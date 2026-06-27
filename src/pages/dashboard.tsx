@@ -1,19 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel'
 import { StatusBadge } from '@/components/shared/status-badge'
-import { Plus, Eye, EyeOff, ArrowDownLeft, TrendingUp, ChevronRight, Package, ShoppingBag, Send, Ship } from 'lucide-react'
+import {
+  Plus, Eye, EyeOff, ArrowDownLeft, TrendingUp, ChevronRight, Package,
+  Send, Ship, ShoppingBag, HelpCircle, Star,
+} from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-
-import IconSoumettre    from 'flat-color-icons/svg/import.svg'
-import IconCommandes    from 'flat-color-icons/svg/briefcase.svg'
-import IconExpeditions  from 'flat-color-icons/svg/shipped.svg'
-import IconSupport      from 'flat-color-icons/svg/support.svg'
-import IconBoite        from 'flat-color-icons/svg/package.svg'
-import IconWallet       from 'flat-color-icons/svg/paid.svg'
+import Autoplay from 'embla-carousel-autoplay'
 
 interface DashboardOrder {
   id: string
@@ -29,36 +27,58 @@ interface WalletData {
 }
 
 const QUICK_ACTIONS = [
-  { label: 'Soumettre',   icon: IconSoumettre,   path: '/submit' },
-  { label: 'Commandes',   icon: IconCommandes,   path: '/orders' },
-  { label: 'Expéditions', icon: IconExpeditions, path: '/shipments' },
-  { label: 'Support',     icon: IconSupport,     path: '/support' },
+  { label: 'Submit',    Icon: Send,       path: '/submit' },
+  { label: 'Orders',   Icon: ShoppingBag, path: '/orders' },
+  { label: 'Shipping', Icon: Ship,        path: '/shipments' },
+  { label: 'Support',  Icon: HelpCircle,  path: '/support' },
 ]
 
-const ACTIVE_STATUSES = ['draft', 'quote_sent', 'quote_accepted', 'awaiting_payment', 'paid', 'purchasing', 'in_china_warehouse', 'shipped', 'in_transit', 'arrived_haiti', 'customs_processing', 'out_for_delivery']
-const TRANSIT_STATUSES = ['shipped', 'in_transit', 'arrived_haiti', 'customs_processing']
+const TESTIMONIALS = [
+  {
+    id: 1,
+    initials: 'MP',
+    name: 'Marie Pierre',
+    location: 'Port-au-Prince',
+    rating: 5,
+    text: 'Excellent service ! Ma commande est arrivée en parfait état depuis la Chine. Le suivi en temps réel est vraiment pratique.',
+    color: 'bg-primary',
+  },
+  {
+    id: 2,
+    initials: 'JB',
+    name: 'Jean Baptiste',
+    location: 'Cap-Haïtien',
+    rating: 5,
+    text: "KONVWA m'a permis d'importer des équipements pour mon atelier à un prix imbattable. Livraison rapide, service client au top !",
+    color: 'bg-blue-500',
+  },
+  {
+    id: 3,
+    initials: 'SC',
+    name: 'Sophie Charles',
+    location: 'Les Cayes',
+    rating: 4,
+    text: 'Je recommande vivement. Le processus de commande est simple et les prix sont transparents. MonCash accepté, c\'est parfait pour Haïti.',
+    color: 'bg-emerald-500',
+  },
+]
 
 export function DashboardPage() {
   const { profile, user } = useAuth()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [orders, setOrders] = useState<DashboardOrder[]>([])
-  const [activeCount, setActiveCount] = useState(0)
-  const [transitCount, setTransitCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [balanceVisible, setBalanceVisible] = useState(true)
+  const autoplay = useRef(Autoplay({ delay: 4000, stopOnInteraction: false }))
 
   useEffect(() => {
     if (!user) return
     Promise.all([
       supabase.from('wallets').select('available_balance, blocked_balance').eq('user_id', user.id).maybeSingle(),
       supabase.from('orders').select('id, tracking_code, status, created_at, quotes(total, product_requests(product_name))').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ACTIVE_STATUSES),
-      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id).in('status', TRANSIT_STATUSES),
-    ]).then(([walletRes, ordersRes, activeRes, transitRes]) => {
+    ]).then(([walletRes, ordersRes]) => {
       if (walletRes.data) setWallet(walletRes.data)
       if (ordersRes.data) setOrders(ordersRes.data as unknown as DashboardOrder[])
-      setActiveCount(activeRes.count ?? 0)
-      setTransitCount(transitRes.count ?? 0)
       setLoading(false)
     })
   }, [user])
@@ -100,55 +120,43 @@ export function DashboardPage() {
         </Link>
       </div>
 
-      {/* ── Stats bento ── */}
-      <div className="px-4 pb-4 grid grid-cols-3 gap-2.5">
-        {loading ? (
-          [1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)
-        ) : (
-          <>
-            <Link to="/orders">
-              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/8">
-                    <ShoppingBag className="h-4 w-4 text-primary" />
+      {/* ── Testimonials Carousel ── */}
+      <div className="px-4 pb-4">
+        <Carousel
+          opts={{ loop: true, align: 'center' }}
+          plugins={[autoplay.current]}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-3">
+            {TESTIMONIALS.map((t) => (
+              <CarouselItem key={t.id} className="pl-3">
+                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                  {/* Stars */}
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn('h-3.5 w-3.5', i < t.rating ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground/30')}
+                      />
+                    ))}
+                  </div>
+                  {/* Review text */}
+                  <p className="text-sm text-foreground leading-relaxed font-medium">"{t.text}"</p>
+                  {/* Author */}
+                  <div className="flex items-center gap-2.5 mt-1">
+                    <div className={cn('flex h-9 w-9 items-center justify-center rounded-full text-white text-xs font-bold shrink-0', t.color)}>
+                      {t.initials}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold leading-none">{t.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t.location}</p>
+                    </div>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-foreground leading-none">{activeCount}</p>
-                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">Commandes<br />actives</p>
-              </div>
-            </Link>
-
-            <Link to="/shipments">
-              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
-                    <Ship className="h-4 w-4 text-blue-500" />
-                  </div>
-                </div>
-                <p className="text-2xl font-bold text-foreground leading-none">{transitCount}</p>
-                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">En<br />transit</p>
-              </div>
-            </Link>
-
-            <Link to="/wallet">
-              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50">
-                    <img src={IconWallet} alt="" className="h-5 w-5 object-contain" />
-                  </div>
-                </div>
-                {loading ? (
-                  <Skeleton className="h-7 w-16 rounded" />
-                ) : (
-                  <p className="text-lg font-bold text-foreground leading-none truncate">
-                    {balance.toLocaleString('fr-HT')}
-                  </p>
-                )}
-                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">HTG<br />disponible</p>
-              </div>
-            </Link>
-          </>
-        )}
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       </div>
 
       {/* ── Wallet Card ── */}
@@ -251,16 +259,19 @@ export function DashboardPage() {
       {/* ── Quick Actions ── */}
       <div className="px-5 pb-5">
         <div className="grid grid-cols-4 gap-3">
-          {QUICK_ACTIONS.map((action) => (
-            <Link key={action.path} to={action.path} className="flex flex-col items-center gap-2 group">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-gray-100 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
-                <img src={action.icon} alt={action.label} className="h-8 w-8 object-contain" />
-              </div>
-              <span className="text-xs font-semibold text-foreground text-center leading-tight">
-                {action.label}
-              </span>
-            </Link>
-          ))}
+          {QUICK_ACTIONS.map((action) => {
+            const { Icon } = action
+            return (
+              <Link key={action.path} to={action.path} className="flex flex-col items-center gap-2 group">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-gray-100 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
+                  <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" strokeWidth={1.6} />
+                </div>
+                <span className="text-xs font-semibold text-foreground text-center leading-tight">
+                  {action.label}
+                </span>
+              </Link>
+            )
+          })}
         </div>
       </div>
 
@@ -319,8 +330,8 @@ export function DashboardPage() {
                   'flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors',
                   idx < orders.length - 1 && 'border-b border-border/50'
                 )}>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 shrink-0">
-                    <img src={IconBoite} alt="" className="h-6 w-6 object-contain" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 shrink-0">
+                    <Package className="h-5 w-5 text-primary" strokeWidth={1.6} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate text-foreground">

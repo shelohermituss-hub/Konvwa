@@ -25,6 +25,8 @@ import { WalletPage } from '@/pages/wallet'
 import { NotificationsPage } from '@/pages/notifications'
 import { ProfilePage } from '@/pages/profile'
 import { SupportPage } from '@/pages/support'
+import { ActivityLogPage } from '@/pages/activity-log'
+import { BillingPage } from '@/pages/billing'
 
 // Admin pages
 import { AdminDashboard } from '@/pages/admin/dashboard'
@@ -86,6 +88,8 @@ export const router = createBrowserRouter([
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'support', element: <SupportPage /> },
+      { path: 'activity-log', element: <ActivityLogPage /> },
+      { path: 'billing', element: <BillingPage /> },
     ],
   },
 
