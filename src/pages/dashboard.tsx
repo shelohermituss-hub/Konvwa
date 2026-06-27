@@ -4,15 +4,17 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StatusBadge } from '@/components/shared/status-badge'
-import { Plus, Package, Eye, EyeOff, ArrowDownLeft, TrendingUp, ChevronRight, Wallet } from 'lucide-react'
+import { Plus, Eye, EyeOff, ArrowDownLeft, TrendingUp, ChevronRight, Package, ShoppingBag, Send, Ship } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 
 import IconSoumettre    from 'flat-color-icons/svg/import.svg'
 import IconCommandes    from 'flat-color-icons/svg/briefcase.svg'
 import IconExpeditions  from 'flat-color-icons/svg/shipped.svg'
 import IconSupport      from 'flat-color-icons/svg/support.svg'
 import IconBoite        from 'flat-color-icons/svg/package.svg'
+import IconWallet       from 'flat-color-icons/svg/paid.svg'
 
 interface DashboardOrder {
   id: string
@@ -34,30 +36,30 @@ const QUICK_ACTIONS = [
   { label: 'Support',     icon: IconSupport,     path: '/support' },
 ]
 
+const ACTIVE_STATUSES = ['draft', 'quote_sent', 'quote_accepted', 'awaiting_payment', 'paid', 'purchasing', 'in_china_warehouse', 'shipped', 'in_transit', 'arrived_haiti', 'customs_processing', 'out_for_delivery']
+const TRANSIT_STATUSES = ['shipped', 'in_transit', 'arrived_haiti', 'customs_processing']
+
 export function DashboardPage() {
   const { profile, user } = useAuth()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [orders, setOrders] = useState<DashboardOrder[]>([])
+  const [activeCount, setActiveCount] = useState(0)
+  const [transitCount, setTransitCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [balanceVisible, setBalanceVisible] = useState(true)
 
   useEffect(() => {
     if (!user) return
     Promise.all([
-      supabase
-        .from('wallets')
-        .select('available_balance, blocked_balance')
-        .eq('user_id', user.id)
-        .maybeSingle(),
-      supabase
-        .from('orders')
-        .select('id, tracking_code, status, created_at, quotes(total, product_requests(product_name))')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(4),
-    ]).then(([walletRes, ordersRes]) => {
+      supabase.from('wallets').select('available_balance, blocked_balance').eq('user_id', user.id).maybeSingle(),
+      supabase.from('orders').select('id, tracking_code, status, created_at, quotes(total, product_requests(product_name))').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ACTIVE_STATUSES),
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id).in('status', TRANSIT_STATUSES),
+    ]).then(([walletRes, ordersRes, activeRes, transitRes]) => {
       if (walletRes.data) setWallet(walletRes.data)
       if (ordersRes.data) setOrders(ordersRes.data as unknown as DashboardOrder[])
+      setActiveCount(activeRes.count ?? 0)
+      setTransitCount(transitRes.count ?? 0)
       setLoading(false)
     })
   }, [user])
@@ -74,8 +76,8 @@ export function DashboardPage() {
   return (
     <div className="min-h-full bg-background">
 
-      {/* Greeting row */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-4 stagger-item">
+      {/* ── Greeting ── */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-11 w-11 ring-2 ring-black/8 shadow-sm">
             <AvatarImage src={profile?.avatar_url || ''} />
@@ -85,19 +87,70 @@ export function DashboardPage() {
           </Avatar>
           <div>
             <p className="text-xs text-muted-foreground font-medium">Bonjour,</p>
-            <h1 className="text-lg font-bold tracking-tight text-foreground leading-tight">{firstName}</h1>
+            <h1 className="text-lg font-bold tracking-tight text-foreground leading-tight">{firstName} 👋</h1>
           </div>
         </div>
-        <Link to="/wallet">
-          <div className="flex items-center gap-1.5 rounded-full bg-black/5 border border-black/8 px-3 py-1.5 hover:bg-black/8 transition-colors">
-            <Wallet className="h-3.5 w-3.5 text-slate-500" />
-            <span className="text-xs font-semibold text-slate-600">Portefeuille</span>
-          </div>
+        <Link to="/submit">
+          <Button size="sm" className="rounded-full gap-1.5 shadow-sm">
+            <Plus className="h-3.5 w-3.5" />
+            Nouveau
+          </Button>
         </Link>
       </div>
 
-      {/* ── Wallet Card — credit card proportions ── */}
-      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
+      {/* ── Stats bento ── */}
+      <div className="px-4 pb-4 grid grid-cols-3 gap-2.5">
+        {loading ? (
+          [1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)
+        ) : (
+          <>
+            <Link to="/orders">
+              <div className="rounded-2xl bg-white border border-border/60 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/8">
+                    <ShoppingBag className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-foreground leading-none">{activeCount}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">Commandes<br />actives</p>
+              </div>
+            </Link>
+
+            <Link to="/shipments">
+              <div className="rounded-2xl bg-white border border-border/60 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
+                    <Ship className="h-4 w-4 text-blue-500" />
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-foreground leading-none">{transitCount}</p>
+                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">En<br />transit</p>
+              </div>
+            </Link>
+
+            <Link to="/wallet">
+              <div className="rounded-2xl bg-white border border-border/60 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50">
+                    <img src={IconWallet} alt="" className="h-5 w-5 object-contain" />
+                  </div>
+                </div>
+                {loading ? (
+                  <Skeleton className="h-7 w-16 rounded" />
+                ) : (
+                  <p className="text-lg font-bold text-foreground leading-none truncate">
+                    {balance.toLocaleString('fr-HT')}
+                  </p>
+                )}
+                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">HTG<br />disponible</p>
+              </div>
+            </Link>
+          </>
+        )}
+      </div>
+
+      {/* ── Wallet Card ── */}
+      <div className="px-4 pb-5">
         <div
           className="rounded-3xl text-white relative overflow-hidden shadow-[0_10px_40px_rgba(0,195,220,0.40)]"
           style={{
@@ -105,13 +158,10 @@ export function DashboardPage() {
             aspectRatio: '1.586',
           }}
         >
-          {/* Decorative rings */}
           <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full border border-white/12" />
           <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full border border-white/8" />
 
-          <div className="absolute inset-0 z-10 flex flex-col justify-between p-4">
-
-            {/* Row 1: branding + contactless */}
+          <div className="absolute inset-0 z-10 flex flex-col justify-between p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/25 backdrop-blur-sm">
@@ -127,7 +177,6 @@ export function DashboardPage() {
               </svg>
             </div>
 
-            {/* Row 2: chip + balance */}
             <div className="flex items-end gap-4">
               <svg width="40" height="30" viewBox="0 0 46 36" fill="none" className="shrink-0 mb-0.5">
                 <rect width="46" height="36" rx="7" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
@@ -149,7 +198,6 @@ export function DashboardPage() {
               </div>
             </div>
 
-            {/* Row 3: holder + number + eye + HTG */}
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-[8px] uppercase tracking-[0.14em] text-white/40 font-semibold mb-0.5">Titulaire</p>
@@ -162,9 +210,7 @@ export function DashboardPage() {
                   onClick={() => setBalanceVisible(v => !v)}
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                 >
-                  {balanceVisible
-                    ? <Eye className="h-3 w-3 text-white/60" />
-                    : <EyeOff className="h-3 w-3 text-white/60" />}
+                  {balanceVisible ? <Eye className="h-3 w-3 text-white/60" /> : <EyeOff className="h-3 w-3 text-white/60" />}
                 </button>
                 <div className="text-right">
                   <p className="text-[8px] uppercase tracking-[0.14em] text-white/40 font-semibold mb-0.5">N° Compte</p>
@@ -175,22 +221,21 @@ export function DashboardPage() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
-      {/* Action buttons below the card — same layout as wallet page */}
-      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '90ms' }}>
+      {/* ── Action buttons ── */}
+      <div className="px-4 pb-5">
         <div className="flex gap-3">
           <Link to="/wallet" className="flex-1">
-            <button className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary text-white py-3.5 text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors pressable">
+            <button className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary text-white py-3.5 text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors">
               <ArrowDownLeft className="h-4 w-4" />
               Recharger
             </button>
           </Link>
           <Link to="/orders" className="flex-1">
-            <button className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors pressable shadow-sm">
+            <button className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors shadow-sm">
               <TrendingUp className="h-4 w-4" />
               Historique
             </button>
@@ -198,12 +243,12 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick Actions — PNG icons */}
-      <div className="px-5 pb-5 stagger-item" style={{ animationDelay: '120ms' }}>
+      {/* ── Quick Actions ── */}
+      <div className="px-5 pb-5">
         <div className="grid grid-cols-4 gap-3">
           {QUICK_ACTIONS.map((action) => (
             <Link key={action.path} to={action.path} className="flex flex-col items-center gap-2 group">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-border/60 shadow-sm action-icon">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-border/60 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
                 <img src={action.icon} alt={action.label} className="h-8 w-8 object-contain" />
               </div>
               <span className="text-xs font-semibold text-foreground text-center leading-tight">
@@ -214,31 +259,31 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Submit CTA Banner */}
-      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '160ms' }}>
+      {/* ── Submit CTA ── */}
+      <div className="px-4 pb-5">
         <Link to="/submit">
-          <div className="flex items-center justify-between rounded-2xl bg-white border border-border/60 p-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all pressable">
+          <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-primary/8 to-primary/4 border border-primary/15 p-4 shadow-sm hover:border-primary/25 hover:shadow-md transition-all">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100">
-                <Plus className="h-5 w-5 text-slate-600" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+                <Send className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-bold text-sm text-foreground">Nouveau produit ?</p>
+                <p className="font-bold text-sm text-foreground">Importer un produit</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Devis reçu en moins de 24h</p>
               </div>
             </div>
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5">
-              <ChevronRight className="h-4 w-4 text-slate-500" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+              <ChevronRight className="h-4 w-4 text-primary" />
             </div>
           </div>
         </Link>
       </div>
 
-      {/* Recent Orders */}
-      <div className="px-5 pb-8 stagger-item" style={{ animationDelay: '200ms' }}>
+      {/* ── Recent Orders ── */}
+      <div className="px-5 pb-8">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-bold text-foreground">Commandes récentes</h2>
-          <Link to="/orders" className="text-xs font-semibold text-foreground flex items-center gap-0.5">
+          <Link to="/orders" className="text-xs font-semibold text-primary flex items-center gap-0.5">
             Voir tout <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -260,23 +305,25 @@ export function DashboardPage() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-2.5">
-            {orders.map((order) => (
+          <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+            {orders.map((order, idx) => (
               <Link key={order.id} to={`/orders/${order.id}`}>
-                <div className="flex items-center gap-3 rounded-2xl bg-white border border-border/60 p-4 shadow-sm hover:border-slate-300 hover:shadow-md transition-all pressable">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 shrink-0">
-                    <img src={IconBoite} alt="" className="h-7 w-7 object-contain" />
+                <div className={cn(
+                  'flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors',
+                  idx < orders.length - 1 && 'border-b border-border/50'
+                )}>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 shrink-0">
+                    <img src={IconBoite} alt="" className="h-6 w-6 object-contain" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate text-foreground">
                       {order.quotes?.product_requests?.product_name || 'Produit'}
                     </p>
-                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{order.tracking_code}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{order.tracking_code}</p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-foreground">{(order.quotes?.total ?? 0).toLocaleString()}</p>
-                    <p className="text-[10px] text-muted-foreground">HTG</p>
-                    <StatusBadge status={order.status} className="mt-1 text-[10px] py-0 h-4" />
+                  <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                    <StatusBadge status={order.status} className="text-[10px]" />
+                    <p className="text-sm font-bold text-foreground">{(order.quotes?.total ?? 0).toLocaleString()} <span className="text-[10px] font-normal text-muted-foreground">HTG</span></p>
                   </div>
                 </div>
               </Link>
