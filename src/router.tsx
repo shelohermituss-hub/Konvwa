@@ -9,8 +9,7 @@ import { AdminLayout } from '@/components/layouts/admin-layout'
 import { AuthGuard } from '@/components/shared/auth-guard'
 import { AdminGuard } from '@/components/shared/auth-guard'
 
-// Onboarding & auth
-import { OnboardingPage } from '@/pages/onboarding'
+// Auth
 import { AuthPage } from '@/pages/auth'
 
 // Public pages
@@ -39,17 +38,11 @@ import { AdminDisputesPage } from '@/pages/admin/disputes'
 import { AdminSettingsPage } from '@/pages/admin/settings'
 
 export const router = createBrowserRouter([
-  // Onboarding — full screen, no layout wrapper
-  {
-    path: '/onboarding',
-    element: (
-      <AuthGuard requireAuth={false}>
-        <OnboardingPage />
-      </AuthGuard>
-    ),
-  },
+  // Root and onboarding → auth
+  { path: '/',           element: <Navigate to="/auth" replace /> },
+  { path: '/onboarding', element: <Navigate to="/auth" replace /> },
 
-  // Combined auth page (login + register tabs) — no layout wrapper
+  // Auth page (login, register, forgot, otp, reset, denied)
   {
     path: '/auth',
     element: (
@@ -59,25 +52,9 @@ export const router = createBrowserRouter([
     ),
   },
 
-  // Legacy auth routes — redirect to /auth
-  {
-    path: '/login',
-    element: <Navigate to="/auth" replace />,
-  },
-  {
-    path: '/register',
-    element: <Navigate to="/auth" replace />,
-  },
-
-  // Root — redirect to onboarding (first-time) or auth (returning)
-  {
-    path: '/',
-    element: (
-      <AuthGuard requireAuth={false}>
-        <OnboardingPage />
-      </AuthGuard>
-    ),
-  },
+  // Legacy routes → auth
+  { path: '/login',    element: <Navigate to="/auth" replace /> },
+  { path: '/register', element: <Navigate to="/auth" replace /> },
 
   // Public marketing routes (retain for SEO / direct links)
   {

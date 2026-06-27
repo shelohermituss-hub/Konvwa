@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,49 +8,57 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, Eye, EyeOff, Package, Wallet, Ship, Star } from 'lucide-react'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import {
+  Loader2, Eye, EyeOff, Mail, Lock,
+  ArrowLeft, CheckCircle2, ShieldX,
+} from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 
+type AuthView = 'login' | 'register' | 'forgot' | 'otp' | 'reset' | 'denied'
+
+const INPUT = 'h-11 rounded-xl bg-muted border-transparent focus-visible:border-primary/60 focus-visible:bg-background font-medium transition-colors'
+const CARD  = 'bg-white rounded-2xl border border-gray-100 shadow-sm'
+
+// ── Schemas ───────────────────────────────────────────────────────────────────
 const loginSchema = z.object({
-  email: z.string().email('Adresse e-mail invalide'),
+  email:    z.string().email('Adresse e-mail invalide'),
   password: z.string().min(1, 'Mot de passe requis'),
 })
 
 const registerSchema = z.object({
-  fullName: z.string().min(2, 'Nom complet requis (min. 2 caractères)'),
-  email: z.string().email('Adresse e-mail invalide'),
-  phone: z.string().optional(),
-  password: z.string().min(6, 'Minimum 6 caractères'),
+  fullName:        z.string().min(2, 'Nom complet requis (min. 2 caractères)'),
+  email:           z.string().email('Adresse e-mail invalide'),
+  phone:           z.string().optional(),
+  password:        z.string().min(6, 'Minimum 6 caractères'),
   confirmPassword: z.string(),
-  acceptTerms: z.boolean().refine((v) => v === true, { message: 'Vous devez accepter les conditions' }),
+  acceptTerms:     z.boolean().refine((v) => v === true, { message: 'Vous devez accepter les conditions' }),
 }).refine((d) => d.password === d.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',
   path: ['confirmPassword'],
 })
 
-type LoginForm = z.infer<typeof loginSchema>
+const forgotSchema = z.object({
+  email: z.string().email('Adresse e-mail invalide'),
+})
+
+const resetSchema = z.object({
+  password:        z.string().min(6, 'Minimum 6 caractères'),
+  confirmPassword: z.string(),
+}).refine((d) => d.password === d.confirmPassword, {
+  message: 'Les mots de passe ne correspondent pas',
+  path: ['confirmPassword'],
+})
+
+type LoginForm    = z.infer<typeof loginSchema>
 type RegisterForm = z.infer<typeof registerSchema>
+type ForgotForm   = z.infer<typeof forgotSchema>
+type ResetForm    = z.infer<typeof resetSchema>
 
-const FEATURES = [
-  {
-    icon: Package,
-    title: 'Importation simplifiée',
-    desc: 'Alibaba, Shein, Temu — on commande pour vous',
-  },
-  {
-    icon: Wallet,
-    title: 'Paiement local',
-    desc: 'MonCash & NatCash acceptés, en HTG',
-  },
-  {
-    icon: Ship,
-    title: 'Suivi en temps réel',
-    desc: 'De la Chine à votre porte, étape par étape',
-  },
-]
-
+// ── Primitives ────────────────────────────────────────────────────────────────
 function PasswordInput({ id, placeholder, className, ...props }: React.ComponentProps<typeof Input>) {
   const [show, setShow] = useState(false)
   return (
@@ -60,11 +68,12 @@ function PasswordInput({ id, placeholder, className, ...props }: React.Component
         id={id}
         type={show ? 'text' : 'password'}
         placeholder={placeholder}
-        className={cn('pr-10', className)}
+        className={cn(INPUT, 'pr-10', className)}
       />
       <button
         type="button"
         tabIndex={-1}
+        aria-label={show ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
         onClick={() => setShow((s) => !s)}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
       >
@@ -74,7 +83,110 @@ function PasswordInput({ id, placeholder, className, ...props }: React.Component
   )
 }
 
-function LoginTab({ onSwitch }: { onSwitch: () => void }) {
+function Field({ id, label, error, children }: { id?: string; label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-sm font-semibold">{label}</Label>
+      {children}
+      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+    </div>
+  )
+}
+
+function PrimaryBtn({ children, className, ...props }: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      {...props}
+      className={cn('w-full h-11 rounded-xl font-semibold text-white', className)}
+      style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+    >
+      {children}
+    </Button>
+  )
+}
+
+function BackBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors group"
+    >
+      <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+      Retour
+    </button>
+  )
+}
+
+function ViewIcon({ icon: Icon }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }) {
+  return (
+    <div
+      className="flex h-12 w-12 items-center justify-center rounded-2xl mb-4"
+      style={{ background: 'rgba(240,90,40,0.10)' }}
+    >
+      <Icon className="h-6 w-6" style={{ color: '#F05A28' }} />
+    </div>
+  )
+}
+
+function Divider() {
+  return (
+    <div className="relative my-5">
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full border-t border-border" />
+      </div>
+      <div className="relative flex justify-center">
+        <span className="bg-white px-3 text-xs text-muted-foreground">ou</span>
+      </div>
+    </div>
+  )
+}
+
+// ── Layout wrapper ────────────────────────────────────────────────────────────
+function AuthLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-[100dvh] bg-[#F4F5F7] flex flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-[400px] space-y-5">
+        {/* Brand */}
+        <div className="flex flex-col items-center gap-1.5">
+          <KonvwaLogo iconOnly size={44} />
+          <div className="text-center leading-none mt-1">
+            <p className="font-bold text-xl tracking-tight">KONVWA</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
+              Importation · Haïti
+            </p>
+          </div>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── Tab switcher (login / register only) ──────────────────────────────────────
+function AuthTabs({ view, onChange }: { view: 'login' | 'register'; onChange: (v: 'login' | 'register') => void }) {
+  return (
+    <div className="flex rounded-2xl bg-white border border-gray-100 shadow-sm p-1">
+      {(['login', 'register'] as const).map((t) => (
+        <button
+          key={t}
+          type="button"
+          onClick={() => onChange(t)}
+          className={cn(
+            'flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200',
+            view === t ? 'text-white shadow-sm' : 'text-muted-foreground hover:text-foreground',
+          )}
+          style={view === t ? { background: 'linear-gradient(135deg, #F05A28, #D44E21)' } : {}}
+        >
+          {t === 'login' ? 'Se connecter' : 'Créer un compte'}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () => void }) {
   const { signIn, isAdmin } = useAuth()
   const navigate = useNavigate()
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
@@ -92,52 +204,56 @@ function LoginTab({ onSwitch }: { onSwitch: () => void }) {
   }
 
   return (
-    <div>
+    <div className={cn(CARD, 'p-7')}>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-foreground">Bon retour !</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Bon retour !</h2>
         <p className="text-sm text-muted-foreground mt-1">Connectez-vous à votre compte KONVWA</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="login-email">Adresse e-mail</Label>
+        <Field id="l-email" label="Adresse e-mail" error={errors.email?.message}>
           <Input
-            id="login-email"
+            id="l-email"
             type="email"
             placeholder="votre@email.com"
             autoComplete="email"
             {...register('email')}
-            className={cn('h-11 rounded-xl', errors.email && 'border-destructive focus-visible:ring-destructive')}
+            className={cn(INPUT, errors.email && 'border-destructive')}
           />
-          {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-        </div>
+        </Field>
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="login-password">Mot de passe</Label>
-            <Link to="#" className="text-xs text-primary hover:underline font-medium">
+            <Label htmlFor="l-password" className="text-sm font-semibold">Mot de passe</Label>
+            <button
+              type="button"
+              onClick={onForgot}
+              className="text-xs text-primary hover:underline font-semibold"
+            >
               Mot de passe oublié ?
-            </Link>
+            </button>
           </div>
           <PasswordInput
-            id="login-password"
+            id="l-password"
             placeholder="••••••••"
             autoComplete="current-password"
             {...register('password')}
-            className={cn('h-11 rounded-xl', errors.password && 'border-destructive')}
+            className={errors.password ? 'border-destructive' : ''}
           />
-          {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
         </div>
 
-        <Button type="submit" className="w-full h-11 rounded-xl font-semibold mt-2" disabled={isSubmitting}>
-          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Se connecter
-        </Button>
+        </PrimaryBtn>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground mt-5">
+      <Divider />
+
+      <p className="text-center text-sm text-muted-foreground">
         Pas encore de compte ?{' '}
-        <button onClick={onSwitch} className="text-primary font-semibold hover:underline">
+        <button type="button" onClick={onSwitch} className="text-primary font-bold hover:underline">
           Créer un compte
         </button>
       </p>
@@ -145,7 +261,8 @@ function LoginTab({ onSwitch }: { onSwitch: () => void }) {
   )
 }
 
-function RegisterTab({ onSwitch }: { onSwitch: () => void }) {
+// ── Register ──────────────────────────────────────────────────────────────────
+function RegisterView({ onSwitch }: { onSwitch: () => void }) {
   const { signUp } = useAuth()
   const navigate = useNavigate()
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<RegisterForm>({
@@ -157,102 +274,99 @@ function RegisterTab({ onSwitch }: { onSwitch: () => void }) {
   async function onSubmit(values: RegisterForm) {
     const { error } = await signUp(values.email, values.password, values.fullName, values.phone)
     if (error) {
-      toast.error("Inscription échouée", { description: error.message })
+      toast.error('Inscription échouée', { description: error.message })
       return
     }
-
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       await Promise.all([
         supabase.from('profiles').insert({
-          user_id: user.id,
+          user_id:   user.id,
           full_name: values.fullName,
-          phone: values.phone || null,
-          role: 'client',
+          phone:     values.phone || null,
+          role:      'client',
         }),
         supabase.from('wallets').insert({
-          user_id: user.id,
+          user_id:           user.id,
           available_balance: 0,
-          blocked_balance: 0,
+          blocked_balance:   0,
         }),
       ])
     }
-
     toast.success('Compte créé avec succès !')
     navigate('/dashboard', { replace: true })
   }
 
   return (
-    <div>
+    <div className={cn(CARD, 'p-7')}>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-foreground">Créer un compte</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Créer un compte</h2>
         <p className="text-sm text-muted-foreground mt-1">Rejoignez KONVWA gratuitement aujourd'hui</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="reg-name">Nom complet</Label>
+        <Field id="r-name" label="Nom complet" error={errors.fullName?.message}>
           <Input
-            id="reg-name"
+            id="r-name"
             type="text"
             placeholder="Jean Dupont"
             autoComplete="name"
             {...register('fullName')}
-            className={cn('h-11 rounded-xl', errors.fullName && 'border-destructive')}
+            className={cn(INPUT, errors.fullName && 'border-destructive')}
           />
-          {errors.fullName && <p className="text-xs text-destructive">{errors.fullName.message}</p>}
-        </div>
+        </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="reg-email">E-mail</Label>
+          <Field id="r-email" label="E-mail" error={errors.email?.message}>
             <Input
-              id="reg-email"
+              id="r-email"
               type="email"
               placeholder="votre@email.com"
               autoComplete="email"
               {...register('email')}
-              className={cn('h-11 rounded-xl', errors.email && 'border-destructive')}
+              className={cn(INPUT, errors.email && 'border-destructive')}
             />
-            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-          </div>
+          </Field>
           <div className="space-y-1.5">
-            <Label htmlFor="reg-phone">
-              Téléphone <span className="text-muted-foreground text-[10px]">(optionnel)</span>
+            <Label htmlFor="r-phone" className="text-sm font-semibold">
+              Téléphone{' '}
+              <span className="text-muted-foreground font-normal text-[10px]">(opt.)</span>
             </Label>
             <Input
-              id="reg-phone"
+              id="r-phone"
               type="tel"
               placeholder="+509 1234-5678"
               autoComplete="tel"
               {...register('phone')}
-              className="h-11 rounded-xl"
+              className={INPUT}
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="reg-password">Mot de passe</Label>
+            <Label htmlFor="r-password" className="text-sm font-semibold">Mot de passe</Label>
             <PasswordInput
-              id="reg-password"
+              id="r-password"
               placeholder="••••••••"
               autoComplete="new-password"
               {...register('password')}
-              className={cn('h-11 rounded-xl', errors.password && 'border-destructive')}
+              className={errors.password ? 'border-destructive' : ''}
             />
-            {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+            {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="reg-confirm">Confirmer</Label>
+            <Label htmlFor="r-confirm" className="text-sm font-semibold">Confirmer</Label>
             <PasswordInput
-              id="reg-confirm"
+              id="r-confirm"
               placeholder="••••••••"
               autoComplete="new-password"
               {...register('confirmPassword')}
-              className={cn('h-11 rounded-xl', errors.confirmPassword && 'border-destructive')}
+              className={errors.confirmPassword ? 'border-destructive' : ''}
             />
-            {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>}
+            {errors.confirmPassword && (
+              <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>
+            )}
           </div>
         </div>
 
@@ -260,27 +374,31 @@ function RegisterTab({ onSwitch }: { onSwitch: () => void }) {
           <Checkbox
             id="terms"
             checked={!!acceptTerms}
-            onCheckedChange={(checked) => setValue('acceptTerms', checked as boolean, { shouldValidate: true })}
+            onCheckedChange={(v) => setValue('acceptTerms', v as boolean, { shouldValidate: true })}
             className={cn(errors.acceptTerms && 'border-destructive')}
           />
           <Label htmlFor="terms" className="text-sm leading-normal cursor-pointer font-normal">
             J'accepte les{' '}
-            <span className="text-primary font-medium">conditions d'utilisation</span>
+            <span className="text-primary font-semibold">conditions d'utilisation</span>
             {' '}et la{' '}
-            <span className="text-primary font-medium">politique de confidentialité</span>
+            <span className="text-primary font-semibold">politique de confidentialité</span>
           </Label>
         </div>
-        {errors.acceptTerms && <p className="text-xs text-destructive">{errors.acceptTerms.message}</p>}
+        {errors.acceptTerms && (
+          <p className="text-xs text-destructive">{errors.acceptTerms.message}</p>
+        )}
 
-        <Button type="submit" className="w-full h-11 rounded-xl font-semibold mt-2" disabled={isSubmitting}>
-          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Créer mon compte
-        </Button>
+        </PrimaryBtn>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground mt-5">
+      <Divider />
+
+      <p className="text-center text-sm text-muted-foreground">
         Déjà un compte ?{' '}
-        <button onClick={onSwitch} className="text-primary font-semibold hover:underline">
+        <button type="button" onClick={onSwitch} className="text-primary font-bold hover:underline">
           Se connecter
         </button>
       </p>
@@ -288,153 +406,254 @@ function RegisterTab({ onSwitch }: { onSwitch: () => void }) {
   )
 }
 
-export function AuthPage() {
-  const [tab, setTab] = useState<'login' | 'register'>('login')
+// ── Forgot password ───────────────────────────────────────────────────────────
+function ForgotView({ onBack }: { onBack: () => void }) {
+  const [sent, setSent] = useState(false)
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotForm>({
+    resolver: zodResolver(forgotSchema),
+  })
+
+  async function onSubmit(values: ForgotForm) {
+    const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+      redirectTo: `${window.location.origin}/auth?type=reset`,
+    })
+    if (error) {
+      toast.error('Erreur', { description: error.message })
+      return
+    }
+    setSent(true)
+  }
+
+  if (sent) {
+    return (
+      <div className={cn(CARD, 'p-8 text-center')}>
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50 mx-auto mb-4">
+          <CheckCircle2 className="h-8 w-8 text-green-500" />
+        </div>
+        <h2 className="text-xl font-bold mb-2">E-mail envoyé !</h2>
+        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+          Vérifiez votre boîte de réception et cliquez sur le lien pour réinitialiser votre mot de passe.
+        </p>
+        <button type="button" onClick={onBack} className="text-sm text-primary font-bold hover:underline">
+          ← Retour à la connexion
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-[100dvh] flex">
-      {/* ── Left brand panel ── */}
-      <div className="hidden lg:flex w-[480px] xl:w-[540px] shrink-0 flex-col relative overflow-hidden"
-        style={{ background: 'linear-gradient(160deg, #0A1628 0%, #0F2040 60%, #1A1035 100%)' }}>
+    <div className={cn(CARD, 'p-7')}>
+      <BackBtn onClick={onBack} />
 
-        {/* Decorative orbs */}
-        <div className="absolute top-[-80px] right-[-80px] w-[400px] h-[400px] rounded-full opacity-20"
-          style={{ background: 'radial-gradient(circle, #F05A28 0%, transparent 70%)' }} />
-        <div className="absolute bottom-[-60px] left-[-60px] w-[300px] h-[300px] rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, #F05A28 0%, transparent 70%)' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-white/5" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full border border-white/5" />
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col h-full p-10 xl:p-12">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl text-white font-bold text-xl"
-              style={{ background: 'linear-gradient(135deg, #F05A28, #AF3E12)' }}>
-              K
-            </div>
-            <div>
-              <span className="font-bold text-xl text-white tracking-tight">KONVWA</span>
-              <p className="text-[10px] text-white/40 uppercase tracking-widest leading-none mt-0.5">Importation · Haïti</p>
-            </div>
-          </div>
-
-          {/* Headline */}
-          <div className="mt-16 xl:mt-20">
-            <h1 className="text-4xl xl:text-[42px] font-bold text-white leading-[1.15] tracking-tight">
-              Importez depuis<br />
-              <span style={{ color: '#F05A28' }}>la Chine.</span><br />
-              Payez en HTG.
-            </h1>
-            <p className="mt-4 text-white/60 text-base leading-relaxed max-w-sm">
-              La plateforme d'importation haïtienne. Des produits du monde entier livrés chez vous, simplement.
-            </p>
-          </div>
-
-          {/* Feature cards */}
-          <div className="mt-10 space-y-3">
-            {FEATURES.map((f) => {
-              const Icon = f.icon
-              return (
-                <div key={f.title} className="flex items-center gap-4 rounded-2xl p-4 border border-white/8 backdrop-blur-sm"
-                  style={{ background: 'rgba(255,255,255,0.05)' }}>
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                    style={{ background: 'rgba(240,90,40,0.2)' }}>
-                    <Icon className="h-5 w-5" style={{ color: '#F05A28' }} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white text-sm">{f.title}</p>
-                    <p className="text-white/50 text-xs mt-0.5">{f.desc}</p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Testimonial */}
-          <div className="mt-auto pt-8">
-            <div className="rounded-2xl p-5 border border-white/10" style={{ background: 'rgba(255,255,255,0.04)' }}>
-              <div className="flex gap-0.5 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <p className="text-white/80 text-sm leading-relaxed italic">
-                "KONVWA m'a permis de commander des produits depuis Alibaba et de payer directement avec MonCash. Livraison rapide et suivi parfait !"
-              </p>
-              <div className="flex items-center gap-3 mt-4">
-                <div className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                  style={{ background: 'linear-gradient(135deg, #F05A28, #AF3E12)' }}>
-                  M
-                </div>
-                <div>
-                  <p className="text-white text-xs font-semibold">Marie-Claire J.</p>
-                  <p className="text-white/40 text-[10px]">Commerçante, Port-au-Prince</p>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-white/25 text-xs mt-6 text-center">
-              © {new Date().getFullYear()} KONVWA · Tous droits réservés
-            </p>
-          </div>
-        </div>
+      <div className="mb-6">
+        <ViewIcon icon={Mail} />
+        <h2 className="text-2xl font-bold tracking-tight">Mot de passe oublié ?</h2>
+        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+          Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.
+        </p>
       </div>
 
-      {/* ── Right form panel ── */}
-      <div className="flex-1 flex flex-col min-h-[100dvh] bg-[#F7F8FA]">
-        {/* Mobile logo */}
-        <div className="flex lg:hidden items-center justify-center gap-3 pt-8 pb-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-bold text-lg"
-            style={{ background: 'linear-gradient(135deg, #F05A28, #AF3E12)' }}>
-            K
-          </div>
-          <span className="font-bold text-xl tracking-tight">KONVWA</span>
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <Field id="f-email" label="Adresse e-mail" error={errors.email?.message}>
+          <Input
+            id="f-email"
+            type="email"
+            placeholder="votre@email.com"
+            autoComplete="email"
+            {...register('email')}
+            className={cn(INPUT, errors.email && 'border-destructive')}
+          />
+        </Field>
 
-        <div className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
-          <div className="w-full max-w-md">
-            {/* Tab switcher */}
-            <div className="flex rounded-2xl bg-white border border-border shadow-sm p-1 mb-5">
-              {(['login', 'register'] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  className={cn(
-                    'flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200',
-                    tab === t
-                      ? 'text-white shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  )}
-                  style={tab === t ? { background: 'linear-gradient(135deg, #F05A28, #AF3E12)' } : {}}
-                >
-                  {t === 'login' ? 'Se connecter' : 'Créer un compte'}
-                </button>
+        <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Envoyer le lien
+        </PrimaryBtn>
+      </form>
+    </div>
+  )
+}
+
+// ── OTP Verification ──────────────────────────────────────────────────────────
+function OtpView({ email, onBack }: { email: string; onBack: () => void }) {
+  const [otp, setOtp] = useState('')
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+
+  async function onVerify() {
+    if (otp.length < 6) return
+    setLoading(true)
+    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' })
+    setLoading(false)
+    if (error) {
+      toast.error('Code invalide', { description: error.message })
+      return
+    }
+    toast.success('Vérification réussie !')
+    navigate('/dashboard', { replace: true })
+  }
+
+  async function resend() {
+    await supabase.auth.signInWithOtp({ email })
+    toast.success('Code renvoyé !')
+  }
+
+  return (
+    <div className={cn(CARD, 'p-7')}>
+      <BackBtn onClick={onBack} />
+
+      <div className="mb-6">
+        <ViewIcon icon={Lock} />
+        <h2 className="text-2xl font-bold tracking-tight">Vérification OTP</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Entrez le code à 6 chiffres envoyé à{' '}
+          <span className="font-semibold text-foreground">{email || 'votre e-mail'}</span>
+        </p>
+      </div>
+
+      <div className="space-y-5">
+        <div className="flex justify-center">
+          <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+            <InputOTPGroup className="gap-2">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <InputOTPSlot
+                  key={i}
+                  index={i}
+                  className="h-12 w-10 rounded-xl bg-muted border-0 shadow-none first:rounded-xl last:rounded-xl text-base font-bold"
+                />
               ))}
-            </div>
-
-            {/* Form card */}
-            <div className="rounded-2xl border border-border bg-white shadow-sm p-6 sm:p-8">
-              {tab === 'login' ? (
-                <LoginTab onSwitch={() => setTab('register')} />
-              ) : (
-                <RegisterTab onSwitch={() => setTab('login')} />
-              )}
-            </div>
-
-            {/* Back to onboarding */}
-            <div className="text-center mt-5">
-              <Link
-                to="/onboarding"
-                onClick={() => localStorage.removeItem('konvwa_onboarding_done')}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                ← Revoir la présentation
-              </Link>
-            </div>
-          </div>
+            </InputOTPGroup>
+          </InputOTP>
         </div>
+
+        <PrimaryBtn onClick={onVerify} disabled={otp.length < 6 || loading}>
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Vérifier le code
+        </PrimaryBtn>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Pas reçu le code ?{' '}
+          <button type="button" onClick={resend} className="text-primary font-bold hover:underline">
+            Renvoyer
+          </button>
+        </p>
       </div>
     </div>
+  )
+}
+
+// ── Reset password ────────────────────────────────────────────────────────────
+function ResetView({ onBack }: { onBack: () => void }) {
+  const navigate = useNavigate()
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ResetForm>({
+    resolver: zodResolver(resetSchema),
+  })
+
+  async function onSubmit(values: ResetForm) {
+    const { error } = await supabase.auth.updateUser({ password: values.password })
+    if (error) {
+      toast.error('Erreur', { description: error.message })
+      return
+    }
+    toast.success('Mot de passe mis à jour !')
+    navigate('/dashboard', { replace: true })
+  }
+
+  return (
+    <div className={cn(CARD, 'p-7')}>
+      <BackBtn onClick={onBack} />
+
+      <div className="mb-6">
+        <ViewIcon icon={Lock} />
+        <h2 className="text-2xl font-bold tracking-tight">Nouveau mot de passe</h2>
+        <p className="text-sm text-muted-foreground mt-1">Choisissez un nouveau mot de passe sécurisé.</p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="rs-password" className="text-sm font-semibold">Nouveau mot de passe</Label>
+          <PasswordInput
+            id="rs-password"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            {...register('password')}
+            className={errors.password ? 'border-destructive' : ''}
+          />
+          {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="rs-confirm" className="text-sm font-semibold">Confirmer le mot de passe</Label>
+          <PasswordInput
+            id="rs-confirm"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            {...register('confirmPassword')}
+            className={errors.confirmPassword ? 'border-destructive' : ''}
+          />
+          {errors.confirmPassword && (
+            <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>
+          )}
+        </div>
+
+        <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Réinitialiser le mot de passe
+        </PrimaryBtn>
+      </form>
+    </div>
+  )
+}
+
+// ── Access denied ─────────────────────────────────────────────────────────────
+function DeniedView() {
+  const navigate = useNavigate()
+
+  return (
+    <div className={cn(CARD, 'p-8 text-center')}>
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mx-auto mb-4">
+        <ShieldX className="h-8 w-8 text-destructive" />
+      </div>
+      <h2 className="text-xl font-bold mb-2">Accès refusé</h2>
+      <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+        Vous n'avez pas les permissions nécessaires pour accéder à cette page.
+      </p>
+      <PrimaryBtn onClick={() => navigate('/dashboard', { replace: true })}>
+        Retour à l'accueil
+      </PrimaryBtn>
+    </div>
+  )
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+export function AuthPage() {
+  const [view, setView] = useState<AuthView>('login')
+  const [otpEmail] = useState('')
+  const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    const type = searchParams.get('type')
+    if (type === 'reset')  setView('reset')
+    if (type === 'otp')    setView('otp')
+    if (type === 'denied') setView('denied')
+  }, [searchParams])
+
+  const isTabView = view === 'login' || view === 'register'
+
+  return (
+    <AuthLayout>
+      {isTabView && (
+        <AuthTabs
+          view={view as 'login' | 'register'}
+          onChange={setView}
+        />
+      )}
+
+      {view === 'login'    && <LoginView    onSwitch={() => setView('register')} onForgot={() => setView('forgot')} />}
+      {view === 'register' && <RegisterView onSwitch={() => setView('login')} />}
+      {view === 'forgot'   && <ForgotView   onBack={() => setView('login')} />}
+      {view === 'otp'      && <OtpView      email={otpEmail} onBack={() => setView('login')} />}
+      {view === 'reset'    && <ResetView    onBack={() => setView('login')} />}
+      {view === 'denied'   && <DeniedView />}
+    </AuthLayout>
   )
 }
