@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 
 function Header() {
   const { user } = useAuth()
@@ -24,11 +25,8 @@ function Header() {
         : 'bg-transparent border-b border-transparent'
     )}>
       <nav className="container flex h-16 items-center justify-between px-4 mx-auto lg:px-8">
-        <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg shadow-sm shadow-primary/30">
-            K
-          </div>
-          <span className="font-bold text-xl tracking-tight">KONVWA</span>
+        <Link to="/">
+          <KonvwaLogo size={34} />
         </Link>
 
         <div className="hidden lg:flex items-center gap-8">
@@ -112,11 +110,8 @@ function Footer() {
       <div className="container px-4 py-12 mx-auto lg:px-8">
         <div className="grid gap-8 lg:grid-cols-4">
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg">
-                K
-              </div>
-              <span className="font-bold text-xl tracking-tight">KONVWA</span>
+            <Link to="/">
+              <KonvwaLogo size={34} />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Importez des produits d'Alibaba, Shein et Temu en Haïti sans carte bancaire.

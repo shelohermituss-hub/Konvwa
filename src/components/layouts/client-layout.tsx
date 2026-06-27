@@ -5,6 +5,7 @@ import { Home, Package, Ship, Bell, User } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 
 const NAV_ITEMS = [
   { label: 'Accueil', icon: Home, path: '/dashboard' },
@@ -34,11 +35,8 @@ function TopHeader() {
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-white/90 backdrop-blur-md px-5 border-b border-border/60 shadow-sm">
-      <Link to="/dashboard" className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-white font-bold text-sm shadow-sm">
-          K
-        </div>
-        <span className="font-bold text-base tracking-tight text-foreground">KONVWA</span>
+      <Link to="/dashboard">
+        <KonvwaLogo size={30} />
       </Link>
 
       <div className="flex items-center gap-2">
