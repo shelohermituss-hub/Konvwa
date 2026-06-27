@@ -1,0 +1,324 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Poppins', sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+}
+
+/* ============================================================
+   KONVWA — BRAND THEME (Light)
+   Primary: Orange Fret #F05A28
+   Navy:    #0A1628  (headings, nav, foreground)
+   ============================================================ */
+
+:root {
+  --radius: 0.75rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.135 0.040 255);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.135 0.040 255);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.135 0.040 255);
+
+  --primary: oklch(0.618 0.196 35);
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.982 0.007 252);
+  --secondary-foreground: oklch(0.135 0.040 255);
+
+  --muted: oklch(0.970 0.013 252);
+  --muted-foreground: oklch(0.535 0.030 248);
+
+  --accent: oklch(0.968 0.025 35);
+  --accent-foreground: oklch(0.618 0.196 35);
+
+  --destructive: oklch(0.534 0.175 35);
+  --destructive-foreground: oklch(1 0 0);
+
+  --success: oklch(0.516 0.130 155);
+  --success-foreground: oklch(1 0 0);
+
+  --warning: oklch(0.805 0.155 75);
+  --warning-foreground: oklch(0.135 0.040 255);
+
+  --border: oklch(0.906 0.018 252);
+  --input: oklch(0.906 0.018 252);
+  --ring: oklch(0.618 0.196 35);
+
+  --chart-1: oklch(0.618 0.196 35);
+  --chart-2: oklch(0.135 0.040 255);
+  --chart-3: oklch(0.805 0.155 75);
+  --chart-4: oklch(0.516 0.130 155);
+  --chart-5: oklch(0.700 0.175 35);
+
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.135 0.040 255);
+  --sidebar-primary: oklch(0.618 0.196 35);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.970 0.013 252);
+  --sidebar-accent-foreground: oklch(0.135 0.040 255);
+  --sidebar-border: oklch(0.906 0.018 252);
+  --sidebar-ring: oklch(0.618 0.196 35);
+}
+
+.dark {
+  --background: oklch(0.120 0.040 255);
+  --foreground: oklch(0.972 0.007 252);
+
+  --card: oklch(0.160 0.040 255);
+  --card-foreground: oklch(0.972 0.007 252);
+
+  --popover: oklch(0.160 0.040 255);
+  --popover-foreground: oklch(0.972 0.007 252);
+
+  --primary: oklch(0.700 0.185 35);
+  --primary-foreground: oklch(0.120 0.040 255);
+
+  --secondary: oklch(0.200 0.040 255);
+  --secondary-foreground: oklch(0.972 0.007 252);
+
+  --muted: oklch(0.200 0.040 255);
+  --muted-foreground: oklch(0.650 0.025 250);
+
+  --accent: oklch(0.220 0.040 255);
+  --accent-foreground: oklch(0.700 0.185 35);
+
+  --destructive: oklch(0.560 0.175 35);
+  --destructive-foreground: oklch(0.972 0.007 252);
+
+  --success: oklch(0.580 0.130 155);
+  --success-foreground: oklch(0.120 0.040 255);
+
+  --warning: oklch(0.750 0.155 75);
+  --warning-foreground: oklch(0.120 0.040 255);
+
+  --border: oklch(0.260 0.040 255);
+  --input: oklch(0.260 0.040 255);
+  --ring: oklch(0.700 0.185 35);
+
+  --chart-1: oklch(0.700 0.185 35);
+  --chart-2: oklch(0.750 0.030 252);
+  --chart-3: oklch(0.805 0.155 75);
+  --chart-4: oklch(0.580 0.130 155);
+  --chart-5: oklch(0.620 0.175 35);
+
+  --sidebar: oklch(0.100 0.040 255);
+  --sidebar-foreground: oklch(0.972 0.007 252);
+  --sidebar-primary: oklch(0.700 0.185 35);
+  --sidebar-primary-foreground: oklch(0.120 0.040 255);
+  --sidebar-accent: oklch(0.200 0.040 255);
+  --sidebar-accent-foreground: oklch(0.972 0.007 252);
+  --sidebar-border: oklch(0.260 0.040 255);
+  --sidebar-ring: oklch(0.700 0.185 35);
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Poppins', sans-serif;
+    overscroll-behavior: none;
+  }
+  html { -webkit-tap-highlight-color: transparent; }
+  h1, h2, h3 { font-weight: 700; }
+  h4, h5, h6 { font-weight: 600; }
+  header { border-top: 4px solid var(--primary); }
+  .card, [data-slot="card"] { box-shadow: 0 2px 14px rgba(10, 22, 40, 0.07); }
+}
+
+/* ============================================================
+   PREMIUM ANIMATION KEYFRAMES
+   ============================================================ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes wordReveal {
+  from { opacity: 0; transform: translateY(12px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* ============================================================
+   ANIMATION UTILITY CLASSES
+   ============================================================ */
+
+.animate-fade-in-up  { animation: fadeInUp  350ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-scale-in    { animation: scaleIn   200ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-right { animation: slideInRight 300ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-word        { animation: wordReveal 450ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-float       { animation: float 3s ease-in-out infinite; }
+.animate-pulse-slow  { animation: pulseSlow 4s ease-in-out infinite; }
+
+/* ============================================================
+   CARD COMPONENT VARIANTS (Fintech Design System)
+   ============================================================ */
+
+/* Flat: forms, lists, settings */
+.card-flat {
+  background-color: white;
+  border: 1px solid oklch(0.94 0 0);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+}
+
+/* Elevated: featured content, stats — lifts on hover */
+.card-elevated {
+  background-color: white;
+  border: 1px solid oklch(0.94 0 0);
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07), 0 16px 40px rgba(0,0,0,0.05);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.card-elevated:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.11), 0 20px 48px rgba(0,0,0,0.07);
+}
+
+/* ============================================================
+   BUTTON UTILITIES
+   ============================================================ */
+
+.btn-gradient {
+  background: linear-gradient(135deg, #F05A28 0%, #AF3E12 100%);
+  color: white;
+  font-weight: 700;
+  transition: all 150ms ease;
+}
+.btn-gradient:hover  { box-shadow: 0 0 28px rgba(240,90,40,0.45); filter: brightness(1.05); }
+.btn-gradient:active { transform: scale(0.97); }
+
+/* ============================================================
+   GLOW EFFECTS
+   ============================================================ */
+
+.glow-orange { box-shadow: 0 0 28px rgba(240,90,40,0.40); }
+.glow-wallet  { box-shadow: 0 8px 40px rgba(240,90,40,0.38); }
+
+/* ============================================================
+   GRADIENT TEXT
+   ============================================================ */
+
+.text-gradient {
+  background: linear-gradient(135deg, #F05A28 0%, #FFB347 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   SCROLL REVEAL  (toggled by IntersectionObserver in JS)
+   ============================================================ */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   WALLET CARD
+   ============================================================ */
+
+.wallet-card-gradient {
+  background: linear-gradient(135deg, #0A1628 0%, #1a2d4e 45%, #F05A28 100%);
+}
+
+/* ============================================================
+   MISC UTILITIES
+   ============================================================ */
+
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* Dot grid background for hero sections */
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Mesh gradient overlay */
+.mesh-overlay {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(240,90,40,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 80% 70%, rgba(10,22,40,0.30) 0%, transparent 60%);
+}
