@@ -54,7 +54,7 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
   const stepIdx = getStepIndex(shipment.status)
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
       {/* Header */}
       <div
         className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/20 transition-colors"
@@ -190,7 +190,7 @@ export function ShipmentsPage() {
   )
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-[#F4F5F7]">
       <div className="px-5 pt-5 pb-4">
         <h1 className="text-2xl font-bold tracking-tight">Expéditions</h1>
         <p className="text-sm text-muted-foreground">{shipments.length} expédition{shipments.length !== 1 ? 's' : ''}</p>
@@ -216,7 +216,7 @@ export function ShipmentsPage() {
         {loading ? (
           [1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
             <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
             <p className="font-semibold text-muted-foreground">
               {filter === 'active' ? 'Aucune expédition en cours' : 'Aucune expédition terminée'}

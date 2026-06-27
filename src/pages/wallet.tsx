@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -99,7 +98,7 @@ export function WalletPage() {
     .reduce((s, t) => s + t.amount, 0)
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-[#F4F5F7]">
 
       {/* Page header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4 stagger-item">
@@ -109,10 +108,13 @@ export function WalletPage() {
         </div>
         <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="rounded-full gap-1.5 shadow-sm">
+            <button
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
               <Plus className="h-4 w-4" />
               Recharger
-            </Button>
+            </button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -124,15 +126,19 @@ export function WalletPage() {
                 <Label>Montant (HTG)</Label>
                 <div className="grid grid-cols-4 gap-2">
                   {[1000, 5000, 10000, 25000].map((a) => (
-                    <Button
+                    <button
                       key={a}
-                      variant={topupAmount === a.toString() ? 'default' : 'outline'}
-                      size="sm"
-                      className="rounded-xl"
                       onClick={() => setTopupAmount(a.toString())}
+                      className={cn(
+                        'rounded-xl py-2 text-sm font-semibold border transition-colors',
+                        topupAmount === a.toString()
+                          ? 'text-white border-transparent'
+                          : 'border-gray-200 bg-white text-foreground hover:border-primary/40'
+                      )}
+                      style={topupAmount === a.toString() ? { background: 'linear-gradient(135deg, #F05A28, #D44E21)' } : undefined}
                     >
                       {(a / 1000).toFixed(0)}k
-                    </Button>
+                    </button>
                   ))}
                 </div>
                 <Input
@@ -140,7 +146,7 @@ export function WalletPage() {
                   placeholder="Montant personnalisé"
                   value={topupAmount}
                   onChange={(e) => setTopupAmount(e.target.value)}
-                  className="rounded-xl"
+                  className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium focus-visible:ring-1 focus-visible:ring-primary/40"
                 />
               </div>
               <div className="space-y-2">
@@ -168,11 +174,16 @@ export function WalletPage() {
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setTopupOpen(false)} className="rounded-xl">Annuler</Button>
-              <Button onClick={handleTopup} disabled={!topupAmount || parseFloat(topupAmount) < 100 || submitting} className="rounded-xl">
-                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <button onClick={() => setTopupOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">Annuler</button>
+              <button
+                onClick={handleTopup}
+                disabled={!topupAmount || parseFloat(topupAmount) < 100 || submitting}
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+              >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Confirmer
-              </Button>
+              </button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -267,7 +278,8 @@ export function WalletPage() {
         <div className="flex gap-3">
           <button
             onClick={() => setTopupOpen(true)}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-primary text-white py-3.5 text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors pressable"
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity pressable"
+            style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
             <img src={IconDistributeur} alt="" className="h-5 w-5 object-contain" />
             Recharger
@@ -281,7 +293,7 @@ export function WalletPage() {
 
       {/* Stats mini cards */}
       <div className="px-4 pb-5 grid grid-cols-2 gap-3 stagger-item" style={{ animationDelay: '140ms' }}>
-        <div className="rounded-2xl bg-white border border-border/60 p-4 shadow-sm">
+        <div className="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 mb-2">
             <img src={IconPieces} alt="" className="h-6 w-6 object-contain" />
           </div>
@@ -293,7 +305,7 @@ export function WalletPage() {
           )}
           <p className="text-[10px] text-muted-foreground mt-0.5">HTG</p>
         </div>
-        <div className="rounded-2xl bg-white border border-border/60 p-4 shadow-sm">
+        <div className="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/8 mb-2">
             <ArrowUpRight className="h-5 w-5 text-destructive" />
           </div>
@@ -316,12 +328,12 @@ export function WalletPage() {
             {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}
           </div>
         ) : transactions.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-white p-8 text-center shadow-sm">
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm">
             <CreditCard className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
             <p className="text-sm font-semibold text-muted-foreground">Aucune transaction</p>
           </div>
         ) : (
-          <div className="rounded-2xl bg-white border border-border/60 overflow-hidden shadow-sm divide-y divide-border/60">
+          <div className="rounded-2xl bg-white border border-gray-100 overflow-hidden shadow-sm divide-y divide-border/60">
             {transactions.map((tx) => {
               const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
               const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'

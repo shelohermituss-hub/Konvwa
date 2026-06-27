@@ -166,7 +166,7 @@ export function ProfilePage() {
         {sections.map((section) => (
           <div key={section.title}>
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-2">{section.title}</p>
-            <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden divide-y divide-border/60">
+            <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden divide-y divide-border/60">
               {section.rows.map((row) => {
                 const content = (
                   <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer active:bg-muted/50">
@@ -530,7 +530,7 @@ function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }
           {/* Notifications */}
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-2">Notifications</p>
-            <div className="rounded-2xl border border-border/60 bg-white overflow-hidden divide-y divide-border/60">
+            <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden divide-y divide-border/60">
               {[
                 { label: 'Notifications push', desc: "Alertes en temps réel sur l'app", value: pushNotif, set: setPushNotif },
                 { label: 'Notifications email', desc: 'Mises à jour par email', value: emailNotif, set: setEmailNotif },
@@ -550,7 +550,7 @@ function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }
           {/* Sécurité */}
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-2">Sécurité</p>
-            <div className="rounded-2xl border border-border/60 bg-white overflow-hidden">
+            <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
               <div className="flex items-center justify-between gap-3 px-4 py-3.5">
                 <div>
                   <p className="text-sm font-medium text-foreground">Authentification biométrique</p>

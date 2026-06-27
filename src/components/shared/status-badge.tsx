@@ -1,5 +1,5 @@
-import { Badge } from '@/components/ui/badge'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from '@/lib/utils'
 import type { OrderStatus, ShipmentStatus, QuoteStatus, PaymentStatus, TicketStatus } from '@/types'
 
 const statusVariants = cva('', {
@@ -110,8 +110,8 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     : 'default'
 
   return (
-    <Badge variant="outline" className={statusVariants({ variant, className })}>
+    <span className={cn('inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold leading-none', statusVariants({ variant }), className)}>
       {statusLabels[status] || status}
-    </Badge>
+    </span>
   )
 }

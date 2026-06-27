@@ -96,7 +96,7 @@ function AdminSidebar() {
 
 function AdminTopBar() {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-background px-6">
+    <header className="flex h-14 items-center justify-between border-b border-gray-100 bg-white px-6">
       <SidebarTrigger className="-ml-2" />
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon">
@@ -113,7 +113,7 @@ export function AdminLayout() {
       <AdminSidebar />
       <SidebarInset>
         <AdminTopBar />
-        <main className="flex-1 overflow-auto p-6 bg-muted/30">
+        <main className="flex-1 overflow-auto p-6 bg-[#F4F5F7]">
           <Outlet />
         </main>
       </SidebarInset>

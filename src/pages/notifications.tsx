@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Bell, Check, Trash2, Info, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
@@ -75,7 +74,7 @@ export function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-[#F4F5F7]">
       {/* Header */}
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <div>
@@ -85,10 +84,10 @@ export function NotificationsPage() {
           )}
         </div>
         {unread.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={markAllRead} className="rounded-full gap-1.5 text-primary">
+          <button onClick={markAllRead} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary bg-primary/8 hover:bg-primary/15 transition-colors">
             <Check className="h-3.5 w-3.5" />
             Tout lire
-          </Button>
+          </button>
         )}
       </div>
 
@@ -96,7 +95,7 @@ export function NotificationsPage() {
         {loading ? (
           [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20 rounded-2xl" />)
         ) : notifications.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center shadow-sm">
             <Bell className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
             <p className="font-semibold text-muted-foreground">Aucune notification</p>
             <p className="text-xs text-muted-foreground/70 mt-1">Vous serez notifié des mises à jour ici</p>
@@ -119,7 +118,7 @@ export function NotificationsPage() {
                   )}
                   <div className={cn(
                     'relative flex gap-3 rounded-2xl p-4 transition-colors',
-                    isUnread ? 'bg-card border border-border shadow-sm' : 'bg-muted/30 border border-transparent'
+                    isUnread ? 'bg-white border border-gray-100 shadow-sm' : 'bg-white/60 border border-transparent'
                   )}>
                     <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl shrink-0', config.iconBg)}>
                       {imgSrc

@@ -25,7 +25,7 @@ interface KpiCardProps {
 
 function KpiCard({ title, value, icon: Icon, iconClass, bgClass, trend, loading }: KpiCardProps) {
   return (
-    <div className="rounded-2xl bg-white border border-border/60 shadow-sm p-5 hover:shadow-md transition-shadow">
+    <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
         <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl', bgClass)}>
           <Icon className={cn('h-5 w-5', iconClass)} />
@@ -137,8 +137,8 @@ export function AdminDashboard() {
 
       {/* ── Charts ── */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-border/50">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
             <h3 className="font-semibold text-sm text-foreground">Commandes par mois</h3>
             <p className="text-xs text-muted-foreground mt-0.5">6 derniers mois</p>
           </div>
@@ -161,8 +161,8 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-border/50">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
             <h3 className="font-semibold text-sm text-foreground">Revenus par mois</h3>
             <p className="text-xs text-muted-foreground mt-0.5">En HTG, 6 derniers mois</p>
           </div>
@@ -224,14 +224,14 @@ export function AdminDashboard() {
           value={stats.loading ? '—' : stats.newUsersThisMonth}
           label="Nouveaux clients ce mois"
           colorClass="text-foreground"
-          bgClass="bg-card border border-border/60"
+          bgClass="bg-card border border-gray-100"
           href="/admin/users"
         />
       </div>
 
       {/* ── Recent orders ── */}
-      <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+      <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
             <h3 className="font-semibold text-sm text-foreground">Commandes récentes</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Dernières commandes reçues</p>

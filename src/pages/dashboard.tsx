@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { StatusBadge } from '@/components/shared/status-badge'
@@ -74,7 +73,7 @@ export function DashboardPage() {
     : '——  ——  ——  ——'
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-[#F4F5F7]">
 
       {/* ── Greeting ── */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
@@ -91,10 +90,13 @@ export function DashboardPage() {
           </div>
         </div>
         <Link to="/submit">
-          <Button size="sm" className="rounded-full gap-1.5 shadow-sm">
+          <button
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
+            style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+          >
             <Plus className="h-3.5 w-3.5" />
             Nouveau
-          </Button>
+          </button>
         </Link>
       </div>
 
@@ -105,7 +107,7 @@ export function DashboardPage() {
         ) : (
           <>
             <Link to="/orders">
-              <div className="rounded-2xl bg-white border border-border/60 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
+              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/8">
                     <ShoppingBag className="h-4 w-4 text-primary" />
@@ -117,7 +119,7 @@ export function DashboardPage() {
             </Link>
 
             <Link to="/shipments">
-              <div className="rounded-2xl bg-white border border-border/60 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
+              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
                     <Ship className="h-4 w-4 text-blue-500" />
@@ -129,7 +131,7 @@ export function DashboardPage() {
             </Link>
 
             <Link to="/wallet">
-              <div className="rounded-2xl bg-white border border-border/60 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
+              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50">
                     <img src={IconWallet} alt="" className="h-5 w-5 object-contain" />
@@ -229,7 +231,10 @@ export function DashboardPage() {
       <div className="px-4 pb-5">
         <div className="flex gap-3">
           <Link to="/wallet" className="flex-1">
-            <button className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary text-white py-3.5 text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors">
+            <button
+              className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
               <ArrowDownLeft className="h-4 w-4" />
               Recharger
             </button>
@@ -248,7 +253,7 @@ export function DashboardPage() {
         <div className="grid grid-cols-4 gap-3">
           {QUICK_ACTIONS.map((action) => (
             <Link key={action.path} to={action.path} className="flex flex-col items-center gap-2 group">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-border/60 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-gray-100 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
                 <img src={action.icon} alt={action.label} className="h-8 w-8 object-contain" />
               </div>
               <span className="text-xs font-semibold text-foreground text-center leading-tight">
@@ -297,12 +302,14 @@ export function DashboardPage() {
             <Package className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
             <p className="text-sm font-semibold text-muted-foreground">Aucune commande</p>
             <p className="text-xs text-muted-foreground/70 mt-1">Soumettez votre premier produit</p>
-            <Button asChild size="sm" className="mt-4 rounded-full">
-              <Link to="/submit">
-                <Plus className="mr-1.5 h-3.5 w-3.5" />
-                Soumettre
-              </Link>
-            </Button>
+            <Link
+              to="/submit"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Soumettre
+            </Link>
           </div>
         ) : (
           <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -186,27 +185,34 @@ export function SubmitPage() {
 
   if (success) {
     return (
-      <div className="min-h-full bg-background flex items-center justify-center px-4 py-12">
+      <div className="min-h-full bg-[#F4F5F7] flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-success/10 mx-auto mb-5">
-            <CheckCircle2 className="h-10 w-10 text-success" />
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 mx-auto mb-5">
+            <CheckCircle2 className="h-10 w-10 text-emerald-500" />
           </div>
           <h2 className="text-xl font-bold mb-2">Demande envoyée !</h2>
           <p className="text-sm text-muted-foreground mb-6">
             Notre équipe analyse votre demande et vous enverra un devis sous 24h.
           </p>
           <div className="flex flex-col gap-3">
-            <Button onClick={() => navigate('/orders')} className="rounded-xl">
+            <button
+              onClick={() => navigate('/orders')}
+              className="w-full rounded-xl py-3 text-sm font-bold text-white hover:opacity-90 transition-opacity"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
               Voir mes commandes
-            </Button>
-            <Button variant="outline" onClick={() => {
-              setSuccess(false)
-              setProductUrl(''); setProductName(''); setCategory('')
-              setQuantity('10'); setPriceUSD(''); setWeightKg('')
-              setSize(''); setColor(''); setUrgency('normal'); setNotes('')
-            }} className="rounded-xl">
+            </button>
+            <button
+              onClick={() => {
+                setSuccess(false)
+                setProductUrl(''); setProductName(''); setCategory('')
+                setQuantity('10'); setPriceUSD(''); setWeightKg('')
+                setSize(''); setColor(''); setUrgency('normal'); setNotes('')
+              }}
+              className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold hover:bg-gray-50 transition-colors"
+            >
               Nouvelle demande
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -416,17 +422,17 @@ export function SubmitPage() {
 
             {/* Submit on mobile */}
             <div className="lg:hidden">
-              <Button
+              <button
                 type="submit"
                 disabled={submitting || !productName.trim() || !category}
-                className="w-full rounded-2xl h-13 text-base font-bold gap-2 shadow-sm"
-                style={{ height: '52px' }}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                style={{ height: '52px', background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               >
                 {submitting
                   ? <><Loader2 className="h-4 w-4 animate-spin" />Envoi en cours…</>
                   : <><SendHorizonal className="h-4 w-4" />Soumettre la commande</>
                 }
-              </Button>
+              </button>
             </div>
           </div>
 

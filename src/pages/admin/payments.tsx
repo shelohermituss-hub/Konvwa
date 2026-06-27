@@ -147,7 +147,7 @@ export function AdminPaymentsPage() {
           { label: 'Validés',          value: transactions.filter(t => t.status === 'completed').length,  icon: CheckCircle2, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
           { label: 'Total validé',     value: `${transactions.filter(t => t.status === 'completed' && t.type === 'deposit').reduce((s, t) => s + t.amount, 0).toLocaleString()} HTG`, icon: TrendingUp, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
         ].map(kpi => (
-          <div key={kpi.label} className="rounded-2xl bg-white border border-border/60 shadow-sm p-4">
+          <div key={kpi.label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
             <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl mb-3', kpi.bg)}>
               <kpi.icon className={cn('h-5 w-5', kpi.iconColor)} />
             </div>
@@ -158,8 +158,8 @@ export function AdminPaymentsPage() {
       </div>
 
       {/* Filters + table */}
-      <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-border/50">
+      <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-gray-100">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
