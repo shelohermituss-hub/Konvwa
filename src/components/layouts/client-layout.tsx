@@ -7,11 +7,11 @@ import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 
-import IconAccueil       from '@/assets/icons/accueil.png'
-import IconCommandes     from '@/assets/icons/commandes.png'
-import IconExpeditions   from '@/assets/icons/expeditions.png'
-import IconNotifications from '@/assets/icons/notifications.png'
-import IconProfil        from '@/assets/icons/profil.png'
+import IconAccueil       from 'flat-color-icons/svg/home.svg'
+import IconCommandes     from 'flat-color-icons/svg/briefcase.svg'
+import IconExpeditions   from 'flat-color-icons/svg/shipped.svg'
+import IconNotifications from 'flat-color-icons/svg/comments.svg'
+import IconProfil        from 'flat-color-icons/svg/contacts.svg'
 
 const NAV_ITEMS = [
   { label: 'Accueil',     icon: IconAccueil,       path: '/dashboard' },

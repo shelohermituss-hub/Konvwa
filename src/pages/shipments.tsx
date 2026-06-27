@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
-import IconNavire from '@/assets/icons/navire.png'
+import IconNavire from 'flat-color-icons/svg/in_transit.svg'
 
 interface MyShipment {
   shipment_id: string

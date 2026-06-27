@@ -8,11 +8,11 @@ import { Plus, Package, Eye, EyeOff, ArrowDownLeft, TrendingUp, ChevronRight, Wa
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 
-import IconSoumettre    from '@/assets/icons/soumettre.png'
-import IconCommandes    from '@/assets/icons/commandes.png'
-import IconExpeditions  from '@/assets/icons/expeditions.png'
-import IconSupport      from '@/assets/icons/support.png'
-import IconBoite        from '@/assets/icons/boite.png'
+import IconSoumettre    from 'flat-color-icons/svg/import.svg'
+import IconCommandes    from 'flat-color-icons/svg/briefcase.svg'
+import IconExpeditions  from 'flat-color-icons/svg/shipped.svg'
+import IconSupport      from 'flat-color-icons/svg/support.svg'
+import IconBoite        from 'flat-color-icons/svg/package.svg'
 
 interface DashboardOrder {
   id: string

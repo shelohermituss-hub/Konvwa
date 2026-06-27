@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
-import IconBoite from '@/assets/icons/boite.png'
+import IconBoite from 'flat-color-icons/svg/package.svg'
 
 interface OrderRow {
   id: string
