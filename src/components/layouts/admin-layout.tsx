@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
+import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger, SidebarRail } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -31,13 +32,8 @@ function AdminSidebar() {
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border px-6 py-4">
         <Link to="/admin" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-            K
-          </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-lg">KONVWA</span>
-            <span className="text-xs text-muted-foreground">Administration</span>
-          </div>
+          <KonvwaLogo size={26} />
+          <span className="text-xs text-muted-foreground ml-1">Administration</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
