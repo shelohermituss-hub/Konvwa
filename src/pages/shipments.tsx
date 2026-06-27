@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
 import { Ship, Package, MapPin, Calendar, Anchor, CheckCircle2, Clock, Truck, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -67,9 +66,9 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-bold text-sm font-mono">{shipment.batch_code}</p>
-            <Badge className={cn('rounded-full text-[10px] px-2 py-0 h-4', STATUS_COLOR[shipment.status])}>
+            <span className={cn('rounded-full text-[10px] px-2 py-0.5 font-semibold', STATUS_COLOR[shipment.status])}>
               {SHIPMENT_STEPS.find(s => s.key === shipment.status)?.label || shipment.status}
-            </Badge>
+            </span>
           </div>
           <p className="text-xs text-muted-foreground truncate mt-0.5">{shipment.product_name}</p>
           {shipment.vessel_info && (
@@ -122,7 +121,7 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
                       {step.label}
                     </span>
                     {isCurrent && (
-                      <Badge className="bg-primary/10 text-primary text-[10px] px-2 rounded-full">Actuel</Badge>
+                      <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold">Actuel</span>
                     )}
                   </div>
                 </div>

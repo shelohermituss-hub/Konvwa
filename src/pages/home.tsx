@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { Badge } from '@/components/ui/badge'
 import {
   ArrowRight, Calculator, CreditCard, Truck, ShoppingBag,
   Smartphone, Package, Zap, Globe, Laptop, Shirt, Home as HomeIcon,
@@ -215,10 +214,10 @@ export function HomePage() {
 
         <div className="relative z-10 container px-4 mx-auto lg:px-8 py-24">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge className="mb-8 bg-white/10 text-white/90 border-white/20 backdrop-blur-sm animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-              <Zap className="h-3 w-3 mr-1.5 text-primary" />
+            <span className="inline-flex items-center gap-1.5 mb-8 px-3 py-1.5 rounded-full bg-white/10 text-white/90 border border-white/20 backdrop-blur-sm text-xs font-semibold animate-fade-in-up" style={{ animationDelay: '0ms' }}>
+              <Zap className="h-3 w-3 text-primary" />
               Importation simplifiée pour Haïti
-            </Badge>
+            </span>
 
             {/* Animated headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white mb-3">
@@ -443,10 +442,10 @@ export function HomePage() {
           style={{ background: 'radial-gradient(circle, rgba(240,90,40,0.5) 0%, transparent 70%)' }}
         />
         <RevealSection className="relative z-10 container px-4 mx-auto lg:px-8 text-center">
-          <Badge className="mb-8 bg-white/10 text-white/80 border-white/20">
-            <Sparkles className="h-3 w-3 mr-1.5 text-primary" />
+          <span className="inline-flex items-center gap-1.5 mb-8 px-3 py-1.5 rounded-full bg-white/10 text-white/80 border border-white/20 text-xs font-semibold">
+            <Sparkles className="h-3 w-3 text-primary" />
             Gratuit et sans engagement
-          </Badge>
+          </span>
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
             Prêt à commencer ?
           </h2>
