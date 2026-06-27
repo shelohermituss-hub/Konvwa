@@ -6,7 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { TimelineStep } from '@/components/shared/timeline-step'
-import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, Package, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink } from 'lucide-react'
+import IconBoite from '@/assets/icons/boite.png'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
@@ -131,27 +132,12 @@ export function OrderDetailPage() {
     }
     setPaying(true)
     try {
-      const { error: txErr } = await supabase.from('wallet_transactions').insert({
-        wallet_id: wallet.id,
-        type: 'payment',
-        amount: total,
-        status: 'completed',
-        description: `Paiement commande ${order.tracking_code}`,
-      })
-      if (txErr) throw txErr
-
-      const { error: wErr } = await supabase
-        .from('wallets')
-        .update({ available_balance: wallet.available_balance - total })
-        .eq('id', wallet.id)
-      if (wErr) throw wErr
-
-      const { error: oErr } = await supabase
-        .from('orders')
-        .update({ total_paid: total, payment_status: 'paid', status: 'processing' })
-        .eq('id', order.id)
-      if (oErr) throw oErr
-
+      const { data, error } = await supabase.rpc('pay_order', { p_order_id: order.id })
+      if (error) throw error
+      if (!data?.success) {
+        toast.error(data?.error || 'Erreur lors du paiement.')
+        return
+      }
       toast.success('Paiement effectué ! Votre commande est en cours de traitement.')
       setOrder(prev => prev ? { ...prev, status: 'processing', payment_status: 'paid', total_paid: total } : null)
       setWallet(prev => prev ? { ...prev, available_balance: prev.available_balance - total } : null)
@@ -177,7 +163,7 @@ export function OrderDetailPage() {
     return (
       <div className="min-h-full bg-[#F4F5F7] flex items-center justify-center px-4">
         <div className="text-center">
-          <Package className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+          <img src={IconBoite} alt="" className="h-14 w-14 mx-auto opacity-30 mb-3" />
           <p className="text-muted-foreground mb-4 font-medium">Commande introuvable.</p>
           <Button asChild variant="outline" className="rounded-xl">
             <Link to="/orders"><ArrowLeft className="mr-2 h-4 w-4" />Retour</Link>

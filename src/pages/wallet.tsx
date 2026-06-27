@@ -5,7 +5,9 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Smartphone, Loader2, Eye, EyeOff, Package } from 'lucide-react'
+import { Plus, ArrowUpRight, CreditCard, Smartphone, Loader2, Eye, EyeOff, Package } from 'lucide-react'
+import IconPieces       from '@/assets/icons/pieces.png'
+import IconDistributeur from '@/assets/icons/distributeur.png'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -180,7 +182,7 @@ export function WalletPage() {
       <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
         <div
           className="rounded-3xl p-5 text-white relative overflow-hidden shadow-[0_8px_40px_rgba(10,22,40,0.28)]"
-          style={{ background: 'linear-gradient(135deg, #3B27CC 0%, #5040DE 45%, #3B2ABB 100%)', minHeight: 200 }}
+          style={{ background: 'linear-gradient(135deg, #1E5221 0%, #2E7D32 45%, #4CAF50 100%)', minHeight: 200 }}
         >
           {/* Decorative blobs */}
           <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-white/5" />
@@ -255,7 +257,7 @@ export function WalletPage() {
             onClick={() => setTopupOpen(true)}
             className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-primary text-white py-3.5 text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors pressable"
           >
-            <ArrowDownLeft className="h-4 w-4" />
+            <img src={IconDistributeur} alt="" className="h-5 w-5 object-contain" />
             Recharger
           </button>
           <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors pressable shadow-sm">
@@ -268,8 +270,8 @@ export function WalletPage() {
       {/* Stats mini cards */}
       <div className="px-4 pb-5 grid grid-cols-2 gap-3 stagger-item" style={{ animationDelay: '140ms' }}>
         <div className="rounded-2xl bg-white border border-border/60 p-4 shadow-sm">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 mb-2">
-            <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 mb-2">
+            <img src={IconPieces} alt="" className="h-6 w-6 object-contain" />
           </div>
           <p className="text-xs text-muted-foreground font-medium">Total rechargé</p>
           {loading ? <Skeleton className="h-6 w-24 mt-1" /> : (
@@ -280,7 +282,7 @@ export function WalletPage() {
           <p className="text-[10px] text-muted-foreground mt-0.5">HTG</p>
         </div>
         <div className="rounded-2xl bg-white border border-border/60 p-4 shadow-sm">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-destructive/8 mb-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/8 mb-2">
             <ArrowUpRight className="h-5 w-5 text-destructive" />
           </div>
           <p className="text-xs text-muted-foreground font-medium">Total dépensé</p>

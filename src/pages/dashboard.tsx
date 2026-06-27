@@ -12,6 +12,7 @@ import IconSoumettre    from '@/assets/icons/soumettre.png'
 import IconCommandes    from '@/assets/icons/commandes.png'
 import IconExpeditions  from '@/assets/icons/expeditions.png'
 import IconSupport      from '@/assets/icons/support.png'
+import IconBoite        from '@/assets/icons/boite.png'
 
 interface DashboardOrder {
   id: string
@@ -99,7 +100,7 @@ export function DashboardPage() {
       <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
         <div
           className="rounded-3xl p-5 text-white relative overflow-hidden shadow-[0_8px_40px_rgba(10,22,40,0.28)]"
-          style={{ background: 'linear-gradient(135deg, #3B27CC 0%, #5040DE 45%, #3B2ABB 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #1E5221 0%, #2E7D32 45%, #4CAF50 100%)' }}
         >
           {/* Decorative blobs */}
           <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-white/5" />
@@ -161,26 +162,25 @@ export function DashboardPage() {
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="h-px bg-white/10" />
-
-            {/* Action buttons at the BOTTOM of the card */}
-            <div className="flex gap-2.5">
-              <Link to="/wallet" className="flex-1">
-                <button className="w-full flex items-center justify-center gap-1.5 rounded-2xl bg-white text-primary py-2.5 text-xs font-bold shadow-sm hover:bg-white/95 transition-colors pressable">
-                  <ArrowDownLeft className="h-3.5 w-3.5" />
-                  Recharger
-                </button>
-              </Link>
-              <Link to="/orders" className="flex-1">
-                <button className="w-full flex items-center justify-center gap-1.5 rounded-2xl border border-white/25 bg-white/10 text-white py-2.5 text-xs font-semibold hover:bg-white/20 transition-colors pressable">
-                  <TrendingUp className="h-3.5 w-3.5" />
-                  Historique
-                </button>
-              </Link>
-            </div>
-
           </div>
+        </div>
+      </div>
+
+      {/* Action buttons below the card — same layout as wallet page */}
+      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '90ms' }}>
+        <div className="flex gap-3">
+          <Link to="/wallet" className="flex-1">
+            <button className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary text-white py-3.5 text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors pressable">
+              <ArrowDownLeft className="h-4 w-4" />
+              Recharger
+            </button>
+          </Link>
+          <Link to="/orders" className="flex-1">
+            <button className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors pressable shadow-sm">
+              <TrendingUp className="h-4 w-4" />
+              Historique
+            </button>
+          </Link>
         </div>
       </div>
 
@@ -250,8 +250,8 @@ export function DashboardPage() {
             {orders.map((order) => (
               <Link key={order.id} to={`/orders/${order.id}`}>
                 <div className="flex items-center gap-3 rounded-2xl bg-white border border-border/60 p-4 shadow-sm hover:border-primary/25 hover:shadow-md transition-all pressable">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-                    <Package className="h-5 w-5 text-primary" />
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/8 shrink-0">
+                    <img src={IconBoite} alt="" className="h-7 w-7 object-contain" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate text-foreground">
