@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-import IconValide from '@/assets/icons/valide.png'
+import IconValide from 'flat-color-icons/svg/ok.svg'
 
 interface Notification {
   id: string
