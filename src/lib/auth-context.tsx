@@ -68,12 +68,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!error && data) {
       setProfile(data as Profile)
+    } else if (!error && !data) {
+      // Profile not yet created (e.g. trigger delay) — try once more after a short wait
+      await new Promise(r => setTimeout(r, 800))
+      const { data: retryData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle()
+      if (retryData) setProfile(retryData as Profile)
     }
     setLoading(false)
   }
 
   async function signUp(email: string, password: string, fullName: string, phone?: string) {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -86,6 +95,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       return { error: new Error(error.message) }
+    }
+
+    // Ensure profile + wallet exist (trigger may not have fired yet)
+    if (data.user) {
+      await supabase.from('profiles').upsert({
+        user_id: data.user.id,
+        full_name: fullName,
+        phone: phone || null,
+        role: 'client',
+      }, { onConflict: 'user_id' })
+
+      await supabase.from('wallets').upsert({
+        user_id: data.user.id,
+        available_balance: 0,
+        blocked_balance: 0,
+      }, { onConflict: 'user_id' })
     }
 
     return { error: null }

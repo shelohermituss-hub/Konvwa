@@ -102,12 +102,11 @@ export function OrderDetailPage() {
   }
 
   async function handleAcceptQuote() {
-    if (!order?.quotes?.id) return
+    if (!order) return
     setAccepting(true)
-    const { error: qErr } = await supabase.from('quotes').update({ status: 'accepted' }).eq('id', order.quotes.id)
-    const { error: oErr } = await supabase.from('orders').update({ status: 'awaiting_payment' }).eq('id', order.id)
-    if (qErr || oErr) {
-      toast.error('Erreur lors de l\'acceptation du devis.')
+    const { data, error } = await supabase.rpc('accept_quote', { p_order_id: order.id })
+    if (error || !data?.success) {
+      toast.error(data?.error || 'Erreur lors de l\'acceptation du devis.')
     } else {
       toast.success('Devis accepté ! Procédez au paiement.')
       setOrder(prev => prev ? { ...prev, status: 'awaiting_payment' } : null)
@@ -116,11 +115,14 @@ export function OrderDetailPage() {
   }
 
   async function handleRejectQuote() {
-    if (!order?.quotes?.id) return
-    await supabase.from('quotes').update({ status: 'rejected' }).eq('id', order.quotes.id)
-    await supabase.from('orders').update({ status: 'cancelled' }).eq('id', order.id)
-    toast.info('Devis refusé.')
-    setOrder(prev => prev ? { ...prev, status: 'cancelled' } : null)
+    if (!order) return
+    const { data, error } = await supabase.rpc('reject_quote', { p_order_id: order.id })
+    if (error || !data?.success) {
+      toast.error(data?.error || 'Erreur lors du refus du devis.')
+    } else {
+      toast.info('Devis refusé.')
+      setOrder(prev => prev ? { ...prev, status: 'cancelled' } : null)
+    }
   }
 
   async function handlePayNow() {
@@ -139,7 +141,7 @@ export function OrderDetailPage() {
         return
       }
       toast.success('Paiement effectué ! Votre commande est en cours de traitement.')
-      setOrder(prev => prev ? { ...prev, status: 'processing', payment_status: 'paid', total_paid: total } : null)
+      setOrder(prev => prev ? { ...prev, status: 'paid', payment_status: 'paid', total_paid: total } : null)
       setWallet(prev => prev ? { ...prev, available_balance: prev.available_balance - total } : null)
     } catch {
       toast.error('Erreur lors du paiement. Réessayez.')
