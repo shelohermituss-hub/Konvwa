@@ -47,7 +47,7 @@ interface WalletData {
 
 function InfoRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
+    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
       <span className={`text-sm font-semibold text-foreground ${valueClass ?? ''}`}>{value}</span>
     </div>
@@ -185,7 +185,7 @@ export function OrderDetailPage() {
     <div className="min-h-full bg-[#F4F5F7] pb-10">
 
       {/* Header */}
-      <div className="bg-white border-b border-border/60 px-4 pt-4 pb-4 sticky top-0 z-20 shadow-sm">
+      <div className="bg-white border-b border-gray-100 px-4 pt-4 pb-4 sticky top-0 z-20 shadow-sm">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild className="h-9 w-9 rounded-xl">
             <Link to="/orders"><ArrowLeft className="h-4 w-4" /></Link>
@@ -203,7 +203,7 @@ export function OrderDetailPage() {
       <div className="px-4 pt-4 space-y-3">
 
         {/* Status tracker */}
-        <div className="rounded-2xl bg-white border border-border/60 shadow-sm px-4 py-4">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm px-4 py-4">
           <OrderStatusTracker status={order.status} />
         </div>
 
@@ -302,8 +302,8 @@ export function OrderDetailPage() {
         )}
 
         {/* Détails commande */}
-        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-border/50">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Détails commande</p>
           </div>
           <div className="px-4 divide-y divide-border/50">
@@ -332,36 +332,36 @@ export function OrderDetailPage() {
 
         {/* Résumé paiement */}
         {order.quotes && (
-          <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-border/50">
+          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Résumé paiement</p>
             </div>
             <div className="px-4 py-2">
-              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">Prix produit</span>
                 <span className="font-medium">{order.quotes.product_price.toLocaleString('fr-HT')} HTG</span>
               </div>
-              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">Quantité</span>
                 <span className="font-medium">× {order.quotes.quantity}</span>
               </div>
-              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">Frais de service</span>
                 <span className="font-medium">{order.quotes.service_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
-              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">Frais d'achat</span>
                 <span className="font-medium">{order.quotes.purchase_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
-              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">Frais maritime</span>
                 <span className="font-medium">{order.quotes.shipping_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
-              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">Douane estimée</span>
                 <span className="font-medium">{order.quotes.customs_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
-              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">Livraison locale</span>
                 <span className="font-medium">{order.quotes.local_delivery_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
@@ -379,8 +379,8 @@ export function OrderDetailPage() {
         )}
 
         {/* Suivi timeline */}
-        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-border/50 flex items-center gap-2">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm font-bold text-foreground">Suivi de la commande</p>
           </div>
@@ -391,7 +391,7 @@ export function OrderDetailPage() {
 
         {/* Expédition */}
         {delivery && (
-          <div className="rounded-2xl bg-white border border-border/60 shadow-sm px-4 py-4 flex items-center gap-3">
+          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm px-4 py-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
               <Calendar className="h-5 w-5 text-primary" />
             </div>
@@ -403,7 +403,7 @@ export function OrderDetailPage() {
         )}
 
         {/* Support */}
-        <div className="rounded-2xl bg-white border border-border/60 shadow-sm px-4 py-4 flex items-center justify-between">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm px-4 py-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-bold text-foreground">Besoin d'aide ?</p>
             <p className="text-xs text-muted-foreground mt-0.5">Notre équipe est disponible</p>

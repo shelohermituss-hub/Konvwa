@@ -65,9 +65,9 @@ function DesktopSidebar({ unread }: { unread: number }) {
     : 'U'
 
   return (
-    <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-[240px] xl:w-[260px] border-r border-border/60 bg-white z-40 shadow-sm">
+    <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-[240px] xl:w-[260px] border-r border-gray-100 bg-white z-40 shadow-sm">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b border-border/50 shrink-0">
+      <div className="flex items-center gap-3 px-5 h-16 border-b border-gray-100 shrink-0">
         <Link to="/dashboard" className="flex items-center gap-3">
           <KonvwaLogo size={32} />
           <div className="leading-none">
@@ -139,7 +139,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
       </nav>
 
       {/* Profile + signout */}
-      <div className="px-3 py-3 border-t border-border/50 shrink-0">
+      <div className="px-3 py-3 border-t border-gray-100 shrink-0">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/40 transition-colors">
           <Avatar className="h-8 w-8 shrink-0 ring-1 ring-border">
             <AvatarImage src={profile?.avatar_url || ''} />
@@ -172,7 +172,7 @@ function TopHeader({ unread }: { unread: number }) {
     : 'U'
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-white/95 backdrop-blur-md px-5 border-b border-border/60 shadow-sm">
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-white/95 backdrop-blur-md px-5 border-b border-gray-100 shadow-sm">
       <Link to="/dashboard">
         <KonvwaLogo size={30} />
       </Link>
@@ -205,7 +205,7 @@ function BottomNav({ unread }: { unread: number }) {
   const location = useLocation()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-border/60 pb-safe shadow-[0_-1px_12px_rgba(10,22,40,0.06)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-100 pb-safe shadow-[0_-1px_12px_rgba(10,22,40,0.06)]">
       <div className="flex items-stretch h-16">
         {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path ||

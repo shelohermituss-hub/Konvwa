@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -79,7 +78,7 @@ export function SupportPage() {
   }
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-[#F4F5F7]">
       <div className="px-5 pt-5 pb-4">
         <h1 className="text-2xl font-bold tracking-tight">Support</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Besoin d'aide ? Nous répondons rapidement.</p>
@@ -87,7 +86,7 @@ export function SupportPage() {
 
       <div className="px-4 pb-6 space-y-4">
         {/* New ticket form */}
-        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
               <Plus className="h-4 w-4 text-primary" />
@@ -105,13 +104,13 @@ export function SupportPage() {
                 placeholder="Résumé de votre demande"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="rounded-xl"
+                className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium focus-visible:ring-1 focus-visible:ring-primary/40"
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="priority" className="text-sm font-semibold">Priorité</Label>
               <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium focus:ring-1 focus:ring-primary/40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -130,22 +129,23 @@ export function SupportPage() {
                 rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="rounded-xl resize-none"
+                className="rounded-xl bg-[#F0F1F5] border-0 font-medium resize-none focus-visible:ring-1 focus-visible:ring-primary/40"
               />
             </div>
-            <Button
-              className="w-full rounded-xl"
+            <button
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               disabled={!subject || !message || submitting}
               onClick={handleSubmit}
             >
-              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Envoyer la demande
-            </Button>
+            </button>
           </div>
         </div>
 
         {/* Ticket list */}
-        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted">
               <MessageSquare className="h-4 w-4 text-muted-foreground" />

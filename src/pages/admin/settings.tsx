@@ -83,8 +83,8 @@ export function AdminSettingsPage() {
       </div>
 
       {/* Calculation parameters */}
-      <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2">
+      <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
             <DollarSign className="h-4 w-4 text-primary" />
           </div>
@@ -141,8 +141,8 @@ export function AdminSettingsPage() {
 
       {/* Preview */}
       {!loading && settings.length > 0 && (
-        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted">
               <RefreshCw className="h-4 w-4 text-muted-foreground" />
             </div>

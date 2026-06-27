@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Search, Plus, ChevronRight, Clock } from 'lucide-react'
@@ -98,7 +97,7 @@ export function OrdersPage() {
   const totalCount = orders.length + drafts.length
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-[#F4F5F7]">
       {/* Header */}
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <div>
@@ -108,12 +107,14 @@ export function OrdersPage() {
             {drafts.length > 0 && ` · ${drafts.length} brouillon${drafts.length > 1 ? 's' : ''}`}
           </p>
         </div>
-        <Button asChild size="sm" className="rounded-full gap-1.5">
-          <Link to="/submit">
-            <Plus className="h-4 w-4" />
-            Nouveau
-          </Link>
-        </Button>
+        <Link
+          to="/submit"
+          className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
+          style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+        >
+          <Plus className="h-4 w-4" />
+          Nouveau
+        </Link>
       </div>
 
       {/* Search */}
@@ -124,7 +125,7 @@ export function OrdersPage() {
             placeholder="Rechercher..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 rounded-xl border-border bg-muted/30"
+            className="pl-10 rounded-xl bg-[#F0F1F5] border-0 h-11 font-medium focus-visible:ring-1 focus-visible:ring-primary/40"
           />
         </div>
       </div>
@@ -157,7 +158,7 @@ export function OrdersPage() {
         {loading ? (
           [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-[88px] rounded-2xl" />)
         ) : isEmpty ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
             <img src={IconBoite} alt="" className="h-12 w-12 mx-auto opacity-30 mb-3" />
             <p className="font-semibold text-muted-foreground">
               {search || (statusFilter !== 'all' && statusFilter !== 'drafts') ? 'Aucun résultat' : 'Aucune commande'}
@@ -166,9 +167,13 @@ export function OrdersPage() {
               {search ? "Essayez d'autres termes" : 'Soumettez votre premier produit'}
             </p>
             {!search && (
-              <Button asChild size="sm" className="rounded-full">
-                <Link to="/submit"><Plus className="mr-1.5 h-3.5 w-3.5" />Soumettre</Link>
-              </Button>
+              <Link
+                to="/submit"
+                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
+                style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+              >
+                <Plus className="mr-1.5 h-3.5 w-3.5" />Soumettre
+              </Link>
             )}
           </div>
         ) : (
@@ -219,7 +224,7 @@ export function OrdersPage() {
                   const delivery = deliveryDate(order)
                   return (
                     <Link key={order.id} to={`/orders/${order.id}`}>
-                      <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm hover:border-primary/20 transition-colors">
+                      <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:border-primary/20 transition-colors">
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/8 shrink-0">
                           <img src={IconBoite} alt="" className="h-8 w-8 object-contain" />
                         </div>

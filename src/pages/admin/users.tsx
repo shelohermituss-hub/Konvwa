@@ -127,7 +127,7 @@ export function AdminUsersPage() {
           { label: 'Clients',            value: stats.clients, icon: UserCircle2, iconClass: 'text-blue-600', bgClass: 'bg-blue-50' },
           { label: 'Équipe',             value: stats.staff,   icon: Shield, iconClass: 'text-amber-600', bgClass: 'bg-amber-50' },
         ].map(kpi => (
-          <div key={kpi.label} className="rounded-2xl bg-white border border-border/60 shadow-sm p-4">
+          <div key={kpi.label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
             {loading ? (
               <Skeleton className="h-16 rounded-xl" />
             ) : (
@@ -146,7 +146,7 @@ export function AdminUsersPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-2xl bg-white border border-border/60 shadow-sm p-4">
+      <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -182,7 +182,7 @@ export function AdminUsersPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+      <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-5 space-y-3">
             {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 rounded-xl" />)}
@@ -269,7 +269,7 @@ export function AdminUsersPage() {
             </Table>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-5 py-3 border-t border-border/50">
+              <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
                 <p className="text-xs text-muted-foreground">
                   {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} sur {filtered.length}
                 </p>
