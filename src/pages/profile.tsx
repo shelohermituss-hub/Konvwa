@@ -9,16 +9,31 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
-  User, Bell, Lock, Settings, LogOut, ChevronRight, ShieldCheck, MapPin,
-  HelpCircle, Loader2, BadgeCheck, LayoutDashboard, Camera, Eye, EyeOff, Plus, Trash2,
+  ChevronRight, Loader2, BadgeCheck, LayoutDashboard, Camera, Eye, EyeOff, Plus, Trash2, MapPin,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import IconPersonnel       from '@/assets/icons/profil-personnel.png'
+import IconAdresse         from '@/assets/icons/profil-adresse.png'
+import IconNotif           from '@/assets/icons/profil-notif.png'
+import IconMdp             from '@/assets/icons/profil-mdp.png'
+import IconConfidentialite from '@/assets/icons/profil-confidentialite.png'
+import IconParametres      from '@/assets/icons/profil-parametres.png'
+import IconSupport         from '@/assets/icons/profil-support.png'
+import IconDeconnexion     from '@/assets/icons/profil-deconnexion.png'
+
 /* ─── Types ─── */
 type Modal = 'none' | 'personal' | 'address' | 'password' | 'privacy' | 'settings' | 'logout'
+
+interface ProfileRow {
+  imgSrc: string
+  label: string
+  onClick?: () => void
+  href?: string
+}
 
 interface AddressEntry {
   id: string
@@ -63,27 +78,27 @@ export function ProfilePage() {
     finally { setAvatarUploading(false); if (fileInputRef.current) fileInputRef.current.value = '' }
   }
 
-  const sections = [
+  const sections: { title: string; rows: ProfileRow[] }[] = [
     {
       title: 'Compte',
       rows: [
-        { icon: User,   label: 'Détails personnels',    iconBg: 'bg-[#FFF0EB]', iconColor: 'text-primary',   onClick: () => setModal('personal') },
-        { icon: MapPin, label: 'Adresses de livraison', iconBg: 'bg-[#EBF3FF]', iconColor: 'text-[#2563EB]', onClick: () => setModal('address') },
-        { icon: Bell,   label: 'Notifications',         iconBg: 'bg-[#FFFBEB]', iconColor: 'text-[#F59E0B]', href: '/notifications' },
+        { imgSrc: IconPersonnel, label: 'Détails personnels',    onClick: () => setModal('personal') },
+        { imgSrc: IconAdresse,   label: 'Adresses de livraison', onClick: () => setModal('address') },
+        { imgSrc: IconNotif,     label: 'Notifications',         href: '/notifications' },
       ],
     },
     {
       title: 'Sécurité',
       rows: [
-        { icon: Lock,        label: 'Mot de passe',    iconBg: 'bg-[#FFF1F2]', iconColor: 'text-[#E11D48]', onClick: () => setModal('password') },
-        { icon: ShieldCheck, label: 'Confidentialité', iconBg: 'bg-[#F0FDF4]', iconColor: 'text-[#16A34A]', onClick: () => setModal('privacy') },
+        { imgSrc: IconMdp,             label: 'Mot de passe',    onClick: () => setModal('password') },
+        { imgSrc: IconConfidentialite, label: 'Confidentialité', onClick: () => setModal('privacy') },
       ],
     },
     {
       title: 'Général',
       rows: [
-        { icon: Settings,   label: 'Paramètres',    iconBg: 'bg-muted', iconColor: 'text-muted-foreground', onClick: () => setModal('settings') },
-        { icon: HelpCircle, label: 'Support & Aide', iconBg: 'bg-muted', iconColor: 'text-muted-foreground', href: '/support' },
+        { imgSrc: IconParametres, label: 'Paramètres',    onClick: () => setModal('settings') },
+        { imgSrc: IconSupport,    label: 'Support & Aide', href: '/support' },
       ],
     },
   ]
@@ -153,17 +168,16 @@ export function ProfilePage() {
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-2">{section.title}</p>
             <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden divide-y divide-border/60">
               {section.rows.map((row) => {
-                const Icon = row.icon
                 const content = (
                   <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer active:bg-muted/50">
-                    <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl shrink-0', row.iconBg)}>
-                      <Icon className={cn('h-4 w-4', row.iconColor)} />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 bg-muted/30">
+                      <img src={row.imgSrc} alt="" className="h-7 w-7 object-contain" />
                     </div>
                     <span className="flex-1 text-sm font-medium text-foreground">{row.label}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                   </div>
                 )
-                if ('href' in row && row.href) return <Link key={row.label} to={row.href}>{content}</Link>
+                if (row.href) return <Link key={row.label} to={row.href}>{content}</Link>
                 return <div key={row.label} onClick={row.onClick}>{content}</div>
               })}
             </div>
@@ -175,8 +189,8 @@ export function ProfilePage() {
           onClick={() => setModal('logout')}
           className="w-full rounded-2xl bg-white border border-destructive/20 px-4 py-3.5 flex items-center gap-3 hover:bg-destructive/5 transition-colors pressable shadow-sm"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FFF1F2] shrink-0">
-            <LogOut className="h-4 w-4 text-destructive" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/30 shrink-0">
+            <img src={IconDeconnexion} alt="" className="h-7 w-7 object-contain" />
           </div>
           <span className="text-sm font-bold text-destructive">Déconnexion</span>
         </button>
