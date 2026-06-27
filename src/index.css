@@ -49,42 +49,47 @@
 }
 
 /* ============================================================
-   KONVWA — BRAND TOKENS
-   Primary: #F05A28   Navy: #0A1628
+   KONVWA — BRAND THEME (Light)
+   Primary: Orange Fret #F05A28
+   Navy:    #0A1628  (headings, nav, foreground)
    ============================================================ */
 
 :root {
   --radius: 0.75rem;
 
-  --background:          oklch(1 0 0);
-  --foreground:          oklch(0.135 0.040 255);
-  --card:                oklch(1 0 0);
-  --card-foreground:     oklch(0.135 0.040 255);
-  --popover:             oklch(1 0 0);
-  --popover-foreground:  oklch(0.135 0.040 255);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.135 0.040 255);
 
-  --primary:             oklch(0.618 0.196 35);
-  --primary-foreground:  oklch(1 0 0);
-  --secondary:           oklch(0.975 0.005 255);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.135 0.040 255);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.135 0.040 255);
+
+  --primary: oklch(0.618 0.196 35);
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.982 0.007 252);
   --secondary-foreground: oklch(0.135 0.040 255);
 
-  --muted:               oklch(0.968 0.008 255);
-  --muted-foreground:    oklch(0.535 0.028 248);
+  --muted: oklch(0.970 0.013 252);
+  --muted-foreground: oklch(0.535 0.030 248);
 
-  --accent:              oklch(0.968 0.025 35);
-  --accent-foreground:   oklch(0.618 0.196 35);
+  --accent: oklch(0.968 0.025 35);
+  --accent-foreground: oklch(0.618 0.196 35);
 
-  --destructive:         oklch(0.534 0.175 25);
+  --destructive: oklch(0.534 0.175 35);
   --destructive-foreground: oklch(1 0 0);
 
-  --success:             oklch(0.516 0.130 155);
-  --success-foreground:  oklch(1 0 0);
-  --warning:             oklch(0.805 0.155 75);
-  --warning-foreground:  oklch(0.135 0.040 255);
+  --success: oklch(0.516 0.130 155);
+  --success-foreground: oklch(1 0 0);
 
-  --border:              oklch(0.912 0.012 255);
-  --input:               oklch(0.912 0.012 255);
-  --ring:                oklch(0.618 0.196 35);
+  --warning: oklch(0.805 0.155 75);
+  --warning-foreground: oklch(0.135 0.040 255);
+
+  --border: oklch(0.906 0.018 252);
+  --input: oklch(0.906 0.018 252);
+  --ring: oklch(0.618 0.196 35);
 
   --chart-1: oklch(0.618 0.196 35);
   --chart-2: oklch(0.135 0.040 255);
@@ -92,58 +97,66 @@
   --chart-4: oklch(0.516 0.130 155);
   --chart-5: oklch(0.700 0.175 35);
 
-  --sidebar:                     oklch(1 0 0);
-  --sidebar-foreground:          oklch(0.135 0.040 255);
-  --sidebar-primary:             oklch(0.618 0.196 35);
-  --sidebar-primary-foreground:  oklch(1 0 0);
-  --sidebar-accent:              oklch(0.968 0.008 255);
-  --sidebar-accent-foreground:   oklch(0.135 0.040 255);
-  --sidebar-border:              oklch(0.912 0.012 255);
-  --sidebar-ring:                oklch(0.618 0.196 35);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.135 0.040 255);
+  --sidebar-primary: oklch(0.618 0.196 35);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.970 0.013 252);
+  --sidebar-accent-foreground: oklch(0.135 0.040 255);
+  --sidebar-border: oklch(0.906 0.018 252);
+  --sidebar-ring: oklch(0.618 0.196 35);
 }
 
 .dark {
-  --background:          oklch(0.120 0.040 255);
-  --foreground:          oklch(0.972 0.007 252);
-  --card:                oklch(0.158 0.038 255);
-  --card-foreground:     oklch(0.972 0.007 252);
-  --popover:             oklch(0.158 0.038 255);
-  --popover-foreground:  oklch(0.972 0.007 252);
-  --primary:             oklch(0.700 0.185 35);
-  --primary-foreground:  oklch(0.120 0.040 255);
-  --secondary:           oklch(0.200 0.038 255);
+  --background: oklch(0.120 0.040 255);
+  --foreground: oklch(0.972 0.007 252);
+
+  --card: oklch(0.160 0.040 255);
+  --card-foreground: oklch(0.972 0.007 252);
+
+  --popover: oklch(0.160 0.040 255);
+  --popover-foreground: oklch(0.972 0.007 252);
+
+  --primary: oklch(0.700 0.185 35);
+  --primary-foreground: oklch(0.120 0.040 255);
+
+  --secondary: oklch(0.200 0.040 255);
   --secondary-foreground: oklch(0.972 0.007 252);
-  --muted:               oklch(0.198 0.036 255);
-  --muted-foreground:    oklch(0.650 0.022 250);
-  --accent:              oklch(0.220 0.038 255);
-  --accent-foreground:   oklch(0.700 0.185 35);
-  --destructive:         oklch(0.560 0.175 25);
+
+  --muted: oklch(0.200 0.040 255);
+  --muted-foreground: oklch(0.650 0.025 250);
+
+  --accent: oklch(0.220 0.040 255);
+  --accent-foreground: oklch(0.700 0.185 35);
+
+  --destructive: oklch(0.560 0.175 35);
   --destructive-foreground: oklch(0.972 0.007 252);
-  --success:             oklch(0.580 0.130 155);
-  --success-foreground:  oklch(0.120 0.040 255);
-  --warning:             oklch(0.750 0.155 75);
-  --warning-foreground:  oklch(0.120 0.040 255);
-  --border:              oklch(0.258 0.036 255);
-  --input:               oklch(0.258 0.036 255);
-  --ring:                oklch(0.700 0.185 35);
+
+  --success: oklch(0.580 0.130 155);
+  --success-foreground: oklch(0.120 0.040 255);
+
+  --warning: oklch(0.750 0.155 75);
+  --warning-foreground: oklch(0.120 0.040 255);
+
+  --border: oklch(0.260 0.040 255);
+  --input: oklch(0.260 0.040 255);
+  --ring: oklch(0.700 0.185 35);
+
   --chart-1: oklch(0.700 0.185 35);
   --chart-2: oklch(0.750 0.030 252);
   --chart-3: oklch(0.805 0.155 75);
   --chart-4: oklch(0.580 0.130 155);
   --chart-5: oklch(0.620 0.175 35);
-  --sidebar:                     oklch(0.100 0.038 255);
-  --sidebar-foreground:          oklch(0.972 0.007 252);
-  --sidebar-primary:             oklch(0.700 0.185 35);
-  --sidebar-primary-foreground:  oklch(0.120 0.040 255);
-  --sidebar-accent:              oklch(0.198 0.036 255);
-  --sidebar-accent-foreground:   oklch(0.972 0.007 252);
-  --sidebar-border:              oklch(0.258 0.036 255);
-  --sidebar-ring:                oklch(0.700 0.185 35);
-}
 
-/* ============================================================
-   BASE LAYER
-   ============================================================ */
+  --sidebar: oklch(0.100 0.040 255);
+  --sidebar-foreground: oklch(0.972 0.007 252);
+  --sidebar-primary: oklch(0.700 0.185 35);
+  --sidebar-primary-foreground: oklch(0.120 0.040 255);
+  --sidebar-accent: oklch(0.200 0.040 255);
+  --sidebar-accent-foreground: oklch(0.972 0.007 252);
+  --sidebar-border: oklch(0.260 0.040 255);
+  --sidebar-ring: oklch(0.700 0.185 35);
+}
 
 @layer base {
   * { @apply border-border; }
@@ -155,19 +168,20 @@
   html { -webkit-tap-highlight-color: transparent; }
   h1, h2, h3 { font-weight: 700; }
   h4, h5, h6 { font-weight: 600; }
+  .card, [data-slot="card"] { box-shadow: 0 2px 14px rgba(10, 22, 40, 0.06); }
 }
 
 /* ============================================================
-   ANIMATION KEYFRAMES
+   PREMIUM ANIMATION KEYFRAMES
    ============================================================ */
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
+  from { opacity: 0; transform: scale(0.95); }
   to   { opacity: 1; transform: scale(1); }
 }
 
@@ -176,208 +190,76 @@
   to   { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes wordReveal {
+  from { opacity: 0; transform: translateY(12px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
+}
+
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
+  0%, 100% { transform: translateY(0px); }
   50%       { transform: translateY(-8px); }
 }
 
+@keyframes pulseSlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.05); }
+}
+
 /* ============================================================
-   ANIMATION UTILITIES
+   ANIMATION UTILITY CLASSES
    ============================================================ */
 
-.animate-fade-in-up  { animation: fadeInUp    350ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-.animate-scale-in    { animation: scaleIn     200ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-.animate-slide-right { animation: slideInRight 300ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+.animate-fade-in-up  { animation: fadeInUp  350ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-scale-in    { animation: scaleIn   200ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-right { animation: slideInRight 300ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-word        { animation: wordReveal 450ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-float       { animation: float 3s ease-in-out infinite; }
-
-/* Page-entry stagger — applied via inline animationDelay */
-@keyframes staggerFadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.stagger-item {
-  opacity: 0;
-  animation: staggerFadeUp 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+.animate-pulse-slow  { animation: pulseSlow 4s ease-in-out infinite; }
 
 /* ============================================================
-   CARD SYSTEM  (FamillyBill spec)
+   CARD COMPONENT VARIANTS (Fintech Design System)
    ============================================================ */
 
-/* Standard card — white, 20px radius, dual ultra-subtle shadow */
+/* Flat: forms, lists, settings */
 .card-flat {
   background-color: #ffffff;
-  border: 1px solid oklch(0.912 0.012 255);
+  border: 1px solid oklch(0.92 0.010 255);
   border-radius: 20px;
-  box-shadow:
-    0 1px 3px  rgba(10, 22, 40, 0.06),
-    0 6px 20px rgba(10, 22, 40, 0.05);
+  box-shadow: 0 1px 4px rgba(10,22,40,0.05), 0 4px 16px rgba(10,22,40,0.04);
 }
 
-/* Elevated card — stronger shadow, lifts on hover */
+/* Elevated: featured content, stats — lifts on hover */
 .card-elevated {
   background-color: #ffffff;
-  border: 1px solid oklch(0.912 0.012 255);
+  border: 1px solid oklch(0.92 0.010 255);
   border-radius: 20px;
-  box-shadow:
-    0 4px 12px  rgba(10, 22, 40, 0.08),
-    0 16px 40px rgba(10, 22, 40, 0.06);
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  box-shadow: 0 4px 16px rgba(10,22,40,0.07), 0 12px 32px rgba(10,22,40,0.05);
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease;
 }
 .card-elevated:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 8px 24px  rgba(10, 22, 40, 0.11),
-    0 24px 56px rgba(10, 22, 40, 0.08);
-}
-
-/* shadcn Card component override */
-.card, [data-slot="card"] {
-  box-shadow:
-    0 1px 3px  rgba(10, 22, 40, 0.06),
-    0 6px 20px rgba(10, 22, 40, 0.05) !important;
+  box-shadow: 0 8px 28px rgba(10,22,40,0.10), 0 20px 48px rgba(10,22,40,0.07);
 }
 
 /* ============================================================
-   WALLET / CREDIT CARD  (FamillyBill spec)
-   28px radius · gradient 135° · orange glow · reflex overlay
+   BUTTON UTILITIES
    ============================================================ */
 
-.wallet-card {
-  border-radius: 28px;
-  background: linear-gradient(135deg, #0A1628 0%, #1a2f5e 55%, #24194a 100%);
-  box-shadow:
-    0 8px 40px rgba(240, 90, 40, 0.28),
-    0 2px 8px  rgba(10, 22, 40, 0.20);
-  position: relative;
-  overflow: hidden;
-}
-/* Light reflex — top-left white overlay */
-.wallet-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
-  border-radius: inherit;
-  pointer-events: none;
-}
-/* Abstract blur circle decoration */
-.wallet-card::after {
-  content: '';
-  position: absolute;
-  bottom: -60px;
-  right: -40px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(240,90,40,0.25) 0%, transparent 65%);
-  pointer-events: none;
-}
-
-/* ============================================================
-   INTERACTIVE FEEDBACK
-   ============================================================ */
-
-/* Universal transition for all interactive elements */
-.interactive {
-  transition: all 150ms ease;
-}
-
-/* Press scale — cards, buttons */
-.pressable {
-  transition: transform 150ms ease;
-}
-.pressable:active { transform: scale(0.97); }
-
-/* Icon tap */
-.action-icon {
-  transition: transform 150ms ease;
-}
-.action-icon:active { transform: scale(0.92); }
-
-/* ============================================================
-   BUTTON SYSTEM  (FamillyBill spec)
-   h-12 (48px) · radius 12px · hover shadow · active scale
-   ============================================================ */
-
-.btn-primary {
-  height: 48px;
-  border-radius: 12px;
-  background-color: #F05A28;
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 20px;
-  transition: all 150ms ease;
-  cursor: pointer;
-  border: none;
-}
-.btn-primary:hover {
-  background-color: #d94e1f;
-  box-shadow: 0 4px 20px rgba(240, 90, 40, 0.40);
-}
-.btn-primary:active { transform: scale(0.97); }
-
-.btn-secondary {
-  height: 48px;
-  border-radius: 12px;
-  background-color: transparent;
-  color: #F05A28;
-  font-weight: 600;
-  font-size: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 20px;
-  border: 1.5px solid oklch(0.912 0.012 255);
-  transition: all 150ms ease;
-  cursor: pointer;
-}
-.btn-secondary:hover { background-color: oklch(0.968 0.008 255); }
-.btn-secondary:active { transform: scale(0.97); }
-
-/* Pill / chip buttons */
-.btn-pill {
-  height: 36px;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 13px;
-  padding: 0 16px;
-  transition: all 150ms ease;
-}
-
-/* Gradient CTA (public pages) */
 .btn-gradient {
-  background: linear-gradient(135deg, #F05A28 0%, #c03d12 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #F05A28 0%, #AF3E12 100%);
+  color: white;
   font-weight: 700;
   transition: all 150ms ease;
 }
-.btn-gradient:hover { box-shadow: 0 4px 24px rgba(240,90,40,0.40); filter: brightness(1.04); }
+.btn-gradient:hover  { box-shadow: 0 0 28px rgba(240,90,40,0.45); filter: brightness(1.05); }
 .btn-gradient:active { transform: scale(0.97); }
 
 /* ============================================================
-   FORM INPUTS  (FamillyBill spec)
-   h-11 (44px) · radius 12px · border changes on focus, no shadow
+   GLOW EFFECTS
    ============================================================ */
 
-.input-fb {
-  height: 44px;
-  border-radius: 12px;
-  border: 1.5px solid oklch(0.912 0.012 255);
-  background: #ffffff;
-  padding: 0 14px;
-  font-size: 14px;
-  transition: border-color 150ms ease;
-  outline: none;
-  width: 100%;
-}
-.input-fb:focus { border-color: #F05A28; box-shadow: none; }
+.glow-orange { box-shadow: 0 0 28px rgba(240,90,40,0.40); }
+.glow-wallet  { box-shadow: 0 8px 40px rgba(240,90,40,0.38); }
 
 /* ============================================================
    GRADIENT TEXT
@@ -391,28 +273,112 @@
 }
 
 /* ============================================================
-   SCROLL REVEAL
+   SCROLL REVEAL  (toggled by IntersectionObserver in JS)
    ============================================================ */
 
 .reveal {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1),
-              transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(24px);
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.reveal.is-visible { opacity: 1; transform: translateY(0); }
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   WALLET CARD
+   ============================================================ */
+
+.wallet-card-gradient {
+  background: linear-gradient(135deg, #0A1628 0%, #142038 40%, #1e3260 70%, #F05A28 130%);
+}
+
+/* Credit-card style wallet card (like FamillyBill purple card) */
+.wallet-card-credit {
+  background: linear-gradient(145deg, #0A1628 0%, #112244 50%, #1a3060 100%);
+  position: relative;
+  overflow: hidden;
+}
+.wallet-card-credit::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240,90,40,0.35) 0%, rgba(240,90,40,0.12) 45%, transparent 70%);
+  pointer-events: none;
+}
+.wallet-card-credit::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(30,50,100,0.8) 0%, transparent 70%);
+  pointer-events: none;
+}
 
 /* ============================================================
    MISC UTILITIES
    ============================================================ */
 
-.pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
 
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-/* Dot grid for hero sections */
+/* Dot grid background for hero sections */
 .dot-grid {
   background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
   background-size: 28px 28px;
 }
+
+/* Mesh gradient overlay */
+.mesh-overlay {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(240,90,40,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 80% 70%, rgba(10,22,40,0.30) 0%, transparent 60%);
+}
+
+/* ============================================================
+   STAGGER ANIMATIONS (FamillyBill style entry)
+   ============================================================ */
+
+@keyframes staggerFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: staggerFadeUp 320ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+.stagger-item:nth-child(6) { animation-delay: 250ms; }
+
+/* Active press feedback on cards */
+.pressable {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.pressable:active { transform: scale(0.97); }
+
+/* Quick action icon circle pulse on tap */
+.action-icon {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease;
+}
+.action-icon:active { transform: scale(0.92); }
