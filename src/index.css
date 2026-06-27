@@ -57,7 +57,7 @@
 :root {
   --radius: 0.75rem;
 
-  --background: oklch(1 0 0);
+  --background: oklch(0.973 0.008 255);
   --foreground: oklch(0.135 0.040 255);
 
   --card: oklch(1 0 0);
@@ -168,8 +168,7 @@
   html { -webkit-tap-highlight-color: transparent; }
   h1, h2, h3 { font-weight: 700; }
   h4, h5, h6 { font-weight: 600; }
-  header { border-top: 4px solid var(--primary); }
-  .card, [data-slot="card"] { box-shadow: 0 2px 14px rgba(10, 22, 40, 0.07); }
+  .card, [data-slot="card"] { box-shadow: 0 2px 14px rgba(10, 22, 40, 0.06); }
 }
 
 /* ============================================================
@@ -223,23 +222,23 @@
 
 /* Flat: forms, lists, settings */
 .card-flat {
-  background-color: white;
-  border: 1px solid oklch(0.94 0 0);
+  background-color: #ffffff;
+  border: 1px solid oklch(0.92 0.010 255);
   border-radius: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 4px rgba(10,22,40,0.05), 0 4px 16px rgba(10,22,40,0.04);
 }
 
 /* Elevated: featured content, stats — lifts on hover */
 .card-elevated {
-  background-color: white;
-  border: 1px solid oklch(0.94 0 0);
+  background-color: #ffffff;
+  border: 1px solid oklch(0.92 0.010 255);
   border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.07), 0 16px 40px rgba(0,0,0,0.05);
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  box-shadow: 0 4px 16px rgba(10,22,40,0.07), 0 12px 32px rgba(10,22,40,0.05);
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease;
 }
 .card-elevated:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.11), 0 20px 48px rgba(0,0,0,0.07);
+  box-shadow: 0 8px 28px rgba(10,22,40,0.10), 0 20px 48px rgba(10,22,40,0.07);
 }
 
 /* ============================================================
@@ -293,7 +292,36 @@
    ============================================================ */
 
 .wallet-card-gradient {
-  background: linear-gradient(135deg, #0A1628 0%, #1a2d4e 45%, #F05A28 100%);
+  background: linear-gradient(135deg, #0A1628 0%, #142038 40%, #1e3260 70%, #F05A28 130%);
+}
+
+/* Credit-card style wallet card (like FamillyBill purple card) */
+.wallet-card-credit {
+  background: linear-gradient(145deg, #0A1628 0%, #112244 50%, #1a3060 100%);
+  position: relative;
+  overflow: hidden;
+}
+.wallet-card-credit::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240,90,40,0.35) 0%, rgba(240,90,40,0.12) 45%, transparent 70%);
+  pointer-events: none;
+}
+.wallet-card-credit::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(30,50,100,0.8) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 /* ============================================================
@@ -322,3 +350,35 @@
     radial-gradient(ellipse 60% 50% at 20% 30%, rgba(240,90,40,0.18) 0%, transparent 60%),
     radial-gradient(ellipse 50% 60% at 80% 70%, rgba(10,22,40,0.30) 0%, transparent 60%);
 }
+
+/* ============================================================
+   STAGGER ANIMATIONS (FamillyBill style entry)
+   ============================================================ */
+
+@keyframes staggerFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: staggerFadeUp 320ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+.stagger-item:nth-child(6) { animation-delay: 250ms; }
+
+/* Active press feedback on cards */
+.pressable {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.pressable:active { transform: scale(0.97); }
+
+/* Quick action icon circle pulse on tap */
+.action-icon {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease;
+}
+.action-icon:active { transform: scale(0.92); }

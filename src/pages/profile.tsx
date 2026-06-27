@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { User, Bell, Lock, Settings, LogOut, ChevronRight, ShieldCheck, MapPin, HelpCircle, Loader2, CheckCircle2, LayoutDashboard } from 'lucide-react'
+import { User, Bell, Lock, Settings, LogOut, ChevronRight, ShieldCheck, MapPin, HelpCircle, Loader2, BadgeCheck, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -43,26 +42,31 @@ export function ProfilePage() {
     setEditOpen(false)
   }
 
+  const roleLabel =
+    profile?.role === 'admin' ? 'Administrateur' :
+    profile?.role === 'agent' ? 'Agent' :
+    'Client vérifié'
+
   const sections: { title: string; rows: SettingRow[] }[] = [
     {
       title: 'Compte',
       rows: [
-        { icon: User, label: 'Détails personnels', iconBg: 'bg-primary/10', iconColor: 'text-primary', action: () => setEditOpen(true) },
-        { icon: MapPin, label: 'Adresses de livraison', iconBg: 'bg-accent/10', iconColor: 'text-accent', href: '/profile' },
-        { icon: Bell, label: 'Notifications', iconBg: 'bg-warning/10', iconColor: 'text-warning', href: '/notifications' },
+        { icon: User,      label: 'Détails personnels',    iconBg: 'bg-[#FFF0EB]', iconColor: 'text-primary',     action: () => setEditOpen(true) },
+        { icon: MapPin,    label: 'Adresses de livraison', iconBg: 'bg-[#EBF3FF]', iconColor: 'text-[#2563EB]',  href: '/profile' },
+        { icon: Bell,      label: 'Notifications',         iconBg: 'bg-[#FFFBEB]', iconColor: 'text-[#F59E0B]',  href: '/notifications' },
       ],
     },
     {
       title: 'Sécurité',
       rows: [
-        { icon: Lock, label: 'Mot de passe', iconBg: 'bg-destructive/10', iconColor: 'text-destructive', href: '/profile' },
-        { icon: ShieldCheck, label: 'Confidentialité', iconBg: 'bg-success/10', iconColor: 'text-success', href: '/profile' },
+        { icon: Lock,        label: 'Mot de passe',    iconBg: 'bg-[#FFF1F2]', iconColor: 'text-[#E11D48]',  href: '/profile' },
+        { icon: ShieldCheck, label: 'Confidentialité', iconBg: 'bg-[#F0FDF4]', iconColor: 'text-[#16A34A]',  href: '/profile' },
       ],
     },
     {
       title: 'Général',
       rows: [
-        { icon: Settings, label: 'Paramètres', iconBg: 'bg-muted', iconColor: 'text-muted-foreground', href: '/profile' },
+        { icon: Settings,   label: 'Paramètres',  iconBg: 'bg-muted', iconColor: 'text-muted-foreground', href: '/profile' },
         { icon: HelpCircle, label: 'Support & Aide', iconBg: 'bg-muted', iconColor: 'text-muted-foreground', href: '/support' },
       ],
     },
@@ -70,62 +74,65 @@ export function ProfilePage() {
 
   return (
     <div className="min-h-full bg-background">
-      {/* Profile header */}
-      <div className="bg-card border-b border-border px-5 pt-6 pb-6 text-center">
+
+      {/* Profile header card */}
+      <div className="bg-white border-b border-border/60 px-5 pt-8 pb-7 text-center shadow-sm stagger-item">
         <div className="relative inline-block">
-          <Avatar className="h-20 w-20 ring-4 ring-border">
+          <Avatar className="h-24 w-24 ring-4 ring-white shadow-lg">
             <AvatarImage src={profile?.avatar_url || ''} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+            <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
+          {/* Online dot */}
+          <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-emerald-500 ring-2 ring-white" />
         </div>
-        <h1 className="text-xl font-bold mt-3">{profile?.full_name || 'Utilisateur'}</h1>
+        <h1 className="text-xl font-bold mt-4 text-foreground">{profile?.full_name || 'Utilisateur'}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
-        <div className="flex items-center justify-center gap-2 mt-3">
-          <Badge variant="secondary" className="rounded-full px-3 gap-1.5">
-            <CheckCircle2 className="h-3 w-3 text-success" />
-            <span className="text-xs">
-              {profile?.role === 'admin' ? 'Administrateur' : profile?.role === 'agent' ? 'Agent' : 'Client vérifié'}
-            </span>
-          </Badge>
+
+        {/* Verified badge */}
+        <div className="flex items-center justify-center mt-3">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3.5 py-1.5">
+            <BadgeCheck className="h-4 w-4 text-primary" />
+            <span className="text-xs font-semibold text-primary">{roleLabel}</span>
+          </div>
         </div>
       </div>
 
       {/* Admin dashboard shortcut */}
       {isAdmin && (
-        <div className="px-4 pt-4">
+        <div className="px-4 pt-4 stagger-item" style={{ animationDelay: '60ms' }}>
           <Link to="/admin">
-            <div className="flex items-center gap-3 rounded-2xl p-4 bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors active:scale-[0.98]">
+            <div className="flex items-center gap-3 rounded-2xl p-4 bg-primary text-white shadow-md hover:bg-primary/90 transition-colors pressable">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 shrink-0">
                 <LayoutDashboard className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-sm">Dashboard Admin</p>
-                <p className="text-xs text-primary-foreground/70 mt-0.5">Gérer commandes, devis & utilisateurs</p>
+                <p className="font-bold text-sm">Dashboard Admin</p>
+                <p className="text-xs text-white/70 mt-0.5">Gérer commandes, devis & utilisateurs</p>
               </div>
-              <ChevronRight className="h-4 w-4 text-primary-foreground/60 shrink-0" />
+              <ChevronRight className="h-4 w-4 text-white/60 shrink-0" />
             </div>
           </Link>
         </div>
       )}
 
       {/* Settings sections */}
-      <div className="px-4 py-5 space-y-4">
+      <div className="px-4 py-5 space-y-4 stagger-item" style={{ animationDelay: '100ms' }}>
         {sections.map((section) => (
           <div key={section.title}>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2">{section.title}</p>
-            <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden divide-y divide-border">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-2">{section.title}</p>
+            <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden divide-y divide-border/60">
               {section.rows.map((row) => {
                 const Icon = row.icon
 
                 const content = (
-                  <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer active:bg-muted/50">
                     <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl shrink-0', row.iconBg)}>
                       <Icon className={cn('h-4 w-4', row.iconColor)} />
                     </div>
-                    <span className="flex-1 text-sm font-medium">{row.label}</span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <span className="flex-1 text-sm font-medium text-foreground">{row.label}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                   </div>
                 )
 
@@ -145,12 +152,12 @@ export function ProfilePage() {
         {/* Logout */}
         <button
           onClick={() => setLogoutOpen(true)}
-          className="w-full rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3.5 flex items-center gap-3 hover:bg-destructive/10 transition-colors"
+          className="w-full rounded-2xl bg-white border border-destructive/20 px-4 py-3.5 flex items-center gap-3 hover:bg-destructive/5 transition-colors pressable shadow-sm"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-destructive/10 shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FFF1F2] shrink-0">
             <LogOut className="h-4 w-4 text-destructive" />
           </div>
-          <span className="text-sm font-semibold text-destructive">Déconnexion</span>
+          <span className="text-sm font-bold text-destructive">Déconnexion</span>
         </button>
       </div>
 
