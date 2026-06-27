@@ -67,9 +67,9 @@ export function DashboardPage() {
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U'
   const balance = wallet?.available_balance ?? 0
-  const accountId = user?.id
-    ? `${user.id.slice(0, 4).toUpperCase()} ${user.id.slice(4, 8).toUpperCase()}`
-    : '— — — —'
+  const cardNumber = user?.id
+    ? `${user.id.slice(0, 4).toUpperCase()}  ${user.id.slice(9, 13).toUpperCase()}  ${user.id.slice(14, 18).toUpperCase()}  ${user.id.slice(19, 23).toUpperCase()}`
+    : '——  ——  ——  ——'
 
   return (
     <div className="min-h-full bg-background">
@@ -77,9 +77,9 @@ export function DashboardPage() {
       {/* Greeting row */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4 stagger-item">
         <div className="flex items-center gap-3">
-          <Avatar className="h-11 w-11 ring-2 ring-primary/20 shadow-sm">
+          <Avatar className="h-11 w-11 ring-2 ring-black/8 shadow-sm">
             <AvatarImage src={profile?.avatar_url || ''} />
-            <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+            <AvatarFallback className="bg-slate-100 text-slate-700 text-sm font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -89,62 +89,74 @@ export function DashboardPage() {
           </div>
         </div>
         <Link to="/wallet">
-          <div className="flex items-center gap-1.5 rounded-full bg-primary/8 border border-primary/15 px-3 py-1.5 hover:bg-primary/12 transition-colors">
-            <Wallet className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-semibold text-primary">Portefeuille</span>
+          <div className="flex items-center gap-1.5 rounded-full bg-black/5 border border-black/8 px-3 py-1.5 hover:bg-black/8 transition-colors">
+            <Wallet className="h-3.5 w-3.5 text-slate-500" />
+            <span className="text-xs font-semibold text-slate-600">Portefeuille</span>
           </div>
         </Link>
       </div>
 
-      {/* ── Wallet Card — FamillyBill style ── */}
+      {/* ── Wallet Card — credit card style ── */}
       <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
         <div
-          className="rounded-3xl p-5 text-white relative overflow-hidden shadow-[0_8px_40px_rgba(10,22,40,0.28)]"
-          style={{ background: 'linear-gradient(135deg, #1E5221 0%, #2E7D32 45%, #4CAF50 100%)' }}
+          className="rounded-3xl text-white relative overflow-hidden shadow-[0_12px_48px_rgba(37,99,235,0.38)]"
+          style={{ background: 'linear-gradient(135deg, #00B4D8 0%, #2563EB 52%, #7C3AED 100%)' }}
         >
-          {/* Decorative blobs */}
-          <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-white/5" />
-          <div className="pointer-events-none absolute top-10 -right-20 h-36 w-36 rounded-full bg-white/[0.03]" />
+          {/* Decorative rings */}
+          <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full border border-white/10" />
+          <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full border border-white/8" />
 
-          <div className="relative z-10 flex flex-col gap-4">
+          <div className="relative z-10 p-5 flex flex-col gap-4">
 
-            {/* Top row: icon + label | overlapping circles */}
+            {/* Row 1: branding + contactless */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
-                  <Package className="h-5 w-5 text-white" />
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+                  <span className="text-[13px] font-black text-white tracking-tighter">K</span>
                 </div>
-                <span className="text-sm font-semibold text-white/90">Portefeuille HTG</span>
+                <span className="font-bold text-white text-sm tracking-wide">KONVWA</span>
               </div>
-              {/* Mastercard-style overlapping circles */}
-              <div className="relative flex items-center h-9">
-                <div className="h-9 w-9 rounded-full bg-primary" style={{ opacity: 0.95 }} />
-                <div className="h-9 w-9 rounded-full -ml-4" style={{ background: '#FF9B4E', opacity: 0.85 }} />
-              </div>
+              {/* Contactless arcs */}
+              <svg width="30" height="26" viewBox="0 0 30 26" fill="none">
+                <circle cx="4" cy="13" r="2.5" fill="white" opacity="0.9"/>
+                <path d="M10 7C13.3 9.5 13.3 16.5 10 19" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+                <path d="M16 3.5C21.5 7.5 21.5 18.5 16 22.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity="0.5"/>
+                <path d="M22 0.5C29.5 5.5 29.5 20.5 22 25.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity="0.3"/>
+              </svg>
             </div>
 
-            {/* Balance */}
+            {/* Row 2: chip */}
+            <svg width="46" height="36" viewBox="0 0 46 36" fill="none">
+              <rect width="46" height="36" rx="7" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.28)" strokeWidth="1"/>
+              <line x1="15" y1="0" x2="15" y2="36" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
+              <line x1="31" y1="0" x2="31" y2="36" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
+              <line x1="0" y1="12" x2="46" y2="12" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
+              <line x1="0" y1="24" x2="46" y2="24" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
+              <rect x="15" y="12" width="16" height="12" rx="2" fill="rgba(255,255,255,0.1)"/>
+            </svg>
+
+            {/* Row 3: balance */}
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/45 font-semibold mb-1">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-white/50 font-semibold mb-1">
                 Solde disponible
               </p>
               {loading ? (
-                <Skeleton className="h-10 w-48 bg-white/15 rounded-xl" />
+                <Skeleton className="h-9 w-44 bg-white/15 rounded-xl" />
               ) : (
-                <p className="text-[2rem] font-bold tracking-tight leading-none">
+                <p className="text-[1.85rem] font-bold tracking-tight leading-none">
                   {balanceVisible ? `${balance.toLocaleString('fr-HT')} HTG` : '• • • • • •'}
                 </p>
               )}
             </div>
 
-            {/* ID + eye + HTG */}
-            <div className="flex items-end justify-between">
+            {/* Row 4: holder + card number + HTG badge */}
+            <div className="flex items-end justify-between pt-1">
               <div>
-                <p className="text-[9px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-0.5">
-                  ID Compte
+                <p className="text-[9px] uppercase tracking-[0.14em] text-white/40 font-semibold mb-0.5">
+                  Titulaire
                 </p>
-                <p className="text-sm font-mono font-semibold text-white/75 tracking-widest">
-                  {accountId}
+                <p className="text-sm font-semibold text-white/80 tracking-wide uppercase">
+                  {profile?.full_name || firstName}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -156,8 +168,16 @@ export function DashboardPage() {
                     ? <Eye className="h-3.5 w-3.5 text-white/60" />
                     : <EyeOff className="h-3.5 w-3.5 text-white/60" />}
                 </button>
-                <div className="rounded-xl bg-white/15 px-3 py-1.5">
-                  <span className="text-xs font-bold text-white tracking-widest">HTG</span>
+                <div>
+                  <p className="text-[9px] uppercase tracking-[0.14em] text-white/40 font-semibold mb-0.5 text-right">
+                    N° Compte
+                  </p>
+                  <p className="text-[11px] font-mono font-semibold text-white/70 tracking-widest">
+                    {cardNumber}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-white/15 px-2.5 py-1.5 ml-1">
+                  <span className="text-xs font-black text-white tracking-widest">HTG</span>
                 </div>
               </div>
             </div>
@@ -205,16 +225,16 @@ export function DashboardPage() {
         <Link to="/submit">
           <div className="flex items-center justify-between rounded-2xl bg-white border border-border/60 p-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all pressable">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-                <Plus className="h-5 w-5 text-primary" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100">
+                <Plus className="h-5 w-5 text-slate-600" />
               </div>
               <div>
                 <p className="font-bold text-sm text-foreground">Nouveau produit ?</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Devis reçu en moins de 24h</p>
               </div>
             </div>
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/8">
-              <ChevronRight className="h-4 w-4 text-primary" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-black/5">
+              <ChevronRight className="h-4 w-4 text-slate-500" />
             </div>
           </div>
         </Link>
@@ -224,7 +244,7 @@ export function DashboardPage() {
       <div className="px-5 pb-8 stagger-item" style={{ animationDelay: '200ms' }}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-bold text-foreground">Commandes récentes</h2>
-          <Link to="/orders" className="text-xs font-semibold text-primary flex items-center gap-0.5">
+          <Link to="/orders" className="text-xs font-semibold text-foreground flex items-center gap-0.5">
             Voir tout <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -249,8 +269,8 @@ export function DashboardPage() {
           <div className="space-y-2.5">
             {orders.map((order) => (
               <Link key={order.id} to={`/orders/${order.id}`}>
-                <div className="flex items-center gap-3 rounded-2xl bg-white border border-border/60 p-4 shadow-sm hover:border-primary/25 hover:shadow-md transition-all pressable">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/8 shrink-0">
+                <div className="flex items-center gap-3 rounded-2xl bg-white border border-border/60 p-4 shadow-sm hover:border-slate-300 hover:shadow-md transition-all pressable">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 shrink-0">
                     <img src={IconBoite} alt="" className="h-7 w-7 object-contain" />
                   </div>
                   <div className="flex-1 min-w-0">

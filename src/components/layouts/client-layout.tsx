@@ -59,7 +59,7 @@ function TopHeader() {
         <Link to="/profile">
           <Avatar className="h-8 w-8 ring-2 ring-border shadow-sm">
             <AvatarImage src={profile?.avatar_url || ''} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+            <AvatarFallback className="bg-slate-100 text-slate-700 text-xs font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
