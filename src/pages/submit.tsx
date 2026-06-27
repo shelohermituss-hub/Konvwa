@@ -210,7 +210,7 @@ export function SubmitPage() {
   }
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-[#F4F5F7]">
       <div className="px-5 pt-5 pb-4">
         <h1 className="text-2xl font-bold tracking-tight">Nouvelle commande</h1>
         <p className="text-sm text-muted-foreground">Renseignez le produit pour obtenir une estimation</p>
@@ -220,25 +220,27 @@ export function SubmitPage() {
         <div className="px-4 pb-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
 
           {/* ─── Left panel: inputs ─── */}
-          <div className="space-y-5">
+          <div className="space-y-4">
 
             {/* Section: Le produit */}
-            <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-border bg-muted/30">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-warning">Le produit</p>
-              </div>
-              <div className="p-4 space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Lien produit (Alibaba · Shein · Temu)</Label>
+            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-2">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-4">Le produit</p>
+
+                <div className="space-y-1 mb-4">
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-sm font-bold text-foreground">Lien produit</Label>
+                    <span className="text-xs text-muted-foreground">(Alibaba · Shein · Temu)</span>
+                  </div>
                   <Input
                     type="url"
                     placeholder="Colle le lien ici"
                     value={productUrl}
                     onChange={e => setProductUrl(e.target.value)}
-                    className="rounded-xl font-mono text-sm"
+                    className="h-12 rounded-2xl bg-[#F0F1F5] border-0 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                   {detectedPlatform && detectedPlatform !== 'other' && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-1.5">
                       <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary capitalize">
                         {detectedPlatform}
                       </span>
@@ -254,21 +256,23 @@ export function SubmitPage() {
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Nom du produit *</Label>
+                <div className="space-y-1 mb-4">
+                  <Label className="text-sm font-bold text-foreground">
+                    Nom du produit <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     placeholder="Ex: Robe d'été fleurie taille M"
                     value={productName}
                     onChange={e => setProductName(e.target.value)}
-                    className="rounded-xl"
+                    className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Prix unitaire (USD)</Label>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-bold text-foreground">Prix unitaire</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">$</span>
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">$</span>
                       <Input
                         type="number"
                         inputMode="decimal"
@@ -277,12 +281,13 @@ export function SubmitPage() {
                         placeholder="4.50"
                         value={priceUSD}
                         onChange={e => setPriceUSD(e.target.value)}
-                        className="rounded-xl pl-6 font-mono"
+                        className="h-12 rounded-2xl bg-[#F0F1F5] border-0 pl-7 font-mono focus-visible:ring-1 focus-visible:ring-primary/40"
                       />
                     </div>
+                    <p className="text-[11px] text-muted-foreground">En USD</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Poids unitaire (kg)</Label>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-bold text-foreground">Poids unitaire</Label>
                     <Input
                       type="number"
                       inputMode="decimal"
@@ -291,14 +296,17 @@ export function SubmitPage() {
                       placeholder="0.25"
                       value={weightKg}
                       onChange={e => setWeightKg(e.target.value)}
-                      className="rounded-xl font-mono"
+                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 font-mono focus-visible:ring-1 focus-visible:ring-primary/40"
                     />
+                    <p className="text-[11px] text-muted-foreground">En kg</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Quantité *</Label>
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-bold text-foreground">
+                      Quantité <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       type="number"
                       inputMode="numeric"
@@ -306,13 +314,15 @@ export function SubmitPage() {
                       step="1"
                       value={quantity}
                       onChange={e => setQuantity(e.target.value)}
-                      className="rounded-xl font-mono"
+                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 font-mono focus-visible:ring-1 focus-visible:ring-primary/40"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Catégorie *</Label>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-bold text-foreground">
+                      Catégorie <span className="text-destructive">*</span>
+                    </Label>
                     <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="rounded-xl">
+                      <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
                         <SelectValue placeholder="Choisir" />
                       </SelectTrigger>
                       <SelectContent>
@@ -327,24 +337,39 @@ export function SubmitPage() {
             </div>
 
             {/* Section: Variantes */}
-            <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-border bg-muted/30">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Variantes & options</p>
-              </div>
-              <div className="p-4 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Taille</Label>
-                    <Input placeholder="M, L, XL…" value={size} onChange={e => setSize(e.target.value)} className="rounded-xl" />
+            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-5">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-4">Variantes & options</p>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <Label className="text-sm font-bold text-foreground">Taille</Label>
+                      <span className="text-xs text-muted-foreground">(optionnel)</span>
+                    </div>
+                    <Input
+                      placeholder="M, L, XL…"
+                      value={size}
+                      onChange={e => setSize(e.target.value)}
+                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40"
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Couleur</Label>
-                    <Input placeholder="Noir, Blanc…" value={color} onChange={e => setColor(e.target.value)} className="rounded-xl" />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <Label className="text-sm font-bold text-foreground">Couleur</Label>
+                      <span className="text-xs text-muted-foreground">(optionnel)</span>
+                    </div>
+                    <Input
+                      placeholder="Noir, Blanc…"
+                      value={color}
+                      onChange={e => setColor(e.target.value)}
+                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40"
+                    />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Urgence</Label>
+                <div className="space-y-2 mb-4">
+                  <Label className="text-sm font-bold text-foreground">Urgence</Label>
                   <RadioGroup
                     value={urgency}
                     onValueChange={v => setUrgency(v as typeof urgency)}
@@ -359,9 +384,9 @@ export function SubmitPage() {
                         <RadioGroupItem value={val} id={`urg-${val}`} className="peer sr-only" />
                         <Label
                           htmlFor={`urg-${val}`}
-                          className="flex flex-col items-center p-3 rounded-xl border border-border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors"
+                          className="flex flex-col items-center py-3 px-2 rounded-2xl border-2 border-transparent bg-[#F0F1F5] cursor-pointer hover:bg-[#E8E9EE] peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
                         >
-                          <span className="font-semibold text-sm">{label}</span>
+                          <span className="font-bold text-sm">{label}</span>
                           <span className="text-[10px] text-muted-foreground mt-0.5">{sub}</span>
                         </Label>
                       </div>
@@ -369,14 +394,17 @@ export function SubmitPage() {
                   </RadioGroup>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Commentaires</Label>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-sm font-bold text-foreground">Commentaires</Label>
+                    <span className="text-xs text-muted-foreground">(optionnel)</span>
+                  </div>
                   <Textarea
                     placeholder="Instructions particulières, exigences…"
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                     rows={3}
-                    className="rounded-xl resize-none text-sm"
+                    className="rounded-2xl bg-[#F0F1F5] border-0 resize-none text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                 </div>
               </div>
@@ -387,7 +415,8 @@ export function SubmitPage() {
               <Button
                 type="submit"
                 disabled={submitting || !productName.trim() || !category}
-                className="w-full rounded-xl h-12 text-base font-semibold gap-2"
+                className="w-full rounded-2xl h-13 text-base font-bold gap-2 shadow-sm"
+                style={{ height: '52px' }}
               >
                 {submitting
                   ? <><Loader2 className="h-4 w-4 animate-spin" />Envoi en cours…</>

@@ -99,7 +99,7 @@ export function DashboardPage() {
       <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
         <div
           className="rounded-3xl p-5 text-white relative overflow-hidden shadow-[0_8px_40px_rgba(10,22,40,0.28)]"
-          style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0F1E50 55%, #161044 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #3B27CC 0%, #5040DE 45%, #3B2ABB 100%)' }}
         >
           {/* Decorative blobs */}
           <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-white/5" />

@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { TimelineStep } from '@/components/shared/timeline-step'
-import { ArrowLeft, Mail, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, Package, ExternalLink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
 import type { OrderStatus } from '@/types'
 import { OrderStatusTracker } from '@/components/shared/order-status-tracker'
@@ -41,38 +39,59 @@ interface OrderDetail {
   } | null
 }
 
+interface WalletData {
+  id: string
+  available_balance: number
+}
+
+function InfoRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className={`text-sm font-semibold text-foreground ${valueClass ?? ''}`}>{value}</span>
+    </div>
+  )
+}
+
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
   const [order, setOrder] = useState<OrderDetail | null>(null)
+  const [wallet, setWallet] = useState<WalletData | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [accepting, setAccepting] = useState(false)
+  const [paying, setPaying] = useState(false)
 
   useEffect(() => {
-    if (!id) return
+    if (!id || !user) return
 
-    supabase
-      .from('orders')
-      .select(`
-        id, tracking_code, status, total_paid, payment_status, created_at,
-        quotes(
-          id, total, product_price, quantity,
-          service_fee, purchase_fee, shipping_fee, customs_fee, local_delivery_fee,
-          estimated_delivery_days,
-          product_requests(product_name, product_url, source_platform)
-        )
-      `)
-      .eq('id', id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setOrder(data as unknown as OrderDetail)
-        } else {
-          setNotFound(true)
-        }
-        setLoading(false)
-      })
-  }, [id])
+    Promise.all([
+      supabase
+        .from('orders')
+        .select(`
+          id, tracking_code, status, total_paid, payment_status, created_at,
+          quotes(
+            id, total, product_price, quantity,
+            service_fee, purchase_fee, shipping_fee, customs_fee, local_delivery_fee,
+            estimated_delivery_days,
+            product_requests(product_name, product_url, source_platform)
+          )
+        `)
+        .eq('id', id)
+        .maybeSingle(),
+      supabase
+        .from('wallets')
+        .select('id, available_balance')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ]).then(([orderRes, walletRes]) => {
+      if (orderRes.data) setOrder(orderRes.data as unknown as OrderDetail)
+      else setNotFound(true)
+      if (walletRes.data) setWallet(walletRes.data)
+      setLoading(false)
+    })
+  }, [id, user])
 
   function estimatedDelivery() {
     if (!order?.quotes?.estimated_delivery_days) return null
@@ -84,318 +103,328 @@ export function OrderDetailPage() {
   async function handleAcceptQuote() {
     if (!order?.quotes?.id) return
     setAccepting(true)
-    const { error } = await supabase.from('quotes').update({ status: 'accepted' }).eq('id', order.quotes.id)
-    const { error: orderError } = await supabase.from('orders').update({ status: 'awaiting_payment' }).eq('id', order.id)
-    if (error || orderError) {
+    const { error: qErr } = await supabase.from('quotes').update({ status: 'accepted' }).eq('id', order.quotes.id)
+    const { error: oErr } = await supabase.from('orders').update({ status: 'awaiting_payment' }).eq('id', order.id)
+    if (qErr || oErr) {
       toast.error('Erreur lors de l\'acceptation du devis.')
     } else {
       toast.success('Devis accepté ! Procédez au paiement.')
-      setOrder(prev => prev ? { ...prev, status: 'awaiting_payment', quotes: prev.quotes ? { ...prev.quotes } : null } : null)
+      setOrder(prev => prev ? { ...prev, status: 'awaiting_payment' } : null)
     }
     setAccepting(false)
   }
 
   async function handleRejectQuote() {
     if (!order?.quotes?.id) return
-    const { error } = await supabase.from('quotes').update({ status: 'rejected' }).eq('id', order.quotes.id)
+    await supabase.from('quotes').update({ status: 'rejected' }).eq('id', order.quotes.id)
     await supabase.from('orders').update({ status: 'cancelled' }).eq('id', order.id)
-    if (error) {
-      toast.error('Erreur lors du refus.')
-    } else {
-      toast.info('Devis refusé.')
-      setOrder(prev => prev ? { ...prev, status: 'cancelled' } : null)
+    toast.info('Devis refusé.')
+    setOrder(prev => prev ? { ...prev, status: 'cancelled' } : null)
+  }
+
+  async function handlePayNow() {
+    if (!order?.quotes || !wallet) return
+    const total = order.quotes.total
+    if (wallet.available_balance < total) {
+      toast.error('Solde insuffisant. Veuillez recharger votre portefeuille.')
+      return
+    }
+    setPaying(true)
+    try {
+      const { error: txErr } = await supabase.from('wallet_transactions').insert({
+        wallet_id: wallet.id,
+        type: 'payment',
+        amount: total,
+        status: 'completed',
+        description: `Paiement commande ${order.tracking_code}`,
+      })
+      if (txErr) throw txErr
+
+      const { error: wErr } = await supabase
+        .from('wallets')
+        .update({ available_balance: wallet.available_balance - total })
+        .eq('id', wallet.id)
+      if (wErr) throw wErr
+
+      const { error: oErr } = await supabase
+        .from('orders')
+        .update({ total_paid: total, payment_status: 'paid', status: 'processing' })
+        .eq('id', order.id)
+      if (oErr) throw oErr
+
+      toast.success('Paiement effectué ! Votre commande est en cours de traitement.')
+      setOrder(prev => prev ? { ...prev, status: 'processing', payment_status: 'paid', total_paid: total } : null)
+      setWallet(prev => prev ? { ...prev, available_balance: prev.available_balance - total } : null)
+    } catch {
+      toast.error('Erreur lors du paiement. Réessayez.')
+    } finally {
+      setPaying(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-          <div className="space-y-6">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </div>
-        </div>
+      <div className="min-h-full bg-[#F4F5F7] px-4 pt-5 space-y-4">
+        <Skeleton className="h-8 w-48 rounded-xl" />
+        <Skeleton className="h-28 w-full rounded-2xl" />
+        <Skeleton className="h-44 w-full rounded-2xl" />
+        <Skeleton className="h-36 w-full rounded-2xl" />
       </div>
     )
   }
 
   if (notFound || !order) {
     return (
-      <div className="text-center py-16">
-        <p className="text-muted-foreground mb-4">Commande introuvable.</p>
-        <Button asChild variant="outline">
-          <Link to="/orders"><ArrowLeft className="mr-2 h-4 w-4" />Retour aux commandes</Link>
-        </Button>
+      <div className="min-h-full bg-[#F4F5F7] flex items-center justify-center px-4">
+        <div className="text-center">
+          <Package className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+          <p className="text-muted-foreground mb-4 font-medium">Commande introuvable.</p>
+          <Button asChild variant="outline" className="rounded-xl">
+            <Link to="/orders"><ArrowLeft className="mr-2 h-4 w-4" />Retour</Link>
+          </Button>
+        </div>
       </div>
     )
   }
 
   const productName = order.quotes?.product_requests?.product_name || 'Produit'
   const delivery = estimatedDelivery()
+  const total = order.quotes?.total ?? 0
+  const canPay = wallet ? wallet.available_balance >= total : false
+  const needsPayment = order.status === 'awaiting_payment' && order.payment_status !== 'paid'
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/orders">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">{productName}</h1>
-            <StatusBadge status={order.status} />
+    <div className="min-h-full bg-[#F4F5F7] pb-10">
+
+      {/* Header */}
+      <div className="bg-white border-b border-border/60 px-4 pt-4 pb-4 sticky top-0 z-20 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" asChild className="h-9 w-9 rounded-xl">
+            <Link to="/orders"><ArrowLeft className="h-4 w-4" /></Link>
+          </Button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base font-bold text-foreground truncate">{productName}</h1>
+              <StatusBadge status={order.status} />
+            </div>
+            <p className="text-xs text-muted-foreground font-mono">{order.tracking_code}</p>
           </div>
-          <p className="text-muted-foreground font-mono text-sm">{order.tracking_code}</p>
         </div>
       </div>
 
-      {/* Status tracker */}
-      <OrderStatusTracker status={order.status} className="bg-card rounded-2xl border border-border px-4 py-3" />
+      <div className="px-4 pt-4 space-y-3">
 
-      {/* Quote action banner */}
-      {order.status === 'quote_sent' && order.quotes && (
-        <Card className="border-primary/40 bg-primary/5">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold">Devis reçu — Action requise</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Total: <span className="font-bold text-primary">{order.quotes.total.toLocaleString()} HTG</span> · Délai: {order.quotes.estimated_delivery_days || '—'} jours
-                </p>
+        {/* Status tracker */}
+        <div className="rounded-2xl bg-white border border-border/60 shadow-sm px-4 py-4">
+          <OrderStatusTracker status={order.status} />
+        </div>
+
+        {/* ── DEVIS REÇU — accepter/refuser ── */}
+        {order.status === 'quote_sent' && order.quotes && (
+          <div className="rounded-2xl bg-primary/8 border border-primary/20 p-4">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 shrink-0">
+                <FileText className="h-4 w-4 text-primary" />
               </div>
-              <div className="flex gap-3 shrink-0">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/5">
-                      <XCircle className="h-4 w-4" />Refuser
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Refuser ce devis ?</AlertDialogTitle>
-                      <AlertDialogDescription>La commande sera annulée. Cette action est irréversible.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Annuler</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleRejectQuote} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        Confirmer le refus
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <Button size="sm" onClick={handleAcceptQuote} disabled={accepting} className="gap-1.5">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {accepting ? 'Acceptation...' : 'Accepter le devis'}
-                </Button>
+              <div>
+                <p className="font-bold text-sm text-foreground">Devis reçu — Action requise</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Total : <span className="font-bold text-primary">{total.toLocaleString('fr-HT')} HTG</span>
+                  {order.quotes.estimated_delivery_days && ` · ${order.quotes.estimated_delivery_days} jours`}
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Payment CTA */}
-      {order.status === 'awaiting_payment' && (
-        <Card className="border-warning/40 bg-warning/5">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold text-warning">Paiement requis</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Réglez {(order.quotes?.total ?? 0).toLocaleString()} HTG depuis votre portefeuille pour lancer la commande.
-                </p>
-              </div>
-              <Button asChild size="sm" className="gap-1.5">
-                <Link to="/wallet">
-                  <Wallet className="h-4 w-4" />Recharger / Payer
-                </Link>
+            <div className="flex gap-2.5">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex-1 rounded-xl gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/5">
+                    <XCircle className="h-3.5 w-3.5" />Refuser
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Refuser ce devis ?</AlertDialogTitle>
+                    <AlertDialogDescription>La commande sera annulée. Cette action est irréversible.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleRejectQuote} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Confirmer le refus
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button size="sm" onClick={handleAcceptQuote} disabled={accepting} className="flex-1 rounded-xl gap-1.5">
+                {accepting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                {accepting ? 'Acceptation…' : 'Accepter'}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Timeline */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Suivi de la commande
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TimelineStep currentStatus={order.status as OrderStatus} />
-            </CardContent>
-          </Card>
-
-          {/* Tabs */}
-          <Tabs defaultValue="details">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="details">Détails</TabsTrigger>
-              <TabsTrigger value="quote">Devis</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="support">Support</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="details" className="mt-4">
-              <Card>
-                <CardContent className="pt-6 space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Plateforme</p>
-                      <Badge variant="outline" className="mt-1 capitalize">
-                        {order.quotes?.product_requests?.source_platform || '—'}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Date de commande</p>
-                      <p className="font-medium">
-                        {new Date(order.created_at).toLocaleDateString('fr-HT')}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Livraison estimée</p>
-                      <p className="font-medium">
-                        {delivery ? delivery.toLocaleDateString('fr-HT') : '—'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Statut paiement</p>
-                      <Badge variant={order.payment_status === 'paid' ? 'default' : 'secondary'} className="mt-1 capitalize">
-                        {order.payment_status === 'paid' ? 'Payé' : order.payment_status === 'partial' ? 'Partiel' : 'Impayé'}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="quote" className="mt-4">
-              <Card>
-                <CardContent className="pt-6">
-                  {order.quotes ? (
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span>Prix produit</span>
-                        <span>{order.quotes.product_price.toLocaleString()} HTG</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Quantité</span>
-                        <span>{order.quotes.quantity}</span>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Frais de service</span>
-                        <span>{order.quotes.service_fee.toLocaleString()} HTG</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Frais d'achat</span>
-                        <span>{order.quotes.purchase_fee.toLocaleString()} HTG</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Frais maritime</span>
-                        <span>{order.quotes.shipping_fee.toLocaleString()} HTG</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Douane estimée</span>
-                        <span>{order.quotes.customs_fee.toLocaleString()} HTG</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Livraison locale</span>
-                        <span>{order.quotes.local_delivery_fee.toLocaleString()} HTG</span>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between font-semibold text-lg">
-                        <span>Total</span>
-                        <span className="text-primary">{order.quotes.total.toLocaleString()} HTG</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">Aucun devis disponible</p>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="documents" className="mt-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Aucun document disponible pour le moment</p>
-                    <p className="text-sm">Les factures et documents seront disponibles après livraison</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="support" className="mt-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center py-8">
-                    <Mail className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="mb-2">Besoin d'aide avec cette commande ?</p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Notre équipe support est disponible pour vous aider
-                    </p>
-                    <Button asChild>
-                      <Link to="/support">Contacter le support</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Résumé paiement</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span>Total commande</span>
-                <span className="font-semibold">{(order.quotes?.total ?? 0).toLocaleString()} HTG</span>
-              </div>
-              <div className="flex justify-between text-success">
-                <span>Payé</span>
-                <span>{order.total_paid.toLocaleString()} HTG</span>
-              </div>
-              <Separator />
-              <Badge className="w-full justify-center" variant={order.payment_status === 'paid' ? 'default' : 'secondary'}>
-                {order.payment_status === 'paid' ? 'Payé intégralement' : 'En attente de paiement'}
-              </Badge>
-            </CardContent>
-          </Card>
-
-          {delivery && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Expédition</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-start gap-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-muted-foreground">Arrivée estimée</p>
-                    <p className="font-medium">{delivery.toLocaleDateString('fr-HT')}</p>
-                  </div>
+        {/* ── PAIEMENT REQUIS — CTA proéminent ── */}
+        {needsPayment && (
+          <div className="rounded-2xl border border-warning/30 overflow-hidden shadow-sm">
+            <div className="bg-warning/8 px-4 pt-4 pb-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning/20 shrink-0">
+                  <AlertCircle className="h-4 w-4 text-warning" />
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                <div>
+                  <p className="font-bold text-sm text-foreground">Paiement requis</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Réglez <span className="font-bold text-foreground">{total.toLocaleString('fr-HT')} HTG</span> depuis votre portefeuille pour lancer la commande.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white px-4 py-3 space-y-3">
+              {/* Solde dispo */}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <Wallet className="h-3.5 w-3.5" />
+                  Solde disponible
+                </span>
+                <span className={`font-bold ${canPay ? 'text-emerald-600' : 'text-destructive'}`}>
+                  {(wallet?.available_balance ?? 0).toLocaleString('fr-HT')} HTG
+                </span>
+              </div>
+              {canPay ? (
+                <Button
+                  onClick={handlePayNow}
+                  disabled={paying}
+                  className="w-full rounded-xl h-11 font-bold gap-2"
+                >
+                  {paying ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" />Paiement en cours…</>
+                  ) : (
+                    <><Wallet className="h-4 w-4" />Payer {total.toLocaleString('fr-HT')} HTG</>
+                  )}
+                </Button>
+              ) : (
+                <Button asChild className="w-full rounded-xl h-11 font-bold gap-2">
+                  <Link to="/wallet">
+                    <Wallet className="h-4 w-4" />
+                    Recharger mon portefeuille
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Détails commande */}
+        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-border/50">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Détails commande</p>
+          </div>
+          <div className="px-4 divide-y divide-border/50">
+            <InfoRow label="Plateforme" value={(order.quotes?.product_requests?.source_platform || '—').toUpperCase()} />
+            <InfoRow label="Date" value={new Date(order.created_at).toLocaleDateString('fr-FR')} />
+            {delivery && <InfoRow label="Livraison estimée" value={delivery.toLocaleDateString('fr-FR')} />}
+            <InfoRow
+              label="Statut paiement"
+              value={order.payment_status === 'paid' ? 'Payé' : order.payment_status === 'partial' ? 'Partiel' : 'Impayé'}
+              valueClass={order.payment_status === 'paid' ? 'text-emerald-600' : 'text-warning'}
+            />
+            {order.quotes?.product_requests?.product_url && (
+              <div className="py-3">
+                <a
+                  href={order.quotes.product_requests.product_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary font-semibold flex items-center gap-1.5 hover:underline"
+                >
+                  Voir le produit <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Résumé paiement */}
+        {order.quotes && (
+          <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-border/50">
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Résumé paiement</p>
+            </div>
+            <div className="px-4 py-2">
+              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+                <span className="text-muted-foreground">Prix produit</span>
+                <span className="font-medium">{order.quotes.product_price.toLocaleString('fr-HT')} HTG</span>
+              </div>
+              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+                <span className="text-muted-foreground">Quantité</span>
+                <span className="font-medium">× {order.quotes.quantity}</span>
+              </div>
+              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+                <span className="text-muted-foreground">Frais de service</span>
+                <span className="font-medium">{order.quotes.service_fee.toLocaleString('fr-HT')} HTG</span>
+              </div>
+              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+                <span className="text-muted-foreground">Frais d'achat</span>
+                <span className="font-medium">{order.quotes.purchase_fee.toLocaleString('fr-HT')} HTG</span>
+              </div>
+              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+                <span className="text-muted-foreground">Frais maritime</span>
+                <span className="font-medium">{order.quotes.shipping_fee.toLocaleString('fr-HT')} HTG</span>
+              </div>
+              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+                <span className="text-muted-foreground">Douane estimée</span>
+                <span className="font-medium">{order.quotes.customs_fee.toLocaleString('fr-HT')} HTG</span>
+              </div>
+              <div className="flex justify-between py-2.5 text-sm border-b border-border/50">
+                <span className="text-muted-foreground">Livraison locale</span>
+                <span className="font-medium">{order.quotes.local_delivery_fee.toLocaleString('fr-HT')} HTG</span>
+              </div>
+              <Separator className="my-0" />
+              <div className="flex justify-between py-3">
+                <span className="font-bold text-base">Total</span>
+                <span className="font-bold text-base text-primary">{order.quotes.total.toLocaleString('fr-HT')} HTG</span>
+              </div>
+              <div className="flex justify-between pb-3 text-sm">
+                <span className="text-emerald-600 font-medium">Déjà payé</span>
+                <span className="text-emerald-600 font-semibold">{order.total_paid.toLocaleString('fr-HT')} HTG</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Suivi timeline */}
+        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-border/50 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-bold text-foreground">Suivi de la commande</p>
+          </div>
+          <div className="px-4 py-4">
+            <TimelineStep currentStatus={order.status as OrderStatus} />
+          </div>
+        </div>
+
+        {/* Expédition */}
+        {delivery && (
+          <div className="rounded-2xl bg-white border border-border/60 shadow-sm px-4 py-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+              <Calendar className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">Arrivée estimée</p>
+              <p className="text-sm font-bold text-foreground">{delivery.toLocaleDateString('fr-FR')}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Support */}
+        <div className="rounded-2xl bg-white border border-border/60 shadow-sm px-4 py-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-bold text-foreground">Besoin d'aide ?</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Notre équipe est disponible</p>
+          </div>
+          <Button asChild size="sm" variant="outline" className="rounded-xl">
+            <Link to="/support">Contacter</Link>
+          </Button>
+        </div>
+
       </div>
     </div>
   )
