@@ -1,18 +1,24 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Home, Package, Ship, Bell, User } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 
+import IconAccueil       from '@/assets/icons/accueil.png'
+import IconCommandes     from '@/assets/icons/commandes.png'
+import IconExpeditions   from '@/assets/icons/expeditions.png'
+import IconNotifications from '@/assets/icons/notifications.png'
+import IconProfil        from '@/assets/icons/profil.png'
+
 const NAV_ITEMS = [
-  { label: 'Accueil', icon: Home, path: '/dashboard' },
-  { label: 'Commandes', icon: Package, path: '/orders' },
-  { label: 'Expéditions', icon: Ship, path: '/shipments' },
-  { label: 'Notifs', icon: Bell, path: '/notifications' },
-  { label: 'Profil', icon: User, path: '/profile' },
+  { label: 'Accueil',     icon: IconAccueil,       path: '/dashboard' },
+  { label: 'Commandes',   icon: IconCommandes,     path: '/orders' },
+  { label: 'Expéditions', icon: IconExpeditions,   path: '/shipments' },
+  { label: 'Notifs',      icon: IconNotifications, path: '/notifications' },
+  { label: 'Profil',      icon: IconProfil,        path: '/profile' },
 ]
 
 function TopHeader() {
@@ -38,7 +44,6 @@ function TopHeader() {
       <Link to="/dashboard">
         <KonvwaLogo size={30} />
       </Link>
-
       <div className="flex items-center gap-2">
         <Link
           to="/notifications"
@@ -97,7 +102,6 @@ function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-border/60 pb-safe shadow-[0_-1px_12px_rgba(10,22,40,0.06)]">
       <div className="flex items-stretch h-16">
         {NAV_ITEMS.map((item) => {
-          const Icon = item.icon
           const isActive = location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
           const isNotif = item.path === '/notifications'
@@ -108,19 +112,20 @@ function BottomNav() {
               to={item.path}
               className="flex flex-1 flex-col items-center justify-center gap-1 relative"
             >
-              {/* Circle indicator (FamillyBill style) */}
               <div className={cn(
-                'relative flex items-center justify-center rounded-full transition-all duration-200',
-                isActive
-                  ? 'bg-primary w-11 h-11 shadow-sm'
-                  : 'w-10 h-10'
+                'relative flex items-center justify-center rounded-2xl transition-all duration-200',
+                isActive ? 'bg-primary/12 w-12 h-11' : 'w-11 h-10'
               )}>
-                <Icon
-                  className={cn('h-5 w-5 transition-colors', isActive ? 'text-white' : 'text-muted-foreground')}
-                  strokeWidth={isActive ? 2.2 : 1.8}
+                <img
+                  src={item.icon}
+                  alt={item.label}
+                  className={cn(
+                    'h-6 w-6 object-contain transition-all duration-200',
+                    isActive ? 'opacity-100 scale-105' : 'opacity-55'
+                  )}
                 />
                 {isNotif && unread > 0 && !isActive && (
-                  <span className="absolute top-1.5 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white leading-none">
+                  <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white leading-none">
                     {unread > 9 ? '9+' : unread}
                   </span>
                 )}
