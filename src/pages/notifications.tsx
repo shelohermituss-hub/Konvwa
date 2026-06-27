@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Bell, Check, Trash2, Info, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Bell, Check, Trash2, Info, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+
+import IconValide from '@/assets/icons/valide.png'
 
 interface Notification {
   id: string
@@ -16,9 +18,17 @@ interface Notification {
   created_at: string
 }
 
-const TYPE_CONFIG = {
+type IconConfig = {
+  icon?: typeof Info
+  imgSrc?: string
+  iconBg: string
+  iconColor: string
+  dotColor: string
+}
+
+const TYPE_CONFIG: Record<string, IconConfig> = {
   info: { icon: Info, iconBg: 'bg-primary/10', iconColor: 'text-primary', dotColor: 'bg-primary' },
-  success: { icon: CheckCircle, iconBg: 'bg-success/10', iconColor: 'text-success', dotColor: 'bg-success' },
+  success: { imgSrc: IconValide, iconBg: 'bg-emerald-50', iconColor: '', dotColor: 'bg-success' },
   warning: { icon: AlertTriangle, iconBg: 'bg-warning/10', iconColor: 'text-warning', dotColor: 'bg-warning' },
   error: { icon: Bell, iconBg: 'bg-destructive/10', iconColor: 'text-destructive', dotColor: 'bg-destructive' },
 }
@@ -100,6 +110,7 @@ export function NotificationsPage() {
               const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.info
               const Icon = config.icon
               const isUnread = !n.read_at
+              const imgSrc = config.imgSrc
               const showReadHeader = i > 0 && !notifications[i - 1].read_at && !isUnread && notifications.some((x) => !x.read_at)
               return (
                 <div key={n.id}>
@@ -111,7 +122,9 @@ export function NotificationsPage() {
                     isUnread ? 'bg-card border border-border shadow-sm' : 'bg-muted/30 border border-transparent'
                   )}>
                     <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl shrink-0', config.iconBg)}>
-                      <Icon className={cn('h-5 w-5', config.iconColor)} />
+                      {imgSrc
+                        ? <img src={imgSrc} alt="" className="h-6 w-6 object-contain" />
+                        : Icon && <Icon className={cn('h-5 w-5', config.iconColor)} />}
                     </div>
                     <div className="flex-1 min-w-0 pr-8">
                       <div className="flex items-center gap-2">

@@ -6,6 +6,8 @@ import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
+import IconNavire from '@/assets/icons/navire.png'
+
 interface MyShipment {
   shipment_id: string
   batch_code: string
@@ -59,8 +61,8 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
         className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/20 transition-colors"
         onClick={() => setExpanded(e => !e)}
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-          <Ship className="h-6 w-6 text-primary" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 shrink-0">
+          <img src={IconNavire} alt="" className="h-8 w-8 object-contain" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -216,7 +218,7 @@ export function ShipmentsPage() {
           [1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-            <Ship className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+            <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
             <p className="font-semibold text-muted-foreground">
               {filter === 'active' ? 'Aucune expédition en cours' : 'Aucune expédition terminée'}
             </p>
