@@ -382,3 +382,64 @@
   transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 160ms ease;
 }
 .action-icon:active { transform: scale(0.92); }
+
+/* ============================================================
+   ONBOARDING ANIMATIONS
+   ============================================================ */
+
+@keyframes ob-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 0.90; transform: scale(1.14); }
+}
+
+@keyframes ob-ring-cw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes ob-ring-ccw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+/* Orbit 1: small dots around the K badge (radius ~96px) */
+@keyframes ob-orbit1 {
+  from { transform: rotate(0deg)   translateY(-96px); }
+  to   { transform: rotate(360deg) translateY(-96px); }
+}
+
+/* Orbit 2: platform badges around the globe (radius ~130px, counter-rotated to stay upright) */
+@keyframes ob-orbit2 {
+  from { transform: rotate(0deg)   translateY(-130px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateY(-130px) rotate(-360deg); }
+}
+
+/* Globe slow z-rotation */
+@keyframes ob-globe {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Text stagger entrances */
+@keyframes ob-text1 {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ob-text2 {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ob-text3 {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-ob-glow      { animation: ob-glow      4s ease-in-out infinite; }
+.animate-ob-ring-cw   { animation: ob-ring-cw   18s linear infinite; }
+.animate-ob-ring-ccw  { animation: ob-ring-ccw  12s linear infinite; }
+.animate-ob-orbit1    { animation: ob-orbit1    3.6s linear infinite; }
+.animate-ob-orbit2    { animation: ob-orbit2    7.2s linear infinite; }
+.animate-ob-globe     { animation: ob-globe     45s linear infinite; }
+.animate-ob-text1     { animation: ob-text1     480ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.animate-ob-text2     { animation: ob-text2     480ms cubic-bezier(0.23, 1, 0.32, 1) 80ms both; }
+.animate-ob-text3     { animation: ob-text3     480ms cubic-bezier(0.23, 1, 0.32, 1) 160ms both; }

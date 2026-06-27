@@ -69,12 +69,21 @@ export const router = createBrowserRouter([
     element: <Navigate to="/auth" replace />,
   },
 
+  // Root — redirect to onboarding (first-time) or auth (returning)
+  {
+    path: '/',
+    element: (
+      <AuthGuard requireAuth={false}>
+        <OnboardingPage />
+      </AuthGuard>
+    ),
+  },
+
   // Public marketing routes (retain for SEO / direct links)
   {
     path: '/',
     element: <PublicLayout />,
     children: [
-      { index: true, element: <HomePage /> },
       { path: 'how-it-works', element: <HomePage /> },
       { path: 'prices', element: <HomePage /> },
       { path: 'faq', element: <HomePage /> },
