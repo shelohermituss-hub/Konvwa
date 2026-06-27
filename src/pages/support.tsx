@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PageHeader } from '@/components/shared/page-header'
-import { EmptyState } from '@/components/shared/empty-state'
-import { MessageSquare, Plus, ChevronRight, Clock, Loader2 } from 'lucide-react'
+import { MessageSquare, Plus, ChevronRight, Clock, Loader2, HelpCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 interface Ticket {
   id: string
@@ -22,11 +19,11 @@ interface Ticket {
   created_at: string
 }
 
-const statusLabels: Record<string, string> = {
-  open: 'Ouvert',
-  in_progress: 'En cours',
-  resolved: 'Résolu',
-  closed: 'Fermé',
+const STATUS_CONFIG: Record<string, { label: string; dot: string; bg: string; text: string }> = {
+  open:        { label: 'Ouvert',   dot: 'bg-amber-400',        bg: 'bg-amber-50',   text: 'text-amber-700' },
+  in_progress: { label: 'En cours', dot: 'bg-primary',          bg: 'bg-primary/10', text: 'text-primary' },
+  resolved:    { label: 'Résolu',   dot: 'bg-emerald-500',      bg: 'bg-emerald-50', text: 'text-emerald-700' },
+  closed:      { label: 'Fermé',    dot: 'bg-muted-foreground', bg: 'bg-muted',      text: 'text-muted-foreground' },
 }
 
 export function SupportPage() {
@@ -45,46 +42,32 @@ export function SupportPage() {
       .select('id, subject, status, priority, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-
     if (data) setTickets(data as Ticket[])
     setLoading(false)
   }
 
-  useEffect(() => {
-    loadTickets()
-  }, [user])
+  useEffect(() => { loadTickets() }, [user])
 
   async function handleSubmit() {
     if (!subject || !message || !user) return
     setSubmitting(true)
-
     const { data: ticketData, error: ticketError } = await supabase
       .from('support_tickets')
-      .insert({
-        user_id: user.id,
-        subject,
-        priority,
-        status: 'open',
-      })
+      .insert({ user_id: user.id, subject, priority, status: 'open' })
       .select('id')
       .maybeSingle()
-
     if (ticketError || !ticketData) {
       toast.error('Erreur lors de la création du ticket. Veuillez réessayer.')
       setSubmitting(false)
       return
     }
-
-    const { error: msgError } = await supabase
-      .from('support_messages')
-      .insert({
-        ticket_id: ticketData.id,
-        sender_id: user.id,
-        message,
-      })
-
+    const { error: msgError } = await supabase.from('support_messages').insert({
+      ticket_id: ticketData.id,
+      sender_id: user.id,
+      message,
+    })
     if (msgError) {
-      toast.error('Ticket créé mais le message n\'a pas pu être envoyé.')
+      toast.error("Ticket créé mais le message n'a pas pu être envoyé.")
     } else {
       toast.success('Votre demande a bien été envoyée.')
       setSubject('')
@@ -92,43 +75,43 @@ export function SupportPage() {
       setPriority('normal')
       await loadTickets()
     }
-
     setSubmitting(false)
   }
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-      <PageHeader
-        title="Support"
-        description="Besoin d'aide ? Ouvrez un ticket ou consultez vos demandes existantes"
-      />
+    <div className="min-h-full bg-background">
+      <div className="px-5 pt-5 pb-4">
+        <h1 className="text-2xl font-bold tracking-tight">Support</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Besoin d'aide ? Nous répondons rapidement.</p>
+      </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* New ticket */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Nouvelle demande
-            </CardTitle>
-            <CardDescription>
-              Décrivez votre problème et nous vous répondrons rapidement
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="subject">Sujet *</Label>
+      <div className="px-4 pb-6 space-y-4">
+        {/* New ticket form */}
+        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+              <Plus className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Nouvelle demande</p>
+              <p className="text-xs text-muted-foreground">Décrivez votre problème</p>
+            </div>
+          </div>
+          <div className="p-5 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="subject" className="text-sm font-semibold">Sujet *</Label>
               <Input
                 id="subject"
                 placeholder="Résumé de votre demande"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
+                className="rounded-xl"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priorité</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="priority" className="text-sm font-semibold">Priorité</Label>
               <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -139,83 +122,78 @@ export function SupportPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="message">Message *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="message" className="text-sm font-semibold">Message *</Label>
               <Textarea
                 id="message"
                 placeholder="Décrivez votre problème en détail..."
                 rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                className="rounded-xl resize-none"
               />
             </div>
             <Button
-              className="w-full"
+              className="w-full rounded-xl"
               disabled={!subject || !message || submitting}
               onClick={handleSubmit}
             >
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Envoyer la demande
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Ticket list */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Mes demandes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            ) : tickets.length === 0 ? (
-              <EmptyState
-                icon={MessageSquare}
-                title="Aucune demande"
-                description="Vous n'avez pas encore ouvert de ticket de support."
-              />
-            ) : (
-              <div className="space-y-3">
-                {tickets.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border hover:border-primary transition-colors cursor-pointer"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted shrink-0">
+        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted">
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <p className="font-semibold text-sm">Mes demandes ({tickets.length})</p>
+          </div>
+          {loading ? (
+            <div className="p-5 space-y-3">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
+            </div>
+          ) : tickets.length === 0 ? (
+            <div className="p-10 text-center">
+              <HelpCircle className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="font-semibold text-sm text-muted-foreground">Aucune demande</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Vous n'avez pas encore ouvert de ticket de support.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {tickets.map((ticket) => {
+                const cfg = STATUS_CONFIG[ticket.status] || STATUS_CONFIG.open
+                return (
+                  <div key={ticket.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors cursor-pointer">
+                    <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl shrink-0', cfg.bg)}>
                       {ticket.status === 'open' ? (
-                        <Clock className="h-5 w-5 text-warning" />
+                        <Clock className={cn('h-4 w-4', cfg.text)} />
                       ) : (
-                        <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                        <MessageSquare className={cn('h-4 w-4', cfg.text)} />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{ticket.subject}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge
-                          variant={ticket.status === 'open' || ticket.status === 'in_progress' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {statusLabels[ticket.status] || ticket.status}
-                        </Badge>
+                      <p className="font-medium text-sm truncate">{ticket.subject}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={cn('inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2 py-0.5', cfg.bg, cfg.text)}>
+                          <span className={cn('h-1.5 w-1.5 rounded-full', cfg.dot)} />
+                          {cfg.label}
+                        </span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(ticket.created_at).toLocaleDateString('fr-HT')}
+                          {new Date(ticket.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                         </span>
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

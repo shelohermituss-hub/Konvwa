@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PageHeader } from '@/components/shared/page-header'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Loader2, Save, RefreshCw, DollarSign, Plane, Landmark, Percent } from 'lucide-react'
@@ -18,16 +16,16 @@ interface Setting {
 }
 
 const SETTING_ICONS: Record<string, typeof DollarSign> = {
-  usd_to_htg_rate: DollarSign,
-  freight_per_kg_usd: Plane,
-  duty_rate_percent: Landmark,
+  usd_to_htg_rate:       DollarSign,
+  freight_per_kg_usd:    Plane,
+  duty_rate_percent:     Landmark,
   service_margin_percent: Percent,
 }
 
 const SETTING_SUFFIXES: Record<string, string> = {
-  usd_to_htg_rate: 'HTG/USD',
-  freight_per_kg_usd: 'USD/kg',
-  duty_rate_percent: '%',
+  usd_to_htg_rate:       'HTG/USD',
+  freight_per_kg_usd:    'USD/kg',
+  duty_rate_percent:     '%',
   service_margin_percent: '%',
 }
 
@@ -39,11 +37,7 @@ export function AdminSettingsPage() {
 
   async function loadSettings() {
     setLoading(true)
-    const { data } = await supabase
-      .from('app_settings')
-      .select('key, value, label, description, updated_at')
-      .order('key')
-
+    const { data } = await supabase.from('app_settings').select('key, value, label, description, updated_at').order('key')
     if (data) {
       setSettings(data as Setting[])
       setValues(Object.fromEntries(data.map((s: Setting) => [s.key, s.value])))
@@ -62,9 +56,7 @@ export function AdminSettingsPage() {
       description: s.description,
       updated_at: new Date().toISOString(),
     }))
-
     const { error } = await supabase.from('app_settings').upsert(updates, { onConflict: 'key' })
-
     if (error) {
       toast.error('Erreur lors de la sauvegarde.')
     } else {
@@ -77,33 +69,34 @@ export function AdminSettingsPage() {
   const hasChanges = settings.some(s => values[s.key] !== s.value)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-start justify-between">
-        <PageHeader
-          title="Paramètres"
-          description="Configurez les taux et marges utilisés dans les estimations clients"
-        />
-        <Button onClick={handleSave} disabled={saving || !hasChanges} className="gap-2 shrink-0">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Paramètres</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Configurez les taux et marges utilisés dans les estimations clients</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving || !hasChanges} className="rounded-xl gap-2 shrink-0">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Enregistrer
         </Button>
       </div>
 
       {/* Calculation parameters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Paramètres de calcul
-          </CardTitle>
-          <CardDescription>
-            Ces valeurs s'appliquent en temps réel dans le calculateur de soumission des commandes clients.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+            <DollarSign className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">Paramètres de calcul</p>
+            <p className="text-xs text-muted-foreground">Ces valeurs s'appliquent en temps réel dans le calculateur de soumission</p>
+          </div>
+        </div>
+        <div className="p-5">
           {loading ? (
             <div className="grid sm:grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+              {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 gap-5">
@@ -113,7 +106,7 @@ export function AdminSettingsPage() {
                 const step = setting.key.includes('percent') ? '0.5' : '0.5'
                 return (
                   <div key={setting.key} className="space-y-2">
-                    <Label className="flex items-center gap-2">
+                    <Label className="flex items-center gap-2 font-semibold text-sm">
                       <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
                         <Icon className="h-3.5 w-3.5 text-primary" />
                       </div>
@@ -129,36 +122,36 @@ export function AdminSettingsPage() {
                         step={step}
                         value={values[setting.key] ?? setting.value}
                         onChange={e => setValues(prev => ({ ...prev, [setting.key]: e.target.value }))}
-                        className="pr-16 font-mono"
+                        className="pr-20 font-mono rounded-xl"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">
                         {suffix}
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground/70">
-                      Dernière mise à jour : {new Date(setting.updated_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      Dernière mise à jour : {new Date(setting.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>
                 )
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Preview */}
       {!loading && settings.length > 0 && (
-        <Card className="border-dashed">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Aperçu d'une commande exemple
-            </CardTitle>
-            <CardDescription>
-              Basé sur 50 unités à $4.50/u · 0.25 kg/u avec les paramètres actuels
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted">
+              <RefreshCw className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Aperçu d'une commande exemple</p>
+              <p className="text-xs text-muted-foreground">50 unités à $4.50/u · 0.25 kg/u avec les paramètres actuels</p>
+            </div>
+          </div>
+          <div className="p-5">
             {(() => {
               const rate = parseFloat(values['usd_to_htg_rate'] || '132')
               const freight = parseFloat(values['freight_per_kg_usd'] || '11')
@@ -177,35 +170,33 @@ export function AdminSettingsPage() {
               const fmtU = (n: number) => '$' + n.toFixed(2)
               return (
                 <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Produit (50 × $4.50)</span>
-                      <span className="font-mono">{fmtU(productUSD)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Fret (12.5 kg × ${freight}/kg)</span>
-                      <span className="font-mono">+ {fmtU(freightUSD)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Douane ({duty}% CIF)</span>
-                      <span className="font-mono">+ {fmtU(dutyUSD)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Service ({svc}%)</span>
-                      <span className="font-mono">+ {fmtU(serviceUSD)}</span>
-                    </div>
+                  <div className="space-y-2.5">
+                    {[
+                      { label: 'Produit (50 × $4.50)', value: fmtU(productUSD) },
+                      { label: `Fret (12.5 kg × $${freight}/kg)`, value: `+ ${fmtU(freightUSD)}` },
+                      { label: `Douane (${duty}% CIF)`, value: `+ ${fmtU(dutyUSD)}` },
+                      { label: `Service (${svc}%)`, value: `+ ${fmtU(serviceUSD)}` },
+                    ].map(row => (
+                      <div key={row.label} className="flex justify-between items-center py-2 border-b border-border/40 last:border-0">
+                        <span className="text-muted-foreground">{row.label}</span>
+                        <span className="font-mono font-semibold">{row.value}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 flex flex-col justify-center">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total rendu</p>
-                    <p className="text-2xl font-bold font-mono text-primary">{fmt(totalHTG)} <span className="text-sm font-normal text-muted-foreground">HTG</span></p>
-                    <p className="text-xs text-muted-foreground font-mono mt-1">≈ {fmtU(totalUSD)}</p>
-                    <p className="text-xs text-muted-foreground mt-2">{fmt(totalHTG / qty)} HTG / unité</p>
+                  <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5 flex flex-col justify-center">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Total rendu</p>
+                    <p className="text-3xl font-bold font-mono text-primary">{fmt(totalHTG)}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">HTG</p>
+                    <p className="text-xs text-muted-foreground font-mono mt-2">≈ {fmtU(totalUSD)}</p>
+                    <div className="mt-3 pt-3 border-t border-primary/20">
+                      <p className="text-xs text-muted-foreground">{fmt(totalHTG / qty)} HTG / unité</p>
+                    </div>
                   </div>
                 </div>
               )
             })()}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {hasChanges && (

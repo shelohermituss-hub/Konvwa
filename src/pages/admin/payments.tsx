@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -7,9 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { PageHeader } from '@/components/shared/page-header'
-import { EmptyState } from '@/components/shared/empty-state'
-import { Search, MoreHorizontal, CheckCircle2, XCircle, CreditCard, Smartphone } from 'lucide-react'
+import { Search, MoreHorizontal, CheckCircle2, XCircle, CreditCard, Smartphone, Clock, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -27,18 +24,29 @@ interface WalletTx {
   customer_phone?: string
 }
 
-const TX_STATUS_COLOR: Record<string, string> = {
-  pending: 'bg-warning/15 text-warning',
-  completed: 'bg-success/15 text-success',
-  failed: 'bg-destructive/15 text-destructive',
-  cancelled: 'bg-muted text-muted-foreground',
+const TX_STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
+  pending:   { label: 'En attente', bg: 'bg-amber-50',      text: 'text-amber-700' },
+  completed: { label: 'Validé',     bg: 'bg-emerald-50',    text: 'text-emerald-700' },
+  failed:    { label: 'Échoué',     bg: 'bg-destructive/10', text: 'text-destructive' },
+  cancelled: { label: 'Refusé',     bg: 'bg-muted',          text: 'text-muted-foreground' },
 }
 
 const METHOD_ICON: Record<string, React.ReactNode> = {
   moncash: <Smartphone className="h-3.5 w-3.5" style={{ color: '#ff6600' }} />,
   natcash: <Smartphone className="h-3.5 w-3.5" style={{ color: '#00a651' }} />,
-  wallet: <CreditCard className="h-3.5 w-3.5 text-primary" />,
+  wallet:  <CreditCard className="h-3.5 w-3.5 text-primary" />,
 }
+
+const TYPE_LABELS: Record<string, string> = {
+  deposit: 'Dépôt', withdrawal: 'Retrait', payment: 'Paiement', refund: 'Remboursement', block: 'Bloqué', unblock: 'Débloqué',
+}
+
+const STATUS_FILTERS = [
+  { value: 'pending',   label: 'En attente' },
+  { value: 'completed', label: 'Confirmés' },
+  { value: 'cancelled', label: 'Refusés' },
+  { value: 'all',       label: 'Tous' },
+]
 
 export function AdminPaymentsPage() {
   const [transactions, setTransactions] = useState<WalletTx[]>([])
@@ -77,14 +85,11 @@ export function AdminPaymentsPage() {
 
   async function handleApprove(tx: WalletTx) {
     setSaving(true)
-    // Update transaction status
     await supabase.from('wallet_transactions').update({ status: 'completed' }).eq('id', tx.id)
-    // Credit wallet
     const { data: wallet } = await supabase.from('wallets').select('available_balance').eq('id', tx.wallet_id).maybeSingle()
     if (wallet) {
       await supabase.from('wallets').update({ available_balance: wallet.available_balance + tx.amount, updated_at: new Date().toISOString() }).eq('id', tx.wallet_id)
     }
-    // Get user_id for notification
     const { data: walletRow } = await supabase.from('wallets').select('user_id').eq('id', tx.wallet_id).maybeSingle()
     if (walletRow) {
       await supabase.from('notifications').insert({
@@ -124,45 +129,44 @@ export function AdminPaymentsPage() {
     return matchSearch && matchStatus
   })
 
-  const STATUS_FILTERS = [
-    { value: 'pending', label: 'En attente' },
-    { value: 'completed', label: 'Confirmés' },
-    { value: 'cancelled', label: 'Refusés' },
-    { value: 'all', label: 'Tous' },
-  ]
-
   const pendingTotal = transactions.filter(t => t.status === 'pending' && t.type === 'deposit').reduce((s, t) => s + t.amount, 0)
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Gestion des paiements" description="Validez les recharges MonCash/NatCash et consultez les transactions" />
+    <div className="space-y-5">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Gestion des paiements</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Validez les recharges MonCash/NatCash et consultez les transactions</p>
+      </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'En attente', value: transactions.filter(t => t.status === 'pending').length, color: 'text-warning' },
-          { label: 'Montant en attente', value: `${pendingTotal.toLocaleString()} HTG`, color: 'text-warning' },
-          { label: 'Validés ce mois', value: transactions.filter(t => t.status === 'completed').length, color: 'text-success' },
-          { label: 'Total validé', value: `${transactions.filter(t => t.status === 'completed' && t.type === 'deposit').reduce((s, t) => s + t.amount, 0).toLocaleString()} HTG`, color: 'text-success' },
+          { label: 'En attente',       value: transactions.filter(t => t.status === 'pending').length,    icon: Clock,       bg: 'bg-amber-50',   iconColor: 'text-amber-600',   valueColor: 'text-amber-700' },
+          { label: 'Montant en attente', value: `${pendingTotal.toLocaleString()} HTG`,                    icon: CreditCard,  bg: 'bg-amber-50',   iconColor: 'text-amber-600',   valueColor: 'text-amber-700' },
+          { label: 'Validés',          value: transactions.filter(t => t.status === 'completed').length,  icon: CheckCircle2, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
+          { label: 'Total validé',     value: `${transactions.filter(t => t.status === 'completed' && t.type === 'deposit').reduce((s, t) => s + t.amount, 0).toLocaleString()} HTG`, icon: TrendingUp, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
         ].map(kpi => (
-          <Card key={kpi.label}>
-            <CardContent className="pt-5">
-              <p className={cn('text-xl font-bold', kpi.color)}>{kpi.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
-            </CardContent>
-          </Card>
+          <div key={kpi.label} className="rounded-2xl bg-white border border-border/60 shadow-sm p-4">
+            <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl mb-3', kpi.bg)}>
+              <kpi.icon className={cn('h-5 w-5', kpi.iconColor)} />
+            </div>
+            <p className={cn('text-xl font-bold', kpi.valueColor)}>{kpi.value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{kpi.label}</p>
+          </div>
         ))}
       </div>
 
-      <Card>
-        <CardHeader className="pb-4">
+      {/* Filters + table */}
+      <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-border/50">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              <Input placeholder="Rechercher par client ou description..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 rounded-xl" />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-44 rounded-xl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -170,96 +174,108 @@ export function AdminPaymentsPage() {
               </SelectContent>
             </Select>
           </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-12 w-full" />)}</div>
-          ) : filtered.length === 0 ? (
-            <EmptyState icon={CreditCard} title="Aucune transaction" description="Aucune transaction ne correspond à votre filtre." />
-          ) : (
-            <div className="rounded-lg border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Méthode</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="w-12"></TableHead>
+        </div>
+
+        {loading ? (
+          <div className="p-5 space-y-3">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-12 rounded-xl" />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center">
+            <CreditCard className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+            <p className="font-semibold text-muted-foreground">Aucune transaction</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Modifiez vos filtres de recherche</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Client</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Type</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Méthode</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Montant</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Statut</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Date</TableHead>
+                <TableHead className="w-10"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map(tx => {
+                const cfg = TX_STATUS_CONFIG[tx.status] || TX_STATUS_CONFIG.pending
+                return (
+                  <TableRow key={tx.id} className="hover:bg-muted/20 transition-colors">
+                    <TableCell>
+                      <p className="font-medium text-sm">{tx.customer_name}</p>
+                      <p className="text-xs text-muted-foreground">{tx.customer_phone}</p>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                      {TYPE_LABELS[tx.type] || tx.type}
+                    </TableCell>
+                    <TableCell>
+                      {tx.payment_method ? (
+                        <div className="flex items-center gap-1.5">
+                          {METHOD_ICON[tx.payment_method] || <CreditCard className="h-3.5 w-3.5" />}
+                          <span className="text-xs capitalize">{tx.payment_method}</span>
+                        </div>
+                      ) : '—'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <p className="font-semibold text-sm">{tx.amount.toLocaleString()}</p>
+                      <p className="text-[10px] text-muted-foreground">HTG</p>
+                    </TableCell>
+                    <TableCell>
+                      <span className={cn('text-xs font-semibold rounded-full px-2.5 py-1', cfg.bg, cfg.text)}>{cfg.label}</span>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+                      {new Date(tx.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </TableCell>
+                    <TableCell>
+                      {tx.status === 'pending' && tx.type === 'deposit' && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl w-44">
+                            <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => setApproveDialog(tx)}>
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />Approuver
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="rounded-lg cursor-pointer text-destructive focus:text-destructive" onClick={() => handleReject(tx)}>
+                              <XCircle className="mr-2 h-4 w-4" />Refuser
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(tx => {
-                    const color = TX_STATUS_COLOR[tx.status] || TX_STATUS_COLOR.pending
-                    const statusLabel = { pending: 'En attente', completed: 'Validé', failed: 'Échoué', cancelled: 'Refusé' }[tx.status] || tx.status
-                    const typeLabel = { deposit: 'Dépôt', withdrawal: 'Retrait', payment: 'Paiement', refund: 'Remboursement', block: 'Bloqué', unblock: 'Débloqué' }[tx.type] || tx.type
-                    return (
-                      <TableRow key={tx.id}>
-                        <TableCell>
-                          <p className="font-medium text-sm">{tx.customer_name}</p>
-                          <p className="text-xs text-muted-foreground">{tx.customer_phone}</p>
-                        </TableCell>
-                        <TableCell className="text-sm">{typeLabel}</TableCell>
-                        <TableCell>
-                          {tx.payment_method ? (
-                            <div className="flex items-center gap-1.5">
-                              {METHOD_ICON[tx.payment_method] || <CreditCard className="h-3.5 w-3.5" />}
-                              <span className="text-xs capitalize">{tx.payment_method}</span>
-                            </div>
-                          ) : '—'}
-                        </TableCell>
-                        <TableCell className="font-semibold">{tx.amount.toLocaleString()} HTG</TableCell>
-                        <TableCell>
-                          <span className={cn('text-xs font-medium rounded-full px-2 py-0.5', color)}>{statusLabel}</span>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {new Date(tx.created_at).toLocaleDateString('fr-HT')}
-                        </TableCell>
-                        <TableCell>
-                          {tx.status === 'pending' && tx.type === 'deposit' && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => setApproveDialog(tx)}>
-                                  <CheckCircle2 className="mr-2 h-4 w-4 text-success" />Approuver
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => handleReject(tx)}>
-                                  <XCircle className="mr-2 h-4 w-4" />Refuser
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                )
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
       {/* Confirm approve dialog */}
       <Dialog open={!!approveDialog} onOpenChange={o => { if (!o) setApproveDialog(null) }}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl">
           <DialogHeader>
             <DialogTitle>Approuver le paiement</DialogTitle>
             <DialogDescription>
-              Confirmer la réception et créditer le wallet de {approveDialog?.customer_name}
+              Confirmer la réception et créditer le wallet de <span className="font-semibold">{approveDialog?.customer_name}</span>
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 rounded-xl bg-muted/40 text-center">
-            <p className="text-3xl font-bold text-success">{approveDialog?.amount.toLocaleString()} HTG</p>
-            <p className="text-sm text-muted-foreground mt-1 capitalize">{approveDialog?.payment_method}</p>
+          <div className="py-4 rounded-xl bg-emerald-50 border border-emerald-100 text-center">
+            <p className="text-3xl font-bold text-emerald-700">{approveDialog?.amount.toLocaleString()} HTG</p>
+            <p className="text-sm text-emerald-600/80 mt-1 capitalize">{approveDialog?.payment_method}</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setApproveDialog(null)}>Annuler</Button>
-            <Button onClick={() => approveDialog && handleApprove(approveDialog)} disabled={saving} className="bg-success text-success-foreground hover:bg-success/90">
+            <Button variant="outline" onClick={() => setApproveDialog(null)} className="rounded-xl">Annuler</Button>
+            <Button
+              onClick={() => approveDialog && handleApprove(approveDialog)}
+              disabled={saving}
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
               <CheckCircle2 className="mr-2 h-4 w-4" />
               {saving ? 'Validation...' : 'Approuver et créditer'}
             </Button>
