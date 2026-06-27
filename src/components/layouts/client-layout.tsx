@@ -56,10 +56,9 @@ function useUnread(userId: string | undefined) {
   return unread
 }
 
-function DesktopSidebar() {
+function DesktopSidebar({ unread }: { unread: number }) {
   const { profile, user, signOut } = useAuth()
   const location = useLocation()
-  const unread = useUnread(user?.id)
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -165,9 +164,8 @@ function DesktopSidebar() {
   )
 }
 
-function TopHeader() {
-  const { profile, user } = useAuth()
-  const unread = useUnread(user?.id)
+function TopHeader({ unread }: { unread: number }) {
+  const { profile } = useAuth()
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -203,10 +201,8 @@ function TopHeader() {
   )
 }
 
-function BottomNav() {
+function BottomNav({ unread }: { unread: number }) {
   const location = useLocation()
-  const { user } = useAuth()
-  const unread = useUnread(user?.id)
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-border/60 pb-safe shadow-[0_-1px_12px_rgba(10,22,40,0.06)]">
@@ -255,14 +251,17 @@ function BottomNav() {
 }
 
 export function ClientLayout() {
+  const { user } = useAuth()
+  const unread = useUnread(user?.id)
+
   return (
     <div className="flex min-h-screen bg-background">
-      <DesktopSidebar />
+      <DesktopSidebar unread={unread} />
 
       <div className="flex-1 flex flex-col lg:ml-[240px] xl:ml-[260px] min-h-screen">
         {/* Mobile top header */}
         <div className="lg:hidden">
-          <TopHeader />
+          <TopHeader unread={unread} />
         </div>
 
         {/* Page content */}
@@ -273,7 +272,7 @@ export function ClientLayout() {
 
       {/* Mobile bottom nav */}
       <div className="lg:hidden">
-        <BottomNav />
+        <BottomNav unread={unread} />
       </div>
     </div>
   )
