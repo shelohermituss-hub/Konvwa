@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { User, Bell, Lock, Settings, LogOut, ChevronRight, ShieldCheck, MapPin, HelpCircle, Loader2, BadgeCheck, LayoutDashboard } from 'lucide-react'
+import { User, Bell, Lock, Settings, LogOut, ChevronRight, ShieldCheck, MapPin, HelpCircle, Loader2, BadgeCheck, LayoutDashboard, Camera } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -21,23 +21,71 @@ interface SettingRow {
 }
 
 export function ProfilePage() {
-  const { profile, user, signOut, isAdmin } = useAuth()
+  const { profile, user, signOut, isAdmin, refreshProfile } = useAuth()
   const [editOpen, setEditOpen] = useState(false)
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [phone, setPhone] = useState(profile?.phone || '')
   const [saving, setSaving] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U'
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image trop lourde (max 5 Mo).')
+      return
+    }
+
+    setAvatarUploading(true)
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg'
+      const path = `${user.id}/avatar.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, contentType: file.type })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(path)
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: `${publicUrl}?t=${Date.now()}`, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+
+      if (updateError) throw updateError
+
+      await refreshProfile()
+      toast.success('Photo de profil mise à jour.')
+    } catch {
+      toast.error('Erreur lors de l\'upload de la photo.')
+    } finally {
+      setAvatarUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   async function handleSave() {
     if (!user) return
     setSaving(true)
-    const { error } = await supabase.from('profiles').update({ full_name: fullName, phone: phone || null, updated_at: new Date().toISOString() }).eq('user_id', user.id)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ full_name: fullName, phone: phone || null, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id)
     if (error) toast.error('Erreur lors de la mise à jour.')
-    else toast.success('Profil mis à jour.')
+    else {
+      await refreshProfile()
+      toast.success('Profil mis à jour.')
+    }
     setSaving(false)
     setEditOpen(false)
   }
@@ -51,9 +99,9 @@ export function ProfilePage() {
     {
       title: 'Compte',
       rows: [
-        { icon: User,      label: 'Détails personnels',    iconBg: 'bg-[#FFF0EB]', iconColor: 'text-primary',     action: () => setEditOpen(true) },
-        { icon: MapPin,    label: 'Adresses de livraison', iconBg: 'bg-[#EBF3FF]', iconColor: 'text-[#2563EB]',  href: '/profile' },
-        { icon: Bell,      label: 'Notifications',         iconBg: 'bg-[#FFFBEB]', iconColor: 'text-[#F59E0B]',  href: '/notifications' },
+        { icon: User,   label: 'Détails personnels',    iconBg: 'bg-[#FFF0EB]', iconColor: 'text-primary',    action: () => setEditOpen(true) },
+        { icon: MapPin, label: 'Adresses de livraison', iconBg: 'bg-[#EBF3FF]', iconColor: 'text-[#2563EB]',  href: '/profile' },
+        { icon: Bell,   label: 'Notifications',         iconBg: 'bg-[#FFFBEB]', iconColor: 'text-[#F59E0B]',  href: '/notifications' },
       ],
     },
     {
@@ -66,7 +114,7 @@ export function ProfilePage() {
     {
       title: 'Général',
       rows: [
-        { icon: Settings,   label: 'Paramètres',  iconBg: 'bg-muted', iconColor: 'text-muted-foreground', href: '/profile' },
+        { icon: Settings,   label: 'Paramètres',   iconBg: 'bg-muted', iconColor: 'text-muted-foreground', href: '/profile' },
         { icon: HelpCircle, label: 'Support & Aide', iconBg: 'bg-muted', iconColor: 'text-muted-foreground', href: '/support' },
       ],
     },
@@ -75,22 +123,54 @@ export function ProfilePage() {
   return (
     <div className="min-h-full bg-background">
 
-      {/* Profile header card */}
+      {/* Profile header */}
       <div className="bg-white border-b border-border/60 px-5 pt-8 pb-7 text-center shadow-sm stagger-item">
+        {/* Avatar with upload */}
         <div className="relative inline-block">
-          <Avatar className="h-24 w-24 ring-4 ring-white shadow-lg">
-            <AvatarImage src={profile?.avatar_url || ''} />
-            <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          <button
+            className="relative block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={avatarUploading}
+            aria-label="Changer la photo de profil"
+          >
+            <Avatar className="h-24 w-24 ring-4 ring-white shadow-lg">
+              <AvatarImage src={profile?.avatar_url || ''} />
+              <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {/* Hover overlay */}
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
+              {avatarUploading
+                ? <Loader2 className="h-6 w-6 text-white animate-spin" />
+                : <Camera className="h-6 w-6 text-white" />}
+            </div>
+          </button>
+          {/* Camera badge */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={avatarUploading}
+            className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary border-2 border-white shadow-md hover:bg-primary/90 transition-colors"
+            aria-label="Modifier la photo"
+          >
+            {avatarUploading
+              ? <Loader2 className="h-3.5 w-3.5 text-white animate-spin" />
+              : <Camera className="h-3.5 w-3.5 text-white" />}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
           {/* Online dot */}
-          <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-emerald-500 ring-2 ring-white" />
+          <div className="absolute top-1 left-1 h-4 w-4 rounded-full bg-emerald-500 ring-2 ring-white" />
         </div>
+
         <h1 className="text-xl font-bold mt-4 text-foreground">{profile?.full_name || 'Utilisateur'}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
 
-        {/* Verified badge */}
         <div className="flex items-center justify-center mt-3">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3.5 py-1.5">
             <BadgeCheck className="h-4 w-4 text-primary" />
@@ -99,7 +179,7 @@ export function ProfilePage() {
         </div>
       </div>
 
-      {/* Admin dashboard shortcut */}
+      {/* Admin shortcut */}
       {isAdmin && (
         <div className="px-4 pt-4 stagger-item" style={{ animationDelay: '60ms' }}>
           <Link to="/admin">
@@ -125,7 +205,6 @@ export function ProfilePage() {
             <div className="rounded-2xl bg-white border border-border/60 shadow-sm overflow-hidden divide-y divide-border/60">
               {section.rows.map((row) => {
                 const Icon = row.icon
-
                 const content = (
                   <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer active:bg-muted/50">
                     <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl shrink-0', row.iconBg)}>
@@ -135,15 +214,8 @@ export function ProfilePage() {
                     <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                   </div>
                 )
-
-                if (row.href) {
-                  return <Link key={row.label} to={row.href}>{content}</Link>
-                }
-                return (
-                  <div key={row.label} onClick={row.action}>
-                    {content}
-                  </div>
-                )
+                if (row.href) return <Link key={row.label} to={row.href}>{content}</Link>
+                return <div key={row.label} onClick={row.action}>{content}</div>
               })}
             </div>
           </div>

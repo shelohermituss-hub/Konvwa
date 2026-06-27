@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Smartphone, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Smartphone, Loader2, Eye, EyeOff, Package } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -37,7 +37,7 @@ const TX_CONFIG: Record<string, { label: string; color: string; bg: string; sign
 }
 
 export function WalletPage() {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,11 +84,10 @@ export function WalletPage() {
   }
 
   const balance = wallet?.available_balance ?? 0
-  const blocked = wallet?.blocked_balance ?? 0
 
-  const initials = profile?.full_name
-    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'KW'
+  const accountId = user?.id
+    ? `${user.id.slice(0, 4).toUpperCase()} ${user.id.slice(4, 8).toUpperCase()}`
+    : '— — — —'
 
   const totalDeposited = transactions
     .filter(t => t.type === 'deposit' && t.status === 'completed')
@@ -177,66 +176,97 @@ export function WalletPage() {
         </Dialog>
       </div>
 
-      {/* Credit-style Wallet Card */}
+      {/* ── FamillyBill-style Wallet Card ── */}
       <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
-        <div className="wallet-card-credit rounded-3xl p-5 text-white shadow-[0_8px_40px_rgba(10,22,40,0.35)] min-h-[190px]">
-          <div className="relative z-10 flex flex-col h-full">
+        <div
+          className="rounded-3xl p-5 text-white relative overflow-hidden shadow-[0_8px_40px_rgba(10,22,40,0.28)]"
+          style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0F1E50 55%, #161044 100%)', minHeight: 200 }}
+        >
+          {/* Decorative blobs */}
+          <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-white/5" />
+          <div className="pointer-events-none absolute top-10 -right-20 h-36 w-36 rounded-full bg-white/[0.03]" />
 
-            {/* Top row: initials + name / currency */}
-            <div className="flex items-center justify-between mb-5">
+          <div className="relative z-10 flex flex-col gap-5">
+
+            {/* Top row: icon + label | overlapping circles */}
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white text-sm font-bold shadow-inner">
-                  {initials}
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
+                  <Package className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-white leading-tight">{profile?.full_name || 'Client'}</p>
-                  <p className="text-[10px] text-white/50">Compte KONVWA</p>
-                </div>
+                <span className="text-sm font-semibold text-white/90">Portefeuille HTG</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="rounded-lg bg-white/15 px-2.5 py-1">
-                  <span className="text-xs font-bold text-white tracking-wider">HTG</span>
-                </div>
-                <button onClick={() => setBalanceVisible(v => !v)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  {balanceVisible ? <Eye className="h-4 w-4 text-white/70" /> : <EyeOff className="h-4 w-4 text-white/70" />}
-                </button>
+              {/* Mastercard-style overlapping circles */}
+              <div className="relative flex items-center h-9">
+                <div className="h-9 w-9 rounded-full bg-primary shadow-sm" style={{ opacity: 0.95 }} />
+                <div className="h-9 w-9 rounded-full -ml-4" style={{ background: '#FF9B4E', opacity: 0.85 }} />
               </div>
             </div>
 
             {/* Balance */}
-            <div className="flex-1">
-              <p className="text-[10px] uppercase tracking-[0.15em] text-white/50 font-medium">Solde disponible</p>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/45 font-semibold mb-1">
+                Solde disponible
+              </p>
               {loading ? (
-                <Skeleton className="h-10 w-44 bg-white/20 mt-1" />
+                <Skeleton className="h-10 w-48 bg-white/15 rounded-xl" />
               ) : (
-                <p className="text-3xl font-bold mt-1 tracking-tight">
-                  {balanceVisible ? `${balance.toLocaleString('fr-HT')} HTG` : '• • • • • •'}
+                <p className="text-[2rem] font-bold tracking-tight leading-none">
+                  {balanceVisible
+                    ? `${balance.toLocaleString('fr-HT')} HTG`
+                    : '• • • • • •'}
                 </p>
               )}
             </div>
 
-            {/* Bottom row */}
-            <div className="flex items-center justify-between mt-4">
+            {/* Bottom row: ID | eye + HTG badge */}
+            <div className="flex items-end justify-between">
               <div>
-                <p className="text-[10px] text-white/40 uppercase tracking-widest">Bloqué</p>
-                <p className="text-sm font-semibold text-white/75">
-                  {balanceVisible ? `${blocked.toLocaleString('fr-HT')} HTG` : '••••'}
+                <p className="text-[9px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-0.5">
+                  ID Compte
+                </p>
+                <p className="text-sm font-mono font-semibold text-white/75 tracking-widest">
+                  {accountId}
                 </p>
               </div>
-              <div className="h-7 w-px bg-white/15" />
-              <div className="text-right">
-                <p className="text-[10px] text-white/40 uppercase tracking-widest">Total</p>
-                <p className="text-sm font-semibold text-white/75">
-                  {balanceVisible ? `${(balance + blocked).toLocaleString('fr-HT')} HTG` : '••••'}
-                </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setBalanceVisible(v => !v)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  {balanceVisible
+                    ? <Eye className="h-3.5 w-3.5 text-white/60" />
+                    : <EyeOff className="h-3.5 w-3.5 text-white/60" />}
+                </button>
+                <div className="rounded-xl bg-white/15 px-3 py-1.5">
+                  <span className="text-xs font-bold text-white tracking-widest">HTG</span>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       </div>
 
+      {/* Action buttons */}
+      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '100ms' }}>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setTopupOpen(true)}
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-primary text-white py-3.5 text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors pressable"
+          >
+            <ArrowDownLeft className="h-4 w-4" />
+            Recharger
+          </button>
+          <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors pressable shadow-sm">
+            <ArrowUpRight className="h-4 w-4" />
+            Retirer
+          </button>
+        </div>
+      </div>
+
       {/* Stats mini cards */}
-      <div className="px-4 pb-5 grid grid-cols-2 gap-3 stagger-item" style={{ animationDelay: '100ms' }}>
+      <div className="px-4 pb-5 grid grid-cols-2 gap-3 stagger-item" style={{ animationDelay: '140ms' }}>
         <div className="rounded-2xl bg-white border border-border/60 p-4 shadow-sm">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 mb-2">
             <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
@@ -260,23 +290,6 @@ export function WalletPage() {
             </p>
           )}
           <p className="text-[10px] text-muted-foreground mt-0.5">HTG</p>
-        </div>
-      </div>
-
-      {/* Action buttons row */}
-      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '140ms' }}>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setTopupOpen(true)}
-            className="flex-1 flex items-center justify-center gap-2 rounded-full bg-primary text-white py-3 text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors pressable"
-          >
-            <ArrowDownLeft className="h-4 w-4" />
-            Recharger
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-2 rounded-full border border-border bg-white text-foreground py-3 text-sm font-semibold hover:bg-muted/50 transition-colors pressable">
-            <ArrowUpRight className="h-4 w-4" />
-            Retirer
-          </button>
         </div>
       </div>
 
