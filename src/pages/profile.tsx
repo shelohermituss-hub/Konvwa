@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
-  ChevronRight, Loader2, BadgeCheck, LayoutDashboard, Camera, Eye, EyeOff, Plus, Trash2, MapPin,
+  ChevronRight, Loader2, BadgeCheck, LayoutDashboard, Camera, Eye, EyeOff, Plus, Trash2, MapPin, LogOut,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
