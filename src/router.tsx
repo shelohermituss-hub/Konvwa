@@ -29,6 +29,7 @@ import { ActivityLogPage } from '@/pages/activity-log'
 import { BillingPage } from '@/pages/billing'
 import { SuppliersPage } from '@/pages/suppliers'
 import { SupplierProfilePage } from '@/pages/supplier-profile'
+import { PaymentReturnPage } from '@/pages/payment-return'
 
 // Admin pages
 import { AdminDashboard } from '@/pages/admin/dashboard'
@@ -45,6 +46,9 @@ export const router = createBrowserRouter([
   // Root and onboarding → auth
   { path: '/',           element: <Navigate to="/auth" replace /> },
   { path: '/onboarding', element: <Navigate to="/auth" replace /> },
+
+  // Payment return — public (MonCash/NatCash redirect callback)
+  { path: '/payment/return', element: <PaymentReturnPage /> },
 
   // Auth page (login, register, forgot, otp, reset, denied)
   {

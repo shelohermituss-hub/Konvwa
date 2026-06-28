@@ -4,11 +4,12 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Smartphone, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff } from 'lucide-react'
 import IconPieces       from 'flat-color-icons/svg/paid.svg'
 import IconDistributeur from 'flat-color-icons/svg/currency_exchange.svg'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
+import { createPayment } from '@/lib/payment-api'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -62,24 +63,20 @@ export function WalletPage() {
   useEffect(() => { loadData() }, [user])
 
   async function handleTopup() {
-    if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet) return
+    if (!topupAmount || parseFloat(topupAmount) < 20 || !wallet) return
     setSubmitting(true)
     const amount = parseFloat(topupAmount)
-    const { error } = await supabase.from('wallet_transactions').insert({
-      wallet_id: wallet.id,
-      type: 'deposit',
-      amount,
-      status: 'pending',
-      payment_method: topupMethod,
-      description: `Recharge ${topupMethod === 'moncash' ? 'MonCash' : 'NatCash'}`,
-    })
-    if (error) {
-      toast.error('Erreur lors de la recharge.')
-    } else {
-      toast.success('Demande soumise. Elle sera traitée sous peu.')
+    try {
+      const result = await createPayment({ amount, method: topupMethod, wallet_id: wallet.id })
+      // Save reference for return page reconciliation
+      sessionStorage.setItem('konvwa_pay_ref', result.reference_id)
+      toast.success('Redirection vers ' + (topupMethod === 'moncash' ? 'MonCash' : 'NatCash') + '…')
       setTopupOpen(false)
-      setTopupAmount('')
-      await loadData()
+      // Redirect to PLOP PLOP payment page
+      window.location.href = result.url
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      toast.error(msg || 'Erreur lors de l\'initialisation du paiement.')
     }
     setSubmitting(false)
   }
@@ -152,12 +149,14 @@ export function WalletPage() {
               <div className="space-y-2">
                 <Label>Méthode</Label>
                 <RadioGroup value={topupMethod} onValueChange={(v) => setTopupMethod(v as 'moncash' | 'natcash')} className="grid grid-cols-2 gap-3">
-                  {([['moncash', 'MonCash', 'Digicel', '#ff6600'], ['natcash', 'NatCash', 'Natcom', '#00a651']] as const).map(([val, name, sub, color]) => (
+                  {([
+                    ['moncash', '/moncash-logo.jpg', 'Digicel'],
+                    ['natcash', '/natcash-logo.png', 'Natcom'],
+                  ] as const).map(([val, logo, sub]) => (
                     <div key={val} className="relative">
                       <RadioGroupItem value={val} id={val} className="peer sr-only" />
                       <Label htmlFor={val} className="flex flex-col items-center justify-center p-4 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
-                        <Smartphone className="h-6 w-6 mb-1.5" style={{ color }} />
-                        <span className="font-semibold text-sm">{name}</span>
+                        <img src={logo} alt={val} className="h-8 object-contain mb-1.5" />
                         <span className="text-xs text-muted-foreground">{sub}</span>
                       </Label>
                     </div>
