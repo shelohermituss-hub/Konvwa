@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { TimelineStep } from '@/components/shared/timeline-step'
-import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight } from 'lucide-react'
 import IconBoite from 'flat-color-icons/svg/package.svg'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
@@ -36,6 +36,11 @@ interface OrderDetail {
       product_name: string
       product_url: string
       source_platform: string
+      product_image_url: string | null
+      box_length_cm: number | null
+      box_width_cm: number | null
+      box_height_cm: number | null
+      weight_lbs: number | null
     } | null
   } | null
 }
@@ -76,7 +81,7 @@ export function OrderDetailPage() {
             id, total, product_price, quantity,
             service_fee, purchase_fee, shipping_fee, customs_fee, local_delivery_fee,
             estimated_delivery_days,
-            product_requests(product_name, product_url, source_platform)
+            product_requests(product_name, product_url, source_platform, product_image_url, box_length_cm, box_width_cm, box_height_cm, weight_lbs)
           )
         `)
         .eq('id', id)
@@ -301,6 +306,23 @@ export function OrderDetailPage() {
           </div>
         )}
 
+        {/* Product image */}
+        {order.quotes?.product_requests?.product_image_url && (
+          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-bold text-foreground">Photo du produit</p>
+            </div>
+            <div className="p-3">
+              <img
+                src={order.quotes.product_requests.product_image_url}
+                alt={productName}
+                className="w-full rounded-xl object-cover max-h-64"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Détails commande */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">
@@ -315,6 +337,34 @@ export function OrderDetailPage() {
               value={order.payment_status === 'paid' ? 'Payé' : order.payment_status === 'partial' ? 'Partiel' : 'Impayé'}
               valueClass={order.payment_status === 'paid' ? 'text-emerald-600' : 'text-warning'}
             />
+            {(() => {
+              const req = order.quotes?.product_requests
+              if (!req?.box_length_cm || !req?.box_width_cm || !req?.box_height_cm) return null
+              const cbm = (req.box_length_cm * req.box_width_cm * req.box_height_cm) / 1_000_000
+              return (
+                <>
+                  <InfoRow
+                    label="Dimensions (L×W×H)"
+                    value={`${req.box_length_cm} × ${req.box_width_cm} × ${req.box_height_cm} cm`}
+                  />
+                  <InfoRow label="Volume CBM" value={`${cbm.toFixed(4)} m³`} />
+                </>
+              )
+            })()}
+            {order.quotes?.product_requests?.weight_lbs != null && (
+              <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Weight className="h-3.5 w-3.5" />
+                  Poids
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  {order.quotes.product_requests.weight_lbs} lbs
+                  <span className="text-xs text-muted-foreground ml-1">
+                    ({(order.quotes.product_requests.weight_lbs * 0.453592).toFixed(2)} kg)
+                  </span>
+                </span>
+              </div>
+            )}
             {order.quotes?.product_requests?.product_url && (
               <div className="py-3">
                 <a
