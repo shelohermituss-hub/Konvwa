@@ -15,12 +15,18 @@ import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
+import IconHome      from 'flat-color-icons/svg/home.svg'
+import IconOrders    from 'flat-color-icons/svg/briefcase.svg'
+import IconShipments from 'flat-color-icons/svg/shipped.svg'
+import IconNotifs    from 'flat-color-icons/svg/comments.svg'
+import IconProfile   from 'flat-color-icons/svg/contacts.svg'
+
 const NAV_ITEMS = [
-  { label: 'Home',      Icon: LayoutDashboard, path: '/dashboard' },
-  { label: 'Orders',    Icon: ShoppingBag,     path: '/orders' },
-  { label: 'Shipments', Icon: Ship,            path: '/shipments' },
-  { label: 'Notifs',    Icon: Bell,            path: '/notifications' },
-  { label: 'Profile',   Icon: User,            path: '/profile' },
+  { label: 'Home',      Icon: LayoutDashboard, flatIcon: IconHome,      path: '/dashboard' },
+  { label: 'Orders',    Icon: ShoppingBag,     flatIcon: IconOrders,    path: '/orders' },
+  { label: 'Shipments', Icon: Ship,            flatIcon: IconShipments, path: '/shipments' },
+  { label: 'Notifs',    Icon: Bell,            flatIcon: IconNotifs,    path: '/notifications' },
+  { label: 'Profile',   Icon: User,            flatIcon: IconProfile,   path: '/profile' },
 ]
 
 const SIDEBAR_EXTRAS = [
@@ -397,7 +403,6 @@ function BottomNav({ unread }: { unread: number }) {
           const isActive = location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
           const isNotif = item.path === '/notifications'
-          const { Icon } = item
 
           return (
             <Link
@@ -409,13 +414,13 @@ function BottomNav({ unread }: { unread: number }) {
                 'relative flex items-center justify-center rounded-2xl transition-all duration-200',
                 isActive ? 'bg-primary/12 w-12 h-11' : 'w-11 h-10'
               )}>
-                <Icon
+                <img
+                  src={item.flatIcon}
+                  alt={item.label}
                   className={cn(
-                    'transition-all duration-200',
-                    isActive ? 'text-primary opacity-100 scale-105' : 'text-muted-foreground opacity-55'
+                    'h-6 w-6 object-contain transition-all duration-200',
+                    isActive ? 'opacity-100 scale-105' : 'opacity-55'
                   )}
-                  size={22}
-                  strokeWidth={isActive ? 2.2 : 1.8}
                 />
                 {isNotif && unread > 0 && !isActive && (
                   <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white leading-none">
@@ -452,7 +457,7 @@ export function ClientLayout() {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 lg:pb-8">
           <Outlet />
         </main>
       </div>

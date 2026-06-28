@@ -97,7 +97,7 @@ export function OrdersPage() {
   const totalCount = orders.length + drafts.length
 
   return (
-    <div className="min-h-full bg-[#F4F5F7]">
+    <div className="min-h-full bg-[#F4F5F7] overflow-x-hidden">
       {/* Header */}
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <div>

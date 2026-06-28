@@ -40,6 +40,7 @@ const TESTIMONIALS = [
     name: 'Marie Pierre',
     location: 'Port-au-Prince',
     rating: 5,
+    short: 'Excellent service, livraison parfaite !',
     text: 'Excellent service ! Ma commande est arrivée en parfait état depuis la Chine. Le suivi en temps réel est vraiment pratique.',
     color: 'bg-primary',
   },
@@ -49,6 +50,7 @@ const TESTIMONIALS = [
     name: 'Jean Baptiste',
     location: 'Cap-Haïtien',
     rating: 5,
+    short: "Prix imbattables, équipements en parfait état.",
     text: "KONVWA m'a permis d'importer des équipements pour mon atelier à un prix imbattable. Livraison rapide, service client au top !",
     color: 'bg-blue-500',
   },
@@ -58,8 +60,19 @@ const TESTIMONIALS = [
     name: 'Sophie Charles',
     location: 'Les Cayes',
     rating: 4,
-    text: 'Je recommande vivement. Le processus de commande est simple et les prix sont transparents. MonCash accepté, c\'est parfait pour Haïti.',
+    short: 'Simple, transparent, MonCash accepté.',
+    text: "Je recommande vivement. Le processus est simple et les prix transparents. MonCash accepté, c'est parfait pour Haïti.",
     color: 'bg-emerald-500',
+  },
+  {
+    id: 4,
+    initials: 'PR',
+    name: 'Paul Richard',
+    location: 'Pétion-Ville',
+    rating: 5,
+    short: "Commande reçue en 3 semaines, impeccable !",
+    text: "Incroyable ! J'ai commandé depuis Alibaba et reçu mes produits en moins de 3 semaines. Packaging soigné et prix honnêtes.",
+    color: 'bg-purple-500',
   },
 ]
 
@@ -69,7 +82,8 @@ export function DashboardPage() {
   const [orders, setOrders] = useState<DashboardOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [balanceVisible, setBalanceVisible] = useState(true)
-  const autoplay = useRef(Autoplay({ delay: 4000, stopOnInteraction: false }))
+  const [expandedTestimonial, setExpandedTestimonial] = useState<number | null>(null)
+  const autoplay = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }))
 
   useEffect(() => {
     if (!user) return
@@ -93,7 +107,7 @@ export function DashboardPage() {
     : '——  ——  ——  ——'
 
   return (
-    <div className="min-h-full bg-[#F4F5F7]">
+    <div className="min-h-full bg-[#F4F5F7] overflow-x-hidden">
 
       {/* ── Greeting ── */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
@@ -120,41 +134,55 @@ export function DashboardPage() {
         </Link>
       </div>
 
-      {/* ── Testimonials Carousel ── */}
-      <div className="px-4 pb-4">
+      {/* ── Testimonials Carousel — 2 cards per view, compact, click-to-expand ── */}
+      <div className="pb-4">
         <Carousel
-          opts={{ loop: true, align: 'center' }}
+          opts={{ loop: true, align: 'start', slidesToScroll: 2 }}
           plugins={[autoplay.current]}
           className="w-full"
         >
-          <CarouselContent className="-ml-3">
-            {TESTIMONIALS.map((t) => (
-              <CarouselItem key={t.id} className="pl-3">
-                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-                  {/* Stars */}
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn('h-3.5 w-3.5', i < t.rating ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground/30')}
-                      />
-                    ))}
-                  </div>
-                  {/* Review text */}
-                  <p className="text-sm text-foreground leading-relaxed font-medium">"{t.text}"</p>
-                  {/* Author */}
-                  <div className="flex items-center gap-2.5 mt-1">
-                    <div className={cn('flex h-9 w-9 items-center justify-center rounded-full text-white text-xs font-bold shrink-0', t.color)}>
-                      {t.initials}
+          <CarouselContent className="-ml-2 pl-4">
+            {TESTIMONIALS.map((t) => {
+              const isOpen = expandedTestimonial === t.id
+              return (
+                <CarouselItem key={t.id} className="pl-2 basis-1/2">
+                  <button
+                    className="w-full text-left"
+                    onClick={() => setExpandedTestimonial(isOpen ? null : t.id)}
+                  >
+                    <div className={cn(
+                      'rounded-2xl bg-white border shadow-sm p-3 flex flex-col gap-2 transition-all duration-200',
+                      isOpen ? 'border-primary/20 shadow-md' : 'border-gray-100'
+                    )}>
+                      {/* Author + stars */}
+                      <div className="flex items-center gap-2">
+                        <div className={cn('flex h-8 w-8 items-center justify-center rounded-full text-white text-[10px] font-bold shrink-0', t.color)}>
+                          {t.initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold truncate leading-none">{t.name}</p>
+                          <p className="text-[9px] text-muted-foreground mt-0.5 truncate">{t.location}</p>
+                        </div>
+                      </div>
+                      {/* Stars */}
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={cn('h-2.5 w-2.5', i < t.rating ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground/20')} />
+                        ))}
+                      </div>
+                      {/* Text — short by default, full when expanded */}
+                      <p className={cn('text-[11px] text-muted-foreground leading-relaxed transition-all')}>
+                        {isOpen ? `"${t.text}"` : t.short}
+                      </p>
+                      {/* Tap hint */}
+                      {!isOpen && (
+                        <p className="text-[9px] text-primary font-semibold">Tap to read more</p>
+                      )}
                     </div>
-                    <div>
-                      <p className="text-sm font-bold leading-none">{t.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t.location}</p>
-                    </div>
-                  </div>
-                </div>
-              </CarouselItem>
-            ))}
+                  </button>
+                </CarouselItem>
+              )
+            })}
           </CarouselContent>
         </Carousel>
       </div>
