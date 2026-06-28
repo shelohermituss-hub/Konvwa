@@ -325,9 +325,27 @@ export function WalletPage() {
             {/* Row 1: branding + contactless */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/25 backdrop-blur-sm">
-                  <span className="text-[12px] font-black text-white">K</span>
-                </div>
+                {/* 3-crates logo in white tones */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 72" fill="none" style={{ height: 22, width: 'auto' }} aria-hidden="true">
+                  <rect x="0"  y="42" width="40" height="24" rx="6" fill="rgba(255,255,255,0.55)"/>
+                  <rect x="0"  y="42" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.35)"/>
+                  <rect x="31" y="42" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.35)"/>
+                  <rect x="9" y="48"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
+                  <rect x="9" y="52.5" width="22" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
+                  <rect x="9" y="57"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
+                  <rect x="34" y="26" width="40" height="24" rx="6" fill="rgba(255,255,255,0.70)"/>
+                  <rect x="34" y="26" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.45)"/>
+                  <rect x="65" y="26" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.45)"/>
+                  <rect x="43" y="32"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)"/>
+                  <rect x="43" y="36.5" width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)"/>
+                  <rect x="43" y="41"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)"/>
+                  <rect x="68" y="10" width="40" height="24" rx="6" fill="rgba(255,255,255,0.90)"/>
+                  <rect x="68" y="10" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.60)"/>
+                  <rect x="99" y="10" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.60)"/>
+                  <rect x="77" y="16"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.40)"/>
+                  <rect x="77" y="20.5" width="22" height="2" rx="1" fill="rgba(255,255,255,0.40)"/>
+                  <rect x="77" y="25"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.40)"/>
+                </svg>
                 <span className="font-bold text-white text-sm tracking-wide">KONVWA</span>
               </div>
               <svg width="28" height="24" viewBox="0 0 30 26" fill="none">

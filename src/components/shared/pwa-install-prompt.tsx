@@ -76,11 +76,9 @@ export function PwaInstallPrompt() {
       >
         <div className="flex items-start gap-3">
           {/* App icon */}
-          <img
-            src="/icon-192.png"
-            alt="KONVWA"
-            className="h-12 w-12 rounded-xl shrink-0 shadow-sm"
-          />
+          <div className="h-12 w-12 rounded-xl shrink-0 shadow-sm flex items-center justify-center bg-white border border-gray-100 overflow-hidden p-1.5">
+            <img src="/logo.svg" alt="KONVWA" className="w-full h-full object-contain" />
+          </div>
 
           {/* Text */}
           <div className="flex-1 min-w-0 pr-1">
