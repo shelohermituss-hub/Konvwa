@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck } from 'lucide-react'
 import IconPieces       from 'flat-color-icons/svg/paid.svg'
 import IconDistributeur from 'flat-color-icons/svg/currency_exchange.svg'
 import { useAuth } from '@/lib/auth-context'
@@ -26,6 +26,7 @@ interface Transaction {
   status: 'pending' | 'completed' | 'failed' | 'cancelled'
   payment_method: string | null
   description: string | null
+  reference: string | null
   created_at: string
 }
 
@@ -38,6 +39,125 @@ const TX_CONFIG: Record<string, { label: string; color: string; bg: string; sign
   block:      { label: 'Bloqué',         color: 'text-warning',     bg: 'bg-warning/10',    sign: '-' },
 }
 
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  completed: { label: 'Complété',  className: 'bg-emerald-50 text-emerald-700' },
+  pending:   { label: 'En attente', className: 'bg-amber-50 text-amber-700' },
+  failed:    { label: 'Échoué',    className: 'bg-red-50 text-red-700' },
+  cancelled: { label: 'Annulé',   className: 'bg-gray-100 text-gray-500' },
+}
+
+const METHOD_LABEL: Record<string, string> = {
+  moncash: 'MonCash',
+  natcash: 'NatCash',
+  wallet:  'Portefeuille',
+}
+
+function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
+  const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
+  const badge = STATUS_BADGE[tx.status] ?? STATUS_BADGE.pending
+
+  function copy(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  const rows: { label: string; value: string; copyable?: boolean }[] = [
+    { label: 'Statut',      value: badge.label },
+    { label: 'Type',        value: config.label },
+    ...(tx.payment_method ? [{ label: 'Méthode', value: METHOD_LABEL[tx.payment_method] ?? tx.payment_method }] : []),
+    ...(tx.reference ? [{ label: 'Référence', value: tx.reference, copyable: true }] : []),
+    { label: 'ID Transaction', value: tx.id.slice(0, 16) + '…', copyable: true },
+    { label: 'Date', value: new Date(tx.created_at).toLocaleString('fr-HT', { dateStyle: 'medium', timeStyle: 'short' }) },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #4F2A8F 0%, #6B3FAF 40%, #3B1F7A 100%)', opacity: 0.95 }} />
+
+      <div
+        className="relative w-full max-w-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute -top-10 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+        >
+          <X className="h-4 w-4 text-white" />
+        </button>
+
+        {/* Receipt card */}
+        <div className="rounded-3xl bg-white overflow-hidden shadow-2xl">
+          {/* Amount header */}
+          <div className="px-6 pt-7 pb-6 text-center" style={{ background: 'linear-gradient(160deg, #4F2A8F, #6B3FAF)' }}>
+            <p className="text-xs uppercase tracking-widest text-white/60 font-semibold mb-2">
+              {isCredit ? 'Montant crédité' : 'Montant débité'}
+            </p>
+            <p className={cn('text-4xl font-black', isCredit ? 'text-emerald-300' : 'text-white')}>
+              {isCredit ? '+' : '-'}{tx.amount.toLocaleString('fr-HT')}
+            </p>
+            <p className="text-white/50 text-sm font-semibold mt-1">HTG</p>
+
+            {/* Status pill */}
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
+              style={{
+                background: tx.status === 'completed' ? 'rgba(52,211,153,0.2)' : tx.status === 'failed' ? 'rgba(248,113,113,0.2)' : 'rgba(251,191,36,0.2)',
+                color: tx.status === 'completed' ? '#34d399' : tx.status === 'failed' ? '#f87171' : '#fbbf24',
+              }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full"
+                style={{ background: tx.status === 'completed' ? '#34d399' : tx.status === 'failed' ? '#f87171' : '#fbbf24' }}
+              />
+              {badge.label}
+            </div>
+          </div>
+
+          {/* Jagged edge separator */}
+          <div className="relative h-4 overflow-hidden" style={{ background: 'linear-gradient(160deg, #4F2A8F, #6B3FAF)' }}>
+            <svg viewBox="0 0 360 16" preserveAspectRatio="none" className="absolute bottom-0 w-full h-4" fill="white">
+              <path d="M0,16 L0,8 L18,16 L36,8 L54,16 L72,8 L90,16 L108,8 L126,16 L144,8 L162,16 L180,8 L198,16 L216,8 L234,16 L252,8 L270,16 L288,8 L306,16 L324,8 L342,16 L360,8 L360,16 Z" />
+            </svg>
+          </div>
+
+          {/* Detail rows */}
+          <div className="px-6 pt-3 pb-7 space-y-3.5">
+            {rows.map((row) => (
+              <div key={row.label} className="flex items-center justify-between gap-4">
+                <span className="text-xs text-muted-foreground font-medium shrink-0">{row.label}</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-xs font-semibold text-foreground text-right truncate max-w-[180px]">{row.value}</span>
+                  {row.copyable && (
+                    <button
+                      onClick={() => copy(row.value)}
+                      className="shrink-0 rounded p-0.5 hover:bg-muted transition-colors"
+                    >
+                      {copied
+                        ? <CheckCheck className="h-3 w-3 text-emerald-500" />
+                        : <Copy className="h-3 w-3 text-muted-foreground" />}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Divider */}
+            <div className="border-t border-dashed border-border/60 pt-3">
+              <p className="text-center text-[10px] text-muted-foreground/50 font-medium">
+                Propulsé par PLOP PLOP · MonCash & NatCash
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function WalletPage() {
   const { user, profile } = useAuth()
   const [wallet, setWallet] = useState<WalletData | null>(null)
@@ -48,12 +168,13 @@ export function WalletPage() {
   const [topupMethod, setTopupMethod] = useState<'moncash' | 'natcash'>('moncash')
   const [topupOpen, setTopupOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [receiptTx, setReceiptTx] = useState<Transaction | null>(null)
 
   async function loadData() {
     if (!user) return
     const [walletRes, txRes] = await Promise.all([
       supabase.from('wallets').select('id, available_balance, blocked_balance').eq('user_id', user.id).maybeSingle(),
-      supabase.from('wallet_transactions').select('id, type, amount, status, payment_method, description, created_at').order('created_at', { ascending: false }).limit(30),
+      supabase.from('wallet_transactions').select('id, type, amount, status, payment_method, description, reference, created_at').order('created_at', { ascending: false }).limit(30),
     ])
     if (walletRes.data) setWallet(walletRes.data)
     if (txRes.data) setTransactions(txRes.data as Transaction[])
@@ -68,11 +189,9 @@ export function WalletPage() {
     const amount = parseFloat(topupAmount)
     try {
       const result = await createPayment({ amount, method: topupMethod, wallet_id: wallet.id })
-      // Save reference for return page reconciliation
       sessionStorage.setItem('konvwa_pay_ref', result.reference_id)
       toast.success('Redirection vers ' + (topupMethod === 'moncash' ? 'MonCash' : 'NatCash') + '…')
       setTopupOpen(false)
-      // Redirect to PLOP PLOP payment page
       window.location.href = result.url
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
@@ -336,8 +455,13 @@ export function WalletPage() {
             {transactions.map((tx) => {
               const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
               const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
+              const badge = STATUS_BADGE[tx.status] ?? STATUS_BADGE.pending
               return (
-                <div key={tx.id} className="flex items-center gap-3 px-4 py-3.5">
+                <button
+                  key={tx.id}
+                  onClick={() => setReceiptTx(tx)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
+                >
                   <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl shrink-0', config.bg)}>
                     {isCredit
                       ? <ArrowDownLeft className={cn('h-5 w-5', config.color)} />
@@ -345,7 +469,9 @@ export function WalletPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">{config.label}</p>
-                    <p className="text-xs text-muted-foreground truncate">{tx.description || '—'}</p>
+                    <span className={cn('inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5', badge.className)}>
+                      {badge.label}
+                    </span>
                   </div>
                   <div className="text-right shrink-0">
                     <p className={cn('font-bold text-sm', config.color)}>
@@ -355,12 +481,17 @@ export function WalletPage() {
                       {new Date(tx.created_at).toLocaleDateString('fr-HT', { day: '2-digit', month: 'short' })}
                     </p>
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
         )}
       </div>
+
+      {/* Receipt modal */}
+      {receiptTx && (
+        <ReceiptModal tx={receiptTx} onClose={() => setReceiptTx(null)} />
+      )}
     </div>
   )
 }

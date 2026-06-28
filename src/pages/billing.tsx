@@ -20,7 +20,12 @@ interface PaidOrder {
   } | null
 }
 
-const PAID_STATUSES = ['processing', 'in_transit', 'arrived_haiti', 'delivered']
+// Orders where payment has been made (all statuses after awaiting_payment, excluding cancelled/draft)
+const PAID_STATUSES = [
+  'paid', 'purchasing', 'in_china_warehouse', 'shipped',
+  'in_transit', 'arrived_haiti', 'customs_processing',
+  'out_for_delivery', 'delivered', 'closed',
+]
 
 export function BillingPage() {
   const { user } = useAuth()
@@ -32,12 +37,22 @@ export function BillingPage() {
     if (!user) return
     supabase
       .from('orders')
-      .select('id, tracking_code, status, total_paid, created_at, quotes(total, product_requests(product_name))')
+      .select('id, tracking_code, status, total_paid, created_at, quotes!quote_id(total, product_requests!request_id(product_name))')
       .eq('user_id', user.id)
-      .in('status', PAID_STATUSES)
+      .eq('payment_status', 'paid')
       .order('created_at', { ascending: false })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         if (data) setOrders(data as unknown as PaidOrder[])
+        else if (error) {
+          // Fallback: filter by status if payment_status column missing
+          supabase
+            .from('orders')
+            .select('id, tracking_code, status, total_paid, created_at, quotes!quote_id(total, product_requests!request_id(product_name))')
+            .eq('user_id', user.id)
+            .in('status', PAID_STATUSES)
+            .order('created_at', { ascending: false })
+            .then(({ data: d2 }) => { if (d2) setOrders(d2 as unknown as PaidOrder[]) })
+        }
         setLoading(false)
       })
   }, [user])
