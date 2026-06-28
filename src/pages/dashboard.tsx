@@ -107,7 +107,7 @@ export function DashboardPage() {
     : '——  ——  ——  ——'
 
   return (
-    <div className="min-h-full bg-[#F4F5F7] overflow-x-hidden">
+    <div className="min-h-full bg-[#F4F5F7] w-full">
 
       {/* ── Greeting ── */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
@@ -135,13 +135,13 @@ export function DashboardPage() {
       </div>
 
       {/* ── Testimonials Carousel — 2 cards per view, compact, click-to-expand ── */}
-      <div className="pb-4">
+      <div className="pb-4 px-4">
         <Carousel
           opts={{ loop: true, align: 'start', slidesToScroll: 2 }}
           plugins={[autoplay.current]}
           className="w-full"
         >
-          <CarouselContent className="-ml-2 pl-4">
+          <CarouselContent className="-ml-2">
             {TESTIMONIALS.map((t) => {
               const isOpen = expandedTestimonial === t.id
               return (

@@ -450,14 +450,14 @@ export function ClientLayout() {
     <div className="flex min-h-screen bg-background">
       <DesktopSidebar unread={unread} />
 
-      <div className="flex-1 flex flex-col lg:ml-[240px] xl:ml-[260px] min-h-screen">
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-[240px] xl:ml-[260px] min-h-screen">
         {/* Mobile top header */}
         <div className="lg:hidden">
           <TopHeader unread={unread} userId={user?.id} />
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 lg:pb-8">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
           <Outlet />
         </main>
       </div>
