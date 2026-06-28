@@ -27,6 +27,7 @@ import { ProfilePage } from '@/pages/profile'
 import { SupportPage } from '@/pages/support'
 import { ActivityLogPage } from '@/pages/activity-log'
 import { BillingPage } from '@/pages/billing'
+import { SupplierProfilePage } from '@/pages/supplier-profile'
 
 // Admin pages
 import { AdminDashboard } from '@/pages/admin/dashboard'
@@ -90,6 +91,7 @@ export const router = createBrowserRouter([
       { path: 'support', element: <SupportPage /> },
       { path: 'activity-log', element: <ActivityLogPage /> },
       { path: 'billing', element: <BillingPage /> },
+      { path: 'suppliers/:id', element: <SupplierProfilePage /> },
     ],
   },
 

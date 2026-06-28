@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Activity, MessageSquare, Package, CreditCard, AlertCircle, Info, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns'
+import { fr } from 'date-fns/locale'
 
 interface NotifActivity {
   id: string
@@ -18,13 +20,13 @@ interface NotifActivity {
 
 const PAGE_SIZE = 10
 
-function groupByDate(items: NotifActivity[]): Record<string, NotifActivity[]> {
+function groupByDate(items: NotifActivity[], lang: string): Record<string, NotifActivity[]> {
   return items.reduce((acc, item) => {
     const d = new Date(item.created_at)
     let key: string
-    if (isToday(d)) key = 'Today'
-    else if (isYesterday(d)) key = 'Yesterday'
-    else key = format(d, 'EEEE dd MMMM').toUpperCase()
+    if (isToday(d)) key = lang === 'fr' ? "Aujourd'hui" : 'Today'
+    else if (isYesterday(d)) key = lang === 'fr' ? 'Hier' : 'Yesterday'
+    else key = format(d, 'EEEE dd MMMM', { locale: lang === 'fr' ? fr : undefined }).toUpperCase()
     if (!acc[key]) acc[key] = []
     acc[key].push(item)
     return acc
@@ -49,6 +51,7 @@ function iconBg(type: string) {
 
 export function ActivityLogPage() {
   const { user, profile } = useAuth()
+  const { t, lang } = useI18n()
   const [activities, setActivities] = useState<NotifActivity[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
@@ -74,7 +77,7 @@ export function ActivityLogPage() {
 
     if (data) {
       if (reset) setActivities(data as NotifActivity[])
-      else setActivities(prev => [...prev, ...data as NotifActivity[]])
+      else setActivities((prev) => [...prev, ...data as NotifActivity[]])
       setHasMore(data.length === PAGE_SIZE)
     }
     setLoading(false)
@@ -89,26 +92,42 @@ export function ActivityLogPage() {
     await load(next)
   }
 
-  const grouped = groupByDate(activities)
+  async function handleItemClick(item: NotifActivity) {
+    setExpanded(expanded === item.id ? null : item.id)
+
+    // Mark as read if not already
+    if (!item.read_at) {
+      const now = new Date().toISOString()
+      setActivities((prev) =>
+        prev.map((a) => (a.id === item.id ? { ...a, read_at: now } : a))
+      )
+      await supabase
+        .from('notifications')
+        .update({ read_at: now })
+        .eq('id', item.id)
+    }
+  }
+
+  const grouped = groupByDate(activities, lang)
   const dateKeys = Object.keys(grouped)
 
   return (
     <div className="min-h-full bg-[#F4F5F7]">
       <div className="px-5 pt-5 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Activity Log</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Your recent account activity</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('activity.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('activity.subtitle')}</p>
       </div>
 
       <div className="px-4 pb-6 space-y-5">
         {loading ? (
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 space-y-4">
-            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}
+            {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
           </div>
         ) : activities.length === 0 ? (
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-12 text-center">
             <Activity className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="font-semibold text-sm text-muted-foreground">No activity yet</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Your account activity will appear here</p>
+            <p className="font-semibold text-sm text-muted-foreground">{t('activity.empty')}</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">{t('activity.empty_sub')}</p>
           </div>
         ) : (
           <>
@@ -122,9 +141,9 @@ export function ActivityLogPage() {
                     <div key={item.id}>
                       <div
                         className="flex items-start gap-3 px-5 py-4 hover:bg-muted/20 transition-colors cursor-pointer"
-                        onClick={() => setExpanded(expanded === item.id ? null : item.id)}
+                        onClick={() => handleItemClick(item)}
                       >
-                        {/* Avatar circle */}
+                        {/* Icon */}
                         <div className={cn('flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5', iconBg(item.type))}>
                           <ActivityIcon type={item.type} />
                         </div>
@@ -138,19 +157,22 @@ export function ActivityLogPage() {
                                 <div className="h-2 w-2 rounded-full bg-blue-500" />
                               )}
                               <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
+                                {formatDistanceToNow(new Date(item.created_at), {
+                                  addSuffix: true,
+                                  locale: lang === 'fr' ? fr : undefined,
+                                })}
                               </p>
                             </div>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.message}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{item.message}</p>
                         </div>
 
-                        {item.message && item.message.length > 80 && (
+                        {item.message && item.message.length > 60 && (
                           <ChevronDown className={cn('h-4 w-4 text-muted-foreground/50 shrink-0 mt-1 transition-transform', expanded === item.id && 'rotate-180')} />
                         )}
                       </div>
 
-                      {/* Expanded comment block */}
+                      {/* Expanded block */}
                       {expanded === item.id && (
                         <div className="px-5 pb-4 ml-12">
                           <div className="rounded-xl bg-[#F4F5F7] border border-border/50 p-3.5">
@@ -184,7 +206,7 @@ export function ActivityLogPage() {
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
-                Load More
+                {t('common.load_more')}
               </button>
             )}
           </>

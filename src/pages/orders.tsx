@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Search, Plus, ChevronRight, Clock } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
@@ -32,19 +33,20 @@ interface DraftRow {
   urgency: string
 }
 
-const STATUS_FILTERS = [
-  { value: 'all',             label: 'Tout' },
-  { value: 'drafts',          label: 'Brouillons' },
-  { value: 'awaiting_payment', label: 'Paiement' },
-  { value: 'processing',      label: 'Traitement' },
-  { value: 'in_transit',      label: 'Transit' },
-  { value: 'arrived_haiti',   label: 'Arrivé' },
-  { value: 'delivered',       label: 'Livré' },
-  { value: 'cancelled',       label: 'Annulé' },
+const STATUS_FILTER_KEYS = [
+  { value: 'all',              key: 'orders.f.all' },
+  { value: 'drafts',           key: 'orders.f.drafts' },
+  { value: 'awaiting_payment', key: 'orders.f.awaiting_payment' },
+  { value: 'processing',       key: 'orders.f.processing' },
+  { value: 'in_transit',       key: 'orders.f.in_transit' },
+  { value: 'arrived_haiti',    key: 'orders.f.arrived_haiti' },
+  { value: 'delivered',        key: 'orders.f.delivered' },
+  { value: 'cancelled',        key: 'orders.f.cancelled' },
 ]
 
 export function OrdersPage() {
   const { user } = useAuth()
+  const { t } = useI18n()
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [drafts, setDrafts] = useState<DraftRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -101,9 +103,9 @@ export function OrdersPage() {
       {/* Header */}
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Commandes</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('orders.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            {totalCount} commande{totalCount !== 1 ? 's' : ''}
+            {totalCount} {t('orders.title').toLowerCase().replace(/s$/, '')}{totalCount !== 1 ? 's' : ''}
             {drafts.length > 0 && ` · ${drafts.length} brouillon${drafts.length > 1 ? 's' : ''}`}
           </p>
         </div>
@@ -113,7 +115,7 @@ export function OrdersPage() {
           style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
         >
           <Plus className="h-4 w-4" />
-          Nouveau
+          {t('common.new')}
         </Link>
       </div>
 
@@ -122,7 +124,7 @@ export function OrdersPage() {
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher..."
+            placeholder={t('common.search')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 rounded-xl bg-[#F0F1F5] border-0 h-11 font-medium focus-visible:ring-1 focus-visible:ring-primary/40"
@@ -132,7 +134,7 @@ export function OrdersPage() {
 
       {/* Status filters */}
       <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-hide">
-        {STATUS_FILTERS.map((f) => (
+        {STATUS_FILTER_KEYS.map((f) => (
           <button
             key={f.value}
             onClick={() => setStatusFilter(f.value)}
@@ -143,7 +145,7 @@ export function OrdersPage() {
                 : 'bg-background text-muted-foreground border-border hover:border-primary/50'
             )}
           >
-            {f.label}
+            {t(f.key)}
             {f.value === 'drafts' && drafts.length > 0 && (
               <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning/20 text-warning text-[9px] font-bold">
                 {drafts.length}
@@ -161,10 +163,10 @@ export function OrdersPage() {
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
             <img src={IconBoite} alt="" className="h-12 w-12 mx-auto opacity-30 mb-3" />
             <p className="font-semibold text-muted-foreground">
-              {search || (statusFilter !== 'all' && statusFilter !== 'drafts') ? 'Aucun résultat' : 'Aucune commande'}
+              {search || (statusFilter !== 'all' && statusFilter !== 'drafts') ? t('common.no_result') : t('orders.no_orders')}
             </p>
             <p className="text-xs text-muted-foreground/70 mt-1 mb-4">
-              {search ? "Essayez d'autres termes" : 'Soumettez votre premier produit'}
+              {search ? t('orders.try_other') : t('orders.submit_first')}
             </p>
             {!search && (
               <Link
@@ -172,7 +174,7 @@ export function OrdersPage() {
                 className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
                 style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               >
-                <Plus className="mr-1.5 h-3.5 w-3.5" />Soumettre
+                <Plus className="mr-1.5 h-3.5 w-3.5" />{t('common.submit')}
               </Link>
             )}
           </div>
@@ -182,7 +184,7 @@ export function OrdersPage() {
             {filteredDrafts.length > 0 && (
               <div className="space-y-2.5">
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">
-                  En attente de traitement
+                  {t('orders.pending_section')}
                 </p>
                 {filteredDrafts.map((draft) => (
                   <div key={draft.id} className="flex items-center gap-3 rounded-2xl border border-warning/30 bg-warning/4 p-4 shadow-sm">
@@ -198,7 +200,7 @@ export function OrdersPage() {
                       </p>
                       <div className="mt-1.5">
                         <span className="inline-flex items-center rounded-full bg-warning/15 text-warning text-[10px] font-bold px-2 py-0.5">
-                          Brouillon · Devis en cours
+                          {t('orders.draft_label')}
                         </span>
                       </div>
                     </div>
@@ -237,7 +239,7 @@ export function OrdersPage() {
                             <StatusBadge status={order.status} />
                             {delivery && (
                               <span className="text-[10px] text-muted-foreground">
-                                Livr. {delivery.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                {t('common.delivery')} {delivery.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                               </span>
                             )}
                           </div>

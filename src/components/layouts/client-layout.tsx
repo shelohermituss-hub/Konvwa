@@ -5,15 +5,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import {
   LayoutDashboard, ShoppingBag, Ship, Bell, User, Wallet, HelpCircle, Send,
-  Globe, ChevronDown, Check, LogOut, Settings, Activity, CreditCard, Clock,
-  Package, AlertCircle, Info,
+  Globe, ChevronDown, Check, LogOut, Settings, Activity, CreditCard,
+  Store, Phone, MessageCircle, Star, MapPin,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { useI18n, type Lang } from '@/lib/i18n-context'
+import { SUPPLIERS } from '@/lib/suppliers-data'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
-import { formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
 
 import IconHome      from 'flat-color-icons/svg/home.svg'
 import IconOrders    from 'flat-color-icons/svg/briefcase.svg'
@@ -22,11 +22,11 @@ import IconNotifs    from 'flat-color-icons/svg/comments.svg'
 import IconProfile   from 'flat-color-icons/svg/contacts.svg'
 
 const NAV_ITEMS = [
-  { label: 'Home',      Icon: LayoutDashboard, flatIcon: IconHome,      path: '/dashboard' },
-  { label: 'Orders',    Icon: ShoppingBag,     flatIcon: IconOrders,    path: '/orders' },
-  { label: 'Shipments', Icon: Ship,            flatIcon: IconShipments, path: '/shipments' },
-  { label: 'Notifs',    Icon: Bell,            flatIcon: IconNotifs,    path: '/notifications' },
-  { label: 'Profile',   Icon: User,            flatIcon: IconProfile,   path: '/profile' },
+  { labelKey: 'nav.home',      Icon: LayoutDashboard, flatIcon: IconHome,      path: '/dashboard' },
+  { labelKey: 'nav.orders',    Icon: ShoppingBag,     flatIcon: IconOrders,    path: '/orders' },
+  { labelKey: 'nav.shipments', Icon: Ship,            flatIcon: IconShipments, path: '/shipments' },
+  { labelKey: 'nav.notifs',    Icon: Bell,            flatIcon: IconNotifs,    path: '/notifications' },
+  { labelKey: 'nav.profile',   Icon: User,            flatIcon: IconProfile,   path: '/profile' },
 ]
 
 const SIDEBAR_EXTRAS = [
@@ -35,20 +35,10 @@ const SIDEBAR_EXTRAS = [
   { label: 'Support', Icon: HelpCircle, path: '/support' },
 ]
 
-const LANGUAGES = [
+const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
-  { code: 'ht', label: 'Kreyòl',   flag: '🇭🇹' },
   { code: 'en', label: 'English',  flag: '🇺🇸' },
 ]
-
-interface NotifItem {
-  id: string
-  title: string
-  message: string
-  type: string
-  read_at: string | null
-  created_at: string
-}
 
 function useUnread(userId: string | undefined) {
   const [unread, setUnread] = useState(0)
@@ -79,102 +69,87 @@ function useUnread(userId: string | undefined) {
   return unread
 }
 
-function NotifIcon({ type }: { type: string }) {
-  if (type === 'order') return <Package className="h-4 w-4 text-primary" />
-  if (type === 'payment') return <CreditCard className="h-4 w-4 text-emerald-500" />
-  if (type === 'alert') return <AlertCircle className="h-4 w-4 text-amber-500" />
-  return <Info className="h-4 w-4 text-blue-500" />
-}
-
-function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
+function SuppliersPopover() {
   const [open, setOpen] = useState(false)
-  const [notifs, setNotifs] = useState<NotifItem[]>([])
-  const [loading, setLoading] = useState(false)
-
-  async function loadNotifs() {
-    if (!userId) return
-    setLoading(true)
-    const { data } = await supabase
-      .from('notifications')
-      .select('id, title, message, type, read_at, created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(5)
-    if (data) setNotifs(data as NotifItem[])
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    if (open) loadNotifs()
-  }, [open])
+  const navigate = useNavigate()
+  const { t } = useI18n()
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors">
-          <Bell className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
-          {unread > 0 && (
-            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white leading-none">
-              {unread > 9 ? '9+' : unread}
-            </span>
-          )}
+          <Store className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0 rounded-2xl shadow-xl border-gray-100" sideOffset={8}>
+      <PopoverContent align="end" className="w-[320px] p-0 rounded-2xl shadow-xl border-gray-100" sideOffset={8}>
+        {/* Header */}
         <div className="px-4 py-3.5 border-b border-border/50 flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-            <Bell className="h-4 w-4 text-primary" />
+            <Store className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-bold text-sm">Notifications</p>
-            {unread > 0 && <p className="text-xs text-muted-foreground">{unread} non lue{unread > 1 ? 's' : ''}</p>}
+            <p className="font-bold text-sm">{t('suppliers.title')}</p>
+            <p className="text-xs text-muted-foreground">{t('suppliers.subtitle')}</p>
           </div>
         </div>
 
-        <div className="divide-y divide-border/40">
-          {loading ? (
-            <div className="p-6 text-center">
-              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-            </div>
-          ) : notifs.length === 0 ? (
-            <div className="p-8 text-center">
-              <Bell className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground font-medium">Aucune notification</p>
-            </div>
-          ) : (
-            notifs.map((n) => (
-              <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer">
-                <div className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-xl shrink-0 mt-0.5',
-                  n.read_at ? 'bg-muted' : 'bg-primary/8'
-                )}>
-                  <NotifIcon type={n.type} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold leading-tight truncate">{n.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1 flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: fr })}
-                  </p>
-                </div>
-                {!n.read_at && (
-                  <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-2" />
-                )}
+        {/* Supplier list */}
+        <div className="divide-y divide-border/40 max-h-[380px] overflow-y-auto">
+          {SUPPLIERS.map((s) => (
+            <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors">
+              {/* Avatar */}
+              <div
+                className="h-11 w-11 rounded-xl flex items-center justify-center text-white text-xs font-black shrink-0 shadow-sm"
+                style={{ background: s.coverGradient }}
+              >
+                {s.initials}
               </div>
-            ))
-          )}
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold leading-tight truncate">{s.name}</p>
+                <p className="text-[11px] text-muted-foreground truncate mt-0.5">{s.specialty}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-0.5">
+                    <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
+                    <span className="text-[10px] font-semibold">{s.rating}</span>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground">{s.location}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact + Profile buttons */}
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <button
+                  onClick={() => { navigate(`/suppliers/${s.id}`); setOpen(false) }}
+                  className="rounded-lg px-2.5 py-1 text-[10px] font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+                >
+                  Profil
+                </button>
+                <a
+                  href={`https://wa.me/${s.whatsapp.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                >
+                  <MessageCircle className="h-2.5 w-2.5" />
+                  WA
+                </a>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="p-3 border-t border-border/50">
-          <Link
-            to="/notifications"
-            onClick={() => setOpen(false)}
-            className="block w-full text-center rounded-xl py-2.5 text-sm font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-          >
-            View All Activity
-          </Link>
+        {/* Footer contact info for first supplier on display */}
+        <div className="p-3 border-t border-border/50 flex items-center gap-2">
+          <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <p className="text-xs text-muted-foreground">
+            {SUPPLIERS[0].phone}
+          </p>
         </div>
       </PopoverContent>
     </Popover>
@@ -184,6 +159,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
 function ProfileMenu() {
   const { profile, user, signOut } = useAuth()
   const navigate = useNavigate()
+  const { t } = useI18n()
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -215,7 +191,7 @@ function ProfileMenu() {
         <div className="p-1.5">
           <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/profile')}>
             <User className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium text-sm">Profile</span>
+            <span className="font-medium text-sm">{t('nav.profile')}</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/profile')}>
             <Settings className="h-4 w-4 text-muted-foreground" />
@@ -223,11 +199,11 @@ function ProfileMenu() {
           </DropdownMenuItem>
           <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/activity-log')}>
             <Activity className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium text-sm">Activity Log</span>
+            <span className="font-medium text-sm">{t('activity.title')}</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/billing')}>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium text-sm">Billing</span>
+            <span className="font-medium text-sm">{t('billing.title')}</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator className="mx-2 my-1" />
           <DropdownMenuItem
@@ -244,8 +220,8 @@ function ProfileMenu() {
 }
 
 function LanguageSwitcher() {
-  const [lang, setLang] = useState('fr')
-  const current = LANGUAGES.find(l => l.code === lang) ?? LANGUAGES[0]
+  const { lang, setLang, t } = useI18n()
+  const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0]
 
   return (
     <DropdownMenu>
@@ -256,7 +232,7 @@ function LanguageSwitcher() {
           <ChevronDown className="h-3 w-3 hidden sm:block" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-lg border-gray-100" sideOffset={8}>
+      <DropdownMenuContent align="end" className="w-40 rounded-xl shadow-lg border-gray-100" sideOffset={8}>
         {LANGUAGES.map((l) => (
           <DropdownMenuItem
             key={l.code}
@@ -264,7 +240,7 @@ function LanguageSwitcher() {
             onClick={() => setLang(l.code)}
           >
             <span className="text-base">{l.flag}</span>
-            <span className="flex-1 text-sm font-medium">{l.label}</span>
+            <span className="flex-1 text-sm font-medium">{t(`lang.${l.code}`)}</span>
             {lang === l.code && <Check className="h-3.5 w-3.5 text-primary" />}
           </DropdownMenuItem>
         ))}
@@ -275,6 +251,7 @@ function LanguageSwitcher() {
 
 function DesktopSidebar({ unread }: { unread: number }) {
   const { profile, user, signOut } = useAuth()
+  const { t } = useI18n()
   const location = useLocation()
 
   const initials = profile?.full_name
@@ -318,7 +295,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-primary" />
               )}
               <Icon className={cn('h-4.5 w-4.5 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')} size={18} />
-              <span className="text-sm">{item.label}</span>
+              <span className="text-sm">{t(item.labelKey)}</span>
               {isNotif && unread > 0 && (
                 <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white px-1">
                   {unread > 9 ? '9+' : unread}
@@ -378,7 +355,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
   )
 }
 
-function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
+function TopHeader({ unread: _unread, userId: _userId }: { unread: number; userId?: string }) {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-white/95 backdrop-blur-md px-4 border-b border-gray-100 shadow-sm">
       <Link to="/dashboard">
@@ -386,7 +363,7 @@ function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
       </Link>
       <div className="flex items-center gap-1">
         <LanguageSwitcher />
-        <NotifPopover userId={userId} unread={unread} />
+        <SuppliersPopover />
         <ProfileMenu />
       </div>
     </header>
@@ -395,6 +372,7 @@ function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
 
 function BottomNav({ unread }: { unread: number }) {
   const location = useLocation()
+  const { t } = useI18n()
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-100 pb-safe shadow-[0_-1px_12px_rgba(10,22,40,0.06)]">
@@ -416,7 +394,7 @@ function BottomNav({ unread }: { unread: number }) {
               )}>
                 <img
                   src={item.flatIcon}
-                  alt={item.label}
+                  alt={t(item.labelKey)}
                   className={cn(
                     'h-6 w-6 object-contain transition-all duration-200',
                     isActive ? 'opacity-100 scale-105' : 'opacity-55'
@@ -432,7 +410,7 @@ function BottomNav({ unread }: { unread: number }) {
                 'text-[10px] font-semibold transition-colors leading-none',
                 isActive ? 'text-primary' : 'text-muted-foreground'
               )}>
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </Link>
           )
