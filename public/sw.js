@@ -1,9 +1,9 @@
-const CACHE_NAME = 'haitiimport-v1'
-const STATIC_ASSETS = ['/', '/index.html']
+const CACHE_NAME = 'konvwa-v1'
+const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS).catch(() => {}))
   )
   self.skipWaiting()
 })
@@ -19,8 +19,9 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
-  // Skip Supabase API calls and non-GET requests
-  if (event.request.method !== 'GET' || url.hostname.includes('supabase')) return
+  // Skip Supabase API calls, Edge Functions, and non-GET requests
+  if (event.request.method !== 'GET') return
+  if (url.hostname.includes('supabase') || url.hostname.includes('solutionip')) return
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
@@ -30,7 +31,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
         }
         return res
-      })
+      }).catch(() => cached)
       return cached || network
     })
   )
