@@ -486,7 +486,7 @@ export function SubmitPage() {
                   <Label className="text-sm font-bold">
                     Expédier depuis <span className="text-destructive">*</span>
                   </Label>
-                  <Select value={shipFromId} onValueChange={setShipFromId}>
+                  <Select value={shipFromId} onValueChange={v => { setShipFromId(v); setShippingRateId('') }}>
                     <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
                       <SelectValue placeholder="Sélectionner une origine" />
                     </SelectTrigger>
@@ -561,58 +561,63 @@ export function SubmitPage() {
                   </Select>
                 </div>
 
-                {/* Tarif d'expédition */}
-                {shippingRates.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold">
-                      Tarif d'expédition{' '}
-                      <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
-                    </Label>
+                {/* Tarif d'expédition — filtré selon l'origine choisie */}
+                {(() => {
+                  if (!shipFromId) return null
+                  const filtered = shippingRates.filter(r => !r.origin_id || r.origin_id === shipFromId)
+                  if (filtered.length === 0) return null
+                  return (
                     <div className="space-y-2">
-                      {shippingRates.map(r => {
-                        const isOcean = r.mode === 'ocean'
-                        const Icon = isOcean ? Ship : Plane
-                        const rate = isOcean
-                          ? (r.per_cbm_usd != null ? `$${r.per_cbm_usd}/CBM` : null)
-                          : (r.per_kg_usd  != null ? `$${r.per_kg_usd}/kg`   : null)
-                        const transit = r.transit_days_min != null
-                          ? `${r.transit_days_min}${r.transit_days_max != null ? '–' + r.transit_days_max : ''} jours`
-                          : null
-                        const selected = shippingRateId === r.id
-                        return (
-                          <button
-                            key={r.id}
-                            type="button"
-                            onClick={() => setShippingRateId(selected ? '' : r.id)}
-                            className={cn(
-                              'w-full flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-all',
-                              selected
-                                ? 'border-primary bg-primary/5'
-                                : 'border-gray-100 bg-[#F0F1F5] hover:border-gray-200'
-                            )}
-                          >
-                            <div className={cn('flex h-8 w-8 items-center justify-center rounded-full shrink-0', isOcean ? 'bg-blue-100' : 'bg-sky-100')}>
-                              <Icon className={cn('h-4 w-4', isOcean ? 'text-blue-600' : 'text-sky-500')} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate">{r.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {[r.type_label, rate, transit].filter(Boolean).join(' · ')}
-                              </p>
-                            </div>
-                            {selected && (
-                              <div className="h-5 w-5 shrink-0 rounded-full bg-primary flex items-center justify-center">
-                                <svg className="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 12 12">
-                                  <path d="M10 3L5 8.5 2 5.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
+                      <Label className="text-sm font-bold">
+                        Tarif d'expédition{' '}
+                        <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                      </Label>
+                      <div className="space-y-2">
+                        {filtered.map(r => {
+                          const isOcean = r.mode === 'ocean'
+                          const Icon = isOcean ? Ship : Plane
+                          const rateLabel = isOcean
+                            ? (r.per_cbm_usd != null ? `$${r.per_cbm_usd}/CBM` : null)
+                            : (r.per_kg_usd  != null ? `$${r.per_kg_usd}/kg`   : null)
+                          const transit = r.transit_days_min != null
+                            ? `${r.transit_days_min}${r.transit_days_max != null ? '–' + r.transit_days_max : ''} jours`
+                            : null
+                          const selected = shippingRateId === r.id
+                          return (
+                            <button
+                              key={r.id}
+                              type="button"
+                              onClick={() => setShippingRateId(selected ? '' : r.id)}
+                              className={cn(
+                                'w-full flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-all',
+                                selected
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-gray-100 bg-[#F0F1F5] hover:border-gray-200'
+                              )}
+                            >
+                              <div className={cn('flex h-8 w-8 items-center justify-center rounded-full shrink-0', isOcean ? 'bg-blue-100' : 'bg-sky-100')}>
+                                <Icon className={cn('h-4 w-4', isOcean ? 'text-blue-600' : 'text-sky-500')} />
                               </div>
-                            )}
-                          </button>
-                        )
-                      })}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">{r.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {[rateLabel, transit].filter(Boolean).join(' · ')}
+                                </p>
+                              </div>
+                              {selected && (
+                                <div className="h-5 w-5 shrink-0 rounded-full bg-primary flex items-center justify-center">
+                                  <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 12 12">
+                                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </div>
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
               </div>
             </div>
 
