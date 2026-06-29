@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { Plus, Pencil, Trash2, Loader2, Truck, MapPin, Package, Globe } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, Truck, MapPin, Package, Globe, Ship, Plane, DollarSign } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +24,15 @@ interface HaitiCity {
 }
 interface ProductType {
   id: string; name: string; active: boolean; sort_order: number
+}
+interface ShippingRate {
+  id: string; mode: 'ocean' | 'air'; name: string; type_label: string; priority: string
+  origin_id: string | null; min_amount_usd: number; max_weight_kg: number | null
+  base_fee_usd: number; per_kg_usd: number | null; per_lb_usd: number | null
+  per_cbm_usd: number | null; per_cuft_usd: number | null
+  transit_days_min: number | null; transit_days_max: number | null
+  description: string | null; active: boolean; sort_order: number
+  shipping_origins?: { name: string; flag_emoji: string | null } | null
 }
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
@@ -58,13 +67,14 @@ function SectionCard({ title, count, children }: { title: string; count: number;
 
 // ── Tab bar ──────────────────────────────────────────────────────────────────
 
-type Tab = 'origins' | 'regions' | 'cities' | 'types'
+type Tab = 'origins' | 'regions' | 'cities' | 'types' | 'rates'
 
 const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
-  { key: 'origins', label: 'Origines',     icon: Globe    },
-  { key: 'regions', label: 'Régions',      icon: MapPin   },
-  { key: 'cities',  label: 'Villes',       icon: Truck    },
-  { key: 'types',   label: 'Types colis',  icon: Package  },
+  { key: 'origins', label: 'Origines',    icon: Globe       },
+  { key: 'regions', label: 'Régions',     icon: MapPin      },
+  { key: 'cities',  label: 'Villes',      icon: Truck       },
+  { key: 'types',   label: 'Types colis', icon: Package     },
+  { key: 'rates',   label: 'Tarifs',      icon: DollarSign  },
 ]
 
 // ── Origins section ───────────────────────────────────────────────────────────
@@ -588,6 +598,315 @@ function ProductTypesSection() {
   )
 }
 
+// ── Shipping rates section ────────────────────────────────────────────────────
+
+type RateForm = {
+  mode: 'ocean' | 'air'
+  name: string
+  type_label: string
+  origin_id: string
+  per_cbm_usd: string
+  per_kg_usd: string
+  min_amount_usd: string
+  transit_days_min: string
+  transit_days_max: string
+  description: string
+  active: boolean
+  sort_order: string
+}
+
+const EMPTY_RATE_FORM: RateForm = {
+  mode: 'ocean', name: '', type_label: 'Standard', origin_id: '',
+  per_cbm_usd: '', per_kg_usd: '', min_amount_usd: '0',
+  transit_days_min: '', transit_days_max: '', description: '', active: true, sort_order: '0',
+}
+
+function ShippingRatesSection() {
+  const [items,   setItems]   = useState<ShippingRate[]>([])
+  const [origins, setOrigins] = useState<ShippingOrigin[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving,  setSaving]  = useState(false)
+  const [open,    setOpen]    = useState(false)
+  const [editing, setEditing] = useState<ShippingRate | null>(null)
+  const [form,    setForm]    = useState<RateForm>(EMPTY_RATE_FORM)
+
+  async function load() {
+    setLoading(true)
+    const [{ data: rates }, { data: orgs }] = await Promise.all([
+      supabase.from('shipping_rates').select('*, shipping_origins(name, flag_emoji)').order('sort_order'),
+      supabase.from('shipping_origins').select('*').order('sort_order'),
+    ])
+    setItems(rates as ShippingRate[] || [])
+    setOrigins(orgs as ShippingOrigin[] || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  function toForm(r: ShippingRate): RateForm {
+    return {
+      mode: r.mode, name: r.name, type_label: r.type_label, origin_id: r.origin_id ?? '',
+      per_cbm_usd: r.per_cbm_usd?.toString() ?? '', per_kg_usd: r.per_kg_usd?.toString() ?? '',
+      min_amount_usd: r.min_amount_usd.toString(),
+      transit_days_min: r.transit_days_min?.toString() ?? '', transit_days_max: r.transit_days_max?.toString() ?? '',
+      description: r.description ?? '', active: r.active, sort_order: r.sort_order.toString(),
+    }
+  }
+
+  function openAdd() { setEditing(null); setForm(EMPTY_RATE_FORM); setOpen(true) }
+  function openEdit(item: ShippingRate) { setEditing(item); setForm(toForm(item)); setOpen(true) }
+
+  function buildPayload() {
+    return {
+      mode: form.mode,
+      name: form.name.trim(),
+      type_label: form.type_label.trim() || 'Standard',
+      origin_id: form.origin_id || null,
+      per_cbm_usd: form.per_cbm_usd ? parseFloat(form.per_cbm_usd) : null,
+      per_kg_usd: form.per_kg_usd ? parseFloat(form.per_kg_usd) : null,
+      per_lb_usd: null,
+      per_cuft_usd: null,
+      base_fee_usd: 0,
+      min_amount_usd: parseFloat(form.min_amount_usd) || 0,
+      max_weight_kg: null,
+      transit_days_min: form.transit_days_min ? parseInt(form.transit_days_min) : null,
+      transit_days_max: form.transit_days_max ? parseInt(form.transit_days_max) : null,
+      description: form.description.trim() || null,
+      active: form.active,
+      sort_order: parseInt(form.sort_order) || 0,
+    }
+  }
+
+  async function handleSave() {
+    if (!form.name.trim()) { toast.error('Nom requis.'); return }
+    if (form.mode === 'ocean' && !form.per_cbm_usd) { toast.error('Tarif CBM requis pour l\'océan.'); return }
+    if (form.mode === 'air'   && !form.per_kg_usd)  { toast.error('Tarif kg requis pour l\'aérien.'); return }
+    setSaving(true)
+    if (editing) {
+      const { error } = await supabase.from('shipping_rates').update(buildPayload()).eq('id', editing.id)
+      if (error) { toast.error('Erreur mise à jour.'); setSaving(false); return }
+      toast.success('Tarif mis à jour.')
+    } else {
+      const { error } = await supabase.from('shipping_rates').insert(buildPayload())
+      if (error) { toast.error('Erreur création.'); setSaving(false); return }
+      toast.success('Tarif ajouté.')
+    }
+    setSaving(false); setOpen(false); load()
+  }
+
+  async function handleToggle(item: ShippingRate) {
+    const { error } = await supabase.from('shipping_rates').update({ active: !item.active }).eq('id', item.id)
+    if (error) { toast.error('Erreur.'); return }
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, active: !i.active } : i))
+  }
+
+  async function handleDelete(item: ShippingRate) {
+    if (!confirm(`Supprimer le tarif "${item.name}" ?`)) return
+    const { error } = await supabase.from('shipping_rates').delete().eq('id', item.id)
+    if (error) { toast.error('Impossible de supprimer.'); return }
+    toast.success('Tarif supprimé.'); load()
+  }
+
+  const ocean = items.filter(r => r.mode === 'ocean')
+  const air   = items.filter(r => r.mode === 'air')
+
+  function RateGroup({ title, icon: Icon, rates, color }: { title: string; icon: React.ElementType; rates: ShippingRate[]; color: string }) {
+    if (rates.length === 0) return null
+    return (
+      <SectionCard title={<span className="flex items-center gap-2"><Icon className={cn('h-4 w-4', color)} />{title}</span> as unknown as string} count={rates.length}>
+        <div className="divide-y divide-gray-100">
+          {rates.map(item => {
+            const org = item.shipping_origins
+            const transit = item.transit_days_min != null
+              ? `${item.transit_days_min}${item.transit_days_max != null ? '–' + item.transit_days_max : ''} j`
+              : null
+            const rate = item.mode === 'ocean'
+              ? (item.per_cbm_usd != null ? `$${item.per_cbm_usd}/CBM` : '—')
+              : (item.per_kg_usd  != null ? `$${item.per_kg_usd}/kg`  : '—')
+            return (
+              <div key={item.id} className="flex items-center gap-3 px-4 py-3.5">
+                <div className={cn('flex h-8 w-8 items-center justify-center rounded-full shrink-0', item.mode === 'ocean' ? 'bg-blue-50' : 'bg-sky-50')}>
+                  <Icon className={cn('h-3.5 w-3.5', color)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold truncate">{item.name}</p>
+                    <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full shrink-0">{item.type_label}</span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                    {org && <span>{org.flag_emoji ?? ''} {org.name}</span>}
+                    {transit && <span>{transit}</span>}
+                    <span className="font-semibold text-foreground">{rate}</span>
+                    {item.min_amount_usd > 0 && <span>min ${item.min_amount_usd}</span>}
+                  </div>
+                </div>
+                <ActiveBadge active={item.active} onToggle={() => handleToggle(item)} />
+                <button onClick={() => openEdit(item)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+                <button onClick={() => handleDelete(item)} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      </SectionCard>
+    )
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-muted-foreground">Tarifs de fret utilisés pour calculer le coût d'expédition</p>
+        <Button size="sm" onClick={openAdd} className="rounded-xl gap-1.5" style={BTN_ORANGE}>
+          <Plus className="h-3.5 w-3.5" /> Ajouter
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+      ) : items.length === 0 ? (
+        <div className="rounded-2xl bg-white border border-gray-100 py-14 text-center">
+          <p className="text-sm text-muted-foreground">Aucun tarif configuré.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <RateGroup title="Fret maritime" icon={Ship} rates={ocean} color="text-blue-600" />
+          <RateGroup title="Fret aérien"   icon={Plane} rates={air}   color="text-sky-500" />
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Modifier' : 'Ajouter'} un tarif</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-1">
+
+            {/* Mode */}
+            <div className="grid grid-cols-2 gap-2">
+              {(['ocean', 'air'] as const).map(m => (
+                <button key={m} onClick={() => setForm(p => ({ ...p, mode: m }))}
+                  className={cn(
+                    'flex items-center justify-center gap-2 h-10 rounded-xl border text-sm font-semibold transition-all',
+                    form.mode === m ? 'border-primary bg-primary/5 text-primary' : 'border-gray-200 text-muted-foreground hover:border-gray-300'
+                  )}
+                >
+                  {m === 'ocean' ? <Ship className="h-4 w-4" /> : <Plane className="h-4 w-4" />}
+                  {m === 'ocean' ? 'Maritime' : 'Aérien'}
+                </button>
+              ))}
+            </div>
+
+            {/* Name + type */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Nom <span className="text-destructive">*</span></Label>
+                <Input placeholder="Express Chine" value={form.name}
+                  onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Type</Label>
+                <Input placeholder="Standard / Express" value={form.type_label}
+                  onChange={e => setForm(p => ({ ...p, type_label: e.target.value }))} className="rounded-xl" />
+              </div>
+            </div>
+
+            {/* Origin */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Origine (optionnel)</Label>
+              <Select value={form.origin_id} onValueChange={v => setForm(p => ({ ...p, origin_id: v === '__none' ? '' : v }))}>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Toutes origines" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">Toutes origines</SelectItem>
+                  {origins.map(o => <SelectItem key={o.id} value={o.id}>{o.flag_emoji} {o.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Rate fields */}
+            {form.mode === 'ocean' ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Tarif / CBM (USD) <span className="text-destructive">*</span></Label>
+                  <Input type="number" step="0.01" placeholder="790" value={form.per_cbm_usd}
+                    onChange={e => setForm(p => ({ ...p, per_cbm_usd: e.target.value }))} className="rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Minimum (USD)</Label>
+                  <Input type="number" step="0.01" placeholder="0" value={form.min_amount_usd}
+                    onChange={e => setForm(p => ({ ...p, min_amount_usd: e.target.value }))} className="rounded-xl" />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Tarif / kg (USD) <span className="text-destructive">*</span></Label>
+                  <Input type="number" step="0.001" placeholder="10.978" value={form.per_kg_usd}
+                    onChange={e => setForm(p => ({ ...p, per_kg_usd: e.target.value }))} className="rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Minimum (USD)</Label>
+                  <Input type="number" step="0.01" placeholder="0" value={form.min_amount_usd}
+                    onChange={e => setForm(p => ({ ...p, min_amount_usd: e.target.value }))} className="rounded-xl" />
+                </div>
+              </div>
+            )}
+
+            {/* Transit */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Délai min (jours)</Label>
+                <Input type="number" placeholder="60" value={form.transit_days_min}
+                  onChange={e => setForm(p => ({ ...p, transit_days_min: e.target.value }))} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Délai max (jours)</Label>
+                <Input type="number" placeholder="70" value={form.transit_days_max}
+                  onChange={e => setForm(p => ({ ...p, transit_days_max: e.target.value }))} className="rounded-xl" />
+              </div>
+            </div>
+
+            {/* Sort order */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Ordre d'affichage</Label>
+              <Input type="number" placeholder="0" value={form.sort_order}
+                onChange={e => setForm(p => ({ ...p, sort_order: e.target.value }))} className="rounded-xl" />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Description (optionnel)</Label>
+              <Input placeholder="Détails sur ce tarif…" value={form.description}
+                onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="rounded-xl" />
+            </div>
+
+            {/* Active */}
+            <div className="flex items-center gap-3 pt-1">
+              <button onClick={() => setForm(p => ({ ...p, active: !p.active }))}
+                className={cn('flex items-center gap-2 text-sm font-semibold px-3 py-1.5 rounded-xl transition-colors',
+                  form.active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                )}
+              >
+                {form.active ? 'Actif' : 'Inactif'}
+              </button>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function AdminShippingConfigPage() {
@@ -599,7 +918,7 @@ export function AdminShippingConfigPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Configuration expédition</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Gérez les origines, régions, villes et types de produits disponibles dans le formulaire client
+          Gérez les origines, régions, villes, types de produits et tarifs de fret
         </p>
       </div>
 
@@ -627,6 +946,7 @@ export function AdminShippingConfigPage() {
       {tab === 'regions' && <RegionsSection />}
       {tab === 'cities'  && <CitiesSection />}
       {tab === 'types'   && <ProductTypesSection />}
+      {tab === 'rates'   && <ShippingRatesSection />}
     </div>
   )
 }

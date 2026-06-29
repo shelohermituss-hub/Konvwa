@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Loader2, ExternalLink, CheckCircle2, SendHorizonal,
-  Package, ImagePlus, X, Box, Truck, MapPin, Plus, Trash2,
+  Package, ImagePlus, X, Box, Truck, MapPin, Plus, Trash2, Ship, Plane,
 } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -45,6 +45,19 @@ interface HaitiCity {
 interface ProductType {
   id: string
   name: string
+}
+
+interface ShippingRate {
+  id: string
+  mode: 'ocean' | 'air'
+  name: string
+  type_label: string
+  per_cbm_usd: number | null
+  per_kg_usd: number | null
+  min_amount_usd: number
+  transit_days_min: number | null
+  transit_days_max: number | null
+  origin_id: string | null
 }
 
 interface PackageItem {
@@ -99,10 +112,19 @@ function calcBreakdown(
   qty: number,
   totalCBM: number,
   totalWeightKg: number,
-  s: AppSettings
+  s: AppSettings,
+  rate: ShippingRate | null = null,
 ): Breakdown {
-  const productUSD  = priceUSD * qty
-  const shippingUSD = totalCBM * s.cbm_price_usd
+  const productUSD = priceUSD * qty
+  let shippingUSD: number
+  if (rate) {
+    const rawShipping = rate.mode === 'ocean'
+      ? totalCBM * (rate.per_cbm_usd ?? 0)
+      : totalWeightKg * (rate.per_kg_usd ?? 0)
+    shippingUSD = Math.max(rate.min_amount_usd, rawShipping)
+  } else {
+    shippingUSD = totalCBM * s.cbm_price_usd
+  }
   const cif         = productUSD + shippingUSD
   const dutyUSD     = cif * (s.duty_rate_percent / 100)
   const subtotal    = cif + dutyUSD
@@ -170,6 +192,8 @@ export function SubmitPage() {
   const [regions,       setRegions]       = useState<HaitiRegion[]>([])
   const [cities,        setCities]        = useState<HaitiCity[]>([])
   const [productTypes,  setProductTypes]  = useState<ProductType[]>([])
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([])
+  const [shippingRateId, setShippingRateId] = useState('')
   const [loadingCities, setLoadingCities] = useState(false)
 
   // Route info
@@ -210,10 +234,14 @@ export function SubmitPage() {
       supabase.from('product_types').select('id,name').eq('active', true).order('sort_order'),
       supabase.from('app_settings').select('key,value')
         .in('key', ['usd_to_htg_rate', 'cbm_price_usd', 'duty_rate_percent', 'service_margin_percent']),
-    ]).then(([originsRes, regionsRes, typesRes, settingsRes]) => {
+      supabase.from('shipping_rates')
+        .select('id,mode,name,type_label,per_cbm_usd,per_kg_usd,min_amount_usd,transit_days_min,transit_days_max,origin_id')
+        .eq('active', true).order('sort_order'),
+    ]).then(([originsRes, regionsRes, typesRes, settingsRes, ratesRes]) => {
       setOrigins(originsRes.data as ShippingOrigin[] || [])
       setRegions(regionsRes.data as HaitiRegion[] || [])
       setProductTypes(typesRes.data as ProductType[] || [])
+      setShippingRates(ratesRes.data as ShippingRate[] || [])
       const map = Object.fromEntries(
         (settingsRes.data ?? []).map((r: { key: string; value: string }) => [r.key, parseFloat(r.value)])
       )
@@ -275,10 +303,12 @@ export function SubmitPage() {
   const totalWeightKg = pkgsComputed.reduce((s, p) => s + p.weight_kg, 0)
   const totalWeightLbs = pkgsComputed.reduce((s, p) => s + p.weight_lbs, 0)
 
+  const selectedRate = shippingRates.find(r => r.id === shippingRateId) ?? null
   const hasDimensions = totalCBM > 0
-  const hasCalc       = price > 0 && hasDimensions && !!settings
+  const hasWeightForAir = selectedRate?.mode === 'air' ? totalWeightKg > 0 : true
+  const hasCalc = price > 0 && hasDimensions && hasWeightForAir && !!settings
 
-  const breakdown        = hasCalc ? calcBreakdown(price, qty, totalCBM, totalWeightKg, settings) : null
+  const breakdown = hasCalc ? calcBreakdown(price, qty, totalCBM, totalWeightKg, settings, selectedRate) : null
   const detectedPlatform = productUrl ? detectPlatform(productUrl) : null
 
   const dimUnit    = unitSystem === 'metric' ? 'cm' : 'in'
@@ -315,7 +345,7 @@ export function SubmitPage() {
     setQuantity('10'); setPriceUSD('')
     setUnitSystem('metric'); setProductTypeId('')
     setPackages([newPkg()])
-    setInvoiceValueUSD('')
+    setInvoiceValueUSD(''); setShippingRateId('')
     setSize(''); setColor(''); setUrgency('normal'); setNotes('')
     clearImage()
   }
@@ -375,9 +405,10 @@ export function SubmitPage() {
       // All packages detail
       packages: packagesPayload,
       // Parcel details
-      unit_system:       unitSystem,
-      product_type_id:   productTypeId || null,
-      invoice_value_usd: parseFloat(invoiceValueUSD) || null,
+      unit_system:        unitSystem,
+      product_type_id:    productTypeId   || null,
+      invoice_value_usd:  parseFloat(invoiceValueUSD) || null,
+      shipping_rate_id:   shippingRateId  || null,
       // Image
       product_image_url: imageUrl,
       // Variant info
@@ -529,6 +560,59 @@ export function SubmitPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Tarif d'expédition */}
+                {shippingRates.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold">
+                      Tarif d'expédition{' '}
+                      <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                    </Label>
+                    <div className="space-y-2">
+                      {shippingRates.map(r => {
+                        const isOcean = r.mode === 'ocean'
+                        const Icon = isOcean ? Ship : Plane
+                        const rate = isOcean
+                          ? (r.per_cbm_usd != null ? `$${r.per_cbm_usd}/CBM` : null)
+                          : (r.per_kg_usd  != null ? `$${r.per_kg_usd}/kg`   : null)
+                        const transit = r.transit_days_min != null
+                          ? `${r.transit_days_min}${r.transit_days_max != null ? '–' + r.transit_days_max : ''} jours`
+                          : null
+                        const selected = shippingRateId === r.id
+                        return (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => setShippingRateId(selected ? '' : r.id)}
+                            className={cn(
+                              'w-full flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-all',
+                              selected
+                                ? 'border-primary bg-primary/5'
+                                : 'border-gray-100 bg-[#F0F1F5] hover:border-gray-200'
+                            )}
+                          >
+                            <div className={cn('flex h-8 w-8 items-center justify-center rounded-full shrink-0', isOcean ? 'bg-blue-100' : 'bg-sky-100')}>
+                              <Icon className={cn('h-4 w-4', isOcean ? 'text-blue-600' : 'text-sky-500')} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{r.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {[r.type_label, rate, transit].filter(Boolean).join(' · ')}
+                              </p>
+                            </div>
+                            {selected && (
+                              <div className="h-5 w-5 shrink-0 rounded-full bg-primary flex items-center justify-center">
+                                <svg className="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 12 12">
+                                  <path d="M10 3L5 8.5 2 5.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </div>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -973,8 +1057,14 @@ export function SubmitPage() {
                       value={fmtUSD(breakdown!.productUSD)}
                     />
                     <ManifestLine
-                      label="Fret maritime (CBM)"
-                      sub={`${fmtCBM(breakdown!.totalCBM)} m³ × $${settings!.cbm_price_usd}/m³`}
+                      label={selectedRate?.mode === 'air' ? 'Fret aérien' : 'Fret maritime'}
+                      sub={
+                        selectedRate
+                          ? selectedRate.mode === 'air'
+                            ? `${totalWeightKg.toFixed(2)} kg × $${selectedRate.per_kg_usd}/kg`
+                            : `${fmtCBM(breakdown!.totalCBM)} m³ × $${selectedRate.per_cbm_usd}/m³`
+                          : `${fmtCBM(breakdown!.totalCBM)} m³ × $${settings!.cbm_price_usd}/m³`
+                      }
                       value={fmtUSD(breakdown!.shippingUSD)}
                       isAdd
                     />
