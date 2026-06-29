@@ -172,19 +172,24 @@ export function WalletPage() {
 
   async function loadData() {
     if (!user) return
-    const [walletRes, txRes] = await Promise.all([
-      supabase.from('wallets').select('id, available_balance, blocked_balance').eq('user_id', user.id).maybeSingle(),
-      supabase.from('wallet_transactions').select('id, type, amount, status, payment_method, description, reference, created_at').order('created_at', { ascending: false }).limit(30),
-    ])
-    if (walletRes.data) setWallet(walletRes.data)
-    if (txRes.data) setTransactions(txRes.data as Transaction[])
+    const walletRes = await supabase.from('wallets').select('id, available_balance, blocked_balance').eq('user_id', user.id).maybeSingle()
+    if (walletRes.data) {
+      setWallet(walletRes.data)
+      const txRes = await supabase
+        .from('wallet_transactions')
+        .select('id, type, amount, status, payment_method, description, reference, created_at')
+        .eq('wallet_id', walletRes.data.id)
+        .order('created_at', { ascending: false })
+        .limit(30)
+      if (txRes.data) setTransactions(txRes.data as Transaction[])
+    }
     setLoading(false)
   }
 
   useEffect(() => { loadData() }, [user])
 
   async function handleTopup() {
-    if (!topupAmount || parseFloat(topupAmount) < 20 || !wallet) return
+    if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet) return
     setSubmitting(true)
     const amount = parseFloat(topupAmount)
     try {
