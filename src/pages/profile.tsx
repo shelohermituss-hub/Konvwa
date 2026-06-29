@@ -58,8 +58,8 @@ export function ProfilePage() {
   return (
     <div className="min-h-full bg-[#F4F5F7]">
       <div className="px-5 pt-5 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">My Profile</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage your personal information and settings</p>
+        <h1 className="text-2xl font-bold tracking-tight">Mon profil</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Gérez vos informations et paramètres</p>
       </div>
 
       <div className="px-4 pb-6 space-y-4">
@@ -72,8 +72,8 @@ export function ProfilePage() {
                 <LayoutDashboard className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <p className="font-bold text-sm">Admin Dashboard</p>
-                <p className="text-xs text-white/70 mt-0.5">Manage orders, quotes & users</p>
+                <p className="font-bold text-sm">Tableau de bord</p>
+                <p className="text-xs text-white/70 mt-0.5">Gérer les commandes, devis & clients</p>
               </div>
               <ChevronRight className="h-4 w-4 text-white/60 shrink-0" />
             </div>
@@ -87,8 +87,8 @@ export function ProfilePage() {
               <User className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="font-semibold text-sm">Personal information</p>
-              <p className="text-xs text-muted-foreground">Update your personal details</p>
+              <p className="font-semibold text-sm">Informations personnelles</p>
+              <p className="text-xs text-muted-foreground">Modifier vos informations</p>
             </div>
           </div>
 
@@ -107,8 +107,8 @@ export function ProfilePage() {
               <MapPin className="h-4 w-4 text-blue-500" />
             </div>
             <div>
-              <p className="font-semibold text-sm">Address information</p>
-              <p className="text-xs text-muted-foreground">Manage your delivery addresses</p>
+              <p className="font-semibold text-sm">Adresses de livraison</p>
+              <p className="text-xs text-muted-foreground">Gérer vos adresses de livraison</p>
             </div>
           </div>
           <AddressSection />
@@ -121,21 +121,21 @@ export function ProfilePage() {
               <Lock className="h-4 w-4 text-amber-500" />
             </div>
             <div>
-              <p className="font-semibold text-sm">Security</p>
-              <p className="text-xs text-muted-foreground">Password and account security</p>
+              <p className="font-semibold text-sm">Sécurité</p>
+              <p className="text-xs text-muted-foreground">Mot de passe et sécurité</p>
             </div>
           </div>
           <div className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold">Password</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Update your account password</p>
+                <p className="text-sm font-semibold">Mot de passe</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Modifier votre mot de passe</p>
               </div>
               <button
                 onClick={() => setShowPasswordModal(true)}
                 className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
               >
-                Change
+                Modifier
               </button>
             </div>
           </div>
@@ -149,7 +149,7 @@ export function ProfilePage() {
             </div>
             <div>
               <p className="font-semibold text-sm">Notifications</p>
-              <p className="text-xs text-muted-foreground">Manage your alert preferences</p>
+              <p className="text-xs text-muted-foreground">Gérer vos préférences de notification</p>
             </div>
           </div>
           <PreferencesSection />
@@ -161,21 +161,21 @@ export function ProfilePage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
               <Activity className="h-4 w-4 text-muted-foreground" />
             </div>
-            <span className="flex-1 text-sm font-medium">Activity Log</span>
+            <span className="flex-1 text-sm font-medium">Journal d'activité</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
           </Link>
           <Link to="/billing" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </div>
-            <span className="flex-1 text-sm font-medium">Billing</span>
+            <span className="flex-1 text-sm font-medium">Facturation</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
           </Link>
           <Link to="/support" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
               <BadgeCheck className="h-4 w-4 text-muted-foreground" />
             </div>
-            <span className="flex-1 text-sm font-medium">Support & Help</span>
+            <span className="flex-1 text-sm font-medium">Support & Aide</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
           </Link>
         </div>
@@ -188,7 +188,7 @@ export function ProfilePage() {
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-destructive/8 shrink-0">
             <LogOut className="h-4 w-4 text-destructive" />
           </div>
-          <span className="text-sm font-bold text-destructive">Sign Out</span>
+          <span className="text-sm font-bold text-destructive">Se déconnecter</span>
         </button>
       </div>
 
@@ -230,7 +230,7 @@ function PersonalInfoForm({
       updated_at: new Date().toISOString(),
     }).eq('user_id', user.id)
     if (error) toast.error('Erreur lors de la mise à jour.')
-    else { await refreshProfile(); toast.success('Profile updated.') }
+    else { await refreshProfile(); toast.success('Profil mis à jour.') }
     setSaving(false)
   }
 
@@ -257,14 +257,14 @@ function PersonalInfoForm({
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
             <Upload className="h-3.5 w-3.5" />
-            Upload Image
+            Changer la photo
           </button>
           <button
             onClick={onAvatarRemove}
             disabled={avatarUploading || !profile?.avatar_url}
             className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted/30 transition-colors disabled:opacity-40"
           >
-            Remove
+            Supprimer
           </button>
         </div>
       </div>
@@ -272,7 +272,7 @@ function PersonalInfoForm({
       {/* Name fields */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">First Name</Label>
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Prénom</Label>
           <Input
             value={firstName}
             onChange={(e) => setFullName(`${e.target.value} ${lastName}`.trim())}
@@ -281,7 +281,7 @@ function PersonalInfoForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Last Name</Label>
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nom</Label>
           <Input
             value={lastName}
             onChange={(e) => setFullName(`${firstName} ${e.target.value}`.trim())}
@@ -293,7 +293,7 @@ function PersonalInfoForm({
 
       {/* Email */}
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Email</Label>
+        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Adresse email</Label>
         <Input
           value={user?.email || ''}
           disabled
@@ -303,7 +303,7 @@ function PersonalInfoForm({
 
       {/* Phone */}
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Phone</Label>
+        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Téléphone</Label>
         <div className="flex gap-2">
           <div className="flex h-11 items-center px-3 rounded-xl bg-[#F0F1F5] text-sm font-semibold text-muted-foreground shrink-0 select-none">
             🇭🇹 +509
@@ -327,7 +327,7 @@ function PersonalInfoForm({
           style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
         >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-          Save Changes
+          Enregistrer
         </button>
       </div>
     </div>
@@ -389,13 +389,13 @@ function AddressSection() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <p className="font-semibold text-sm">{a.label}</p>
-              {a.default && <span className="rounded-full bg-primary/15 text-primary text-[9px] font-bold px-2 py-0.5">Primary</span>}
+              {a.default && <span className="rounded-full bg-primary/15 text-primary text-[9px] font-bold px-2 py-0.5">Principal</span>}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">{a.address}</p>
             {a.phone && <p className="text-xs text-muted-foreground/70 mt-0.5">{a.phone}</p>}
             {!a.default && (
               <button onClick={() => handleSetDefault(a.id)} className="text-[11px] text-primary font-semibold mt-1.5">
-                Set as default
+                Définir par défaut
               </button>
             )}
           </div>
@@ -409,27 +409,27 @@ function AddressSection() {
         <div className="rounded-xl border border-border bg-[#F4F5F7] p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Label</Label>
-              <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Home, Office…" className="h-10 rounded-xl bg-white border-0 focus-visible:ring-1 focus-visible:ring-primary/40" />
+              <Label className="text-xs font-semibold">Libellé</Label>
+              <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Maison, Bureau…" className="h-10 rounded-xl bg-white border-0 focus-visible:ring-1 focus-visible:ring-primary/40" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Phone</Label>
+              <Label className="text-xs font-semibold">Téléphone</Label>
               <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+509 XXXX" className="h-10 rounded-xl bg-white border-0 focus-visible:ring-1 focus-visible:ring-primary/40" />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Full Address</Label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Street, City, Department" className="h-10 rounded-xl bg-white border-0 focus-visible:ring-1 focus-visible:ring-primary/40" />
+            <Label className="text-xs font-semibold">Adresse complète</Label>
+            <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue, Ville, Département" className="h-10 rounded-xl bg-white border-0 focus-visible:ring-1 focus-visible:ring-primary/40" />
           </div>
           <div className="flex gap-2 justify-end">
-            <button onClick={() => setAdding(false)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted/30 transition-colors">Cancel</button>
+            <button onClick={() => setAdding(false)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-muted/30 transition-colors">Annuler</button>
             <button
               onClick={handleAdd}
               disabled={saving || !address.trim()}
               className="rounded-xl px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
-              {saving && <Loader2 className="inline h-3.5 w-3.5 animate-spin mr-1" />}Add Address
+              {saving && <Loader2 className="inline h-3.5 w-3.5 animate-spin mr-1" />}Ajouter
             </button>
           </div>
         </div>
@@ -438,7 +438,7 @@ function AddressSection() {
           onClick={() => setAdding(true)}
           className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary/25 py-3 text-sm font-semibold text-primary hover:border-primary/40 hover:bg-primary/4 transition-colors"
         >
-          <Plus className="h-4 w-4" />Add address
+          <Plus className="h-4 w-4" />Ajouter une adresse
         </button>
       )}
     </div>
@@ -454,9 +454,9 @@ function PreferencesSection() {
   return (
     <div className="divide-y divide-border/50">
       {[
-        { label: 'Push notifications', desc: 'Real-time alerts on the app', value: push, set: setPush },
-        { label: 'Email notifications', desc: 'Updates by email', value: email, set: setEmail },
-        { label: 'SMS notifications', desc: 'Alerts by SMS (optional)', value: sms, set: setSms },
+        { label: 'Notifications push', desc: "Alertes en temps réel sur l'application", value: push, set: setPush },
+        { label: 'Notifications email', desc: 'Mises à jour par email', value: email, set: setEmail },
+        { label: 'Notifications SMS', desc: 'Alertes par SMS (optionnel)', value: sms, set: setSms },
       ].map((item) => (
         <div key={item.label} className="flex items-center justify-between gap-3 px-5 py-3.5">
           <div>
@@ -480,12 +480,12 @@ function PasswordModal({ open, onClose }: { open: boolean; onClose: () => void }
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
-    if (next.length < 8) { toast.error('Password must be at least 8 characters.'); return }
-    if (next !== confirm) { toast.error('Passwords do not match.'); return }
+    if (next.length < 8) { toast.error('Le mot de passe doit avoir au moins 8 caractères.'); return }
+    if (next !== confirm) { toast.error('Les mots de passe ne correspondent pas.'); return }
     setSaving(true)
     const { error } = await supabase.auth.updateUser({ password: next })
-    if (error) toast.error(error.message || 'Error changing password.')
-    else { toast.success('Password updated successfully.'); setCurrent(''); setNext(''); setConfirm(''); onClose() }
+    if (error) toast.error(error.message || 'Erreur lors du changement de mot de passe.')
+    else { toast.success('Mot de passe mis à jour.'); setCurrent(''); setNext(''); setConfirm(''); onClose() }
     setSaving(false)
   }
 
@@ -493,12 +493,12 @@ function PasswordModal({ open, onClose }: { open: boolean; onClose: () => void }
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Change password</DialogTitle>
-          <DialogDescription>Create a new secure password</DialogDescription>
+          <DialogTitle>Changer le mot de passe</DialogTitle>
+          <DialogDescription>Créez un nouveau mot de passe sécurisé</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label className="text-sm font-bold">Current password</Label>
+            <Label className="text-sm font-bold">Mot de passe actuel</Label>
             <div className="relative">
               <Input type={showCurrent ? 'text' : 'password'} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="••••••••" className="h-11 rounded-xl bg-[#F0F1F5] border-0 pr-11 focus-visible:ring-1 focus-visible:ring-primary/40" />
               <button type="button" onClick={() => setShowCurrent(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -507,9 +507,9 @@ function PasswordModal({ open, onClose }: { open: boolean; onClose: () => void }
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm font-bold">New password</Label>
+            <Label className="text-sm font-bold">Nouveau mot de passe</Label>
             <div className="relative">
-              <Input type={showNext ? 'text' : 'password'} value={next} onChange={(e) => setNext(e.target.value)} placeholder="Min. 8 characters" className="h-11 rounded-xl bg-[#F0F1F5] border-0 pr-11 focus-visible:ring-1 focus-visible:ring-primary/40" />
+              <Input type={showNext ? 'text' : 'password'} value={next} onChange={(e) => setNext(e.target.value)} placeholder="Min. 8 caractères" className="h-11 rounded-xl bg-[#F0F1F5] border-0 pr-11 focus-visible:ring-1 focus-visible:ring-primary/40" />
               <button type="button" onClick={() => setShowNext(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {showNext ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -523,15 +523,15 @@ function PasswordModal({ open, onClose }: { open: boolean; onClose: () => void }
             )}
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm font-bold">Confirm password</Label>
+            <Label className="text-sm font-bold">Confirmer le mot de passe</Label>
             <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" className={cn('h-11 rounded-xl bg-[#F0F1F5] border-0 focus-visible:ring-1', confirm && confirm !== next ? 'ring-1 ring-destructive/30 focus-visible:ring-destructive/40' : 'focus-visible:ring-primary/40')} />
-            {confirm && confirm !== next && <p className="text-xs text-destructive">Passwords do not match</p>}
+            {confirm && confirm !== next && <p className="text-xs text-destructive">Les mots de passe ne correspondent pas</p>}
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="rounded-xl">Cancel</Button>
+          <Button variant="outline" onClick={onClose} className="rounded-xl">Annuler</Button>
           <Button onClick={handleSave} disabled={saving || !next || next !== confirm} className="rounded-xl">
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Update
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Mettre à jour
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -58,6 +58,7 @@ interface OrderDetail {
         weight_lbs: number | null
         cbm: number | null
       }> | null
+      shipping_rates: { mode: string; name: string } | null
     } | null
   } | null
 }
@@ -106,7 +107,8 @@ export function OrderDetailPage() {
               haiti_regions!destination_region_id(name),
               haiti_cities!destination_city_id(name),
               product_types!product_type_id(name),
-              packages
+              packages,
+              shipping_rates!shipping_rate_id(mode, name)
             )
           )
         `)
@@ -532,7 +534,7 @@ export function OrderDetailPage() {
                 <span className="font-medium">{order.quotes.purchase_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">Frais maritime</span>
+                <span className="text-muted-foreground">{order.quotes?.product_requests?.shipping_rates?.mode === 'air' ? 'Fret aérien' : 'Frais maritimes'}</span>
                 <span className="font-medium">{order.quotes.shipping_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">

@@ -314,7 +314,7 @@ export function DashboardPage() {
                       </p>
                       {/* Tap hint pinned to bottom */}
                       {!isOpen && (
-                        <p className="text-[9px] text-primary font-semibold">Tap to read more</p>
+                        <p className="text-[9px] text-primary font-semibold">Appuyer pour lire</p>
                       )}
                     </div>
                   </button>

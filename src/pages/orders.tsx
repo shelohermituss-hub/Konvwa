@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from '@/components/shared/status-badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Search, Plus, ChevronRight, Clock } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
@@ -31,6 +32,10 @@ interface DraftRow {
   status: string
   created_at: string
   urgency: string
+  product_url: string | null
+  notes: string | null
+  quantity: number
+  budget_estimate: number | null
 }
 
 const STATUS_FILTER_KEYS = [
@@ -52,6 +57,7 @@ export function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [selectedDraft, setSelectedDraft] = useState<DraftRow | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -63,7 +69,7 @@ export function OrdersPage() {
         .order('created_at', { ascending: false }),
       supabase
         .from('product_requests')
-        .select('id, product_name, category, status, created_at, urgency')
+        .select('id, product_name, category, status, created_at, urgency, product_url, notes, quantity, budget_estimate')
         .eq('user_id', user.id)
         .in('status', ['submitted', 'reviewing'])
         .order('created_at', { ascending: false }),
@@ -187,7 +193,11 @@ export function OrdersPage() {
                   {t('orders.pending_section')}
                 </p>
                 {filteredDrafts.map((draft) => (
-                  <div key={draft.id} className="flex items-center gap-3 rounded-2xl border border-warning/30 bg-warning/4 p-4 shadow-sm">
+                  <button
+                    key={draft.id}
+                    onClick={() => setSelectedDraft(draft)}
+                    className="w-full flex items-center gap-3 rounded-2xl border border-warning/30 bg-warning/4 p-4 shadow-sm hover:border-warning/50 hover:bg-warning/8 transition-colors text-left"
+                  >
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning/12 shrink-0">
                       <Clock className="h-5 w-5 text-warning" />
                     </div>
@@ -204,12 +214,13 @@ export function OrdersPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="text-right shrink-0 flex flex-col items-end gap-1">
                       <p className="text-[10px] text-muted-foreground">
                         {new Date(draft.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                       </p>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -258,6 +269,63 @@ export function OrdersPage() {
           </>
         )}
       </div>
+
+      {/* Draft detail dialog */}
+      <Dialog open={!!selectedDraft} onOpenChange={(o) => { if (!o) setSelectedDraft(null) }}>
+        <DialogContent className="rounded-2xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Clock className="h-4 w-4 text-warning shrink-0" />
+              Demande en cours d'examen
+            </DialogTitle>
+          </DialogHeader>
+          {selectedDraft && (
+            <div className="space-y-3 pb-2">
+              <div className="rounded-xl bg-warning/8 border border-warning/20 p-3">
+                <p className="text-xs text-warning font-semibold">
+                  Votre demande a bien été reçue. Notre équipe l'examine et vous enverra un devis sous peu.
+                </p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between py-1.5 border-b border-border/50">
+                  <span className="text-muted-foreground">Produit</span>
+                  <span className="font-semibold text-right max-w-[55%] text-xs">{selectedDraft.product_name}</span>
+                </div>
+                <div className="flex justify-between py-1.5 border-b border-border/50">
+                  <span className="text-muted-foreground">Catégorie</span>
+                  <span className="font-semibold capitalize">{selectedDraft.category || 'Autre'}</span>
+                </div>
+                <div className="flex justify-between py-1.5 border-b border-border/50">
+                  <span className="text-muted-foreground">Quantité</span>
+                  <span className="font-semibold">{selectedDraft.quantity}</span>
+                </div>
+                <div className="flex justify-between py-1.5 border-b border-border/50">
+                  <span className="text-muted-foreground">Urgence</span>
+                  <span className="font-semibold">
+                    {selectedDraft.urgency === 'express' ? 'Express (1-2 sem.)' : selectedDraft.urgency === 'urgent' ? 'Urgent (2-3 sem.)' : 'Normal (4-6 sem.)'}
+                  </span>
+                </div>
+                {selectedDraft.budget_estimate && (
+                  <div className="flex justify-between py-1.5 border-b border-border/50">
+                    <span className="text-muted-foreground">Budget estimé</span>
+                    <span className="font-semibold">{selectedDraft.budget_estimate.toLocaleString()} HTG</span>
+                  </div>
+                )}
+                <div className="flex justify-between py-1.5">
+                  <span className="text-muted-foreground">Soumis le</span>
+                  <span className="font-semibold">{new Date(selectedDraft.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                </div>
+              </div>
+              {selectedDraft.notes && (
+                <div className="rounded-xl bg-muted/40 p-3">
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Notes</p>
+                  <p className="text-xs">{selectedDraft.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
