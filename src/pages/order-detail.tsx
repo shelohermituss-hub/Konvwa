@@ -6,7 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { TimelineStep } from '@/components/shared/timeline-step'
-import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight, MapPin, Globe, Truck } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight, MapPin, Globe, Truck, Download } from 'lucide-react'
+import { downloadOrderPDF, type OrderForPDF } from '@/lib/pdf'
 import IconBoite from 'flat-color-icons/svg/package.svg'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
@@ -48,6 +49,15 @@ interface OrderDetail {
       haiti_regions: { name: string } | null
       haiti_cities: { name: string } | null
       product_types: { name: string } | null
+      packages: Array<{
+        number: number
+        length_cm: number | null
+        width_cm:  number | null
+        height_cm: number | null
+        weight_kg: number | null
+        weight_lbs: number | null
+        cbm: number | null
+      }> | null
     } | null
   } | null
 }
@@ -95,7 +105,8 @@ export function OrderDetailPage() {
               shipping_origins!ship_from_id(name, flag_emoji),
               haiti_regions!destination_region_id(name),
               haiti_cities!destination_city_id(name),
-              product_types!product_type_id(name)
+              product_types!product_type_id(name),
+              packages
             )
           )
         `)
@@ -201,6 +212,10 @@ export function OrderDetailPage() {
   const canPay = wallet ? wallet.available_balance >= total : false
   const needsPayment = order.status === 'awaiting_payment' && order.payment_status !== 'paid'
 
+  function handleDownloadPDF() {
+    downloadOrderPDF(order as unknown as OrderForPDF)
+  }
+
   return (
     <div className="min-h-full bg-[#F4F5F7] pb-10">
 
@@ -217,6 +232,15 @@ export function OrderDetailPage() {
             </div>
             <p className="text-xs text-muted-foreground font-mono">{order.tracking_code}</p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPDF}
+            className="shrink-0 h-9 rounded-xl gap-1.5 text-xs font-semibold border-primary/20 text-primary hover:bg-primary/5"
+          >
+            <Download className="h-3.5 w-3.5" />
+            PDF
+          </Button>
         </div>
       </div>
 
@@ -398,17 +422,45 @@ export function OrderDetailPage() {
               </div>
             )}
 
-            {/* Dimensions & CBM */}
+            {/* Colis — multi-package ou single */}
             {(() => {
               const req = order.quotes?.product_requests
-              if (!req?.box_length_cm || !req?.box_width_cm || !req?.box_height_cm) return null
+              if (!req) return null
+              const pkgs = req.packages?.filter(p => p.length_cm || p.weight_kg)
+              if (pkgs && pkgs.length > 0) {
+                const totalCBM = pkgs.reduce((s, p) => s + (p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : 0)), 0)
+                return (
+                  <div className="py-3 border-b border-gray-100 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                        <Package className="h-3.5 w-3.5" />
+                        {pkgs.length > 1 ? `${pkgs.length} colis` : 'Colis'}
+                      </span>
+                      <span className="text-sm font-semibold text-primary">{totalCBM.toFixed(4)} m³</span>
+                    </div>
+                    {pkgs.map(p => {
+                      const cbm = p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : null)
+                      return (
+                        <div key={p.number} className="flex items-center justify-between rounded-lg bg-[#F8F9FB] px-3 py-2 text-xs">
+                          <span className="font-semibold text-muted-foreground">Colis {p.number}</span>
+                          <span className="text-foreground font-mono">
+                            {p.length_cm && p.width_cm && p.height_cm
+                              ? `${p.length_cm}×${p.width_cm}×${p.height_cm} cm`
+                              : '—'}
+                          </span>
+                          {cbm && <span className="text-primary font-mono font-semibold">{cbm.toFixed(4)} m³</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              }
+              // Fallback to flat columns
+              if (!req.box_length_cm || !req.box_width_cm || !req.box_height_cm) return null
               const cbm = (req.box_length_cm * req.box_width_cm * req.box_height_cm) / 1_000_000
               return (
                 <>
-                  <InfoRow
-                    label="Dimensions (L×W×H)"
-                    value={`${req.box_length_cm} × ${req.box_width_cm} × ${req.box_height_cm} cm`}
-                  />
+                  <InfoRow label="Dimensions (L×W×H)" value={`${req.box_length_cm} × ${req.box_width_cm} × ${req.box_height_cm} cm`} />
                   <InfoRow label="Volume CBM" value={`${cbm.toFixed(4)} m³`} />
                 </>
               )

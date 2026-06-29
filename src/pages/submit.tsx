@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Loader2, ExternalLink, CheckCircle2, SendHorizonal,
-  Package, ImagePlus, X, Box, Truck, MapPin,
+  Package, ImagePlus, X, Box, Truck, MapPin, Plus, Trash2,
 } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -47,10 +47,18 @@ interface ProductType {
   name: string
 }
 
+interface PackageItem {
+  id: string
+  length: string
+  width: string
+  height: string
+  weight: string
+}
+
 interface Breakdown {
   productUSD: number
-  cbmPerUnit: number
   totalCBM: number
+  totalWeightKg: number
   shippingUSD: number
   dutyUSD: number
   serviceUSD: number
@@ -85,18 +93,15 @@ const fmt    = (n: number) => Math.round(n).toLocaleString('fr-FR').replace(/ /g
 const fmtUSD = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtCBM = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
 
-// Always takes l, w, h in cm
+// totalCBM = somme des CBM de tous les colis (en m³)
 function calcBreakdown(
   priceUSD: number,
   qty: number,
-  l_cm: number,
-  w_cm: number,
-  h_cm: number,
+  totalCBM: number,
+  totalWeightKg: number,
   s: AppSettings
 ): Breakdown {
   const productUSD  = priceUSD * qty
-  const cbmPerUnit  = (l_cm * w_cm * h_cm) / 1_000_000
-  const totalCBM    = cbmPerUnit * qty
   const shippingUSD = totalCBM * s.cbm_price_usd
   const cif         = productUSD + shippingUSD
   const dutyUSD     = cif * (s.duty_rate_percent / 100)
@@ -105,7 +110,11 @@ function calcBreakdown(
   const totalUSD    = subtotal + serviceUSD
   const totalHTG    = totalUSD * s.usd_to_htg_rate
   const unitHTG     = totalHTG / Math.max(1, qty)
-  return { productUSD, cbmPerUnit, totalCBM, shippingUSD, dutyUSD, serviceUSD, totalUSD, totalHTG, unitHTG }
+  return { productUSD, totalCBM, totalWeightKg, shippingUSD, dutyUSD, serviceUSD, totalUSD, totalHTG, unitHTG }
+}
+
+function newPkg(): PackageItem {
+  return { id: crypto.randomUUID(), length: '', width: '', height: '', weight: '' }
 }
 
 async function uploadProductImage(file: File, userId: string): Promise<string | null> {
@@ -182,10 +191,7 @@ export function SubmitPage() {
   // Parcel info
   const [unitSystem,      setUnitSystem]      = useState<'metric' | 'imperial'>('metric')
   const [productTypeId,   setProductTypeId]   = useState('')
-  const [weightInput,     setWeightInput]     = useState('')
-  const [boxLength,       setBoxLength]       = useState('')
-  const [boxWidth,        setBoxWidth]        = useState('')
-  const [boxHeight,       setBoxHeight]       = useState('')
+  const [packages,        setPackages]        = useState<PackageItem[]>([newPkg()])
   const [invoiceValueUSD, setInvoiceValueUSD] = useState('')
 
   // Image upload
@@ -221,6 +227,12 @@ export function SubmitPage() {
     })
   }, [])
 
+  const addPackage = useCallback(() => setPackages(prev => [...prev, newPkg()]), [])
+  const removePackage = useCallback((id: string) => setPackages(prev => prev.filter(p => p.id !== id)), [])
+  const updatePackage = useCallback((id: string, field: keyof Omit<PackageItem, 'id'>, value: string) => {
+    setPackages(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p))
+  }, [])
+
   async function handleRegionChange(id: string) {
     setRegionId(id)
     setCityId('')
@@ -238,27 +250,35 @@ export function SubmitPage() {
   }
 
   // Derived values
-  const price     = parseFloat(priceUSD) || 0
-  const qty       = Math.max(1, parseInt(quantity) || 1)
-  const l         = parseFloat(boxLength) || 0
-  const w         = parseFloat(boxWidth)  || 0
-  const h         = parseFloat(boxHeight) || 0
-  const rawWeight = parseFloat(weightInput) || 0
+  const price = parseFloat(priceUSD) || 0
+  const qty   = Math.max(1, parseInt(quantity) || 1)
 
-  // Convert dimensions to cm for CBM calc
-  const dimFactor = unitSystem === 'imperial' ? 2.54 : 1
-  const l_cm = l * dimFactor
-  const w_cm = w * dimFactor
-  const h_cm = h * dimFactor
+  const dimFactor    = unitSystem === 'imperial' ? 2.54     : 1
+  const weightFactor = unitSystem === 'imperial' ? 0.453592 : 1  // → kg
 
-  // Weight in both units
-  const weightKg  = unitSystem === 'metric'   ? rawWeight : rawWeight * 0.453592
-  const weightLbs = unitSystem === 'imperial' ? rawWeight : rawWeight / 0.453592
+  // Compute per-package values (always in cm / kg)
+  const pkgsComputed = packages.map(p => {
+    const l = parseFloat(p.length) || 0
+    const w = parseFloat(p.width)  || 0
+    const h = parseFloat(p.height) || 0
+    const wt = parseFloat(p.weight) || 0
+    const l_cm = l * dimFactor
+    const w_cm = w * dimFactor
+    const h_cm = h * dimFactor
+    const cbm  = l_cm > 0 && w_cm > 0 && h_cm > 0 ? (l_cm * w_cm * h_cm) / 1_000_000 : 0
+    const weight_kg  = wt * weightFactor
+    const weight_lbs = unitSystem === 'imperial' ? wt : wt / 0.453592
+    return { l_cm, w_cm, h_cm, cbm, weight_kg, weight_lbs }
+  })
 
-  const hasDimensions = l > 0 && w > 0 && h > 0
+  const totalCBM      = pkgsComputed.reduce((s, p) => s + p.cbm, 0)
+  const totalWeightKg = pkgsComputed.reduce((s, p) => s + p.weight_kg, 0)
+  const totalWeightLbs = pkgsComputed.reduce((s, p) => s + p.weight_lbs, 0)
+
+  const hasDimensions = totalCBM > 0
   const hasCalc       = price > 0 && hasDimensions && !!settings
 
-  const breakdown        = hasCalc ? calcBreakdown(price, qty, l_cm, w_cm, h_cm, settings) : null
+  const breakdown        = hasCalc ? calcBreakdown(price, qty, totalCBM, totalWeightKg, settings) : null
   const detectedPlatform = productUrl ? detectPlatform(productUrl) : null
 
   const dimUnit    = unitSystem === 'metric' ? 'cm' : 'in'
@@ -294,7 +314,7 @@ export function SubmitPage() {
     setProductUrl(''); setProductName(''); setCategory('')
     setQuantity('10'); setPriceUSD('')
     setUnitSystem('metric'); setProductTypeId('')
-    setWeightInput(''); setBoxLength(''); setBoxWidth(''); setBoxHeight('')
+    setPackages([newPkg()])
     setInvoiceValueUSD('')
     setSize(''); setColor(''); setUrgency('normal'); setNotes('')
     clearImage()
@@ -317,6 +337,19 @@ export function SubmitPage() {
       if (!imageUrl) toast.warning('Image non uploadée, mais la commande sera soumise.')
     }
 
+    // Build packages payload (always in cm / kg)
+    const packagesPayload = pkgsComputed
+      .map((p, i) => ({
+        number:     i + 1,
+        length_cm:  p.l_cm      || null,
+        width_cm:   p.w_cm      || null,
+        height_cm:  p.h_cm      || null,
+        weight_kg:  p.weight_kg  || null,
+        weight_lbs: p.weight_lbs || null,
+        cbm:        p.cbm        || null,
+      }))
+      .filter(p => p.length_cm || p.weight_kg)  // skip empty rows
+
     const { error } = await supabase.from('product_requests').insert({
       user_id:          user.id,
       product_url:      productUrl.trim() || null,
@@ -332,26 +365,27 @@ export function SubmitPage() {
       ship_from_id:           shipFromId || null,
       destination_region_id:  regionId   || null,
       destination_city_id:    cityId     || null,
-      // Dimensions — always stored in cm
-      box_length_cm: l_cm || null,
-      box_width_cm:  w_cm || null,
-      box_height_cm: h_cm || null,
-      // Weight — both units
-      weight_lbs: weightLbs || null,
-      weight_kg:  weightKg  || null,
+      // First package dims for backward compat
+      box_length_cm: pkgsComputed[0]?.l_cm || null,
+      box_width_cm:  pkgsComputed[0]?.w_cm || null,
+      box_height_cm: pkgsComputed[0]?.h_cm || null,
+      // Total weight of all packages
+      weight_lbs: totalWeightLbs || null,
+      weight_kg:  totalWeightKg  || null,
+      // All packages detail
+      packages: packagesPayload,
       // Parcel details
       unit_system:       unitSystem,
       product_type_id:   productTypeId || null,
       invoice_value_usd: parseFloat(invoiceValueUSD) || null,
       // Image
       product_image_url: imageUrl,
-      // Variant info (legacy)
+      // Variant info
       variant_info: {
         size:                size  || null,
         color:               color || null,
         unit_price_usd:      price || null,
-        cbm_per_unit:        breakdown?.cbmPerUnit   || null,
-        estimated_total_htg: breakdown?.totalHTG     || null,
+        estimated_total_htg: breakdown?.totalHTG || null,
       },
     })
 
@@ -580,10 +614,10 @@ export function SubmitPage() {
               </div>
             </div>
 
-            {/* ── Section: Informations du colis ── */}
+            {/* ── Section: Informations des colis ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-4">
-                <SectionHeader icon={Box} label="Informations du colis" />
+                <SectionHeader icon={Box} label="Informations des colis" />
 
                 {/* Unit system toggle */}
                 <div>
@@ -592,10 +626,7 @@ export function SubmitPage() {
                     value={unitSystem}
                     onValueChange={v => {
                       setUnitSystem(v as 'metric' | 'imperial')
-                      setWeightInput('')
-                      setBoxLength('')
-                      setBoxWidth('')
-                      setBoxHeight('')
+                      setPackages([newPkg()])
                     }}
                     className="grid grid-cols-2 gap-2"
                   >
@@ -635,64 +666,121 @@ export function SubmitPage() {
                   </Select>
                 </div>
 
-                {/* Weight */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-bold">
-                    Poids total ({weightUnit}){' '}
-                    <span className="font-normal text-muted-foreground">(optionnel)</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type="number" inputMode="decimal" min="0" step="0.01"
-                      placeholder="0.00"
-                      value={weightInput}
-                      onChange={e => setWeightInput(e.target.value)}
-                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 pr-14 font-mono focus-visible:ring-1 focus-visible:ring-primary/40"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-                      {weightUnit}
+                {/* Dynamic packages list */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-bold">
+                      Colis — dimensions de la boîte ({dimUnit})
+                    </Label>
+                    <span className="text-[11px] text-muted-foreground font-medium">
+                      {packages.length} colis
                     </span>
                   </div>
-                  {rawWeight > 0 && (
-                    <p className="text-[11px] text-muted-foreground">
-                      ≈{' '}
-                      {unitSystem === 'metric'
-                        ? `${(rawWeight / 0.453592).toFixed(2)} lbs`
-                        : `${(rawWeight * 0.453592).toFixed(3)} kg`}
-                    </p>
-                  )}
-                </div>
 
-                {/* Dimensions */}
-                <div>
-                  <Label className="text-sm font-bold mb-2 block">
-                    Dimensions ({dimUnit}){' '}
-                    <span className="font-normal text-muted-foreground">— une unité</span>
-                  </Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {([
-                      ['L', boxLength, setBoxLength],
-                      ['l', boxWidth,  setBoxWidth],
-                      ['H', boxHeight, setBoxHeight],
-                    ] as const).map(([lbl, val, setter]) => (
-                      <div key={lbl} className="space-y-1">
-                        <span className="text-[11px] text-muted-foreground font-medium">{lbl}</span>
-                        <Input
-                          type="number" inputMode="decimal" min="0" step="0.1"
-                          placeholder="0.0"
-                          value={val}
-                          onChange={e => setter(e.target.value)}
-                          className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
-                        />
+                  {packages.map((pkg, idx) => {
+                    const l  = parseFloat(pkg.length) || 0
+                    const w  = parseFloat(pkg.width)  || 0
+                    const h  = parseFloat(pkg.height) || 0
+                    const wt = parseFloat(pkg.weight) || 0
+                    const l_cm = l * dimFactor; const w_cm = w * dimFactor; const h_cm = h * dimFactor
+                    const cbm = l_cm > 0 && w_cm > 0 && h_cm > 0 ? (l_cm * w_cm * h_cm) / 1_000_000 : 0
+                    return (
+                      <div key={pkg.id} className="rounded-xl bg-[#F8F9FB] border border-gray-100 p-3 space-y-2.5">
+                        {/* Header row */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            Colis {idx + 1}
+                          </span>
+                          {packages.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removePackage(pkg.id)}
+                              className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/10 hover:bg-destructive/20 transition-colors"
+                            >
+                              <Trash2 className="h-3 w-3 text-destructive" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Dimensions */}
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            ['L', pkg.length, 'length'],
+                            ['l', pkg.width,  'width'],
+                            ['H', pkg.height, 'height'],
+                          ] as const).map(([lbl, val, field]) => (
+                            <div key={field} className="space-y-1">
+                              <span className="text-[10px] text-muted-foreground font-semibold">{lbl} ({dimUnit})</span>
+                              <Input
+                                type="number" inputMode="decimal" min="0" step="0.1"
+                                placeholder="0.0"
+                                value={val}
+                                onChange={e => updatePackage(pkg.id, field, e.target.value)}
+                                className="h-10 rounded-xl bg-white border border-gray-200 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Weight */}
+                        <div className="relative">
+                          <span className="text-[10px] text-muted-foreground font-semibold block mb-1">Poids ({weightUnit})</span>
+                          <Input
+                            type="number" inputMode="decimal" min="0" step="0.01"
+                            placeholder="0.00"
+                            value={pkg.weight}
+                            onChange={e => updatePackage(pkg.id, 'weight', e.target.value)}
+                            className="h-10 rounded-xl bg-white border border-gray-200 pr-12 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
+                          />
+                          <span className="absolute right-3 bottom-2.5 text-xs font-semibold text-muted-foreground">{weightUnit}</span>
+                        </div>
+
+                        {/* CBM preview */}
+                        {cbm > 0 && (
+                          <div className="flex items-center justify-between rounded-lg bg-primary/5 border border-primary/10 px-2.5 py-1.5">
+                            <span className="text-[10px] font-semibold text-primary">CBM</span>
+                            <span className="font-mono text-xs font-bold text-primary">{fmtCBM(cbm)} m³</span>
+                          </div>
+                        )}
+                        {wt > 0 && unitSystem === 'imperial' && (
+                          <p className="text-[10px] text-muted-foreground">≈ {(wt * 0.453592).toFixed(3)} kg</p>
+                        )}
+                        {wt > 0 && unitSystem === 'metric' && (
+                          <p className="text-[10px] text-muted-foreground">≈ {(wt / 0.453592).toFixed(2)} lbs</p>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                  {hasDimensions && (
-                    <div className="mt-2.5 rounded-xl bg-primary/5 border border-primary/15 px-3 py-2.5 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-primary">CBM / unité</span>
-                      <span className="font-mono text-sm font-bold text-primary">
-                        {fmtCBM((l_cm * w_cm * h_cm) / 1_000_000)} m³
-                      </span>
+                    )
+                  })}
+
+                  {/* Add package button */}
+                  <button
+                    type="button"
+                    onClick={addPackage}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 py-3 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/[0.02] transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Ajouter un colis
+                  </button>
+
+                  {/* Total CBM + weight summary */}
+                  {(totalCBM > 0 || totalWeightKg > 0) && (
+                    <div className="rounded-xl bg-[#0C1413] px-4 py-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#9FB0AB' }}>
+                          {packages.length} colis · Total
+                        </p>
+                        {totalWeightKg > 0 && (
+                          <p className="text-xs mt-0.5" style={{ color: '#6E8882' }}>
+                            {totalWeightKg.toFixed(2)} kg ({totalWeightLbs.toFixed(2)} lbs)
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-semibold" style={{ color: '#9FB0AB' }}>CBM total</p>
+                        <p className="font-mono text-base font-bold" style={{ color: '#E6A23C' }}>
+                          {fmtCBM(totalCBM)} <span className="text-xs font-normal" style={{ color: '#6E8882' }}>m³</span>
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -886,7 +974,7 @@ export function SubmitPage() {
                     />
                     <ManifestLine
                       label="Fret maritime (CBM)"
-                      sub={`${fmtCBM(breakdown!.totalCBM)} m³ × $${settings!.cbm_price_usd}/CBM`}
+                      sub={`${fmtCBM(breakdown!.totalCBM)} m³ × $${settings!.cbm_price_usd}/m³`}
                       value={fmtUSD(breakdown!.shippingUSD)}
                       isAdd
                     />
@@ -930,7 +1018,7 @@ export function SubmitPage() {
                 </div>
               </div>
 
-              {/* Per-unit + CBM rate */}
+              {/* Per-unit + CBM total */}
               {breakdown && (
                 <div className="mx-4 mt-2 mb-1 grid grid-cols-2 gap-2">
                   <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
@@ -941,9 +1029,9 @@ export function SubmitPage() {
                     </p>
                   </div>
                   <div className="rounded-xl p-3" style={{ background: 'rgba(14,122,107,0.12)', border: '1px solid rgba(14,122,107,0.25)' }}>
-                    <p className="text-[10px] uppercase tracking-[0.08em] mb-1" style={{ color: '#6E8882' }}>CBM / unité</p>
+                    <p className="text-[10px] uppercase tracking-[0.08em] mb-1" style={{ color: '#6E8882' }}>CBM total</p>
                     <p className="text-base font-semibold tabular-nums" style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#0E7A6B' }}>
-                      {fmtCBM(breakdown.cbmPerUnit)}{' '}
+                      {fmtCBM(breakdown.totalCBM)}{' '}
                       <span className="text-xs font-normal" style={{ color: '#6E8882' }}>m³</span>
                     </p>
                   </div>
