@@ -41,6 +41,7 @@ import { AdminPaymentsPage } from '@/pages/admin/payments'
 import { AdminUsersPage } from '@/pages/admin/users'
 import { AdminDisputesPage } from '@/pages/admin/disputes'
 import { AdminSettingsPage } from '@/pages/admin/settings'
+import { AdminShippingConfigPage } from '@/pages/admin/shipping-config'
 
 export const router = createBrowserRouter([
   // Root and onboarding → auth
@@ -121,6 +122,7 @@ export const router = createBrowserRouter([
       { path: 'users', element: <AdminUsersPage /> },
       { path: 'disputes', element: <AdminDisputesPage /> },
       { path: 'analytics', element: <AdminDashboard /> },
+      { path: 'shipping-config', element: <AdminShippingConfigPage /> },
       { path: 'settings', element: <AdminSettingsPage /> },
     ],
   },

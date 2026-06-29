@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { TimelineStep } from '@/components/shared/timeline-step'
-import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight, MapPin, Globe, Truck } from 'lucide-react'
 import IconBoite from 'flat-color-icons/svg/package.svg'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
@@ -41,6 +41,13 @@ interface OrderDetail {
       box_width_cm: number | null
       box_height_cm: number | null
       weight_lbs: number | null
+      weight_kg: number | null
+      invoice_value_usd: number | null
+      unit_system: string | null
+      shipping_origins: { name: string; flag_emoji: string | null } | null
+      haiti_regions: { name: string } | null
+      haiti_cities: { name: string } | null
+      product_types: { name: string } | null
     } | null
   } | null
 }
@@ -81,7 +88,15 @@ export function OrderDetailPage() {
             id, total, product_price, quantity,
             service_fee, purchase_fee, shipping_fee, customs_fee, local_delivery_fee,
             estimated_delivery_days,
-            product_requests(product_name, product_url, source_platform, product_image_url, box_length_cm, box_width_cm, box_height_cm, weight_lbs)
+            product_requests(
+              product_name, product_url, source_platform, product_image_url,
+              box_length_cm, box_width_cm, box_height_cm,
+              weight_lbs, weight_kg, invoice_value_usd, unit_system,
+              shipping_origins!ship_from_id(name, flag_emoji),
+              haiti_regions!destination_region_id(name),
+              haiti_cities!destination_city_id(name),
+              product_types!product_type_id(name)
+            )
           )
         `)
         .eq('id', id)
@@ -337,6 +352,53 @@ export function OrderDetailPage() {
               value={order.payment_status === 'paid' ? 'Payé' : order.payment_status === 'partial' ? 'Partiel' : 'Impayé'}
               valueClass={order.payment_status === 'paid' ? 'text-emerald-600' : 'text-warning'}
             />
+
+            {/* Route d'expédition */}
+            {order.quotes?.product_requests?.shipping_origins && (
+              <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Globe className="h-3.5 w-3.5" />
+                  Expédié depuis
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  {order.quotes.product_requests.shipping_origins.flag_emoji && (
+                    <span className="mr-1">{order.quotes.product_requests.shipping_origins.flag_emoji}</span>
+                  )}
+                  {order.quotes.product_requests.shipping_origins.name}
+                </span>
+              </div>
+            )}
+            {order.quotes?.product_requests?.haiti_regions && (
+              <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Destination
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  🇭🇹 Haïti — {order.quotes.product_requests.haiti_regions.name}
+                  {order.quotes.product_requests.haiti_cities && (
+                    <span className="text-muted-foreground font-normal">
+                      , {order.quotes.product_requests.haiti_cities.name}
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
+
+            {/* Type de colis */}
+            {order.quotes?.product_requests?.product_types && (
+              <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Truck className="h-3.5 w-3.5" />
+                  Type de colis
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  {order.quotes.product_requests.product_types.name}
+                </span>
+              </div>
+            )}
+
+            {/* Dimensions & CBM */}
             {(() => {
               const req = order.quotes?.product_requests
               if (!req?.box_length_cm || !req?.box_width_cm || !req?.box_height_cm) return null
@@ -351,20 +413,34 @@ export function OrderDetailPage() {
                 </>
               )
             })()}
-            {order.quotes?.product_requests?.weight_lbs != null && (
+
+            {/* Poids */}
+            {(order.quotes?.product_requests?.weight_kg != null || order.quotes?.product_requests?.weight_lbs != null) && (
               <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                 <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <Weight className="h-3.5 w-3.5" />
                   Poids
                 </span>
                 <span className="text-sm font-semibold text-foreground">
-                  {order.quotes.product_requests.weight_lbs} lbs
-                  <span className="text-xs text-muted-foreground ml-1">
-                    ({(order.quotes.product_requests.weight_lbs * 0.453592).toFixed(2)} kg)
-                  </span>
+                  {(() => {
+                    const req = order.quotes!.product_requests!
+                    if (req.weight_kg != null) {
+                      return <>{req.weight_kg} kg<span className="text-xs text-muted-foreground ml-1">({(req.weight_kg / 0.453592).toFixed(2)} lbs)</span></>
+                    }
+                    return <>{req.weight_lbs} lbs<span className="text-xs text-muted-foreground ml-1">({(req.weight_lbs! * 0.453592).toFixed(2)} kg)</span></>
+                  })()}
                 </span>
               </div>
             )}
+
+            {/* Valeur déclarée */}
+            {order.quotes?.product_requests?.invoice_value_usd != null && (
+              <InfoRow
+                label="Valeur déclarée"
+                value={`$${order.quotes.product_requests.invoice_value_usd.toFixed(2)} USD`}
+              />
+            )}
+
             {order.quotes?.product_requests?.product_url && (
               <div className="py-3">
                 <a

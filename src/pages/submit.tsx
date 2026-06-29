@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Loader2, ExternalLink, CheckCircle2, SendHorizonal,
-  Package, ImagePlus, X, Box,
+  Package, ImagePlus, X, Box, Truck, MapPin,
 } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -22,6 +22,29 @@ interface AppSettings {
   cbm_price_usd: number
   duty_rate_percent: number
   service_margin_percent: number
+}
+
+interface ShippingOrigin {
+  id: string
+  name: string
+  flag_emoji: string
+  country_code: string
+}
+
+interface HaitiRegion {
+  id: string
+  name: string
+}
+
+interface HaitiCity {
+  id: string
+  region_id: string
+  name: string
+}
+
+interface ProductType {
+  id: string
+  name: string
 }
 
 interface Breakdown {
@@ -39,14 +62,14 @@ interface Breakdown {
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { value: 'clothing',     label: 'Vêtements & accessoires' },
-  { value: 'electronics',  label: 'Électronique / gadgets' },
-  { value: 'cosmetics',    label: 'Cosmétiques / beauté' },
-  { value: 'home',         label: 'Maison & cuisine' },
-  { value: 'toys',         label: 'Jouets' },
-  { value: 'auto',         label: 'Auto & moto' },
-  { value: 'sport',        label: 'Sport & loisirs' },
-  { value: 'other',        label: 'Autre' },
+  { value: 'clothing',    label: 'Vêtements & accessoires' },
+  { value: 'electronics', label: 'Électronique / gadgets' },
+  { value: 'cosmetics',   label: 'Cosmétiques / beauté' },
+  { value: 'home',        label: 'Maison & cuisine' },
+  { value: 'toys',        label: 'Jouets' },
+  { value: 'auto',        label: 'Auto & moto' },
+  { value: 'sport',       label: 'Sport & loisirs' },
+  { value: 'other',       label: 'Autre' },
 ]
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -58,21 +81,21 @@ function detectPlatform(url: string): 'alibaba' | 'shein' | 'temu' | 'other' {
   return 'other'
 }
 
-const fmt    = (n: number) => Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ')
+const fmt    = (n: number) => Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ')
 const fmtUSD = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtCBM = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
 
+// Always takes l, w, h in cm
 function calcBreakdown(
   priceUSD: number,
   qty: number,
-  l: number,
-  w: number,
-  h: number,
+  l_cm: number,
+  w_cm: number,
+  h_cm: number,
   s: AppSettings
 ): Breakdown {
   const productUSD  = priceUSD * qty
-  // CBM = L × W × H (cm) ÷ 1 000 000
-  const cbmPerUnit  = (l * w * h) / 1_000_000
+  const cbmPerUnit  = (l_cm * w_cm * h_cm) / 1_000_000
   const totalCBM    = cbmPerUnit * qty
   const shippingUSD = totalCBM * s.cbm_price_usd
   const cif         = productUSD + shippingUSD
@@ -116,15 +139,34 @@ function ManifestLine({
   )
 }
 
+function SectionHeader({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon className="h-4 w-4 text-primary" />
+      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">{label}</p>
+    </div>
+  )
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function SubmitPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  // Settings
-  const [settings, setSettings]             = useState<AppSettings | null>(null)
+  // Settings & reference data
+  const [settings,      setSettings]      = useState<AppSettings | null>(null)
   const [loadingSettings, setLoadingSettings] = useState(true)
+  const [origins,       setOrigins]       = useState<ShippingOrigin[]>([])
+  const [regions,       setRegions]       = useState<HaitiRegion[]>([])
+  const [cities,        setCities]        = useState<HaitiCity[]>([])
+  const [productTypes,  setProductTypes]  = useState<ProductType[]>([])
+  const [loadingCities, setLoadingCities] = useState(false)
+
+  // Route info
+  const [shipFromId, setShipFromId] = useState('')
+  const [regionId,   setRegionId]   = useState('')
+  const [cityId,     setCityId]     = useState('')
 
   // Product info
   const [productUrl,  setProductUrl]  = useState('')
@@ -137,11 +179,14 @@ export function SubmitPage() {
   const [urgency,     setUrgency]     = useState<'normal' | 'urgent' | 'express'>('normal')
   const [notes,       setNotes]       = useState('')
 
-  // Dimensions (cm) & weight (lbs)
-  const [boxLength, setBoxLength] = useState('')
-  const [boxWidth,  setBoxWidth]  = useState('')
-  const [boxHeight, setBoxHeight] = useState('')
-  const [weightLbs, setWeightLbs] = useState('')
+  // Parcel info
+  const [unitSystem,      setUnitSystem]      = useState<'metric' | 'imperial'>('metric')
+  const [productTypeId,   setProductTypeId]   = useState('')
+  const [weightInput,     setWeightInput]     = useState('')
+  const [boxLength,       setBoxLength]       = useState('')
+  const [boxWidth,        setBoxWidth]        = useState('')
+  const [boxHeight,       setBoxHeight]       = useState('')
+  const [invoiceValueUSD, setInvoiceValueUSD] = useState('')
 
   // Image upload
   const [imageFile,    setImageFile]    = useState<File | null>(null)
@@ -153,35 +198,71 @@ export function SubmitPage() {
   const [success,    setSuccess]    = useState(false)
 
   useEffect(() => {
-    supabase
-      .from('app_settings')
-      .select('key, value')
-      .in('key', ['usd_to_htg_rate', 'cbm_price_usd', 'duty_rate_percent', 'service_margin_percent'])
-      .then(({ data }) => {
-        const map = Object.fromEntries((data ?? []).map((r: { key: string; value: string }) => [r.key, parseFloat(r.value)]))
-        setSettings({
-          usd_to_htg_rate:         map.usd_to_htg_rate         ?? 132,
-          cbm_price_usd:           map.cbm_price_usd           ?? 790,
-          duty_rate_percent:       map.duty_rate_percent       ?? 20,
-          service_margin_percent:  map.service_margin_percent  ?? 15,
-        })
-        setLoadingSettings(false)
+    Promise.all([
+      supabase.from('shipping_origins').select('id,name,flag_emoji,country_code').eq('active', true).order('sort_order'),
+      supabase.from('haiti_regions').select('id,name').eq('active', true).order('sort_order'),
+      supabase.from('product_types').select('id,name').eq('active', true).order('sort_order'),
+      supabase.from('app_settings').select('key,value')
+        .in('key', ['usd_to_htg_rate', 'cbm_price_usd', 'duty_rate_percent', 'service_margin_percent']),
+    ]).then(([originsRes, regionsRes, typesRes, settingsRes]) => {
+      setOrigins(originsRes.data as ShippingOrigin[] || [])
+      setRegions(regionsRes.data as HaitiRegion[] || [])
+      setProductTypes(typesRes.data as ProductType[] || [])
+      const map = Object.fromEntries(
+        (settingsRes.data ?? []).map((r: { key: string; value: string }) => [r.key, parseFloat(r.value)])
+      )
+      setSettings({
+        usd_to_htg_rate:        map.usd_to_htg_rate        ?? 132,
+        cbm_price_usd:          map.cbm_price_usd          ?? 790,
+        duty_rate_percent:      map.duty_rate_percent      ?? 20,
+        service_margin_percent: map.service_margin_percent ?? 15,
       })
+      setLoadingSettings(false)
+    })
   }, [])
 
+  async function handleRegionChange(id: string) {
+    setRegionId(id)
+    setCityId('')
+    setCities([])
+    if (!id) return
+    setLoadingCities(true)
+    const { data } = await supabase
+      .from('haiti_cities')
+      .select('id,name,region_id')
+      .eq('region_id', id)
+      .eq('active', true)
+      .order('sort_order')
+    setCities(data as HaitiCity[] || [])
+    setLoadingCities(false)
+  }
+
   // Derived values
-  const price  = parseFloat(priceUSD)  || 0
-  const qty    = Math.max(1, parseInt(quantity) || 1)
-  const l      = parseFloat(boxLength) || 0
-  const w      = parseFloat(boxWidth)  || 0
-  const h      = parseFloat(boxHeight) || 0
-  const lbs    = parseFloat(weightLbs) || 0
+  const price     = parseFloat(priceUSD) || 0
+  const qty       = Math.max(1, parseInt(quantity) || 1)
+  const l         = parseFloat(boxLength) || 0
+  const w         = parseFloat(boxWidth)  || 0
+  const h         = parseFloat(boxHeight) || 0
+  const rawWeight = parseFloat(weightInput) || 0
+
+  // Convert dimensions to cm for CBM calc
+  const dimFactor = unitSystem === 'imperial' ? 2.54 : 1
+  const l_cm = l * dimFactor
+  const w_cm = w * dimFactor
+  const h_cm = h * dimFactor
+
+  // Weight in both units
+  const weightKg  = unitSystem === 'metric'   ? rawWeight : rawWeight * 0.453592
+  const weightLbs = unitSystem === 'imperial' ? rawWeight : rawWeight / 0.453592
 
   const hasDimensions = l > 0 && w > 0 && h > 0
   const hasCalc       = price > 0 && hasDimensions && !!settings
 
-  const breakdown         = hasCalc ? calcBreakdown(price, qty, l, w, h, settings) : null
-  const detectedPlatform  = productUrl ? detectPlatform(productUrl) : null
+  const breakdown        = hasCalc ? calcBreakdown(price, qty, l_cm, w_cm, h_cm, settings) : null
+  const detectedPlatform = productUrl ? detectPlatform(productUrl) : null
+
+  const dimUnit    = unitSystem === 'metric' ? 'cm' : 'in'
+  const weightUnit = unitSystem === 'metric' ? 'kg' : 'lbs'
 
   // Image handlers
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -208,16 +289,28 @@ export function SubmitPage() {
     handleImageChange(fakeEvent)
   }
 
+  function resetForm() {
+    setShipFromId(''); setRegionId(''); setCityId(''); setCities([])
+    setProductUrl(''); setProductName(''); setCategory('')
+    setQuantity('10'); setPriceUSD('')
+    setUnitSystem('metric'); setProductTypeId('')
+    setWeightInput(''); setBoxLength(''); setBoxWidth(''); setBoxHeight('')
+    setInvoiceValueUSD('')
+    setSize(''); setColor(''); setUrgency('normal'); setNotes('')
+    clearImage()
+  }
+
   // Submit
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
-    if (!productName.trim()) { toast.error('Le nom du produit est requis.'); return }
-    if (!category)           { toast.error('La catégorie est requise.'); return }
+    if (!productName.trim()) { toast.error('Le nom du produit est requis.');              return }
+    if (!category)           { toast.error('La catégorie est requise.');                   return }
+    if (!shipFromId)         { toast.error("Sélectionnez l'origine d'expédition.");        return }
+    if (!regionId)           { toast.error('Sélectionnez la région de destination.');      return }
 
     setSubmitting(true)
 
-    // Upload image first if provided
     let imageUrl: string | null = null
     if (imageFile) {
       imageUrl = await uploadProductImage(imageFile, user.id)
@@ -225,30 +318,40 @@ export function SubmitPage() {
     }
 
     const { error } = await supabase.from('product_requests').insert({
-      user_id:           user.id,
-      product_url:       productUrl.trim() || null,
-      product_name:      productName.trim(),
+      user_id:          user.id,
+      product_url:      productUrl.trim() || null,
+      product_name:     productName.trim(),
       category,
-      quantity:          qty,
-      budget_estimate:   breakdown?.totalHTG || null,
+      quantity:         qty,
+      budget_estimate:  breakdown?.totalHTG || null,
       urgency,
-      notes:             notes || null,
-      source_platform:   detectedPlatform || 'other',
-      status:            'submitted',
-      // Dimensions & poids
-      box_length_cm:     l || null,
-      box_width_cm:      w || null,
-      box_height_cm:     h || null,
-      weight_lbs:        lbs || null,
+      notes:            notes || null,
+      source_platform:  detectedPlatform || 'other',
+      status:           'submitted',
+      // Route
+      ship_from_id:           shipFromId || null,
+      destination_region_id:  regionId   || null,
+      destination_city_id:    cityId     || null,
+      // Dimensions — always stored in cm
+      box_length_cm: l_cm || null,
+      box_width_cm:  w_cm || null,
+      box_height_cm: h_cm || null,
+      // Weight — both units
+      weight_lbs: weightLbs || null,
+      weight_kg:  weightKg  || null,
+      // Parcel details
+      unit_system:       unitSystem,
+      product_type_id:   productTypeId || null,
+      invoice_value_usd: parseFloat(invoiceValueUSD) || null,
       // Image
       product_image_url: imageUrl,
-      // Variant info for backward compat
+      // Variant info (legacy)
       variant_info: {
-        size:                   size || null,
-        color:                  color || null,
-        unit_price_usd:         price || null,
-        cbm_per_unit:           breakdown?.cbmPerUnit || null,
-        estimated_total_htg:    breakdown?.totalHTG || null,
+        size:                size  || null,
+        color:               color || null,
+        unit_price_usd:      price || null,
+        cbm_per_unit:        breakdown?.cbmPerUnit   || null,
+        estimated_total_htg: breakdown?.totalHTG     || null,
       },
     })
 
@@ -259,6 +362,8 @@ export function SubmitPage() {
     }
     setSubmitting(false)
   }
+
+  const canSubmit = !submitting && !!productName.trim() && !!category && !!shipFromId && !!regionId
 
   // ── Success screen ──
   if (success) {
@@ -281,15 +386,7 @@ export function SubmitPage() {
               Voir mes commandes
             </button>
             <button
-              onClick={() => {
-                setSuccess(false)
-                setProductUrl(''); setProductName(''); setCategory('')
-                setQuantity('10'); setPriceUSD('')
-                setBoxLength(''); setBoxWidth(''); setBoxHeight('')
-                setWeightLbs('')
-                setSize(''); setColor(''); setUrgency('normal'); setNotes('')
-                clearImage()
-              }}
+              onClick={() => { setSuccess(false); resetForm() }}
               className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold hover:bg-gray-50 transition-colors"
             >
               Nouvelle demande
@@ -314,10 +411,97 @@ export function SubmitPage() {
           {/* ── Left panel ── */}
           <div className="space-y-4">
 
-            {/* Section : Le produit */}
+            {/* ── Section: Informations de route ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Le produit</p>
+                <SectionHeader icon={Truck} label="Informations de route" />
+
+                {/* Expédier depuis */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">
+                    Expédier depuis <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={shipFromId} onValueChange={setShipFromId}>
+                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
+                      <SelectValue placeholder="Sélectionner une origine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {origins.map(o => (
+                        <SelectItem key={o.id} value={o.id}>
+                          {o.flag_emoji} {o.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Expédier vers (fixed) */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">Expédier vers</Label>
+                  <div className="h-12 rounded-2xl bg-[#F0F1F5] flex items-center px-4 gap-2.5">
+                    <span className="text-lg leading-none">🇭🇹</span>
+                    <span className="text-sm font-semibold text-foreground">Haïti</span>
+                    <span className="ml-auto rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5">
+                      Disponible
+                    </span>
+                  </div>
+                </div>
+
+                {/* Région */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">
+                    Région <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={regionId} onValueChange={handleRegionChange}>
+                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
+                      <SelectValue placeholder="Sélectionner une région" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.map(r => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Ville */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">
+                    Ville{' '}
+                    <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                  </Label>
+                  <Select
+                    value={cityId}
+                    onValueChange={setCityId}
+                    disabled={!regionId || loadingCities}
+                  >
+                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40 disabled:opacity-50">
+                      <SelectValue
+                        placeholder={
+                          !regionId
+                            ? "Sélectionner d'abord une région"
+                            : loadingCities
+                            ? 'Chargement…'
+                            : 'Toutes les villes'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cities.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Section: Le produit ── */}
+            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-5 space-y-4">
+                <SectionHeader icon={Package} label="Le produit" />
 
                 {/* URL */}
                 <div className="space-y-1">
@@ -396,29 +580,103 @@ export function SubmitPage() {
               </div>
             </div>
 
-            {/* Section : Dimensions & Poids */}
+            {/* ── Section: Informations du colis ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Box className="h-4 w-4 text-primary" />
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
-                    Dimensions de la boîte
-                  </p>
+                <SectionHeader icon={Box} label="Informations du colis" />
+
+                {/* Unit system toggle */}
+                <div>
+                  <Label className="text-sm font-bold mb-2 block">Unités de mesure</Label>
+                  <RadioGroup
+                    value={unitSystem}
+                    onValueChange={v => {
+                      setUnitSystem(v as 'metric' | 'imperial')
+                      setWeightInput('')
+                      setBoxLength('')
+                      setBoxWidth('')
+                      setBoxHeight('')
+                    }}
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    {([
+                      ['imperial', 'Impérial', '(lbs, in)'],
+                      ['metric',   'Métrique',  '(kg, cm)'],
+                    ] as const).map(([val, label, sub]) => (
+                      <div key={val} className="relative">
+                        <RadioGroupItem value={val} id={`unit-${val}`} className="peer sr-only" />
+                        <Label
+                          htmlFor={`unit-${val}`}
+                          className="flex flex-col items-center py-2.5 px-3 rounded-xl border-2 border-transparent bg-[#F0F1F5] cursor-pointer hover:bg-[#E8E9EE] peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
+                        >
+                          <span className="font-semibold text-sm">{label}</span>
+                          <span className="text-[10px] text-muted-foreground mt-0.5">{sub}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
 
-                {/* Dimensions L × W × H */}
+                {/* Product type */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">
+                    Type de produit{' '}
+                    <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                  </Label>
+                  <Select value={productTypeId} onValueChange={setProductTypeId}>
+                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
+                      <SelectValue placeholder="Marchandise générale" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {productTypes.map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Weight */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">
+                    Poids total ({weightUnit}){' '}
+                    <span className="font-normal text-muted-foreground">(optionnel)</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number" inputMode="decimal" min="0" step="0.01"
+                      placeholder="0.00"
+                      value={weightInput}
+                      onChange={e => setWeightInput(e.target.value)}
+                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 pr-14 font-mono focus-visible:ring-1 focus-visible:ring-primary/40"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
+                      {weightUnit}
+                    </span>
+                  </div>
+                  {rawWeight > 0 && (
+                    <p className="text-[11px] text-muted-foreground">
+                      ≈{' '}
+                      {unitSystem === 'metric'
+                        ? `${(rawWeight / 0.453592).toFixed(2)} lbs`
+                        : `${(rawWeight * 0.453592).toFixed(3)} kg`}
+                    </p>
+                  )}
+                </div>
+
+                {/* Dimensions */}
                 <div>
                   <Label className="text-sm font-bold mb-2 block">
-                    Dimensions (cm) <span className="font-normal text-muted-foreground">— une unité</span>
+                    Dimensions ({dimUnit}){' '}
+                    <span className="font-normal text-muted-foreground">— une unité</span>
                   </Label>
                   <div className="grid grid-cols-3 gap-2">
                     {([
-                      ['Longueur', boxLength, setBoxLength],
-                      ['Largeur',  boxWidth,  setBoxWidth],
-                      ['Hauteur',  boxHeight, setBoxHeight],
-                    ] as const).map(([label, val, setter]) => (
-                      <div key={label} className="space-y-1">
-                        <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
+                      ['L', boxLength, setBoxLength],
+                      ['l', boxWidth,  setBoxWidth],
+                      ['H', boxHeight, setBoxHeight],
+                    ] as const).map(([lbl, val, setter]) => (
+                      <div key={lbl} className="space-y-1">
+                        <span className="text-[11px] text-muted-foreground font-medium">{lbl}</span>
                         <Input
                           type="number" inputMode="decimal" min="0" step="0.1"
                           placeholder="0.0"
@@ -429,50 +687,40 @@ export function SubmitPage() {
                       </div>
                     ))}
                   </div>
-                  {/* CBM preview */}
                   {hasDimensions && (
                     <div className="mt-2.5 rounded-xl bg-primary/5 border border-primary/15 px-3 py-2.5 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-primary">CBM par unité</span>
+                      <span className="text-xs font-semibold text-primary">CBM / unité</span>
                       <span className="font-mono text-sm font-bold text-primary">
-                        {fmtCBM((l * w * h) / 1_000_000)} m³
+                        {fmtCBM((l_cm * w_cm * h_cm) / 1_000_000)} m³
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* Poids en livres */}
+                {/* Invoice value */}
                 <div className="space-y-1">
                   <Label className="text-sm font-bold">
-                    Poids unitaire (lbs) <span className="font-normal text-muted-foreground">(optionnel)</span>
+                    Valeur déclarée (USD){' '}
+                    <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
                   </Label>
                   <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">$</span>
                     <Input
                       type="number" inputMode="decimal" min="0" step="0.01"
                       placeholder="0.00"
-                      value={weightLbs}
-                      onChange={e => setWeightLbs(e.target.value)}
-                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 pr-14 font-mono focus-visible:ring-1 focus-visible:ring-primary/40"
+                      value={invoiceValueUSD}
+                      onChange={e => setInvoiceValueUSD(e.target.value)}
+                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 pl-7 font-mono focus-visible:ring-1 focus-visible:ring-primary/40"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">lbs</span>
                   </div>
-                  {lbs > 0 && (
-                    <p className="text-[11px] text-muted-foreground">
-                      ≈ {(lbs * 0.453592).toFixed(3)} kg
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
 
-            {/* Section : Image du produit */}
+            {/* ── Section: Image du produit ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-3">
-                <div className="flex items-center gap-2">
-                  <ImagePlus className="h-4 w-4 text-primary" />
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
-                    Photo du produit
-                  </p>
-                </div>
+                <SectionHeader icon={ImagePlus} label="Photo du produit" />
 
                 {imagePreview ? (
                   <div className="relative rounded-2xl overflow-hidden border border-gray-100">
@@ -494,7 +742,7 @@ export function SubmitPage() {
                   </div>
                 ) : (
                   <div
-                    className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer hover:border-primary/40 hover:bg-primary/2 transition-colors"
+                    className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer hover:border-primary/40 hover:bg-primary/[0.02] transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                     onDrop={handleDrop}
                     onDragOver={e => e.preventDefault()}
@@ -516,10 +764,10 @@ export function SubmitPage() {
               </div>
             </div>
 
-            {/* Section : Variantes & options */}
+            {/* ── Section: Variantes & options ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Variantes & options</p>
+                <SectionHeader icon={MapPin} label="Variantes & options" />
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -570,7 +818,7 @@ export function SubmitPage() {
             <div className="lg:hidden">
               <button
                 type="submit"
-                disabled={submitting || !productName.trim() || !category}
+                disabled={!canSubmit}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                 style={{ height: '52px', background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               >
@@ -599,6 +847,20 @@ export function SubmitPage() {
                   <span className="text-xs ml-1" style={{ color: '#6E8882' }}>unités</span>
                 </div>
               </div>
+
+              {/* Route summary (when set) */}
+              {(shipFromId || regionId) && (
+                <div className="px-5 pt-3 pb-1 flex items-center gap-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                  <Truck className="h-3.5 w-3.5 shrink-0" style={{ color: '#6E8882' }} />
+                  <p className="text-[11px] truncate" style={{ color: '#9FB0AB' }}>
+                    {origins.find(o => o.id === shipFromId)?.flag_emoji}{' '}
+                    {origins.find(o => o.id === shipFromId)?.name || '…'}
+                    {' → '}
+                    🇭🇹 Haïti{regions.find(r => r.id === regionId) ? ` · ${regions.find(r => r.id === regionId)!.name}` : ''}
+                    {cities.find(c => c.id === cityId) ? ` · ${cities.find(c => c.id === cityId)!.name}` : ''}
+                  </p>
+                </div>
+              )}
 
               {/* Breakdown */}
               <div className="px-5 pt-1">
@@ -696,11 +958,11 @@ export function SubmitPage() {
               <div className="p-4 mt-2">
                 <button
                   type="submit"
-                  disabled={submitting || !productName.trim() || !category}
+                  disabled={!canSubmit}
                   className={cn('w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed')}
                   style={{
                     fontFamily: "'Space Grotesk', sans-serif",
-                    background: submitting || !productName.trim() || !category ? '#1a3530' : '#0E7A6B',
+                    background: canSubmit ? '#0E7A6B' : '#1a3530',
                     color: '#fff',
                     letterSpacing: '0.02em',
                   }}
