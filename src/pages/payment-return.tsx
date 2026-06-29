@@ -141,7 +141,7 @@ export function PaymentReturnPage() {
       </div>
 
       <p className="text-[11px] text-muted-foreground mt-6 text-center">
-        Powered by PLOP PLOP · MonCash & NatCash
+        Propulsé par MonCash & NatCash
       </p>
     </div>
   )

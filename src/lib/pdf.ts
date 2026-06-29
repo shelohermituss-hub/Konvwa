@@ -180,7 +180,7 @@ export function downloadOrderPDF(order: OrderForPDF) {
 
   yL = leftRow('Date',    fmtDate(order.created_at), yL)
   yL = leftRow('Produit', req?.product_name ?? '—', yL)
-  yL = leftRow('Qte',     `${quot?.quantity ?? 1} unite(s)`, yL)
+  yL = leftRow('Qté',     `${quot?.quantity ?? 1} unité(s)`, yL)
   yL = leftRow('Plat.',   (req?.source_platform ?? '—').toUpperCase(), yL)
   if (req?.product_types?.name) yL = leftRow('Type colis', req.product_types.name, yL)
   if (req?.invoice_value_usd)   yL = leftRow('Val. declaree', `$${req.invoice_value_usd.toFixed(2)}`, yL)

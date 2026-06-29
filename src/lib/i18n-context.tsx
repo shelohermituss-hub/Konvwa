@@ -79,6 +79,9 @@ const FR: Dict = {
   'suppliers.profile.specialty': 'Spécialité',
   'suppliers.profile.location': 'Localisation',
   'suppliers.profile.no_products': 'Aucun produit disponible',
+
+  'lang.fr': 'Français',
+  'lang.en': 'Anglais',
 }
 
 const EN: Dict = {
@@ -155,6 +158,9 @@ const EN: Dict = {
   'suppliers.profile.specialty': 'Specialty',
   'suppliers.profile.location': 'Location',
   'suppliers.profile.no_products': 'No products available',
+
+  'lang.fr': 'French',
+  'lang.en': 'English',
 }
 
 const DICTS: Record<Lang, Dict> = { fr: FR, en: EN }

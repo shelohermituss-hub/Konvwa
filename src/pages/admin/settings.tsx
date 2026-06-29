@@ -113,7 +113,7 @@ export function AdminSettingsPage() {
               <CreditCard className="h-4 w-4 text-emerald-600" />
             </div>
             <div>
-              <p className="font-semibold text-sm">API Paiement (PLOP PLOP)</p>
+              <p className="font-semibold text-sm">API Paiement</p>
               <p className="text-xs text-muted-foreground">Clés MonCash & NatCash — configuration sécurisée</p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export function AdminSettingsPage() {
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                   <Settings2 className="h-3.5 w-3.5" /> Client ID
                 </Label>
-                <p className="text-[11px] text-muted-foreground">Identifiant marchand PLOP PLOP (format : pp_...)</p>
+                <p className="text-[11px] text-muted-foreground">Identifiant marchand MonCash (format : pp_...)</p>
                 <Input
                   value={values['payment_client_id'] ?? ''}
                   onChange={e => setValues(p => ({ ...p, payment_client_id: e.target.value }))}
@@ -171,7 +171,7 @@ export function AdminSettingsPage() {
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                   <Link className="h-3.5 w-3.5" /> URL de retour
                 </Label>
-                <p className="text-[11px] text-muted-foreground">URL de votre site où PLOP PLOP redirige après paiement</p>
+                <p className="text-[11px] text-muted-foreground">URL de votre site où MonCash redirige après paiement</p>
                 <Input
                   value={values['payment_return_url'] ?? ''}
                   onChange={e => setValues(p => ({ ...p, payment_return_url: e.target.value }))}

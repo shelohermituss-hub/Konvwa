@@ -148,7 +148,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
             {/* Divider */}
             <div className="border-t border-dashed border-border/60 pt-3">
               <p className="text-center text-[10px] text-muted-foreground/50 font-medium">
-                Propulsé par PLOP PLOP · MonCash & NatCash
+                Propulsé par MonCash & NatCash
               </p>
             </div>
           </div>

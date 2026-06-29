@@ -31,10 +31,10 @@ const NAV_ITEMS = [
 ]
 
 const SIDEBAR_EXTRAS = [
-  { label: 'Submit',        Icon: Send,       path: '/submit' },
-  { label: 'Wallet',        Icon: Wallet,     path: '/wallet' },
-  { label: 'Notifications', Icon: Bell,       path: '/notifications' },
-  { label: 'Support',       Icon: HelpCircle, path: '/support' },
+  { label: 'Soumettre',      Icon: Send,       path: '/submit' },
+  { label: 'Portefeuille',   Icon: Wallet,     path: '/wallet' },
+  { label: 'Notifications',  Icon: Bell,       path: '/notifications' },
+  { label: 'Support',        Icon: HelpCircle, path: '/support' },
 ]
 
 const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
@@ -224,7 +224,7 @@ function ProfileMenu() {
           </DropdownMenuItem>
           <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/profile')}>
             <Settings className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium text-sm">Account Setting</span>
+            <span className="font-medium text-sm">Paramètres du compte</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/activity-log')}>
             <Activity className="h-4 w-4 text-muted-foreground" />
@@ -240,7 +240,7 @@ function ProfileMenu() {
             onClick={() => signOut()}
           >
             <LogOut className="h-4 w-4" />
-            <span className="font-medium text-sm">Sign Out</span>
+            <span className="font-medium text-sm">Se déconnecter</span>
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>
@@ -369,7 +369,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
           <button
             onClick={() => signOut()}
             className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors text-muted-foreground"
-            title="Sign Out"
+            title="Se déconnecter"
           >
             <LogOut className="h-3.5 w-3.5" />
           </button>
