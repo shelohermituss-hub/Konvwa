@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ShoppingCart, Trash2, Minus, Plus, Package, ArrowRight, ChevronLeft } from 'lucide-react'
+import { Trash2, Minus, Plus, Package, ArrowRight, ChevronLeft } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'

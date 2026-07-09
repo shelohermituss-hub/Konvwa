@@ -239,7 +239,7 @@ export function OrdersPage() {
                     <Link key={order.id} to={`/orders/${order.id}`}>
                       <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:border-primary/20 transition-colors">
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/8 shrink-0">
-                          <img src={IconBoite} alt="" className="h-8 w-8 object-contain" />
+                          <Package className="h-7 w-7 text-primary/60" strokeWidth={1.5} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">
