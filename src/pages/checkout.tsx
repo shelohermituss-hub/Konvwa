@@ -209,7 +209,7 @@ export function CheckoutPage() {
       </div>
 
       {/* Bottom pay button */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-4px_20px_rgba(10,22,40,0.08)] px-4 py-4">
+      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-4px_20px_rgba(10,22,40,0.08)] px-4 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
         {insufficient ? (
           <button
             onClick={() => navigate('/wallet')}
