@@ -7,6 +7,7 @@ import { router } from "./router"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth-context"
 import { I18nProvider } from "@/lib/i18n-context"
+import { CartProvider } from "@/lib/cart-context"
 import { Toaster } from "sonner"
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt"
 
@@ -21,9 +22,11 @@ createRoot(document.getElementById("root")!).render(
     <ThemeProvider defaultTheme="light" storageKey="haiti-import-theme">
       <I18nProvider>
         <AuthProvider>
-          <RouterProvider router={router} />
-          <Toaster richColors position="top-center" />
-          <PwaInstallPrompt />
+          <CartProvider>
+            <RouterProvider router={router} />
+            <Toaster richColors position="top-center" />
+            <PwaInstallPrompt />
+          </CartProvider>
         </AuthProvider>
       </I18nProvider>
     </ThemeProvider>

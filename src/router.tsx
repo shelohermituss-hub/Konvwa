@@ -27,8 +27,10 @@ import { ProfilePage } from '@/pages/profile'
 import { SupportPage } from '@/pages/support'
 import { ActivityLogPage } from '@/pages/activity-log'
 import { BillingPage } from '@/pages/billing'
-import { SuppliersPage } from '@/pages/suppliers'
-import { SupplierProfilePage } from '@/pages/supplier-profile'
+import { ProductsPage } from '@/pages/products'
+import { ProductDetailPage } from '@/pages/product-detail'
+import { CartPage } from '@/pages/cart'
+import { CheckoutPage } from '@/pages/checkout'
 import { PaymentReturnPage } from '@/pages/payment-return'
 
 // Admin pages
@@ -42,6 +44,7 @@ import { AdminUsersPage } from '@/pages/admin/users'
 import { AdminDisputesPage } from '@/pages/admin/disputes'
 import { AdminSettingsPage } from '@/pages/admin/settings'
 import { AdminShippingConfigPage } from '@/pages/admin/shipping-config'
+import { AdminProductsPage } from '@/pages/admin/products'
 
 export const router = createBrowserRouter([
   // Root and onboarding → auth
@@ -97,8 +100,10 @@ export const router = createBrowserRouter([
       { path: 'support', element: <SupportPage /> },
       { path: 'activity-log', element: <ActivityLogPage /> },
       { path: 'billing', element: <BillingPage /> },
-      { path: 'suppliers', element: <SuppliersPage /> },
-      { path: 'suppliers/:id', element: <SupplierProfilePage /> },
+      { path: 'products', element: <ProductsPage /> },
+      { path: 'products/:id', element: <ProductDetailPage /> },
+      { path: 'cart', element: <CartPage /> },
+      { path: 'checkout', element: <CheckoutPage /> },
     ],
   },
 
@@ -122,6 +127,7 @@ export const router = createBrowserRouter([
       { path: 'users', element: <AdminUsersPage /> },
       { path: 'disputes', element: <AdminDisputesPage /> },
       { path: 'analytics', element: <AdminDashboard /> },
+      { path: 'products', element: <AdminProductsPage /> },
       { path: 'shipping-config', element: <AdminShippingConfigPage /> },
       { path: 'settings', element: <AdminSettingsPage /> },
     ],

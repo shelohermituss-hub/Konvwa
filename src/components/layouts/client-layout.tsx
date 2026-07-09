@@ -6,10 +6,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import {
   LayoutDashboard, ShoppingBag, Ship, Bell, User, Wallet, HelpCircle, Send,
   Globe, ChevronDown, Check, LogOut, Settings, Activity, CreditCard,
-  Store, Clock, Package, AlertCircle, Info,
+  ShoppingCart, Clock, Package, AlertCircle, Info,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n, type Lang } from '@/lib/i18n-context'
+import { useCart } from '@/lib/cart-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
@@ -19,22 +20,23 @@ import { fr as frLocale } from 'date-fns/locale'
 import IconHome      from 'flat-color-icons/svg/home.svg'
 import IconOrders    from 'flat-color-icons/svg/briefcase.svg'
 import IconShipments from 'flat-color-icons/svg/shipped.svg'
-import IconSuppliers from 'flat-color-icons/svg/shop.svg'
+import IconProducts  from 'flat-color-icons/svg/shop.svg'
 import IconProfile   from 'flat-color-icons/svg/contacts.svg'
 
 const NAV_ITEMS = [
   { labelKey: 'nav.home',      Icon: LayoutDashboard, flatIcon: IconHome,      path: '/dashboard' },
   { labelKey: 'nav.orders',    Icon: ShoppingBag,     flatIcon: IconOrders,    path: '/orders' },
   { labelKey: 'nav.shipments', Icon: Ship,            flatIcon: IconShipments, path: '/shipments' },
-  { labelKey: 'nav.suppliers', Icon: Store,           flatIcon: IconSuppliers, path: '/suppliers' },
+  { labelKey: 'nav.products',  Icon: Package,         flatIcon: IconProducts,  path: '/products' },
   { labelKey: 'nav.profile',   Icon: User,            flatIcon: IconProfile,   path: '/profile' },
 ]
 
 const SIDEBAR_EXTRAS = [
-  { label: 'Soumettre',      Icon: Send,       path: '/submit' },
-  { label: 'Portefeuille',   Icon: Wallet,     path: '/wallet' },
-  { label: 'Notifications',  Icon: Bell,       path: '/notifications' },
-  { label: 'Support',        Icon: HelpCircle, path: '/support' },
+  { label: 'Soumettre',      Icon: Send,          path: '/submit' },
+  { label: 'Panier',         Icon: ShoppingCart,  path: '/cart' },
+  { label: 'Portefeuille',   Icon: Wallet,        path: '/wallet' },
+  { label: 'Notifications',  Icon: Bell,          path: '/notifications' },
+  { label: 'Support',        Icon: HelpCircle,    path: '/support' },
 ]
 
 const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
@@ -379,6 +381,24 @@ function DesktopSidebar({ unread }: { unread: number }) {
   )
 }
 
+function CartBadge() {
+  const { count } = useCart()
+  const navigate = useNavigate()
+  return (
+    <button
+      onClick={() => navigate('/cart')}
+      className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors"
+    >
+      <ShoppingCart className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
+      {count > 0 && (
+        <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white leading-none">
+          {count > 9 ? '9+' : count}
+        </span>
+      )}
+    </button>
+  )
+}
+
 function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-white/95 backdrop-blur-md px-4 border-b border-gray-100 shadow-sm">
@@ -387,6 +407,7 @@ function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
       </Link>
       <div className="flex items-center gap-1">
         <LanguageSwitcher />
+        <CartBadge />
         <NotifPopover userId={userId} unread={unread} />
         <ProfileMenu />
       </div>
