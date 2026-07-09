@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
+import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
 
 interface Product {
   id: string
@@ -131,12 +132,10 @@ export function ProductsPage() {
             <p className="text-sm text-muted-foreground">Chargement…</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <Package className="h-8 w-8 text-muted-foreground/40" />
-            </div>
-            <p className="text-sm font-semibold">{t('products.empty')}</p>
-            <p className="text-xs text-muted-foreground text-center max-w-[220px]">{t('products.empty_sub')}</p>
+          <div className="flex flex-col items-center justify-center py-16 gap-2">
+            <IllustrationEmptyProducts className="w-48 h-auto" />
+            <p className="text-sm font-bold mt-1">{t('products.empty')}</p>
+            <p className="text-xs text-muted-foreground text-center max-w-[200px] leading-relaxed">{t('products.empty_sub')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -164,7 +163,17 @@ function ProductCard({ product, onPress }: { product: Product; onPress: () => vo
         {hasImage ? (
           <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
         ) : (
-          <Package className="h-10 w-10 text-muted-foreground/20" />
+          <div className="flex flex-col items-center justify-center gap-1.5 w-full h-full"
+            style={{ background: 'linear-gradient(140deg, #F4F5F7 0%, #EEF0F3 100%)' }}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 shadow-sm">
+              <Package className="h-5 w-5 text-primary/40" strokeWidth={1.5} />
+            </div>
+            {product.category && (
+              <span className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-wider px-2 text-center leading-tight">
+                {product.category}
+              </span>
+            )}
+          </div>
         )}
         {product.featured && (
           <span className="absolute top-2 left-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">

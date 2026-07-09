@@ -13,6 +13,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import Autoplay from 'embla-carousel-autoplay'
+import { IllustrationDeliveryHero } from '@/components/shared/illustrations'
 
 interface DashboardOrder {
   id: string
@@ -339,10 +340,10 @@ export function DashboardPage() {
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-[72px] w-full rounded-2xl" />)}
           </div>
         ) : orders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-white p-8 text-center shadow-sm">
-            <Package className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-sm font-semibold text-muted-foreground">{t('dash.no_orders')}</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">{t('dash.submit_first')}</p>
+          <div className="rounded-2xl border border-dashed border-border bg-white pt-6 pb-8 px-6 text-center shadow-sm">
+            <IllustrationDeliveryHero className="w-48 h-auto mx-auto mb-2 opacity-80" />
+            <p className="text-sm font-bold text-foreground/70">{t('dash.no_orders')}</p>
+            <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">{t('dash.submit_first')}</p>
             <Link
               to="/submit"
               className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"

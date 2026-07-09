@@ -3,6 +3,7 @@ import { ShoppingCart, Trash2, Minus, Plus, Package, ArrowRight, ChevronLeft } f
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
+import { IllustrationEmptyCart } from '@/components/shared/illustrations'
 
 export function CartPage() {
   const { t } = useI18n()
@@ -33,13 +34,11 @@ export function CartPage() {
         </div>
       ) : items.length === 0 ? (
         /* Empty state */
-        <div className="flex flex-col items-center justify-center py-24 px-8 gap-4 text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-            <ShoppingCart className="h-9 w-9 text-muted-foreground/30" />
-          </div>
+        <div className="flex flex-col items-center justify-center py-16 px-8 gap-3 text-center">
+          <IllustrationEmptyCart className="w-48 h-auto" />
           <div>
             <p className="font-bold text-base">{t('cart.empty')}</p>
-            <p className="text-sm text-muted-foreground mt-1">{t('cart.empty_sub')}</p>
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{t('cart.empty_sub')}</p>
           </div>
           <button
             onClick={() => navigate('/products')}

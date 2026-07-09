@@ -10,7 +10,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
-import IconBoite from 'flat-color-icons/svg/package.svg'
+import { IllustrationEmptyOrders } from '@/components/shared/illustrations'
 
 interface OrderRow {
   id: string
@@ -166,12 +166,12 @@ export function OrdersPage() {
         {loading ? (
           [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-[88px] rounded-2xl" />)
         ) : isEmpty ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
-            <img src={IconBoite} alt="" className="h-12 w-12 mx-auto opacity-30 mb-3" />
-            <p className="font-semibold text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white pt-8 pb-10 px-6 text-center shadow-sm">
+            <IllustrationEmptyOrders className="w-44 h-auto mx-auto mb-2" />
+            <p className="font-bold text-foreground/70">
               {search || (statusFilter !== 'all' && statusFilter !== 'drafts') ? t('common.no_result') : t('orders.no_orders')}
             </p>
-            <p className="text-xs text-muted-foreground/70 mt-1 mb-4">
+            <p className="text-xs text-muted-foreground/70 mt-1 mb-4 leading-relaxed">
               {search ? t('orders.try_other') : t('orders.submit_first')}
             </p>
             {!search && (
