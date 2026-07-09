@@ -21,7 +21,6 @@ export function CheckoutPage() {
   const [loadingWallet, setLoadingWallet] = useState(true)
   const [paying, setPaying] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [orderId, setOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -85,7 +84,6 @@ export function CheckoutPage() {
       if (rpcResult?.error) throw new Error(rpcResult.error)
 
       await clearCart()
-      setOrderId(order.id)
       setSuccess(true)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Erreur inconnue'
