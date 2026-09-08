@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { Loader2, Save, RefreshCw, DollarSign, Plane, Landmark, Percent } from 'lucide-react'
+import { Loader2, Save, RefreshCw, DollarSign, Plane, Landmark, Percent, CreditCard, Eye, EyeOff, Link, Settings2, CheckCircle } from 'lucide-react'
 
 interface Setting {
   key: string
@@ -29,11 +29,16 @@ const SETTING_SUFFIXES: Record<string, string> = {
   service_margin_percent: '%',
 }
 
+const PAYMENT_KEYS = ['payment_client_id', 'payment_client_secret', 'payment_return_url', 'payment_methods', 'payment_base_url']
+const CALC_KEYS = ['usd_to_htg_rate', 'freight_per_kg_usd', 'duty_rate_percent', 'service_margin_percent']
+
 export function AdminSettingsPage() {
   const [settings, setSettings] = useState<Setting[]>([])
   const [values, setValues] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [savingPayment, setSavingPayment] = useState(false)
+  const [showSecret, setShowSecret] = useState(false)
 
   async function loadSettings() {
     setLoading(true)
@@ -49,7 +54,8 @@ export function AdminSettingsPage() {
 
   async function handleSave() {
     setSaving(true)
-    const updates = settings.map(s => ({
+    const calcSettings = settings.filter(s => CALC_KEYS.includes(s.key))
+    const updates = calcSettings.map(s => ({
       key: s.key,
       value: values[s.key] ?? s.value,
       label: s.label,
@@ -57,16 +63,33 @@ export function AdminSettingsPage() {
       updated_at: new Date().toISOString(),
     }))
     const { error } = await supabase.from('app_settings').upsert(updates, { onConflict: 'key' })
-    if (error) {
-      toast.error('Erreur lors de la sauvegarde.')
-    } else {
-      toast.success('Paramètres mis à jour.')
-      await loadSettings()
-    }
+    if (error) toast.error('Erreur lors de la sauvegarde.')
+    else { toast.success('Paramètres de calcul mis à jour.'); await loadSettings() }
     setSaving(false)
   }
 
-  const hasChanges = settings.some(s => values[s.key] !== s.value)
+  async function handleSavePayment() {
+    setSavingPayment(true)
+    const paySettings = settings.filter(s => PAYMENT_KEYS.includes(s.key))
+    const updates = paySettings.map(s => ({
+      key: s.key,
+      value: values[s.key] ?? s.value,
+      label: s.label,
+      description: s.description,
+      sensitive: s.key === 'payment_client_secret',
+      updated_at: new Date().toISOString(),
+    }))
+    const { error } = await supabase.from('app_settings').upsert(updates, { onConflict: 'key' })
+    if (error) toast.error('Erreur lors de la sauvegarde.')
+    else { toast.success('Configuration API paiement enregistrée.'); await loadSettings() }
+    setSavingPayment(false)
+  }
+
+  const calcSettings = settings.filter(s => CALC_KEYS.includes(s.key))
+  const paymentSettings = settings.filter(s => PAYMENT_KEYS.includes(s.key))
+  const hasCalcChanges = calcSettings.some(s => values[s.key] !== s.value)
+  const hasPaymentChanges = paymentSettings.some(s => values[s.key] !== s.value)
+  const hasChanges = hasCalcChanges
 
   return (
     <div className="space-y-5">
@@ -80,6 +103,110 @@ export function AdminSettingsPage() {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Enregistrer
         </Button>
+      </div>
+
+      {/* ── Payment API settings ── */}
+      <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50">
+              <CreditCard className="h-4 w-4 text-emerald-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">API Paiement</p>
+              <p className="text-xs text-muted-foreground">Clés MonCash & NatCash — configuration sécurisée</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <img src="/moncash-logo.jpg" alt="MonCash" className="h-5 object-contain rounded" />
+            <img src="/natcash-logo.png" alt="NatCash" className="h-5 object-contain" />
+          </div>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {loading ? (
+            <div className="space-y-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+          ) : (
+            <>
+              {/* Client ID */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <Settings2 className="h-3.5 w-3.5" /> Client ID
+                </Label>
+                <p className="text-[11px] text-muted-foreground">Identifiant marchand MonCash (format : pp_...)</p>
+                <Input
+                  value={values['payment_client_id'] ?? ''}
+                  onChange={e => setValues(p => ({ ...p, payment_client_id: e.target.value }))}
+                  placeholder="pp_d6d7ffd9450cbc8da8fe622c13fb"
+                  className="font-mono text-sm rounded-xl"
+                />
+              </div>
+
+              {/* Client Secret */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <Eye className="h-3.5 w-3.5" /> Clé Privée (Hash 64 chars)
+                </Label>
+                <p className="text-[11px] text-muted-foreground">Clé secrète HMAC — ne jamais partager, invisible aux clients</p>
+                <div className="relative">
+                  <Input
+                    type={showSecret ? 'text' : 'password'}
+                    value={values['payment_client_secret'] ?? ''}
+                    onChange={e => setValues(p => ({ ...p, payment_client_secret: e.target.value }))}
+                    placeholder="c4e6b79760e3bb1d0134a4832f557c9e45944b7bb7edf37ef228a4b3faa42325"
+                    className="font-mono text-sm rounded-xl pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSecret(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Return URL */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <Link className="h-3.5 w-3.5" /> URL de retour
+                </Label>
+                <p className="text-[11px] text-muted-foreground">URL de votre site où MonCash redirige après paiement</p>
+                <Input
+                  value={values['payment_return_url'] ?? ''}
+                  onChange={e => setValues(p => ({ ...p, payment_return_url: e.target.value }))}
+                  placeholder="https://konvwa.app/payment/return"
+                  className="text-sm rounded-xl"
+                />
+              </div>
+
+              {/* Methods */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5" /> Méthodes actives
+                </Label>
+                <Input
+                  value={values['payment_methods'] ?? 'moncash,natcash'}
+                  onChange={e => setValues(p => ({ ...p, payment_methods: e.target.value }))}
+                  placeholder="moncash,natcash"
+                  className="text-sm rounded-xl"
+                />
+                <p className="text-[11px] text-muted-foreground">Valeurs possibles : moncash · natcash · moncash,natcash · all</p>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <Button
+                  onClick={handleSavePayment}
+                  disabled={savingPayment || !hasPaymentChanges}
+                  className="rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {savingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Enregistrer l'API paiement
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Calculation parameters */}
@@ -100,7 +227,7 @@ export function AdminSettingsPage() {
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 gap-5">
-              {settings.map(setting => {
+              {calcSettings.map(setting => {
                 const Icon = SETTING_ICONS[setting.key] || DollarSign
                 const suffix = SETTING_SUFFIXES[setting.key] || ''
                 const step = setting.key.includes('percent') ? '0.5' : '0.5'

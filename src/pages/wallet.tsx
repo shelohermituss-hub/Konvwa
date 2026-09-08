@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
+import { WalletCardSkin } from '@/components/shared/wallet-card-skin'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Smartphone, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck } from 'lucide-react'
 import IconPieces       from 'flat-color-icons/svg/paid.svg'
 import IconDistributeur from 'flat-color-icons/svg/currency_exchange.svg'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
+import { createPayment } from '@/lib/payment-api'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +27,7 @@ interface Transaction {
   status: 'pending' | 'completed' | 'failed' | 'cancelled'
   payment_method: string | null
   description: string | null
+  reference: string | null
   created_at: string
 }
 
@@ -37,6 +40,125 @@ const TX_CONFIG: Record<string, { label: string; color: string; bg: string; sign
   block:      { label: 'Bloqué',         color: 'text-warning',     bg: 'bg-warning/10',    sign: '-' },
 }
 
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  completed: { label: 'Complété',  className: 'bg-emerald-50 text-emerald-700' },
+  pending:   { label: 'En attente', className: 'bg-amber-50 text-amber-700' },
+  failed:    { label: 'Échoué',    className: 'bg-red-50 text-red-700' },
+  cancelled: { label: 'Annulé',   className: 'bg-gray-100 text-gray-500' },
+}
+
+const METHOD_LABEL: Record<string, string> = {
+  moncash: 'MonCash',
+  natcash: 'NatCash',
+  wallet:  'Portefeuille',
+}
+
+function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
+  const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
+  const badge = STATUS_BADGE[tx.status] ?? STATUS_BADGE.pending
+
+  function copy(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  const rows: { label: string; value: string; copyable?: boolean }[] = [
+    { label: 'Statut',      value: badge.label },
+    { label: 'Type',        value: config.label },
+    ...(tx.payment_method ? [{ label: 'Méthode', value: METHOD_LABEL[tx.payment_method] ?? tx.payment_method }] : []),
+    ...(tx.reference ? [{ label: 'Référence', value: tx.reference, copyable: true }] : []),
+    { label: 'ID Transaction', value: tx.id.slice(0, 16) + '…', copyable: true },
+    { label: 'Date', value: new Date(tx.created_at).toLocaleString('fr-HT', { dateStyle: 'medium', timeStyle: 'short' }) },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #4F2A8F 0%, #6B3FAF 40%, #3B1F7A 100%)', opacity: 0.95 }} />
+
+      <div
+        className="relative w-full max-w-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute -top-10 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+        >
+          <X className="h-4 w-4 text-white" />
+        </button>
+
+        {/* Receipt card */}
+        <div className="rounded-3xl bg-white overflow-hidden shadow-2xl">
+          {/* Amount header */}
+          <div className="px-6 pt-7 pb-6 text-center" style={{ background: 'linear-gradient(160deg, #4F2A8F, #6B3FAF)' }}>
+            <p className="text-xs uppercase tracking-widest text-white/60 font-semibold mb-2">
+              {isCredit ? 'Montant crédité' : 'Montant débité'}
+            </p>
+            <p className={cn('text-4xl font-black', isCredit ? 'text-emerald-300' : 'text-white')}>
+              {isCredit ? '+' : '-'}{tx.amount.toLocaleString('fr-HT')}
+            </p>
+            <p className="text-white/50 text-sm font-semibold mt-1">HTG</p>
+
+            {/* Status pill */}
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
+              style={{
+                background: tx.status === 'completed' ? 'rgba(52,211,153,0.2)' : tx.status === 'failed' ? 'rgba(248,113,113,0.2)' : 'rgba(251,191,36,0.2)',
+                color: tx.status === 'completed' ? '#34d399' : tx.status === 'failed' ? '#f87171' : '#fbbf24',
+              }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full"
+                style={{ background: tx.status === 'completed' ? '#34d399' : tx.status === 'failed' ? '#f87171' : '#fbbf24' }}
+              />
+              {badge.label}
+            </div>
+          </div>
+
+          {/* Jagged edge separator */}
+          <div className="relative h-4 overflow-hidden" style={{ background: 'linear-gradient(160deg, #4F2A8F, #6B3FAF)' }}>
+            <svg viewBox="0 0 360 16" preserveAspectRatio="none" className="absolute bottom-0 w-full h-4" fill="white">
+              <path d="M0,16 L0,8 L18,16 L36,8 L54,16 L72,8 L90,16 L108,8 L126,16 L144,8 L162,16 L180,8 L198,16 L216,8 L234,16 L252,8 L270,16 L288,8 L306,16 L324,8 L342,16 L360,8 L360,16 Z" />
+            </svg>
+          </div>
+
+          {/* Detail rows */}
+          <div className="px-6 pt-3 pb-7 space-y-3.5">
+            {rows.map((row) => (
+              <div key={row.label} className="flex items-center justify-between gap-4">
+                <span className="text-xs text-muted-foreground font-medium shrink-0">{row.label}</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-xs font-semibold text-foreground text-right truncate max-w-[180px]">{row.value}</span>
+                  {row.copyable && (
+                    <button
+                      onClick={() => copy(row.value)}
+                      className="shrink-0 rounded p-0.5 hover:bg-muted transition-colors"
+                    >
+                      {copied
+                        ? <CheckCheck className="h-3 w-3 text-emerald-500" />
+                        : <Copy className="h-3 w-3 text-muted-foreground" />}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Divider */}
+            <div className="border-t border-dashed border-border/60 pt-3">
+              <p className="text-center text-[10px] text-muted-foreground/50 font-medium">
+                Propulsé par MonCash & NatCash
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function WalletPage() {
   const { user, profile } = useAuth()
   const [wallet, setWallet] = useState<WalletData | null>(null)
@@ -47,15 +169,21 @@ export function WalletPage() {
   const [topupMethod, setTopupMethod] = useState<'moncash' | 'natcash'>('moncash')
   const [topupOpen, setTopupOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [receiptTx, setReceiptTx] = useState<Transaction | null>(null)
 
   async function loadData() {
     if (!user) return
-    const [walletRes, txRes] = await Promise.all([
-      supabase.from('wallets').select('id, available_balance, blocked_balance').eq('user_id', user.id).maybeSingle(),
-      supabase.from('wallet_transactions').select('id, type, amount, status, payment_method, description, created_at').order('created_at', { ascending: false }).limit(30),
-    ])
-    if (walletRes.data) setWallet(walletRes.data)
-    if (txRes.data) setTransactions(txRes.data as Transaction[])
+    const walletRes = await supabase.from('wallets').select('id, available_balance, blocked_balance').eq('user_id', user.id).maybeSingle()
+    if (walletRes.data) {
+      setWallet(walletRes.data)
+      const txRes = await supabase
+        .from('wallet_transactions')
+        .select('id, type, amount, status, payment_method, description, reference, created_at')
+        .eq('wallet_id', walletRes.data.id)
+        .order('created_at', { ascending: false })
+        .limit(30)
+      if (txRes.data) setTransactions(txRes.data as Transaction[])
+    }
     setLoading(false)
   }
 
@@ -65,21 +193,15 @@ export function WalletPage() {
     if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet) return
     setSubmitting(true)
     const amount = parseFloat(topupAmount)
-    const { error } = await supabase.from('wallet_transactions').insert({
-      wallet_id: wallet.id,
-      type: 'deposit',
-      amount,
-      status: 'pending',
-      payment_method: topupMethod,
-      description: `Recharge ${topupMethod === 'moncash' ? 'MonCash' : 'NatCash'}`,
-    })
-    if (error) {
-      toast.error('Erreur lors de la recharge.')
-    } else {
-      toast.success('Demande soumise. Elle sera traitée sous peu.')
+    try {
+      const result = await createPayment({ amount, method: topupMethod, wallet_id: wallet.id })
+      sessionStorage.setItem('konvwa_pay_ref', result.reference_id)
+      toast.success('Redirection vers ' + (topupMethod === 'moncash' ? 'MonCash' : 'NatCash') + '…')
       setTopupOpen(false)
-      setTopupAmount('')
-      await loadData()
+      window.location.href = result.url
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      toast.error(msg || 'Erreur lors de l\'initialisation du paiement.')
     }
     setSubmitting(false)
   }
@@ -152,12 +274,14 @@ export function WalletPage() {
               <div className="space-y-2">
                 <Label>Méthode</Label>
                 <RadioGroup value={topupMethod} onValueChange={(v) => setTopupMethod(v as 'moncash' | 'natcash')} className="grid grid-cols-2 gap-3">
-                  {([['moncash', 'MonCash', 'Digicel', '#ff6600'], ['natcash', 'NatCash', 'Natcom', '#00a651']] as const).map(([val, name, sub, color]) => (
+                  {([
+                    ['moncash', '/moncash-logo.jpg', 'Digicel'],
+                    ['natcash', '/natcash-logo.png', 'Natcom'],
+                  ] as const).map(([val, logo, sub]) => (
                     <div key={val} className="relative">
                       <RadioGroupItem value={val} id={val} className="peer sr-only" />
                       <Label htmlFor={val} className="flex flex-col items-center justify-center p-4 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
-                        <Smartphone className="h-6 w-6 mb-1.5" style={{ color }} />
-                        <span className="font-semibold text-sm">{name}</span>
+                        <img src={logo} alt={val} className="h-8 object-contain mb-1.5" />
                         <span className="text-xs text-muted-foreground">{sub}</span>
                       </Label>
                     </div>
@@ -191,25 +315,32 @@ export function WalletPage() {
 
       {/* ── Wallet Card — credit card proportions ── */}
       <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
-        <div
-          className="rounded-3xl text-white relative overflow-hidden shadow-[0_10px_40px_rgba(0,195,220,0.40)]"
-          style={{
-            background: 'linear-gradient(135deg, #00E5F5 0%, #00C3DC 40%, #0099B8 100%)',
-            aspectRatio: '1.586',
-          }}
-        >
-          {/* Decorative rings */}
-          <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full border border-white/12" />
-          <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full border border-white/8" />
-
-          <div className="absolute inset-0 z-10 flex flex-col justify-between p-4">
+        <WalletCardSkin userId={user?.id ?? ''}>
 
             {/* Row 1: branding + contactless */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/25 backdrop-blur-sm">
-                  <span className="text-[12px] font-black text-white">K</span>
-                </div>
+                {/* 3-crates logo in white tones */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 72" fill="none" style={{ height: 22, width: 'auto' }} aria-hidden="true">
+                  <rect x="0"  y="42" width="40" height="24" rx="6" fill="rgba(255,255,255,0.55)"/>
+                  <rect x="0"  y="42" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.35)"/>
+                  <rect x="31" y="42" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.35)"/>
+                  <rect x="9" y="48"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
+                  <rect x="9" y="52.5" width="22" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
+                  <rect x="9" y="57"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
+                  <rect x="34" y="26" width="40" height="24" rx="6" fill="rgba(255,255,255,0.70)"/>
+                  <rect x="34" y="26" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.45)"/>
+                  <rect x="65" y="26" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.45)"/>
+                  <rect x="43" y="32"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)"/>
+                  <rect x="43" y="36.5" width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)"/>
+                  <rect x="43" y="41"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)"/>
+                  <rect x="68" y="10" width="40" height="24" rx="6" fill="rgba(255,255,255,0.90)"/>
+                  <rect x="68" y="10" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.60)"/>
+                  <rect x="99" y="10" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.60)"/>
+                  <rect x="77" y="16"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.40)"/>
+                  <rect x="77" y="20.5" width="22" height="2" rx="1" fill="rgba(255,255,255,0.40)"/>
+                  <rect x="77" y="25"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.40)"/>
+                </svg>
                 <span className="font-bold text-white text-sm tracking-wide">KONVWA</span>
               </div>
               <svg width="28" height="24" viewBox="0 0 30 26" fill="none">
@@ -269,8 +400,7 @@ export function WalletPage() {
               </div>
             </div>
 
-          </div>
-        </div>
+        </WalletCardSkin>
       </div>
 
       {/* Action buttons */}
@@ -337,8 +467,13 @@ export function WalletPage() {
             {transactions.map((tx) => {
               const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
               const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
+              const badge = STATUS_BADGE[tx.status] ?? STATUS_BADGE.pending
               return (
-                <div key={tx.id} className="flex items-center gap-3 px-4 py-3.5">
+                <button
+                  key={tx.id}
+                  onClick={() => setReceiptTx(tx)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
+                >
                   <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl shrink-0', config.bg)}>
                     {isCredit
                       ? <ArrowDownLeft className={cn('h-5 w-5', config.color)} />
@@ -346,7 +481,9 @@ export function WalletPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">{config.label}</p>
-                    <p className="text-xs text-muted-foreground truncate">{tx.description || '—'}</p>
+                    <span className={cn('inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5', badge.className)}>
+                      {badge.label}
+                    </span>
                   </div>
                   <div className="text-right shrink-0">
                     <p className={cn('font-bold text-sm', config.color)}>
@@ -356,12 +493,17 @@ export function WalletPage() {
                       {new Date(tx.created_at).toLocaleDateString('fr-HT', { day: '2-digit', month: 'short' })}
                     </p>
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
         )}
       </div>
+
+      {/* Receipt modal */}
+      {receiptTx && (
+        <ReceiptModal tx={receiptTx} onClose={() => setReceiptTx(null)} />
+      )}
     </div>
   )
 }

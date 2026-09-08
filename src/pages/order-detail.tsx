@@ -6,7 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { TimelineStep } from '@/components/shared/timeline-step'
-import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight, MapPin, Globe, Truck, Download } from 'lucide-react'
+import { downloadOrderPDF, type OrderForPDF } from '@/lib/pdf'
 import IconBoite from 'flat-color-icons/svg/package.svg'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
@@ -36,6 +37,28 @@ interface OrderDetail {
       product_name: string
       product_url: string
       source_platform: string
+      product_image_url: string | null
+      box_length_cm: number | null
+      box_width_cm: number | null
+      box_height_cm: number | null
+      weight_lbs: number | null
+      weight_kg: number | null
+      invoice_value_usd: number | null
+      unit_system: string | null
+      shipping_origins: { name: string; flag_emoji: string | null } | null
+      haiti_regions: { name: string } | null
+      haiti_cities: { name: string } | null
+      product_types: { name: string } | null
+      packages: Array<{
+        number: number
+        length_cm: number | null
+        width_cm:  number | null
+        height_cm: number | null
+        weight_kg: number | null
+        weight_lbs: number | null
+        cbm: number | null
+      }> | null
+      shipping_rates: { mode: string; name: string } | null
     } | null
   } | null
 }
@@ -76,7 +99,17 @@ export function OrderDetailPage() {
             id, total, product_price, quantity,
             service_fee, purchase_fee, shipping_fee, customs_fee, local_delivery_fee,
             estimated_delivery_days,
-            product_requests(product_name, product_url, source_platform)
+            product_requests(
+              product_name, product_url, source_platform, product_image_url,
+              box_length_cm, box_width_cm, box_height_cm,
+              weight_lbs, weight_kg, invoice_value_usd, unit_system,
+              shipping_origins!ship_from_id(name, flag_emoji),
+              haiti_regions!destination_region_id(name),
+              haiti_cities!destination_city_id(name),
+              product_types!product_type_id(name),
+              packages,
+              shipping_rates!shipping_rate_id(mode, name)
+            )
           )
         `)
         .eq('id', id)
@@ -181,6 +214,10 @@ export function OrderDetailPage() {
   const canPay = wallet ? wallet.available_balance >= total : false
   const needsPayment = order.status === 'awaiting_payment' && order.payment_status !== 'paid'
 
+  function handleDownloadPDF() {
+    downloadOrderPDF(order as unknown as OrderForPDF)
+  }
+
   return (
     <div className="min-h-full bg-[#F4F5F7] pb-10">
 
@@ -197,6 +234,15 @@ export function OrderDetailPage() {
             </div>
             <p className="text-xs text-muted-foreground font-mono">{order.tracking_code}</p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPDF}
+            className="shrink-0 h-9 rounded-xl gap-1.5 text-xs font-semibold border-primary/20 text-primary hover:bg-primary/5"
+          >
+            <Download className="h-3.5 w-3.5" />
+            PDF
+          </Button>
         </div>
       </div>
 
@@ -301,6 +347,23 @@ export function OrderDetailPage() {
           </div>
         )}
 
+        {/* Product image */}
+        {order.quotes?.product_requests?.product_image_url && (
+          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-bold text-foreground">Photo du produit</p>
+            </div>
+            <div className="p-3">
+              <img
+                src={order.quotes.product_requests.product_image_url}
+                alt={productName}
+                className="w-full rounded-xl object-cover max-h-64"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Détails commande */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">
@@ -315,6 +378,123 @@ export function OrderDetailPage() {
               value={order.payment_status === 'paid' ? 'Payé' : order.payment_status === 'partial' ? 'Partiel' : 'Impayé'}
               valueClass={order.payment_status === 'paid' ? 'text-emerald-600' : 'text-warning'}
             />
+
+            {/* Route d'expédition */}
+            {order.quotes?.product_requests?.shipping_origins && (
+              <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Globe className="h-3.5 w-3.5" />
+                  Expédié depuis
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  {order.quotes.product_requests.shipping_origins.flag_emoji && (
+                    <span className="mr-1">{order.quotes.product_requests.shipping_origins.flag_emoji}</span>
+                  )}
+                  {order.quotes.product_requests.shipping_origins.name}
+                </span>
+              </div>
+            )}
+            {order.quotes?.product_requests?.haiti_regions && (
+              <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Destination
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  🇭🇹 Haïti — {order.quotes.product_requests.haiti_regions.name}
+                  {order.quotes.product_requests.haiti_cities && (
+                    <span className="text-muted-foreground font-normal">
+                      , {order.quotes.product_requests.haiti_cities.name}
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
+
+            {/* Type de colis */}
+            {order.quotes?.product_requests?.product_types && (
+              <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Truck className="h-3.5 w-3.5" />
+                  Type de colis
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  {order.quotes.product_requests.product_types.name}
+                </span>
+              </div>
+            )}
+
+            {/* Colis — multi-package ou single */}
+            {(() => {
+              const req = order.quotes?.product_requests
+              if (!req) return null
+              const pkgs = req.packages?.filter(p => p.length_cm || p.weight_kg)
+              if (pkgs && pkgs.length > 0) {
+                const totalCBM = pkgs.reduce((s, p) => s + (p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : 0)), 0)
+                return (
+                  <div className="py-3 border-b border-gray-100 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                        <Package className="h-3.5 w-3.5" />
+                        {pkgs.length > 1 ? `${pkgs.length} colis` : 'Colis'}
+                      </span>
+                      <span className="text-sm font-semibold text-primary">{totalCBM.toFixed(4)} m³</span>
+                    </div>
+                    {pkgs.map(p => {
+                      const cbm = p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : null)
+                      return (
+                        <div key={p.number} className="flex items-center justify-between rounded-lg bg-[#F8F9FB] px-3 py-2 text-xs">
+                          <span className="font-semibold text-muted-foreground">Colis {p.number}</span>
+                          <span className="text-foreground font-mono">
+                            {p.length_cm && p.width_cm && p.height_cm
+                              ? `${p.length_cm}×${p.width_cm}×${p.height_cm} cm`
+                              : '—'}
+                          </span>
+                          {cbm && <span className="text-primary font-mono font-semibold">{cbm.toFixed(4)} m³</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              }
+              // Fallback to flat columns
+              if (!req.box_length_cm || !req.box_width_cm || !req.box_height_cm) return null
+              const cbm = (req.box_length_cm * req.box_width_cm * req.box_height_cm) / 1_000_000
+              return (
+                <>
+                  <InfoRow label="Dimensions (L×W×H)" value={`${req.box_length_cm} × ${req.box_width_cm} × ${req.box_height_cm} cm`} />
+                  <InfoRow label="Volume CBM" value={`${cbm.toFixed(4)} m³`} />
+                </>
+              )
+            })()}
+
+            {/* Poids */}
+            {(order.quotes?.product_requests?.weight_kg != null || order.quotes?.product_requests?.weight_lbs != null) && (
+              <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Weight className="h-3.5 w-3.5" />
+                  Poids
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  {(() => {
+                    const req = order.quotes!.product_requests!
+                    if (req.weight_kg != null) {
+                      return <>{req.weight_kg} kg<span className="text-xs text-muted-foreground ml-1">({(req.weight_kg / 0.453592).toFixed(2)} lbs)</span></>
+                    }
+                    return <>{req.weight_lbs} lbs<span className="text-xs text-muted-foreground ml-1">({(req.weight_lbs! * 0.453592).toFixed(2)} kg)</span></>
+                  })()}
+                </span>
+              </div>
+            )}
+
+            {/* Valeur déclarée */}
+            {order.quotes?.product_requests?.invoice_value_usd != null && (
+              <InfoRow
+                label="Valeur déclarée"
+                value={`$${order.quotes.product_requests.invoice_value_usd.toFixed(2)} USD`}
+              />
+            )}
+
             {order.quotes?.product_requests?.product_url && (
               <div className="py-3">
                 <a
@@ -354,7 +534,7 @@ export function OrderDetailPage() {
                 <span className="font-medium">{order.quotes.purchase_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">Frais maritime</span>
+                <span className="text-muted-foreground">{order.quotes?.product_requests?.shipping_rates?.mode === 'air' ? 'Fret aérien' : 'Frais maritimes'}</span>
                 <span className="font-medium">{order.quotes.shipping_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">

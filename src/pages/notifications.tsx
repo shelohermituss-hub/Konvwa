@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { PushSettingsRow } from '@/components/shared/pwa-experience'
 
 import IconValide from 'flat-color-icons/svg/ok.svg'
 
@@ -89,6 +90,13 @@ export function NotificationsPage() {
             Tout lire
           </button>
         )}
+      </div>
+
+      {/* Push settings */}
+      <div className="px-4 mb-4">
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
+          <PushSettingsRow userId={user?.id} />
+        </div>
       </div>
 
       <div className="px-4 pb-6 space-y-2">

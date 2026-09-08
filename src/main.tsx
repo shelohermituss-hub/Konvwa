@@ -6,7 +6,10 @@ import "./index.css"
 import { router } from "./router"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth-context"
+import { I18nProvider } from "@/lib/i18n-context"
+import { CartProvider } from "@/lib/cart-context"
 import { Toaster } from "sonner"
+import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt"
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -17,10 +20,15 @@ if ('serviceWorker' in navigator) {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="light" storageKey="haiti-import-theme">
-      <AuthProvider>
-        <RouterProvider router={router} />
-        <Toaster richColors position="top-center" />
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <CartProvider>
+            <RouterProvider router={router} />
+            <Toaster richColors position="top-center" />
+            <PwaInstallPrompt />
+          </CartProvider>
+        </AuthProvider>
+      </I18nProvider>
     </ThemeProvider>
   </StrictMode>
 )

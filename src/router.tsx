@@ -25,6 +25,13 @@ import { WalletPage } from '@/pages/wallet'
 import { NotificationsPage } from '@/pages/notifications'
 import { ProfilePage } from '@/pages/profile'
 import { SupportPage } from '@/pages/support'
+import { ActivityLogPage } from '@/pages/activity-log'
+import { BillingPage } from '@/pages/billing'
+import { ProductsPage } from '@/pages/products'
+import { ProductDetailPage } from '@/pages/product-detail'
+import { CartPage } from '@/pages/cart'
+import { CheckoutPage } from '@/pages/checkout'
+import { PaymentReturnPage } from '@/pages/payment-return'
 
 // Admin pages
 import { AdminDashboard } from '@/pages/admin/dashboard'
@@ -36,11 +43,17 @@ import { AdminPaymentsPage } from '@/pages/admin/payments'
 import { AdminUsersPage } from '@/pages/admin/users'
 import { AdminDisputesPage } from '@/pages/admin/disputes'
 import { AdminSettingsPage } from '@/pages/admin/settings'
+import { AdminShippingConfigPage } from '@/pages/admin/shipping-config'
+import { AdminProductsPage } from '@/pages/admin/products'
+import { AdminNotificationsPage } from '@/pages/admin/notifications'
 
 export const router = createBrowserRouter([
   // Root and onboarding → auth
   { path: '/',           element: <Navigate to="/auth" replace /> },
   { path: '/onboarding', element: <Navigate to="/auth" replace /> },
+
+  // Payment return — public (MonCash/NatCash redirect callback)
+  { path: '/payment/return', element: <PaymentReturnPage /> },
 
   // Auth page (login, register, forgot, otp, reset, denied)
   {
@@ -86,6 +99,12 @@ export const router = createBrowserRouter([
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'support', element: <SupportPage /> },
+      { path: 'activity-log', element: <ActivityLogPage /> },
+      { path: 'billing', element: <BillingPage /> },
+      { path: 'products', element: <ProductsPage /> },
+      { path: 'products/:id', element: <ProductDetailPage /> },
+      { path: 'cart', element: <CartPage /> },
+      { path: 'checkout', element: <CheckoutPage /> },
     ],
   },
 
@@ -109,6 +128,9 @@ export const router = createBrowserRouter([
       { path: 'users', element: <AdminUsersPage /> },
       { path: 'disputes', element: <AdminDisputesPage /> },
       { path: 'analytics', element: <AdminDashboard /> },
+      { path: 'products', element: <AdminProductsPage /> },
+      { path: 'shipping-config', element: <AdminShippingConfigPage /> },
+      { path: 'notifications', element: <AdminNotificationsPage /> },
       { path: 'settings', element: <AdminSettingsPage /> },
     ],
   },

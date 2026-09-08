@@ -12,6 +12,15 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+interface PackageEntry {
+  number: number
+  length_cm: number | null
+  width_cm: number | null
+  height_cm: number | null
+  weight_kg: number | null
+  cbm: number | null
+}
+
 interface ProductRequest {
   id: string
   product_name: string
@@ -27,6 +36,12 @@ interface ProductRequest {
   user_id: string
   customer_name?: string
   has_quote: boolean
+  packages: PackageEntry[] | null
+  weight_kg: number | null
+  invoice_value_usd: number | null
+  shipping_origin_name?: string
+  shipping_rate_mode?: string | null
+  shipping_rate_name?: string | null
 }
 
 const REQUEST_STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string }> = {
@@ -68,6 +83,10 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
   const subtotal = parseNum(productPrice) * parseNum(quantity)
   const totalFees = parseNum(serviceFee) + parseNum(purchaseFee) + parseNum(shippingFee) + parseNum(customsFee) + parseNum(localFee) + parseNum(margin) + parseNum(contingency)
   const total = subtotal + totalFees
+
+  const isAir = request.shipping_rate_mode === 'air'
+  const totalCBM = (request.packages || []).reduce((s, p) => s + (p.cbm ?? 0), 0)
+  const totalWeightKg = (request.packages || []).reduce((s, p) => s + (p.weight_kg ?? 0), 0) || request.weight_kg || 0
 
   async function handleCreate() {
     if (!productPrice) return
@@ -123,7 +142,7 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
     { label: 'Quantité', value: quantity, onChange: setQuantity },
     { label: 'Frais de service', value: serviceFee, onChange: setServiceFee },
     { label: "Frais d'achat", value: purchaseFee, onChange: setPurchaseFee },
-    { label: 'Fret maritime', value: shippingFee, onChange: setShippingFee },
+    { label: isAir ? 'Fret aérien' : 'Fret maritime', value: shippingFee, onChange: setShippingFee },
     { label: 'Douane estimée', value: customsFee, onChange: setCustomsFee },
     { label: 'Livraison locale', value: localFee, onChange: setLocalFee },
     { label: 'Marge', value: margin, onChange: setMargin },
@@ -134,7 +153,7 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
   return (
     <div className="space-y-4 py-2">
       {/* Product info */}
-      <div className="rounded-xl bg-muted/40 p-3 space-y-1">
+      <div className="rounded-xl bg-muted/40 p-3 space-y-2">
         <p className="font-semibold text-sm">{request.product_name}</p>
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
           <span>Qté: {request.quantity}</span>
@@ -142,6 +161,49 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
           <span>{URGENCY_LABELS[request.urgency]}</span>
           {request.budget_estimate && <><span>·</span><span>Budget: {request.budget_estimate.toLocaleString()} HTG</span></>}
         </div>
+        {/* Logistics info */}
+        <div className="grid grid-cols-2 gap-1.5 pt-1">
+          {request.shipping_origin_name && (
+            <div className="rounded-lg bg-white px-2.5 py-1.5">
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Origine</p>
+              <p className="text-xs font-semibold">{request.shipping_origin_name}</p>
+            </div>
+          )}
+          {request.shipping_rate_name && (
+            <div className="rounded-lg bg-white px-2.5 py-1.5">
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Tarif choisi</p>
+              <p className="text-xs font-semibold">{isAir ? '✈ ' : '🚢 '}{request.shipping_rate_name}</p>
+            </div>
+          )}
+          {totalCBM > 0 && (
+            <div className="rounded-lg bg-white px-2.5 py-1.5">
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Volume total</p>
+              <p className="text-xs font-semibold">{totalCBM.toFixed(4)} m³</p>
+            </div>
+          )}
+          {totalWeightKg > 0 && (
+            <div className="rounded-lg bg-white px-2.5 py-1.5">
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Poids total</p>
+              <p className="text-xs font-semibold">{totalWeightKg.toFixed(2)} kg</p>
+            </div>
+          )}
+          {request.invoice_value_usd && (
+            <div className="rounded-lg bg-white px-2.5 py-1.5">
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Valeur déclarée</p>
+              <p className="text-xs font-semibold">${request.invoice_value_usd} USD</p>
+            </div>
+          )}
+        </div>
+        {(request.packages || []).length > 0 && (
+          <div className="rounded-lg bg-white px-2.5 py-2 space-y-1">
+            <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">{(request.packages || []).length} colis</p>
+            {(request.packages || []).map((p, i) => (
+              <p key={i} className="text-xs text-muted-foreground">
+                #{p.number} — {[p.length_cm, p.width_cm, p.height_cm].filter(Boolean).join('×')} cm{p.weight_kg ? ` · ${p.weight_kg} kg` : ''}{p.cbm ? ` · ${p.cbm.toFixed(4)} m³` : ''}
+              </p>
+            ))}
+          </div>
+        )}
         {request.notes && <p className="text-xs text-muted-foreground italic">{request.notes}</p>}
       </div>
 
@@ -195,7 +257,13 @@ export function AdminQuotesPage() {
   async function loadRequests() {
     const { data } = await supabase
       .from('product_requests')
-      .select('id, product_name, product_url, source_platform, category, quantity, urgency, budget_estimate, notes, status, created_at, user_id')
+      .select(`
+        id, product_name, product_url, source_platform, category, quantity, urgency,
+        budget_estimate, notes, status, created_at, user_id,
+        packages, weight_kg, invoice_value_usd,
+        shipping_origins!ship_from_id(name),
+        shipping_rates!shipping_rate_id(mode, name)
+      `)
       .order('created_at', { ascending: false })
     if (!data) { setLoading(false); return }
 
@@ -206,10 +274,14 @@ export function AdminQuotesPage() {
     const { data: quotesData } = await supabase.from('quotes').select('request_id')
     const quotedIds = new Set((quotesData || []).map(q => q.request_id))
 
-    setRequests(data.map(r => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setRequests(data.map((r: any) => ({
       ...(r as unknown as ProductRequest),
       customer_name: profileMap[r.user_id] || '—',
       has_quote: quotedIds.has(r.id),
+      shipping_origin_name: r.shipping_origins?.name ?? null,
+      shipping_rate_mode: r.shipping_rates?.mode ?? null,
+      shipping_rate_name: r.shipping_rates?.name ?? null,
     })))
     setLoading(false)
   }

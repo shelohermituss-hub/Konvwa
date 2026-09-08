@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel'
 import { StatusBadge } from '@/components/shared/status-badge'
-import { Plus, Eye, EyeOff, ArrowDownLeft, TrendingUp, ChevronRight, Package, ShoppingBag, Send, Ship } from 'lucide-react'
+import {
+  Plus, Eye, EyeOff, ArrowDownLeft, TrendingUp, ChevronRight, Package,
+  Send, Ship, ShoppingBag, HelpCircle, Star,
+} from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-
-import IconSoumettre    from 'flat-color-icons/svg/import.svg'
-import IconCommandes    from 'flat-color-icons/svg/briefcase.svg'
-import IconExpeditions  from 'flat-color-icons/svg/shipped.svg'
-import IconSupport      from 'flat-color-icons/svg/support.svg'
-import IconBoite        from 'flat-color-icons/svg/package.svg'
-import IconWallet       from 'flat-color-icons/svg/paid.svg'
+import Autoplay from 'embla-carousel-autoplay'
+import { IllustrationDeliveryHero } from '@/components/shared/illustrations'
 
 interface DashboardOrder {
   id: string
@@ -28,37 +28,74 @@ interface WalletData {
   blocked_balance: number
 }
 
-const QUICK_ACTIONS = [
-  { label: 'Soumettre',   icon: IconSoumettre,   path: '/submit' },
-  { label: 'Commandes',   icon: IconCommandes,   path: '/orders' },
-  { label: 'Expéditions', icon: IconExpeditions, path: '/shipments' },
-  { label: 'Support',     icon: IconSupport,     path: '/support' },
+const QUICK_ACTION_KEYS = [
+  { labelKey: 'dash.q_submit',   Icon: Send,       path: '/submit' },
+  { labelKey: 'dash.q_orders',   Icon: ShoppingBag, path: '/orders' },
+  { labelKey: 'dash.q_shipping', Icon: Ship,        path: '/shipments' },
+  { labelKey: 'dash.q_support',  Icon: HelpCircle,  path: '/support' },
 ]
 
-const ACTIVE_STATUSES = ['draft', 'quote_sent', 'quote_accepted', 'awaiting_payment', 'paid', 'purchasing', 'in_china_warehouse', 'shipped', 'in_transit', 'arrived_haiti', 'customs_processing', 'out_for_delivery']
-const TRANSIT_STATUSES = ['shipped', 'in_transit', 'arrived_haiti', 'customs_processing']
+const TESTIMONIALS = [
+  {
+    id: 1,
+    initials: 'MP',
+    name: 'Marie Pierre',
+    location: 'Port-au-Prince',
+    rating: 5,
+    short: 'Excellent service, livraison parfaite !',
+    text: 'Excellent service ! Ma commande est arrivée en parfait état depuis la Chine. Le suivi en temps réel est vraiment pratique.',
+    color: 'bg-primary',
+  },
+  {
+    id: 2,
+    initials: 'JB',
+    name: 'Jean Baptiste',
+    location: 'Cap-Haïtien',
+    rating: 5,
+    short: "Prix imbattables, équipements en parfait état.",
+    text: "KONVWA m'a permis d'importer des équipements pour mon atelier à un prix imbattable. Livraison rapide, service client au top !",
+    color: 'bg-blue-500',
+  },
+  {
+    id: 3,
+    initials: 'SC',
+    name: 'Sophie Charles',
+    location: 'Les Cayes',
+    rating: 4,
+    short: 'Simple, transparent, MonCash accepté.',
+    text: "Je recommande vivement. Le processus est simple et les prix transparents. MonCash accepté, c'est parfait pour Haïti.",
+    color: 'bg-emerald-500',
+  },
+  {
+    id: 4,
+    initials: 'PR',
+    name: 'Paul Richard',
+    location: 'Pétion-Ville',
+    rating: 5,
+    short: "Commande reçue en 3 semaines, impeccable !",
+    text: "Incroyable ! J'ai commandé depuis Alibaba et reçu mes produits en moins de 3 semaines. Packaging soigné et prix honnêtes.",
+    color: 'bg-purple-500',
+  },
+]
 
 export function DashboardPage() {
   const { profile, user } = useAuth()
+  const { t } = useI18n()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [orders, setOrders] = useState<DashboardOrder[]>([])
-  const [activeCount, setActiveCount] = useState(0)
-  const [transitCount, setTransitCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [balanceVisible, setBalanceVisible] = useState(true)
+  const [expandedTestimonial, setExpandedTestimonial] = useState<number | null>(null)
+  const autoplay = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }))
 
   useEffect(() => {
     if (!user) return
     Promise.all([
       supabase.from('wallets').select('available_balance, blocked_balance').eq('user_id', user.id).maybeSingle(),
       supabase.from('orders').select('id, tracking_code, status, created_at, quotes(total, product_requests(product_name))').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ACTIVE_STATUSES),
-      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id).in('status', TRANSIT_STATUSES),
-    ]).then(([walletRes, ordersRes, activeRes, transitRes]) => {
+    ]).then(([walletRes, ordersRes]) => {
       if (walletRes.data) setWallet(walletRes.data)
       if (ordersRes.data) setOrders(ordersRes.data as unknown as DashboardOrder[])
-      setActiveCount(activeRes.count ?? 0)
-      setTransitCount(transitRes.count ?? 0)
       setLoading(false)
     })
   }, [user])
@@ -73,7 +110,7 @@ export function DashboardPage() {
     : '——  ——  ——  ——'
 
   return (
-    <div className="min-h-full bg-[#F4F5F7]">
+    <div className="min-h-full bg-[#F4F5F7] w-full">
 
       {/* ── Greeting ── */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
@@ -85,7 +122,7 @@ export function DashboardPage() {
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-xs text-muted-foreground font-medium">Bonjour,</p>
+            <p className="text-xs text-muted-foreground font-medium">{t('dash.greeting')},</p>
             <h1 className="text-lg font-bold tracking-tight text-foreground leading-tight">{firstName} 👋</h1>
           </div>
         </div>
@@ -95,60 +132,9 @@ export function DashboardPage() {
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
             <Plus className="h-3.5 w-3.5" />
-            Nouveau
+            {t('common.new')}
           </button>
         </Link>
-      </div>
-
-      {/* ── Stats bento ── */}
-      <div className="px-4 pb-4 grid grid-cols-3 gap-2.5">
-        {loading ? (
-          [1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)
-        ) : (
-          <>
-            <Link to="/orders">
-              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/8">
-                    <ShoppingBag className="h-4 w-4 text-primary" />
-                  </div>
-                </div>
-                <p className="text-2xl font-bold text-foreground leading-none">{activeCount}</p>
-                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">Commandes<br />actives</p>
-              </div>
-            </Link>
-
-            <Link to="/shipments">
-              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
-                    <Ship className="h-4 w-4 text-blue-500" />
-                  </div>
-                </div>
-                <p className="text-2xl font-bold text-foreground leading-none">{transitCount}</p>
-                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">En<br />transit</p>
-              </div>
-            </Link>
-
-            <Link to="/wallet">
-              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3.5 hover:border-primary/20 transition-colors">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50">
-                    <img src={IconWallet} alt="" className="h-5 w-5 object-contain" />
-                  </div>
-                </div>
-                {loading ? (
-                  <Skeleton className="h-7 w-16 rounded" />
-                ) : (
-                  <p className="text-lg font-bold text-foreground leading-none truncate">
-                    {balance.toLocaleString('fr-HT')}
-                  </p>
-                )}
-                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">HTG<br />disponible</p>
-              </div>
-            </Link>
-          </>
-        )}
       </div>
 
       {/* ── Wallet Card ── */}
@@ -189,7 +175,7 @@ export function DashboardPage() {
                 <rect x="15" y="12" width="16" height="12" rx="2" fill="rgba(255,255,255,0.12)"/>
               </svg>
               <div>
-                <p className="text-[9px] uppercase tracking-[0.16em] text-white/55 font-semibold mb-0.5">Solde disponible</p>
+                <p className="text-[9px] uppercase tracking-[0.16em] text-white/55 font-semibold mb-0.5">{t('dash.balance')}</p>
                 {loading ? (
                   <Skeleton className="h-7 w-36 bg-white/15 rounded-lg" />
                 ) : (
@@ -236,13 +222,13 @@ export function DashboardPage() {
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
               <ArrowDownLeft className="h-4 w-4" />
-              Recharger
+              {t('dash.topup')}
             </button>
           </Link>
           <Link to="/orders" className="flex-1">
             <button className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors shadow-sm">
               <TrendingUp className="h-4 w-4" />
-              Historique
+              {t('dash.history')}
             </button>
           </Link>
         </div>
@@ -251,16 +237,19 @@ export function DashboardPage() {
       {/* ── Quick Actions ── */}
       <div className="px-5 pb-5">
         <div className="grid grid-cols-4 gap-3">
-          {QUICK_ACTIONS.map((action) => (
-            <Link key={action.path} to={action.path} className="flex flex-col items-center gap-2 group">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-gray-100 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
-                <img src={action.icon} alt={action.label} className="h-8 w-8 object-contain" />
-              </div>
-              <span className="text-xs font-semibold text-foreground text-center leading-tight">
-                {action.label}
-              </span>
-            </Link>
-          ))}
+          {QUICK_ACTION_KEYS.map((action) => {
+            const { Icon } = action
+            return (
+              <Link key={action.path} to={action.path} className="flex flex-col items-center gap-2 group">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-gray-100 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
+                  <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" strokeWidth={1.6} />
+                </div>
+                <span className="text-xs font-semibold text-foreground text-center leading-tight">
+                  {t(action.labelKey)}
+                </span>
+              </Link>
+            )
+          })}
         </div>
       </div>
 
@@ -273,8 +262,8 @@ export function DashboardPage() {
                 <Send className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-bold text-sm text-foreground">Importer un produit</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Devis reçu en moins de 24h</p>
+                <p className="font-bold text-sm text-foreground">{t('dash.import')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('dash.quote_time')}</p>
               </div>
             </div>
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
@@ -284,12 +273,65 @@ export function DashboardPage() {
         </Link>
       </div>
 
+      {/* ── Testimonials Carousel — 2 cards per view, equal height, click-to-expand ── */}
+      <div className="pb-5 px-4">
+        <Carousel
+          opts={{ loop: true, align: 'start', slidesToScroll: 2 }}
+          plugins={[autoplay.current]}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-2 items-stretch">
+            {TESTIMONIALS.map((testimonial) => {
+              const isOpen = expandedTestimonial === testimonial.id
+              return (
+                <CarouselItem key={testimonial.id} className="pl-2 basis-1/2 flex">
+                  <button
+                    className="w-full text-left flex flex-col flex-1"
+                    onClick={() => setExpandedTestimonial(isOpen ? null : testimonial.id)}
+                  >
+                    <div className={cn(
+                      'rounded-2xl bg-white border shadow-sm p-3 flex flex-col gap-2 transition-all duration-200 flex-1',
+                      isOpen ? 'border-primary/20 shadow-md' : 'border-gray-100'
+                    )}>
+                      {/* Author */}
+                      <div className="flex items-center gap-2">
+                        <div className={cn('flex h-8 w-8 items-center justify-center rounded-full text-white text-[10px] font-bold shrink-0', testimonial.color)}>
+                          {testimonial.initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold truncate leading-none">{testimonial.name}</p>
+                          <p className="text-[9px] text-muted-foreground mt-0.5 truncate">{testimonial.location}</p>
+                        </div>
+                      </div>
+                      {/* Stars */}
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={cn('h-2.5 w-2.5', i < testimonial.rating ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground/20')} />
+                        ))}
+                      </div>
+                      {/* Text */}
+                      <p className="text-[11px] text-muted-foreground leading-relaxed flex-1">
+                        {isOpen ? `"${testimonial.text}"` : testimonial.short}
+                      </p>
+                      {/* Tap hint pinned to bottom */}
+                      {!isOpen && (
+                        <p className="text-[9px] text-primary font-semibold">Appuyer pour lire</p>
+                      )}
+                    </div>
+                  </button>
+                </CarouselItem>
+              )
+            })}
+          </CarouselContent>
+        </Carousel>
+      </div>
+
       {/* ── Recent Orders ── */}
       <div className="px-5 pb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-foreground">Commandes récentes</h2>
+          <h2 className="text-base font-bold text-foreground">{t('dash.recent')}</h2>
           <Link to="/orders" className="text-xs font-semibold text-primary flex items-center gap-0.5">
-            Voir tout <ChevronRight className="h-3.5 w-3.5" />
+            {t('common.see_all')} <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
@@ -298,17 +340,17 @@ export function DashboardPage() {
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-[72px] w-full rounded-2xl" />)}
           </div>
         ) : orders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-white p-8 text-center shadow-sm">
-            <Package className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-sm font-semibold text-muted-foreground">Aucune commande</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Soumettez votre premier produit</p>
+          <div className="rounded-2xl border border-dashed border-border bg-white pt-6 pb-8 px-6 text-center shadow-sm">
+            <IllustrationDeliveryHero className="w-48 h-auto mx-auto mb-2 opacity-80" />
+            <p className="text-sm font-bold text-foreground/70">{t('dash.no_orders')}</p>
+            <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">{t('dash.submit_first')}</p>
             <Link
               to="/submit"
               className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
               <Plus className="h-3.5 w-3.5" />
-              Soumettre
+              {t('common.submit')}
             </Link>
           </div>
         ) : (
@@ -319,8 +361,8 @@ export function DashboardPage() {
                   'flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors',
                   idx < orders.length - 1 && 'border-b border-border/50'
                 )}>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 shrink-0">
-                    <img src={IconBoite} alt="" className="h-6 w-6 object-contain" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 shrink-0">
+                    <Package className="h-5 w-5 text-primary" strokeWidth={1.6} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate text-foreground">

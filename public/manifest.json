@@ -1,18 +1,50 @@
 {
-  "name": "HaitiImport",
-  "short_name": "HaitiImport",
-  "description": "Importez facilement depuis les USA vers Haïti",
+  "name": "KONVWA",
+  "short_name": "KONVWA",
+  "description": "Importez facilement depuis Alibaba, Shein et Temu vers Haïti",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#f8f9fa",
-  "theme_color": "#1a5c3a",
-  "orientation": "portrait",
+  "background_color": "#0A1628",
+  "theme_color": "#F05A28",
+  "orientation": "portrait-primary",
+  "lang": "fr-HT",
+  "categories": ["shopping", "finance"],
   "icons": [
     {
-      "src": "/vite.svg",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Mon portefeuille",
+      "short_name": "Portefeuille",
+      "description": "Accéder à votre portefeuille HTG",
+      "url": "/wallet",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mes commandes",
+      "short_name": "Commandes",
+      "description": "Voir vos commandes en cours",
+      "url": "/orders",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

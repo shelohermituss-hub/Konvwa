@@ -4,7 +4,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, Bell, Store, BarChart3, FileText } from 'lucide-react'
+import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, Bell, BarChart3, FileText, Truck } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
 function AdminSidebar() {
@@ -17,10 +17,12 @@ function AdminSidebar() {
     { title: 'Devis', url: '/admin/quotes', icon: FileText },
     { title: 'Expéditions', url: '/admin/shipments', icon: Ship },
     { title: 'Paiements', url: '/admin/payments', icon: CreditCard },
-    { title: 'Fournisseurs', url: '/admin/suppliers', icon: Store },
+    { title: 'Produits', url: '/admin/products', icon: Package },
     { title: 'Utilisateurs', url: '/admin/users', icon: Users },
     { title: 'Litiges', url: '/admin/disputes', icon: AlertTriangle },
     { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
+    { title: 'Notifications', url: '/admin/notifications', icon: Bell },
+    { title: 'Config. expédition', url: '/admin/shipping-config', icon: Truck },
     { title: 'Paramètres', url: '/admin/settings', icon: Settings },
   ]
 

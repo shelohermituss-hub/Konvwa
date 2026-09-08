@@ -1,31 +1,58 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Bell, LogOut, LayoutDashboard, ShoppingBag, Ship, MessageSquare, User, Wallet, HelpCircle, Send } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import {
+  LayoutDashboard, ShoppingBag, Ship, Bell, User, Wallet, HelpCircle, Send,
+  Globe, ChevronDown, Check, LogOut, Settings, Activity, CreditCard,
+  ShoppingCart, Clock, Package, AlertCircle, Info,
+} from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { useI18n, type Lang } from '@/lib/i18n-context'
+import { useCart } from '@/lib/cart-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
+import { PwaExperience } from '@/components/shared/pwa-experience'
+import { formatDistanceToNow } from 'date-fns'
+import { fr as frLocale } from 'date-fns/locale'
 
-import IconAccueil       from 'flat-color-icons/svg/home.svg'
-import IconCommandes     from 'flat-color-icons/svg/briefcase.svg'
-import IconExpeditions   from 'flat-color-icons/svg/shipped.svg'
-import IconNotifications from 'flat-color-icons/svg/comments.svg'
-import IconProfil        from 'flat-color-icons/svg/contacts.svg'
+import IconHome      from 'flat-color-icons/svg/home.svg'
+import IconOrders    from 'flat-color-icons/svg/briefcase.svg'
+import IconShipments from 'flat-color-icons/svg/shipped.svg'
+import IconProducts  from 'flat-color-icons/svg/shop.svg'
+import IconProfile   from 'flat-color-icons/svg/contacts.svg'
 
 const NAV_ITEMS = [
-  { label: 'Accueil',     icon: IconAccueil,       lucide: LayoutDashboard, path: '/dashboard' },
-  { label: 'Commandes',   icon: IconCommandes,     lucide: ShoppingBag,     path: '/orders' },
-  { label: 'Expéditions', icon: IconExpeditions,   lucide: Ship,            path: '/shipments' },
-  { label: 'Notifs',      icon: IconNotifications, lucide: MessageSquare,   path: '/notifications' },
-  { label: 'Profil',      icon: IconProfil,        lucide: User,            path: '/profile' },
+  { labelKey: 'nav.home',      Icon: LayoutDashboard, flatIcon: IconHome,      path: '/dashboard' },
+  { labelKey: 'nav.orders',    Icon: ShoppingBag,     flatIcon: IconOrders,    path: '/orders' },
+  { labelKey: 'nav.shipments', Icon: Ship,            flatIcon: IconShipments, path: '/shipments' },
+  { labelKey: 'nav.products',  Icon: Package,         flatIcon: IconProducts,  path: '/products' },
+  { labelKey: 'nav.profile',   Icon: User,            flatIcon: IconProfile,   path: '/profile' },
 ]
 
 const SIDEBAR_EXTRAS = [
-  { label: 'Soumettre',   lucide: Send,       path: '/submit' },
-  { label: 'Portefeuille', lucide: Wallet,    path: '/wallet' },
-  { label: 'Support',     lucide: HelpCircle, path: '/support' },
+  { label: 'Soumettre',      Icon: Send,          path: '/submit' },
+  { label: 'Panier',         Icon: ShoppingCart,  path: '/cart' },
+  { label: 'Portefeuille',   Icon: Wallet,        path: '/wallet' },
+  { label: 'Notifications',  Icon: Bell,          path: '/notifications' },
+  { label: 'Support',        Icon: HelpCircle,    path: '/support' },
 ]
+
+const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'en', label: 'English',  flag: '🇺🇸' },
+]
+
+interface NotifItem {
+  id: string
+  title: string
+  message: string
+  type: string
+  read_at: string | null
+  created_at: string
+}
 
 function useUnread(userId: string | undefined) {
   const [unread, setUnread] = useState(0)
@@ -56,8 +83,207 @@ function useUnread(userId: string | undefined) {
   return unread
 }
 
+function NotifIcon({ type }: { type: string }) {
+  if (type === 'order') return <Package className="h-4 w-4 text-primary" />
+  if (type === 'payment') return <CreditCard className="h-4 w-4 text-emerald-500" />
+  if (type === 'alert') return <AlertCircle className="h-4 w-4 text-amber-500" />
+  return <Info className="h-4 w-4 text-blue-500" />
+}
+
+function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
+  const { lang } = useI18n()
+  const [open, setOpen] = useState(false)
+  const [notifs, setNotifs] = useState<NotifItem[]>([])
+  const [loading, setLoading] = useState(false)
+
+  async function loadNotifs() {
+    if (!userId) return
+    setLoading(true)
+    const { data } = await supabase
+      .from('notifications')
+      .select('id, title, message, type, read_at, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    if (data) setNotifs(data as NotifItem[])
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    if (open) loadNotifs()
+  }, [open])
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors">
+          <Bell className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
+          {unread > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white leading-none">
+              {unread > 9 ? '9+' : unread}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-0 rounded-2xl shadow-xl border-gray-100" sideOffset={8}>
+        <div className="px-4 py-3.5 border-b border-border/50 flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+            <Bell className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="font-bold text-sm">Notifications</p>
+            {unread > 0 && <p className="text-xs text-muted-foreground">{unread} non lue{unread > 1 ? 's' : ''}</p>}
+          </div>
+        </div>
+
+        <div className="divide-y divide-border/40">
+          {loading ? (
+            <div className="p-6 text-center">
+              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            </div>
+          ) : notifs.length === 0 ? (
+            <div className="p-8 text-center">
+              <Bell className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground font-medium">Aucune notification</p>
+            </div>
+          ) : (
+            notifs.map((n) => (
+              <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer">
+                <div className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-xl shrink-0 mt-0.5',
+                  n.read_at ? 'bg-muted' : 'bg-primary/8'
+                )}>
+                  <NotifIcon type={n.type} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold leading-tight truncate">{n.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-1 flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatDistanceToNow(new Date(n.created_at), {
+                      addSuffix: true,
+                      locale: lang === 'fr' ? frLocale : undefined,
+                    })}
+                  </p>
+                </div>
+                {!n.read_at && (
+                  <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-2" />
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="p-3 border-t border-border/50">
+          <Link
+            to="/notifications"
+            onClick={() => setOpen(false)}
+            className="block w-full text-center rounded-xl py-2.5 text-sm font-bold text-white"
+            style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+          >
+            Voir toutes les notifications
+          </Link>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function ProfileMenu() {
+  const { profile, user, signOut } = useAuth()
+  const navigate = useNavigate()
+  const { t } = useI18n()
+
+  const initials = profile?.full_name
+    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'U'
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+          <Avatar className="h-8 w-8 ring-2 ring-border shadow-sm">
+            <AvatarImage src={profile?.avatar_url || ''} />
+            <AvatarFallback className="bg-slate-100 text-slate-700 text-xs font-bold">{initials}</AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64 rounded-2xl p-0 shadow-xl border-gray-100" sideOffset={8}>
+        <div className="px-4 py-4 border-b border-border/50 flex items-center gap-3">
+          <Avatar className="h-10 w-10 ring-2 ring-border">
+            <AvatarImage src={profile?.avatar_url || ''} />
+            <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="font-bold text-sm truncate">{profile?.full_name || 'Client'}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          </div>
+        </div>
+
+        <div className="p-1.5">
+          <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/profile')}>
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">{t('nav.profile')}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/profile')}>
+            <Settings className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">Paramètres du compte</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/activity-log')}>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">{t('activity.title')}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/billing')}>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">{t('billing.title')}</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="mx-2 my-1" />
+          <DropdownMenuItem
+            className="rounded-xl cursor-pointer px-3 py-2.5 gap-3 text-destructive focus:text-destructive focus:bg-destructive/8"
+            onClick={() => signOut()}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="font-medium text-sm">Se déconnecter</span>
+          </DropdownMenuItem>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function LanguageSwitcher() {
+  const { lang, setLang, t } = useI18n()
+  const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0]
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 hover:bg-muted transition-colors text-muted-foreground">
+          <Globe className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase hidden sm:block">{current.code}</span>
+          <ChevronDown className="h-3 w-3 hidden sm:block" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40 rounded-xl shadow-lg border-gray-100" sideOffset={8}>
+        {LANGUAGES.map((l) => (
+          <DropdownMenuItem
+            key={l.code}
+            className="rounded-lg cursor-pointer px-3 py-2 gap-3"
+            onClick={() => setLang(l.code)}
+          >
+            <span className="text-base">{l.flag}</span>
+            <span className="flex-1 text-sm font-medium">{t(`lang.${l.code}`)}</span>
+            {lang === l.code && <Check className="h-3.5 w-3.5 text-primary" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 function DesktopSidebar({ unread }: { unread: number }) {
   const { profile, user, signOut } = useAuth()
+  const { t } = useI18n()
   const location = useLocation()
 
   const initials = profile?.full_name
@@ -66,7 +292,6 @@ function DesktopSidebar({ unread }: { unread: number }) {
 
   return (
     <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-[240px] xl:w-[260px] border-r border-gray-100 bg-white z-40 shadow-sm">
-      {/* Logo */}
       <div className="flex items-center gap-3 px-5 h-16 border-b border-gray-100 shrink-0">
         <Link to="/dashboard" className="flex items-center gap-3">
           <KonvwaLogo size={32} />
@@ -77,13 +302,12 @@ function DesktopSidebar({ unread }: { unread: number }) {
         </Link>
       </div>
 
-      {/* Main nav */}
       <nav className="flex-1 overflow-y-auto px-3 pt-4 pb-2 space-y-0.5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pb-2">Navigation</p>
         {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
-          const isNotif = item.path === '/notifications'
+          const { Icon } = item
 
           return (
             <Link
@@ -99,17 +323,8 @@ function DesktopSidebar({ unread }: { unread: number }) {
               {isActive && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-primary" />
               )}
-              <img
-                src={item.icon}
-                alt=""
-                className={cn('h-5 w-5 object-contain shrink-0 transition-opacity', isActive ? 'opacity-100' : 'opacity-60')}
-              />
-              <span className="text-sm">{item.label}</span>
-              {isNotif && unread > 0 && (
-                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white px-1">
-                  {unread > 9 ? '9+' : unread}
-                </span>
-              )}
+              <Icon className={cn('h-4.5 w-4.5 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')} size={18} />
+              <span className="text-sm">{t(item.labelKey)}</span>
             </Link>
           )
         })}
@@ -118,13 +333,14 @@ function DesktopSidebar({ unread }: { unread: number }) {
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pb-2">Actions</p>
           {SIDEBAR_EXTRAS.map((item) => {
             const isActive = location.pathname === item.path
-            const Icon = item.lucide
+            const isNotif = item.path === '/notifications'
+            const { Icon } = item
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150',
+                  'relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150',
                   isActive
                     ? 'bg-primary/8 text-primary font-semibold'
                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -132,20 +348,22 @@ function DesktopSidebar({ unread }: { unread: number }) {
               >
                 <Icon className="h-4.5 w-4.5 shrink-0" size={18} />
                 <span className="text-sm">{item.label}</span>
+                {isNotif && unread > 0 && (
+                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white px-1">
+                    {unread > 9 ? '9+' : unread}
+                  </span>
+                )}
               </Link>
             )
           })}
         </div>
       </nav>
 
-      {/* Profile + signout */}
       <div className="px-3 py-3 border-t border-gray-100 shrink-0">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/40 transition-colors">
           <Avatar className="h-8 w-8 shrink-0 ring-1 ring-border">
             <AvatarImage src={profile?.avatar_url || ''} />
-            <AvatarFallback className="bg-slate-100 text-slate-700 text-xs font-bold">
-              {initials}
-            </AvatarFallback>
+            <AvatarFallback className="bg-slate-100 text-slate-700 text-xs font-bold">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold truncate leading-none">{profile?.full_name || 'Client'}</p>
@@ -154,7 +372,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
           <button
             onClick={() => signOut()}
             className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors text-muted-foreground"
-            title="Déconnexion"
+            title="Se déconnecter"
           >
             <LogOut className="h-3.5 w-3.5" />
           </button>
@@ -164,45 +382,43 @@ function DesktopSidebar({ unread }: { unread: number }) {
   )
 }
 
-function TopHeader({ unread }: { unread: number }) {
-  const { profile } = useAuth()
-
-  const initials = profile?.full_name
-    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'U'
-
+function CartBadge() {
+  const { count } = useCart()
+  const navigate = useNavigate()
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-white/95 backdrop-blur-md px-5 border-b border-gray-100 shadow-sm">
+    <button
+      onClick={() => navigate('/cart')}
+      className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors"
+    >
+      <ShoppingCart className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
+      {count > 0 && (
+        <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white leading-none">
+          {count > 9 ? '9+' : count}
+        </span>
+      )}
+    </button>
+  )
+}
+
+function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
+  return (
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-white/95 backdrop-blur-md px-4 border-b border-gray-100 shadow-sm">
       <Link to="/dashboard">
         <KonvwaLogo size={30} />
       </Link>
-      <div className="flex items-center gap-2">
-        <Link
-          to="/notifications"
-          className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors"
-        >
-          <Bell className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
-          {unread > 0 && (
-            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white leading-none">
-              {unread > 9 ? '9+' : unread}
-            </span>
-          )}
-        </Link>
-        <Link to="/profile">
-          <Avatar className="h-8 w-8 ring-2 ring-border shadow-sm">
-            <AvatarImage src={profile?.avatar_url || ''} />
-            <AvatarFallback className="bg-slate-100 text-slate-700 text-xs font-bold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
+      <div className="flex items-center gap-1">
+        <LanguageSwitcher />
+        <CartBadge />
+        <NotifPopover userId={userId} unread={unread} />
+        <ProfileMenu />
       </div>
     </header>
   )
 }
 
-function BottomNav({ unread }: { unread: number }) {
+function BottomNav({ unread: _unread }: { unread: number }) {
   const location = useLocation()
+  const { t } = useI18n()
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-100 pb-safe shadow-[0_-1px_12px_rgba(10,22,40,0.06)]">
@@ -210,7 +426,6 @@ function BottomNav({ unread }: { unread: number }) {
         {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
-          const isNotif = item.path === '/notifications'
 
           return (
             <Link
@@ -223,24 +438,19 @@ function BottomNav({ unread }: { unread: number }) {
                 isActive ? 'bg-primary/12 w-12 h-11' : 'w-11 h-10'
               )}>
                 <img
-                  src={item.icon}
-                  alt={item.label}
+                  src={item.flatIcon}
+                  alt={t(item.labelKey)}
                   className={cn(
                     'h-6 w-6 object-contain transition-all duration-200',
                     isActive ? 'opacity-100 scale-105' : 'opacity-55'
                   )}
                 />
-                {isNotif && unread > 0 && !isActive && (
-                  <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white leading-none">
-                    {unread > 9 ? '9+' : unread}
-                  </span>
-                )}
               </div>
               <span className={cn(
                 'text-[10px] font-semibold transition-colors leading-none',
                 isActive ? 'text-primary' : 'text-muted-foreground'
               )}>
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </Link>
           )
@@ -258,19 +468,17 @@ export function ClientLayout() {
     <div className="flex min-h-screen bg-background">
       <DesktopSidebar unread={unread} />
 
-      <div className="flex-1 flex flex-col lg:ml-[240px] xl:ml-[260px] min-h-screen">
-        {/* Mobile top header */}
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-[240px] xl:ml-[260px] min-h-screen">
         <div className="lg:hidden">
-          <TopHeader unread={unread} />
+          <TopHeader unread={unread} userId={user?.id} />
         </div>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+          <PwaExperience userId={user?.id} />
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
       <div className="lg:hidden">
         <BottomNav unread={unread} />
       </div>
