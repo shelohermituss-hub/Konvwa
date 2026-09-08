@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -7,6 +8,7 @@ import {
   Users, CheckCheck, Mail, AlertTriangle, Package, CreditCard, Info,
   X, ChevronDown, ChevronUp,
 } from 'lucide-react'
+import { PushSettingsRow } from '@/components/shared/pwa-experience'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -315,6 +317,7 @@ function NotifRow({ n, usersMap, onMarkRead }: { n: Notification; usersMap: Map<
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function AdminNotificationsPage() {
+  const { user } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [users, setUsers]               = useState<UserOption[]>([])
   const [loading, setLoading]           = useState(true)
@@ -401,6 +404,14 @@ export function AdminNotificationsPage() {
             Nouvelle notification
           </Button>
         </div>
+      </div>
+
+      {/* Admin push subscription */}
+      <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">
+          Mes notifications push (cet appareil)
+        </p>
+        <PushSettingsRow userId={user?.id} />
       </div>
 
       {/* Stats */}
