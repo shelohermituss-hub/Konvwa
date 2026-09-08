@@ -14,6 +14,7 @@ import { useCart } from '@/lib/cart-context'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
+import { PwaExperience } from '@/components/shared/pwa-experience'
 import { formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
 
@@ -473,6 +474,7 @@ export function ClientLayout() {
         </div>
 
         <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+          <PwaExperience userId={user?.id} />
           <Outlet />
         </main>
       </div>
