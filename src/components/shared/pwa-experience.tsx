@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function PwaExperience({ userId, className }: Props) {
-  const { isSupported, permission, subscribed, loading, types, subscribe, unsubscribe, updateTypes } =
+  const { isSupported, permission, subscribed, loading, types, subscribe, updateTypes } =
     usePushNotifications(userId)
 
   const [dismissed, setDismissed]   = useState(() => {
