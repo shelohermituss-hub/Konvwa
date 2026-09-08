@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, BellOff, ChevronDown, ChevronUp, X } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
@@ -27,12 +27,15 @@ export function PwaExperience({ userId, className }: Props) {
   const [expanded, setExpanded]     = useState(false)
   const [localTypes, setLocalTypes] = useState<NotificationTypes>(types)
 
+  // Silently re-subscribe when browser permission was already granted (can't call during render)
+  useEffect(() => {
+    if (isSupported && permission === 'granted' && !subscribed) {
+      subscribe().catch(() => {})
+    }
+  }, [isSupported, permission, subscribed, subscribe])
+
   if (!isSupported || permission === 'denied' || dismissed || subscribed) return null
-  if (permission === 'granted' && !subscribed) {
-    // Already granted but not subscribed yet — silently subscribe in background
-    subscribe().catch(() => {})
-    return null
-  }
+  if (permission === 'granted') return null
 
   function dismiss() {
     try { localStorage.setItem('konvwa-push-dismissed', '1') } catch { /* ignore */ }
