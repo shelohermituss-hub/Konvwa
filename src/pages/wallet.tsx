@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { WalletCardSkin } from '@/components/shared/wallet-card-skin'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -314,18 +315,7 @@ export function WalletPage() {
 
       {/* ── Wallet Card — credit card proportions ── */}
       <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
-        <div
-          className="rounded-3xl text-white relative overflow-hidden shadow-[0_10px_40px_rgba(0,195,220,0.40)]"
-          style={{
-            background: 'linear-gradient(135deg, #00E5F5 0%, #00C3DC 40%, #0099B8 100%)',
-            aspectRatio: '1.586',
-          }}
-        >
-          {/* Decorative rings */}
-          <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full border border-white/12" />
-          <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full border border-white/8" />
-
-          <div className="absolute inset-0 z-10 flex flex-col justify-between p-4">
+        <WalletCardSkin userId={user?.id ?? ''}>
 
             {/* Row 1: branding + contactless */}
             <div className="flex items-center justify-between">
@@ -410,8 +400,7 @@ export function WalletPage() {
               </div>
             </div>
 
-          </div>
-        </div>
+        </WalletCardSkin>
       </div>
 
       {/* Action buttons */}
