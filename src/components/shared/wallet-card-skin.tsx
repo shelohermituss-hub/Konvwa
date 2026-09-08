@@ -198,6 +198,12 @@ const SKINS: CardSkin[] = [
   },
 ]
 
+// ── Per-user skin overrides (index into SKINS array) ─────────────────────────
+
+const SKIN_OVERRIDES: Record<string, number> = {
+  '1ab96698-493d-42ac-b438-2c3720d1dd95': 4, // Dark Gold Wave
+}
+
 // ── Deterministic skin picker ─────────────────────────────────────────────────
 
 function hashId(id: string): number {
@@ -207,6 +213,8 @@ function hashId(id: string): number {
 }
 
 export function getCardSkin(userId: string): CardSkin {
+  const override = SKIN_OVERRIDES[userId]
+  if (override !== undefined) return SKINS[override]
   return SKINS[hashId(userId) % SKINS.length]
 }
 
