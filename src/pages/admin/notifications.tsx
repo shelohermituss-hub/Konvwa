@@ -26,7 +26,6 @@ interface Notification {
   data: Record<string, unknown> | null
   read: boolean
   created_at: string
-  profiles?: { full_name: string }
 }
 
 interface UserOption {
@@ -251,7 +250,7 @@ function CreateDialog({
 
 // ── Notification row ──────────────────────────────────────────────────────────
 
-function NotifRow({ n, onMarkRead }: { n: Notification; onMarkRead: (id: string) => void }) {
+function NotifRow({ n, usersMap, onMarkRead }: { n: Notification; usersMap: Map<string, string>; onMarkRead: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false)
   const cfg = TYPE_CONFIG[n.type] ?? { label: n.type, icon: Bell, color: 'text-muted-foreground bg-muted' }
   const Icon = cfg.icon
@@ -276,7 +275,7 @@ function NotifRow({ n, onMarkRead }: { n: Notification; onMarkRead: (id: string)
           <p className="text-xs text-muted-foreground mt-0.5 truncate">{n.body}</p>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-[11px] text-muted-foreground/70">
-              {n.profiles?.full_name ?? n.user_id.slice(0, 8)}
+              {usersMap.get(n.user_id) ?? n.user_id.slice(0, 8)}
             </span>
             <span className="text-[11px] text-muted-foreground/50">·</span>
             <span className="text-[11px] text-muted-foreground/70">
@@ -329,12 +328,12 @@ export function AdminNotificationsPage() {
     const [notifsRes, usersRes] = await Promise.all([
       supabase
         .from('notifications')
-        .select('id, user_id, type, title, body, data, read, created_at, profiles(full_name)')
+        .select('id, user_id, type, title, body, data, read, created_at')
         .order('created_at', { ascending: false })
         .limit(200),
       supabase.from('profiles').select('user_id, full_name').order('full_name'),
     ])
-    if (notifsRes.data) setNotifications(notifsRes.data as unknown as Notification[])
+    if (notifsRes.data) setNotifications(notifsRes.data as Notification[])
     if (usersRes.data) setUsers(usersRes.data as UserOption[])
     setLoading(false)
   }
@@ -354,6 +353,8 @@ export function AdminNotificationsPage() {
     toast.success(`${unread.length} notification${unread.length > 1 ? 's' : ''} marquée${unread.length > 1 ? 's' : ''} comme lue${unread.length > 1 ? 's' : ''}`)
   }
 
+  const usersMap = new Map(users.map(u => [u.user_id, u.full_name]))
+
   const total  = notifications.length
   const unread = notifications.filter(n => !n.read).length
   const read   = total - unread
@@ -364,7 +365,7 @@ export function AdminNotificationsPage() {
     if (filterRead === 'read'   && !n.read) return false
     if (search) {
       const q = search.toLowerCase()
-      const name = n.profiles?.full_name?.toLowerCase() ?? ''
+      const name = (usersMap.get(n.user_id) ?? '').toLowerCase()
       return n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q) || name.includes(q)
     }
     return true
@@ -479,7 +480,7 @@ export function AdminNotificationsPage() {
             </p>
           </div>
         ) : filtered.map(n => (
-          <NotifRow key={n.id} n={n} onMarkRead={markRead} />
+          <NotifRow key={n.id} n={n} usersMap={usersMap} onMarkRead={markRead} />
         ))}
       </div>
 
