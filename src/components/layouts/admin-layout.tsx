@@ -21,6 +21,7 @@ function AdminSidebar() {
     { title: 'Utilisateurs', url: '/admin/users', icon: Users },
     { title: 'Litiges', url: '/admin/disputes', icon: AlertTriangle },
     { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
+    { title: 'Notifications', url: '/admin/notifications', icon: Bell },
     { title: 'Config. expédition', url: '/admin/shipping-config', icon: Truck },
     { title: 'Paramètres', url: '/admin/settings', icon: Settings },
   ]

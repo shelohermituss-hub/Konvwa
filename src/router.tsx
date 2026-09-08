@@ -45,6 +45,7 @@ import { AdminDisputesPage } from '@/pages/admin/disputes'
 import { AdminSettingsPage } from '@/pages/admin/settings'
 import { AdminShippingConfigPage } from '@/pages/admin/shipping-config'
 import { AdminProductsPage } from '@/pages/admin/products'
+import { AdminNotificationsPage } from '@/pages/admin/notifications'
 
 export const router = createBrowserRouter([
   // Root and onboarding → auth
@@ -129,6 +130,7 @@ export const router = createBrowserRouter([
       { path: 'analytics', element: <AdminDashboard /> },
       { path: 'products', element: <AdminProductsPage /> },
       { path: 'shipping-config', element: <AdminShippingConfigPage /> },
+      { path: 'notifications', element: <AdminNotificationsPage /> },
       { path: 'settings', element: <AdminSettingsPage /> },
     ],
   },

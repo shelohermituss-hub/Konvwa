@@ -423,6 +423,7 @@ function ShippingRequestForm({
       user_id:                user.id,
       request_type:           'shipping',
       status:                 'submitted',
+      product_url:            '',
       product_name:           'Cargaison',
       category:               'other',
       quantity:               1,
@@ -650,6 +651,52 @@ function ShippingRequestForm({
                     </div>
                   )}
                 </div>
+
+                {/* ── Estimation de prix ── */}
+                {(totalCBM > 0 || totalWeightKg > 0) && (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700/70 flex items-center gap-2">
+                      <Ship className="h-3.5 w-3.5 text-amber-600" />
+                      Estimation du fret
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Maritime */}
+                      <div className="rounded-xl bg-white/80 border border-amber-100 px-3 py-2.5">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Ship className="h-3.5 w-3.5 text-amber-600" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Standard · Mer</span>
+                        </div>
+                        <p className="font-mono font-bold text-base text-foreground">
+                          ~${Math.max(
+                            totalWeightKg * 4,
+                            totalCBM * 200
+                          ).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {totalCBM > 0
+                            ? `${fmtCBM(totalCBM)} m³ × $200/m³`
+                            : `${totalWeightKg.toFixed(1)} kg × $4/kg`}
+                        </p>
+                      </div>
+                      {/* Aérien */}
+                      <div className="rounded-xl bg-white/80 border border-amber-100 px-3 py-2.5">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Plane className="h-3.5 w-3.5 text-primary" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Urgent · Avion</span>
+                        </div>
+                        <p className="font-mono font-bold text-base text-foreground">
+                          ~${(totalWeightKg * 11).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {totalWeightKg.toFixed(1)} kg × $11/kg
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-amber-700/60 leading-relaxed">
+                      Estimation indicative hors douane et livraison locale. Le devis exact vous sera communiqué sous 24h.
+                    </p>
+                  </div>
+                )}
 
                 {/* ── Valeur marchande ── */}
                 <div className="space-y-3">
