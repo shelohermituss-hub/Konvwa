@@ -115,7 +115,7 @@ const REQUEST_STATUS_COLOR: Record<string, string> = {
 }
 const REQUEST_STATUS_LABEL: Record<string, string> = {
   submitted:  'En attente',
-  reviewing:  'En cours d'examen',
+  reviewing:  "En cours d'examen",
   quoted:     'Devis envoyé',
   accepted:   'Acceptée',
   rejected:   'Refusée',
