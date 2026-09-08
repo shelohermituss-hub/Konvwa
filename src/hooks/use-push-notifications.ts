@@ -37,16 +37,23 @@ async function saveSubscription(
     .filter(([, v]) => v)
     .map(([k]) => k)
 
-  await supabase.from('push_subscriptions').upsert(
-    {
-      user_id:            userId,
-      subscription:       subscription.toJSON(),
-      user_agent:         navigator.userAgent,
-      notification_types: activeTypes,
-      updated_at:         new Date().toISOString(),
-    },
-    { onConflict: 'user_id, (subscription->>\'endpoint\')' }
-  )
+  const endpoint = subscription.endpoint
+
+  // PostgREST can't target a functional unique index via onConflict,
+  // so we delete the existing row for this endpoint then insert fresh.
+  await supabase
+    .from('push_subscriptions')
+    .delete()
+    .eq('user_id', userId)
+    .eq('subscription->>endpoint', endpoint)
+
+  await supabase.from('push_subscriptions').insert({
+    user_id:            userId,
+    subscription:       subscription.toJSON(),
+    user_agent:         navigator.userAgent,
+    notification_types: activeTypes,
+    updated_at:         new Date().toISOString(),
+  })
 }
 
 async function removeSubscription(userId: string, endpoint: string) {
@@ -88,11 +95,19 @@ export function usePushNotifications(userId?: string) {
     const handler = (event: MessageEvent) => {
       if (event.data?.type === 'PUSH_SUBSCRIPTION_CHANGED' && event.data.subscription) {
         const sub = event.data.subscription as PushSubscriptionJSON
-        supabase.from('push_subscriptions').upsert({
-          user_id:      userId,
-          subscription: sub,
-          updated_at:   new Date().toISOString(),
-        })
+        if (!sub.endpoint) return
+        supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('user_id', userId)
+          .eq('subscription->>endpoint', sub.endpoint)
+          .then(() =>
+            supabase.from('push_subscriptions').insert({
+              user_id:      userId,
+              subscription: sub,
+              updated_at:   new Date().toISOString(),
+            })
+          )
       }
     }
     navigator.serviceWorker.addEventListener('message', handler)
