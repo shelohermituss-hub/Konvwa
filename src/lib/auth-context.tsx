@@ -68,16 +68,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!error && data) {
       setProfile(data as Profile)
-    } else if (!error && !data) {
-      // Profile not yet created (e.g. trigger delay) — try once more after a short wait
-      await new Promise(r => setTimeout(r, 800))
-      const { data: retryData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle()
-      if (retryData) setProfile(retryData as Profile)
+      setLoading(false)
+      return
     }
+
+    // Profile missing or RLS returned empty — wait briefly (trigger latency) then retry
+    await new Promise(r => setTimeout(r, 800))
+    const { data: retryData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (retryData) {
+      setProfile(retryData as Profile)
+      setLoading(false)
+      return
+    }
+
+    // Still no profile — auto-create one (handles manual auth users or trigger failures)
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    const fullName =
+      authUser?.user_metadata?.full_name ||
+      authUser?.email?.split('@')[0] ||
+      'Utilisateur'
+
+    const { data: created } = await supabase
+      .from('profiles')
+      .upsert({ user_id: userId, full_name: fullName, role: 'client' }, { onConflict: 'user_id' })
+      .select()
+      .maybeSingle()
+
+    if (created) setProfile(created as Profile)
+
+    // Also ensure wallet exists
+    await supabase
+      .from('wallets')
+      .upsert({ user_id: userId, available_balance: 0, blocked_balance: 0 }, { onConflict: 'user_id' })
+
     setLoading(false)
   }
 
