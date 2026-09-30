@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { createPayment } from '@/lib/payment-api'
@@ -25,6 +25,7 @@ interface Transaction {
   payment_method: string | null
   description: string | null
   reference: string | null
+  proof_url: string | null
   created_at: string
 }
 
@@ -60,6 +61,62 @@ const CRYPTO_ADDRESS: Record<string, { address: string; network: string; coin: s
   eth:  { address: '0x0dff06e9fe0665e4379a80a9a033a78d9c8a860e', network: 'ERC20', coin: 'ETH' },
 }
 
+function ProofUpload({
+  preview,
+  required,
+  onFile,
+  onRemove,
+}: {
+  preview: string | null
+  required: boolean
+  onFile: (file: File, preview: string) => void
+  onRemove: () => void
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">
+        Preuve de paiement{required && <span className="text-destructive ml-0.5">*</span>}
+      </Label>
+      {preview ? (
+        <div className="relative rounded-xl overflow-hidden border border-emerald-200">
+          <img src={preview} alt="Preuve" className="w-full h-36 object-cover" />
+          <button
+            type="button"
+            onClick={onRemove}
+            className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow-sm"
+          >
+            <X className="h-3.5 w-3.5 text-foreground" />
+          </button>
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-emerald-600/90 rounded-full px-2 py-0.5">
+            <CheckCheck className="h-3 w-3 text-white" />
+            <span className="text-[10px] text-white font-semibold">Preuve ajoutée</span>
+          </div>
+        </div>
+      ) : (
+        <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 bg-[#F8F8FA] py-5 cursor-pointer hover:border-primary/40 transition-colors">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-gray-100 shadow-sm">
+            <Upload className="h-5 w-5 text-muted-foreground/60" />
+          </div>
+          <div className="text-center">
+            <p className="text-xs font-semibold text-foreground">Appuyez pour ajouter une preuve</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Capture d'écran ou photo · PNG, JPG · max 5 Mo</p>
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              onFile(file, URL.createObjectURL(file))
+            }}
+          />
+        </label>
+      )}
+    </div>
+  )
+}
+
 function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
   const [copied, setCopied] = useState(false)
   const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
@@ -78,6 +135,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
     { label: 'Type',        value: config.label },
     ...(tx.payment_method ? [{ label: 'Méthode', value: METHOD_LABEL[tx.payment_method] ?? tx.payment_method }] : []),
     ...(tx.reference ? [{ label: 'Référence', value: tx.reference, copyable: true }] : []),
+    ...(tx.proof_url ? [{ label: 'Preuve', value: 'Soumise ✓' }] : []),
     { label: 'ID Transaction', value: tx.id.slice(0, 16) + '…', copyable: true },
     { label: 'Date', value: new Date(tx.created_at).toLocaleString('fr-HT', { dateStyle: 'medium', timeStyle: 'short' }) },
   ]
@@ -179,6 +237,8 @@ export function WalletPage() {
   const [receiptTx, setReceiptTx] = useState<Transaction | null>(null)
   const [txHashInput, setTxHashInput] = useState('')
   const [addrCopied, setAddrCopied] = useState(false)
+  const [proofFile, setProofFile] = useState<File | null>(null)
+  const [proofPreview, setProofPreview] = useState<string | null>(null)
 
   async function loadData() {
     if (!user) return
@@ -187,7 +247,7 @@ export function WalletPage() {
       setWallet(walletRes.data)
       const txRes = await supabase
         .from('wallet_transactions')
-        .select('id, type, amount, status, payment_method, description, reference, created_at')
+        .select('id, type, amount, status, payment_method, description, reference, proof_url, created_at')
         .eq('wallet_id', walletRes.data.id)
         .order('created_at', { ascending: false })
         .limit(30)
@@ -220,11 +280,25 @@ export function WalletPage() {
   }
 
   async function handleManualDeposit() {
-    if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet) return
+    if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet || !user) return
+    const isCrypto = topupMethod !== 'virement'
+    if (isCrypto && !proofFile) return
     setSubmitting(true)
     try {
       const amount = parseFloat(topupAmount)
-      const isCrypto = topupMethod !== 'virement'
+
+      // Upload proof image if provided
+      let proofStoragePath: string | null = null
+      if (proofFile) {
+        const ext = proofFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const path = `${user.id}/${Date.now()}.${ext}`
+        const { error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(path, proofFile, { contentType: proofFile.type, upsert: false })
+        if (uploadError) throw new Error('Échec du téléversement : ' + uploadError.message)
+        proofStoragePath = path
+      }
+
       const { error } = await supabase.from('wallet_transactions').insert({
         wallet_id: wallet.id,
         type: 'deposit',
@@ -235,12 +309,15 @@ export function WalletPage() {
           ? `Dépôt crypto ${topupMethod.toUpperCase()}`
           : 'Virement bancaire BUH DOLLAR',
         reference: txHashInput.trim() || null,
+        proof_url: proofStoragePath,
       })
       if (error) throw error
       toast.success('Dépôt soumis — en attente de confirmation.')
       setTopupOpen(false)
       setTopupAmount('')
       setTxHashInput('')
+      setProofFile(null)
+      setProofPreview(null)
       loadData()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
@@ -271,7 +348,10 @@ export function WalletPage() {
           <h1 className="text-2xl font-bold tracking-tight">Portefeuille</h1>
           <p className="text-sm text-muted-foreground">Gérez votre solde HTG</p>
         </div>
-        <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
+        <Dialog open={topupOpen} onOpenChange={(open) => {
+          setTopupOpen(open)
+          if (!open) { setProofFile(null); setProofPreview(null); setTxHashInput('') }
+        }}>
           <DialogTrigger asChild>
             <button
               className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
@@ -415,6 +495,12 @@ export function WalletPage() {
                       className="h-10 rounded-xl bg-[#F0F1F5] border-0 text-sm"
                     />
                   </div>
+                  <ProofUpload
+                    preview={proofPreview}
+                    required={false}
+                    onFile={(f, p) => { setProofFile(f); setProofPreview(p) }}
+                    onRemove={() => { setProofFile(null); setProofPreview(null) }}
+                  />
                 </div>
               )}
 
@@ -462,6 +548,12 @@ export function WalletPage() {
                         className="h-10 rounded-xl bg-[#F0F1F5] border-0 text-sm font-mono"
                       />
                     </div>
+                    <ProofUpload
+                      preview={proofPreview}
+                      required={true}
+                      onFile={(f, p) => { setProofFile(f); setProofPreview(p) }}
+                      onRemove={() => { setProofFile(null); setProofPreview(null) }}
+                    />
                   </div>
                 )
               })()}
@@ -478,7 +570,10 @@ export function WalletPage() {
               <button onClick={() => setTopupOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">Annuler</button>
               <button
                 onClick={handleTopup}
-                disabled={!topupAmount || parseFloat(topupAmount) < 100 || submitting}
+                disabled={
+                  !topupAmount || parseFloat(topupAmount) < 100 || submitting ||
+                  ((topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') && !proofFile)
+                }
                 className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                 style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               >
