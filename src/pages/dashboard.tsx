@@ -35,6 +35,15 @@ const QUICK_ACTION_KEYS = [
   { labelKey: 'dash.q_support',  Icon: HelpCircle,  path: '/support' },
 ]
 
+const TRENDING_PRODUCTS = [
+  { id: 1, name: 'AirPods Pro 2', price: 8500, platform: 'Alibaba', emoji: '🎧', tag: 'Électronique' },
+  { id: 2, name: 'Sneakers Nike', price: 4200, platform: 'Temu', emoji: '👟', tag: 'Mode' },
+  { id: 3, name: 'Montre Xiaomi', price: 3800, platform: 'Alibaba', emoji: '⌚', tag: 'Tech' },
+  { id: 4, name: 'Sac à main', price: 2900, platform: 'Shein', emoji: '👜', tag: 'Mode' },
+  { id: 5, name: 'Cafetière pro', price: 5600, platform: 'Alibaba', emoji: '☕', tag: 'Maison' },
+  { id: 6, name: 'Panneau solaire', price: 12500, platform: 'Alibaba', emoji: '☀️', tag: 'Énergie' },
+]
+
 const TESTIMONIALS = [
   {
     id: 1,
@@ -87,6 +96,7 @@ export function DashboardPage() {
   const [balanceVisible, setBalanceVisible] = useState(true)
   const [expandedTestimonial, setExpandedTestimonial] = useState<number | null>(null)
   const autoplay = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }))
+  const autoplayProducts = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }))
 
   useEffect(() => {
     if (!user) return
@@ -270,6 +280,39 @@ export function DashboardPage() {
             </div>
           </div>
         </Link>
+      </div>
+
+      {/* ── Trending Products Carousel ── */}
+      <div className="pb-5">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <h2 className="text-base font-bold text-foreground">Produits tendance</h2>
+          <Link to="/products" className="text-xs font-semibold text-primary flex items-center gap-0.5">
+            Voir tout <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        <Carousel
+          opts={{ loop: true, align: 'start', slidesToScroll: 2 }}
+          plugins={[autoplayProducts.current]}
+          className="w-full px-4"
+        >
+          <CarouselContent className="-ml-2">
+            {TRENDING_PRODUCTS.map((product) => (
+              <CarouselItem key={product.id} className="pl-2 basis-1/2">
+                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3 flex flex-col gap-2 h-full">
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">{product.emoji}</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{product.platform}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm text-foreground leading-tight">{product.name}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{product.tag}</p>
+                  </div>
+                  <p className="text-sm font-bold text-primary">{product.price.toLocaleString('fr-HT')} <span className="text-[10px] font-normal text-muted-foreground">HTG</span></p>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       </div>
 
       {/* ── Testimonials Carousel — 2 cards per view, equal height, click-to-expand ── */}
