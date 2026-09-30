@@ -18,18 +18,12 @@ import { PwaExperience } from '@/components/shared/pwa-experience'
 import { formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
 
-import IconHome      from 'flat-color-icons/svg/home.svg'
-import IconOrders    from 'flat-color-icons/svg/briefcase.svg'
-import IconShipments from 'flat-color-icons/svg/shipped.svg'
-import IconProducts  from 'flat-color-icons/svg/shop.svg'
-import IconProfile   from 'flat-color-icons/svg/contacts.svg'
-
 const NAV_ITEMS = [
-  { labelKey: 'nav.home',      Icon: LayoutDashboard, flatIcon: IconHome,      path: '/dashboard' },
-  { labelKey: 'nav.orders',    Icon: ShoppingBag,     flatIcon: IconOrders,    path: '/orders' },
-  { labelKey: 'nav.shipments', Icon: Ship,            flatIcon: IconShipments, path: '/shipments' },
-  { labelKey: 'nav.products',  Icon: Package,         flatIcon: IconProducts,  path: '/products' },
-  { labelKey: 'nav.profile',   Icon: User,            flatIcon: IconProfile,   path: '/profile' },
+  { labelKey: 'nav.home',      Icon: LayoutDashboard, path: '/dashboard' },
+  { labelKey: 'nav.orders',    Icon: ShoppingBag,     path: '/orders' },
+  { labelKey: 'nav.shipments', Icon: Ship,            path: '/shipments' },
+  { labelKey: 'nav.products',  Icon: Package,         path: '/products' },
+  { labelKey: 'nav.profile',   Icon: User,            path: '/profile' },
 ]
 
 const SIDEBAR_EXTRAS = [
@@ -426,6 +420,7 @@ function BottomNav({ unread: _unread }: { unread: number }) {
         {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
+          const { Icon } = item
 
           return (
             <Link
@@ -434,15 +429,15 @@ function BottomNav({ unread: _unread }: { unread: number }) {
               className="flex flex-1 flex-col items-center justify-center gap-1 relative"
             >
               <div className={cn(
-                'relative flex items-center justify-center rounded-2xl transition-all duration-200',
-                isActive ? 'bg-primary/12 w-12 h-11' : 'w-11 h-10'
+                'flex items-center justify-center rounded-2xl transition-all duration-200',
+                isActive ? 'bg-primary/10 w-12 h-9' : 'w-11 h-9'
               )}>
-                <img
-                  src={item.flatIcon}
-                  alt={t(item.labelKey)}
+                <Icon
+                  size={21}
+                  strokeWidth={isActive ? 2.2 : 1.7}
                   className={cn(
-                    'h-6 w-6 object-contain transition-all duration-200',
-                    isActive ? 'opacity-100 scale-105' : 'opacity-55'
+                    'transition-colors duration-200',
+                    isActive ? 'text-primary' : 'text-muted-foreground'
                   )}
                 />
               </div>

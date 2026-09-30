@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { WalletCardSkin } from '@/components/shared/wallet-card-skin'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -313,94 +312,80 @@ export function WalletPage() {
         </Dialog>
       </div>
 
-      {/* ── Wallet Card — credit card proportions ── */}
+      {/* ── Wallet Card ── */}
       <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
-        <WalletCardSkin userId={user?.id ?? ''}>
+        <div
+          className="rounded-3xl text-white relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #0A1628 0%, #162340 55%, #1C2F50 100%)',
+            boxShadow: '0 12px 40px rgba(10,22,40,0.45)',
+            aspectRatio: '1.586',
+          }}
+        >
+          {/* Subtle orange glow top-right */}
+          <div
+            className="absolute"
+            style={{
+              top: '-40%', right: '-20%',
+              width: '55%', paddingTop: '55%',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(240,90,40,0.18) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }}
+          />
 
-            {/* Row 1: branding + contactless */}
+          <div className="absolute inset-0 flex flex-col justify-between p-5">
+            {/* Top row: brand + eye toggle */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {/* 3-crates logo in white tones */}
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 72" fill="none" style={{ height: 22, width: 'auto' }} aria-hidden="true">
-                  <rect x="0"  y="42" width="40" height="24" rx="6" fill="rgba(255,255,255,0.55)"/>
-                  <rect x="0"  y="42" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.35)"/>
-                  <rect x="31" y="42" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.35)"/>
-                  <rect x="9" y="48"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
-                  <rect x="9" y="52.5" width="22" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
-                  <rect x="9" y="57"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
-                  <rect x="34" y="26" width="40" height="24" rx="6" fill="rgba(255,255,255,0.70)"/>
-                  <rect x="34" y="26" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.45)"/>
-                  <rect x="65" y="26" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.45)"/>
-                  <rect x="43" y="32"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)"/>
-                  <rect x="43" y="36.5" width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)"/>
-                  <rect x="43" y="41"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.30)"/>
-                  <rect x="68" y="10" width="40" height="24" rx="6" fill="rgba(255,255,255,0.90)"/>
-                  <rect x="68" y="10" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.60)"/>
-                  <rect x="99" y="10" width="9"  height="24" rx="6" fill="rgba(255,255,255,0.60)"/>
-                  <rect x="77" y="16"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.40)"/>
-                  <rect x="77" y="20.5" width="22" height="2" rx="1" fill="rgba(255,255,255,0.40)"/>
-                  <rect x="77" y="25"   width="22" height="2" rx="1" fill="rgba(255,255,255,0.40)"/>
-                </svg>
-                <span className="font-bold text-white text-sm tracking-wide">KONVWA</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-white text-base tracking-widest">KONVWA</span>
+                <span
+                  className="text-[9px] font-bold tracking-widest rounded-sm px-1.5 py-0.5"
+                  style={{ background: 'rgba(240,90,40,0.22)', color: '#F97B50' }}
+                >
+                  PAY
+                </span>
               </div>
-              <svg width="28" height="24" viewBox="0 0 30 26" fill="none">
-                <circle cx="4" cy="13" r="2.5" fill="white" opacity="0.9"/>
-                <path d="M10 7C13.3 9.5 13.3 16.5 10 19" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
-                <path d="M16 3.5C21.5 7.5 21.5 18.5 16 22.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity="0.5"/>
-                <path d="M22 0.5C29.5 5.5 29.5 20.5 22 25.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" opacity="0.3"/>
-              </svg>
+              <button
+                onClick={() => setBalanceVisible(v => !v)}
+                className="flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+                style={{ background: 'rgba(255,255,255,0.08)' }}
+              >
+                {balanceVisible
+                  ? <Eye className="h-3.5 w-3.5 text-white/60" />
+                  : <EyeOff className="h-3.5 w-3.5 text-white/60" />}
+              </button>
             </div>
 
-            {/* Row 2: chip + balance inline */}
-            <div className="flex items-end gap-4">
-              <svg width="40" height="30" viewBox="0 0 46 36" fill="none" className="shrink-0 mb-0.5">
-                <rect width="46" height="36" rx="7" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
-                <line x1="15" y1="0" x2="15" y2="36" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
-                <line x1="31" y1="0" x2="31" y2="36" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
-                <line x1="0" y1="12" x2="46" y2="12" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
-                <line x1="0" y1="24" x2="46" y2="24" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
-                <rect x="15" y="12" width="16" height="12" rx="2" fill="rgba(255,255,255,0.12)"/>
-              </svg>
-              <div>
-                <p className="text-[9px] uppercase tracking-[0.16em] text-white/55 font-semibold mb-0.5">Solde disponible</p>
-                {loading ? (
-                  <Skeleton className="h-7 w-36 bg-white/15 rounded-lg" />
-                ) : (
-                  <p className="text-[1.6rem] font-bold tracking-tight leading-none">
-                    {balanceVisible ? `${balance.toLocaleString('fr-HT')} HTG` : '• • • • • •'}
-                  </p>
-                )}
-              </div>
+            {/* Center: balance */}
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-1">
+                Solde disponible
+              </p>
+              {loading ? (
+                <Skeleton className="h-8 w-40 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }} />
+              ) : (
+                <p className="text-[2rem] font-bold tracking-tight leading-none text-white">
+                  {balanceVisible ? `${balance.toLocaleString('fr-HT')} HTG` : '••••• HTG'}
+                </p>
+              )}
             </div>
 
-            {/* Row 3: holder + number + eye + HTG */}
+            {/* Bottom row: name + account number */}
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-[8px] uppercase tracking-[0.14em] text-white/40 font-semibold mb-0.5">Titulaire</p>
-                <p className="text-[13px] font-semibold text-white/85 tracking-wide uppercase leading-tight">
+                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">Titulaire</p>
+                <p className="text-[13px] font-semibold text-white/80 tracking-wider uppercase">
                   {profile?.full_name || user?.email?.split('@')[0] || '—'}
                 </p>
               </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setBalanceVisible(v => !v)}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  {balanceVisible
-                    ? <Eye className="h-3 w-3 text-white/60" />
-                    : <EyeOff className="h-3 w-3 text-white/60" />}
-                </button>
-                <div className="text-right">
-                  <p className="text-[8px] uppercase tracking-[0.14em] text-white/40 font-semibold mb-0.5">N° Compte</p>
-                  <p className="text-[10px] font-mono font-semibold text-white/70 tracking-widest">{cardNumber}</p>
-                </div>
-                <div className="rounded-md bg-white/20 px-2 py-1 ml-1">
-                  <span className="text-[11px] font-black text-white tracking-widest">HTG</span>
-                </div>
+              <div className="text-right">
+                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">N° Compte</p>
+                <p className="text-[11px] font-mono font-semibold text-white/60 tracking-widest">{cardNumber}</p>
               </div>
             </div>
-
-        </WalletCardSkin>
+          </div>
+        </div>
       </div>
 
       {/* Action buttons */}
