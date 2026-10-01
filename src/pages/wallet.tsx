@@ -298,10 +298,16 @@ export function WalletPage() {
       if (proofFile) {
         const ext = proofFile.name.split('.').pop()?.toLowerCase() || 'jpg'
         const path = `${user.id}/${Date.now()}.${ext}`
+        const contentType = proofFile.type || 'image/jpeg'
         const { error: uploadError } = await supabase.storage
           .from('payment-proofs')
-          .upload(path, proofFile, { contentType: proofFile.type, upsert: false })
-        if (uploadError) throw new Error('Échec du téléversement : ' + uploadError.message)
+          .upload(path, proofFile, { contentType, upsert: false })
+        if (uploadError) {
+          const msg = typeof uploadError.message === 'string'
+            ? uploadError.message
+            : JSON.stringify(uploadError)
+          throw new Error('Téléversement impossible : ' + msg)
+        }
         proofStoragePath = path
       }
 
@@ -317,7 +323,12 @@ export function WalletPage() {
         reference: txHashInput.trim() || null,
         proof_url: proofStoragePath,
       })
-      if (error) throw new Error(error.message || 'Erreur lors de l\'enregistrement du dépôt.')
+      if (error) {
+        const msg = typeof error.message === 'string'
+          ? error.message
+          : JSON.stringify(error)
+        throw new Error('Enregistrement impossible : ' + msg)
+      }
       haptics.success()
       toast.success('Dépôt soumis — en attente de confirmation.')
       setTopupOpen(false)
@@ -327,8 +338,12 @@ export function WalletPage() {
       setProofPreview(null)
       loadData()
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : (e as { message?: string })?.message || 'Erreur inconnue.'
-      toast.error(msg)
+      const msg = e instanceof Error
+        ? e.message
+        : typeof e === 'string'
+          ? e
+          : JSON.stringify(e)
+      toast.error(msg || 'Erreur inconnue.')
     }
     setSubmitting(false)
   }
