@@ -11,6 +11,7 @@ import { AdminGuard } from '@/components/shared/auth-guard'
 
 // Auth
 import { AuthPage } from '@/pages/auth'
+import { OnboardingPage } from '@/pages/onboarding'
 
 // Public pages
 import { HomePage } from '@/pages/home'
@@ -48,9 +49,17 @@ import { AdminProductsPage } from '@/pages/admin/products'
 import { AdminNotificationsPage } from '@/pages/admin/notifications'
 
 export const router = createBrowserRouter([
-  // Root and onboarding → auth
-  { path: '/',           element: <Navigate to="/auth" replace /> },
-  { path: '/onboarding', element: <Navigate to="/auth" replace /> },
+  // Root: show onboarding if never seen, otherwise go to auth
+  {
+    path: '/',
+    element: (() => {
+      try {
+        if (localStorage.getItem('konvwa_onboarding_seen')) return <Navigate to="/auth" replace />
+      } catch { /* */ }
+      return <OnboardingPage />
+    })(),
+  },
+  { path: '/onboarding', element: <OnboardingPage /> },
 
   // Payment return — public (MonCash/NatCash redirect callback)
   { path: '/payment/return', element: <PaymentReturnPage /> },
