@@ -36,6 +36,8 @@ interface OrderDetail {
   shipping_option: 'all_inclusive' | 'separate'
   chosen_shipping_method_id: string | null
   shipping_method_confirmed_at: string | null
+  shipping_amount_paid: number | null
+  shipping_paid_at: string | null
   chosen_shipping_method?: ShippingMethod | null
   quotes: {
     id: string
@@ -114,6 +116,7 @@ export function OrderDetailPage() {
         .select(`
           id, tracking_code, status, total_paid, payment_status, created_at,
           shipping_option, chosen_shipping_method_id, shipping_method_confirmed_at,
+          shipping_amount_paid, shipping_paid_at,
           chosen_shipping_method:shipping_methods(id, name, description, price_htg, duration_days_min, duration_days_max, mode),
           quotes(
             id, total, product_price, quantity,
@@ -226,13 +229,18 @@ export function OrderDetailPage() {
         return
       }
       const method = shippingMethods.find(m => m.id === selectedMethodId) ?? null
-      toast.success('Mode d\'expédition confirmé ! Votre colis est en cours d\'expédition.')
+      const shippingAmount = data.shipping_amount ?? method?.price_htg ?? 0
+      toast.success(`Expédition payée — ${data.method_name ?? method?.name}. Votre colis est en route !`)
       setOrder(prev => prev ? {
         ...prev,
         status: 'shipped',
         chosen_shipping_method_id: selectedMethodId,
         chosen_shipping_method: method,
+        shipping_amount_paid: shippingAmount,
+        shipping_paid_at: new Date().toISOString(),
+        total_paid: (prev.total_paid ?? 0) + shippingAmount,
       } : null)
+      setWallet(prev => prev ? { ...prev, available_balance: prev.available_balance - shippingAmount } : null)
     } catch {
       toast.error('Erreur lors du choix. Réessayez.')
     } finally {
@@ -470,17 +478,51 @@ export function OrderDetailPage() {
                   })}
                 </div>
               )}
-              <Button
-                onClick={handleChooseShipping}
-                disabled={!selectedMethodId || choosingShipping}
-                className="w-full rounded-xl h-11 font-bold gap-2"
-              >
-                {choosingShipping ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" />Confirmation…</>
-                ) : (
-                  <><CheckCircle2 className="h-4 w-4" />Confirmer l'expédition</>
-                )}
-              </Button>
+              {/* Solde + CTA paiement */}
+              {selectedMethodId && (() => {
+                const method = shippingMethods.find(m => m.id === selectedMethodId)
+                if (!method) return null
+                const canPay = wallet ? wallet.available_balance >= method.price_htg : false
+                return (
+                  <div className="rounded-xl bg-[#F8F9FB] border border-gray-100 p-3 space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1.5">
+                        <Wallet className="h-3.5 w-3.5" />
+                        Solde disponible
+                      </span>
+                      <span className={`font-bold ${canPay ? 'text-emerald-600' : 'text-destructive'}`}>
+                        {(wallet?.available_balance ?? 0).toLocaleString('fr-HT')} HTG
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">À payer</span>
+                      <span className="font-bold text-foreground">{method.price_htg.toLocaleString('fr-HT')} HTG</span>
+                    </div>
+                    {!canPay && (
+                      <p className="text-xs text-destructive font-medium">
+                        Solde insuffisant. Rechargez votre portefeuille.
+                      </p>
+                    )}
+                    {canPay ? (
+                      <Button
+                        onClick={handleChooseShipping}
+                        disabled={choosingShipping}
+                        className="w-full rounded-xl h-11 font-bold gap-2"
+                      >
+                        {choosingShipping ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" />Paiement en cours…</>
+                        ) : (
+                          <><Wallet className="h-4 w-4" />Payer {method.price_htg.toLocaleString('fr-HT')} HTG</>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button asChild className="w-full rounded-xl h-11 font-bold gap-2">
+                        <Link to="/wallet"><Wallet className="h-4 w-4" />Recharger mon portefeuille</Link>
+                      </Button>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
           </div>
         )}
@@ -712,12 +754,58 @@ export function OrderDetailPage() {
               </div>
               <Separator className="my-0" />
               <div className="flex justify-between py-3">
-                <span className="font-bold text-base">Total</span>
+                <span className="font-bold text-base">Sous-total produit</span>
                 <span className="font-bold text-base text-primary">{order.quotes.total.toLocaleString('fr-HT')} HTG</span>
               </div>
+              {order.shipping_amount_paid != null && order.shipping_amount_paid > 0 && (
+                <div className="flex justify-between pb-2 text-sm">
+                  <span className="text-muted-foreground">+ Expédition payée</span>
+                  <span className="font-semibold">{order.shipping_amount_paid.toLocaleString('fr-HT')} HTG</span>
+                </div>
+              )}
               <div className="flex justify-between pb-3 text-sm">
-                <span className="text-emerald-600 font-medium">Déjà payé</span>
+                <span className="text-emerald-600 font-medium">Déjà payé (total)</span>
                 <span className="text-emerald-600 font-semibold">{order.total_paid.toLocaleString('fr-HT')} HTG</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── FACTURE EXPÉDITION SÉPARÉE ── */}
+        {order.shipping_option === 'separate' && order.chosen_shipping_method && order.shipping_amount_paid && (
+          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              <p className="text-sm font-bold text-foreground">Facture expédition</p>
+              <span className="ml-auto text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Payée</span>
+            </div>
+            <div className="px-4 py-2">
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
+                <span className="text-muted-foreground">Mode</span>
+                <span className="font-medium">{order.chosen_shipping_method.name}</span>
+              </div>
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
+                <span className="text-muted-foreground">Délai estimé</span>
+                <span className="font-medium">
+                  {order.chosen_shipping_method.duration_days_min}–{order.chosen_shipping_method.duration_days_max} jours
+                </span>
+              </div>
+              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
+                <span className="text-muted-foreground">Référence</span>
+                <span className="font-mono text-xs">{order.tracking_code}-SHIP</span>
+              </div>
+              {order.shipping_paid_at && (
+                <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
+                  <span className="text-muted-foreground">Payé le</span>
+                  <span className="font-medium">
+                    {new Date(order.shipping_paid_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  </span>
+                </div>
+              )}
+              <Separator className="my-0" />
+              <div className="flex justify-between py-3">
+                <span className="font-bold text-base">Montant expédition</span>
+                <span className="font-bold text-base text-primary">{order.shipping_amount_paid.toLocaleString('fr-HT')} HTG</span>
               </div>
             </div>
           </div>

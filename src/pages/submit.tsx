@@ -2,16 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Loader2, ExternalLink, CheckCircle2, SendHorizonal,
-  Package, ImagePlus, X, Truck, MapPin, FileText, Zap,
+  Package, ImagePlus, X, Truck, FileText, Zap,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -609,52 +607,6 @@ export function SubmitPage() {
                       className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40"
                     />
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Section: Préférences ── */}
-            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-              <div className="px-5 pt-5 pb-5 space-y-4">
-                <SectionHeader icon={MapPin} label="Préférences" />
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold">Urgence</Label>
-                  <RadioGroup
-                    value={urgency}
-                    onValueChange={v => setUrgency(v as typeof urgency)}
-                    className="grid grid-cols-3 gap-2"
-                  >
-                    {([
-                      ['normal',  'Normal',  '4–6 sem.'],
-                      ['urgent',  'Urgent',  '2–3 sem.'],
-                      ['express', 'Express', '1–2 sem.'],
-                    ] as const).map(([val, label, sub]) => (
-                      <div key={val} className="relative">
-                        <RadioGroupItem value={val} id={`urg-${val}`} className="peer sr-only" />
-                        <Label
-                          htmlFor={`urg-${val}`}
-                          className="flex flex-col items-center py-3 px-2 rounded-2xl border-2 border-transparent bg-[#F0F1F5] cursor-pointer hover:bg-[#E8E9EE] peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
-                        >
-                          <span className="font-bold text-sm">{label}</span>
-                          <span className="text-[10px] text-muted-foreground mt-0.5">{sub}</span>
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-sm font-bold">
-                    Commentaires <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
-                  </Label>
-                  <Textarea
-                    placeholder="Instructions particulières, précisions sur le produit…"
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    rows={3}
-                    className="rounded-2xl bg-[#F0F1F5] border-0 resize-none text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
-                  />
                 </div>
               </div>
             </div>
