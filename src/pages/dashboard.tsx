@@ -32,9 +32,15 @@ interface TrendingProduct {
   id: string
   name: string
   price_htg: number
+  moq: number
+  unit: string
   category: string | null
   supplier_name: string | null
   images: string[]
+  stock_available: boolean
+  featured: boolean
+  delivery_days_min: number | null
+  delivery_days_max: number | null
 }
 
 const QUICK_ACTION_KEYS = [
@@ -105,7 +111,7 @@ export function DashboardPage() {
     Promise.all([
       supabase.from('wallets').select('available_balance, blocked_balance').eq('user_id', user.id).maybeSingle(),
       supabase.from('orders').select('id, tracking_code, status, created_at, quotes(total, product_requests(product_name))').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('products').select('id, name, price_htg, category, supplier_name, images').eq('active', true).order('featured', { ascending: false }).order('created_at', { ascending: false }).limit(8),
+      supabase.from('products').select('id, name, price_htg, moq, unit, category, supplier_name, images, stock_available, featured, delivery_days_min, delivery_days_max').eq('active', true).order('featured', { ascending: false }).order('created_at', { ascending: false }).limit(8),
     ]).then(([walletRes, ordersRes, productsRes]) => {
       if (walletRes.data) setWallet(walletRes.data)
       if (ordersRes.data) setOrders(ordersRes.data as unknown as DashboardOrder[])
@@ -295,9 +301,9 @@ export function DashboardPage() {
           </Link>
         </div>
         {loading ? (
-          <div className="flex gap-2 px-4">
-            <Skeleton className="h-44 w-40 rounded-2xl flex-shrink-0" />
-            <Skeleton className="h-44 w-40 rounded-2xl flex-shrink-0" />
+          <div className="grid grid-cols-2 gap-3 px-4">
+            <Skeleton className="aspect-square w-full rounded-2xl" />
+            <Skeleton className="aspect-square w-full rounded-2xl" />
           </div>
         ) : trendingProducts.length === 0 ? null : (
           <Carousel
@@ -308,36 +314,64 @@ export function DashboardPage() {
             <CarouselContent className="-ml-2">
               {trendingProducts.map((product) => (
                 <CarouselItem key={product.id} className="pl-2 basis-1/2">
-                  <Link to={`/products/${product.id}`} className="block rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden h-full">
+                  <Link
+                    to={`/products/${product.id}`}
+                    className="flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden text-left active:scale-[0.98] transition-transform duration-100 h-full"
+                  >
                     {/* Image */}
-                    <div className="w-full h-28 bg-gray-50 overflow-hidden">
+                    <div className="w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative">
                       {product.images?.[0] ? (
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
+                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="h-8 w-8 text-gray-300" />
+                        <div
+                          className="flex flex-col items-center justify-center gap-1.5 w-full h-full"
+                          style={{ background: 'linear-gradient(140deg, #F4F5F7 0%, #EEF0F3 100%)' }}
+                        >
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 shadow-sm">
+                            <Package className="h-5 w-5 text-primary/40" strokeWidth={1.5} />
+                          </div>
+                          {product.category && (
+                            <span className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-wider px-2 text-center leading-tight">
+                              {product.category}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {product.featured && (
+                        <span className="absolute top-2 left-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                          Vedette
+                        </span>
+                      )}
+                      {!product.stock_available && (
+                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                          <span className="text-[10px] font-bold text-destructive bg-white/90 px-2 py-1 rounded-full border border-destructive/20">
+                            Rupture
+                          </span>
                         </div>
                       )}
                     </div>
                     {/* Info */}
-                    <div className="p-2.5 flex flex-col gap-1">
-                      {product.category && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary self-start">
-                          {product.category}
-                        </span>
-                      )}
-                      <p className="font-semibold text-xs text-foreground leading-tight line-clamp-2">{product.name}</p>
+                    <div className="p-2.5 flex flex-col gap-1 flex-1">
+                      <p className="text-xs font-bold text-foreground leading-snug line-clamp-2">{product.name}</p>
                       {product.supplier_name && (
                         <p className="text-[10px] text-muted-foreground truncate">{product.supplier_name}</p>
                       )}
-                      <p className="text-sm font-bold text-primary mt-0.5">
-                        {product.price_htg.toLocaleString('fr-HT')} <span className="text-[10px] font-normal text-muted-foreground">HTG</span>
-                      </p>
+                      <div className="mt-auto pt-1.5 flex items-end justify-between gap-1">
+                        <div>
+                          <p className="text-sm font-black text-primary leading-none">
+                            {product.price_htg.toLocaleString('fr-HT')}
+                            <span className="text-[10px] font-semibold text-muted-foreground"> HTG</span>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            Min. {product.moq} {product.unit}
+                          </p>
+                        </div>
+                        {product.delivery_days_min && (
+                          <p className="text-[10px] text-muted-foreground whitespace-nowrap">
+                            {product.delivery_days_min}–{product.delivery_days_max ?? product.delivery_days_min}j
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 </CarouselItem>
