@@ -279,8 +279,8 @@ export function WalletPage() {
       setTopupOpen(false)
       window.location.href = result.url
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e)
-      toast.error(msg || 'Erreur lors de l\'initialisation du paiement.')
+      const msg = e instanceof Error ? e.message : (e as { message?: string })?.message || 'Erreur lors de l\'initialisation du paiement.'
+      toast.error(msg)
     }
     setSubmitting(false)
   }
@@ -317,7 +317,7 @@ export function WalletPage() {
         reference: txHashInput.trim() || null,
         proof_url: proofStoragePath,
       })
-      if (error) throw error
+      if (error) throw new Error(error.message || 'Erreur lors de l\'enregistrement du dépôt.')
       haptics.success()
       toast.success('Dépôt soumis — en attente de confirmation.')
       setTopupOpen(false)
@@ -327,8 +327,8 @@ export function WalletPage() {
       setProofPreview(null)
       loadData()
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e)
-      toast.error(msg || 'Erreur.')
+      const msg = e instanceof Error ? e.message : (e as { message?: string })?.message || 'Erreur inconnue.'
+      toast.error(msg)
     }
     setSubmitting(false)
   }

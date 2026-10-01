@@ -34,7 +34,7 @@ export function PaymentReturnPage() {
           setState('pending')
         }
       } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e)
+        const msg = e instanceof Error ? e.message : (e as { message?: string })?.message || 'Erreur inconnue.'
         setErrMsg(msg)
         setState('error')
       }
