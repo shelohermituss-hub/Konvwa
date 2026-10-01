@@ -315,7 +315,7 @@ export function OrderDetailPage() {
 
         {/* Status tracker */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm px-4 py-4">
-          <OrderStatusTracker status={order.status} />
+          <OrderStatusTracker status={order.status} shippingOption={order.shipping_option} />
         </div>
 
         {/* ── CARGAISON EN ENTREPÔT CHINE — informations volume/poids ── */}

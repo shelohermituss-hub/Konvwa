@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Label } from '@/components/ui/label'
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Ship, Package, MapPin, Calendar, Anchor, CheckCircle2, Clock, Truck,
   ChevronDown, ChevronUp, Plus, Trash2, Plane, Box, SendHorizonal, Loader2,
+  Wallet, ArrowRight, Weight,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -61,6 +63,36 @@ interface PackagePayload {
   height_cm: number | null
   weight_kg: number | null
   cbm: number | null
+}
+
+interface OrderReadyForShipment {
+  id: string
+  tracking_code: string
+  product_name: string
+  packages: Array<{
+    number: number
+    length_cm: number | null
+    width_cm: number | null
+    height_cm: number | null
+    weight_kg: number | null
+    weight_lbs: number | null
+    cbm: number | null
+  }> | null
+  weight_kg: number | null
+  weight_lbs: number | null
+  box_length_cm: number | null
+  box_width_cm: number | null
+  box_height_cm: number | null
+}
+
+interface ShippingMethod {
+  id: string
+  name: string
+  description: string | null
+  price_htg: number
+  duration_days_min: number
+  duration_days_max: number
+  mode: 'air' | 'sea' | 'express'
 }
 
 interface ShippingOrigin {
@@ -122,6 +154,266 @@ const REQUEST_STATUS_LABEL: Record<string, string> = {
 }
 
 const fmtCBM = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+
+// ── CreateShipmentFromOrderSheet ─────────────────────────────────────────────
+
+function CreateShipmentFromOrderSheet({
+  order,
+  walletBalance,
+  open,
+  onClose,
+  onSuccess,
+}: {
+  order: OrderReadyForShipment | null
+  walletBalance: number
+  open: boolean
+  onClose: () => void
+  onSuccess: () => void
+}) {
+  const [methods, setMethods] = useState<ShippingMethod[]>([])
+  const [loadingMethods, setLoadingMethods] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState(false)
+
+  useEffect(() => {
+    if (!open) { setSelectedId(null); return }
+    setLoadingMethods(true)
+    supabase
+      .from('shipping_methods')
+      .select('id,name,description,price_htg,duration_days_min,duration_days_max,mode')
+      .eq('active', true)
+      .order('sort_order')
+      .then(({ data }) => {
+        setMethods((data as ShippingMethod[]) ?? [])
+        setLoadingMethods(false)
+      })
+  }, [open])
+
+  if (!order) return null
+
+  const pkgs = order.packages?.filter(p => p.length_cm || p.weight_kg || p.weight_lbs) ?? []
+  const hasPkgs = pkgs.length > 0
+
+  const totalCBM = hasPkgs
+    ? pkgs.reduce((s, p) => s + (p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : 0)), 0)
+    : (order.box_length_cm && order.box_width_cm && order.box_height_cm
+        ? (order.box_length_cm * order.box_width_cm * order.box_height_cm) / 1_000_000
+        : 0)
+
+  const totalKg = hasPkgs
+    ? pkgs.reduce((s, p) => s + (p.weight_kg ?? (p.weight_lbs ? p.weight_lbs * 0.453592 : 0)), 0)
+    : (order.weight_kg ?? (order.weight_lbs ? order.weight_lbs * 0.453592 : 0))
+
+  const selectedMethod = methods.find(m => m.id === selectedId) ?? null
+  const canPay = selectedMethod ? walletBalance >= selectedMethod.price_htg : false
+
+  async function handleConfirm() {
+    if (!order || !selectedId) return
+    setConfirming(true)
+    try {
+      const { data, error } = await supabase.rpc('choose_shipping_method', {
+        p_order_id: order.id,
+        p_shipping_method_id: selectedId,
+      })
+      if (error) throw error
+      if (!data?.success) {
+        toast.error(data?.error || "Erreur lors de la création de l'expédition.")
+        return
+      }
+      toast.success(`Expédition créée — ${data.method_name ?? selectedMethod?.name}. Votre colis est en route !`)
+      onSuccess()
+      onClose()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Erreur inconnue.'
+      toast.error(msg)
+    } finally {
+      setConfirming(false)
+    }
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose() }}>
+      <SheetContent side="bottom" className="h-[90dvh] rounded-t-2xl p-0 overflow-hidden flex flex-col">
+        <SheetHeader className="px-5 pt-5 pb-4 border-b border-border shrink-0">
+          <SheetTitle className="text-left text-lg font-bold">Créer une expédition</SheetTitle>
+          <p className="text-sm text-muted-foreground text-left -mt-1 font-mono">{order.tracking_code}</p>
+        </SheetHeader>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 pb-36">
+
+          {/* Cargo summary */}
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 overflow-hidden">
+            <div className="px-4 py-3 border-b border-amber-200 flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 shrink-0">
+                <Package className="h-4 w-4 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-foreground">{order.product_name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {hasPkgs ? `${pkgs.length} colis` : '1 colis'}
+                  {totalCBM > 0 ? ` · ${fmtCBM(totalCBM)} m³` : ''}
+                  {totalKg > 0 ? ` · ${totalKg.toFixed(2)} kg` : ''}
+                </p>
+              </div>
+            </div>
+
+            <div className="px-4 py-3 grid grid-cols-2 gap-3">
+              {totalCBM > 0 && (
+                <div className="rounded-xl bg-white border border-amber-100 px-3 py-2.5">
+                  <p className="text-xs text-muted-foreground mb-0.5">Volume total</p>
+                  <p className="text-sm font-bold text-foreground">{fmtCBM(totalCBM)} m³</p>
+                  <p className="text-[11px] text-muted-foreground">{(totalCBM * 35.3147).toFixed(2)} ft³</p>
+                </div>
+              )}
+              {totalKg > 0 && (
+                <div className="rounded-xl bg-white border border-amber-100 px-3 py-2.5">
+                  <p className="text-xs text-muted-foreground mb-0.5">Poids total</p>
+                  <p className="text-sm font-bold text-foreground">{totalKg.toFixed(2)} kg</p>
+                  <p className="text-[11px] text-muted-foreground">{(totalKg / 0.453592).toFixed(1)} lbs</p>
+                </div>
+              )}
+            </div>
+
+            {hasPkgs && pkgs.length > 1 && (
+              <div className="px-4 pb-3">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">Détail par carton</p>
+                <div className="space-y-1.5">
+                  {pkgs.map(p => {
+                    const cbm = p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : null)
+                    const kg = p.weight_kg ?? (p.weight_lbs ? p.weight_lbs * 0.453592 : null)
+                    return (
+                      <div key={p.number} className="rounded-xl bg-white border border-amber-100 px-3 py-2 flex items-center gap-3">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                          <span className="text-[10px] font-bold text-amber-700">{p.number}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {p.length_cm && p.width_cm && p.height_cm ? (
+                            <p className="text-xs font-mono font-semibold">{p.length_cm}×{p.width_cm}×{p.height_cm} cm</p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">Dimensions inconnues</p>
+                          )}
+                          {kg != null && <p className="text-[11px] text-muted-foreground">{kg.toFixed(2)} kg</p>}
+                        </div>
+                        {cbm != null && <span className="text-xs font-bold text-amber-700 shrink-0">{fmtCBM(cbm)} m³</span>}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Shipping methods */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3 flex items-center gap-2">
+              <Truck className="h-3.5 w-3.5 text-primary" />
+              Choisir un mode d'expédition
+            </p>
+            {loadingMethods ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {methods.map(method => {
+                  const Icon = method.mode === 'air' || method.mode === 'express' ? Plane : Ship
+                  const isSelected = selectedId === method.id
+                  return (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => setSelectedId(method.id)}
+                      className={cn(
+                        'w-full text-left rounded-xl border-2 px-3.5 py-3 transition-all',
+                        isSelected ? 'border-primary bg-primary/5' : 'border-gray-200 bg-[#F8F9FB] hover:border-primary/40'
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
+                          isSelected ? 'bg-primary/15' : 'bg-white border border-gray-200'
+                        )}>
+                          <Icon className={cn('h-4 w-4', isSelected ? 'text-primary' : 'text-muted-foreground')} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-bold truncate">{method.name}</p>
+                            <p className={cn('text-sm font-bold shrink-0', isSelected ? 'text-primary' : 'text-foreground')}>
+                              {method.price_htg.toLocaleString('fr-HT')} HTG
+                            </p>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {method.duration_days_min}–{method.duration_days_max} jours
+                            {method.description ? ` · ${method.description}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Balance + cost breakdown */}
+          {selectedMethod && (
+            <div className="rounded-xl bg-[#F8F9FB] border border-gray-100 p-3 space-y-2.5">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <Wallet className="h-3.5 w-3.5" />
+                  Solde disponible
+                </span>
+                <span className={cn('font-bold', canPay ? 'text-emerald-600' : 'text-destructive')}>
+                  {walletBalance.toLocaleString('fr-HT')} HTG
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">À payer</span>
+                <span className="font-bold">{selectedMethod.price_htg.toLocaleString('fr-HT')} HTG</span>
+              </div>
+              {!canPay && (
+                <p className="text-xs text-destructive font-medium">Solde insuffisant. Rechargez votre portefeuille.</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Sticky CTA */}
+        <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-border px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
+          {selectedMethod && !canPay ? (
+            <Link
+              to="/wallet"
+              className="w-full rounded-2xl py-4 text-sm font-bold text-white flex items-center justify-center gap-2"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
+              <Wallet className="h-4 w-4" />
+              Recharger mon portefeuille
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled={!selectedId || confirming || !canPay}
+              onClick={handleConfirm}
+              className={cn(
+                'w-full rounded-2xl py-4 text-sm font-bold text-white flex items-center justify-center gap-2 transition-all',
+                (!selectedId || confirming || !canPay) ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.98]'
+              )}
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
+              {confirming ? (
+                <><Loader2 className="h-4 w-4 animate-spin" />Traitement en cours…</>
+              ) : selectedMethod ? (
+                <><Wallet className="h-4 w-4" />Payer {selectedMethod.price_htg.toLocaleString('fr-HT')} HTG</>
+              ) : (
+                <><ArrowRight className="h-4 w-4" />Choisir une méthode</>
+              )}
+            </button>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
 
 function newPkg(): PackageItem {
   return { id: crypto.randomUUID(), length: '', width: '', height: '', weight: '' }
@@ -798,16 +1090,19 @@ function ShippingRequestForm({
 
 export function ShipmentsPage() {
   const { user } = useAuth()
-  const [shipments,        setShipments]        = useState<MyShipment[]>([])
-  const [shippingRequests, setShippingRequests] = useState<ShippingRequest[]>([])
-  const [loading,          setLoading]          = useState(true)
-  const [filter,           setFilter]           = useState<'active' | 'completed'>('active')
-  const [showForm,         setShowForm]         = useState(false)
+  const [shipments,          setShipments]          = useState<MyShipment[]>([])
+  const [shippingRequests,   setShippingRequests]   = useState<ShippingRequest[]>([])
+  const [ordersReady,        setOrdersReady]        = useState<OrderReadyForShipment[]>([])
+  const [walletBalance,      setWalletBalance]      = useState(0)
+  const [loading,            setLoading]            = useState(true)
+  const [filter,             setFilter]             = useState<'active' | 'completed'>('active')
+  const [showForm,           setShowForm]           = useState(false)
+  const [selectedReadyOrder, setSelectedReadyOrder] = useState<OrderReadyForShipment | null>(null)
 
   async function load() {
     if (!user) return
 
-    const [shipmentsRes, requestsRes, originsRes, regionsRes] = await Promise.all([
+    const [shipmentsRes, requestsRes, originsRes, regionsRes, ordersReadyRes, walletRes] = await Promise.all([
       supabase
         .from('order_shipments')
         .select(`
@@ -825,6 +1120,24 @@ export function ShipmentsPage() {
         .order('created_at', { ascending: false }),
       supabase.from('shipping_origins').select('id,name,flag_emoji').eq('active', true),
       supabase.from('haiti_regions').select('id,name').eq('active', true),
+      supabase
+        .from('orders')
+        .select(`
+          id, tracking_code,
+          quotes(
+            product_requests(
+              product_name,
+              packages,
+              weight_kg, weight_lbs,
+              box_length_cm, box_width_cm, box_height_cm
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'in_china_warehouse')
+        .eq('shipping_option', 'separate')
+        .is('chosen_shipping_method_id', null),
+      supabase.from('wallets').select('available_balance').eq('user_id', user.id).maybeSingle(),
     ])
 
     if (shipmentsRes.data) {
@@ -852,6 +1165,25 @@ export function ShipmentsPage() {
         region_name:    r.destination_region_id ? regionsMap[r.destination_region_id] : undefined,
       })))
     }
+
+    if (ordersReadyRes.data) {
+      setOrdersReady(ordersReadyRes.data.map((o: any) => {
+        const req = o.quotes?.product_requests
+        return {
+          id:            o.id,
+          tracking_code: o.tracking_code,
+          product_name:  req?.product_name || 'Produit',
+          packages:      req?.packages ?? null,
+          weight_kg:     req?.weight_kg ?? null,
+          weight_lbs:    req?.weight_lbs ?? null,
+          box_length_cm: req?.box_length_cm ?? null,
+          box_width_cm:  req?.box_width_cm ?? null,
+          box_height_cm: req?.box_height_cm ?? null,
+        }
+      }))
+    }
+
+    if (walletRes.data) setWalletBalance(walletRes.data.available_balance ?? 0)
 
     setLoading(false)
   }
@@ -883,8 +1215,81 @@ export function ShipmentsPage() {
         </button>
       </div>
 
+      {/* Orders ready for separate shipment */}
+      {!loading && ordersReady.length > 0 && (
+        <div className="px-4 mb-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70 px-1 mb-2">
+            Prêt pour expédition
+          </p>
+          <div className="space-y-2">
+            {ordersReady.map(order => {
+              const pkgs = order.packages?.filter(p => p.length_cm || p.weight_kg || p.weight_lbs) ?? []
+              const hasPkgs = pkgs.length > 0
+              const totalCBM = hasPkgs
+                ? pkgs.reduce((s, p) => s + (p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : 0)), 0)
+                : (order.box_length_cm && order.box_width_cm && order.box_height_cm
+                    ? (order.box_length_cm * order.box_width_cm * order.box_height_cm) / 1_000_000
+                    : 0)
+              const totalKg = hasPkgs
+                ? pkgs.reduce((s, p) => s + (p.weight_kg ?? (p.weight_lbs ? p.weight_lbs * 0.453592 : 0)), 0)
+                : (order.weight_kg ?? (order.weight_lbs ? order.weight_lbs * 0.453592 : 0))
+
+              return (
+                <div
+                  key={order.id}
+                  className="rounded-2xl border border-primary/20 bg-white shadow-sm overflow-hidden"
+                >
+                  <div className="flex items-center gap-3 p-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+                      <Package className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{order.product_name}</p>
+                        <span className="rounded-full bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 font-semibold">
+                          Entrepôt Chine
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 font-mono">{order.tracking_code}</p>
+                      <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                        {totalCBM > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Box className="h-3 w-3" />
+                            {fmtCBM(totalCBM)} m³
+                          </span>
+                        )}
+                        {totalKg > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Weight className="h-3 w-3" />
+                            {totalKg.toFixed(2)} kg
+                          </span>
+                        )}
+                        {hasPkgs && (
+                          <span className="flex items-center gap-1">
+                            <Package className="h-3 w-3" />
+                            {pkgs.length} colis
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedReadyOrder(order)}
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white transition-all active:scale-95"
+                      style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+                    >
+                      <Truck className="h-3.5 w-3.5" />
+                      Expédier
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* CTA card — only when no pending requests and no shipments */}
-      {!loading && shippingRequests.length === 0 && shipments.length === 0 && (
+      {!loading && shippingRequests.length === 0 && shipments.length === 0 && ordersReady.length === 0 && (
         <div className="px-4 mb-4">
           <div
             className="rounded-2xl border border-primary/20 bg-white shadow-sm p-4 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
@@ -960,6 +1365,18 @@ export function ShipmentsPage() {
         open={showForm}
         onClose={() => setShowForm(false)}
         onSuccess={load}
+      />
+
+      {/* Create shipment from existing warehouse order */}
+      <CreateShipmentFromOrderSheet
+        order={selectedReadyOrder}
+        walletBalance={walletBalance}
+        open={selectedReadyOrder !== null}
+        onClose={() => setSelectedReadyOrder(null)}
+        onSuccess={() => {
+          setSelectedReadyOrder(null)
+          load()
+        }}
       />
     </div>
   )

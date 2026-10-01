@@ -1,55 +1,54 @@
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 
-// Maps DB status values to simplified UI pipeline steps
-const PIPELINE_STEPS = [
+const FULL_STEPS = [
+  { key: 'submitted',  label: 'Soumis',    statuses: ['draft', 'submitted', 'reviewing', 'quote_sent'] },
+  { key: 'quoted',     label: 'Devis',     statuses: ['quoted'] },
+  { key: 'paid',       label: 'Payé',      statuses: ['awaiting_payment', 'paid', 'purchasing'] },
+  { key: 'warehouse',  label: 'Entrepôt',  statuses: ['in_china_warehouse'] },
+  { key: 'shipped',    label: 'Expédié',   statuses: ['shipped'] },
+  { key: 'transit',    label: 'Transit',   statuses: ['in_transit'] },
+  { key: 'arrived',    label: 'Arrivée',   statuses: ['arrived', 'customs', 'customs_clearance'] },
+  { key: 'delivering', label: 'Livraison', statuses: ['delivery', 'delivering'] },
+  { key: 'delivered',  label: 'Livré',     statuses: ['delivered', 'completed'] },
+] as const
+
+// For separate (achat seulement) orders, the tracker ends at Entrepôt.
+// Any status beyond in_china_warehouse also maps to the last step so it shows complete.
+const SEPARATE_STEPS = [
+  { key: 'submitted', label: 'Soumis',   statuses: ['draft', 'submitted', 'reviewing', 'quote_sent'] },
+  { key: 'quoted',    label: 'Devis',    statuses: ['quoted'] },
+  { key: 'paid',      label: 'Payé',     statuses: ['awaiting_payment', 'paid', 'purchasing'] },
   {
-    key: 'submitted',
-    label: 'Soumis',
-    statuses: ['draft', 'submitted', 'reviewing'],
-  },
-  {
-    key: 'quoted',
-    label: 'Devis',
-    statuses: ['quoted'],
-  },
-  {
-    key: 'paid',
-    label: 'Payé',
-    statuses: ['awaiting_payment', 'paid', 'purchasing'],
-  },
-  {
-    key: 'transit',
-    label: 'Transit',
-    statuses: ['in_transit', 'customs_clearance', 'arrived_haiti'],
-  },
-  {
-    key: 'delivering',
-    label: 'Livraison',
-    statuses: ['delivering'],
-  },
-  {
-    key: 'delivered',
-    label: 'Livré',
-    statuses: ['delivered', 'completed'],
+    key: 'warehouse',
+    label: 'Entrepôt',
+    statuses: [
+      'in_china_warehouse',
+      'shipped', 'in_transit', 'arrived', 'customs', 'customs_clearance',
+      'delivery', 'delivering', 'delivered', 'completed',
+    ],
   },
 ] as const
 
-function getStepIndex(status: string): number {
-  for (let i = 0; i < PIPELINE_STEPS.length; i++) {
-    if ((PIPELINE_STEPS[i].statuses as readonly string[]).includes(status)) return i
+type StepList = typeof FULL_STEPS | typeof SEPARATE_STEPS
+
+function getStepIndex(status: string, steps: StepList): number {
+  for (let i = 0; i < steps.length; i++) {
+    if ((steps[i].statuses as readonly string[]).includes(status)) return i
   }
   return 0
 }
 
 interface OrderStatusTrackerProps {
   status: string
+  shippingOption?: 'all_inclusive' | 'separate' | string
   className?: string
 }
 
-export function OrderStatusTracker({ status, className }: OrderStatusTrackerProps) {
+export function OrderStatusTracker({ status, shippingOption, className }: OrderStatusTrackerProps) {
   const isCancelled = status === 'cancelled'
-  const activeIndex = getStepIndex(status)
+  const steps: StepList = shippingOption === 'separate' ? SEPARATE_STEPS : FULL_STEPS
+  const activeIndex = getStepIndex(status, steps)
 
   if (isCancelled) {
     return (
@@ -62,20 +61,19 @@ export function OrderStatusTracker({ status, className }: OrderStatusTrackerProp
   return (
     <div className={cn('overflow-x-auto scrollbar-hide', className)}>
       <div className="flex items-center min-w-max px-1 py-2">
-        {PIPELINE_STEPS.map((step, index) => {
+        {steps.map((step, index) => {
           const isDone = index < activeIndex
           const isActive = index === activeIndex
           const isUpcoming = index > activeIndex
 
           return (
             <div key={step.key} className="flex items-center">
-              {/* Step node */}
               <div className="flex flex-col items-center gap-1.5">
                 <div
                   className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all',
-                    isDone && 'border-primary bg-primary text-primary-foreground',
-                    isActive && 'border-primary bg-primary/10 text-primary shadow-sm',
+                    isDone    && 'border-primary bg-primary text-primary-foreground',
+                    isActive  && 'border-primary bg-primary/10 text-primary shadow-sm',
                     isUpcoming && 'border-border bg-background text-muted-foreground',
                   )}
                 >
@@ -85,7 +83,7 @@ export function OrderStatusTracker({ status, className }: OrderStatusTrackerProp
                     <div
                       className={cn(
                         'h-2.5 w-2.5 rounded-full',
-                        isActive && 'bg-primary animate-pulse',
+                        isActive  && 'bg-primary animate-pulse',
                         isUpcoming && 'bg-muted-foreground/30',
                       )}
                     />
@@ -94,8 +92,8 @@ export function OrderStatusTracker({ status, className }: OrderStatusTrackerProp
                 <span
                   className={cn(
                     'text-[10px] font-medium whitespace-nowrap',
-                    isDone && 'text-primary',
-                    isActive && 'text-primary font-semibold',
+                    isDone    && 'text-primary',
+                    isActive  && 'text-primary font-semibold',
                     isUpcoming && 'text-muted-foreground',
                   )}
                 >
@@ -103,8 +101,7 @@ export function OrderStatusTracker({ status, className }: OrderStatusTrackerProp
                 </span>
               </div>
 
-              {/* Connector line (not after last step) */}
-              {index < PIPELINE_STEPS.length - 1 && (
+              {index < steps.length - 1 && (
                 <div
                   className={cn(
                     'h-0.5 w-8 mx-1 mb-5 rounded-full transition-colors',
