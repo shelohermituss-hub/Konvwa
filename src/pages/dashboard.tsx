@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { haptics } from '@/lib/haptic'
 import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -120,6 +121,8 @@ export function DashboardPage() {
     })
   }, [user])
 
+  const handleTap = useCallback(() => haptics.tap(), [])
+
   const firstName = profile?.full_name?.split(' ')[0] || 'Client'
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -130,7 +133,7 @@ export function DashboardPage() {
     <div className="min-h-full bg-[#F4F5F7] w-full">
 
       {/* ── Greeting ── */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-4">
+      <div className="flex items-center justify-between px-5 pt-5 pb-4 animate-fade-in-up delay-1">
         <div className="flex items-center gap-3">
           <Avatar className="h-11 w-11 ring-2 ring-black/8 shadow-sm">
             <AvatarImage src={profile?.avatar_url || ''} />
@@ -145,7 +148,8 @@ export function DashboardPage() {
         </div>
         <Link to="/submit">
           <button
-            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
+            onClick={handleTap}
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm pressable"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -155,7 +159,7 @@ export function DashboardPage() {
       </div>
 
       {/* ── Wallet Cards (compact 2-col) ── */}
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-4 animate-fade-in-up delay-2">
         <div className="flex gap-3">
           {/* Solde principal */}
           <Link to="/wallet" className="flex-1">
@@ -235,16 +239,16 @@ export function DashboardPage() {
       </div>
 
       {/* ── Action buttons ── */}
-      <div className="px-4 pb-5">
+      <div className="px-4 pb-5 animate-fade-in-up delay-3">
         <div className="flex gap-3">
           <Link to="/wallet" className="flex-1">
-            <button className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white bg-[#0A1628] hover:bg-[#0d1e38] transition-colors shadow-sm">
+            <button onClick={handleTap} className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white bg-[#0A1628] hover:bg-[#0d1e38] transition-colors shadow-sm pressable">
               <ArrowDownLeft className="h-4 w-4" />
               Dépôt
             </button>
           </Link>
           <Link to="/orders" className="flex-1">
-            <button className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-[#0A1628] border-2 border-[#0A1628] bg-transparent hover:bg-[#0A1628]/5 transition-colors">
+            <button onClick={handleTap} className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-[#0A1628] border-2 border-[#0A1628] bg-transparent hover:bg-[#0A1628]/5 transition-colors pressable">
               <TrendingUp className="h-4 w-4" />
               Historique
             </button>
@@ -253,12 +257,12 @@ export function DashboardPage() {
       </div>
 
       {/* ── Quick Actions ── */}
-      <div className="px-5 pb-5">
+      <div className="px-5 pb-5 animate-fade-in-up delay-4">
         <div className="grid grid-cols-4 gap-3">
           {QUICK_ACTION_KEYS.map((action) => {
             const { Icon } = action
             return (
-              <Link key={action.path} to={action.path} className="flex flex-col items-center gap-2 group">
+              <Link key={action.path} to={action.path} onClick={handleTap} className="flex flex-col items-center gap-2 group pressable">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-gray-100 shadow-sm group-hover:border-primary/20 group-hover:shadow-md transition-all">
                   <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" strokeWidth={1.6} />
                 </div>
@@ -434,7 +438,7 @@ export function DashboardPage() {
       </div>
 
       {/* ── Recent Orders ── */}
-      <div className="px-5 pb-8">
+      <div className="px-5 pb-8 animate-fade-in-up delay-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-bold text-foreground">{t('dash.recent')}</h2>
           <Link to="/orders" className="text-xs font-semibold text-primary flex items-center gap-0.5">

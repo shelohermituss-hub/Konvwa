@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { haptics } from '@/lib/haptic'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -413,6 +414,7 @@ function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
 function BottomNav({ unread: _unread }: { unread: number }) {
   const location = useLocation()
   const { t } = useI18n()
+  const handleNavTap = useCallback(() => haptics.nav(), [])
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-100 pb-safe shadow-[0_-1px_12px_rgba(10,22,40,0.06)]">
@@ -426,6 +428,7 @@ function BottomNav({ unread: _unread }: { unread: number }) {
             <Link
               key={item.path}
               to={item.path}
+              onClick={handleNavTap}
               className="flex flex-1 flex-col items-center justify-center gap-1 relative"
             >
               <div className={cn(
@@ -457,6 +460,7 @@ function BottomNav({ unread: _unread }: { unread: number }) {
 
 export function ClientLayout() {
   const { user } = useAuth()
+  const location = useLocation()
   const unread = useUnread(user?.id)
 
   return (
@@ -470,7 +474,9 @@ export function ClientLayout() {
 
         <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
           <PwaExperience userId={user?.id} />
-          <Outlet />
+          <div key={location.pathname} className="page-enter">
+            <Outlet />
+          </div>
         </main>
       </div>
 

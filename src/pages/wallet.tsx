@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
+import { haptics } from '@/lib/haptic'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -125,6 +126,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
 
   function copy(text: string) {
     navigator.clipboard.writeText(text).then(() => {
+      haptics.copy()
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
@@ -272,6 +274,7 @@ export function WalletPage() {
     try {
       const result = await createPayment({ amount, method: topupMethod as 'moncash' | 'natcash', wallet_id: wallet.id })
       sessionStorage.setItem('konvwa_pay_ref', result.reference_id)
+      haptics.success()
       toast.success('Redirection vers ' + (topupMethod === 'moncash' ? 'MonCash' : 'NatCash') + '…')
       setTopupOpen(false)
       window.location.href = result.url
@@ -315,6 +318,7 @@ export function WalletPage() {
         proof_url: proofStoragePath,
       })
       if (error) throw error
+      haptics.success()
       toast.success('Dépôt soumis — en attente de confirmation.')
       setTopupOpen(false)
       setTopupAmount('')
@@ -362,6 +366,8 @@ export function WalletPage() {
     return groups
   }, [filteredTx])
 
+  const handleTap = useCallback(() => haptics.tap(), [])
+
   const balance = wallet?.available_balance ?? 0
 
   const cardNumber = user?.id
@@ -379,7 +385,7 @@ export function WalletPage() {
     <div className="min-h-full bg-[#F4F5F7]">
 
       {/* Page header */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-4 stagger-item">
+      <div className="flex items-center justify-between px-5 pt-5 pb-4 animate-fade-in-up delay-1">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Portefeuille</h1>
           <p className="text-sm text-muted-foreground">Gérez votre solde HTG</p>
@@ -390,7 +396,8 @@ export function WalletPage() {
         }}>
           <DialogTrigger asChild>
             <button
-              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
+              onClick={handleTap}
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm pressable"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
               <Plus className="h-4 w-4" />
@@ -560,6 +567,7 @@ export function WalletPage() {
                             type="button"
                             onClick={() => {
                               navigator.clipboard.writeText(info.address)
+                              haptics.copy()
                               setAddrCopied(true)
                               setTimeout(() => setAddrCopied(false), 2000)
                             }}
@@ -605,12 +613,12 @@ export function WalletPage() {
             <DialogFooter>
               <button onClick={() => setTopupOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">Annuler</button>
               <button
-                onClick={handleTopup}
+                onClick={() => { handleTap(); handleTopup() }}
                 disabled={
                   !topupAmount || parseFloat(topupAmount) < 100 || submitting ||
                   ((topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') && !proofFile)
                 }
-                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity pressable"
                 style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -622,7 +630,7 @@ export function WalletPage() {
       </div>
 
       {/* ── Wallet Card ── */}
-      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
+      <div className="px-4 pb-5 animate-fade-in-up delay-2">
         <div
           className="rounded-3xl text-white relative overflow-hidden"
           style={{
@@ -698,10 +706,10 @@ export function WalletPage() {
       </div>
 
       {/* Action buttons */}
-      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '100ms' }}>
+      <div className="px-4 pb-5 animate-fade-in-up delay-3">
         <div className="flex gap-3">
           <button
-            onClick={() => setTopupOpen(true)}
+            onClick={() => { handleTap(); setTopupOpen(true) }}
             className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity pressable"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
@@ -716,7 +724,7 @@ export function WalletPage() {
       </div>
 
       {/* Stats mini cards */}
-      <div className="px-4 pb-5 grid grid-cols-2 gap-3 stagger-item" style={{ animationDelay: '140ms' }}>
+      <div className="px-4 pb-5 grid grid-cols-2 gap-3 animate-fade-in-up delay-4">
         <div className="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 mb-2">
             <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
@@ -744,7 +752,7 @@ export function WalletPage() {
       </div>
 
       {/* Transactions */}
-      <div className="px-4 pb-8 stagger-item" style={{ animationDelay: '180ms' }}>
+      <div className="px-4 pb-8 animate-fade-in-up delay-5">
         <h2 className="text-base font-bold mb-3 px-1">Dernières transactions</h2>
 
         {/* Search */}
@@ -767,8 +775,8 @@ export function WalletPage() {
             <div key={key} className="flex gap-1.5 shrink-0">
               {value ? (
                 <button
-                  onClick={() => set(null)}
-                  className="flex items-center gap-1 rounded-full border border-[#0A1628] bg-[#0A1628] px-3 py-1.5 text-xs font-semibold text-white"
+                  onClick={() => { haptics.light(); set(null) }}
+                  className="flex items-center gap-1 rounded-full border border-[#0A1628] bg-[#0A1628] px-3 py-1.5 text-xs font-semibold text-white pressable"
                 >
                   {options.find(([v]) => v === value)?.[1] ?? label}
                   <X className="h-3 w-3" />
@@ -777,8 +785,8 @@ export function WalletPage() {
                 options.map(([v, l]) => (
                   <button
                     key={v}
-                    onClick={() => set(v)}
-                    className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-foreground hover:border-gray-400 transition-colors"
+                    onClick={() => { haptics.light(); set(v) }}
+                    className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-foreground hover:border-gray-400 transition-colors pressable"
                   >
                     {l}
                   </button>
@@ -817,8 +825,8 @@ export function WalletPage() {
                     return (
                       <button
                         key={tx.id}
-                        onClick={() => setReceiptTx(tx)}
-                        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
+                        onClick={() => { haptics.light(); setReceiptTx(tx) }}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left"
                       >
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 bg-gray-100">
                           {isCredit
