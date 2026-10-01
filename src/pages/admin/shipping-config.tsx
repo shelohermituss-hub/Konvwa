@@ -67,7 +67,7 @@ function SectionCard({ title, count, children }: { title: string; count: number;
 
 // ── Tab bar ──────────────────────────────────────────────────────────────────
 
-type Tab = 'origins' | 'regions' | 'cities' | 'types' | 'rates' | 'methods'
+type Tab = 'origins' | 'regions' | 'cities' | 'types' | 'rates'
 
 const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
   { key: 'origins', label: 'Origines',    icon: Globe       },
@@ -75,7 +75,6 @@ const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
   { key: 'cities',  label: 'Villes',      icon: Truck       },
   { key: 'types',   label: 'Types colis', icon: Package     },
   { key: 'rates',   label: 'Tarifs',      icon: DollarSign  },
-  { key: 'methods', label: 'Méthodes',    icon: Ship        },
 ]
 
 // ── Origins section ───────────────────────────────────────────────────────────
@@ -1139,7 +1138,6 @@ export function AdminShippingConfigPage() {
       {tab === 'cities'  && <CitiesSection />}
       {tab === 'types'   && <ProductTypesSection />}
       {tab === 'rates'   && <ShippingRatesSection />}
-      {tab === 'methods' && <MethodsSection />}
     </div>
   )
 }

@@ -85,14 +85,28 @@ interface OrderReadyForShipment {
   box_height_cm: number | null
 }
 
-interface ShippingMethod {
+interface FreightRate {
   id: string
   name: string
+  mode: 'ocean' | 'air'
+  type_label: string | null
+  per_cbm_usd: number | null
+  per_kg_usd: number | null
+  min_amount_usd: number | null
+  transit_days_min: number
+  transit_days_max: number
   description: string | null
-  price_htg: number
-  duration_days_min: number
-  duration_days_max: number
-  mode: 'air' | 'sea' | 'express'
+  shipping_origins: { name: string; flag_emoji: string | null } | null
+}
+
+function computeRateHtg(rate: FreightRate, cbm: number, kg: number, usdToHtg: number): number {
+  let usd = 0
+  if (rate.mode === 'ocean' && rate.per_cbm_usd) {
+    usd = Math.max(cbm * rate.per_cbm_usd, rate.min_amount_usd ?? 0)
+  } else if (rate.mode === 'air' && rate.per_kg_usd) {
+    usd = Math.max(kg * rate.per_kg_usd, rate.min_amount_usd ?? 0)
+  }
+  return Math.ceil(usd * usdToHtg)
 }
 
 interface ShippingOrigin {
@@ -170,23 +184,31 @@ function CreateShipmentFromOrderSheet({
   onClose: () => void
   onSuccess: () => void
 }) {
-  const [methods, setMethods] = useState<ShippingMethod[]>([])
-  const [loadingMethods, setLoadingMethods] = useState(false)
+  const [rates, setRates] = useState<FreightRate[]>([])
+  const [loadingRates, setLoadingRates] = useState(false)
+  const [usdToHtg, setUsdToHtg] = useState(132)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
 
   useEffect(() => {
     if (!open) { setSelectedId(null); return }
-    setLoadingMethods(true)
-    supabase
-      .from('shipping_methods')
-      .select('id,name,description,price_htg,duration_days_min,duration_days_max,mode')
-      .eq('active', true)
-      .order('sort_order')
-      .then(({ data }) => {
-        setMethods((data as ShippingMethod[]) ?? [])
-        setLoadingMethods(false)
-      })
+    setLoadingRates(true)
+    Promise.all([
+      supabase
+        .from('shipping_rates')
+        .select('id,name,mode,type_label,per_cbm_usd,per_kg_usd,min_amount_usd,transit_days_min,transit_days_max,description,shipping_origins(name,flag_emoji)')
+        .eq('active', true)
+        .order('sort_order'),
+      supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'usd_to_htg_rate')
+        .maybeSingle(),
+    ]).then(([ratesRes, settingRes]) => {
+      setRates((ratesRes.data as FreightRate[]) ?? [])
+      if (settingRes.data?.value) setUsdToHtg(parseFloat(settingRes.data.value) || 132)
+      setLoadingRates(false)
+    })
   }, [open])
 
   if (!order) return null
@@ -204,23 +226,25 @@ function CreateShipmentFromOrderSheet({
     ? pkgs.reduce((s, p) => s + (p.weight_kg ?? (p.weight_lbs ? p.weight_lbs * 0.453592 : 0)), 0)
     : (order.weight_kg ?? (order.weight_lbs ? order.weight_lbs * 0.453592 : 0))
 
-  const selectedMethod = methods.find(m => m.id === selectedId) ?? null
-  const canPay = selectedMethod ? walletBalance >= selectedMethod.price_htg : false
+  const selectedRate = rates.find(r => r.id === selectedId) ?? null
+  const selectedAmountHtg = selectedRate ? computeRateHtg(selectedRate, totalCBM, totalKg, usdToHtg) : 0
+  const canPay = selectedRate ? walletBalance >= selectedAmountHtg : false
 
   async function handleConfirm() {
-    if (!order || !selectedId) return
+    if (!order || !selectedId || !selectedRate) return
     setConfirming(true)
     try {
       const { data, error } = await supabase.rpc('choose_shipping_method', {
         p_order_id: order.id,
-        p_shipping_method_id: selectedId,
+        p_shipping_rate_id: selectedId,
+        p_shipping_amount_htg: selectedAmountHtg,
       })
       if (error) throw error
       if (!data?.success) {
         toast.error(data?.error || "Erreur lors de la création de l'expédition.")
         return
       }
-      toast.success(`Expédition créée — ${data.method_name ?? selectedMethod?.name}. Votre colis est en route !`)
+      toast.success(`Expédition créée — ${data.rate_name ?? selectedRate.name}. Votre colis est en route !`)
       onSuccess()
       onClose()
     } catch (e: unknown) {
@@ -303,49 +327,64 @@ function CreateShipmentFromOrderSheet({
             )}
           </div>
 
-          {/* Shipping methods */}
+          {/* Freight rates */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3 flex items-center gap-2">
               <Truck className="h-3.5 w-3.5 text-primary" />
               Choisir un mode d'expédition
             </p>
-            {loadingMethods ? (
+            {loadingRates ? (
               <div className="space-y-2">
-                {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)}
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
               </div>
             ) : (
               <div className="space-y-2">
-                {methods.map(method => {
-                  const Icon = method.mode === 'air' || method.mode === 'express' ? Plane : Ship
-                  const isSelected = selectedId === method.id
+                {rates.map(rate => {
+                  const Icon = rate.mode === 'air' ? Plane : Ship
+                  const isSelected = selectedId === rate.id
+                  const priceHtg = computeRateHtg(rate, totalCBM, totalKg, usdToHtg)
+                  const priceUsd = rate.mode === 'ocean' && rate.per_cbm_usd
+                    ? Math.max(totalCBM * rate.per_cbm_usd, rate.min_amount_usd ?? 0)
+                    : rate.per_kg_usd
+                      ? Math.max(totalKg * rate.per_kg_usd, rate.min_amount_usd ?? 0)
+                      : 0
                   return (
                     <button
-                      key={method.id}
+                      key={rate.id}
                       type="button"
-                      onClick={() => setSelectedId(method.id)}
+                      onClick={() => setSelectedId(rate.id)}
                       className={cn(
                         'w-full text-left rounded-xl border-2 px-3.5 py-3 transition-all',
                         isSelected ? 'border-primary bg-primary/5' : 'border-gray-200 bg-[#F8F9FB] hover:border-primary/40'
                       )}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
                         <div className={cn(
-                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors mt-0.5',
                           isSelected ? 'bg-primary/15' : 'bg-white border border-gray-200'
                         )}>
                           <Icon className={cn('h-4 w-4', isSelected ? 'text-primary' : 'text-muted-foreground')} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-bold truncate">{method.name}</p>
-                            <p className={cn('text-sm font-bold shrink-0', isSelected ? 'text-primary' : 'text-foreground')}>
-                              {method.price_htg.toLocaleString('fr-HT')} HTG
-                            </p>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold truncate">{rate.name}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {rate.shipping_origins?.flag_emoji && <span className="mr-1">{rate.shipping_origins.flag_emoji}</span>}
+                                {rate.shipping_origins?.name && <span>{rate.shipping_origins.name} · </span>}
+                                {rate.transit_days_min}–{rate.transit_days_max} jours
+                              </p>
+                              {rate.type_label && (
+                                <p className="text-[10px] text-muted-foreground/70 mt-0.5">{rate.type_label}</p>
+                              )}
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className={cn('text-sm font-bold', isSelected ? 'text-primary' : 'text-foreground')}>
+                                {priceHtg.toLocaleString('fr-HT')} HTG
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">${priceUsd.toFixed(2)}</p>
+                            </div>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {method.duration_days_min}–{method.duration_days_max} jours
-                            {method.description ? ` · ${method.description}` : ''}
-                          </p>
                         </div>
                       </div>
                     </button>
@@ -356,7 +395,7 @@ function CreateShipmentFromOrderSheet({
           </div>
 
           {/* Balance + cost breakdown */}
-          {selectedMethod && (
+          {selectedRate && (
             <div className="rounded-xl bg-[#F8F9FB] border border-gray-100 p-3 space-y-2.5">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground flex items-center gap-1.5">
@@ -369,7 +408,7 @@ function CreateShipmentFromOrderSheet({
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">À payer</span>
-                <span className="font-bold">{selectedMethod.price_htg.toLocaleString('fr-HT')} HTG</span>
+                <span className="font-bold">{selectedAmountHtg.toLocaleString('fr-HT')} HTG</span>
               </div>
               {!canPay && (
                 <p className="text-xs text-destructive font-medium">Solde insuffisant. Rechargez votre portefeuille.</p>
@@ -380,7 +419,7 @@ function CreateShipmentFromOrderSheet({
 
         {/* Sticky CTA */}
         <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-border px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
-          {selectedMethod && !canPay ? (
+          {selectedRate && !canPay ? (
             <Link
               to="/wallet"
               className="w-full rounded-2xl py-4 text-sm font-bold text-white flex items-center justify-center gap-2"
@@ -402,8 +441,8 @@ function CreateShipmentFromOrderSheet({
             >
               {confirming ? (
                 <><Loader2 className="h-4 w-4 animate-spin" />Traitement en cours…</>
-              ) : selectedMethod ? (
-                <><Wallet className="h-4 w-4" />Payer {selectedMethod.price_htg.toLocaleString('fr-HT')} HTG</>
+              ) : selectedRate ? (
+                <><Wallet className="h-4 w-4" />Payer {selectedAmountHtg.toLocaleString('fr-HT')} HTG</>
               ) : (
                 <><ArrowRight className="h-4 w-4" />Choisir une méthode</>
               )}
@@ -1136,7 +1175,8 @@ export function ShipmentsPage() {
         .eq('user_id', user.id)
         .eq('status', 'in_china_warehouse')
         .eq('shipping_option', 'separate')
-        .is('chosen_shipping_method_id', null),
+        .is('chosen_shipping_method_id', null)
+        .is('chosen_shipping_rate_id', null),
       supabase.from('wallets').select('available_balance').eq('user_id', user.id).maybeSingle(),
     ])
 
