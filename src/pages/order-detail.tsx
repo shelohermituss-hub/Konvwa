@@ -279,8 +279,8 @@ export function OrderDetailPage() {
   const canPay = wallet ? wallet.available_balance >= total : false
   const needsPayment = order.status === 'awaiting_payment' && order.payment_status !== 'paid'
 
-  function handleDownloadPDF() {
-    downloadOrderPDF(order as unknown as OrderForPDF)
+  async function handleDownloadPDF() {
+    await downloadOrderPDF(order as unknown as OrderForPDF)
   }
 
   return (
