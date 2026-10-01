@@ -487,7 +487,6 @@ function QuoteRequestSheet({
   const { user } = useAuth()
   const [warehouses,  setWarehouses]  = useState<Warehouse[]>([])
   const [categories,  setCategories]  = useState<ProductRateCategory[]>([])
-  const [_loading,    setLoading]     = useState(false)
 
   const [categorySlug, setCategorySlug] = useState<'generic' | 'branded' | ''>('')
   const [warehouseId,  setWarehouseId]  = useState('')
@@ -564,7 +563,6 @@ function QuoteRequestSheet({
     }
   }
 
-  if (_loading) return null
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) { reset(); onClose() } }}>
