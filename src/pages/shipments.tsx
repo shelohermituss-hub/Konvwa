@@ -59,6 +59,8 @@ interface ShippingRequest {
   received_at: string | null
   invoiced_at: string | null
   package_count: number | null
+  origin_country: string | null
+  destination_address: string | null
   warehouse: Warehouse | null
   product_rate_category: ProductRateCategory | null
 }
@@ -488,13 +490,15 @@ function QuoteRequestSheet({
   const [warehouses,  setWarehouses]  = useState<Warehouse[]>([])
   const [categories,  setCategories]  = useState<ProductRateCategory[]>([])
 
-  const [categorySlug, setCategorySlug] = useState<'generic' | 'branded' | ''>('')
-  const [warehouseId,  setWarehouseId]  = useState('')
-  const [notes,        setNotes]        = useState('')
-  const [pkgCount,     setPkgCount]     = useState('')
-  const [estCbm,       setEstCbm]       = useState('')
-  const [estKg,        setEstKg]        = useState('')
-  const [submitting,   setSubmitting]   = useState(false)
+  const [originCountry,      setOriginCountry]      = useState<'CN' | 'US' | ''>('')
+  const [categorySlug,       setCategorySlug]       = useState<'generic' | 'branded' | ''>('')
+  const [warehouseId,        setWarehouseId]        = useState('')
+  const [destinationAddress, setDestinationAddress] = useState('')
+  const [notes,              setNotes]              = useState('')
+  const [pkgCount,           setPkgCount]           = useState('')
+  const [estCbm,             setEstCbm]             = useState('')
+  const [estKg,              setEstKg]              = useState('')
+  const [submitting,         setSubmitting]         = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -507,20 +511,26 @@ function QuoteRequestSheet({
     })
   }, [open])
 
-  // Auto-select warehouse when category changes
+  // Auto-select warehouse based on origin + category
   useEffect(() => {
-    if (!categorySlug) { setWarehouseId(''); return }
-    const match = warehouses.find(w =>
-      (categorySlug === 'generic' && w.for_category === 'generic') ||
-      (categorySlug === 'branded' && w.for_category === 'branded')
-    )
-    if (match) setWarehouseId(match.id)
-    else setWarehouseId('')
-  }, [categorySlug, warehouses])
+    if (!originCountry) { setWarehouseId(''); return }
+    let match: Warehouse | undefined
+    if (originCountry === 'US') {
+      match = warehouses.find(w => w.country_code === 'US')
+    } else if (originCountry === 'CN') {
+      if (!categorySlug) { setWarehouseId(''); return }
+      match = warehouses.find(w =>
+        w.country_code === 'CN' && w.for_category === categorySlug
+      )
+    }
+    setWarehouseId(match?.id ?? '')
+  }, [originCountry, categorySlug, warehouses])
 
   function reset() {
+    setOriginCountry('')
     setCategorySlug('')
     setWarehouseId('')
+    setDestinationAddress('')
     setNotes('')
     setPkgCount('')
     setEstCbm('')
@@ -532,18 +542,21 @@ function QuoteRequestSheet({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
-    if (!categorySlug) { toast.error('Sélectionnez le type de produit.'); return }
-    if (!warehouseId)  { toast.error('Aucun entrepôt disponible pour ce type.'); return }
+    if (!originCountry) { toast.error('Sélectionnez le pays d\'origine.'); return }
+    if (originCountry === 'CN' && !categorySlug) { toast.error('Sélectionnez le type de produit.'); return }
+    if (!warehouseId)  { toast.error('Aucun entrepôt disponible pour cette origine.'); return }
 
     setSubmitting(true)
     try {
       const { data, error } = await supabase.rpc('request_shipping_quote', {
-        p_product_category_slug: categorySlug,
+        p_product_category_slug: categorySlug || 'generic',
         p_warehouse_id:          warehouseId,
         p_notes:                 notes.trim() || null,
         p_package_count:         pkgCount ? parseInt(pkgCount) : null,
         p_estimated_cbm:         estCbm   ? parseFloat(estCbm)   : null,
         p_estimated_kg:          estKg    ? parseFloat(estKg)    : null,
+        p_origin_country:        originCountry || null,
+        p_destination_address:   destinationAddress.trim() || null,
       })
       if (error) throw error
       if (!data?.success) {
@@ -577,7 +590,41 @@ function QuoteRequestSheet({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="px-5 py-4 space-y-6 pb-32">
 
-            {/* ── Product type ── */}
+            {/* ── Origine ── */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-primary" />
+                Pays d'origine <span className="text-destructive">*</span>
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {([
+                  { code: 'CN', flag: '🇨🇳', label: 'Chine', sub: 'Shenzhen / Foshan' },
+                  { code: 'US', flag: '🇺🇸', label: 'États-Unis', sub: 'Orlando, FL' },
+                ] as const).map(o => (
+                  <button
+                    key={o.code}
+                    type="button"
+                    onClick={() => { setOriginCountry(o.code); setCategorySlug('') }}
+                    className={cn(
+                      'rounded-2xl border-2 p-3.5 text-left transition-all',
+                      originCountry === o.code
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 bg-[#F8F9FB]'
+                    )}
+                  >
+                    <span className="text-2xl">{o.flag}</span>
+                    <p className={cn(
+                      'text-sm font-bold leading-tight mt-1.5',
+                      originCountry === o.code ? 'text-primary' : 'text-foreground'
+                    )}>{o.label}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{o.sub}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Product type (Chine only) ── */}
+            {originCountry === 'CN' && (
             <div className="space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
                 <Tag className="h-3.5 w-3.5 text-primary" />
@@ -617,6 +664,7 @@ function QuoteRequestSheet({
                 ))}
               </div>
             </div>
+            )}
 
             {/* ── Suggested warehouse ── */}
             {selectedWarehouse && (
@@ -705,6 +753,20 @@ function QuoteRequestSheet({
               </div>
             </div>
 
+            {/* ── Destination en Haïti ── */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-primary" />
+                Destination en Haïti <span className="text-xs font-normal normal-case tracking-normal text-muted-foreground/50">(optionnel)</span>
+              </p>
+              <Input
+                placeholder="Port-au-Prince, Pétion-Ville, Cap-Haïtien…"
+                value={destinationAddress}
+                onChange={e => setDestinationAddress(e.target.value)}
+                className="h-11 rounded-xl bg-[#F0F1F5] border-0 text-sm"
+              />
+            </div>
+
             {/* Info note */}
             <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
               <p className="text-xs text-sky-800 leading-relaxed">
@@ -718,7 +780,7 @@ function QuoteRequestSheet({
           <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-border px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
             <button
               type="submit"
-              disabled={submitting || !categorySlug}
+              disabled={submitting || !originCountry || (originCountry === 'CN' && !categorySlug)}
               className={cn(
                 'w-full rounded-2xl py-4 text-sm font-bold text-white flex items-center justify-center gap-2 transition-all',
                 submitting || !categorySlug ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.98]'

@@ -30,6 +30,8 @@ interface ShippingRequest {
   received_at: string | null
   invoiced_at: string | null
   package_count: number | null
+  origin_country: string | null
+  destination_address: string | null
   admin_notes: string | null
   user_id: string
   profiles: { full_name: string | null; phone: string | null } | null
@@ -179,6 +181,14 @@ function AdminActionSheet({
               {request.product_rate_category?.name ?? '—'} ·{' '}
               {request.warehouse?.flag_emoji} {request.warehouse?.name ?? '—'}
             </p>
+            {request.origin_country && (
+              <p className="text-muted-foreground">
+                Origine : {request.origin_country === 'CN' ? '🇨🇳 Chine' : request.origin_country === 'US' ? '🇺🇸 États-Unis' : request.origin_country}
+              </p>
+            )}
+            {request.destination_address && (
+              <p className="text-muted-foreground">Destination : {request.destination_address}</p>
+            )}
             <p className="text-muted-foreground">Créé le {fmtDate(request.created_at)}</p>
             {request.notes && <p className="text-muted-foreground italic">"{request.notes}"</p>}
           </div>
@@ -346,8 +356,9 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
             {request.profiles?.full_name ?? 'Client inconnu'}
           </p>
           <p className="text-[11px] text-muted-foreground truncate">
+            {request.origin_country === 'CN' ? '🇨🇳' : request.origin_country === 'US' ? '🇺🇸' : ''}{' '}
             {request.product_rate_category?.name ?? '—'} ·{' '}
-            {request.warehouse?.flag_emoji} {request.warehouse?.code ?? '—'}
+            {request.warehouse?.code ?? '—'}
             {request.package_count != null && ` · ${request.package_count} colis`}
           </p>
         </div>
@@ -363,6 +374,20 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
       {expanded && (
         <div className="border-t border-gray-100 px-4 py-3.5 space-y-3">
           <div className="grid grid-cols-2 gap-2 text-xs">
+            {request.origin_country && (
+              <div>
+                <p className="text-muted-foreground">Origine</p>
+                <p className="font-medium">
+                  {request.origin_country === 'CN' ? '🇨🇳 Chine' : request.origin_country === 'US' ? '🇺🇸 États-Unis' : request.origin_country}
+                </p>
+              </div>
+            )}
+            {request.destination_address && (
+              <div>
+                <p className="text-muted-foreground">Destination</p>
+                <p className="font-medium">{request.destination_address}</p>
+              </div>
+            )}
             <div>
               <p className="text-muted-foreground">CBM estimé / réel</p>
               <p className="font-medium">
