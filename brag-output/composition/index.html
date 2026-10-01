@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="node_modules/gsap/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0A1628;
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+        background: #0A1628;
+        position: relative;
+        overflow: hidden;
+      }
+      .clip {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      /* ───── AMBIENT GLOWS ───── */
+      .glow-orb {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      /* ───── SCENE 1: HOOK ───── */
+      #scene-hook { flex-direction: column; gap: 0; }
+      #platform-row {
+        display: flex;
+        gap: 80px;
+        align-items: center;
+        justify-content: center;
+      }
+      .platform-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+      .platform-logo {
+        width: 200px;
+        height: 200px;
+        border-radius: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+        font-size: 38px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+      .platform-logo.alibaba { background: #CC5000; color: white; }
+      .platform-logo.shein   { background: #000000; color: white; border: 2px solid rgba(255,255,255,0.15); }
+      .platform-logo.temu    { background: #F24730; color: white; }
+      .platform-name {
+        font-size: 20px;
+        font-weight: 500;
+        color: rgba(255,255,255,0.75);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      #konvwa-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(10,22,40,0.65);
+        backdrop-filter: blur(2px);
+      }
+      #konvwa-wordmark-hook {
+        font-size: 136px;
+        font-weight: 900;
+        color: white;
+        letter-spacing: -4px;
+        line-height: 1;
+      }
+      #konvwa-wordmark-hook em {
+        font-style: normal;
+        color: #F05A28;
+      }
+
+      /* ───── SCENE 2: PAY CARD ───── */
+      #scene-card { flex-direction: column; gap: 0; }
+      #card-glow {
+        position: absolute;
+        width: 800px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(240,90,40,0.15) 0%, transparent 70%);
+        top: 50%;
+        left: 50%;
+        margin-top: -300px;
+        margin-left: -400px;
+        pointer-events: none;
+      }
+      #pay-card-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+        position: relative;
+        z-index: 1;
+      }
+      .pay-card {
+        width: 720px;
+        height: 400px;
+        border-radius: 36px;
+        background: linear-gradient(135deg, #0A1628 0%, #162340 55%, #1C2F50 100%);
+        border: 1.5px solid rgba(240,90,40,0.28);
+        box-shadow:
+          0 0 80px rgba(240,90,40,0.20),
+          0 32px 100px rgba(0,0,0,0.65);
+        padding: 52px 60px;
+        position: relative;
+        overflow: hidden;
+      }
+      .pay-card::before {
+        content: '';
+        position: absolute;
+        top: -80px;
+        right: -80px;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(240,90,40,0.14) 0%, transparent 70%);
+        border-radius: 50%;
+      }
+      .card-konvwa-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.55);
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .card-title-text {
+        font-size: 30px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: 0.5px;
+        margin-bottom: 52px;
+      }
+      .card-title-text em { font-style: normal; color: #F05A28; }
+      .card-balance-label {
+        font-size: 12px;
+        color: rgba(255,255,255,0.55);
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .card-balance {
+        font-size: 56px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: -1.5px;
+      }
+      .card-balance .currency {
+        font-size: 28px;
+        font-weight: 500;
+        color: rgba(255,255,255,0.55);
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+      .card-chip-el {
+        position: absolute;
+        bottom: 52px;
+        right: 60px;
+        width: 52px;
+        height: 40px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #c8a96e, #e8cb8c, #b8913c);
+      }
+      #card-subtitle-text {
+        font-size: 24px;
+        font-weight: 400;
+        color: rgba(255,255,255,0.5);
+        text-align: center;
+      }
+
+      /* ───── SCENE 3: SUBMIT FORM ───── */
+      #scene-form { gap: 0; }
+      #phone-outer {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .form-phone-frame {
+        width: 400px;
+        height: 760px;
+        border-radius: 52px;
+        border: 2.5px solid rgba(255,255,255,0.1);
+        background: #111D33;
+        box-shadow:
+          0 0 0 8px #0A1628,
+          0 48px 140px rgba(0,0,0,0.75),
+          0 0 80px rgba(240,90,40,0.08);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .phone-statusbar {
+        background: #0D1726;
+        padding: 16px 28px 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .phone-statusbar span { font-size: 13px; color: rgba(255,255,255,0.6); }
+      .phone-content { padding: 28px 28px 20px; flex: 1; overflow: hidden; }
+      .form-header-text {
+        font-size: 22px;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 4px;
+      }
+      .form-subheader-text {
+        font-size: 13px;
+        color: rgba(255,255,255,0.60);
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
+      .platform-chip-el {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,106,0,0.14);
+        border: 1px solid rgba(255,106,0,0.3);
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 12px;
+        color: #FF9A50;
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+      .form-field-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.5);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      #url-field {
+        background: rgba(255,255,255,0.05);
+        border: 1.5px solid rgba(240,90,40,0.4);
+        border-radius: 14px;
+        padding: 14px 16px;
+        font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+        font-size: 12px;
+        color: rgba(255,255,255,0.75);
+        margin-bottom: 0;
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+      }
+      #typed-url-span { white-space: nowrap; overflow: hidden; }
+      #cursor-el {
+        display: inline-block;
+        width: 2px;
+        height: 14px;
+        background: #F05A28;
+        vertical-align: middle;
+        margin-left: 2px;
+        border-radius: 1px;
+      }
+      #price-reveal-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        background: rgba(240,90,40,0.07);
+        border: 1.5px solid rgba(240,90,40,0.2);
+        border-radius: 14px;
+        margin-top: 20px;
+      }
+      .price-row-label { font-size: 13px; color: rgba(255,255,255,0.55); }
+      #price-display { font-size: 24px; font-weight: 700; color: #F05A28; }
+
+      /* ───── SCENE 4: MONCASH ───── */
+      #scene-moncash { flex-direction: column; gap: 0; }
+      #moncash-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+      }
+      .wallet-title-text {
+        font-size: 22px;
+        font-weight: 600;
+        color: white;
+        text-align: center;
+        margin-bottom: 8px;
+      }
+      .moncash-btn-el {
+        width: 380px;
+        padding: 20px 32px;
+        background: linear-gradient(135deg, #CC1828, #E83040);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        box-shadow: 0 10px 40px rgba(229,27,45,0.35);
+      }
+      .moncash-logo-el {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 800;
+        color: #CC1828;
+        flex-shrink: 0;
+      }
+      .moncash-label { font-size: 18px; font-weight: 700; color: white; }
+      .moncash-sublabel { font-size: 12px; color: white; }
+      #confirm-toast-el {
+        position: absolute;
+        top: 40px;
+        left: 50%;
+        margin-left: -210px;
+        opacity: 0;
+        width: 420px;
+        background: rgba(15,35,18,0.98);
+        border: 1.5px solid rgba(34,197,94,0.4);
+        border-radius: 20px;
+        padding: 20px 28px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        box-shadow:
+          0 20px 70px rgba(0,0,0,0.7),
+          0 0 40px rgba(34,197,94,0.1);
+        z-index: 10;
+      }
+      .toast-check-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #22C55E;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .toast-check-icon svg { width: 24px; height: 24px; }
+      .toast-confirm-title { font-size: 16px; font-weight: 700; color: #22C55E; }
+      .toast-confirm-body { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 3px; }
+
+      /* ───── SCENE 5: OUTRO ───── */
+      #scene-outro { flex-direction: column; gap: 24px; }
+      #outro-glow {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(240,90,40,0.12) 0%, transparent 65%);
+        top: 50%;
+        left: 50%;
+        margin-top: -300px;
+        margin-left: -300px;
+        pointer-events: none;
+      }
+      #outro-brand-el {
+        font-size: 108px;
+        font-weight: 900;
+        color: white;
+        letter-spacing: -4px;
+        line-height: 1;
+        position: relative;
+        z-index: 1;
+      }
+      #outro-brand-el em { font-style: normal; color: #F05A28; }
+      #outro-tagline-el {
+        font-size: 34px;
+        font-weight: 400;
+        color: rgba(255,255,255,0.6);
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ───── FADE OVERLAY ───── */
+      #fade-overlay {
+        position: absolute;
+        inset: 0;
+        background: #0A1628;
+        opacity: 0;
+        z-index: 999;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="konvwa-brag"
+      data-start="0"
+      data-width="1920"
+      data-height="1080"
+      data-duration="20"
+    >
+
+      <!-- Music track -->
+      <audio id="bgmusic" data-start="0" data-track-index="0" data-volume="0.6"
+        src="assets/music/happy-beats-business-moves-vol-1-by-ende-dot-app.mp3"></audio>
+
+      <!-- ═══ SCENE 1: Hook (0–3s) ═══ -->
+      <section id="scene-hook" class="clip" data-start="0" data-duration="3" data-track-index="1" data-layout-allow-overlap="true">
+        <!-- Ambient glow behind logos -->
+        <div class="glow-orb" id="hook-glow" style="width:700px;height:500px;background:radial-gradient(circle,rgba(240,90,40,0.08) 0%,transparent 70%);top:50%;left:50%;margin-top:-250px;margin-left:-350px;"></div>
+
+        <!-- Platform badges row (intentionally overlapped by KONVWA wordmark) -->
+        <div id="platform-row" data-layout-allow-overlap="true">
+          <div class="platform-badge" id="badge-alibaba" data-layout-allow-overlap="true">
+            <div class="platform-logo alibaba" data-layout-allow-overlap="true">Alibaba</div>
+            <span class="platform-name">Alibaba</span>
+          </div>
+          <div class="platform-badge" id="badge-shein" data-layout-allow-overlap="true">
+            <div class="platform-logo shein" data-layout-allow-overlap="true">SHEIN</div>
+            <span class="platform-name">Shein</span>
+          </div>
+          <div class="platform-badge" id="badge-temu" data-layout-allow-overlap="true">
+            <div class="platform-logo temu" data-layout-allow-overlap="true">Temu</div>
+            <span class="platform-name">Temu</span>
+          </div>
+        </div>
+
+        <!-- KONVWA overlay (fades in over logos — intentional) -->
+        <div id="konvwa-overlay" data-layout-allow-overlap="true">
+          <div id="konvwa-wordmark-hook">KONV<em>WA</em></div>
+        </div>
+      </section>
+
+      <!-- ═══ SCENE 2: PAY Card (3–7s) ═══ -->
+      <section id="scene-card" class="clip" data-start="3" data-duration="4" data-track-index="1">
+        <div id="card-glow"></div>
+
+        <div id="pay-card-wrap">
+          <div class="pay-card" id="pay-card-el">
+            <div class="card-konvwa-label">KONVWA</div>
+            <div class="card-title-text">KONV<em>WA</em> PAY</div>
+            <div class="card-balance-label">Solde disponible</div>
+            <div class="card-balance">
+              <span class="currency">HTG</span>24&thinsp;500
+            </div>
+            <div class="card-chip-el"></div>
+          </div>
+          <div id="card-subtitle-text">Votre wallet, en HTG.</div>
+        </div>
+      </section>
+
+      <!-- ═══ SCENE 3: Submit Form (7–12s) ═══ -->
+      <section id="scene-form" class="clip" data-start="7" data-duration="5" data-track-index="1">
+        <div id="phone-outer">
+          <!-- Subtle phone glow -->
+          <div class="glow-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(240,90,40,0.09) 0%,transparent 65%);top:50%;left:50%;margin-top:-250px;margin-left:-250px;pointer-events:none;"></div>
+
+          <div class="form-phone-frame" id="phone-frame">
+            <div class="phone-statusbar">
+              <span>9:41</span>
+              <span style="letter-spacing:2px;">●●●</span>
+            </div>
+            <div class="phone-content">
+              <div class="form-header-text">Nouvelle commande</div>
+              <div class="form-subheader-text">Importez depuis les meilleures plateformes</div>
+
+              <div class="platform-chip-el" id="platform-chip-el">🟠 Alibaba</div>
+
+              <div class="form-field-label">Lien du produit</div>
+              <div id="url-field">
+                <span id="typed-url-span"></span><span id="cursor-el"></span>
+              </div>
+
+              <div id="price-reveal-row">
+                <span class="price-row-label">Prix estimé</span>
+                <span id="price-display">HTG 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ SCENE 4: MonCash (12–16s) ═══ -->
+      <section id="scene-moncash" class="clip" data-start="12" data-duration="4" data-track-index="1">
+        <!-- Ambient red glow behind button -->
+        <div class="glow-orb" style="width:500px;height:400px;background:radial-gradient(circle,rgba(200,25,40,0.12) 0%,transparent 70%);top:50%;left:50%;margin-top:-200px;margin-left:-250px;pointer-events:none;"></div>
+
+        <div id="moncash-inner">
+          <div class="wallet-title-text">Recharger le wallet</div>
+          <div class="moncash-btn-el" id="moncash-btn-el">
+            <div class="moncash-logo-el">M</div>
+            <div>
+              <div class="moncash-label">MonCash</div>
+              <div class="moncash-sublabel">Paiement mobile haïtien</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirmation toast — absolutely positioned inside scene -->
+        <div id="confirm-toast-el">
+          <div class="toast-check-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div class="toast-confirm-title">Paiement confirmé</div>
+            <div class="toast-confirm-body">5&thinsp;000 HTG ajoutés à votre wallet</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ SCENE 5: Outro (16–20s) ═══ -->
+      <section id="scene-outro" class="clip" data-start="16" data-duration="4" data-track-index="1">
+        <div id="outro-glow"></div>
+        <div id="outro-brand-el">KONV<em>WA</em></div>
+        <div id="outro-tagline-el">L'import, enfin simple.</div>
+      </section>
+
+      <!-- Fade-to-dark overlay (not a .clip; safe to tween opacity; starts invisible via CSS opacity:0) -->
+      <div id="fade-overlay" data-layout-allow-occlusion="true"></div>
+
+    </div>
+
+    <script>
+      // ── Typing animation state (deterministic objects for onUpdate) ──
+      const TYPED_URL = 'alibaba.com/item/montre-xiaomi-band8';
+      const HTG_FINAL = 8500;
+      const TYPING_START = 8.1;
+      const TYPING_DUR   = 1.1;
+      const COUNTER_START = TYPING_START + TYPING_DUR + 0.25;
+
+      const typingObj  = { chars: 0 };
+      const counterObj = { val: 0 };
+
+      const tl = gsap.timeline({ paused: true });
+
+      // ── MUSIC FADE-IN (0→0.5s) and FADE-OUT (18→20s) ──
+      // handled via data-volume; fades via GSAP on the audio element's volume property
+      // Note: audio data-volume=0.6 sets base level; tween is on the element volume attr
+      // Hyperframes owns audio playback; we express intent via data-volume
+
+      // ══════════════════════════════════════
+      // SCENE 1: Hook (0–3s)
+      // ══════════════════════════════════════
+
+      // Platform badges fly in together at t=0.3s
+      tl.fromTo('#badge-alibaba',
+        { x: -130, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.45, ease: 'power3.out' },
+        0.3
+      );
+      tl.fromTo('#badge-shein',
+        { y: 90, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' },
+        0.3
+      );
+      tl.fromTo('#badge-temu',
+        { x: 130, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.45, ease: 'power3.out' },
+        0.3
+      );
+
+      // KONVWA overlay fades in at t=1.7s (0.5s before scene end, give room to read)
+      tl.fromTo('#konvwa-overlay',
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, ease: 'power2.out' },
+        1.7
+      );
+      tl.fromTo('#konvwa-wordmark-hook',
+        { scale: 0.88, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.5, ease: 'power3.out' },
+        1.7
+      );
+      // Dim badges as wordmark arrives
+      tl.to('#badge-alibaba, #badge-shein, #badge-temu',
+        { opacity: 0.25, duration: 0.4 },
+        1.7
+      );
+
+      // ══════════════════════════════════════
+      // SCENE 2: PAY Card (3–7s)
+      // beat-locked: card appears at 3.02s (strongCue)
+      // ══════════════════════════════════════
+
+      // Card rises from below — beat-locked: 3.02s
+      tl.fromTo('#pay-card-wrap',
+        { y: 90, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' },
+        3.02 // beat-locked: 3.02s
+      );
+
+      // Subtitle fades in
+      tl.fromTo('#card-subtitle-text',
+        { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' },
+        3.7
+      );
+
+      // Glow pulse — beat-locked: 4.02s
+      tl.fromTo('#card-glow',
+        { scale: 0.9, opacity: 0.6 },
+        { scale: 1.35, opacity: 0, duration: 0.8, ease: 'power1.out' },
+        4.02 // beat-locked: 4.02s
+      );
+
+      // ══════════════════════════════════════
+      // SCENE 3: Submit Form (7–12s)
+      // ══════════════════════════════════════
+
+      // Phone frame enters
+      tl.fromTo('#phone-frame',
+        { y: 70, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' },
+        7.2
+      );
+
+      // Platform chip pops in
+      tl.fromTo('#platform-chip-el',
+        { scale: 0.75, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(2.5)' },
+        7.75
+      );
+
+      // URL typing (deterministic via object tween)
+      tl.to(typingObj, {
+        chars: TYPED_URL.length,
+        duration: TYPING_DUR,
+        ease: 'none',
+        onUpdate() {
+          const n = Math.round(typingObj.chars);
+          const el = document.getElementById('typed-url-span');
+          if (el) el.textContent = TYPED_URL.slice(0, n);
+        }
+      }, TYPING_START);
+
+      // Hide cursor after typing
+      tl.to('#cursor-el', { opacity: 0, duration: 0.15 }, TYPING_START + TYPING_DUR + 0.05);
+
+      // Price row reveal
+      tl.fromTo('#price-reveal-row',
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
+        COUNTER_START - 0.1
+      );
+
+      // HTG price counter
+      tl.to(counterObj, {
+        val: HTG_FINAL,
+        duration: 0.75,
+        ease: 'power2.out',
+        onUpdate() {
+          const el = document.getElementById('price-display');
+          if (el) {
+            const v = Math.round(counterObj.val);
+            el.textContent = 'HTG ' + v.toLocaleString('fr-FR');
+          }
+        }
+      }, COUNTER_START);
+
+      // ══════════════════════════════════════
+      // SCENE 4: MonCash (12–16s)
+      // beat-grid: MonCash panel at 12.2s; toast at ~14.0s (beat 28 ≈ 13.97s)
+      // ══════════════════════════════════════
+
+      tl.fromTo('#moncash-inner',
+        { y: 36, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' },
+        12.2
+      );
+
+      // Tap feedback on button at 13.3s
+      tl.to('#moncash-btn-el', { scale: 0.95, duration: 0.1, ease: 'power1.in' }, 13.3);
+      tl.to('#moncash-btn-el', { scale: 1.0, duration: 0.18, ease: 'power2.out' }, 13.4);
+
+      // Toast slides in from top — beat-grid: ≈14.0s (beat 28 = 13.972s, snap within ±0.10s)
+      // CSS sets opacity:0 so element is invisible before this tween fires
+      tl.fromTo('#confirm-toast-el',
+        { y: -60, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' },
+        13.97 // beat-grid: beat 28 at 13.972s
+      );
+
+      // ══════════════════════════════════════
+      // SCENE 5: Outro (16–20s)
+      // beat-locked: brand at 16.02s, tagline at 17.02s
+      // ══════════════════════════════════════
+
+      // Brand drops — beat-locked: 16.02s (strongCue)
+      tl.fromTo('#outro-brand-el',
+        { scale: 1.18, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.4, ease: 'power3.out' },
+        16.02 // beat-locked: 16.02s
+      );
+
+      // Tagline fades in — beat-locked: 17.02s (strongCue)
+      tl.fromTo('#outro-tagline-el',
+        { opacity: 0, y: 22 },
+        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' },
+        17.02 // beat-locked: 17.02s
+      );
+
+      // Subtle glow breathe on outro
+      tl.fromTo('#outro-glow',
+        { scale: 0.8, opacity: 0 },
+        { scale: 1.2, opacity: 1, duration: 1.5, ease: 'power1.inOut' },
+        16.1
+      );
+
+      // Fade-to-dark at t=19.5s (CSS opacity:0 → GSAP opacity:1)
+      tl.to('#fade-overlay',
+        { opacity: 1, duration: 0.5, ease: 'power1.in' },
+        19.5
+      );
+
+      window.__timelines['konvwa-brag'] = tl;
+    </script>
+  </body>
+</html>
