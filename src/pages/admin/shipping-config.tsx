@@ -67,7 +67,7 @@ function SectionCard({ title, count, children }: { title: string; count: number;
 
 // ── Tab bar ──────────────────────────────────────────────────────────────────
 
-type Tab = 'origins' | 'regions' | 'cities' | 'types' | 'rates'
+type Tab = 'origins' | 'regions' | 'cities' | 'types' | 'rates' | 'methods'
 
 const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
   { key: 'origins', label: 'Origines',    icon: Globe       },
@@ -75,6 +75,7 @@ const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
   { key: 'cities',  label: 'Villes',      icon: Truck       },
   { key: 'types',   label: 'Types colis', icon: Package     },
   { key: 'rates',   label: 'Tarifs',      icon: DollarSign  },
+  { key: 'methods', label: 'Méthodes',    icon: Ship        },
 ]
 
 // ── Origins section ───────────────────────────────────────────────────────────
@@ -907,6 +908,197 @@ function ShippingRatesSection() {
   )
 }
 
+// ── Shipping methods section ─────────────────────────────────────────────────
+
+interface ShippingMethod {
+  id: string; name: string; description: string | null
+  price_htg: number; duration_days_min: number; duration_days_max: number
+  mode: 'air' | 'sea' | 'express'; active: boolean; sort_order: number
+}
+
+function MethodsSection() {
+  const [items,   setItems]   = useState<ShippingMethod[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving,  setSaving]  = useState(false)
+  const [open,    setOpen]    = useState(false)
+  const [editing, setEditing] = useState<ShippingMethod | null>(null)
+  const [form,    setForm]    = useState({ name: '', description: '', price_htg: '', duration_days_min: '', duration_days_max: '', mode: 'sea' as 'air' | 'sea' | 'express' })
+
+  async function load() {
+    setLoading(true)
+    const { data } = await supabase.from('shipping_methods').select('*').order('sort_order')
+    setItems(data as ShippingMethod[] || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  function openAdd() {
+    setEditing(null)
+    setForm({ name: '', description: '', price_htg: '', duration_days_min: '', duration_days_max: '', mode: 'sea' })
+    setOpen(true)
+  }
+
+  function openEdit(item: ShippingMethod) {
+    setEditing(item)
+    setForm({
+      name: item.name, description: item.description ?? '',
+      price_htg: String(item.price_htg),
+      duration_days_min: String(item.duration_days_min),
+      duration_days_max: String(item.duration_days_max),
+      mode: item.mode,
+    })
+    setOpen(true)
+  }
+
+  async function handleSave() {
+    if (!form.name.trim()) { toast.error('Nom requis.'); return }
+    if (!form.price_htg || isNaN(Number(form.price_htg))) { toast.error('Prix HTG invalide.'); return }
+    if (!form.duration_days_min || !form.duration_days_max) { toast.error('Délais requis.'); return }
+    setSaving(true)
+    const payload = {
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      price_htg: Number(form.price_htg),
+      duration_days_min: Number(form.duration_days_min),
+      duration_days_max: Number(form.duration_days_max),
+      mode: form.mode,
+    }
+    if (editing) {
+      const { error } = await supabase.from('shipping_methods').update(payload).eq('id', editing.id)
+      if (error) { toast.error('Erreur mise à jour.'); setSaving(false); return }
+      toast.success('Méthode mise à jour.')
+    } else {
+      const maxOrder = items.reduce((m, i) => Math.max(m, i.sort_order), 0)
+      const { error } = await supabase.from('shipping_methods').insert({ ...payload, sort_order: maxOrder + 1 })
+      if (error) { toast.error('Erreur création.'); setSaving(false); return }
+      toast.success('Méthode ajoutée.')
+    }
+    setSaving(false); setOpen(false); load()
+  }
+
+  async function handleToggle(item: ShippingMethod) {
+    const { error } = await supabase.from('shipping_methods').update({ active: !item.active }).eq('id', item.id)
+    if (error) { toast.error('Erreur.'); return }
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, active: !i.active } : i))
+  }
+
+  async function handleDelete(item: ShippingMethod) {
+    if (!confirm(`Supprimer "${item.name}" ?`)) return
+    const { error } = await supabase.from('shipping_methods').delete().eq('id', item.id)
+    if (error) { toast.error('Impossible de supprimer (utilisé par des commandes).'); return }
+    toast.success('Méthode supprimée.'); load()
+  }
+
+  const ModeIcon = ({ mode }: { mode: string }) =>
+    mode === 'sea' ? <Ship className="h-3.5 w-3.5 text-blue-500" /> : <Plane className="h-3.5 w-3.5 text-sky-500" />
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-muted-foreground">Méthodes d'expédition proposées aux clients (expédition séparée)</p>
+        <Button size="sm" onClick={openAdd} className="rounded-xl gap-1.5" style={BTN_ORANGE}>
+          <Plus className="h-3.5 w-3.5" /> Ajouter
+        </Button>
+      </div>
+
+      <SectionCard title="Méthodes d'expédition" count={items.length}>
+        {loading ? (
+          <div className="p-4 space-y-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
+        ) : items.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">Aucune méthode.</p>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {items.map(item => (
+              <div key={item.id} className="flex items-center gap-3 px-4 py-3.5">
+                <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-xl', item.mode === 'sea' ? 'bg-blue-50' : 'bg-sky-50')}>
+                  <ModeIcon mode={item.mode} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold truncate">{item.name}</p>
+                    <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full shrink-0 capitalize">{item.mode}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {item.price_htg.toLocaleString('fr-HT')} HTG · {item.duration_days_min}–{item.duration_days_max} jours
+                    {item.description ? ` · ${item.description}` : ''}
+                  </p>
+                </div>
+                <ActiveBadge active={item.active} onToggle={() => handleToggle(item)} />
+                <button onClick={() => openEdit(item)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+                <button onClick={() => handleDelete(item)} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Modifier' : 'Ajouter'} une méthode d'expédition</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Nom <span className="text-destructive">*</span></Label>
+              <Input placeholder="Aérien Standard" value={form.name}
+                onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Description</Label>
+              <Input placeholder="Expédition aérienne standard" value={form.description}
+                onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="rounded-xl" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Prix (HTG) <span className="text-destructive">*</span></Label>
+                <Input type="number" placeholder="45000" value={form.price_htg}
+                  onChange={e => setForm(p => ({ ...p, price_htg: e.target.value }))} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Mode <span className="text-destructive">*</span></Label>
+                <Select value={form.mode} onValueChange={v => setForm(p => ({ ...p, mode: v as 'air' | 'sea' | 'express' }))}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sea">Maritime (sea)</SelectItem>
+                    <SelectItem value="air">Aérien (air)</SelectItem>
+                    <SelectItem value="express">Express</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Délai min (jours) <span className="text-destructive">*</span></Label>
+                <Input type="number" placeholder="7" value={form.duration_days_min}
+                  onChange={e => setForm(p => ({ ...p, duration_days_min: e.target.value }))} className="rounded-xl" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Délai max (jours) <span className="text-destructive">*</span></Label>
+                <Input type="number" placeholder="14" value={form.duration_days_max}
+                  onChange={e => setForm(p => ({ ...p, duration_days_max: e.target.value }))} className="rounded-xl" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function AdminShippingConfigPage() {
@@ -947,6 +1139,7 @@ export function AdminShippingConfigPage() {
       {tab === 'cities'  && <CitiesSection />}
       {tab === 'types'   && <ProductTypesSection />}
       {tab === 'rates'   && <ShippingRatesSection />}
+      {tab === 'methods' && <MethodsSection />}
     </div>
   )
 }

@@ -318,6 +318,89 @@ export function OrderDetailPage() {
           <OrderStatusTracker status={order.status} />
         </div>
 
+        {/* ── CARGAISON EN ENTREPÔT CHINE — informations volume/poids ── */}
+        {order.status === 'in_china_warehouse' && (() => {
+          const req = order.quotes?.product_requests
+          if (!req) return null
+          const pkgs = req.packages?.filter(p => p.length_cm || p.weight_kg || p.weight_lbs)
+          const hasPkgs = pkgs && pkgs.length > 0
+          const totalCBM = hasPkgs
+            ? pkgs.reduce((s, p) => s + (p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : 0)), 0)
+            : (req.box_length_cm && req.box_width_cm && req.box_height_cm ? (req.box_length_cm * req.box_width_cm * req.box_height_cm) / 1_000_000 : null)
+          const totalKg = hasPkgs
+            ? pkgs.reduce((s, p) => s + (p.weight_kg ?? (p.weight_lbs ? p.weight_lbs * 0.453592 : 0)), 0)
+            : (req.weight_kg ?? (req.weight_lbs ? req.weight_lbs * 0.453592 : null))
+          if (!totalCBM && !totalKg && !hasPkgs) return null
+          return (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 overflow-hidden shadow-sm">
+              <div className="px-4 py-3 border-b border-amber-200 flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 shrink-0">
+                  <Package className="h-4 w-4 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Cargaison en entrepôt Chine</p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasPkgs ? `${pkgs.length} colis` : '1 colis'}
+                    {totalCBM != null ? ` · ${totalCBM.toFixed(4)} m³` : ''}
+                    {totalKg != null ? ` · ${totalKg.toFixed(2)} kg (${(totalKg / 0.453592).toFixed(1)} lbs)` : ''}
+                  </p>
+                </div>
+              </div>
+
+              {/* Résumé volumes */}
+              <div className="px-4 py-3 grid grid-cols-2 gap-3">
+                {totalCBM != null && (
+                  <div className="rounded-xl bg-white border border-amber-100 px-3 py-2.5">
+                    <p className="text-xs text-muted-foreground mb-0.5">Volume total</p>
+                    <p className="text-base font-bold text-foreground">{totalCBM.toFixed(4)} m³</p>
+                    <p className="text-[11px] text-muted-foreground">{(totalCBM * 35.3147).toFixed(2)} ft³</p>
+                  </div>
+                )}
+                {totalKg != null && (
+                  <div className="rounded-xl bg-white border border-amber-100 px-3 py-2.5">
+                    <p className="text-xs text-muted-foreground mb-0.5">Poids total</p>
+                    <p className="text-base font-bold text-foreground">{totalKg.toFixed(2)} kg</p>
+                    <p className="text-[11px] text-muted-foreground">{(totalKg / 0.453592).toFixed(1)} lbs</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Détail par carton */}
+              {hasPkgs && pkgs.length > 0 && (
+                <div className="px-4 pb-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">Détail par carton</p>
+                  <div className="space-y-1.5">
+                    {pkgs.map(p => {
+                      const cbm = p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : null)
+                      const kg = p.weight_kg ?? (p.weight_lbs ? p.weight_lbs * 0.453592 : null)
+                      return (
+                        <div key={p.number} className="rounded-xl bg-white border border-amber-100 px-3 py-2.5 flex items-center gap-3">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                            <span className="text-xs font-bold text-amber-700">{p.number}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            {p.length_cm && p.width_cm && p.height_cm ? (
+                              <p className="text-xs font-mono font-semibold text-foreground">{p.length_cm}×{p.width_cm}×{p.height_cm} cm</p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">Dimensions inconnues</p>
+                            )}
+                            {kg != null && (
+                              <p className="text-xs text-muted-foreground">{kg.toFixed(2)} kg · {(kg / 0.453592).toFixed(1)} lbs</p>
+                            )}
+                          </div>
+                          {cbm != null && (
+                            <span className="text-xs font-bold text-amber-700 shrink-0">{cbm.toFixed(4)} m³</span>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })()}
+
         {/* ── DEVIS REÇU — accepter/refuser ── */}
         {order.status === 'quote_sent' && order.quotes && (
           <div className="rounded-2xl bg-primary/8 border border-primary/20 p-4">
