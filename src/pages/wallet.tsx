@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, Search } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { createPayment } from '@/lib/payment-api'
@@ -239,6 +239,9 @@ export function WalletPage() {
   const [addrCopied, setAddrCopied] = useState(false)
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [proofPreview, setProofPreview] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [filterType, setFilterType] = useState<string | null>(null)
+  const [filterStatus, setFilterStatus] = useState<string | null>(null)
 
   async function loadData() {
     if (!user) return
@@ -325,6 +328,39 @@ export function WalletPage() {
     }
     setSubmitting(false)
   }
+
+  const filteredTx = useMemo(() => {
+    return transactions.filter(tx => {
+      const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
+      const matchSearch = !search ||
+        config.label.toLowerCase().includes(search.toLowerCase()) ||
+        (tx.description ?? '').toLowerCase().includes(search.toLowerCase()) ||
+        (tx.reference ?? '').toLowerCase().includes(search.toLowerCase())
+      const matchType = !filterType || tx.type === filterType
+      const matchStatus = !filterStatus || tx.status === filterStatus
+      return matchSearch && matchType && matchStatus
+    })
+  }, [transactions, search, filterType, filterStatus])
+
+  const groupedTx = useMemo(() => {
+    const groups: { label: string; total: number; items: Transaction[] }[] = []
+    const map: Record<string, number> = {}
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    for (const tx of filteredTx) {
+      const d = new Date(tx.created_at)
+      let key: string
+      if (d.toDateString() === today.toDateString()) key = "Aujourd'hui"
+      else if (d.toDateString() === yesterday.toDateString()) key = 'Hier'
+      else key = d.toLocaleDateString('fr-HT', { day: 'numeric', month: 'long' })
+      if (map[key] === undefined) { map[key] = groups.length; groups.push({ label: key, total: 0, items: [] }) }
+      groups[map[key]].items.push(tx)
+      const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
+      groups[map[key]].total += isCredit ? tx.amount : -tx.amount
+    }
+    return groups
+  }, [filteredTx])
 
   const balance = wallet?.available_balance ?? 0
 
@@ -708,52 +744,108 @@ export function WalletPage() {
       </div>
 
       {/* Transactions */}
-      <div className="px-5 pb-8 stagger-item" style={{ animationDelay: '180ms' }}>
-        <h2 className="text-base font-bold mb-3">Transactions</h2>
+      <div className="px-4 pb-8 stagger-item" style={{ animationDelay: '180ms' }}>
+        <h2 className="text-base font-bold mb-3 px-1">Dernières transactions</h2>
+
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher des transactions"
+            className="w-full rounded-2xl bg-white border border-gray-100 shadow-sm pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/40"
+          />
+        </div>
+
+        {/* Filter chips */}
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-4 no-scrollbar">
+          {[
+            { key: 'type',   label: 'Type',    value: filterType,   options: [['deposit','Dépôt'],['payment','Paiement'],['withdrawal','Retrait']] as [string,string][], set: setFilterType },
+            { key: 'status', label: 'Statut',  value: filterStatus, options: [['completed','Complété'],['pending','En attente'],['failed','Échoué']] as [string,string][], set: setFilterStatus },
+          ].map(({ key, label, value, options, set }) => (
+            <div key={key} className="flex gap-1.5 shrink-0">
+              {value ? (
+                <button
+                  onClick={() => set(null)}
+                  className="flex items-center gap-1 rounded-full border border-[#0A1628] bg-[#0A1628] px-3 py-1.5 text-xs font-semibold text-white"
+                >
+                  {options.find(([v]) => v === value)?.[1] ?? label}
+                  <X className="h-3 w-3" />
+                </button>
+              ) : (
+                options.map(([v, l]) => (
+                  <button
+                    key={v}
+                    onClick={() => set(v)}
+                    className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-foreground hover:border-gray-400 transition-colors"
+                  >
+                    {l}
+                  </button>
+                ))
+              )}
+            </div>
+          ))}
+        </div>
 
         {loading ? (
           <div className="space-y-2.5">
             {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}
           </div>
-        ) : transactions.length === 0 ? (
+        ) : groupedTx.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm">
             <CreditCard className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
             <p className="text-sm font-semibold text-muted-foreground">Aucune transaction</p>
           </div>
         ) : (
-          <div className="rounded-2xl bg-white border border-gray-100 overflow-hidden shadow-sm divide-y divide-border/60">
-            {transactions.map((tx) => {
-              const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
-              const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
-              const badge = STATUS_BADGE[tx.status] ?? STATUS_BADGE.pending
-              return (
-                <button
-                  key={tx.id}
-                  onClick={() => setReceiptTx(tx)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
-                >
-                  <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl shrink-0', config.bg)}>
-                    {isCredit
-                      ? <ArrowDownLeft className={cn('h-5 w-5', config.color)} />
-                      : <ArrowUpRight className={cn('h-5 w-5', config.color)} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-foreground">{config.label}</p>
-                    <span className={cn('inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5', badge.className)}>
-                      {badge.label}
-                    </span>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={cn('font-bold text-sm', config.color)}>
-                      {config.sign}{tx.amount.toLocaleString('fr-HT')} HTG
-                    </p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {new Date(tx.created_at).toLocaleDateString('fr-HT', { day: '2-digit', month: 'short' })}
-                    </p>
-                  </div>
-                </button>
-              )
-            })}
+          <div className="space-y-4">
+            {groupedTx.map((group) => (
+              <div key={group.label}>
+                {/* Date header */}
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <span className="text-xs font-semibold text-muted-foreground">{group.label}</span>
+                  <span className={cn('text-xs font-semibold', group.total >= 0 ? 'text-emerald-600' : 'text-destructive')}>
+                    {group.total >= 0 ? '+' : ''}{group.total.toLocaleString('fr-HT')} HTG
+                  </span>
+                </div>
+                {/* Rows */}
+                <div className="rounded-2xl bg-white shadow-sm overflow-hidden divide-y divide-gray-100">
+                  {group.items.map((tx) => {
+                    const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
+                    const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
+                    const badge = STATUS_BADGE[tx.status] ?? STATUS_BADGE.pending
+                    return (
+                      <button
+                        key={tx.id}
+                        onClick={() => setReceiptTx(tx)}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
+                      >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 bg-gray-100">
+                          {isCredit
+                            ? <ArrowDownLeft className="h-5 w-5 text-gray-500" />
+                            : <ArrowUpRight className="h-5 w-5 text-gray-500" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-foreground">{config.label}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {new Date(tx.created_at).toLocaleTimeString('fr-HT', { hour: '2-digit', minute: '2-digit' })}
+                            {tx.payment_method ? ` · ${METHOD_LABEL[tx.payment_method] ?? tx.payment_method}` : ''}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className={cn('font-bold text-sm', isCredit ? 'text-emerald-600' : 'text-foreground')}>
+                            {isCredit ? '+' : '-'}{tx.amount.toLocaleString('fr-HT')} HTG
+                          </p>
+                          <p className={cn('text-[11px] font-medium mt-0.5', badge.className.includes('emerald') ? 'text-emerald-600' : badge.className.includes('red') ? 'text-red-500' : badge.className.includes('amber') ? 'text-amber-500' : 'text-gray-400')}>
+                            {badge.label}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
