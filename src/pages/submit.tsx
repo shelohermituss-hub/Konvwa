@@ -117,6 +117,9 @@ export function SubmitPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Shipping option
+  const [shippingOption, setShippingOption] = useState<'all_inclusive' | 'separate'>('all_inclusive')
+
   // State
   const [submitting, setSubmitting] = useState(false)
   const [success,    setSuccess]    = useState(false)
@@ -177,6 +180,7 @@ export function SubmitPage() {
     setProductUrl(''); setProductName(''); setCategory('')
     setQuantity('1'); setPriceUSD('')
     setSize(''); setColor(''); setUrgency('normal'); setNotes('')
+    setShippingOption('all_inclusive')
     clearImage()
   }
 
@@ -212,6 +216,7 @@ export function SubmitPage() {
       notes:                  notes || null,
       source_platform:        detectedPlatform || 'other',
       status:                 'submitted',
+      shipping_option:        shippingOption,
       ship_from_id:           shipFromId || null,
       destination_region_id:  regionId   || null,
       destination_city_id:    cityId     || null,
@@ -461,6 +466,79 @@ export function SubmitPage() {
               </div>
             </div>
 
+            {/* ── Section: Option d'expédition ── */}
+            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-5 space-y-3">
+                <SectionHeader icon={Truck} label="Option d'expédition" />
+                <p className="text-xs text-muted-foreground">
+                  Choisissez comment vous souhaitez recevoir votre devis.
+                </p>
+                <div className="grid grid-cols-1 gap-3">
+                  {/* Tout inclus */}
+                  <button
+                    type="button"
+                    onClick={() => setShippingOption('all_inclusive')}
+                    className={cn(
+                      'text-left rounded-2xl border-2 px-4 py-3.5 transition-all',
+                      shippingOption === 'all_inclusive'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 bg-[#F0F1F5] hover:border-primary/40'
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                        shippingOption === 'all_inclusive'
+                          ? 'border-primary bg-primary'
+                          : 'border-gray-300 bg-white'
+                      )}>
+                        {shippingOption === 'all_inclusive' && (
+                          <div className="h-2 w-2 rounded-full bg-white" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">Tout inclus</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                          Un seul devis avec produit, expédition, douane et livraison. Vous payez une fois.
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Expédition séparée */}
+                  <button
+                    type="button"
+                    onClick={() => setShippingOption('separate')}
+                    className={cn(
+                      'text-left rounded-2xl border-2 px-4 py-3.5 transition-all',
+                      shippingOption === 'separate'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 bg-[#F0F1F5] hover:border-primary/40'
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                        shippingOption === 'separate'
+                          ? 'border-primary bg-primary'
+                          : 'border-gray-300 bg-white'
+                      )}>
+                        {shippingOption === 'separate' && (
+                          <div className="h-2 w-2 rounded-full bg-white" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">Expédition séparée</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                          Devis produit uniquement. Quand votre colis arrive en entrepôt Chine, vous choisissez vous-même le mode d'expédition.
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* ── Section: Photo & variantes ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-4">
@@ -649,6 +727,24 @@ export function SubmitPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Option d'expédition */}
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F0F1F5]">
+                      <Truck className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Expédition</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {shippingOption === 'all_inclusive' ? 'Tout inclus' : 'Séparée'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {shippingOption === 'all_inclusive'
+                          ? 'Devis complet avec tous les frais'
+                          : 'Choix du mode à l\'entrepôt Chine'}
+                      </p>
+                    </div>
+                  </div>
 
                   {/* Prix indicatif */}
                   {price > 0 && (

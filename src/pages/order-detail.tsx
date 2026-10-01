@@ -6,14 +6,25 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { TimelineStep } from '@/components/shared/timeline-step'
-import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight, MapPin, Globe, Truck, Download } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight, MapPin, Globe, Truck, Download, Plane, Ship, Zap } from 'lucide-react'
 import { downloadOrderPDF, type OrderForPDF } from '@/lib/pdf'
 import IconBoite from 'flat-color-icons/svg/package.svg'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 import { OrderStatusTracker } from '@/components/shared/order-status-tracker'
+
+interface ShippingMethod {
+  id: string
+  name: string
+  description: string | null
+  price_htg: number
+  duration_days_min: number
+  duration_days_max: number
+  mode: 'air' | 'sea' | 'express'
+}
 
 interface OrderDetail {
   id: string
@@ -22,6 +33,10 @@ interface OrderDetail {
   total_paid: number
   payment_status: string
   created_at: string
+  shipping_option: 'all_inclusive' | 'separate'
+  chosen_shipping_method_id: string | null
+  shipping_method_confirmed_at: string | null
+  chosen_shipping_method?: ShippingMethod | null
   quotes: {
     id: string
     total: number
@@ -86,6 +101,9 @@ export function OrderDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [accepting, setAccepting] = useState(false)
   const [paying, setPaying] = useState(false)
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([])
+  const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null)
+  const [choosingShipping, setChoosingShipping] = useState(false)
 
   useEffect(() => {
     if (!id || !user) return
@@ -95,6 +113,8 @@ export function OrderDetailPage() {
         .from('orders')
         .select(`
           id, tracking_code, status, total_paid, payment_status, created_at,
+          shipping_option, chosen_shipping_method_id, shipping_method_confirmed_at,
+          chosen_shipping_method:shipping_methods(id, name, description, price_htg, duration_days_min, duration_days_max, mode),
           quotes(
             id, total, product_price, quantity,
             service_fee, purchase_fee, shipping_fee, customs_fee, local_delivery_fee,
@@ -120,8 +140,17 @@ export function OrderDetailPage() {
         .eq('user_id', user.id)
         .maybeSingle(),
     ]).then(([orderRes, walletRes]) => {
-      if (orderRes.data) setOrder(orderRes.data as unknown as OrderDetail)
-      else setNotFound(true)
+      if (orderRes.data) {
+        const o = orderRes.data as unknown as OrderDetail
+        setOrder(o)
+        if (o.status === 'in_china_warehouse' && o.shipping_option === 'separate' && !o.chosen_shipping_method_id) {
+          supabase.from('shipping_methods').select('id,name,description,price_htg,duration_days_min,duration_days_max,mode').eq('active', true).order('sort_order').then(({ data }) => {
+            if (data) setShippingMethods(data as ShippingMethod[])
+          })
+        }
+      } else {
+        setNotFound(true)
+      }
       if (walletRes.data) setWallet(walletRes.data)
       setLoading(false)
     })
@@ -180,6 +209,34 @@ export function OrderDetailPage() {
       toast.error('Erreur lors du paiement. Réessayez.')
     } finally {
       setPaying(false)
+    }
+  }
+
+  async function handleChooseShipping() {
+    if (!order || !selectedMethodId) return
+    setChoosingShipping(true)
+    try {
+      const { data, error } = await supabase.rpc('choose_shipping_method', {
+        p_order_id: order.id,
+        p_shipping_method_id: selectedMethodId,
+      })
+      if (error) throw error
+      if (!data?.success) {
+        toast.error(data?.error || 'Erreur lors du choix du mode d\'expédition.')
+        return
+      }
+      const method = shippingMethods.find(m => m.id === selectedMethodId) ?? null
+      toast.success('Mode d\'expédition confirmé ! Votre colis est en cours d\'expédition.')
+      setOrder(prev => prev ? {
+        ...prev,
+        status: 'shipped',
+        chosen_shipping_method_id: selectedMethodId,
+        chosen_shipping_method: method,
+      } : null)
+    } catch {
+      toast.error('Erreur lors du choix. Réessayez.')
+    } finally {
+      setChoosingShipping(false)
     }
   }
 
@@ -347,6 +404,87 @@ export function OrderDetailPage() {
           </div>
         )}
 
+        {/* ── EXPÉDITION SÉPARÉE — choisir le mode ── */}
+        {order.status === 'in_china_warehouse' &&
+          order.shipping_option === 'separate' &&
+          !order.chosen_shipping_method_id && (
+          <div className="rounded-2xl border border-primary/30 overflow-hidden shadow-sm">
+            <div className="bg-primary/8 px-4 pt-4 pb-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 shrink-0">
+                  <Truck className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-foreground">Votre colis est en entrepôt Chine</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Choisissez le mode d'expédition pour que votre commande avance.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white px-4 pt-3 pb-4 space-y-3">
+              {shippingMethods.length === 0 ? (
+                <div className="flex items-center gap-2 py-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Chargement des options…</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {shippingMethods.map(method => {
+                    const Icon = method.mode === 'air' || method.mode === 'express' ? Plane : Ship
+                    const isSelected = selectedMethodId === method.id
+                    return (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setSelectedMethodId(method.id)}
+                        className={cn(
+                          'w-full text-left rounded-xl border-2 px-3.5 py-3 transition-all',
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-gray-200 bg-[#F8F9FB] hover:border-primary/40'
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
+                            isSelected ? 'bg-primary/15' : 'bg-white border border-gray-200'
+                          )}>
+                            <Icon className={cn('h-4 w-4', isSelected ? 'text-primary' : 'text-muted-foreground')} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-bold text-foreground truncate">{method.name}</p>
+                              <p className={cn('text-sm font-bold shrink-0', isSelected ? 'text-primary' : 'text-foreground')}>
+                                {method.price_htg.toLocaleString('fr-HT')} HTG
+                              </p>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {method.duration_days_min}–{method.duration_days_max} jours
+                              {method.description ? ` · ${method.description}` : ''}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              <Button
+                onClick={handleChooseShipping}
+                disabled={!selectedMethodId || choosingShipping}
+                className="w-full rounded-xl h-11 font-bold gap-2"
+              >
+                {choosingShipping ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" />Confirmation…</>
+                ) : (
+                  <><CheckCircle2 className="h-4 w-4" />Confirmer l'expédition</>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Product image */}
         {order.quotes?.product_requests?.product_image_url && (
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
@@ -371,6 +509,11 @@ export function OrderDetailPage() {
           </div>
           <div className="px-4 divide-y divide-border/50">
             <InfoRow label="Plateforme" value={(order.quotes?.product_requests?.source_platform || '—').toUpperCase()} />
+            <InfoRow
+              label="Option expédition"
+              value={order.shipping_option === 'all_inclusive' ? 'Tout inclus' : 'Expédition séparée'}
+              valueClass={order.shipping_option === 'separate' ? 'text-primary' : ''}
+            />
             <InfoRow label="Date" value={new Date(order.created_at).toLocaleDateString('fr-FR')} />
             {delivery && <InfoRow label="Livraison estimée" value={delivery.toLocaleDateString('fr-FR')} />}
             <InfoRow
@@ -533,10 +676,32 @@ export function OrderDetailPage() {
                 <span className="text-muted-foreground">Frais d'achat</span>
                 <span className="font-medium">{order.quotes.purchase_fee.toLocaleString('fr-HT')} HTG</span>
               </div>
-              <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">{order.quotes?.product_requests?.shipping_rates?.mode === 'air' ? 'Fret aérien' : 'Frais maritimes'}</span>
-                <span className="font-medium">{order.quotes.shipping_fee.toLocaleString('fr-HT')} HTG</span>
-              </div>
+              {order.shipping_option === 'separate' ? (
+                order.chosen_shipping_method ? (
+                  <div className="py-2.5 border-b border-gray-100">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Expédition ({order.chosen_shipping_method.name})</span>
+                      <span className="font-medium">{order.chosen_shipping_method.price_htg.toLocaleString('fr-HT')} HTG</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {order.chosen_shipping_method.duration_days_min}–{order.chosen_shipping_method.duration_days_max} jours
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Zap className="h-3.5 w-3.5 text-warning" />
+                      Expédition
+                    </span>
+                    <span className="font-medium text-warning">À confirmer</span>
+                  </div>
+                )
+              ) : (
+                <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
+                  <span className="text-muted-foreground">{order.quotes?.product_requests?.shipping_rates?.mode === 'air' ? 'Fret aérien' : 'Frais maritimes'}</span>
+                  <span className="font-medium">{order.quotes.shipping_fee.toLocaleString('fr-HT')} HTG</span>
+                </div>
+              )}
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">Douane estimée</span>
                 <span className="font-medium">{order.quotes.customs_fee.toLocaleString('fr-HT')} HTG</span>
