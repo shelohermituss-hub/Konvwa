@@ -10,7 +10,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Package, Loader2, ChevronDown, ChevronUp,
-  CheckCheck, FileText, Receipt, Scale, Box, Ship
+  CheckCheck, FileText, Receipt, Scale, Box, Ship, RefreshCw
 } from 'lucide-react'
 
 interface ShipmentBatch {
@@ -604,7 +604,7 @@ export function AdminShippingRequestsPage() {
           </p>
         </div>
         <Button variant="outline" size="sm" className="rounded-xl gap-1.5" onClick={load}>
-          <Warehouse className="h-4 w-4" />
+          <RefreshCw className="h-4 w-4" />
           Actualiser
         </Button>
       </div>
