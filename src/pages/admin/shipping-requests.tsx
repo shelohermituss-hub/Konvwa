@@ -460,7 +460,11 @@ export function AdminShippingRequestsPage() {
       .order('created_at', { ascending: false })
     setLoading(false)
     if (error) { toast.error('Erreur chargement : ' + error.message); return }
-    setRequests((data as ShippingRequest[]) ?? [])
+    const normalized = (data ?? []).map((r: Record<string, unknown>) => ({
+      ...r,
+      profiles: Array.isArray(r.profiles) ? (r.profiles[0] ?? null) : r.profiles,
+    }))
+    setRequests(normalized as unknown as ShippingRequest[])
   }
 
   useEffect(() => { load() }, [])

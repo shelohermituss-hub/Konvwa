@@ -487,7 +487,7 @@ function QuoteRequestSheet({
   const { user } = useAuth()
   const [warehouses,  setWarehouses]  = useState<Warehouse[]>([])
   const [categories,  setCategories]  = useState<ProductRateCategory[]>([])
-  const [loading,     setLoading]     = useState(false)
+  const [_loading,    setLoading]     = useState(false)
 
   const [categorySlug, setCategorySlug] = useState<'generic' | 'branded' | ''>('')
   const [warehouseId,  setWarehouseId]  = useState('')
@@ -529,7 +529,6 @@ function QuoteRequestSheet({
   }
 
   const selectedWarehouse = warehouses.find(w => w.id === warehouseId) ?? null
-  const selectedCategory  = categories.find(c => c.slug === categorySlug) ?? null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
