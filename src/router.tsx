@@ -22,6 +22,7 @@ import { SubmitPage } from '@/pages/submit'
 import { OrdersPage } from '@/pages/orders'
 import { OrderDetailPage } from '@/pages/order-detail'
 import { ShipmentsPage } from '@/pages/shipments'
+import { ShipmentDetailPage } from '@/pages/shipment-detail'
 import { WalletPage } from '@/pages/wallet'
 import { NotificationsPage } from '@/pages/notifications'
 import { ProfilePage } from '@/pages/profile'
@@ -105,6 +106,7 @@ export const router = createBrowserRouter([
       { path: 'orders', element: <OrdersPage /> },
       { path: 'orders/:id', element: <OrderDetailPage /> },
       { path: 'shipments', element: <ShipmentsPage /> },
+      { path: 'shipments/:id', element: <ShipmentDetailPage /> },
       { path: 'wallet', element: <WalletPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'profile', element: <ProfilePage /> },

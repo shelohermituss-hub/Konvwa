@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Ship, Package, MapPin, Calendar, Anchor, CheckCircle2, Clock, Truck,
-  ChevronDown, ChevronUp, Plus, Loader2, Wallet, Copy, Check,
-  Tag, Building2, AlertCircle, ChevronRight,
+  ChevronDown, ChevronUp, Plus, Copy, Check,
+  Building2, AlertCircle, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -311,228 +311,68 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
 
 // ── ShippingRequestCard ───────────────────────────────────────────────────────
 
-function ShippingRequestCard({
-  req,
-  walletBalance,
-  onPaid,
-}: {
-  req: ShippingRequest
-  walletBalance: number
-  onPaid: () => void
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const [paying,   setPaying]   = useState(false)
+function ShippingRequestCard({ req }: { req: ShippingRequest }) {
   const s = REQ_STATUS[req.status] ?? { label: req.status, color: 'bg-muted text-muted-foreground' }
   const displayAmount = req.actual_amount_htg ?? req.quoted_amount_htg
   const isQuoted      = req.status === 'quoted'
   const isInvoiced    = req.status === 'invoiced'
-  const canPay        = isQuoted && displayAmount != null && walletBalance >= displayAmount
-
-  async function handlePay() {
-    setPaying(true)
-    const { data, error } = await supabase.rpc('pay_shipping_quote', { p_request_id: req.id })
-    setPaying(false)
-    if (error || !data?.success) {
-      toast.error(data?.error ?? error?.message ?? 'Erreur de paiement')
-      return
-    }
-    toast.success(`${(req.quoted_amount_htg ?? 0).toLocaleString('fr-HT')} HTG débités — paiement confirmé`)
-    onPaid()
-  }
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-      <div
-        className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/20 transition-colors"
-        onClick={() => setExpanded(e => !e)}
-      >
-        <div className={cn(
-          'flex h-12 w-12 items-center justify-center rounded-xl shrink-0',
-          isQuoted   ? 'bg-primary/10' :
-          isInvoiced ? 'bg-emerald-50' :
-                       'bg-amber-50'
-        )}>
-          <Package className={cn(
-            'h-6 w-6',
-            isQuoted   ? 'text-primary' :
-            isInvoiced ? 'text-emerald-600' :
-                         'text-amber-600'
-          )} />
-        </div>
+    <Link
+      to={`/shipments/${req.id}`}
+      className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:border-primary/20 transition-colors"
+    >
+      <div className={cn(
+        'flex h-12 w-12 items-center justify-center rounded-xl shrink-0',
+        isQuoted   ? 'bg-primary/10' :
+        isInvoiced ? 'bg-emerald-50' :
+                     'bg-amber-50'
+      )}>
+        <Package className={cn(
+          'h-6 w-6',
+          isQuoted   ? 'text-primary' :
+          isInvoiced ? 'text-emerald-600' :
+                       'text-amber-600'
+        )} />
+      </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={cn('rounded-full text-[10px] px-2 py-0.5 font-semibold', s.color)}>
-              {s.label}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={cn('rounded-full text-[10px] px-2 py-0.5 font-semibold', s.color)}>
+            {s.label}
+          </span>
+          {req.product_rate_category && (
+            <span className={cn(
+              'rounded-full text-[10px] px-2 py-0.5 font-semibold',
+              req.product_rate_category.slug === 'branded'
+                ? 'bg-orange-50 text-orange-700'
+                : 'bg-sky-50 text-sky-700'
+            )}>
+              {req.product_rate_category.slug === 'branded' ? 'Marque' : 'Générique'}
             </span>
-            {req.product_rate_category && (
-              <span className={cn(
-                'rounded-full text-[10px] px-2 py-0.5 font-semibold',
-                req.product_rate_category.slug === 'branded'
-                  ? 'bg-orange-50 text-orange-700'
-                  : 'bg-sky-50 text-sky-700'
-              )}>
-                {req.product_rate_category.slug === 'branded' ? 'Marque' : 'Générique'}
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1 truncate">
-            {req.warehouse?.name ?? 'Entrepôt inconnu'}
-          </p>
-          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-            {new Date(req.created_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short', year: 'numeric' })}
-          </p>
+          )}
         </div>
+        <p className="text-xs text-muted-foreground mt-1 truncate">
+          {req.warehouse?.name ?? 'Entrepôt inconnu'}
+        </p>
+        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+          {new Date(req.created_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </p>
+      </div>
 
+      <div className="shrink-0 flex flex-col items-end gap-1">
         {displayAmount != null ? (
-          <div className="text-right shrink-0">
+          <>
             <p className={cn('text-sm font-bold', isInvoiced ? 'text-emerald-600' : 'text-primary')}>
               {displayAmount.toLocaleString('fr-HT')} HTG
             </p>
             <p className="text-[10px] text-muted-foreground">{isInvoiced ? 'Payé' : isQuoted ? 'Officiel' : 'Estimation'}</p>
-          </div>
+          </>
         ) : (
-          expanded
-            ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
-            : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
         )}
       </div>
-
-      {expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-border space-y-3">
-
-          {/* Status contextual message */}
-          {(req.status === 'submitted' || req.status === 'reviewing') && (
-            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5 flex items-start gap-2">
-              <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-800 leading-relaxed">
-                Envoyez vos colis à l'adresse de notre entrepôt.{' '}
-                Votre devis officiel sera établi à leur arrivée.
-              </p>
-            </div>
-          )}
-          {req.status === 'received' && (
-            <div className="rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-2.5 flex items-start gap-2">
-              <Package className="h-3.5 w-3.5 text-indigo-600 shrink-0 mt-0.5" />
-              <p className="text-xs text-indigo-800 leading-relaxed">
-                Vos colis sont bien arrivés à notre entrepôt.{' '}
-                Votre devis officiel est en cours de préparation.
-              </p>
-            </div>
-          )}
-          {isInvoiced && (
-            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2.5 flex items-center gap-2">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-              <p className="text-xs text-emerald-800 font-medium">
-                Paiement confirmé —{' '}
-                {(req.actual_amount_htg ?? req.quoted_amount_htg ?? 0).toLocaleString('fr-HT')} HTG.{' '}
-                Votre cargaison sera assignée à une prochaine expédition.
-              </p>
-            </div>
-          )}
-
-          {/* Dimensions */}
-          {(req.actual_cbm ?? req.estimated_cbm ?? req.actual_kg ?? req.estimated_kg) != null && (
-            <div className="grid grid-cols-2 gap-2">
-              {(req.actual_cbm ?? req.estimated_cbm) != null && (
-                <div className="rounded-xl bg-[#F8F9FB] border border-gray-100 px-3 py-2">
-                  <p className="text-[10px] text-muted-foreground">
-                    {req.actual_cbm ? 'Volume réel' : 'Volume estimé'}
-                  </p>
-                  <p className="text-sm font-bold font-mono">
-                    {((req.actual_cbm ?? req.estimated_cbm) as number).toFixed(4)} m³
-                  </p>
-                </div>
-              )}
-              {(req.actual_kg ?? req.estimated_kg) != null && (
-                <div className="rounded-xl bg-[#F8F9FB] border border-gray-100 px-3 py-2">
-                  <p className="text-[10px] text-muted-foreground">
-                    {req.actual_kg ? 'Poids réel' : 'Poids estimé'}
-                  </p>
-                  <p className="text-sm font-bold font-mono">
-                    {((req.actual_kg ?? req.estimated_kg) as number).toFixed(2)} kg
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {req.package_count != null && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Package className="h-3.5 w-3.5" />
-              {req.package_count} colis estimé{req.package_count !== 1 ? 's' : ''}
-            </div>
-          )}
-
-          {req.notes && (
-            <div className="rounded-xl bg-muted/40 p-3">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Notes</p>
-              <p className="text-xs text-foreground">{req.notes}</p>
-            </div>
-          )}
-
-          {/* Quote banner */}
-          {isQuoted && displayAmount != null && (
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-foreground">Devis officiel</p>
-                <p className="text-lg font-bold text-primary">
-                  {displayAmount.toLocaleString('fr-HT')} HTG
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Devis établi après réception de vos colis. Réglez maintenant pour confirmer votre expédition.
-              </p>
-              {canPay ? (
-                <button
-                  type="button"
-                  onClick={handlePay}
-                  disabled={paying}
-                  className="flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:opacity-60"
-                  style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-                >
-                  {paying
-                    ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Paiement…</>
-                    : <><Wallet className="h-3.5 w-3.5" />Payer {displayAmount.toLocaleString('fr-HT')} HTG</>
-                  }
-                </button>
-              ) : (
-                <Link
-                  to="/wallet"
-                  className="flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-all"
-                  style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-                >
-                  <Wallet className="h-3.5 w-3.5" />
-                  Recharger — solde insuffisant
-                </Link>
-              )}
-            </div>
-          )}
-
-          {/* Timeline */}
-          <div className="space-y-1.5">
-            {req.quoted_at && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                Devis envoyé le {new Date(req.quoted_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
-              </div>
-            )}
-            {req.received_at && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
-                Colis reçu le {new Date(req.received_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
-              </div>
-            )}
-            {req.invoiced_at && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                Facturé le {new Date(req.invoiced_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+    </Link>
   )
 }
 
@@ -904,7 +744,6 @@ export function ShipmentsPage() {
   const [shipments,        setShipments]        = useState<MyShipment[]>([])
   const [shippingRequests, setShippingRequests] = useState<ShippingRequest[]>([])
   const [warehouses,       setWarehouses]       = useState<Warehouse[]>([])
-  const [walletBalance,    setWalletBalance]    = useState(0)
   const [loading,          setLoading]          = useState(true)
   const [tab,              setTab]              = useState<'cargaisons' | 'expeditions'>('cargaisons')
   const [showForm,         setShowForm]         = useState(false)
@@ -913,7 +752,7 @@ export function ShipmentsPage() {
     if (!user) return
     setLoading(true)
 
-    const [shipmentsRes, requestsRes, warehousesRes, walletRes] = await Promise.all([
+    const [shipmentsRes, requestsRes, warehousesRes] = await Promise.all([
       supabase
         .from('order_shipments')
         .select(`
@@ -938,7 +777,6 @@ export function ShipmentsPage() {
         .not('status', 'in', '(cancelled)')
         .order('created_at', { ascending: false }),
       supabase.from('warehouses').select('*').eq('active', true).order('sort_order'),
-      supabase.from('wallets').select('available_balance').eq('user_id', user.id).maybeSingle(),
     ])
 
     if (shipmentsRes.data) {
@@ -964,8 +802,6 @@ export function ShipmentsPage() {
     if (warehousesRes.data) {
       setWarehouses(warehousesRes.data as Warehouse[])
     }
-
-    if (walletRes.data) setWalletBalance(walletRes.data.available_balance ?? 0)
 
     setLoading(false)
   }, [user])
@@ -1102,7 +938,7 @@ export function ShipmentsPage() {
               </div>
             ) : (
               shippingRequests.map(r => (
-                <ShippingRequestCard key={r.id} req={r} walletBalance={walletBalance} onPaid={load} />
+                <ShippingRequestCard key={r.id} req={r} />
               ))
             )}
           </>

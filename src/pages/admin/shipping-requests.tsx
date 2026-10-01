@@ -538,19 +538,28 @@ export function AdminShippingRequestsPage() {
         quoted_amount_htg, actual_amount_htg,
         quoted_at, received_at, invoiced_at, package_count, admin_notes,
         user_id,
-        profiles!product_requests_user_id_fkey(full_name, phone),
         warehouse:warehouses(id, code, name, flag_emoji, country_code),
         product_rate_category:product_rate_categories(id, name, slug, rate_multiplier)
       `)
       .eq('request_type', 'shipping')
       .order('created_at', { ascending: false })
+    if (error) { setLoading(false); toast.error('Erreur chargement : ' + error.message); return }
+
+    const rows = data ?? []
+    const userIds = [...new Set(rows.map((r: Record<string, unknown>) => r.user_id as string))]
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, full_name, phone')
+      .in('user_id', userIds)
+    const profileMap = Object.fromEntries(
+      (profiles ?? []).map(p => [p.user_id, { full_name: p.full_name, phone: p.phone }])
+    )
+
     setLoading(false)
-    if (error) { toast.error('Erreur chargement : ' + error.message); return }
-    const normalized = (data ?? []).map((r: Record<string, unknown>) => ({
+    setRequests(rows.map((r: Record<string, unknown>) => ({
       ...r,
-      profiles: Array.isArray(r.profiles) ? (r.profiles[0] ?? null) : r.profiles,
-    }))
-    setRequests(normalized as unknown as ShippingRequest[])
+      profiles: profileMap[r.user_id as string] ?? null,
+    })) as unknown as ShippingRequest[])
   }
 
   useEffect(() => { load() }, [])

@@ -264,6 +264,7 @@ export function AdminQuotesPage() {
         shipping_origins!ship_from_id(name),
         shipping_rates!shipping_rate_id(mode, name)
       `)
+      .or('request_type.is.null,request_type.neq.shipping')
       .order('created_at', { ascending: false })
     if (!data) { setLoading(false); return }
 
