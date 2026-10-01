@@ -144,7 +144,6 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
 
   // ── SECTION 2 — CLIENT (left) + META (right) ──────────────────────────────
   const metaLabelX = W - M - 52
-  const metaValueX = W - M
 
   // Left: Facturer à
   normal(8); clr(...MID)
