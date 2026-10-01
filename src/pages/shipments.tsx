@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Ship, Package, MapPin, Calendar, Anchor, CheckCircle2, Clock, Truck,
-  ChevronDown, ChevronUp, Plus, Copy, Check,
-  Building2, AlertCircle, ChevronRight,
+  ChevronDown, ChevronUp, Plus, Loader2, Copy, Check,
+  Tag, Building2, AlertCircle, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
