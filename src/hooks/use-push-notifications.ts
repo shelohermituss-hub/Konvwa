@@ -12,11 +12,11 @@ export type NotificationTypes = {
 
 const DEFAULT_TYPES: NotificationTypes = { orders: true, payments: true, quotes: true, alerts: true }
 
-function urlBase64ToUint8Array(base64: string): Uint8Array {
+function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   const pad = '='.repeat((4 - (base64.length % 4)) % 4)
   const b64 = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/')
   const raw = atob(b64)
-  return Uint8Array.from(raw, (c) => c.charCodeAt(0))
+  return new Uint8Array(Array.from(raw, (c) => c.charCodeAt(0)))
 }
 
 async function getRegistration(): Promise<ServiceWorkerRegistration | null> {
