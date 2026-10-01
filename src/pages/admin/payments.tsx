@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Search, MoreHorizontal, CheckCircle2, XCircle, CreditCard, Smartphone, Clock, TrendingUp } from 'lucide-react'
+import { Search, MoreHorizontal, CheckCircle2, XCircle, CreditCard, Smartphone, Clock, TrendingUp, ImageOff, ExternalLink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,8 @@ interface WalletTx {
   status: string
   payment_method: string | null
   description: string | null
+  reference: string | null
+  proof_url: string | null
   created_at: string
   wallet_id: string
   customer_name?: string
@@ -54,12 +56,13 @@ export function AdminPaymentsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('pending')
   const [approveDialog, setApproveDialog] = useState<WalletTx | null>(null)
+  const [proofSignedUrl, setProofSignedUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   async function loadTransactions() {
     const { data: txData } = await supabase
       .from('wallet_transactions')
-      .select('id, type, amount, status, payment_method, description, created_at, wallet_id')
+      .select('id, type, amount, status, payment_method, description, reference, proof_url, created_at, wallet_id')
       .order('created_at', { ascending: false })
       .limit(200)
 
@@ -82,6 +85,17 @@ export function AdminPaymentsPage() {
   }
 
   useEffect(() => { loadTransactions() }, [])
+
+  async function openApproveDialog(tx: WalletTx) {
+    setApproveDialog(tx)
+    setProofSignedUrl(null)
+    if (tx.proof_url) {
+      const { data } = await supabase.storage
+        .from('payment-proofs')
+        .createSignedUrl(tx.proof_url, 3600)
+      setProofSignedUrl(data?.signedUrl ?? null)
+    }
+  }
 
   async function handleApprove(tx: WalletTx) {
     setSaving(true)
@@ -238,7 +252,7 @@ export function AdminPaymentsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="rounded-xl w-44">
-                            <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => setApproveDialog(tx)}>
+                            <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => openApproveDialog(tx)}>
                               <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />Approuver
                             </DropdownMenuItem>
                             <DropdownMenuItem className="rounded-lg cursor-pointer text-destructive focus:text-destructive" onClick={() => handleReject(tx)}>
@@ -257,7 +271,7 @@ export function AdminPaymentsPage() {
       </div>
 
       {/* Confirm approve dialog */}
-      <Dialog open={!!approveDialog} onOpenChange={o => { if (!o) setApproveDialog(null) }}>
+      <Dialog open={!!approveDialog} onOpenChange={o => { if (!o) { setApproveDialog(null); setProofSignedUrl(null) } }}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
             <DialogTitle>Approuver le paiement</DialogTitle>
@@ -269,6 +283,43 @@ export function AdminPaymentsPage() {
             <p className="text-3xl font-bold text-emerald-700">{approveDialog?.amount.toLocaleString()} HTG</p>
             <p className="text-sm text-emerald-600/80 mt-1 capitalize">{approveDialog?.payment_method}</p>
           </div>
+
+          {/* Transaction hash / reference */}
+          {approveDialog?.reference && (
+            <div className="rounded-xl bg-muted/40 border border-muted px-3 py-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Référence / Hash</p>
+              <p className="text-xs font-mono break-all">{approveDialog.reference}</p>
+            </div>
+          )}
+
+          {/* Proof image */}
+          {approveDialog?.proof_url && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Preuve de paiement</p>
+              {proofSignedUrl ? (
+                <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                  <img
+                    src={proofSignedUrl}
+                    alt="Preuve de paiement"
+                    className="w-full max-h-64 object-contain"
+                  />
+                  <a
+                    href={proofSignedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2 right-2 flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1 text-[10px] text-white hover:bg-black/80 transition-colors"
+                  >
+                    <ExternalLink className="h-3 w-3" />Agrandir
+                  </a>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 h-20 text-muted-foreground text-xs">
+                  <ImageOff className="h-4 w-4" />Chargement de la preuve…
+                </div>
+              )}
+            </div>
+          )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setApproveDialog(null)} className="rounded-xl">Annuler</Button>
             <Button
