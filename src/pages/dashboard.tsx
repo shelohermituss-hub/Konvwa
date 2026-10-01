@@ -159,7 +159,7 @@ export function DashboardPage() {
         <div className="flex gap-3">
           {/* Solde principal */}
           <Link to="/wallet" className="flex-1">
-            <div className="rounded-2xl bg-white p-4 relative overflow-hidden shadow-sm border border-black/5">
+            <div className="rounded-2xl bg-white p-4 relative overflow-hidden shadow-sm">
               {/* Amount row */}
               <div className="flex items-baseline gap-1 mb-1">
                 {loading ? (
@@ -209,7 +209,7 @@ export function DashboardPage() {
 
           {/* En attente */}
           <Link to="/wallet" className="w-[38%]">
-            <div className="rounded-2xl bg-white p-4 h-full flex flex-col justify-between shadow-sm border border-black/5">
+            <div className="rounded-2xl bg-white p-4 h-full flex flex-col justify-between shadow-sm">
               <div className="flex items-baseline gap-0.5 mb-1">
                 {loading ? (
                   <Skeleton className="h-8 w-16 rounded-lg" />
