@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { Plus, Pencil, Trash2, Loader2, Truck, MapPin, Package, Globe, Ship, Plane, DollarSign } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, Truck, MapPin, Package, Globe, Ship, Plane, DollarSign, Warehouse, Tag } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +25,18 @@ interface HaitiCity {
 interface ProductType {
   id: string; name: string; active: boolean; sort_order: number
 }
+interface WarehouseEntry {
+  id: string; code: string; name: string; country_code: string
+  flag_emoji: string | null; address_line1: string | null; address_line2: string | null
+  address_line3: string | null; city: string | null; state: string | null
+  postal_code: string | null; contact_info: string | null; instructions: string | null
+  for_category: 'generic' | 'branded' | 'usa' | 'all'; active: boolean; sort_order: number
+}
+interface ProductRateCategory {
+  id: string; name: string; slug: 'generic' | 'branded'
+  rate_multiplier: number; description: string | null; active: boolean; sort_order: number
+}
+
 interface ShippingRate {
   id: string; mode: 'ocean' | 'air'; name: string; type_label: string; priority: string
   origin_id: string | null; min_amount_usd: number; max_weight_kg: number | null
@@ -67,15 +79,365 @@ function SectionCard({ title, count, children }: { title: string; count: number;
 
 // ── Tab bar ──────────────────────────────────────────────────────────────────
 
-type Tab = 'origins' | 'regions' | 'cities' | 'types' | 'rates'
+type Tab = 'origins' | 'regions' | 'cities' | 'types' | 'rates' | 'warehouses' | 'categories'
 
 const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
-  { key: 'origins', label: 'Origines',    icon: Globe       },
-  { key: 'regions', label: 'Régions',     icon: MapPin      },
-  { key: 'cities',  label: 'Villes',      icon: Truck       },
-  { key: 'types',   label: 'Types colis', icon: Package     },
-  { key: 'rates',   label: 'Tarifs',      icon: DollarSign  },
+  { key: 'warehouses',  label: 'Entrepôts',   icon: Warehouse  },
+  { key: 'categories',  label: 'Catégories',  icon: Tag        },
+  { key: 'origins',     label: 'Origines',    icon: Globe      },
+  { key: 'regions',     label: 'Régions',     icon: MapPin     },
+  { key: 'cities',      label: 'Villes',      icon: Truck      },
+  { key: 'types',       label: 'Types',       icon: Package    },
+  { key: 'rates',       label: 'Tarifs',      icon: DollarSign },
 ]
+
+// ── Warehouses section ────────────────────────────────────────────────────────
+
+type WhForm = {
+  code: string; name: string; country_code: string; flag_emoji: string
+  address_line1: string; address_line2: string; address_line3: string
+  city: string; state: string; postal_code: string
+  contact_info: string; instructions: string
+  for_category: 'generic' | 'branded' | 'usa' | 'all'
+}
+
+const EMPTY_WH: WhForm = {
+  code: '', name: '', country_code: 'CN', flag_emoji: '🇨🇳',
+  address_line1: '', address_line2: '', address_line3: '',
+  city: '', state: '', postal_code: '',
+  contact_info: '', instructions: '', for_category: 'all',
+}
+
+function WarehousesSection() {
+  const [items,   setItems]   = useState<WarehouseEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving,  setSaving]  = useState(false)
+  const [open,    setOpen]    = useState(false)
+  const [editing, setEditing] = useState<WarehouseEntry | null>(null)
+  const [form,    setForm]    = useState<WhForm>(EMPTY_WH)
+
+  async function load() {
+    setLoading(true)
+    const { data } = await supabase.from('warehouses').select('*').order('sort_order')
+    setItems(data as WarehouseEntry[] || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  function toForm(w: WarehouseEntry): WhForm {
+    return {
+      code: w.code, name: w.name, country_code: w.country_code, flag_emoji: w.flag_emoji ?? '',
+      address_line1: w.address_line1 ?? '', address_line2: w.address_line2 ?? '',
+      address_line3: w.address_line3 ?? '', city: w.city ?? '', state: w.state ?? '',
+      postal_code: w.postal_code ?? '', contact_info: w.contact_info ?? '',
+      instructions: w.instructions ?? '', for_category: w.for_category,
+    }
+  }
+
+  function openAdd() { setEditing(null); setForm(EMPTY_WH); setOpen(true) }
+  function openEdit(w: WarehouseEntry) { setEditing(w); setForm(toForm(w)); setOpen(true) }
+
+  async function handleSave() {
+    if (!form.name.trim() || !form.code.trim()) { toast.error('Code et nom requis.'); return }
+    setSaving(true)
+    const payload = {
+      code: form.code.trim().toUpperCase(),
+      name: form.name.trim(),
+      country_code: form.country_code.trim().toUpperCase() || 'CN',
+      flag_emoji: form.flag_emoji || null,
+      address_line1: form.address_line1.trim() || null,
+      address_line2: form.address_line2.trim() || null,
+      address_line3: form.address_line3.trim() || null,
+      city: form.city.trim() || null,
+      state: form.state.trim() || null,
+      postal_code: form.postal_code.trim() || null,
+      contact_info: form.contact_info.trim() || null,
+      instructions: form.instructions.trim() || null,
+      for_category: form.for_category,
+    }
+    if (editing) {
+      const { error } = await supabase.from('warehouses').update(payload).eq('id', editing.id)
+      if (error) { toast.error('Erreur : ' + error.message); setSaving(false); return }
+      toast.success('Entrepôt mis à jour.')
+    } else {
+      const maxOrder = items.reduce((m, i) => Math.max(m, i.sort_order), 0)
+      const { error } = await supabase.from('warehouses').insert({ ...payload, sort_order: maxOrder + 1 })
+      if (error) { toast.error('Erreur : ' + error.message); setSaving(false); return }
+      toast.success('Entrepôt ajouté.')
+    }
+    setSaving(false); setOpen(false); load()
+  }
+
+  async function handleToggle(w: WarehouseEntry) {
+    const { error } = await supabase.from('warehouses').update({ active: !w.active }).eq('id', w.id)
+    if (error) { toast.error('Erreur.'); return }
+    setItems(prev => prev.map(i => i.id === w.id ? { ...i, active: !i.active } : i))
+  }
+
+  const CAT_LABELS: Record<string, string> = { generic: 'Générique', branded: 'Marque', usa: 'USA', all: 'Tous' }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-muted-foreground">Adresses d'entrepôt affichées aux clients</p>
+        <Button size="sm" onClick={openAdd} className="rounded-xl gap-1.5" style={BTN_ORANGE}>
+          <Plus className="h-3.5 w-3.5" /> Ajouter
+        </Button>
+      </div>
+
+      <SectionCard title="Entrepôts" count={items.length}>
+        {loading ? (
+          <div className="p-4 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+        ) : items.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">Aucun entrepôt.</p>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {items.map(w => (
+              <div key={w.id} className="flex items-start gap-3 px-4 py-3.5">
+                <span className="text-2xl leading-none shrink-0 mt-0.5">{w.flag_emoji || '🏭'}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold">{w.name}</p>
+                    <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full shrink-0 font-mono">{w.code}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded-full shrink-0">{CAT_LABELS[w.for_category]}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                    {[w.address_line1, w.city, w.state, w.postal_code].filter(Boolean).join(', ')}
+                  </p>
+                </div>
+                <ActiveBadge active={w.active} onToggle={() => handleToggle(w)} />
+                <button onClick={() => openEdit(w)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Modifier' : 'Ajouter'} un entrepôt</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-1">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Code <span className="text-destructive">*</span></Label>
+                <Input placeholder="MCO-WH1" value={form.code} className="rounded-xl font-mono"
+                  onChange={e => setForm(p => ({ ...p, code: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Catégorie</Label>
+                <Select value={form.for_category} onValueChange={v => setForm(p => ({ ...p, for_category: v as WhForm['for_category'] }))}>
+                  <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="generic">Générique</SelectItem>
+                    <SelectItem value="branded">Marque</SelectItem>
+                    <SelectItem value="usa">USA</SelectItem>
+                    <SelectItem value="all">Tous</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Nom <span className="text-destructive">*</span></Label>
+              <Input placeholder="Entrepôt USA — Orlando" value={form.name} className="rounded-xl"
+                onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Pays</Label>
+                <Input placeholder="US" value={form.country_code} maxLength={2} className="rounded-xl font-mono"
+                  onChange={e => setForm(p => ({ ...p, country_code: e.target.value.toUpperCase() }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Drapeau</Label>
+                <Input placeholder="🇺🇸" value={form.flag_emoji} className="rounded-xl text-xl"
+                  onChange={e => setForm(p => ({ ...p, flag_emoji: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Code postal</Label>
+                <Input placeholder="32810" value={form.postal_code} className="rounded-xl"
+                  onChange={e => setForm(p => ({ ...p, postal_code: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Adresse ligne 1</Label>
+              <Input placeholder="6325 N Orange Blossom Trl Ste 132" value={form.address_line1} className="rounded-xl"
+                onChange={e => setForm(p => ({ ...p, address_line1: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Adresse ligne 2</Label>
+              <Input placeholder="(détails…)" value={form.address_line2} className="rounded-xl"
+                onChange={e => setForm(p => ({ ...p, address_line2: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Adresse ligne 3</Label>
+              <Input placeholder="(suite…)" value={form.address_line3} className="rounded-xl"
+                onChange={e => setForm(p => ({ ...p, address_line3: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Ville</Label>
+                <Input placeholder="Orlando" value={form.city} className="rounded-xl"
+                  onChange={e => setForm(p => ({ ...p, city: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">État / Province</Label>
+                <Input placeholder="Florida" value={form.state} className="rounded-xl"
+                  onChange={e => setForm(p => ({ ...p, state: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Contact</Label>
+              <Input placeholder="Nom · Tél · WeChat" value={form.contact_info} className="rounded-xl"
+                onChange={e => setForm(p => ({ ...p, contact_info: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Instructions</Label>
+              <textarea
+                rows={4}
+                value={form.instructions}
+                onChange={e => setForm(p => ({ ...p, instructions: e.target.value }))}
+                placeholder="Instructions pour le client…"
+                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+// ── Product rate categories section ───────────────────────────────────────────
+
+function CategoriesSection() {
+  const [items,   setItems]   = useState<ProductRateCategory[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving,  setSaving]  = useState(false)
+  const [open,    setOpen]    = useState(false)
+  const [editing, setEditing] = useState<ProductRateCategory | null>(null)
+  const [form,    setForm]    = useState({ name: '', description: '', rate_multiplier: '1.00' })
+
+  async function load() {
+    setLoading(true)
+    const { data } = await supabase.from('product_rate_categories').select('*').order('sort_order')
+    setItems(data as ProductRateCategory[] || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  function openEdit(c: ProductRateCategory) {
+    setEditing(c)
+    setForm({ name: c.name, description: c.description ?? '', rate_multiplier: String(c.rate_multiplier) })
+    setOpen(true)
+  }
+
+  async function handleSave() {
+    if (!form.name.trim()) { toast.error('Nom requis.'); return }
+    const mult = parseFloat(form.rate_multiplier)
+    if (isNaN(mult) || mult <= 0) { toast.error('Multiplicateur invalide.'); return }
+    setSaving(true)
+    if (editing) {
+      const { error } = await supabase.from('product_rate_categories')
+        .update({ name: form.name.trim(), description: form.description.trim() || null, rate_multiplier: mult })
+        .eq('id', editing.id)
+      if (error) { toast.error('Erreur : ' + error.message); setSaving(false); return }
+      toast.success('Catégorie mise à jour.')
+    }
+    setSaving(false); setOpen(false); load()
+  }
+
+  async function handleToggle(c: ProductRateCategory) {
+    const { error } = await supabase.from('product_rate_categories').update({ active: !c.active }).eq('id', c.id)
+    if (error) { toast.error('Erreur.'); return }
+    setItems(prev => prev.map(i => i.id === c.id ? { ...i, active: !i.active } : i))
+  }
+
+  return (
+    <>
+      <div className="mb-3">
+        <p className="text-sm text-muted-foreground">Catégories de produits et leurs multiplicateurs de tarif</p>
+      </div>
+
+      <SectionCard title="Catégories de tarif" count={items.length}>
+        {loading ? (
+          <div className="p-4 space-y-3">{[1,2].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {items.map(c => (
+              <div key={c.id} className="flex items-center gap-3 px-4 py-3.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50 shrink-0">
+                  <Tag className="h-3.5 w-3.5 text-orange-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold">{c.name}</p>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">×{c.rate_multiplier}</span>
+                  </div>
+                  {c.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{c.description}</p>}
+                </div>
+                <ActiveBadge active={c.active} onToggle={() => handleToggle(c)} />
+                <button onClick={() => openEdit(c)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4 text-sm text-amber-800 mt-3">
+        <p className="font-semibold mb-1">Note</p>
+        <p>Les slugs <code className="font-mono text-xs">generic</code> et <code className="font-mono text-xs">branded</code> sont fixes et utilisés par le système. Seuls le nom, la description et le multiplicateur sont modifiables.</p>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Modifier la catégorie</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Nom <span className="text-destructive">*</span></Label>
+              <Input placeholder="Générique (sans marque)" value={form.name} className="rounded-xl"
+                onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Multiplicateur de tarif <span className="text-destructive">*</span></Label>
+              <Input type="number" step="0.01" min="0.01" placeholder="1.00" value={form.rate_multiplier} className="rounded-xl"
+                onChange={e => setForm(p => ({ ...p, rate_multiplier: e.target.value }))} />
+              <p className="text-[11px] text-muted-foreground">1.00 = tarif standard · 1.30 = +30 %</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Description</Label>
+              <Input placeholder="Produits de marque…" value={form.description} className="rounded-xl"
+                onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
 
 // ── Origins section ───────────────────────────────────────────────────────────
 
@@ -1101,7 +1463,7 @@ function MethodsSection() {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function AdminShippingConfigPage() {
-  const [tab, setTab] = useState<Tab>('origins')
+  const [tab, setTab] = useState<Tab>('warehouses')
 
   return (
     <div className="space-y-5">
@@ -1109,7 +1471,7 @@ export function AdminShippingConfigPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Configuration expédition</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Gérez les origines, régions, villes, types de produits et tarifs de fret
+          Entrepôts, catégories de tarif, origines, régions, villes et tarifs de fret
         </p>
       </div>
 
@@ -1133,11 +1495,13 @@ export function AdminShippingConfigPage() {
       </div>
 
       {/* Content */}
-      {tab === 'origins' && <OriginsSection />}
-      {tab === 'regions' && <RegionsSection />}
-      {tab === 'cities'  && <CitiesSection />}
-      {tab === 'types'   && <ProductTypesSection />}
-      {tab === 'rates'   && <ShippingRatesSection />}
+      {tab === 'warehouses'  && <WarehousesSection />}
+      {tab === 'categories'  && <CategoriesSection />}
+      {tab === 'origins'     && <OriginsSection />}
+      {tab === 'regions'     && <RegionsSection />}
+      {tab === 'cities'      && <CitiesSection />}
+      {tab === 'types'       && <ProductTypesSection />}
+      {tab === 'rates'       && <ShippingRatesSection />}
     </div>
   )
 }

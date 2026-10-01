@@ -5,11 +5,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Ship, Package, MapPin, Calendar, Anchor, CheckCircle2, Clock, Truck,
-  ChevronDown, ChevronUp, Plus, Trash2, Plane, Box, SendHorizonal, Loader2,
-  Wallet, ArrowRight, Weight,
+  ChevronDown, ChevronUp, Plus, Loader2, Wallet, Copy, Check,
+  Tag, Building2, AlertCircle, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -19,6 +18,50 @@ import { toast } from 'sonner'
 import IconNavire from 'flat-color-icons/svg/in_transit.svg'
 
 // ── Types ────────────────────────────────────────────────────────────────────
+
+interface Warehouse {
+  id: string
+  code: string
+  name: string
+  country_code: string
+  flag_emoji: string | null
+  address_line1: string | null
+  address_line2: string | null
+  address_line3: string | null
+  city: string | null
+  state: string | null
+  postal_code: string | null
+  contact_info: string | null
+  instructions: string | null
+  for_category: 'generic' | 'branded' | 'usa' | 'all'
+}
+
+interface ProductRateCategory {
+  id: string
+  name: string
+  slug: 'generic' | 'branded'
+  rate_multiplier: number
+  description: string | null
+}
+
+interface ShippingRequest {
+  id: string
+  status: string
+  notes: string | null
+  created_at: string
+  estimated_cbm: number | null
+  estimated_kg: number | null
+  actual_cbm: number | null
+  actual_kg: number | null
+  quoted_amount_htg: number | null
+  actual_amount_htg: number | null
+  quoted_at: string | null
+  received_at: string | null
+  invoiced_at: string | null
+  package_count: number | null
+  warehouse: Warehouse | null
+  product_rate_category: ProductRateCategory | null
+}
 
 interface MyShipment {
   shipment_id: string
@@ -32,98 +75,6 @@ interface MyShipment {
   order_id: string
   order_tracking: string
   product_name: string
-}
-
-interface ShippingRequest {
-  id: string
-  status: string
-  ship_from_id: string | null
-  destination_region_id: string | null
-  invoice_value_usd: number | null
-  weight_kg: number | null
-  packages: PackagePayload[] | null
-  notes: string | null
-  created_at: string
-  ship_from_name?: string
-  region_name?: string
-}
-
-interface PackageItem {
-  id: string
-  length: string
-  width: string
-  height: string
-  weight: string
-}
-
-interface PackagePayload {
-  number: number
-  length_cm: number | null
-  width_cm: number | null
-  height_cm: number | null
-  weight_kg: number | null
-  cbm: number | null
-}
-
-interface OrderReadyForShipment {
-  id: string
-  tracking_code: string
-  product_name: string
-  packages: Array<{
-    number: number
-    length_cm: number | null
-    width_cm: number | null
-    height_cm: number | null
-    weight_kg: number | null
-    weight_lbs: number | null
-    cbm: number | null
-  }> | null
-  weight_kg: number | null
-  weight_lbs: number | null
-  box_length_cm: number | null
-  box_width_cm: number | null
-  box_height_cm: number | null
-}
-
-interface FreightRate {
-  id: string
-  name: string
-  mode: 'ocean' | 'air'
-  type_label: string | null
-  per_cbm_usd: number | null
-  per_kg_usd: number | null
-  min_amount_usd: number | null
-  transit_days_min: number
-  transit_days_max: number
-  description: string | null
-  shipping_origins: { name: string; flag_emoji: string | null } | null
-}
-
-function computeRateHtg(rate: FreightRate, cbm: number, kg: number, usdToHtg: number): number {
-  let usd = 0
-  if (rate.mode === 'ocean' && rate.per_cbm_usd) {
-    usd = Math.max(cbm * rate.per_cbm_usd, rate.min_amount_usd ?? 0)
-  } else if (rate.mode === 'air' && rate.per_kg_usd) {
-    usd = Math.max(kg * rate.per_kg_usd, rate.min_amount_usd ?? 0)
-  }
-  return Math.ceil(usd * usdToHtg)
-}
-
-interface ShippingOrigin {
-  id: string
-  name: string
-  flag_emoji: string
-}
-
-interface HaitiRegion {
-  id: string
-  name: string
-}
-
-interface HaitiCity {
-  id: string
-  region_id: string
-  name: string
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -140,322 +91,115 @@ const SHIPMENT_STEPS = [
   { key: 'completed',     label: 'Livré',         icon: CheckCircle2 },
 ]
 
-const STATUS_COLOR: Record<string, string> = {
+const SHIPMENT_STATUS_COLOR: Record<string, string> = {
   pending:       'bg-muted text-muted-foreground',
-  consolidating: 'bg-warning/15 text-warning',
-  packed:        'bg-warning/15 text-warning',
-  loaded:        'bg-accent/15 text-accent',
-  sailing:       'bg-primary/15 text-primary',
-  arrived:       'bg-success/15 text-success',
-  cleared:       'bg-success/15 text-success',
-  distributing:  'bg-success/15 text-success',
-  completed:     'bg-success/15 text-success',
+  consolidating: 'bg-amber-50 text-amber-700',
+  packed:        'bg-amber-50 text-amber-700',
+  loaded:        'bg-sky-50 text-sky-700',
+  sailing:       'bg-primary/10 text-primary',
+  arrived:       'bg-emerald-50 text-emerald-700',
+  cleared:       'bg-emerald-50 text-emerald-700',
+  distributing:  'bg-emerald-50 text-emerald-700',
+  completed:     'bg-emerald-50 text-emerald-700',
 }
 
-const REQUEST_STATUS_COLOR: Record<string, string> = {
-  submitted:  'bg-amber-50 text-amber-700',
-  reviewing:  'bg-blue-50 text-blue-700',
-  quoted:     'bg-primary/10 text-primary',
-  accepted:   'bg-emerald-50 text-emerald-700',
-  rejected:   'bg-destructive/10 text-destructive',
-}
-const REQUEST_STATUS_LABEL: Record<string, string> = {
-  submitted:  'En attente',
-  reviewing:  "En cours d'examen",
-  quoted:     'Devis envoyé',
-  accepted:   'Acceptée',
-  rejected:   'Refusée',
+const REQ_STATUS: Record<string, { label: string; color: string }> = {
+  submitted: { label: 'En attente',    color: 'bg-amber-50 text-amber-700' },
+  reviewing: { label: 'En examen',     color: 'bg-sky-50 text-sky-700' },
+  quoted:    { label: 'Devis reçu',    color: 'bg-primary/10 text-primary' },
+  received:  { label: 'Colis reçu',   color: 'bg-indigo-50 text-indigo-700' },
+  invoiced:  { label: 'Facturé',       color: 'bg-emerald-50 text-emerald-700' },
+  cancelled: { label: 'Annulé',        color: 'bg-gray-100 text-gray-500' },
 }
 
-const fmtCBM = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+// ── WarehouseAddressCard ─────────────────────────────────────────────────────
 
-// ── CreateShipmentFromOrderSheet ─────────────────────────────────────────────
+function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
+  const [copied, setCopied] = useState(false)
 
-function CreateShipmentFromOrderSheet({
-  order,
-  walletBalance,
-  open,
-  onClose,
-  onSuccess,
-}: {
-  order: OrderReadyForShipment | null
-  walletBalance: number
-  open: boolean
-  onClose: () => void
-  onSuccess: () => void
-}) {
-  const [rates, setRates] = useState<FreightRate[]>([])
-  const [loadingRates, setLoadingRates] = useState(false)
-  const [usdToHtg, setUsdToHtg] = useState(132)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [confirming, setConfirming] = useState(false)
+  const addressLines = [
+    wh.address_line1,
+    wh.address_line2,
+    wh.address_line3,
+    [wh.city, wh.state, wh.postal_code].filter(Boolean).join(', '),
+    wh.country_code === 'US' ? 'US' : null,
+  ].filter(Boolean)
 
-  useEffect(() => {
-    if (!open) { setSelectedId(null); return }
-    setLoadingRates(true)
-    Promise.all([
-      supabase
-        .from('shipping_rates')
-        .select('id,name,mode,type_label,per_cbm_usd,per_kg_usd,min_amount_usd,transit_days_min,transit_days_max,description,shipping_origins(name,flag_emoji)')
-        .eq('active', true)
-        .order('sort_order'),
-      supabase
-        .from('app_settings')
-        .select('value')
-        .eq('key', 'usd_to_htg_rate')
-        .maybeSingle(),
-    ]).then(([ratesRes, settingRes]) => {
-      setRates((ratesRes.data as FreightRate[]) ?? [])
-      if (settingRes.data?.value) setUsdToHtg(parseFloat(settingRes.data.value) || 132)
-      setLoadingRates(false)
-    })
-  }, [open])
+  const fullAddress = [
+    ...(wh.contact_info ? [wh.contact_info] : []),
+    ...addressLines,
+  ].join('\n')
 
-  if (!order) return null
-
-  const pkgs = order.packages?.filter(p => p.length_cm || p.weight_kg || p.weight_lbs) ?? []
-  const hasPkgs = pkgs.length > 0
-
-  const totalCBM = hasPkgs
-    ? pkgs.reduce((s, p) => s + (p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : 0)), 0)
-    : (order.box_length_cm && order.box_width_cm && order.box_height_cm
-        ? (order.box_length_cm * order.box_width_cm * order.box_height_cm) / 1_000_000
-        : 0)
-
-  const totalKg = hasPkgs
-    ? pkgs.reduce((s, p) => s + (p.weight_kg ?? (p.weight_lbs ? p.weight_lbs * 0.453592 : 0)), 0)
-    : (order.weight_kg ?? (order.weight_lbs ? order.weight_lbs * 0.453592 : 0))
-
-  const selectedRate = rates.find(r => r.id === selectedId) ?? null
-  const selectedAmountHtg = selectedRate ? computeRateHtg(selectedRate, totalCBM, totalKg, usdToHtg) : 0
-  const canPay = selectedRate ? walletBalance >= selectedAmountHtg : false
-
-  async function handleConfirm() {
-    if (!order || !selectedId || !selectedRate) return
-    setConfirming(true)
+  async function copyAddress() {
     try {
-      const { data, error } = await supabase.rpc('choose_shipping_method', {
-        p_order_id: order.id,
-        p_shipping_rate_id: selectedId,
-        p_shipping_amount_htg: selectedAmountHtg,
-      })
-      if (error) throw error
-      if (!data?.success) {
-        toast.error(data?.error || "Erreur lors de la création de l'expédition.")
-        return
-      }
-      toast.success(`Expédition créée — ${data.rate_name ?? selectedRate.name}. Votre colis est en route !`)
-      onSuccess()
-      onClose()
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Erreur inconnue.'
-      toast.error(msg)
-    } finally {
-      setConfirming(false)
+      await navigator.clipboard.writeText(fullAddress)
+      setCopied(true)
+      toast.success('Adresse copiée')
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Impossible de copier')
     }
   }
 
+  const bgColor = wh.for_category === 'usa'
+    ? 'bg-blue-50 border-blue-100'
+    : wh.for_category === 'branded'
+      ? 'bg-orange-50 border-orange-100'
+      : 'bg-emerald-50 border-emerald-100'
+
+  const categoryLabel = wh.for_category === 'usa'
+    ? 'USA'
+    : wh.for_category === 'branded'
+      ? 'Produits marque'
+      : wh.for_category === 'generic'
+        ? 'Produits génériques'
+        : 'Tous produits'
+
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-      <SheetContent side="bottom" className="h-[90dvh] rounded-t-2xl p-0 overflow-hidden flex flex-col">
-        <SheetHeader className="px-5 pt-5 pb-4 border-b border-border shrink-0">
-          <SheetTitle className="text-left text-lg font-bold">Créer une expédition</SheetTitle>
-          <p className="text-sm text-muted-foreground text-left -mt-1 font-mono">{order.tracking_code}</p>
-        </SheetHeader>
-
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 pb-36">
-
-          {/* Cargo summary */}
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 overflow-hidden">
-            <div className="px-4 py-3 border-b border-amber-200 flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 shrink-0">
-                <Package className="h-4 w-4 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-foreground">{order.product_name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {hasPkgs ? `${pkgs.length} colis` : '1 colis'}
-                  {totalCBM > 0 ? ` · ${fmtCBM(totalCBM)} m³` : ''}
-                  {totalKg > 0 ? ` · ${totalKg.toFixed(2)} kg` : ''}
-                </p>
-              </div>
-            </div>
-
-            <div className="px-4 py-3 grid grid-cols-2 gap-3">
-              {totalCBM > 0 && (
-                <div className="rounded-xl bg-white border border-amber-100 px-3 py-2.5">
-                  <p className="text-xs text-muted-foreground mb-0.5">Volume total</p>
-                  <p className="text-sm font-bold text-foreground">{fmtCBM(totalCBM)} m³</p>
-                  <p className="text-[11px] text-muted-foreground">{(totalCBM * 35.3147).toFixed(2)} ft³</p>
-                </div>
-              )}
-              {totalKg > 0 && (
-                <div className="rounded-xl bg-white border border-amber-100 px-3 py-2.5">
-                  <p className="text-xs text-muted-foreground mb-0.5">Poids total</p>
-                  <p className="text-sm font-bold text-foreground">{totalKg.toFixed(2)} kg</p>
-                  <p className="text-[11px] text-muted-foreground">{(totalKg / 0.453592).toFixed(1)} lbs</p>
-                </div>
-              )}
-            </div>
-
-            {hasPkgs && pkgs.length > 1 && (
-              <div className="px-4 pb-3">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">Détail par carton</p>
-                <div className="space-y-1.5">
-                  {pkgs.map(p => {
-                    const cbm = p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : null)
-                    const kg = p.weight_kg ?? (p.weight_lbs ? p.weight_lbs * 0.453592 : null)
-                    return (
-                      <div key={p.number} className="rounded-xl bg-white border border-amber-100 px-3 py-2 flex items-center gap-3">
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-100">
-                          <span className="text-[10px] font-bold text-amber-700">{p.number}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          {p.length_cm && p.width_cm && p.height_cm ? (
-                            <p className="text-xs font-mono font-semibold">{p.length_cm}×{p.width_cm}×{p.height_cm} cm</p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground">Dimensions inconnues</p>
-                          )}
-                          {kg != null && <p className="text-[11px] text-muted-foreground">{kg.toFixed(2)} kg</p>}
-                        </div>
-                        {cbm != null && <span className="text-xs font-bold text-amber-700 shrink-0">{fmtCBM(cbm)} m³</span>}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Freight rates */}
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3 flex items-center gap-2">
-              <Truck className="h-3.5 w-3.5 text-primary" />
-              Choisir un mode d'expédition
-            </p>
-            {loadingRates ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {rates.map(rate => {
-                  const Icon = rate.mode === 'air' ? Plane : Ship
-                  const isSelected = selectedId === rate.id
-                  const priceHtg = computeRateHtg(rate, totalCBM, totalKg, usdToHtg)
-                  const priceUsd = rate.mode === 'ocean' && rate.per_cbm_usd
-                    ? Math.max(totalCBM * rate.per_cbm_usd, rate.min_amount_usd ?? 0)
-                    : rate.per_kg_usd
-                      ? Math.max(totalKg * rate.per_kg_usd, rate.min_amount_usd ?? 0)
-                      : 0
-                  return (
-                    <button
-                      key={rate.id}
-                      type="button"
-                      onClick={() => setSelectedId(rate.id)}
-                      className={cn(
-                        'w-full text-left rounded-xl border-2 px-3.5 py-3 transition-all',
-                        isSelected ? 'border-primary bg-primary/5' : 'border-gray-200 bg-[#F8F9FB] hover:border-primary/40'
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={cn(
-                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors mt-0.5',
-                          isSelected ? 'bg-primary/15' : 'bg-white border border-gray-200'
-                        )}>
-                          <Icon className={cn('h-4 w-4', isSelected ? 'text-primary' : 'text-muted-foreground')} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="text-sm font-bold truncate">{rate.name}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {rate.shipping_origins?.flag_emoji && <span className="mr-1">{rate.shipping_origins.flag_emoji}</span>}
-                                {rate.shipping_origins?.name && <span>{rate.shipping_origins.name} · </span>}
-                                {rate.transit_days_min}–{rate.transit_days_max} jours
-                              </p>
-                              {rate.type_label && (
-                                <p className="text-[10px] text-muted-foreground/70 mt-0.5">{rate.type_label}</p>
-                              )}
-                            </div>
-                            <div className="text-right shrink-0">
-                              <p className={cn('text-sm font-bold', isSelected ? 'text-primary' : 'text-foreground')}>
-                                {priceHtg.toLocaleString('fr-HT')} HTG
-                              </p>
-                              <p className="text-[10px] text-muted-foreground">${priceUsd.toFixed(2)}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Balance + cost breakdown */}
-          {selectedRate && (
-            <div className="rounded-xl bg-[#F8F9FB] border border-gray-100 p-3 space-y-2.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Wallet className="h-3.5 w-3.5" />
-                  Solde disponible
-                </span>
-                <span className={cn('font-bold', canPay ? 'text-emerald-600' : 'text-destructive')}>
-                  {walletBalance.toLocaleString('fr-HT')} HTG
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">À payer</span>
-                <span className="font-bold">{selectedAmountHtg.toLocaleString('fr-HT')} HTG</span>
-              </div>
-              {!canPay && (
-                <p className="text-xs text-destructive font-medium">Solde insuffisant. Rechargez votre portefeuille.</p>
-              )}
-            </div>
-          )}
+    <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className={cn('px-4 py-3 flex items-center gap-3', bgColor)}>
+        <span className="text-2xl leading-none">{wh.flag_emoji ?? '🏭'}</span>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm truncate">{wh.name}</p>
+          <p className="text-xs text-muted-foreground font-mono">{wh.code}</p>
         </div>
+        <span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-white/60 text-foreground/70 shrink-0">
+          {categoryLabel}
+        </span>
+      </div>
 
-        {/* Sticky CTA */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-border px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
-          {selectedRate && !canPay ? (
-            <Link
-              to="/wallet"
-              className="w-full rounded-2xl py-4 text-sm font-bold text-white flex items-center justify-center gap-2"
-              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-            >
-              <Wallet className="h-4 w-4" />
-              Recharger mon portefeuille
-            </Link>
-          ) : (
-            <button
-              type="button"
-              disabled={!selectedId || confirming || !canPay}
-              onClick={handleConfirm}
-              className={cn(
-                'w-full rounded-2xl py-4 text-sm font-bold text-white flex items-center justify-center gap-2 transition-all',
-                (!selectedId || confirming || !canPay) ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.98]'
-              )}
-              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-            >
-              {confirming ? (
-                <><Loader2 className="h-4 w-4 animate-spin" />Traitement en cours…</>
-              ) : selectedRate ? (
-                <><Wallet className="h-4 w-4" />Payer {selectedAmountHtg.toLocaleString('fr-HT')} HTG</>
-              ) : (
-                <><ArrowRight className="h-4 w-4" />Choisir une méthode</>
-              )}
-            </button>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
+      {/* Address */}
+      <div className="px-4 py-3">
+        {wh.contact_info && (
+          <p className="text-sm font-semibold text-foreground mb-1">{wh.contact_info}</p>
+        )}
+        {addressLines.map((line, i) => (
+          <p key={i} className="text-sm text-muted-foreground leading-snug">{line}</p>
+        ))}
+
+        {wh.instructions && (
+          <div className="mt-3 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-800 leading-relaxed whitespace-pre-line">{wh.instructions}</p>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={copyAddress}
+          className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
+        >
+          {copied
+            ? <><Check className="h-3.5 w-3.5 text-emerald-600" /><span className="text-emerald-600">Copié !</span></>
+            : <><Copy className="h-3.5 w-3.5" />Copier l'adresse</>
+          }
+        </button>
+      </div>
+    </div>
   )
-}
-
-function newPkg(): PackageItem {
-  return { id: crypto.randomUUID(), length: '', width: '', height: '', weight: '' }
 }
 
 // ── ShipmentCard ─────────────────────────────────────────────────────────────
@@ -476,8 +220,11 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-bold text-sm font-mono">{shipment.batch_code}</p>
-            <span className={cn('rounded-full text-[10px] px-2 py-0.5 font-semibold', STATUS_COLOR[shipment.status])}>
-              {SHIPMENT_STEPS.find(s => s.key === shipment.status)?.label || shipment.status}
+            <span className={cn(
+              'rounded-full text-[10px] px-2 py-0.5 font-semibold',
+              SHIPMENT_STATUS_COLOR[shipment.status] ?? 'bg-muted text-muted-foreground'
+            )}>
+              {SHIPMENT_STEPS.find(s => s.key === shipment.status)?.label ?? shipment.status}
             </span>
           </div>
           <p className="text-xs text-muted-foreground truncate mt-0.5">{shipment.product_name}</p>
@@ -499,13 +246,13 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
             {shipment.departure_date && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5" />
-                <span>Départ: {new Date(shipment.departure_date).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}</span>
+                Départ : {new Date(shipment.departure_date).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
               </div>
             )}
             {shipment.estimated_arrival && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5" />
-                <span>Arrivée: {new Date(shipment.estimated_arrival).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}</span>
+                Arrivée : {new Date(shipment.estimated_arrival).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
               </div>
             )}
           </div>
@@ -513,12 +260,12 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
           <div className="space-y-2">
             {SHIPMENT_STEPS.map((step, idx) => {
               const Icon = step.icon
-              const isDone = idx < stepIdx
+              const isDone    = idx < stepIdx
               const isCurrent = idx === stepIdx
               return (
                 <div key={step.key} className="flex items-center gap-3">
                   <div className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-full shrink-0 transition-all',
+                    'flex h-7 w-7 items-center justify-center rounded-full shrink-0',
                     isDone    ? 'bg-primary text-primary-foreground' :
                     isCurrent ? 'bg-primary/20 text-primary ring-2 ring-primary/30' :
                                 'bg-muted text-muted-foreground'
@@ -530,7 +277,9 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
                       {step.label}
                     </span>
                     {isCurrent && (
-                      <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold">Actuel</span>
+                      <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold">
+                        Actuel
+                      </span>
                     )}
                   </div>
                 </div>
@@ -558,9 +307,19 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
 
 // ── ShippingRequestCard ───────────────────────────────────────────────────────
 
-function ShippingRequestCard({ req }: { req: ShippingRequest }) {
+function ShippingRequestCard({
+  req,
+  walletBalance,
+}: {
+  req: ShippingRequest
+  walletBalance: number
+}) {
   const [expanded, setExpanded] = useState(false)
-  const totalCBM = (req.packages ?? []).reduce((s, p) => s + (p.cbm ?? 0), 0)
+  const s = REQ_STATUS[req.status] ?? { label: req.status, color: 'bg-muted text-muted-foreground' }
+  const displayAmount = req.actual_amount_htg ?? req.quoted_amount_htg
+  const isQuoted      = req.status === 'quoted'
+  const isInvoiced    = req.status === 'invoiced'
+  const canPay        = isQuoted && displayAmount != null && walletBalance >= displayAmount
 
   return (
     <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
@@ -568,73 +327,90 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
         className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/20 transition-colors"
         onClick={() => setExpanded(e => !e)}
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 shrink-0">
-          <Box className="h-6 w-6 text-primary" />
+        <div className={cn(
+          'flex h-12 w-12 items-center justify-center rounded-xl shrink-0',
+          isQuoted   ? 'bg-primary/10' :
+          isInvoiced ? 'bg-emerald-50' :
+                       'bg-amber-50'
+        )}>
+          <Package className={cn(
+            'h-6 w-6',
+            isQuoted   ? 'text-primary' :
+            isInvoiced ? 'text-emerald-600' :
+                         'text-amber-600'
+          )} />
         </div>
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-bold text-sm">Expédition cargo</p>
-            <span className={cn(
-              'rounded-full text-[10px] px-2 py-0.5 font-semibold',
-              REQUEST_STATUS_COLOR[req.status] ?? 'bg-muted text-muted-foreground'
-            )}>
-              {REQUEST_STATUS_LABEL[req.status] ?? req.status}
+            <span className={cn('rounded-full text-[10px] px-2 py-0.5 font-semibold', s.color)}>
+              {s.label}
             </span>
+            {req.product_rate_category && (
+              <span className={cn(
+                'rounded-full text-[10px] px-2 py-0.5 font-semibold',
+                req.product_rate_category.slug === 'branded'
+                  ? 'bg-orange-50 text-orange-700'
+                  : 'bg-sky-50 text-sky-700'
+              )}>
+                {req.product_rate_category.slug === 'branded' ? 'Marque' : 'Générique'}
+              </span>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {[req.ship_from_name, req.region_name].filter(Boolean).join(' → ')}
-            {totalCBM > 0 ? ` · ${fmtCBM(totalCBM)} m³` : ''}
+          <p className="text-xs text-muted-foreground mt-1 truncate">
+            {req.warehouse?.name ?? 'Entrepôt inconnu'}
           </p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
             {new Date(req.created_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short', year: 'numeric' })}
           </p>
         </div>
-        {expanded
-          ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
-          : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+
+        {displayAmount != null ? (
+          <div className="text-right shrink-0">
+            <p className={cn('text-sm font-bold', isInvoiced ? 'text-emerald-600' : 'text-primary')}>
+              {displayAmount.toLocaleString('fr-HT')} HTG
+            </p>
+            <p className="text-[10px] text-muted-foreground">{isInvoiced ? 'Payé' : 'Estimation'}</p>
+          </div>
+        ) : (
+          expanded
+            ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+            : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+        )}
       </div>
 
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t border-border space-y-3">
-          {/* Summary chips */}
-          <div className="flex flex-wrap gap-2">
-            {req.packages && req.packages.length > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-                <Package className="h-3 w-3" />
-                {req.packages.length} colis
-              </span>
-            )}
-            {req.weight_kg != null && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-                {req.weight_kg.toFixed(2)} kg
-              </span>
-            )}
-            {totalCBM > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-1 text-xs font-semibold">
-                {fmtCBM(totalCBM)} m³ CBM
-              </span>
-            )}
-            {req.invoice_value_usd != null && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-1 text-xs font-semibold">
-                ${req.invoice_value_usd.toLocaleString('en-US', { minimumFractionDigits: 2 })} valeur
-              </span>
-            )}
-          </div>
-
-          {/* Packages */}
-          {req.packages && req.packages.length > 0 && (
-            <div className="rounded-xl bg-[#F8F9FB] border border-gray-100 p-3 space-y-1.5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">Détail des colis</p>
-              {req.packages.map((p) => (
-                <div key={p.number} className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Colis {p.number}</span>
-                  <span className="font-mono text-foreground">
-                    {[p.length_cm, p.width_cm, p.height_cm].filter(Boolean).map(v => `${v}cm`).join(' × ')}
-                    {p.weight_kg ? ` · ${p.weight_kg}kg` : ''}
-                    {p.cbm ? ` · ${fmtCBM(p.cbm)}m³` : ''}
-                  </span>
+          {/* Dimensions */}
+          {(req.actual_cbm ?? req.estimated_cbm ?? req.actual_kg ?? req.estimated_kg) != null && (
+            <div className="grid grid-cols-2 gap-2">
+              {(req.actual_cbm ?? req.estimated_cbm) != null && (
+                <div className="rounded-xl bg-[#F8F9FB] border border-gray-100 px-3 py-2">
+                  <p className="text-[10px] text-muted-foreground">
+                    {req.actual_cbm ? 'Volume réel' : 'Volume estimé'}
+                  </p>
+                  <p className="text-sm font-bold font-mono">
+                    {((req.actual_cbm ?? req.estimated_cbm) as number).toFixed(4)} m³
+                  </p>
                 </div>
-              ))}
+              )}
+              {(req.actual_kg ?? req.estimated_kg) != null && (
+                <div className="rounded-xl bg-[#F8F9FB] border border-gray-100 px-3 py-2">
+                  <p className="text-[10px] text-muted-foreground">
+                    {req.actual_kg ? 'Poids réel' : 'Poids estimé'}
+                  </p>
+                  <p className="text-sm font-bold font-mono">
+                    {((req.actual_kg ?? req.estimated_kg) as number).toFixed(2)} kg
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {req.package_count != null && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Package className="h-3.5 w-3.5" />
+              {req.package_count} colis estimé{req.package_count !== 1 ? 's' : ''}
             </div>
           )}
 
@@ -644,15 +420,62 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
               <p className="text-xs text-foreground">{req.notes}</p>
             </div>
           )}
+
+          {/* Quote banner */}
+          {isQuoted && displayAmount != null && (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold text-foreground">Devis reçu</p>
+                <p className="text-lg font-bold text-primary">
+                  {displayAmount.toLocaleString('fr-HT')} HTG
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Montant estimé. La facture finale sera établie après réception de vos colis.
+              </p>
+              {!canPay && (
+                <Link
+                  to="/wallet"
+                  className="flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-all"
+                  style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+                >
+                  <Wallet className="h-3.5 w-3.5" />
+                  Recharger — solde insuffisant
+                </Link>
+              )}
+            </div>
+          )}
+
+          {/* Timeline */}
+          <div className="space-y-1.5">
+            {req.quoted_at && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                Devis envoyé le {new Date(req.quoted_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
+              </div>
+            )}
+            {req.received_at && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                Colis reçu le {new Date(req.received_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
+              </div>
+            )}
+            {req.invoiced_at && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                Facturé le {new Date(req.invoiced_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-// ── ShippingRequestForm ───────────────────────────────────────────────────────
+// ── QuoteRequestSheet ─────────────────────────────────────────────────────────
 
-function ShippingRequestForm({
+function QuoteRequestSheet({
   open,
   onClose,
   onSuccess,
@@ -662,461 +485,253 @@ function ShippingRequestForm({
   onSuccess: () => void
 }) {
   const { user } = useAuth()
+  const [warehouses,  setWarehouses]  = useState<Warehouse[]>([])
+  const [categories,  setCategories]  = useState<ProductRateCategory[]>([])
+  const [loading,     setLoading]     = useState(false)
 
-  const [origins, setOrigins]   = useState<ShippingOrigin[]>([])
-  const [regions, setRegions]   = useState<HaitiRegion[]>([])
-  const [cities,  setCities]    = useState<HaitiCity[]>([])
-  const [loadingRef, setLoadingRef] = useState(true)
-  const [loadingCities, setLoadingCities] = useState(false)
-
-  const [shipFromId, setShipFromId] = useState('')
-  const [regionId,   setRegionId]   = useState('')
-  const [cityId,     setCityId]     = useState('')
-  const [invoiceUSD, setInvoiceUSD] = useState('')
-  const [urgency,    setUrgency]    = useState<'normal' | 'urgent'>('normal')
-  const [notes,      setNotes]      = useState('')
-
-  const [packages, setPackages] = useState<PackageItem[]>([newPkg()])
-  const [submitting, setSubmitting] = useState(false)
+  const [categorySlug, setCategorySlug] = useState<'generic' | 'branded' | ''>('')
+  const [warehouseId,  setWarehouseId]  = useState('')
+  const [notes,        setNotes]        = useState('')
+  const [pkgCount,     setPkgCount]     = useState('')
+  const [estCbm,       setEstCbm]       = useState('')
+  const [estKg,        setEstKg]        = useState('')
+  const [submitting,   setSubmitting]   = useState(false)
 
   useEffect(() => {
     if (!open) return
     Promise.all([
-      supabase.from('shipping_origins').select('id,name,flag_emoji').eq('active', true).order('sort_order'),
-      supabase.from('haiti_regions').select('id,name').eq('active', true).order('sort_order'),
-    ]).then(([originsRes, regionsRes]) => {
-      setOrigins(originsRes.data as ShippingOrigin[] || [])
-      setRegions(regionsRes.data as HaitiRegion[] || [])
-      setLoadingRef(false)
+      supabase.from('warehouses').select('*').eq('active', true).order('sort_order'),
+      supabase.from('product_rate_categories').select('*').eq('active', true).order('sort_order'),
+    ]).then(([whRes, catRes]) => {
+      setWarehouses((whRes.data as Warehouse[]) ?? [])
+      setCategories((catRes.data as ProductRateCategory[]) ?? [])
     })
   }, [open])
 
-  async function handleRegionChange(id: string) {
-    setRegionId(id)
-    setCityId('')
-    setCities([])
-    if (!id) return
-    setLoadingCities(true)
-    const { data } = await supabase
-      .from('haiti_cities')
-      .select('id,name,region_id')
-      .eq('region_id', id)
-      .eq('active', true)
-      .order('sort_order')
-    setCities(data as HaitiCity[] || [])
-    setLoadingCities(false)
+  // Auto-select warehouse when category changes
+  useEffect(() => {
+    if (!categorySlug) { setWarehouseId(''); return }
+    const match = warehouses.find(w =>
+      (categorySlug === 'generic' && w.for_category === 'generic') ||
+      (categorySlug === 'branded' && w.for_category === 'branded')
+    )
+    if (match) setWarehouseId(match.id)
+    else setWarehouseId('')
+  }, [categorySlug, warehouses])
+
+  function reset() {
+    setCategorySlug('')
+    setWarehouseId('')
+    setNotes('')
+    setPkgCount('')
+    setEstCbm('')
+    setEstKg('')
   }
 
-  const addPackage    = useCallback(() => setPackages(prev => [...prev, newPkg()]), [])
-  const removePackage = useCallback((id: string) => setPackages(prev => prev.filter(p => p.id !== id)), [])
-  const updatePackage = useCallback((id: string, field: keyof Omit<PackageItem, 'id'>, value: string) => {
-    setPackages(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p))
-  }, [])
-
-  const pkgsComputed = packages.map(p => {
-    const l = parseFloat(p.length) || 0
-    const w = parseFloat(p.width)  || 0
-    const h = parseFloat(p.height) || 0
-    const wt = parseFloat(p.weight) || 0
-    const cbm = l > 0 && w > 0 && h > 0 ? (l * w * h) / 1_000_000 : 0
-    return { l, w, h, wt, cbm }
-  })
-
-  const totalCBM      = pkgsComputed.reduce((s, p) => s + p.cbm, 0)
-  const totalWeightKg = pkgsComputed.reduce((s, p) => s + p.wt, 0)
-
-  function resetForm() {
-    setShipFromId(''); setRegionId(''); setCityId(''); setCities([])
-    setInvoiceUSD(''); setUrgency('normal'); setNotes('')
-    setPackages([newPkg()])
-  }
+  const selectedWarehouse = warehouses.find(w => w.id === warehouseId) ?? null
+  const selectedCategory  = categories.find(c => c.slug === categorySlug) ?? null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
-    if (!shipFromId) { toast.error("Sélectionnez l'origine d'expédition."); return }
-    if (!regionId)   { toast.error('Sélectionnez la région de destination.'); return }
+    if (!categorySlug) { toast.error('Sélectionnez le type de produit.'); return }
+    if (!warehouseId)  { toast.error('Aucun entrepôt disponible pour ce type.'); return }
 
     setSubmitting(true)
-
-    const packagesPayload: PackagePayload[] = pkgsComputed
-      .map((p, i) => ({
-        number:    i + 1,
-        length_cm: p.l  || null,
-        width_cm:  p.w  || null,
-        height_cm: p.h  || null,
-        weight_kg: p.wt || null,
-        cbm:       p.cbm || null,
-      }))
-      .filter(p => p.length_cm || p.weight_kg)
-
-    const { error } = await supabase.from('product_requests').insert({
-      user_id:                user.id,
-      request_type:           'shipping',
-      status:                 'submitted',
-      product_url:            '',
-      product_name:           'Cargaison',
-      category:               'other',
-      quantity:               1,
-      urgency,
-      notes:                  notes || null,
-      source_platform:        'other',
-      ship_from_id:           shipFromId || null,
-      destination_region_id:  regionId   || null,
-      destination_city_id:    cityId     || null,
-      weight_kg:              totalWeightKg || null,
-      weight_lbs:             totalWeightKg ? totalWeightKg / 0.453592 : null,
-      packages:               packagesPayload.length ? packagesPayload : null,
-      unit_system:            'metric',
-      invoice_value_usd:      parseFloat(invoiceUSD) || null,
-    })
-
-    if (error) {
-      toast.error('Erreur lors de la soumission.')
-    } else {
-      toast.success('Demande envoyée !', {
-        description: 'Notre équipe vous contactera sous 24h avec un tarif.',
+    try {
+      const { data, error } = await supabase.rpc('request_shipping_quote', {
+        p_product_category_slug: categorySlug,
+        p_warehouse_id:          warehouseId,
+        p_notes:                 notes.trim() || null,
+        p_package_count:         pkgCount ? parseInt(pkgCount) : null,
+        p_estimated_cbm:         estCbm   ? parseFloat(estCbm)   : null,
+        p_estimated_kg:          estKg    ? parseFloat(estKg)    : null,
       })
-      resetForm()
+      if (error) throw error
+      if (!data?.success) {
+        toast.error(data?.error || 'Erreur lors de la soumission.')
+        return
+      }
+      toast.success('Demande envoyée !', {
+        description: "Notre équipe vous enverra un devis estimatif sous 24h.",
+      })
+      reset()
       onSuccess()
       onClose()
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Erreur inconnue.')
+    } finally {
+      setSubmitting(false)
     }
-    setSubmitting(false)
   }
 
+  if (loading) return null
+
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose() }}>
+    <Sheet open={open} onOpenChange={(v) => { if (!v) { reset(); onClose() } }}>
       <SheetContent side="bottom" className="h-[92dvh] rounded-t-2xl p-0 overflow-hidden flex flex-col">
         <SheetHeader className="px-5 pt-5 pb-4 border-b border-border shrink-0">
-          <SheetTitle className="text-left text-lg font-bold">Expédier ma cargaison</SheetTitle>
+          <SheetTitle className="text-left text-lg font-bold">Demander un devis d'expédition</SheetTitle>
           <p className="text-sm text-muted-foreground text-left -mt-1">
-            Vous avez déjà vos produits — entrez les dimensions et nous calculons le tarif.
+            Indiquez le type de vos produits — nous calculons une estimation et vous facturons à la réception.
           </p>
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-          <div className="px-5 py-4 space-y-5 pb-32">
+          <div className="px-5 py-4 space-y-6 pb-32">
 
-            {loadingRef ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 rounded-2xl" />)}
+            {/* ── Product type ── */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+                <Tag className="h-3.5 w-3.5 text-primary" />
+                Type de produit <span className="text-destructive">*</span>
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setCategorySlug(cat.slug)}
+                    className={cn(
+                      'rounded-2xl border-2 p-3.5 text-left transition-all',
+                      categorySlug === cat.slug
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 bg-[#F8F9FB]'
+                    )}
+                  >
+                    <p className={cn(
+                      'text-sm font-bold leading-tight',
+                      categorySlug === cat.slug ? 'text-primary' : 'text-foreground'
+                    )}>
+                      {cat.slug === 'generic' ? 'Générique' : 'Marque'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+                      {cat.description}
+                    </p>
+                    {cat.rate_multiplier !== 1 && (
+                      <p className={cn(
+                        'text-[10px] font-bold mt-1.5',
+                        categorySlug === cat.slug ? 'text-primary' : 'text-muted-foreground'
+                      )}>
+                        +{Math.round((cat.rate_multiplier - 1) * 100)}% sur tarif standard
+                      </p>
+                    )}
+                  </button>
+                ))}
               </div>
-            ) : (
-              <>
-                {/* ── Route ── */}
-                <div className="space-y-3">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
-                    <Truck className="h-3.5 w-3.5 text-primary" />
-                    Informations de route
-                  </p>
+            </div>
 
-                  {/* Origine */}
-                  <div className="space-y-1">
-                    <Label className="text-sm font-bold">
-                      Expédier depuis <span className="text-destructive">*</span>
-                    </Label>
-                    <Select value={shipFromId} onValueChange={setShipFromId}>
-                      <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
-                        <SelectValue placeholder="Sélectionner une origine" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {origins.map(o => (
-                          <SelectItem key={o.id} value={o.id}>
-                            {o.flag_emoji} {o.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Destination fixe */}
-                  <div className="space-y-1">
-                    <Label className="text-sm font-bold">Expédier vers</Label>
-                    <div className="h-12 rounded-2xl bg-[#F0F1F5] flex items-center px-4 gap-2.5">
-                      <span className="text-lg leading-none">🇭🇹</span>
-                      <span className="text-sm font-semibold text-foreground">Haïti</span>
-                      <span className="ml-auto rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5">
-                        Disponible
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Région */}
-                  <div className="space-y-1">
-                    <Label className="text-sm font-bold">
-                      Région <span className="text-destructive">*</span>
-                    </Label>
-                    <Select value={regionId} onValueChange={handleRegionChange}>
-                      <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
-                        <SelectValue placeholder="Sélectionner une région" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {regions.map(r => (
-                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Ville */}
-                  <div className="space-y-1">
-                    <Label className="text-sm font-bold">
-                      Ville <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
-                    </Label>
-                    <Select value={cityId} onValueChange={setCityId} disabled={!regionId || loadingCities}>
-                      <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40 disabled:opacity-50">
-                        <SelectValue
-                          placeholder={!regionId ? "Sélectionner d'abord une région" : loadingCities ? 'Chargement…' : 'Toutes les villes'}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cities.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+            {/* ── Suggested warehouse ── */}
+            {selectedWarehouse && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 overflow-hidden">
+                <div className="px-4 py-3 flex items-center gap-2.5 border-b border-amber-200">
+                  <Building2 className="h-4 w-4 text-amber-700 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Adresse de l'entrepôt</p>
+                    <p className="text-xs text-amber-700">{selectedWarehouse.code}</p>
                   </div>
                 </div>
-
-                {/* ── Colis ── */}
-                <div className="space-y-3">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
-                    <Box className="h-3.5 w-3.5 text-primary" />
-                    Dimensions des colis (cm / kg)
-                  </p>
-
-                  {packages.map((pkg, idx) => {
-                    const l  = parseFloat(pkg.length) || 0
-                    const w  = parseFloat(pkg.width)  || 0
-                    const h  = parseFloat(pkg.height) || 0
-                    const cbm = l > 0 && w > 0 && h > 0 ? (l * w * h) / 1_000_000 : 0
-                    return (
-                      <div key={pkg.id} className="rounded-xl bg-[#F8F9FB] border border-gray-100 p-3 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                            Colis {idx + 1}
-                          </span>
-                          {packages.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removePackage(pkg.id)}
-                              className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/10 hover:bg-destructive/20 transition-colors"
-                            >
-                              <Trash2 className="h-3 w-3 text-destructive" />
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Dimensions L × l × H */}
-                        <div className="grid grid-cols-3 gap-2">
-                          {([
-                            ['L', pkg.length, 'length'],
-                            ['l', pkg.width,  'width'],
-                            ['H', pkg.height, 'height'],
-                          ] as const).map(([lbl, val, field]) => (
-                            <div key={field} className="space-y-1">
-                              <span className="text-[10px] text-muted-foreground font-semibold">{lbl} (cm)</span>
-                              <Input
-                                type="number" inputMode="decimal" min="0" step="0.1"
-                                placeholder="0.0"
-                                value={val}
-                                onChange={e => updatePackage(pkg.id, field, e.target.value)}
-                                className="h-10 rounded-xl bg-white border border-gray-200 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
-                              />
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Poids */}
-                        <div className="relative">
-                          <span className="text-[10px] text-muted-foreground font-semibold block mb-1">Poids (kg)</span>
-                          <Input
-                            type="number" inputMode="decimal" min="0" step="0.01"
-                            placeholder="0.00"
-                            value={pkg.weight}
-                            onChange={e => updatePackage(pkg.id, 'weight', e.target.value)}
-                            className="h-10 rounded-xl bg-white border border-gray-200 pr-10 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
-                          />
-                          <span className="absolute right-3 bottom-2.5 text-xs font-semibold text-muted-foreground">kg</span>
-                        </div>
-
-                        {cbm > 0 && (
-                          <div className="flex items-center justify-between rounded-lg bg-primary/5 border border-primary/10 px-2.5 py-1.5">
-                            <span className="text-[10px] font-semibold text-primary">CBM</span>
-                            <span className="font-mono text-xs font-bold text-primary">{fmtCBM(cbm)} m³</span>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-
-                  <button
-                    type="button"
-                    onClick={addPackage}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 py-3 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/[0.02] transition-colors"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Ajouter un colis
-                  </button>
-
-                  {(totalCBM > 0 || totalWeightKg > 0) && (
-                    <div className="rounded-xl bg-[#0C1413] px-4 py-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#9FB0AB' }}>
-                          {packages.length} colis · Total
-                        </p>
-                        {totalWeightKg > 0 && (
-                          <p className="text-xs mt-0.5" style={{ color: '#6E8882' }}>
-                            {totalWeightKg.toFixed(2)} kg
-                          </p>
-                        )}
-                      </div>
-                      {totalCBM > 0 && (
-                        <div className="text-right">
-                          <p className="text-xs font-semibold" style={{ color: '#9FB0AB' }}>CBM total</p>
-                          <p className="font-mono text-base font-bold" style={{ color: '#E6A23C' }}>
-                            {fmtCBM(totalCBM)} m³
-                          </p>
-                        </div>
-                      )}
+                <div className="px-4 py-3 space-y-1">
+                  {selectedWarehouse.contact_info && (
+                    <p className="text-sm font-semibold">{selectedWarehouse.contact_info}</p>
+                  )}
+                  {[selectedWarehouse.address_line1, selectedWarehouse.address_line2, selectedWarehouse.address_line3].filter(Boolean).map((l, i) => (
+                    <p key={i} className="text-xs text-muted-foreground">{l}</p>
+                  ))}
+                  {[selectedWarehouse.city, selectedWarehouse.state, selectedWarehouse.postal_code].filter(Boolean).length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {[selectedWarehouse.city, selectedWarehouse.state, selectedWarehouse.postal_code].filter(Boolean).join(', ')}
+                    </p>
+                  )}
+                  {selectedWarehouse.instructions && (
+                    <div className="mt-2 pt-2 border-t border-amber-200">
+                      <p className="text-[11px] text-amber-800 leading-relaxed whitespace-pre-line">
+                        {selectedWarehouse.instructions}
+                      </p>
                     </div>
                   )}
                 </div>
-
-                {/* ── Estimation de prix ── */}
-                {(totalCBM > 0 || totalWeightKg > 0) && (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-3">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700/70 flex items-center gap-2">
-                      <Ship className="h-3.5 w-3.5 text-amber-600" />
-                      Estimation du fret
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Maritime */}
-                      <div className="rounded-xl bg-white/80 border border-amber-100 px-3 py-2.5">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <Ship className="h-3.5 w-3.5 text-amber-600" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Standard · Mer</span>
-                        </div>
-                        <p className="font-mono font-bold text-base text-foreground">
-                          ~${Math.max(
-                            totalWeightKg * 4,
-                            totalCBM * 200
-                          ).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {totalCBM > 0
-                            ? `${fmtCBM(totalCBM)} m³ × $200/m³`
-                            : `${totalWeightKg.toFixed(1)} kg × $4/kg`}
-                        </p>
-                      </div>
-                      {/* Aérien */}
-                      <div className="rounded-xl bg-white/80 border border-amber-100 px-3 py-2.5">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <Plane className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Urgent · Avion</span>
-                        </div>
-                        <p className="font-mono font-bold text-base text-foreground">
-                          ~${(totalWeightKg * 11).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {totalWeightKg.toFixed(1)} kg × $11/kg
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-amber-700/60 leading-relaxed">
-                      Estimation indicative hors douane et livraison locale. Le devis exact vous sera communiqué sous 24h.
-                    </p>
-                  </div>
-                )}
-
-                {/* ── Valeur marchande ── */}
-                <div className="space-y-3">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
-                    <Ship className="h-3.5 w-3.5 text-primary" />
-                    Valeur de la cargaison
-                  </p>
-
-                  <div className="space-y-1">
-                    <Label className="text-sm font-bold">
-                      Valeur marchande totale (USD){' '}
-                      <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">$</span>
-                      <Input
-                        type="number" inputMode="decimal" min="0" step="0.01"
-                        placeholder="0.00"
-                        value={invoiceUSD}
-                        onChange={e => setInvoiceUSD(e.target.value)}
-                        className="h-12 rounded-2xl bg-[#F0F1F5] border-0 pl-7 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
-                      />
-                    </div>
-                    <p className="text-[11px] text-muted-foreground px-1">
-                      Valeur déclarée pour le dédouanement en Haïti
-                    </p>
-                  </div>
-
-                  {/* Urgency */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold">Délai souhaité</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {([
-                        { value: 'normal', label: 'Standard', desc: 'Meilleur prix', icon: Ship },
-                        { value: 'urgent', label: 'Urgent',   desc: 'Prioritaire',   icon: Plane },
-                      ] as const).map(({ value, label, desc, icon: Icon }) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => setUrgency(value)}
-                          className={cn(
-                            'flex items-center gap-2.5 rounded-2xl border-2 px-3 py-3 text-left transition-all',
-                            urgency === value ? 'border-primary bg-primary/5' : 'border-gray-100 bg-[#F0F1F5]'
-                          )}
-                        >
-                          <Icon className={cn('h-4 w-4 shrink-0', urgency === value ? 'text-primary' : 'text-muted-foreground')} />
-                          <div>
-                            <p className="text-sm font-semibold leading-tight">{label}</p>
-                            <p className="text-[10px] text-muted-foreground">{desc}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Notes */}
-                  <div className="space-y-1">
-                    <Label className="text-sm font-bold">
-                      Notes <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
-                    </Label>
-                    <Textarea
-                      placeholder="Précisions sur la marchandise, emballage, instructions particulières…"
-                      value={notes}
-                      onChange={e => setNotes(e.target.value)}
-                      rows={3}
-                      className="rounded-2xl bg-[#F0F1F5] border-0 text-sm resize-none focus-visible:ring-1 focus-visible:ring-primary/40"
-                    />
-                  </div>
-                </div>
-              </>
+              </div>
             )}
+
+            {/* ── Optional estimates ── */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+                <Package className="h-3.5 w-3.5 text-primary" />
+                Informations optionnelles
+              </p>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-xs font-semibold text-muted-foreground">Nb colis</Label>
+                  <Input
+                    type="number" inputMode="numeric" min="1"
+                    placeholder="1"
+                    value={pkgCount}
+                    onChange={e => setPkgCount(e.target.value)}
+                    className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-mono text-sm"
+                  />
+                </div>
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-xs font-semibold text-muted-foreground">CBM (m³)</Label>
+                  <Input
+                    type="number" inputMode="decimal" min="0" step="0.0001"
+                    placeholder="0.00"
+                    value={estCbm}
+                    onChange={e => setEstCbm(e.target.value)}
+                    className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-mono text-sm"
+                  />
+                </div>
+                <div className="space-y-1 col-span-1">
+                  <Label className="text-xs font-semibold text-muted-foreground">Poids (kg)</Label>
+                  <Input
+                    type="number" inputMode="decimal" min="0" step="0.01"
+                    placeholder="0.0"
+                    value={estKg}
+                    onChange={e => setEstKg(e.target.value)}
+                    className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-mono text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-sm font-bold">
+                  Notes <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                </Label>
+                <Textarea
+                  placeholder="Type de marchandise, instructions particulières, nom du fournisseur…"
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  rows={3}
+                  className="rounded-2xl bg-[#F0F1F5] border-0 text-sm resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Info note */}
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+              <p className="text-xs text-sky-800 leading-relaxed">
+                Aucun paiement n'est requis maintenant. Vous recevrez un devis estimatif sous 24h.
+                La facture sera établie après réception et vérification de vos colis.
+              </p>
+            </div>
           </div>
 
           {/* Sticky CTA */}
           <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-border px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">
             <button
               type="submit"
-              disabled={submitting || !shipFromId || !regionId}
+              disabled={submitting || !categorySlug}
               className={cn(
-                'w-full rounded-2xl py-4 text-sm font-bold text-white transition-all flex items-center justify-center gap-2',
-                submitting || !shipFromId || !regionId ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.98]'
+                'w-full rounded-2xl py-4 text-sm font-bold text-white flex items-center justify-center gap-2 transition-all',
+                submitting || !categorySlug ? 'opacity-50 cursor-not-allowed' : 'active:scale-[0.98]'
               )}
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
-              {submitting ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Envoi en cours…</>
-              ) : (
-                <><SendHorizonal className="h-4 w-4" /> Soumettre la demande</>
-              )}
+              {submitting
+                ? <><Loader2 className="h-4 w-4 animate-spin" />Envoi en cours…</>
+                : <><Package className="h-4 w-4" />Demander un devis</>
+              }
             </button>
           </div>
         </form>
@@ -1125,23 +740,60 @@ function ShippingRequestForm({
   )
 }
 
+// ── WarehousesSection ─────────────────────────────────────────────────────────
+
+function WarehousesSection({ warehouses }: { warehouses: Warehouse[] }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className="px-4 mb-5">
+      <button
+        type="button"
+        onClick={() => setExpanded(e => !e)}
+        className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 flex items-center gap-3 transition-colors hover:bg-muted/20"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+          <Building2 className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1 text-left min-w-0">
+          <p className="text-sm font-bold">Adresses de nos entrepôts</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Communiquez l'adresse à votre fournisseur
+          </p>
+        </div>
+        {expanded
+          ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+          : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-3">
+          {warehouses.map(wh => (
+            <WarehouseAddressCard key={wh.id} wh={wh} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function ShipmentsPage() {
   const { user } = useAuth()
-  const [shipments,          setShipments]          = useState<MyShipment[]>([])
-  const [shippingRequests,   setShippingRequests]   = useState<ShippingRequest[]>([])
-  const [ordersReady,        setOrdersReady]        = useState<OrderReadyForShipment[]>([])
-  const [walletBalance,      setWalletBalance]      = useState(0)
-  const [loading,            setLoading]            = useState(true)
-  const [filter,             setFilter]             = useState<'active' | 'completed'>('active')
-  const [showForm,           setShowForm]           = useState(false)
-  const [selectedReadyOrder, setSelectedReadyOrder] = useState<OrderReadyForShipment | null>(null)
+  const [shipments,        setShipments]        = useState<MyShipment[]>([])
+  const [shippingRequests, setShippingRequests] = useState<ShippingRequest[]>([])
+  const [warehouses,       setWarehouses]       = useState<Warehouse[]>([])
+  const [walletBalance,    setWalletBalance]    = useState(0)
+  const [loading,          setLoading]          = useState(true)
+  const [filter,           setFilter]           = useState<'active' | 'completed'>('active')
+  const [showForm,         setShowForm]         = useState(false)
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!user) return
+    setLoading(true)
 
-    const [shipmentsRes, requestsRes, originsRes, regionsRes, ordersReadyRes, walletRes] = await Promise.all([
+    const [shipmentsRes, requestsRes, warehousesRes, walletRes] = await Promise.all([
       supabase
         .from('order_shipments')
         .select(`
@@ -1152,87 +804,62 @@ export function ShipmentsPage() {
         .eq('orders.user_id', user.id),
       supabase
         .from('product_requests')
-        .select('id, status, ship_from_id, destination_region_id, invoice_value_usd, weight_kg, packages, notes, created_at')
-        .eq('user_id', user.id)
-        .eq('request_type', 'shipping')
-        .not('status', 'in', '(completed,rejected)')
-        .order('created_at', { ascending: false }),
-      supabase.from('shipping_origins').select('id,name,flag_emoji').eq('active', true),
-      supabase.from('haiti_regions').select('id,name').eq('active', true),
-      supabase
-        .from('orders')
         .select(`
-          id, tracking_code,
-          quotes(
-            product_requests(
-              product_name,
-              packages,
-              weight_kg, weight_lbs,
-              box_length_cm, box_width_cm, box_height_cm
-            )
-          )
+          id, status, notes, created_at,
+          estimated_cbm, estimated_kg, actual_cbm, actual_kg,
+          quoted_amount_htg, actual_amount_htg, quoted_at, received_at, invoiced_at,
+          package_count,
+          warehouse:warehouses(id, code, name, country_code, flag_emoji, address_line1, address_line2, address_line3, city, state, postal_code, contact_info, instructions, for_category),
+          product_rate_category:product_rate_categories(id, name, slug, rate_multiplier, description)
         `)
         .eq('user_id', user.id)
-        .eq('status', 'in_china_warehouse')
-        .eq('shipping_option', 'separate')
-        .is('chosen_shipping_method_id', null)
-        .is('chosen_shipping_rate_id', null),
+        .eq('request_type', 'shipping')
+        .not('status', 'in', '(cancelled)')
+        .order('created_at', { ascending: false }),
+      supabase.from('warehouses').select('*').eq('active', true).order('sort_order'),
       supabase.from('wallets').select('available_balance').eq('user_id', user.id).maybeSingle(),
     ])
 
     if (shipmentsRes.data) {
       setShipments(shipmentsRes.data.map((d: any) => ({
-        shipment_id:      d.shipments?.id || '',
-        batch_code:       d.shipments?.batch_code || '',
-        status:           d.shipments?.status || 'pending',
-        vessel_info:      d.shipments?.vessel_info,
-        departure_date:   d.shipments?.departure_date,
+        shipment_id:       d.shipments?.id || '',
+        batch_code:        d.shipments?.batch_code || '',
+        status:            d.shipments?.status || 'pending',
+        vessel_info:       d.shipments?.vessel_info,
+        departure_date:    d.shipments?.departure_date,
         estimated_arrival: d.shipments?.estimated_arrival,
-        actual_arrival:   d.shipments?.actual_arrival,
-        container_number: d.shipments?.container_number,
-        order_id:         d.order_id,
-        order_tracking:   d.orders?.tracking_code || '',
-        product_name:     d.orders?.quotes?.product_requests?.product_name || 'Produit',
+        actual_arrival:    d.shipments?.actual_arrival,
+        container_number:  d.shipments?.container_number,
+        order_id:          d.order_id,
+        order_tracking:    d.orders?.tracking_code || '',
+        product_name:      d.orders?.quotes?.product_requests?.product_name || 'Produit',
       })))
     }
 
     if (requestsRes.data) {
-      const originsMap = Object.fromEntries((originsRes.data ?? []).map((o: any) => [o.id, `${o.flag_emoji} ${o.name}`]))
-      const regionsMap = Object.fromEntries((regionsRes.data ?? []).map((r: any) => [r.id, r.name]))
-      setShippingRequests(requestsRes.data.map((r: any) => ({
-        ...r,
-        ship_from_name: r.ship_from_id ? originsMap[r.ship_from_id] : undefined,
-        region_name:    r.destination_region_id ? regionsMap[r.destination_region_id] : undefined,
-      })))
+      setShippingRequests(requestsRes.data as unknown as ShippingRequest[])
     }
 
-    if (ordersReadyRes.data) {
-      setOrdersReady(ordersReadyRes.data.map((o: any) => {
-        const req = o.quotes?.product_requests
-        return {
-          id:            o.id,
-          tracking_code: o.tracking_code,
-          product_name:  req?.product_name || 'Produit',
-          packages:      req?.packages ?? null,
-          weight_kg:     req?.weight_kg ?? null,
-          weight_lbs:    req?.weight_lbs ?? null,
-          box_length_cm: req?.box_length_cm ?? null,
-          box_width_cm:  req?.box_width_cm ?? null,
-          box_height_cm: req?.box_height_cm ?? null,
-        }
-      }))
+    if (warehousesRes.data) {
+      setWarehouses(warehousesRes.data as Warehouse[])
     }
 
     if (walletRes.data) setWalletBalance(walletRes.data.available_balance ?? 0)
 
     setLoading(false)
-  }
+  }, [user])
 
-  useEffect(() => { load() }, [user])
+  useEffect(() => { load() }, [load])
 
   const filtered = shipments.filter(s =>
     filter === 'active' ? s.status !== 'completed' : s.status === 'completed'
   )
+
+  const activeRequests    = shippingRequests.filter(r => !['invoiced'].includes(r.status))
+  const completedRequests = shippingRequests.filter(r =>  ['invoiced'].includes(r.status))
+  const displayedRequests = filter === 'active' ? activeRequests : completedRequests
+
+  const hasQuoted = shippingRequests.some(r => r.status === 'quoted')
 
   return (
     <div className="min-h-full bg-[#F4F5F7]">
@@ -1241,8 +868,8 @@ export function ShipmentsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Expéditions</h1>
           <p className="text-sm text-muted-foreground">
-            {shipments.length} expédition{shipments.length !== 1 ? 's' : ''}
-            {shippingRequests.length > 0 && ` · ${shippingRequests.length} demande${shippingRequests.length !== 1 ? 's' : ''} en attente`}
+            {shippingRequests.length} demande{shippingRequests.length !== 1 ? 's' : ''}
+            {shipments.length > 0 && ` · ${shipments.length} expédition${shipments.length !== 1 ? 's' : ''}`}
           </p>
         </div>
         <button
@@ -1251,115 +878,50 @@ export function ShipmentsPage() {
           style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
         >
           <Plus className="h-3.5 w-3.5" />
-          Expédier
+          Demande
         </button>
       </div>
 
-      {/* Orders ready for separate shipment */}
-      {!loading && ordersReady.length > 0 && (
-        <div className="px-4 mb-5">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70 px-1 mb-2">
-            Prêt pour expédition
-          </p>
-          <div className="space-y-2">
-            {ordersReady.map(order => {
-              const pkgs = order.packages?.filter(p => p.length_cm || p.weight_kg || p.weight_lbs) ?? []
-              const hasPkgs = pkgs.length > 0
-              const totalCBM = hasPkgs
-                ? pkgs.reduce((s, p) => s + (p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : 0)), 0)
-                : (order.box_length_cm && order.box_width_cm && order.box_height_cm
-                    ? (order.box_length_cm * order.box_width_cm * order.box_height_cm) / 1_000_000
-                    : 0)
-              const totalKg = hasPkgs
-                ? pkgs.reduce((s, p) => s + (p.weight_kg ?? (p.weight_lbs ? p.weight_lbs * 0.453592 : 0)), 0)
-                : (order.weight_kg ?? (order.weight_lbs ? order.weight_lbs * 0.453592 : 0))
-
-              return (
-                <div
-                  key={order.id}
-                  className="rounded-2xl border border-primary/20 bg-white shadow-sm overflow-hidden"
-                >
-                  <div className="flex items-center gap-3 p-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-                      <Package className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold text-sm truncate">{order.product_name}</p>
-                        <span className="rounded-full bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 font-semibold">
-                          Entrepôt Chine
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 font-mono">{order.tracking_code}</p>
-                      <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
-                        {totalCBM > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Box className="h-3 w-3" />
-                            {fmtCBM(totalCBM)} m³
-                          </span>
-                        )}
-                        {totalKg > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Weight className="h-3 w-3" />
-                            {totalKg.toFixed(2)} kg
-                          </span>
-                        )}
-                        {hasPkgs && (
-                          <span className="flex items-center gap-1">
-                            <Package className="h-3 w-3" />
-                            {pkgs.length} colis
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setSelectedReadyOrder(order)}
-                      className="shrink-0 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white transition-all active:scale-95"
-                      style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-                    >
-                      <Truck className="h-3.5 w-3.5" />
-                      Expédier
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+      {/* Quote notification banner */}
+      {hasQuoted && (
+        <div className="px-4 mb-3">
+          <div className="rounded-2xl bg-primary/10 border border-primary/20 px-4 py-3 flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15 shrink-0">
+              <Package className="h-4 w-4 text-primary" />
+            </div>
+            <p className="text-sm font-semibold text-primary flex-1">
+              Vous avez un devis en attente — vérifiez votre solde.
+            </p>
+            <Link to="/wallet" className="text-xs font-bold text-primary underline shrink-0">
+              Portefeuille
+            </Link>
           </div>
         </div>
       )}
 
-      {/* CTA card — only when no pending requests and no shipments */}
-      {!loading && shippingRequests.length === 0 && shipments.length === 0 && ordersReady.length === 0 && (
+      {/* Warehouse addresses */}
+      {!loading && warehouses.length > 0 && (
+        <WarehousesSection warehouses={warehouses} />
+      )}
+
+      {/* Empty CTA */}
+      {!loading && shippingRequests.length === 0 && shipments.length === 0 && (
         <div className="px-4 mb-4">
-          <div
-            className="rounded-2xl border border-primary/20 bg-white shadow-sm p-4 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+          <button
             onClick={() => setShowForm(true)}
+            className="w-full rounded-2xl border border-dashed border-primary/30 bg-white shadow-sm p-5 flex items-center gap-3 transition-colors hover:bg-primary/[0.02]"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-              <Box className="h-5 w-5 text-primary" />
+              <Package className="h-5 w-5 text-primary" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold">Vous avez déjà vos produits ?</p>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-bold">Créer une demande d'expédition</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Soumettez vos dimensions — on calcule le tarif et on organise l'expédition.
+                Obtenez un devis estimatif — aucun paiement immédiat.
               </p>
             </div>
             <Plus className="h-4 w-4 text-primary shrink-0" />
-          </div>
-        </div>
-      )}
-
-      {/* Pending shipping requests section */}
-      {!loading && shippingRequests.length > 0 && (
-        <div className="px-4 mb-5">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70 px-1 mb-2">
-            Demandes d'expédition
-          </p>
-          <div className="space-y-2">
-            {shippingRequests.map(r => (
-              <ShippingRequestCard key={r.id} req={r} />
-            ))}
-          </div>
+          </button>
         </div>
       )}
 
@@ -1381,42 +943,39 @@ export function ShipmentsPage() {
         ))}
       </div>
 
-      {/* Shipment list */}
+      {/* Content */}
       <div className="px-4 pb-6 space-y-3">
         {loading ? (
           [1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)
-        ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
-            <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
-            <p className="font-semibold text-muted-foreground">
-              {filter === 'active' ? 'Aucune expédition en cours' : 'Aucune expédition terminée'}
-            </p>
-            <p className="text-xs text-muted-foreground/70 mt-1">
-              {filter === 'active' ? 'Vos commandes payées apparaîtront ici' : 'Les livraisons complètes apparaîtront ici'}
-            </p>
-          </div>
         ) : (
-          filtered.map(s => <ShipmentCard key={`${s.shipment_id}-${s.order_id}`} shipment={s} />)
+          <>
+            {displayedRequests.map(r => (
+              <ShippingRequestCard key={r.id} req={r} walletBalance={walletBalance} />
+            ))}
+            {filtered.map(s => (
+              <ShipmentCard key={`${s.shipment_id}-${s.order_id}`} shipment={s} />
+            ))}
+            {displayedRequests.length === 0 && filtered.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
+                <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
+                <p className="font-semibold text-muted-foreground">
+                  {filter === 'active' ? 'Aucune demande en cours' : 'Aucune expédition terminée'}
+                </p>
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  {filter === 'active'
+                    ? 'Appuyez sur + pour créer une demande'
+                    : 'Les expéditions facturées apparaîtront ici'}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* Shipping request form sheet */}
-      <ShippingRequestForm
+      <QuoteRequestSheet
         open={showForm}
         onClose={() => setShowForm(false)}
         onSuccess={load}
-      />
-
-      {/* Create shipment from existing warehouse order */}
-      <CreateShipmentFromOrderSheet
-        order={selectedReadyOrder}
-        walletBalance={walletBalance}
-        open={selectedReadyOrder !== null}
-        onClose={() => setSelectedReadyOrder(null)}
-        onSuccess={() => {
-          setSelectedReadyOrder(null)
-          load()
-        }}
       />
     </div>
   )
