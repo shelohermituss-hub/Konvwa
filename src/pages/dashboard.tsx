@@ -157,78 +157,83 @@ export function DashboardPage() {
         </Link>
       </div>
 
-      {/* ── Wallet Card ── */}
-      <div className="px-4 pb-5">
-        <div
-          className="rounded-3xl text-white relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #0A1628 0%, #162340 55%, #1C2F50 100%)',
-            boxShadow: '0 12px 40px rgba(10,22,40,0.45)',
-            aspectRatio: '1.586',
-          }}
-        >
-          {/* Subtle orange glow top-right */}
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              top: '-40%', right: '-20%',
-              width: '55%', paddingTop: '55%',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(240,90,40,0.18) 0%, transparent 70%)',
-            }}
-          />
-
-          <div className="absolute inset-0 flex flex-col justify-between p-5">
-            {/* Top row: brand + eye toggle */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-white text-base tracking-widest">KONVWA</span>
-                <span
-                  className="text-[9px] font-bold tracking-widest rounded-sm px-1.5 py-0.5"
-                  style={{ background: 'rgba(240,90,40,0.22)', color: '#F97B50' }}
-                >
-                  PAY
+      {/* ── Wallet Cards (compact 2-col) ── */}
+      <div className="px-4 pb-4">
+        <div className="flex gap-3">
+          {/* Solde principal */}
+          <Link to="/wallet" className="flex-1">
+            <div className="rounded-2xl bg-[#F0F1F5] p-4 relative overflow-hidden">
+              {/* Amount row */}
+              <div className="flex items-baseline gap-1 mb-1">
+                {loading ? (
+                  <Skeleton className="h-8 w-32 rounded-lg" />
+                ) : (
+                  <>
+                    <span className="text-[1.75rem] font-extrabold tracking-tight text-foreground leading-none">
+                      {balanceVisible
+                        ? Math.floor(balance).toLocaleString('fr-HT')
+                        : '•••••'}
+                    </span>
+                    {balanceVisible && (
+                      <span className="text-sm font-semibold text-muted-foreground">
+                        .{String(Math.round((balance % 1) * 100)).padStart(2, '0')}
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => { e.preventDefault(); setBalanceVisible(v => !v) }}
+                      className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {balanceVisible
+                        ? <Eye className="h-4 w-4" />
+                        : <EyeOff className="h-4 w-4" />}
+                    </button>
+                  </>
+                )}
+              </div>
+              {/* Label row */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Solde en <span className="font-bold text-foreground">HTG</span>
+                </span>
+                <span className="rounded-full bg-[#F05A28] px-2.5 py-0.5 text-[10px] font-bold text-white">
+                  KONVWA
                 </span>
               </div>
-              <button
-                onClick={() => setBalanceVisible(v => !v)}
-                className="flex h-7 w-7 items-center justify-center rounded-full transition-colors"
-                style={{ background: 'rgba(255,255,255,0.08)' }}
-              >
-                {balanceVisible
-                  ? <Eye className="h-3.5 w-3.5 text-white/60" />
-                  : <EyeOff className="h-3.5 w-3.5 text-white/60" />}
-              </button>
-            </div>
-
-            {/* Center: balance */}
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-1">
-                {t('dash.balance')}
-              </p>
-              {loading ? (
-                <Skeleton className="h-8 w-40 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              ) : (
-                <p className="text-[2rem] font-bold tracking-tight leading-none text-white">
-                  {balanceVisible ? `${balance.toLocaleString('fr-HT')} HTG` : '••••• HTG'}
-                </p>
-              )}
-            </div>
-
-            {/* Bottom row: name + account number */}
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">Titulaire</p>
-                <p className="text-[13px] font-semibold text-white/80 tracking-wider uppercase">
-                  {profile?.full_name || firstName}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">N° Compte</p>
-                <p className="text-[11px] font-mono font-semibold text-white/60 tracking-widest">{cardNumber}</p>
+              {/* Flag */}
+              <div className="absolute top-4 right-4 h-9 w-9 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
+                <img
+                  src="https://flagcdn.com/w80/ht.png"
+                  alt="Haïti"
+                  className="h-full w-full object-cover"
+                />
               </div>
             </div>
-          </div>
+          </Link>
+
+          {/* En attente */}
+          <Link to="/wallet" className="w-[38%]">
+            <div className="rounded-2xl bg-[#F0F1F5] p-4 h-full flex flex-col justify-between">
+              <div className="flex items-baseline gap-0.5 mb-1">
+                {loading ? (
+                  <Skeleton className="h-8 w-16 rounded-lg" />
+                ) : (
+                  <>
+                    <span className="text-[1.75rem] font-extrabold tracking-tight text-amber-500 leading-none">
+                      {balanceVisible
+                        ? Math.floor(wallet?.blocked_balance ?? 0).toLocaleString('fr-HT')
+                        : '•••'}
+                    </span>
+                    {balanceVisible && (
+                      <span className="text-sm font-semibold text-amber-400">
+                        .{String(Math.round(((wallet?.blocked_balance ?? 0) % 1) * 100)).padStart(2, '0')}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+              <span className="text-sm text-muted-foreground">En attente</span>
+            </div>
+          </Link>
         </div>
       </div>
 
@@ -236,18 +241,15 @@ export function DashboardPage() {
       <div className="px-4 pb-5">
         <div className="flex gap-3">
           <Link to="/wallet" className="flex-1">
-            <button
-              className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity"
-              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-            >
+            <button className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white bg-[#0A1628] hover:bg-[#0d1e38] transition-colors shadow-sm">
               <ArrowDownLeft className="h-4 w-4" />
-              {t('dash.topup')}
+              Dépôt
             </button>
           </Link>
           <Link to="/orders" className="flex-1">
-            <button className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors shadow-sm">
+            <button className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-[#0A1628] border-2 border-[#0A1628] bg-transparent hover:bg-[#0A1628]/5 transition-colors">
               <TrendingUp className="h-4 w-4" />
-              {t('dash.history')}
+              Historique
             </button>
           </Link>
         </div>
