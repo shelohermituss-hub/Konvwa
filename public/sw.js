@@ -48,14 +48,15 @@ self.addEventListener('push', (event) => {
     data = { title: 'KONVWA', body: event.data.text() }
   }
 
-  const { title = 'KONVWA', body = '', icon = '/icon-192.png', badge = '/icon-192.png', clickUrl = '/', type = 'info' } = data
+  const { title = 'KONVWA', body = '', icon = '/icon-192.png', badge = '/badge-mono.png', clickUrl = '/', type = 'info' } = data
 
   const options = {
     body,
     icon,
     badge,
-    data:    { clickUrl },
-    tag:     type,
+    vibrate:  [200, 100, 200],
+    data:     { clickUrl },
+    tag:      type,
     renotify: false,
     requireInteraction: false,
     actions: [

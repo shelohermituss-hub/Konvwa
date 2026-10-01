@@ -1,28 +1,20 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Loader2, ExternalLink, CheckCircle2, SendHorizonal,
-  Package, ImagePlus, X, Box, Truck, MapPin, Plus, Trash2, Ship, Plane,
+  Package, ImagePlus, X, Truck, MapPin, FileText, Zap,
 } from 'lucide-react'
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface AppSettings {
-  usd_to_htg_rate: number
-  cbm_price_usd: number
-  duty_rate_percent: number
-  service_margin_percent: number
-}
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ShippingOrigin {
   id: string
@@ -42,45 +34,7 @@ interface HaitiCity {
   name: string
 }
 
-interface ProductType {
-  id: string
-  name: string
-}
-
-interface ShippingRate {
-  id: string
-  mode: 'ocean' | 'air'
-  name: string
-  type_label: string
-  per_cbm_usd: number | null
-  per_kg_usd: number | null
-  min_amount_usd: number
-  transit_days_min: number | null
-  transit_days_max: number | null
-  origin_id: string | null
-}
-
-interface PackageItem {
-  id: string
-  length: string
-  width: string
-  height: string
-  weight: string
-}
-
-interface Breakdown {
-  productUSD: number
-  totalCBM: number
-  totalWeightKg: number
-  shippingUSD: number
-  dutyUSD: number
-  serviceUSD: number
-  totalUSD: number
-  totalHTG: number
-  unitHTG: number
-}
-
-// ── Constants ────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
   { value: 'clothing',    label: 'Vêtements & accessoires' },
@@ -93,50 +47,20 @@ const CATEGORIES = [
   { value: 'other',       label: 'Autre' },
 ]
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+const STEPS = [
+  { label: 'Demande soumise',         sub: 'Votre produit est envoyé',         done: true  },
+  { label: 'Devis produit',           sub: 'Prix du produit sous 24h',         done: false },
+  { label: 'Mode d\'expédition',      sub: 'Frais de port & assurance',        done: false },
+  { label: 'Paiement & livraison',    sub: 'Paiement HTG via MonCash',         done: false },
+]
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function detectPlatform(url: string): 'alibaba' | 'shein' | 'temu' | 'other' {
   if (url.includes('alibaba.com') || url.includes('1688.com')) return 'alibaba'
   if (url.includes('shein.com')) return 'shein'
   if (url.includes('temu.com')) return 'temu'
   return 'other'
-}
-
-const fmt    = (n: number) => Math.round(n).toLocaleString('fr-FR').replace(/ /g, ' ')
-const fmtUSD = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const fmtCBM = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
-
-// totalCBM = somme des CBM de tous les colis (en m³)
-function calcBreakdown(
-  priceUSD: number,
-  qty: number,
-  totalCBM: number,
-  totalWeightKg: number,
-  s: AppSettings,
-  rate: ShippingRate | null = null,
-): Breakdown {
-  const productUSD = priceUSD * qty
-  let shippingUSD: number
-  if (rate) {
-    const rawShipping = rate.mode === 'ocean'
-      ? totalCBM * (rate.per_cbm_usd ?? 0)
-      : totalWeightKg * (rate.per_kg_usd ?? 0)
-    shippingUSD = Math.max(rate.min_amount_usd, rawShipping)
-  } else {
-    shippingUSD = totalCBM * s.cbm_price_usd
-  }
-  const cif         = productUSD + shippingUSD
-  const dutyUSD     = cif * (s.duty_rate_percent / 100)
-  const subtotal    = cif + dutyUSD
-  const serviceUSD  = subtotal * (s.service_margin_percent / 100)
-  const totalUSD    = subtotal + serviceUSD
-  const totalHTG    = totalUSD * s.usd_to_htg_rate
-  const unitHTG     = totalHTG / Math.max(1, qty)
-  return { productUSD, totalCBM, totalWeightKg, shippingUSD, dutyUSD, serviceUSD, totalUSD, totalHTG, unitHTG }
-}
-
-function newPkg(): PackageItem {
-  return { id: crypto.randomUUID(), length: '', width: '', height: '', weight: '' }
 }
 
 async function uploadProductImage(file: File, userId: string): Promise<string | null> {
@@ -151,25 +75,6 @@ async function uploadProductImage(file: File, userId: string): Promise<string | 
   return data.publicUrl
 }
 
-// ── Sub-components ───────────────────────────────────────────────────────────
-
-function ManifestLine({
-  label, sub, value, isAdd = false,
-}: { label: string; sub?: string; value: string; isAdd?: boolean }) {
-  return (
-    <div className="flex items-baseline justify-between py-3 border-b border-white/[0.08]">
-      <div>
-        <span className="text-sm text-[#c8d5d1]">{label}</span>
-        {sub && <div className="text-[11px] text-[#6e8882] mt-0.5">{sub}</div>}
-      </div>
-      <span className="font-mono text-[13px] font-medium text-[#e8f0ed] tabular-nums">
-        {isAdd && <span className="text-[#6e8882]">+ </span>}
-        {value}
-      </span>
-    </div>
-  )
-}
-
 function SectionHeader({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
     <div className="flex items-center gap-2">
@@ -179,46 +84,35 @@ function SectionHeader({ icon: Icon, label }: { icon: React.ElementType; label: 
   )
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export function SubmitPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  // Settings & reference data
-  const [settings,      setSettings]      = useState<AppSettings | null>(null)
-  const [loadingSettings, setLoadingSettings] = useState(true)
+  // Reference data
   const [origins,       setOrigins]       = useState<ShippingOrigin[]>([])
   const [regions,       setRegions]       = useState<HaitiRegion[]>([])
   const [cities,        setCities]        = useState<HaitiCity[]>([])
-  const [productTypes,  setProductTypes]  = useState<ProductType[]>([])
-  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([])
-  const [shippingRateId, setShippingRateId] = useState('')
   const [loadingCities, setLoadingCities] = useState(false)
 
-  // Route info
+  // Route
   const [shipFromId, setShipFromId] = useState('')
   const [regionId,   setRegionId]   = useState('')
   const [cityId,     setCityId]     = useState('')
 
-  // Product info
+  // Product
   const [productUrl,  setProductUrl]  = useState('')
   const [productName, setProductName] = useState('')
   const [category,    setCategory]    = useState('')
-  const [quantity,    setQuantity]    = useState('10')
+  const [quantity,    setQuantity]    = useState('1')
   const [priceUSD,    setPriceUSD]    = useState('')
   const [color,       setColor]       = useState('')
   const [size,        setSize]        = useState('')
   const [urgency,     setUrgency]     = useState<'normal' | 'urgent' | 'express'>('normal')
   const [notes,       setNotes]       = useState('')
 
-  // Parcel info
-  const [unitSystem,      setUnitSystem]      = useState<'metric' | 'imperial'>('metric')
-  const [productTypeId,   setProductTypeId]   = useState('')
-  const [packages,        setPackages]        = useState<PackageItem[]>([newPkg()])
-  const [invoiceValueUSD, setInvoiceValueUSD] = useState('')
-
-  // Image upload
+  // Image
   const [imageFile,    setImageFile]    = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -231,34 +125,10 @@ export function SubmitPage() {
     Promise.all([
       supabase.from('shipping_origins').select('id,name,flag_emoji,country_code').eq('active', true).order('sort_order'),
       supabase.from('haiti_regions').select('id,name').eq('active', true).order('sort_order'),
-      supabase.from('product_types').select('id,name').eq('active', true).order('sort_order'),
-      supabase.from('app_settings').select('key,value')
-        .in('key', ['usd_to_htg_rate', 'cbm_price_usd', 'duty_rate_percent', 'service_margin_percent']),
-      supabase.from('shipping_rates')
-        .select('id,mode,name,type_label,per_cbm_usd,per_kg_usd,min_amount_usd,transit_days_min,transit_days_max,origin_id')
-        .eq('active', true).order('sort_order'),
-    ]).then(([originsRes, regionsRes, typesRes, settingsRes, ratesRes]) => {
+    ]).then(([originsRes, regionsRes]) => {
       setOrigins(originsRes.data as ShippingOrigin[] || [])
       setRegions(regionsRes.data as HaitiRegion[] || [])
-      setProductTypes(typesRes.data as ProductType[] || [])
-      setShippingRates(ratesRes.data as ShippingRate[] || [])
-      const map = Object.fromEntries(
-        (settingsRes.data ?? []).map((r: { key: string; value: string }) => [r.key, parseFloat(r.value)])
-      )
-      setSettings({
-        usd_to_htg_rate:        map.usd_to_htg_rate        ?? 132,
-        cbm_price_usd:          map.cbm_price_usd          ?? 790,
-        duty_rate_percent:      map.duty_rate_percent      ?? 20,
-        service_margin_percent: map.service_margin_percent ?? 15,
-      })
-      setLoadingSettings(false)
     })
-  }, [])
-
-  const addPackage = useCallback(() => setPackages(prev => [...prev, newPkg()]), [])
-  const removePackage = useCallback((id: string) => setPackages(prev => prev.filter(p => p.id !== id)), [])
-  const updatePackage = useCallback((id: string, field: keyof Omit<PackageItem, 'id'>, value: string) => {
-    setPackages(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p))
   }, [])
 
   async function handleRegionChange(id: string) {
@@ -276,43 +146,6 @@ export function SubmitPage() {
     setCities(data as HaitiCity[] || [])
     setLoadingCities(false)
   }
-
-  // Derived values
-  const price = parseFloat(priceUSD) || 0
-  const qty   = Math.max(1, parseInt(quantity) || 1)
-
-  const dimFactor    = unitSystem === 'imperial' ? 2.54     : 1
-  const weightFactor = unitSystem === 'imperial' ? 0.453592 : 1  // → kg
-
-  // Compute per-package values (always in cm / kg)
-  const pkgsComputed = packages.map(p => {
-    const l = parseFloat(p.length) || 0
-    const w = parseFloat(p.width)  || 0
-    const h = parseFloat(p.height) || 0
-    const wt = parseFloat(p.weight) || 0
-    const l_cm = l * dimFactor
-    const w_cm = w * dimFactor
-    const h_cm = h * dimFactor
-    const cbm  = l_cm > 0 && w_cm > 0 && h_cm > 0 ? (l_cm * w_cm * h_cm) / 1_000_000 : 0
-    const weight_kg  = wt * weightFactor
-    const weight_lbs = unitSystem === 'imperial' ? wt : wt / 0.453592
-    return { l_cm, w_cm, h_cm, cbm, weight_kg, weight_lbs }
-  })
-
-  const totalCBM      = pkgsComputed.reduce((s, p) => s + p.cbm, 0)
-  const totalWeightKg = pkgsComputed.reduce((s, p) => s + p.weight_kg, 0)
-  const totalWeightLbs = pkgsComputed.reduce((s, p) => s + p.weight_lbs, 0)
-
-  const selectedRate = shippingRates.find(r => r.id === shippingRateId) ?? null
-  const hasDimensions = totalCBM > 0
-  const hasWeightForAir = selectedRate?.mode === 'air' ? totalWeightKg > 0 : true
-  const hasCalc = price > 0 && hasDimensions && hasWeightForAir && !!settings
-
-  const breakdown = hasCalc ? calcBreakdown(price, qty, totalCBM, totalWeightKg, settings, selectedRate) : null
-  const detectedPlatform = productUrl ? detectPlatform(productUrl) : null
-
-  const dimUnit    = unitSystem === 'metric' ? 'cm' : 'in'
-  const weightUnit = unitSystem === 'metric' ? 'kg' : 'lbs'
 
   // Image handlers
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -342,81 +175,51 @@ export function SubmitPage() {
   function resetForm() {
     setShipFromId(''); setRegionId(''); setCityId(''); setCities([])
     setProductUrl(''); setProductName(''); setCategory('')
-    setQuantity('10'); setPriceUSD('')
-    setUnitSystem('metric'); setProductTypeId('')
-    setPackages([newPkg()])
-    setInvoiceValueUSD(''); setShippingRateId('')
+    setQuantity('1'); setPriceUSD('')
     setSize(''); setColor(''); setUrgency('normal'); setNotes('')
     clearImage()
   }
+
+  const detectedPlatform = productUrl ? detectPlatform(productUrl) : null
+  const qty = Math.max(1, parseInt(quantity) || 1)
+  const price = parseFloat(priceUSD) || 0
+  const canSubmit = !submitting && !!productName.trim() && !!category && !!shipFromId && !!regionId
 
   // Submit
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
-    if (!productName.trim()) { toast.error('Le nom du produit est requis.');              return }
-    if (!category)           { toast.error('La catégorie est requise.');                   return }
-    if (!shipFromId)         { toast.error("Sélectionnez l'origine d'expédition.");        return }
-    if (!regionId)           { toast.error('Sélectionnez la région de destination.');      return }
+    if (!productName.trim()) { toast.error('Le nom du produit est requis.');         return }
+    if (!category)           { toast.error('La catégorie est requise.');              return }
+    if (!shipFromId)         { toast.error("Sélectionnez l'origine d'expédition.");  return }
+    if (!regionId)           { toast.error('Sélectionnez la région de destination.'); return }
 
     setSubmitting(true)
 
     let imageUrl: string | null = null
     if (imageFile) {
       imageUrl = await uploadProductImage(imageFile, user.id)
-      if (!imageUrl) toast.warning('Image non uploadée, mais la commande sera soumise.')
+      if (!imageUrl) toast.warning('Image non uploadée, mais la demande sera soumise.')
     }
 
-    // Build packages payload (always in cm / kg)
-    const packagesPayload = pkgsComputed
-      .map((p, i) => ({
-        number:     i + 1,
-        length_cm:  p.l_cm      || null,
-        width_cm:   p.w_cm      || null,
-        height_cm:  p.h_cm      || null,
-        weight_kg:  p.weight_kg  || null,
-        weight_lbs: p.weight_lbs || null,
-        cbm:        p.cbm        || null,
-      }))
-      .filter(p => p.length_cm || p.weight_kg)  // skip empty rows
-
     const { error } = await supabase.from('product_requests').insert({
-      user_id:          user.id,
-      product_url:      productUrl.trim() || null,
-      product_name:     productName.trim(),
+      user_id:                user.id,
+      product_url:            productUrl.trim() || null,
+      product_name:           productName.trim(),
       category,
-      quantity:         qty,
-      budget_estimate:  breakdown?.totalHTG || null,
+      quantity:               qty,
       urgency,
-      notes:            notes || null,
-      source_platform:  detectedPlatform || 'other',
-      status:           'submitted',
-      // Route
+      notes:                  notes || null,
+      source_platform:        detectedPlatform || 'other',
+      status:                 'submitted',
       ship_from_id:           shipFromId || null,
       destination_region_id:  regionId   || null,
       destination_city_id:    cityId     || null,
-      // First package dims for backward compat
-      box_length_cm: pkgsComputed[0]?.l_cm || null,
-      box_width_cm:  pkgsComputed[0]?.w_cm || null,
-      box_height_cm: pkgsComputed[0]?.h_cm || null,
-      // Total weight of all packages
-      weight_lbs: totalWeightLbs || null,
-      weight_kg:  totalWeightKg  || null,
-      // All packages detail
-      packages: packagesPayload,
-      // Parcel details
-      unit_system:        unitSystem,
-      product_type_id:    productTypeId   || null,
-      invoice_value_usd:  parseFloat(invoiceValueUSD) || null,
-      shipping_rate_id:   shippingRateId  || null,
-      // Image
-      product_image_url: imageUrl,
-      // Variant info
+      product_image_url:      imageUrl,
       variant_info: {
-        size:                size  || null,
-        color:               color || null,
-        unit_price_usd:      price || null,
-        estimated_total_htg: breakdown?.totalHTG || null,
+        size:           size  || null,
+        color:          color || null,
+        unit_price_usd: price || null,
       },
     })
 
@@ -428,9 +231,7 @@ export function SubmitPage() {
     setSubmitting(false)
   }
 
-  const canSubmit = !submitting && !!productName.trim() && !!category && !!shipFromId && !!regionId
-
-  // ── Success screen ──
+  // ── Success screen ────────────────────────────────────────────────────────
   if (success) {
     return (
       <div className="min-h-full bg-[#F4F5F7] flex items-center justify-center px-4 py-12">
@@ -441,6 +242,7 @@ export function SubmitPage() {
           <h2 className="text-xl font-bold mb-2">Demande envoyée !</h2>
           <p className="text-sm text-muted-foreground mb-6">
             Notre équipe analyse votre demande et vous enverra un devis sous 24h.
+            Vous pourrez ensuite choisir votre mode d'expédition.
           </p>
           <div className="flex flex-col gap-3">
             <button
@@ -448,7 +250,7 @@ export function SubmitPage() {
               className="w-full rounded-xl py-3 text-sm font-bold text-white hover:opacity-90 transition-opacity"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
-              Voir mes commandes
+              Suivre ma demande
             </button>
             <button
               onClick={() => { setSuccess(false); resetForm() }}
@@ -462,164 +264,21 @@ export function SubmitPage() {
     )
   }
 
-  // ── Form ──
+  // ── Form ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-full bg-[#F4F5F7]">
       <div className="px-5 pt-5 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Nouvelle commande</h1>
-        <p className="text-sm text-muted-foreground">Renseignez le produit pour obtenir une estimation</p>
+        <h1 className="text-2xl font-bold tracking-tight">Demande de devis</h1>
+        <p className="text-sm text-muted-foreground">
+          Renseignez le produit — notre équipe vous envoie le prix sous 24h
+        </p>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div className="px-4 pb-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
 
-          {/* ── Left panel ── */}
+          {/* ── Left panel ─────────────────────────────────────────────────── */}
           <div className="space-y-4">
-
-            {/* ── Section: Informations de route ── */}
-            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-              <div className="px-5 pt-5 pb-5 space-y-4">
-                <SectionHeader icon={Truck} label="Informations de route" />
-
-                {/* Expédier depuis */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-bold">
-                    Expédier depuis <span className="text-destructive">*</span>
-                  </Label>
-                  <Select value={shipFromId} onValueChange={v => { setShipFromId(v); setShippingRateId('') }}>
-                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
-                      <SelectValue placeholder="Sélectionner une origine" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {origins.map(o => (
-                        <SelectItem key={o.id} value={o.id}>
-                          {o.flag_emoji} {o.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Expédier vers (fixed) */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-bold">Expédier vers</Label>
-                  <div className="h-12 rounded-2xl bg-[#F0F1F5] flex items-center px-4 gap-2.5">
-                    <span className="text-lg leading-none">🇭🇹</span>
-                    <span className="text-sm font-semibold text-foreground">Haïti</span>
-                    <span className="ml-auto rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5">
-                      Disponible
-                    </span>
-                  </div>
-                </div>
-
-                {/* Région */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-bold">
-                    Région <span className="text-destructive">*</span>
-                  </Label>
-                  <Select value={regionId} onValueChange={handleRegionChange}>
-                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
-                      <SelectValue placeholder="Sélectionner une région" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {regions.map(r => (
-                        <SelectItem key={r.id} value={r.id}>
-                          {r.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Ville */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-bold">
-                    Ville{' '}
-                    <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
-                  </Label>
-                  <Select
-                    value={cityId}
-                    onValueChange={setCityId}
-                    disabled={!regionId || loadingCities}
-                  >
-                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40 disabled:opacity-50">
-                      <SelectValue
-                        placeholder={
-                          !regionId
-                            ? "Sélectionner d'abord une région"
-                            : loadingCities
-                            ? 'Chargement…'
-                            : 'Toutes les villes'
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cities.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Tarif d'expédition — filtré selon l'origine choisie */}
-                {(() => {
-                  if (!shipFromId) return null
-                  const filtered = shippingRates.filter(r => !r.origin_id || r.origin_id === shipFromId)
-                  if (filtered.length === 0) return null
-                  return (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-bold">
-                        Tarif d'expédition{' '}
-                        <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
-                      </Label>
-                      <div className="space-y-2">
-                        {filtered.map(r => {
-                          const isOcean = r.mode === 'ocean'
-                          const Icon = isOcean ? Ship : Plane
-                          const rateLabel = isOcean
-                            ? (r.per_cbm_usd != null ? `$${r.per_cbm_usd}/CBM` : null)
-                            : (r.per_kg_usd  != null ? `$${r.per_kg_usd}/kg`   : null)
-                          const transit = r.transit_days_min != null
-                            ? `${r.transit_days_min}${r.transit_days_max != null ? '–' + r.transit_days_max : ''} jours`
-                            : null
-                          const selected = shippingRateId === r.id
-                          return (
-                            <button
-                              key={r.id}
-                              type="button"
-                              onClick={() => setShippingRateId(selected ? '' : r.id)}
-                              className={cn(
-                                'w-full flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-all',
-                                selected
-                                  ? 'border-primary bg-primary/5'
-                                  : 'border-gray-100 bg-[#F0F1F5] hover:border-gray-200'
-                              )}
-                            >
-                              <div className={cn('flex h-8 w-8 items-center justify-center rounded-full shrink-0', isOcean ? 'bg-blue-100' : 'bg-sky-100')}>
-                                <Icon className={cn('h-4 w-4', isOcean ? 'text-blue-600' : 'text-sky-500')} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-foreground truncate">{r.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {[rateLabel, transit].filter(Boolean).join(' · ')}
-                                </p>
-                              </div>
-                              {selected && (
-                                <div className="h-5 w-5 shrink-0 rounded-full bg-primary flex items-center justify-center">
-                                  <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 12 12">
-                                    <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                  </svg>
-                                </div>
-                              )}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })()}
-              </div>
-            </div>
 
             {/* ── Section: Le produit ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
@@ -654,30 +313,38 @@ export function SubmitPage() {
 
                 {/* Nom */}
                 <div className="space-y-1">
-                  <Label className="text-sm font-bold">Nom du produit <span className="text-destructive">*</span></Label>
+                  <Label className="text-sm font-bold">
+                    Nom du produit <span className="text-destructive">*</span>
+                  </Label>
                   <Input
-                    placeholder="Ex: Robe d'été fleurie taille M"
+                    placeholder="Ex : Robe d'été fleurie taille M"
                     value={productName}
                     onChange={e => setProductName(e.target.value)}
                     className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
                 </div>
 
-                {/* Prix + Quantité */}
+                {/* Catégorie + Quantité */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-sm font-bold">Prix unitaire (USD)</Label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">$</span>
-                      <Input
-                        type="number" inputMode="decimal" min="0" step="0.01" placeholder="4.50"
-                        value={priceUSD} onChange={e => setPriceUSD(e.target.value)}
-                        className="h-12 rounded-2xl bg-[#F0F1F5] border-0 pl-7 font-mono focus-visible:ring-1 focus-visible:ring-primary/40"
-                      />
-                    </div>
+                    <Label className="text-sm font-bold">
+                      Catégorie <span className="text-destructive">*</span>
+                    </Label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
+                        <SelectValue placeholder="Choisir" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map(c => (
+                          <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-sm font-bold">Quantité <span className="text-destructive">*</span></Label>
+                    <Label className="text-sm font-bold">
+                      Quantité <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       type="number" inputMode="numeric" min="1" step="1"
                       value={quantity} onChange={e => setQuantity(e.target.value)}
@@ -686,219 +353,120 @@ export function SubmitPage() {
                   </div>
                 </div>
 
-                {/* Catégorie */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-bold">Catégorie <span className="text-destructive">*</span></Label>
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
-                      <SelectValue placeholder="Choisir une catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map(c => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Section: Informations des colis ── */}
-            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-              <div className="px-5 pt-5 pb-5 space-y-4">
-                <SectionHeader icon={Box} label="Informations des colis" />
-
-                {/* Unit system toggle */}
-                <div>
-                  <Label className="text-sm font-bold mb-2 block">Unités de mesure</Label>
-                  <RadioGroup
-                    value={unitSystem}
-                    onValueChange={v => {
-                      setUnitSystem(v as 'metric' | 'imperial')
-                      setPackages([newPkg()])
-                    }}
-                    className="grid grid-cols-2 gap-2"
-                  >
-                    {([
-                      ['imperial', 'Impérial', '(lbs, in)'],
-                      ['metric',   'Métrique',  '(kg, cm)'],
-                    ] as const).map(([val, label, sub]) => (
-                      <div key={val} className="relative">
-                        <RadioGroupItem value={val} id={`unit-${val}`} className="peer sr-only" />
-                        <Label
-                          htmlFor={`unit-${val}`}
-                          className="flex flex-col items-center py-2.5 px-3 rounded-xl border-2 border-transparent bg-[#F0F1F5] cursor-pointer hover:bg-[#E8E9EE] peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
-                        >
-                          <span className="font-semibold text-sm">{label}</span>
-                          <span className="text-[10px] text-muted-foreground mt-0.5">{sub}</span>
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-
-                {/* Product type */}
+                {/* Prix indicatif */}
                 <div className="space-y-1">
                   <Label className="text-sm font-bold">
-                    Type de produit{' '}
-                    <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
-                  </Label>
-                  <Select value={productTypeId} onValueChange={setProductTypeId}>
-                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
-                      <SelectValue placeholder="Marchandise générale" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {productTypes.map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Dynamic packages list */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-bold">
-                      Colis — dimensions de la boîte ({dimUnit})
-                    </Label>
-                    <span className="text-[11px] text-muted-foreground font-medium">
-                      {packages.length} colis
-                    </span>
-                  </div>
-
-                  {packages.map((pkg, idx) => {
-                    const l  = parseFloat(pkg.length) || 0
-                    const w  = parseFloat(pkg.width)  || 0
-                    const h  = parseFloat(pkg.height) || 0
-                    const wt = parseFloat(pkg.weight) || 0
-                    const l_cm = l * dimFactor; const w_cm = w * dimFactor; const h_cm = h * dimFactor
-                    const cbm = l_cm > 0 && w_cm > 0 && h_cm > 0 ? (l_cm * w_cm * h_cm) / 1_000_000 : 0
-                    return (
-                      <div key={pkg.id} className="rounded-xl bg-[#F8F9FB] border border-gray-100 p-3 space-y-2.5">
-                        {/* Header row */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                            Colis {idx + 1}
-                          </span>
-                          {packages.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removePackage(pkg.id)}
-                              className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/10 hover:bg-destructive/20 transition-colors"
-                            >
-                              <Trash2 className="h-3 w-3 text-destructive" />
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Dimensions */}
-                        <div className="grid grid-cols-3 gap-2">
-                          {([
-                            ['L', pkg.length, 'length'],
-                            ['l', pkg.width,  'width'],
-                            ['H', pkg.height, 'height'],
-                          ] as const).map(([lbl, val, field]) => (
-                            <div key={field} className="space-y-1">
-                              <span className="text-[10px] text-muted-foreground font-semibold">{lbl} ({dimUnit})</span>
-                              <Input
-                                type="number" inputMode="decimal" min="0" step="0.1"
-                                placeholder="0.0"
-                                value={val}
-                                onChange={e => updatePackage(pkg.id, field, e.target.value)}
-                                className="h-10 rounded-xl bg-white border border-gray-200 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
-                              />
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Weight */}
-                        <div className="relative">
-                          <span className="text-[10px] text-muted-foreground font-semibold block mb-1">Poids ({weightUnit})</span>
-                          <Input
-                            type="number" inputMode="decimal" min="0" step="0.01"
-                            placeholder="0.00"
-                            value={pkg.weight}
-                            onChange={e => updatePackage(pkg.id, 'weight', e.target.value)}
-                            className="h-10 rounded-xl bg-white border border-gray-200 pr-12 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
-                          />
-                          <span className="absolute right-3 bottom-2.5 text-xs font-semibold text-muted-foreground">{weightUnit}</span>
-                        </div>
-
-                        {/* CBM preview */}
-                        {cbm > 0 && (
-                          <div className="flex items-center justify-between rounded-lg bg-primary/5 border border-primary/10 px-2.5 py-1.5">
-                            <span className="text-[10px] font-semibold text-primary">CBM</span>
-                            <span className="font-mono text-xs font-bold text-primary">{fmtCBM(cbm)} m³</span>
-                          </div>
-                        )}
-                        {wt > 0 && unitSystem === 'imperial' && (
-                          <p className="text-[10px] text-muted-foreground">≈ {(wt * 0.453592).toFixed(3)} kg</p>
-                        )}
-                        {wt > 0 && unitSystem === 'metric' && (
-                          <p className="text-[10px] text-muted-foreground">≈ {(wt / 0.453592).toFixed(2)} lbs</p>
-                        )}
-                      </div>
-                    )
-                  })}
-
-                  {/* Add package button */}
-                  <button
-                    type="button"
-                    onClick={addPackage}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 py-3 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/[0.02] transition-colors"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Ajouter un colis
-                  </button>
-
-                  {/* Total CBM + weight summary */}
-                  {(totalCBM > 0 || totalWeightKg > 0) && (
-                    <div className="rounded-xl bg-[#0C1413] px-4 py-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#9FB0AB' }}>
-                          {packages.length} colis · Total
-                        </p>
-                        {totalWeightKg > 0 && (
-                          <p className="text-xs mt-0.5" style={{ color: '#6E8882' }}>
-                            {totalWeightKg.toFixed(2)} kg ({totalWeightLbs.toFixed(2)} lbs)
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-semibold" style={{ color: '#9FB0AB' }}>CBM total</p>
-                        <p className="font-mono text-base font-bold" style={{ color: '#E6A23C' }}>
-                          {fmtCBM(totalCBM)} <span className="text-xs font-normal" style={{ color: '#6E8882' }}>m³</span>
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Invoice value */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-bold">
-                    Valeur déclarée (USD){' '}
+                    Prix affiché sur la plateforme{' '}
                     <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
                   </Label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">$</span>
                     <Input
                       type="number" inputMode="decimal" min="0" step="0.01"
-                      placeholder="0.00"
-                      value={invoiceValueUSD}
-                      onChange={e => setInvoiceValueUSD(e.target.value)}
+                      placeholder="4.50"
+                      value={priceUSD}
+                      onChange={e => setPriceUSD(e.target.value)}
                       className="h-12 rounded-2xl bg-[#F0F1F5] border-0 pl-7 font-mono focus-visible:ring-1 focus-visible:ring-primary/40"
                     />
                   </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Aide notre équipe à établir le devis plus vite. Non obligatoire.
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* ── Section: Image du produit ── */}
+            {/* ── Section: Origine & destination ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-              <div className="px-5 pt-5 pb-5 space-y-3">
-                <SectionHeader icon={ImagePlus} label="Photo du produit" />
+              <div className="px-5 pt-5 pb-5 space-y-4">
+                <SectionHeader icon={Truck} label="Origine & destination" />
 
+                {/* Expédier depuis */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">
+                    Expédier depuis <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={shipFromId} onValueChange={setShipFromId}>
+                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
+                      <SelectValue placeholder="Sélectionner une origine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {origins.map(o => (
+                        <SelectItem key={o.id} value={o.id}>
+                          {o.flag_emoji} {o.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Destination fixe */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">Destination</Label>
+                  <div className="h-12 rounded-2xl bg-[#F0F1F5] flex items-center px-4 gap-2.5">
+                    <span className="text-lg leading-none">🇭🇹</span>
+                    <span className="text-sm font-semibold text-foreground">Haïti</span>
+                    <span className="ml-auto rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5">
+                      Disponible
+                    </span>
+                  </div>
+                </div>
+
+                {/* Région */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">
+                    Région <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={regionId} onValueChange={handleRegionChange}>
+                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
+                      <SelectValue placeholder="Sélectionner une région" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.map(r => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Ville */}
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold">
+                    Ville{' '}
+                    <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                  </Label>
+                  <Select
+                    value={cityId}
+                    onValueChange={setCityId}
+                    disabled={!regionId || loadingCities}
+                  >
+                    <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40 disabled:opacity-50">
+                      <SelectValue
+                        placeholder={
+                          !regionId
+                            ? "Sélectionner d'abord une région"
+                            : loadingCities
+                            ? 'Chargement…'
+                            : 'Toutes les villes'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cities.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Section: Photo & variantes ── */}
+            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-5 space-y-4">
+                <SectionHeader icon={ImagePlus} label="Photo & variantes" />
+
+                {/* Image upload */}
                 {imagePreview ? (
                   <div className="relative rounded-2xl overflow-hidden border border-gray-100">
                     <img
@@ -926,7 +494,7 @@ export function SubmitPage() {
                   >
                     <ImagePlus className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
                     <p className="text-sm font-semibold text-muted-foreground">
-                      Glisser une image ou cliquer
+                      Capture d'écran du produit
                     </p>
                     <p className="text-xs text-muted-foreground/60 mt-0.5">JPG, PNG, WEBP · max 5 MB</p>
                   </div>
@@ -938,30 +506,47 @@ export function SubmitPage() {
                   className="hidden"
                   onChange={handleImageChange}
                 />
+
+                {/* Taille + Couleur */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-bold">
+                      Taille <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                    </Label>
+                    <Input
+                      placeholder="M, L, XL…"
+                      value={size}
+                      onChange={e => setSize(e.target.value)}
+                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-bold">
+                      Couleur <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                    </Label>
+                    <Input
+                      placeholder="Noir, Blanc…"
+                      value={color}
+                      onChange={e => setColor(e.target.value)}
+                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* ── Section: Variantes & options ── */}
+            {/* ── Section: Préférences ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-4">
-                <SectionHeader icon={MapPin} label="Variantes & options" />
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-bold">Taille <span className="text-xs font-normal text-muted-foreground">(optionnel)</span></Label>
-                    <Input placeholder="M, L, XL…" value={size} onChange={e => setSize(e.target.value)}
-                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm font-bold">Couleur <span className="text-xs font-normal text-muted-foreground">(optionnel)</span></Label>
-                    <Input placeholder="Noir, Blanc…" value={color} onChange={e => setColor(e.target.value)}
-                      className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40" />
-                  </div>
-                </div>
+                <SectionHeader icon={MapPin} label="Préférences" />
 
                 <div className="space-y-2">
                   <Label className="text-sm font-bold">Urgence</Label>
-                  <RadioGroup value={urgency} onValueChange={v => setUrgency(v as typeof urgency)} className="grid grid-cols-3 gap-2">
+                  <RadioGroup
+                    value={urgency}
+                    onValueChange={v => setUrgency(v as typeof urgency)}
+                    className="grid grid-cols-3 gap-2"
+                  >
                     {([
                       ['normal',  'Normal',  '4–6 sem.'],
                       ['urgent',  'Urgent',  '2–3 sem.'],
@@ -969,8 +554,10 @@ export function SubmitPage() {
                     ] as const).map(([val, label, sub]) => (
                       <div key={val} className="relative">
                         <RadioGroupItem value={val} id={`urg-${val}`} className="peer sr-only" />
-                        <Label htmlFor={`urg-${val}`}
-                          className="flex flex-col items-center py-3 px-2 rounded-2xl border-2 border-transparent bg-[#F0F1F5] cursor-pointer hover:bg-[#E8E9EE] peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all">
+                        <Label
+                          htmlFor={`urg-${val}`}
+                          className="flex flex-col items-center py-3 px-2 rounded-2xl border-2 border-transparent bg-[#F0F1F5] cursor-pointer hover:bg-[#E8E9EE] peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
+                        >
                           <span className="font-bold text-sm">{label}</span>
                           <span className="text-[10px] text-muted-foreground mt-0.5">{sub}</span>
                         </Label>
@@ -980,10 +567,13 @@ export function SubmitPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-sm font-bold">Commentaires <span className="text-xs font-normal text-muted-foreground">(optionnel)</span></Label>
+                  <Label className="text-sm font-bold">
+                    Commentaires <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                  </Label>
                   <Textarea
-                    placeholder="Instructions particulières, exigences…"
-                    value={notes} onChange={e => setNotes(e.target.value)}
+                    placeholder="Instructions particulières, précisions sur le produit…"
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
                     rows={3}
                     className="rounded-2xl bg-[#F0F1F5] border-0 resize-none text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
@@ -1001,164 +591,150 @@ export function SubmitPage() {
               >
                 {submitting
                   ? <><Loader2 className="h-4 w-4 animate-spin" />Envoi en cours…</>
-                  : <><SendHorizonal className="h-4 w-4" />Soumettre la commande</>
+                  : <><SendHorizonal className="h-4 w-4" />Demander le devis</>
                 }
               </button>
             </div>
           </div>
 
-          {/* ── Right panel: manifest card ── */}
-          <div className="mt-5 lg:mt-0 lg:sticky lg:top-6">
-            <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#0C1413', color: '#FAF8F3' }}>
+          {/* ── Right panel: récapitulatif + étapes ────────────────────────── */}
+          <div className="mt-5 lg:mt-0 lg:sticky lg:top-6 space-y-4">
 
-              {/* Header */}
-              <div className="flex items-end justify-between px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#9FB0AB' }}>
-                    Devis d'importation
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: '#6E8882' }}>Coût rendu en Haïti</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-lg font-bold tabular-nums" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{qty}</span>
-                  <span className="text-xs ml-1" style={{ color: '#6E8882' }}>unités</span>
-                </div>
-              </div>
-
-              {/* Route summary (when set) */}
-              {(shipFromId || regionId) && (
-                <div className="px-5 pt-3 pb-1 flex items-center gap-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                  <Truck className="h-3.5 w-3.5 shrink-0" style={{ color: '#6E8882' }} />
-                  <p className="text-[11px] truncate" style={{ color: '#9FB0AB' }}>
-                    {origins.find(o => o.id === shipFromId)?.flag_emoji}{' '}
-                    {origins.find(o => o.id === shipFromId)?.name || '…'}
-                    {' → '}
-                    🇭🇹 Haïti{regions.find(r => r.id === regionId) ? ` · ${regions.find(r => r.id === regionId)!.name}` : ''}
-                    {cities.find(c => c.id === cityId) ? ` · ${cities.find(c => c.id === cityId)!.name}` : ''}
+            {/* Récapitulatif de la demande */}
+            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-1">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+                    Récapitulatif
                   </p>
                 </div>
-              )}
 
-              {/* Breakdown */}
-              <div className="px-5 pt-1">
-                {loadingSettings ? (
-                  <div className="space-y-3 py-4">
-                    {[1, 2, 3, 4].map(i => (
-                      <Skeleton key={i} className="h-10 w-full" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                    ))}
-                  </div>
-                ) : !hasCalc ? (
-                  <div className="py-8 text-center">
-                    <Package className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm" style={{ color: '#6E8882' }}>
-                      Renseignez le prix et les<br />dimensions pour voir l'estimation
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <ManifestLine
-                      label="Produit"
-                      sub={`${qty} × ${fmtUSD(price)}`}
-                      value={fmtUSD(breakdown!.productUSD)}
-                    />
-                    <ManifestLine
-                      label={selectedRate?.mode === 'air' ? 'Fret aérien' : 'Fret maritime'}
-                      sub={
-                        selectedRate
-                          ? selectedRate.mode === 'air'
-                            ? `${totalWeightKg.toFixed(2)} kg × $${selectedRate.per_kg_usd}/kg`
-                            : `${fmtCBM(breakdown!.totalCBM)} m³ × $${selectedRate.per_cbm_usd}/m³`
-                          : `${fmtCBM(breakdown!.totalCBM)} m³ × $${settings!.cbm_price_usd}/m³`
-                      }
-                      value={fmtUSD(breakdown!.shippingUSD)}
-                      isAdd
-                    />
-                    <ManifestLine
-                      label="Droits & taxes"
-                      sub={`${settings!.duty_rate_percent}% sur CIF`}
-                      value={fmtUSD(breakdown!.dutyUSD)}
-                      isAdd
-                    />
-                    <ManifestLine
-                      label="Marge de service"
-                      sub={`${settings!.service_margin_percent}%`}
-                      value={fmtUSD(breakdown!.serviceUSD)}
-                      isAdd
-                    />
-                  </>
-                )}
-              </div>
-
-              {/* Total */}
-              <div className="mx-4 mt-4 rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.1em]" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#9FB0AB' }}>
-                    Total rendu
-                  </p>
-                  <div className="text-right">
-                    {breakdown ? (
-                      <>
-                        <p className="text-2xl font-bold tabular-nums leading-none" style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#E6A23C' }}>
-                          {fmt(breakdown.totalHTG)}{' '}
-                          <span className="text-sm font-normal" style={{ color: '#FAF8F3' }}>HTG</span>
+                <div className="space-y-3 pb-4">
+                  {/* Produit */}
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F0F1F5]">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Produit</p>
+                      {productName ? (
+                        <p className="text-sm font-semibold text-foreground leading-tight truncate">{productName}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground/40 italic">Non renseigné</p>
+                      )}
+                      {(category || qty > 1) && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {[CATEGORIES.find(c => c.value === category)?.label, qty > 1 ? `${qty} unités` : '1 unité'].filter(Boolean).join(' · ')}
                         </p>
-                        <p className="text-xs mt-1 tabular-nums" style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#6E8882' }}>
-                          ≈ {fmtUSD(breakdown.totalUSD)}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-lg font-mono" style={{ color: '#6E8882' }}>—</p>
-                    )}
+                      )}
+                    </div>
                   </div>
+
+                  {/* Route */}
+                  {(shipFromId || regionId) && (
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F0F1F5]">
+                        <Truck className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Trajet</p>
+                        <p className="text-sm font-semibold text-foreground leading-tight">
+                          {origins.find(o => o.id === shipFromId)?.flag_emoji}{' '}
+                          {origins.find(o => o.id === shipFromId)?.name || '…'}
+                          {' → 🇭🇹 '}
+                          {regions.find(r => r.id === regionId)?.name || 'Haïti'}
+                          {cities.find(c => c.id === cityId) ? ` · ${cities.find(c => c.id === cityId)!.name}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Prix indicatif */}
+                  {price > 0 && (
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                        <Zap className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Prix affiché</p>
+                        <p className="text-sm font-bold text-foreground">
+                          ${price.toFixed(2)}{qty > 1 ? <span className="font-normal text-muted-foreground"> × {qty}</span> : null}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info box */}
+                <div className="rounded-xl bg-primary/5 border border-primary/10 px-4 py-3 mb-5">
+                  <p className="text-[11px] font-semibold text-primary mb-1">Devis sous 24h</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Notre équipe vérifie la disponibilité du produit et vous envoie le prix définitif. Vous choisissez ensuite votre mode d'expédition.
+                  </p>
                 </div>
               </div>
 
-              {/* Per-unit + CBM total */}
-              {breakdown && (
-                <div className="mx-4 mt-2 mb-1 grid grid-cols-2 gap-2">
-                  <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    <p className="text-[10px] uppercase tracking-[0.08em] mb-1" style={{ color: '#6E8882' }}>Coût / unité</p>
-                    <p className="text-base font-semibold tabular-nums" style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#FAF8F3' }}>
-                      {fmt(breakdown.unitHTG)}{' '}
-                      <span className="text-xs font-normal" style={{ color: '#6E8882' }}>HTG</span>
-                    </p>
-                  </div>
-                  <div className="rounded-xl p-3" style={{ background: 'rgba(14,122,107,0.12)', border: '1px solid rgba(14,122,107,0.25)' }}>
-                    <p className="text-[10px] uppercase tracking-[0.08em] mb-1" style={{ color: '#6E8882' }}>CBM total</p>
-                    <p className="text-base font-semibold tabular-nums" style={{ fontFamily: "'IBM Plex Mono', monospace", color: '#0E7A6B' }}>
-                      {fmtCBM(breakdown.totalCBM)}{' '}
-                      <span className="text-xs font-normal" style={{ color: '#6E8882' }}>m³</span>
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <p className="mx-4 mt-3 text-[11px]" style={{ color: '#4a5c57' }}>
-                Estimation basée sur les tarifs actuels. Le devis officiel est établi par notre équipe.
-              </p>
-
-              {/* Submit */}
-              <div className="p-4 mt-2">
+              {/* Submit button */}
+              <div className="px-4 pb-4 hidden lg:block">
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className={cn('w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed')}
-                  style={{
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    background: canSubmit ? '#0E7A6B' : '#1a3530',
-                    color: '#fff',
-                    letterSpacing: '0.02em',
-                  }}
+                  className={cn(
+                    'w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white'
+                  )}
+                  style={{ background: canSubmit ? 'linear-gradient(135deg, #F05A28, #D44E21)' : '#d1d5db' }}
                 >
                   {submitting
                     ? <><Loader2 className="h-4 w-4 animate-spin" />Envoi en cours…</>
-                    : <><SendHorizonal className="h-4 w-4" />Soumettre la commande</>
+                    : <><SendHorizonal className="h-4 w-4" />Demander le devis</>
                   }
                 </button>
               </div>
             </div>
-          </div>
 
+            {/* Étapes du flux */}
+            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-5">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-4">
+                  Comment ça marche
+                </p>
+                <div className="relative">
+                  {/* Vertical line */}
+                  <div className="absolute left-[17px] top-5 bottom-5 w-px bg-gray-100" />
+
+                  <div className="space-y-0">
+                    {STEPS.map((step, i) => (
+                      <div key={i} className="flex items-start gap-3 relative py-2.5">
+                        <div className={cn(
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 relative z-10',
+                          i === 0
+                            ? 'bg-primary border-primary'
+                            : 'bg-white border-gray-200'
+                        )}>
+                          {i === 0 ? (
+                            <CheckCircle2 className="h-4 w-4 text-white" />
+                          ) : (
+                            <span className="text-xs font-bold text-muted-foreground">{i + 1}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1 pt-1.5">
+                          <p className={cn(
+                            'text-sm font-semibold leading-tight',
+                            i === 0 ? 'text-primary' : 'text-foreground'
+                          )}>
+                            {step.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{step.sub}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </form>
     </div>

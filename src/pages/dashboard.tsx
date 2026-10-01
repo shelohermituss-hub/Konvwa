@@ -28,12 +28,28 @@ interface WalletData {
   blocked_balance: number
 }
 
+interface TrendingProduct {
+  id: string
+  name: string
+  price_htg: number
+  moq: number
+  unit: string
+  category: string | null
+  supplier_name: string | null
+  images: string[]
+  stock_available: boolean
+  featured: boolean
+  delivery_days_min: number | null
+  delivery_days_max: number | null
+}
+
 const QUICK_ACTION_KEYS = [
   { labelKey: 'dash.q_submit',   Icon: Send,       path: '/submit' },
   { labelKey: 'dash.q_orders',   Icon: ShoppingBag, path: '/orders' },
   { labelKey: 'dash.q_shipping', Icon: Ship,        path: '/shipments' },
   { labelKey: 'dash.q_support',  Icon: HelpCircle,  path: '/support' },
 ]
+
 
 const TESTIMONIALS = [
   {
@@ -83,19 +99,23 @@ export function DashboardPage() {
   const { t } = useI18n()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [orders, setOrders] = useState<DashboardOrder[]>([])
+  const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [balanceVisible, setBalanceVisible] = useState(true)
   const [expandedTestimonial, setExpandedTestimonial] = useState<number | null>(null)
   const autoplay = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }))
+  const autoplayProducts = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }))
 
   useEffect(() => {
     if (!user) return
     Promise.all([
       supabase.from('wallets').select('available_balance, blocked_balance').eq('user_id', user.id).maybeSingle(),
       supabase.from('orders').select('id, tracking_code, status, created_at, quotes(total, product_requests(product_name))').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-    ]).then(([walletRes, ordersRes]) => {
+      supabase.from('products').select('id, name, price_htg, moq, unit, category, supplier_name, images, stock_available, featured, delivery_days_min, delivery_days_max').eq('active', true).order('featured', { ascending: false }).order('created_at', { ascending: false }).limit(8),
+    ]).then(([walletRes, ordersRes, productsRes]) => {
       if (walletRes.data) setWallet(walletRes.data)
       if (ordersRes.data) setOrders(ordersRes.data as unknown as DashboardOrder[])
+      if (productsRes.data) setTrendingProducts(productsRes.data as TrendingProduct[])
       setLoading(false)
     })
   }, [user])
@@ -270,6 +290,95 @@ export function DashboardPage() {
             </div>
           </div>
         </Link>
+      </div>
+
+      {/* ── Trending Products Carousel ── */}
+      <div className="pb-5">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <h2 className="text-base font-bold text-foreground">Produits tendance</h2>
+          <Link to="/products" className="text-xs font-semibold text-primary flex items-center gap-0.5">
+            Voir tout <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3 px-4">
+            <Skeleton className="aspect-square w-full rounded-2xl" />
+            <Skeleton className="aspect-square w-full rounded-2xl" />
+          </div>
+        ) : trendingProducts.length === 0 ? null : (
+          <Carousel
+            opts={{ loop: true, align: 'start', slidesToScroll: 2 }}
+            plugins={[autoplayProducts.current]}
+            className="w-full px-4"
+          >
+            <CarouselContent className="-ml-2">
+              {trendingProducts.map((product) => (
+                <CarouselItem key={product.id} className="pl-2 basis-1/2">
+                  <Link
+                    to={`/products/${product.id}`}
+                    className="flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden text-left active:scale-[0.98] transition-transform duration-100 h-full"
+                  >
+                    {/* Image */}
+                    <div className="w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative">
+                      {product.images?.[0] ? (
+                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div
+                          className="flex flex-col items-center justify-center gap-1.5 w-full h-full"
+                          style={{ background: 'linear-gradient(140deg, #F4F5F7 0%, #EEF0F3 100%)' }}
+                        >
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 shadow-sm">
+                            <Package className="h-5 w-5 text-primary/40" strokeWidth={1.5} />
+                          </div>
+                          {product.category && (
+                            <span className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-wider px-2 text-center leading-tight">
+                              {product.category}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {product.featured && (
+                        <span className="absolute top-2 left-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                          Vedette
+                        </span>
+                      )}
+                      {!product.stock_available && (
+                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                          <span className="text-[10px] font-bold text-destructive bg-white/90 px-2 py-1 rounded-full border border-destructive/20">
+                            Rupture
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Info */}
+                    <div className="p-2.5 flex flex-col gap-1 flex-1">
+                      <p className="text-xs font-bold text-foreground leading-snug line-clamp-2">{product.name}</p>
+                      {product.supplier_name && (
+                        <p className="text-[10px] text-muted-foreground truncate">{product.supplier_name}</p>
+                      )}
+                      <div className="mt-auto pt-1.5 flex items-end justify-between gap-1">
+                        <div>
+                          <p className="text-sm font-black text-primary leading-none">
+                            {product.price_htg.toLocaleString('fr-HT')}
+                            <span className="text-[10px] font-semibold text-muted-foreground"> HTG</span>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            Min. {product.moq} {product.unit}
+                          </p>
+                        </div>
+                        {product.delivery_days_min && (
+                          <p className="text-[10px] text-muted-foreground whitespace-nowrap">
+                            {product.delivery_days_min}–{product.delivery_days_max ?? product.delivery_days_min}j
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        )}
       </div>
 
       {/* ── Testimonials Carousel — 2 cards per view, equal height, click-to-expand ── */}

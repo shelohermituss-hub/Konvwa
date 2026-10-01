@@ -17,6 +17,29 @@ function uint8ArrayToBase64Url(arr: Uint8Array): string {
     .replace(/=+$/, '')
 }
 
+// web-push generate-vapid-keys outputs a raw 32-byte EC scalar (base64url),
+// NOT a PKCS#8 blob. We wrap it in the PKCS#8 DER structure for P-256 so
+// crypto.subtle.importKey('pkcs8') can accept it.
+function wrapRawEcKeyAsPkcs8(rawKey: Uint8Array): ArrayBuffer {
+  // DER header for PKCS#8 OneAsymmetricKey wrapping a P-256 private key
+  // (RFC 5958 / RFC 5915)
+  const header = new Uint8Array([
+    0x30, 0x41, // SEQUENCE (65 bytes)
+    0x02, 0x01, 0x00, // INTEGER 0 (version = 0)
+    0x30, 0x13, // SEQUENCE (19 bytes) — AlgorithmIdentifier
+      0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // OID ecPublicKey
+      0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, // OID prime256v1
+    0x04, 0x27, // OCTET STRING (39 bytes)
+      0x30, 0x25, // SEQUENCE (37 bytes) — ECPrivateKey
+        0x02, 0x01, 0x01, // INTEGER 1 (ecPrivkeyVer1)
+        0x04, 0x20, // OCTET STRING (32 bytes) — the raw private key scalar follows
+  ])
+  const pkcs8 = new Uint8Array(header.length + rawKey.length)
+  pkcs8.set(header)
+  pkcs8.set(rawKey, header.length)
+  return pkcs8.buffer
+}
+
 async function createVapidJwt(
   audience: string,
   subject: string,
@@ -30,10 +53,10 @@ async function createVapidJwt(
   const pEnc  = uint8ArrayToBase64Url(enc.encode(JSON.stringify(payload)))
   const input = `${hEnc}.${pEnc}`
 
-  const keyData = urlBase64ToUint8Array(privateKeyB64)
+  const rawKey = urlBase64ToUint8Array(privateKeyB64)
   const key = await crypto.subtle.importKey(
     'pkcs8',
-    keyData.buffer,
+    wrapRawEcKeyAsPkcs8(rawKey),
     { name: 'ECDSA', namedCurve: 'P-256' },
     false,
     ['sign']
@@ -236,17 +259,35 @@ serve(async (req) => {
     }
     const category = typeMap[body.type ?? 'info'] ?? 'alerts'
 
+    const eligible = subs.filter((s) => {
+      const types = s.notification_types as string[] | null
+      return !types || types.includes(category)
+    })
+
     const results = await Promise.all(
-      subs
-        .filter((s) => {
-          const types = s.notification_types as string[] | null
-          return !types || types.includes(category)
-        })
-        .map((s) => sendPush(s.subscription as PushSub, payload, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT))
+      eligible.map(async (s) => {
+        const sub = s.subscription as PushSub
+        const result = await sendPush(sub, payload, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT)
+        return { ...result, endpoint: sub.endpoint }
+      })
     )
 
-    // Remove stale subscriptions (410 Gone)
-    // (simplified — in production, track endpoint and delete stale ones)
+    // Remove stale subscriptions (410 Gone = revoked, 404 = no longer exists)
+    const staleEndpoints = results
+      .filter((r) => r.status === 410 || r.status === 404)
+      .map((r) => r.endpoint)
+
+    if (staleEndpoints.length > 0) {
+      await Promise.all(
+        staleEndpoints.map((ep) =>
+          admin.from('push_subscriptions')
+            .delete()
+            .eq('user_id', body.user_id)
+            .filter('subscription->>endpoint', 'eq', ep)
+        )
+      )
+      console.log(`[send-push] removed ${staleEndpoints.length} stale subscription(s)`)
+    }
 
     const sent   = results.filter((r) => r.ok).length
     const failed = results.filter((r) => !r.ok).length

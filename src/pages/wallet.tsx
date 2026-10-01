@@ -4,9 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck } from 'lucide-react'
-import IconPieces       from 'flat-color-icons/svg/paid.svg'
-import IconDistributeur from 'flat-color-icons/svg/currency_exchange.svg'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { createPayment } from '@/lib/payment-api'
@@ -27,6 +25,7 @@ interface Transaction {
   payment_method: string | null
   description: string | null
   reference: string | null
+  proof_url: string | null
   created_at: string
 }
 
@@ -47,9 +46,75 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
 }
 
 const METHOD_LABEL: Record<string, string> = {
-  moncash: 'MonCash',
-  natcash: 'NatCash',
-  wallet:  'Portefeuille',
+  moncash:  'MonCash',
+  natcash:  'NatCash',
+  wallet:   'Portefeuille',
+  virement: 'Virement BUH',
+  btc:      'Bitcoin (BTC)',
+  usdt:     'USDT TRC20',
+  eth:      'Ethereum (ETH)',
+}
+
+const CRYPTO_ADDRESS: Record<string, { address: string; network: string; coin: string }> = {
+  btc:  { address: '0x0dff06e9fe0665e4379a80a9a033a78d9c8a860e', network: 'ERC20', coin: 'BTC' },
+  usdt: { address: 'THgK5YWMdmvfPnFycjp7RyHJShKZ9NcriA',        network: 'TRC20', coin: 'USDT' },
+  eth:  { address: '0x0dff06e9fe0665e4379a80a9a033a78d9c8a860e', network: 'ERC20', coin: 'ETH' },
+}
+
+function ProofUpload({
+  preview,
+  required,
+  onFile,
+  onRemove,
+}: {
+  preview: string | null
+  required: boolean
+  onFile: (file: File, preview: string) => void
+  onRemove: () => void
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs">
+        Preuve de paiement{required && <span className="text-destructive ml-0.5">*</span>}
+      </Label>
+      {preview ? (
+        <div className="relative rounded-xl overflow-hidden border border-emerald-200">
+          <img src={preview} alt="Preuve" className="w-full h-36 object-cover" />
+          <button
+            type="button"
+            onClick={onRemove}
+            className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow-sm"
+          >
+            <X className="h-3.5 w-3.5 text-foreground" />
+          </button>
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-emerald-600/90 rounded-full px-2 py-0.5">
+            <CheckCheck className="h-3 w-3 text-white" />
+            <span className="text-[10px] text-white font-semibold">Preuve ajoutée</span>
+          </div>
+        </div>
+      ) : (
+        <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 bg-[#F8F8FA] py-5 cursor-pointer hover:border-primary/40 transition-colors">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-gray-100 shadow-sm">
+            <Upload className="h-5 w-5 text-muted-foreground/60" />
+          </div>
+          <div className="text-center">
+            <p className="text-xs font-semibold text-foreground">Appuyez pour ajouter une preuve</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Capture d'écran ou photo · PNG, JPG · max 5 Mo</p>
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              onFile(file, URL.createObjectURL(file))
+            }}
+          />
+        </label>
+      )}
+    </div>
+  )
 }
 
 function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
@@ -70,6 +135,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
     { label: 'Type',        value: config.label },
     ...(tx.payment_method ? [{ label: 'Méthode', value: METHOD_LABEL[tx.payment_method] ?? tx.payment_method }] : []),
     ...(tx.reference ? [{ label: 'Référence', value: tx.reference, copyable: true }] : []),
+    ...(tx.proof_url ? [{ label: 'Preuve', value: 'Soumise ✓' }] : []),
     { label: 'ID Transaction', value: tx.id.slice(0, 16) + '…', copyable: true },
     { label: 'Date', value: new Date(tx.created_at).toLocaleString('fr-HT', { dateStyle: 'medium', timeStyle: 'short' }) },
   ]
@@ -165,10 +231,14 @@ export function WalletPage() {
   const [loading, setLoading] = useState(true)
   const [balanceVisible, setBalanceVisible] = useState(true)
   const [topupAmount, setTopupAmount] = useState('')
-  const [topupMethod, setTopupMethod] = useState<'moncash' | 'natcash'>('moncash')
+  const [topupMethod, setTopupMethod] = useState<'moncash' | 'natcash' | 'virement' | 'btc' | 'usdt' | 'eth'>('moncash')
   const [topupOpen, setTopupOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [receiptTx, setReceiptTx] = useState<Transaction | null>(null)
+  const [txHashInput, setTxHashInput] = useState('')
+  const [addrCopied, setAddrCopied] = useState(false)
+  const [proofFile, setProofFile] = useState<File | null>(null)
+  const [proofPreview, setProofPreview] = useState<string | null>(null)
 
   async function loadData() {
     if (!user) return
@@ -177,7 +247,7 @@ export function WalletPage() {
       setWallet(walletRes.data)
       const txRes = await supabase
         .from('wallet_transactions')
-        .select('id, type, amount, status, payment_method, description, reference, created_at')
+        .select('id, type, amount, status, payment_method, description, reference, proof_url, created_at')
         .eq('wallet_id', walletRes.data.id)
         .order('created_at', { ascending: false })
         .limit(30)
@@ -190,10 +260,14 @@ export function WalletPage() {
 
   async function handleTopup() {
     if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet) return
+    if (topupMethod === 'virement' || topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') {
+      await handleManualDeposit()
+      return
+    }
     setSubmitting(true)
     const amount = parseFloat(topupAmount)
     try {
-      const result = await createPayment({ amount, method: topupMethod, wallet_id: wallet.id })
+      const result = await createPayment({ amount, method: topupMethod as 'moncash' | 'natcash', wallet_id: wallet.id })
       sessionStorage.setItem('konvwa_pay_ref', result.reference_id)
       toast.success('Redirection vers ' + (topupMethod === 'moncash' ? 'MonCash' : 'NatCash') + '…')
       setTopupOpen(false)
@@ -201,6 +275,53 @@ export function WalletPage() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
       toast.error(msg || 'Erreur lors de l\'initialisation du paiement.')
+    }
+    setSubmitting(false)
+  }
+
+  async function handleManualDeposit() {
+    if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet || !user) return
+    const isCrypto = topupMethod !== 'virement'
+    if (isCrypto && !proofFile) return
+    setSubmitting(true)
+    try {
+      const amount = parseFloat(topupAmount)
+
+      // Upload proof image if provided
+      let proofStoragePath: string | null = null
+      if (proofFile) {
+        const ext = proofFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const path = `${user.id}/${Date.now()}.${ext}`
+        const { error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(path, proofFile, { contentType: proofFile.type, upsert: false })
+        if (uploadError) throw new Error('Échec du téléversement : ' + uploadError.message)
+        proofStoragePath = path
+      }
+
+      const { error } = await supabase.from('wallet_transactions').insert({
+        wallet_id: wallet.id,
+        type: 'deposit',
+        amount,
+        status: 'pending',
+        payment_method: topupMethod,
+        description: isCrypto
+          ? `Dépôt crypto ${topupMethod.toUpperCase()}`
+          : 'Virement bancaire BUH DOLLAR',
+        reference: txHashInput.trim() || null,
+        proof_url: proofStoragePath,
+      })
+      if (error) throw error
+      toast.success('Dépôt soumis — en attente de confirmation.')
+      setTopupOpen(false)
+      setTopupAmount('')
+      setTxHashInput('')
+      setProofFile(null)
+      setProofPreview(null)
+      loadData()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      toast.error(msg || 'Erreur.')
     }
     setSubmitting(false)
   }
@@ -227,7 +348,10 @@ export function WalletPage() {
           <h1 className="text-2xl font-bold tracking-tight">Portefeuille</h1>
           <p className="text-sm text-muted-foreground">Gérez votre solde HTG</p>
         </div>
-        <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
+        <Dialog open={topupOpen} onOpenChange={(open) => {
+          setTopupOpen(open)
+          if (!open) { setProofFile(null); setProofPreview(null); setTxHashInput('') }
+        }}>
           <DialogTrigger asChild>
             <button
               className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm"
@@ -271,22 +395,168 @@ export function WalletPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Méthode</Label>
-                <RadioGroup value={topupMethod} onValueChange={(v) => setTopupMethod(v as 'moncash' | 'natcash')} className="grid grid-cols-2 gap-3">
-                  {([
-                    ['moncash', '/moncash-logo.jpg', 'Digicel'],
-                    ['natcash', '/natcash-logo.png', 'Natcom'],
-                  ] as const).map(([val, logo, sub]) => (
-                    <div key={val} className="relative">
-                      <RadioGroupItem value={val} id={val} className="peer sr-only" />
-                      <Label htmlFor={val} className="flex flex-col items-center justify-center p-4 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
-                        <img src={logo} alt={val} className="h-8 object-contain mb-1.5" />
-                        <span className="text-xs text-muted-foreground">{sub}</span>
-                      </Label>
-                    </div>
-                  ))}
+                <Label>Méthode de paiement</Label>
+                <RadioGroup
+                  value={topupMethod}
+                  onValueChange={(v) => { setTopupMethod(v as typeof topupMethod); setTxHashInput('') }}
+                  className="grid grid-cols-2 gap-2.5"
+                >
+                  {/* MonCash */}
+                  <div className="relative">
+                    <RadioGroupItem value="moncash" id="moncash" className="peer sr-only" />
+                    <Label htmlFor="moncash" className="flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
+                      <img src="/moncash-logo.jpg" alt="MonCash" className="h-7 object-contain mb-1" />
+                      <span className="text-[10px] text-muted-foreground">Digicel</span>
+                    </Label>
+                  </div>
+                  {/* NatCash */}
+                  <div className="relative">
+                    <RadioGroupItem value="natcash" id="natcash" className="peer sr-only" />
+                    <Label htmlFor="natcash" className="flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
+                      <img src="/natcash-logo.png" alt="NatCash" className="h-7 object-contain mb-1" />
+                      <span className="text-[10px] text-muted-foreground">Natcom</span>
+                    </Label>
+                  </div>
+                  {/* Virement */}
+                  <div className="relative">
+                    <RadioGroupItem value="virement" id="virement" className="peer sr-only" />
+                    <Label htmlFor="virement" className="flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 mb-1">
+                        <Wallet className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">Virement</span>
+                    </Label>
+                  </div>
+                  {/* Crypto */}
+                  <div className="relative">
+                    <RadioGroupItem value="btc" id="crypto-tab" className="peer sr-only" />
+                    <Label
+                      htmlFor="crypto-tab"
+                      onClick={() => setTopupMethod(m => (m === 'btc' || m === 'usdt' || m === 'eth') ? m : 'btc')}
+                      className={cn(
+                        'flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer hover:border-orange-400 transition-colors',
+                        (topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth')
+                          ? 'border-orange-400 bg-orange-50'
+                          : ''
+                      )}
+                    >
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 mb-1">
+                        <Bitcoin className="h-4 w-4 text-orange-500" />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">Crypto</span>
+                    </Label>
+                  </div>
                 </RadioGroup>
+
+                {/* Crypto coin selector */}
+                {(topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') && (
+                  <div className="flex gap-2 pt-1">
+                    {(['btc', 'usdt', 'eth'] as const).map((coin) => (
+                      <button
+                        key={coin}
+                        type="button"
+                        onClick={() => setTopupMethod(coin)}
+                        className={cn(
+                          'flex-1 rounded-xl py-1.5 text-xs font-bold border transition-colors',
+                          topupMethod === coin
+                            ? 'border-orange-400 bg-orange-500 text-white'
+                            : 'border-gray-200 bg-white text-foreground hover:border-orange-300'
+                        )}
+                      >
+                        {coin.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Virement bancaire details */}
+              {topupMethod === 'virement' && (
+                <div className="space-y-3">
+                  <div className="rounded-xl bg-blue-50 border border-blue-100 p-4 space-y-2">
+                    <p className="text-xs font-bold text-blue-800 uppercase tracking-wide">Coordonnées bancaires</p>
+                    {[
+                      ['Banque', 'BUH DOLLAR'],
+                      ['N° Compte', '55000146737'],
+                      ['Titulaire', 'HERMITUS SHELO'],
+                    ].map(([label, val]) => (
+                      <div key={label} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground text-xs">{label}</span>
+                        <span className="font-semibold text-xs text-foreground">{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Numéro de référence du virement</Label>
+                    <Input
+                      placeholder="Ex: VIR-20260930-XXX"
+                      value={txHashInput}
+                      onChange={(e) => setTxHashInput(e.target.value)}
+                      className="h-10 rounded-xl bg-[#F0F1F5] border-0 text-sm"
+                    />
+                  </div>
+                  <ProofUpload
+                    preview={proofPreview}
+                    required={false}
+                    onFile={(f, p) => { setProofFile(f); setProofPreview(p) }}
+                    onRemove={() => { setProofFile(null); setProofPreview(null) }}
+                  />
+                </div>
+              )}
+
+              {/* Crypto deposit address */}
+              {(topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') && (() => {
+                const info = CRYPTO_ADDRESS[topupMethod]
+                return (
+                  <div className="space-y-3">
+                    <div className="rounded-xl bg-orange-50 border border-orange-100 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-orange-800 uppercase tracking-wide">
+                          {info.coin} — Réseau {info.network}
+                        </p>
+                        <span className="text-[9px] font-bold bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full">DÉPÔT</span>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-1">Adresse de dépôt</p>
+                        <div className="flex items-center gap-2 bg-white rounded-lg p-2 border border-orange-100">
+                          <p className="text-[11px] font-mono text-foreground flex-1 break-all leading-relaxed">{info.address}</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(info.address)
+                              setAddrCopied(true)
+                              setTimeout(() => setAddrCopied(false), 2000)
+                            }}
+                            className="shrink-0 p-1 rounded hover:bg-orange-50 transition-colors"
+                          >
+                            {addrCopied
+                              ? <CheckCheck className="h-3.5 w-3.5 text-emerald-500" />
+                              : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-orange-700">
+                        Envoyez uniquement des {info.coin} sur le réseau {info.network}. Tout autre envoi sera perdu.
+                      </p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Hash de la transaction (optionnel)</Label>
+                      <Input
+                        placeholder="0x... ou TXid..."
+                        value={txHashInput}
+                        onChange={(e) => setTxHashInput(e.target.value)}
+                        className="h-10 rounded-xl bg-[#F0F1F5] border-0 text-sm font-mono"
+                      />
+                    </div>
+                    <ProofUpload
+                      preview={proofPreview}
+                      required={true}
+                      onFile={(f, p) => { setProofFile(f); setProofPreview(p) }}
+                      onRemove={() => { setProofFile(null); setProofPreview(null) }}
+                    />
+                  </div>
+                )
+              })()}
               {topupAmount && parseFloat(topupAmount) >= 100 && (
                 <div className="rounded-xl bg-muted p-3 text-sm">
                   <div className="flex justify-between">
@@ -300,7 +570,10 @@ export function WalletPage() {
               <button onClick={() => setTopupOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">Annuler</button>
               <button
                 onClick={handleTopup}
-                disabled={!topupAmount || parseFloat(topupAmount) < 100 || submitting}
+                disabled={
+                  !topupAmount || parseFloat(topupAmount) < 100 || submitting ||
+                  ((topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') && !proofFile)
+                }
                 className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                 style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               >
@@ -396,7 +669,7 @@ export function WalletPage() {
             className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity pressable"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
-            <img src={IconDistributeur} alt="" className="h-5 w-5 object-contain" />
+            <ArrowDownLeft className="h-4 w-4" />
             Recharger
           </button>
           <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors pressable shadow-sm">
@@ -410,7 +683,7 @@ export function WalletPage() {
       <div className="px-4 pb-5 grid grid-cols-2 gap-3 stagger-item" style={{ animationDelay: '140ms' }}>
         <div className="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 mb-2">
-            <img src={IconPieces} alt="" className="h-6 w-6 object-contain" />
+            <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
           </div>
           <p className="text-xs text-muted-foreground font-medium">Total rechargé</p>
           {loading ? <Skeleton className="h-6 w-24 mt-1" /> : (
