@@ -71,6 +71,7 @@ export function OrdersPage() {
         .from('product_requests')
         .select('id, product_name, category, status, created_at, urgency, product_url, notes, quantity, budget_estimate')
         .eq('user_id', user.id)
+        .neq('request_type', 'shipping')
         .in('status', ['submitted', 'reviewing'])
         .order('created_at', { ascending: false }),
     ]).then(([ordersRes, draftsRes]) => {

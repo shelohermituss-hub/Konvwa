@@ -4,13 +4,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
-  Package, Loader2, ChevronDown, ChevronUp, Warehouse,
-  CheckCheck, FileText, Receipt, Scale, Box
+  Package, Loader2, ChevronDown, ChevronUp,
+  CheckCheck, FileText, Receipt, Scale, Box, Ship
 } from 'lucide-react'
+
+interface ShipmentBatch {
+  id: string
+  batch_code: string
+  status: string
+  vessel_info: string | null
+  estimated_arrival: string | null
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -32,6 +41,7 @@ interface ShippingRequest {
   package_count: number | null
   origin_country: string | null
   destination_address: string | null
+  shipment_id: string | null
   admin_notes: string | null
   user_id: string
   profiles: { full_name: string | null; phone: string | null } | null
@@ -93,6 +103,28 @@ function AdminActionSheet({
     final_amount_htg:  String(request.actual_amount_htg ?? request.quoted_amount_htg ?? ''),
     admin_notes:       request.admin_notes ?? '',
   })
+  const [batches, setBatches] = useState<ShipmentBatch[]>([])
+  const [selectedBatchId, setSelectedBatchId] = useState<string>(request.shipment_id ?? '')
+  const [assigningSaving, setAssigningSaving] = useState(false)
+
+  useEffect(() => {
+    supabase.from('shipments').select('id, batch_code, status, vessel_info, estimated_arrival')
+      .not('status', 'eq', 'cancelled')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setBatches((data as ShipmentBatch[]) ?? []))
+  }, [])
+
+  async function handleAssignBatch() {
+    setAssigningSaving(true)
+    const { error } = await supabase
+      .from('product_requests')
+      .update({ shipment_id: selectedBatchId || null })
+      .eq('id', request.id)
+    setAssigningSaving(false)
+    if (error) { toast.error('Erreur : ' + error.message); return }
+    toast.success(selectedBatchId ? 'Cargaison assignée au batch' : 'Assignation retirée')
+    onDone()
+  }
 
   async function handleMarkReviewing() {
     setSaving(true)
@@ -266,6 +298,43 @@ function AdminActionSheet({
               placeholder="Notes visibles seulement par l'admin…"
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm resize-none disabled:opacity-50"
             />
+          </div>
+
+          {/* Assign to shipment batch */}
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3.5 space-y-2.5">
+            <div className="flex items-center gap-2">
+              <Ship className="h-4 w-4 text-indigo-600 shrink-0" />
+              <p className="text-sm font-semibold text-indigo-800">Assigner à un batch d'expédition</p>
+            </div>
+            {request.shipment_id && (
+              <p className="text-[11px] text-indigo-700">
+                Actuellement dans : <span className="font-bold">{batches.find(b => b.id === request.shipment_id)?.batch_code ?? request.shipment_id.slice(0,8)}</span>
+              </p>
+            )}
+            <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
+              <SelectTrigger className="rounded-xl bg-white border-indigo-200 text-sm">
+                <SelectValue placeholder="Choisir un batch…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">— Aucun batch —</SelectItem>
+                {batches.map(b => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.batch_code} · {b.status}
+                    {b.vessel_info ? ` · ${b.vessel_info}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              className="w-full rounded-xl gap-2"
+              onClick={handleAssignBatch}
+              disabled={assigningSaving || selectedBatchId === (request.shipment_id ?? '')}
+              style={{ background: '#4F46E5', color: '#fff' }}
+            >
+              {assigningSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ship className="h-3.5 w-3.5" />}
+              {selectedBatchId ? 'Assigner au batch' : 'Retirer du batch'}
+            </Button>
           </div>
         </div>
 

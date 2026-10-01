@@ -61,6 +61,8 @@ interface ShippingRequest {
   package_count: number | null
   origin_country: string | null
   destination_address: string | null
+  shipment_id: string | null
+  shipment: { id: string; batch_code: string; status: string; vessel_info: string | null; departure_date: string | null; estimated_arrival: string | null; actual_arrival: string | null; container_number: string | null } | null
   warehouse: Warehouse | null
   product_rate_category: ProductRateCategory | null
 }
@@ -845,7 +847,7 @@ export function ShipmentsPage() {
   const [warehouses,       setWarehouses]       = useState<Warehouse[]>([])
   const [walletBalance,    setWalletBalance]    = useState(0)
   const [loading,          setLoading]          = useState(true)
-  const [filter,           setFilter]           = useState<'active' | 'completed'>('active')
+  const [tab,              setTab]              = useState<'cargaisons' | 'expeditions'>('cargaisons')
   const [showForm,         setShowForm]         = useState(false)
 
   const load = useCallback(async () => {
@@ -867,9 +869,10 @@ export function ShipmentsPage() {
           id, status, notes, created_at,
           estimated_cbm, estimated_kg, actual_cbm, actual_kg,
           quoted_amount_htg, actual_amount_htg, quoted_at, received_at, invoiced_at,
-          package_count,
+          package_count, origin_country, destination_address, shipment_id,
           warehouse:warehouses(id, code, name, country_code, flag_emoji, address_line1, address_line2, address_line3, city, state, postal_code, contact_info, instructions, for_category),
-          product_rate_category:product_rate_categories(id, name, slug, rate_multiplier, description)
+          product_rate_category:product_rate_categories(id, name, slug, rate_multiplier, description),
+          shipment:shipments(id, batch_code, status, vessel_info, departure_date, estimated_arrival, actual_arrival, container_number)
         `)
         .eq('user_id', user.id)
         .eq('request_type', 'shipping')
@@ -910,13 +913,27 @@ export function ShipmentsPage() {
 
   useEffect(() => { load() }, [load])
 
-  const filtered = shipments.filter(s =>
-    filter === 'active' ? s.status !== 'completed' : s.status === 'completed'
-  )
-
-  const activeRequests    = shippingRequests.filter(r => !['invoiced'].includes(r.status))
-  const completedRequests = shippingRequests.filter(r =>  ['invoiced'].includes(r.status))
-  const displayedRequests = filter === 'active' ? activeRequests : completedRequests
+  // Expéditions tab: order_shipments batches + shipping-request-linked batches (deduplicated)
+  const cargoLinkedShipments: MyShipment[] = shippingRequests
+    .filter(r => r.shipment != null)
+    .map(r => ({
+      shipment_id:       r.shipment!.id,
+      batch_code:        r.shipment!.batch_code,
+      status:            r.shipment!.status,
+      vessel_info:       r.shipment!.vessel_info,
+      departure_date:    r.shipment!.departure_date,
+      estimated_arrival: r.shipment!.estimated_arrival,
+      actual_arrival:    r.shipment!.actual_arrival,
+      container_number:  r.shipment!.container_number,
+      order_id:          '',
+      order_tracking:    '',
+      product_name:      r.product_rate_category?.name ?? 'Cargaison',
+    }))
+  const allBatchIds = new Set(shipments.map(s => s.shipment_id))
+  const mergedShipments = [
+    ...shipments,
+    ...cargoLinkedShipments.filter(s => !allBatchIds.has(s.shipment_id)),
+  ]
 
   const hasQuoted = shippingRequests.some(r => r.status === 'quoted')
 
@@ -927,8 +944,7 @@ export function ShipmentsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Expéditions</h1>
           <p className="text-sm text-muted-foreground">
-            {shippingRequests.length} demande{shippingRequests.length !== 1 ? 's' : ''}
-            {shipments.length > 0 && ` · ${shipments.length} expédition${shipments.length !== 1 ? 's' : ''}`}
+            {shippingRequests.length} cargaison{shippingRequests.length !== 1 ? 's' : ''} · {mergedShipments.length} expédition{mergedShipments.length !== 1 ? 's' : ''}
           </p>
         </div>
         <button
@@ -986,18 +1002,29 @@ export function ShipmentsPage() {
 
       {/* Tabs */}
       <div className="px-4 pb-4 flex gap-2">
-        {(['active', 'completed'] as const).map((f) => (
+        {([
+          { key: 'cargaisons',  label: 'Cargaisons',   count: shippingRequests.length },
+          { key: 'expeditions', label: 'Expéditions',   count: mergedShipments.length  },
+        ] as const).map(({ key, label, count }) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
+            key={key}
+            onClick={() => setTab(key)}
             className={cn(
-              'flex-1 rounded-full py-2 text-sm font-semibold transition-colors border',
-              filter === f
+              'flex-1 rounded-full py-2 text-sm font-semibold transition-colors border flex items-center justify-center gap-1.5',
+              tab === key
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-background text-muted-foreground border-border'
             )}
           >
-            {f === 'active' ? 'En cours' : 'Terminées'}
+            {label}
+            {count > 0 && (
+              <span className={cn(
+                'text-[10px] font-bold px-1.5 py-0.5 rounded-full',
+                tab === key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+              )}>
+                {count}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -1006,26 +1033,34 @@ export function ShipmentsPage() {
       <div className="px-4 pb-6 space-y-3">
         {loading ? (
           [1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)
-        ) : (
+        ) : tab === 'cargaisons' ? (
           <>
-            {displayedRequests.map(r => (
-              <ShippingRequestCard key={r.id} req={r} walletBalance={walletBalance} />
-            ))}
-            {filtered.map(s => (
-              <ShipmentCard key={`${s.shipment_id}-${s.order_id}`} shipment={s} />
-            ))}
-            {displayedRequests.length === 0 && filtered.length === 0 && (
+            {shippingRequests.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
                 <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
-                <p className="font-semibold text-muted-foreground">
-                  {filter === 'active' ? 'Aucune demande en cours' : 'Aucune expédition terminée'}
-                </p>
+                <p className="font-semibold text-muted-foreground">Aucune demande</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">Appuyez sur + pour créer une demande</p>
+              </div>
+            ) : (
+              shippingRequests.map(r => (
+                <ShippingRequestCard key={r.id} req={r} walletBalance={walletBalance} />
+              ))
+            )}
+          </>
+        ) : (
+          <>
+            {mergedShipments.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
+                <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
+                <p className="font-semibold text-muted-foreground">Aucune expédition assignée</p>
                 <p className="text-xs text-muted-foreground/70 mt-1">
-                  {filter === 'active'
-                    ? 'Appuyez sur + pour créer une demande'
-                    : 'Les expéditions facturées apparaîtront ici'}
+                  Votre cargaison sera assignée à un batch par notre équipe
                 </p>
               </div>
+            ) : (
+              mergedShipments.map(s => (
+                <ShipmentCard key={`${s.shipment_id}-${s.order_id}`} shipment={s} />
+              ))
             )}
           </>
         )}
