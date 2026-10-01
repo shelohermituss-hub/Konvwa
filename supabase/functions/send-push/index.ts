@@ -1,195 +1,11 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-// ── VAPID signing via Web Crypto (no npm:web-push needed) ──────────────────
-
-function urlBase64ToUint8Array(base64: string): Uint8Array {
-  const pad = '='.repeat((4 - (base64.length % 4)) % 4)
-  const b64 = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/')
-  const raw = atob(b64)
-  return Uint8Array.from(raw, (c) => c.charCodeAt(0))
-}
-
-function uint8ArrayToBase64Url(arr: Uint8Array): string {
-  return btoa(String.fromCharCode(...arr))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
-}
-
-// web-push generate-vapid-keys outputs a raw 32-byte EC scalar (base64url),
-// NOT a PKCS#8 blob. We wrap it in the PKCS#8 DER structure for P-256 so
-// crypto.subtle.importKey('pkcs8') can accept it.
-function wrapRawEcKeyAsPkcs8(rawKey: Uint8Array): ArrayBuffer {
-  // DER header for PKCS#8 OneAsymmetricKey wrapping a P-256 private key
-  // (RFC 5958 / RFC 5915)
-  const header = new Uint8Array([
-    0x30, 0x41, // SEQUENCE (65 bytes)
-    0x02, 0x01, 0x00, // INTEGER 0 (version = 0)
-    0x30, 0x13, // SEQUENCE (19 bytes) — AlgorithmIdentifier
-      0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // OID ecPublicKey
-      0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, // OID prime256v1
-    0x04, 0x27, // OCTET STRING (39 bytes)
-      0x30, 0x25, // SEQUENCE (37 bytes) — ECPrivateKey
-        0x02, 0x01, 0x01, // INTEGER 1 (ecPrivkeyVer1)
-        0x04, 0x20, // OCTET STRING (32 bytes) — the raw private key scalar follows
-  ])
-  const pkcs8 = new Uint8Array(header.length + rawKey.length)
-  pkcs8.set(header)
-  pkcs8.set(rawKey, header.length)
-  return pkcs8.buffer
-}
-
-async function createVapidJwt(
-  audience: string,
-  subject: string,
-  privateKeyB64: string
-): Promise<string> {
-  const header  = { alg: 'ES256', typ: 'JWT' }
-  const payload = { aud: audience, exp: Math.floor(Date.now() / 1000) + 86400, sub: subject }
-
-  const enc   = new TextEncoder()
-  const hEnc  = uint8ArrayToBase64Url(enc.encode(JSON.stringify(header)))
-  const pEnc  = uint8ArrayToBase64Url(enc.encode(JSON.stringify(payload)))
-  const input = `${hEnc}.${pEnc}`
-
-  const rawKey = urlBase64ToUint8Array(privateKeyB64)
-  const key = await crypto.subtle.importKey(
-    'pkcs8',
-    wrapRawEcKeyAsPkcs8(rawKey),
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['sign']
-  )
-  const sig = await crypto.subtle.sign(
-    { name: 'ECDSA', hash: 'SHA-256' },
-    key,
-    enc.encode(input)
-  )
-
-  return `${input}.${uint8ArrayToBase64Url(new Uint8Array(sig))}`
-}
-
-// ── Encrypt push message (RFC 8291) ───────────────────────────────────────
-
-async function encryptPayload(
-  subscription: { keys: { p256dh: string; auth: string } },
-  plaintext: string
-): Promise<{ ciphertext: Uint8Array; salt: Uint8Array; serverPublicKey: Uint8Array }> {
-  const enc        = new TextEncoder()
-  const salt       = crypto.getRandomValues(new Uint8Array(16))
-  const authSecret = urlBase64ToUint8Array(subscription.keys.auth)
-  const clientKey  = urlBase64ToUint8Array(subscription.keys.p256dh)
-
-  // Server ephemeral ECDH key pair
-  const serverKeyPair = await crypto.subtle.generateKey(
-    { name: 'ECDH', namedCurve: 'P-256' },
-    true,
-    ['deriveKey', 'deriveBits']
-  )
-  const serverPublicKeyRaw = new Uint8Array(
-    await crypto.subtle.exportKey('raw', serverKeyPair.publicKey)
-  )
-
-  // Import client public key
-  const clientPublicKey = await crypto.subtle.importKey(
-    'raw', clientKey.buffer,
-    { name: 'ECDH', namedCurve: 'P-256' },
-    false, []
-  )
-
-  // ECDH shared secret
-  const sharedBits = await crypto.subtle.deriveBits(
-    { name: 'ECDH', public: clientPublicKey },
-    serverKeyPair.privateKey,
-    256
-  )
-
-  // HKDF to derive PRK
-  const hkdfKey = await crypto.subtle.importKey('raw', sharedBits, 'HKDF', false, ['deriveBits'])
-
-  const prk = await crypto.subtle.deriveBits(
-    { name: 'HKDF', hash: 'SHA-256', salt: authSecret, info: enc.encode('Content-Encoding: auth\0') },
-    hkdfKey, 256
-  )
-
-  const prkKey = await crypto.subtle.importKey('raw', prk, 'HKDF', false, ['deriveBits'])
-
-  // Key info
-  const keyInfo = concat(enc.encode('Content-Encoding: aesgcm\0\x41'), clientKey, serverPublicKeyRaw)
-  const nonceInfo = concat(enc.encode('Content-Encoding: nonce\0\x41'), clientKey, serverPublicKeyRaw)
-
-  const cek = await crypto.subtle.deriveBits(
-    { name: 'HKDF', hash: 'SHA-256', salt, info: keyInfo }, prkKey, 128
-  )
-  const nonce = await crypto.subtle.deriveBits(
-    { name: 'HKDF', hash: 'SHA-256', salt, info: nonceInfo }, prkKey, 96
-  )
-
-  const aesKey = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['encrypt'])
-
-  // Pad plaintext (2-byte padding length prefix + 0 bytes of padding)
-  const plaintextBytes = enc.encode(plaintext)
-  const padded = new Uint8Array(2 + plaintextBytes.length)
-  padded[0] = 0; padded[1] = 0
-  padded.set(plaintextBytes, 2)
-
-  const ciphertext = new Uint8Array(
-    await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, aesKey, padded)
-  )
-
-  return { ciphertext, salt, serverPublicKey: serverPublicKeyRaw }
-}
-
-function concat(...arrays: Uint8Array[]): Uint8Array {
-  const total = arrays.reduce((s, a) => s + a.length, 0)
-  const out   = new Uint8Array(total)
-  let offset  = 0
-  for (const a of arrays) { out.set(a, offset); offset += a.length }
-  return out
-}
-
-// ── Send one push notification ─────────────────────────────────────────────
+import webpush from 'npm:web-push@3'
 
 interface PushSub {
   endpoint: string
   keys: { p256dh: string; auth: string }
 }
-
-async function sendPush(
-  sub: PushSub,
-  payload: string,
-  vapidPublicKey: string,
-  vapidPrivateKey: string,
-  vapidSubject: string
-): Promise<{ ok: boolean; status?: number; error?: string }> {
-  try {
-    const url      = new URL(sub.endpoint)
-    const audience = `${url.protocol}//${url.host}`
-    const jwt      = await createVapidJwt(audience, vapidSubject, vapidPrivateKey)
-
-    const { ciphertext, salt, serverPublicKey } = await encryptPayload(sub, payload)
-
-    const res = await fetch(sub.endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization':   `vapid t=${jwt},k=${vapidPublicKey}`,
-        'Content-Encoding': 'aesgcm',
-        'Content-Type':    'application/octet-stream',
-        'Encryption':      `salt=${uint8ArrayToBase64Url(salt)}`,
-        'Crypto-Key':      `dh=${uint8ArrayToBase64Url(serverPublicKey)}`,
-        'TTL':             '86400',
-      },
-      body: ciphertext,
-    })
-
-    return { ok: res.ok, status: res.status }
-  } catch (e) {
-    return { ok: false, error: String(e) }
-  }
-}
-
-// ── Edge Function handler ─────────────────────────────────────────────────
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -208,11 +24,15 @@ serve(async (req) => {
     const SUPABASE_URL      = Deno.env.get('SUPABASE_URL')      ?? ''
     const SERVICE_ROLE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
+    console.log(`[send-push] VAPID_PUBLIC_KEY set=${!!VAPID_PUBLIC_KEY} VAPID_PRIVATE_KEY set=${!!VAPID_PRIVATE_KEY} SERVICE_ROLE_KEY set=${!!SERVICE_ROLE_KEY}`)
+
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
       return new Response(JSON.stringify({ error: 'VAPID keys not configured' }), {
         status: 500, headers: { ...CORS, 'Content-Type': 'application/json' },
       })
     }
+
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
 
     const body: {
       user_id: string
@@ -231,28 +51,29 @@ serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-    // Fetch all subscriptions for this user
     const { data: subs, error: subErr } = await admin
       .from('push_subscriptions')
       .select('subscription, notification_types')
       .eq('user_id', body.user_id)
 
     if (subErr || !subs?.length) {
+      console.log(`[send-push] no subscriptions for user=${body.user_id} err=${subErr?.message}`)
       return new Response(JSON.stringify({ sent: 0, reason: 'no subscriptions' }), {
         status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
       })
     }
 
+    console.log(`[send-push] found ${subs.length} subscriptions for user=${body.user_id}`)
+
     const payload = JSON.stringify({
       title:    body.title,
       body:     body.body,
       icon:     body.icon     ?? '/icon-192.png',
-      badge:    '/icon-192.png',
+      badge:    '/badge-mono.png',
       clickUrl: body.click_url ?? '/',
       type:     body.type     ?? 'info',
     })
 
-    // Map type to notification category
     const typeMap: Record<string, string> = {
       order: 'orders', payment: 'payments', quote: 'quotes',
       success: 'payments', warning: 'alerts', error: 'alerts', info: 'alerts',
@@ -264,18 +85,23 @@ serve(async (req) => {
       return !types || types.includes(category)
     })
 
+    const staleEndpoints: string[] = []
+
     const results = await Promise.all(
       eligible.map(async (s) => {
         const sub = s.subscription as PushSub
-        const result = await sendPush(sub, payload, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT)
-        return { ...result, endpoint: sub.endpoint }
+        try {
+          const res = await webpush.sendNotification(sub, payload)
+          return { ok: true, status: res.statusCode, endpoint: sub.endpoint }
+        } catch (e: unknown) {
+          const err = e as { statusCode?: number; body?: string }
+          const status = err?.statusCode ?? 0
+          console.error(`[send-push] status=${status} err=${String(err?.body ?? e).slice(0, 150)} endpoint=...${sub.endpoint.slice(-20)}`)
+          if (status === 410 || status === 404) staleEndpoints.push(sub.endpoint)
+          return { ok: false, status, endpoint: sub.endpoint }
+        }
       })
     )
-
-    // Remove stale subscriptions (410 Gone = revoked, 404 = no longer exists)
-    const staleEndpoints = results
-      .filter((r) => r.status === 410 || r.status === 404)
-      .map((r) => r.endpoint)
 
     if (staleEndpoints.length > 0) {
       await Promise.all(
