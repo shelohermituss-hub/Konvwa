@@ -28,6 +28,15 @@ interface WalletData {
   blocked_balance: number
 }
 
+interface TrendingProduct {
+  id: string
+  name: string
+  price_htg: number
+  category: string | null
+  supplier_name: string | null
+  images: string[]
+}
+
 const QUICK_ACTION_KEYS = [
   { labelKey: 'dash.q_submit',   Icon: Send,       path: '/submit' },
   { labelKey: 'dash.q_orders',   Icon: ShoppingBag, path: '/orders' },
@@ -35,14 +44,6 @@ const QUICK_ACTION_KEYS = [
   { labelKey: 'dash.q_support',  Icon: HelpCircle,  path: '/support' },
 ]
 
-const TRENDING_PRODUCTS = [
-  { id: 1, name: 'AirPods Pro 2', price: 8500, platform: 'Alibaba', emoji: '🎧', tag: 'Électronique' },
-  { id: 2, name: 'Sneakers Nike', price: 4200, platform: 'Temu', emoji: '👟', tag: 'Mode' },
-  { id: 3, name: 'Montre Xiaomi', price: 3800, platform: 'Alibaba', emoji: '⌚', tag: 'Tech' },
-  { id: 4, name: 'Sac à main', price: 2900, platform: 'Shein', emoji: '👜', tag: 'Mode' },
-  { id: 5, name: 'Cafetière pro', price: 5600, platform: 'Alibaba', emoji: '☕', tag: 'Maison' },
-  { id: 6, name: 'Panneau solaire', price: 12500, platform: 'Alibaba', emoji: '☀️', tag: 'Énergie' },
-]
 
 const TESTIMONIALS = [
   {
@@ -92,6 +93,7 @@ export function DashboardPage() {
   const { t } = useI18n()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [orders, setOrders] = useState<DashboardOrder[]>([])
+  const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [balanceVisible, setBalanceVisible] = useState(true)
   const [expandedTestimonial, setExpandedTestimonial] = useState<number | null>(null)
@@ -103,9 +105,11 @@ export function DashboardPage() {
     Promise.all([
       supabase.from('wallets').select('available_balance, blocked_balance').eq('user_id', user.id).maybeSingle(),
       supabase.from('orders').select('id, tracking_code, status, created_at, quotes(total, product_requests(product_name))').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-    ]).then(([walletRes, ordersRes]) => {
+      supabase.from('products').select('id, name, price_htg, category, supplier_name, images').eq('active', true).order('featured', { ascending: false }).order('created_at', { ascending: false }).limit(8),
+    ]).then(([walletRes, ordersRes, productsRes]) => {
       if (walletRes.data) setWallet(walletRes.data)
       if (ordersRes.data) setOrders(ordersRes.data as unknown as DashboardOrder[])
+      if (productsRes.data) setTrendingProducts(productsRes.data as TrendingProduct[])
       setLoading(false)
     })
   }, [user])
@@ -290,29 +294,57 @@ export function DashboardPage() {
             Voir tout <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <Carousel
-          opts={{ loop: true, align: 'start', slidesToScroll: 2 }}
-          plugins={[autoplayProducts.current]}
-          className="w-full px-4"
-        >
-          <CarouselContent className="-ml-2">
-            {TRENDING_PRODUCTS.map((product) => (
-              <CarouselItem key={product.id} className="pl-2 basis-1/2">
-                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-3 flex flex-col gap-2 h-full">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl">{product.emoji}</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{product.platform}</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm text-foreground leading-tight">{product.name}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{product.tag}</p>
-                  </div>
-                  <p className="text-sm font-bold text-primary">{product.price.toLocaleString('fr-HT')} <span className="text-[10px] font-normal text-muted-foreground">HTG</span></p>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+        {loading ? (
+          <div className="flex gap-2 px-4">
+            <Skeleton className="h-44 w-40 rounded-2xl flex-shrink-0" />
+            <Skeleton className="h-44 w-40 rounded-2xl flex-shrink-0" />
+          </div>
+        ) : trendingProducts.length === 0 ? null : (
+          <Carousel
+            opts={{ loop: true, align: 'start', slidesToScroll: 2 }}
+            plugins={[autoplayProducts.current]}
+            className="w-full px-4"
+          >
+            <CarouselContent className="-ml-2">
+              {trendingProducts.map((product) => (
+                <CarouselItem key={product.id} className="pl-2 basis-1/2">
+                  <Link to={`/products/${product.id}`} className="block rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden h-full">
+                    {/* Image */}
+                    <div className="w-full h-28 bg-gray-50 overflow-hidden">
+                      {product.images?.[0] ? (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="h-8 w-8 text-gray-300" />
+                        </div>
+                      )}
+                    </div>
+                    {/* Info */}
+                    <div className="p-2.5 flex flex-col gap-1">
+                      {product.category && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary self-start">
+                          {product.category}
+                        </span>
+                      )}
+                      <p className="font-semibold text-xs text-foreground leading-tight line-clamp-2">{product.name}</p>
+                      {product.supplier_name && (
+                        <p className="text-[10px] text-muted-foreground truncate">{product.supplier_name}</p>
+                      )}
+                      <p className="text-sm font-bold text-primary mt-0.5">
+                        {product.price_htg.toLocaleString('fr-HT')} <span className="text-[10px] font-normal text-muted-foreground">HTG</span>
+                      </p>
+                    </div>
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        )}
       </div>
 
       {/* ── Testimonials Carousel — 2 cards per view, equal height, click-to-expand ── */}
