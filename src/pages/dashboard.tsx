@@ -126,9 +126,6 @@ export function DashboardPage() {
     : 'U'
   const balance = wallet?.available_balance ?? 0
 
-    ? `${user.id.slice(0, 4).toUpperCase()}  ${user.id.slice(9, 13).toUpperCase()}  ${user.id.slice(14, 18).toUpperCase()}  ${user.id.slice(19, 23).toUpperCase()}`
-    : '——  ——  ——  ——'
-
   return (
     <div className="min-h-full bg-[#F4F5F7] w-full">
 
