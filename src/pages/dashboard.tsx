@@ -125,7 +125,7 @@ export function DashboardPage() {
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U'
   const balance = wallet?.available_balance ?? 0
-  const cardNumber = user?.id
+
     ? `${user.id.slice(0, 4).toUpperCase()}  ${user.id.slice(9, 13).toUpperCase()}  ${user.id.slice(14, 18).toUpperCase()}  ${user.id.slice(19, 23).toUpperCase()}`
     : '——  ——  ——  ——'
 
