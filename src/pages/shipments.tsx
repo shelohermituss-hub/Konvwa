@@ -314,16 +314,31 @@ function ShipmentCard({ shipment }: { shipment: MyShipment }) {
 function ShippingRequestCard({
   req,
   walletBalance,
+  onPaid,
 }: {
   req: ShippingRequest
   walletBalance: number
+  onPaid: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [paying,   setPaying]   = useState(false)
   const s = REQ_STATUS[req.status] ?? { label: req.status, color: 'bg-muted text-muted-foreground' }
   const displayAmount = req.actual_amount_htg ?? req.quoted_amount_htg
   const isQuoted      = req.status === 'quoted'
   const isInvoiced    = req.status === 'invoiced'
   const canPay        = isQuoted && displayAmount != null && walletBalance >= displayAmount
+
+  async function handlePay() {
+    setPaying(true)
+    const { data, error } = await supabase.rpc('pay_shipping_quote', { p_request_id: req.id })
+    setPaying(false)
+    if (error || !data?.success) {
+      toast.error(data?.error ?? error?.message ?? 'Erreur de paiement')
+      return
+    }
+    toast.success(`${(req.quoted_amount_htg ?? 0).toLocaleString('fr-HT')} HTG débités — paiement confirmé`)
+    onPaid()
+  }
 
   return (
     <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
@@ -374,7 +389,7 @@ function ShippingRequestCard({
             <p className={cn('text-sm font-bold', isInvoiced ? 'text-emerald-600' : 'text-primary')}>
               {displayAmount.toLocaleString('fr-HT')} HTG
             </p>
-            <p className="text-[10px] text-muted-foreground">{isInvoiced ? 'Payé' : 'Estimation'}</p>
+            <p className="text-[10px] text-muted-foreground">{isInvoiced ? 'Payé' : isQuoted ? 'Officiel' : 'Estimation'}</p>
           </div>
         ) : (
           expanded
@@ -385,6 +400,37 @@ function ShippingRequestCard({
 
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t border-border space-y-3">
+
+          {/* Status contextual message */}
+          {(req.status === 'submitted' || req.status === 'reviewing') && (
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5 flex items-start gap-2">
+              <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Envoyez vos colis à l'adresse de notre entrepôt.{' '}
+                Votre devis officiel sera établi à leur arrivée.
+              </p>
+            </div>
+          )}
+          {req.status === 'received' && (
+            <div className="rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-2.5 flex items-start gap-2">
+              <Package className="h-3.5 w-3.5 text-indigo-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-indigo-800 leading-relaxed">
+                Vos colis sont bien arrivés à notre entrepôt.{' '}
+                Votre devis officiel est en cours de préparation.
+              </p>
+            </div>
+          )}
+          {isInvoiced && (
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2.5 flex items-center gap-2">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+              <p className="text-xs text-emerald-800 font-medium">
+                Paiement confirmé —{' '}
+                {(req.actual_amount_htg ?? req.quoted_amount_htg ?? 0).toLocaleString('fr-HT')} HTG.{' '}
+                Votre cargaison sera assignée à une prochaine expédition.
+              </p>
+            </div>
+          )}
+
           {/* Dimensions */}
           {(req.actual_cbm ?? req.estimated_cbm ?? req.actual_kg ?? req.estimated_kg) != null && (
             <div className="grid grid-cols-2 gap-2">
@@ -427,17 +473,30 @@ function ShippingRequestCard({
 
           {/* Quote banner */}
           {isQuoted && displayAmount != null && (
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2.5">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-foreground">Devis reçu</p>
+                <p className="text-sm font-bold text-foreground">Devis officiel</p>
                 <p className="text-lg font-bold text-primary">
                   {displayAmount.toLocaleString('fr-HT')} HTG
                 </p>
               </div>
               <p className="text-xs text-muted-foreground">
-                Montant estimé. La facture finale sera établie après réception de vos colis.
+                Devis établi après réception de vos colis. Réglez maintenant pour confirmer votre expédition.
               </p>
-              {!canPay && (
+              {canPay ? (
+                <button
+                  type="button"
+                  onClick={handlePay}
+                  disabled={paying}
+                  className="flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+                >
+                  {paying
+                    ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Paiement…</>
+                    : <><Wallet className="h-3.5 w-3.5" />Payer {displayAmount.toLocaleString('fr-HT')} HTG</>
+                  }
+                </button>
+              ) : (
                 <Link
                   to="/wallet"
                   className="flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-sm font-bold text-white transition-all"
@@ -1043,7 +1102,7 @@ export function ShipmentsPage() {
               </div>
             ) : (
               shippingRequests.map(r => (
-                <ShippingRequestCard key={r.id} req={r} walletBalance={walletBalance} />
+                <ShippingRequestCard key={r.id} req={r} walletBalance={walletBalance} onPaid={load} />
               ))
             )}
           </>

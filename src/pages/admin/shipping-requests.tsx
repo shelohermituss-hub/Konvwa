@@ -10,8 +10,10 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Package, Loader2, ChevronDown, ChevronUp,
-  CheckCheck, FileText, Receipt, Scale, Box, Ship, RefreshCw
+  CheckCheck, FileText, Scale, Box, Ship, RefreshCw,
+  Clock, CheckCircle2, AlertCircle,
 } from 'lucide-react'
+
 
 interface ShipmentBatch {
   id: string
@@ -174,25 +176,6 @@ function AdminActionSheet({
     onDone()
   }
 
-  async function handleInvoice() {
-    if (!form.final_amount_htg) {
-      toast.error('Montant final obligatoire')
-      return
-    }
-    setSaving(true)
-    const { data, error } = await supabase.rpc('admin_invoice_shipment', {
-      p_request_id:       request.id,
-      p_final_amount_htg: parseFloat(form.final_amount_htg),
-    })
-    setSaving(false)
-    if (error || !data?.success) {
-      toast.error(data?.error ?? error?.message ?? 'Erreur')
-      return
-    }
-    toast.success(`${fmt(data.amount_htg)} HTG débités`)
-    onDone()
-  }
-
   const s = request.status
 
   return (
@@ -205,6 +188,40 @@ function AdminActionSheet({
         </SheetHeader>
 
         <div className="py-5 space-y-5">
+          {/* Status banner */}
+          {(s === 'submitted' || s === 'reviewing') && (
+            <div className="rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-3 flex items-start gap-2.5">
+              <Clock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800 leading-relaxed">
+                En attente de réception — marquez les colis reçus à l'entrepôt pour pourvoir établir le devis officiel.
+              </p>
+            </div>
+          )}
+          {s === 'received' && (
+            <div className="rounded-xl bg-indigo-50 border border-indigo-200 px-3.5 py-3 flex items-start gap-2.5">
+              <Box className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-indigo-800 leading-relaxed">
+                Colis reçus — mesurez et pesez les colis, puis envoyez le devis officiel au client.
+              </p>
+            </div>
+          )}
+          {s === 'quoted' && (
+            <div className="rounded-xl bg-orange-50 border border-orange-200 px-3.5 py-3 flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-orange-800 leading-relaxed">
+                Devis envoyé — le client doit régler <span className="font-bold">{fmt(request.quoted_amount_htg)} HTG</span> depuis son portefeuille.
+              </p>
+            </div>
+          )}
+          {s === 'invoiced' && (
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-3 flex items-center gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <p className="text-sm text-emerald-800 font-medium">
+                Paiement reçu — {fmt(request.actual_amount_htg ?? request.quoted_amount_htg)} HTG. Assignez au batch.
+              </p>
+            </div>
+          )}
+
           {/* Client info */}
           <div className="rounded-xl bg-gray-50 p-3.5 space-y-1 text-sm">
             <p className="font-semibold">{request.profiles?.full_name ?? 'Client inconnu'}</p>
@@ -225,64 +242,49 @@ function AdminActionSheet({
             {request.notes && <p className="text-muted-foreground italic">"{request.notes}"</p>}
           </div>
 
-          {/* Dimensions */}
-          <div className="space-y-3">
-            <p className="text-sm font-semibold">Dimensions</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">CBM réel (m³)</Label>
-                <Input
-                  type="number" step="0.001" placeholder="0.500"
-                  value={form.actual_cbm}
-                  onChange={e => setForm(p => ({ ...p, actual_cbm: e.target.value }))}
-                  className="rounded-xl"
-                  disabled={s === 'invoiced' || s === 'cancelled'}
-                />
-                {request.estimated_cbm != null && (
-                  <p className="text-[10px] text-muted-foreground">Estimé: {request.estimated_cbm} m³</p>
-                )}
+          {/* Dimensions + quote — only shown once packages are received */}
+          {(s === 'received' || s === 'quoted' || s === 'invoiced') && (
+            <div className="space-y-3">
+              <p className="text-sm font-semibold">Mesures réelles</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">CBM réel (m³)</Label>
+                  <Input
+                    type="number" step="0.001" placeholder="0.500"
+                    value={form.actual_cbm}
+                    onChange={e => setForm(p => ({ ...p, actual_cbm: e.target.value }))}
+                    className="rounded-xl"
+                    disabled={s !== 'received'}
+                  />
+                  {request.estimated_cbm != null && (
+                    <p className="text-[10px] text-muted-foreground">Estimé: {request.estimated_cbm} m³</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Poids réel (kg)</Label>
+                  <Input
+                    type="number" step="0.1" placeholder="5.0"
+                    value={form.actual_kg}
+                    onChange={e => setForm(p => ({ ...p, actual_kg: e.target.value }))}
+                    className="rounded-xl"
+                    disabled={s !== 'received'}
+                  />
+                  {request.estimated_kg != null && (
+                    <p className="text-[10px] text-muted-foreground">Estimé: {request.estimated_kg} kg</p>
+                  )}
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Poids réel (kg)</Label>
-                <Input
-                  type="number" step="0.1" placeholder="5.0"
-                  value={form.actual_kg}
-                  onChange={e => setForm(p => ({ ...p, actual_kg: e.target.value }))}
-                  className="rounded-xl"
-                  disabled={s === 'invoiced' || s === 'cancelled'}
-                />
-                {request.estimated_kg != null && (
-                  <p className="text-[10px] text-muted-foreground">Estimé: {request.estimated_kg} kg</p>
-                )}
-              </div>
-            </div>
-          </div>
 
-          {/* Quote amount */}
-          {(s === 'submitted' || s === 'reviewing') && (
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Montant du devis (HTG)</Label>
-              <Input
-                type="number" step="1" placeholder="12 000"
-                value={form.quoted_amount_htg}
-                onChange={e => setForm(p => ({ ...p, quoted_amount_htg: e.target.value }))}
-                className="rounded-xl"
-              />
-            </div>
-          )}
-
-          {/* Invoice amount */}
-          {s === 'received' && (
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Montant final à facturer (HTG)</Label>
-              <Input
-                type="number" step="1" placeholder={form.quoted_amount_htg || '12 000'}
-                value={form.final_amount_htg}
-                onChange={e => setForm(p => ({ ...p, final_amount_htg: e.target.value }))}
-                className="rounded-xl"
-              />
-              {request.quoted_amount_htg && (
-                <p className="text-[11px] text-muted-foreground">Devis initial : {fmt(request.quoted_amount_htg)} HTG</p>
+              {s === 'received' && (
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Montant du devis officiel (HTG)</Label>
+                  <Input
+                    type="number" step="1" placeholder="12 000"
+                    value={form.quoted_amount_htg}
+                    onChange={e => setForm(p => ({ ...p, quoted_amount_htg: e.target.value }))}
+                    className="rounded-xl"
+                  />
+                </div>
               )}
             </div>
           )}
@@ -300,42 +302,44 @@ function AdminActionSheet({
             />
           </div>
 
-          {/* Assign to shipment batch */}
-          <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3.5 space-y-2.5">
-            <div className="flex items-center gap-2">
-              <Ship className="h-4 w-4 text-indigo-600 shrink-0" />
-              <p className="text-sm font-semibold text-indigo-800">Assigner à un batch d'expédition</p>
+          {/* Assign to shipment batch (shown once invoiced) */}
+          {s === 'invoiced' && (
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3.5 space-y-2.5">
+              <div className="flex items-center gap-2">
+                <Ship className="h-4 w-4 text-indigo-600 shrink-0" />
+                <p className="text-sm font-semibold text-indigo-800">Assigner à un batch d'expédition</p>
+              </div>
+              {request.shipment_id && (
+                <p className="text-[11px] text-indigo-700">
+                  Actuellement dans : <span className="font-bold">{batches.find(b => b.id === request.shipment_id)?.batch_code ?? request.shipment_id.slice(0,8)}</span>
+                </p>
+              )}
+              <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
+                <SelectTrigger className="rounded-xl bg-white border-indigo-200 text-sm">
+                  <SelectValue placeholder="Choisir un batch…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">— Aucun batch —</SelectItem>
+                  {batches.map(b => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.batch_code} · {b.status}
+                      {b.vessel_info ? ` · ${b.vessel_info}` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                className="w-full rounded-xl gap-2"
+                onClick={handleAssignBatch}
+                disabled={assigningSaving || selectedBatchId === (request.shipment_id ?? '')}
+                style={{ background: '#4F46E5', color: '#fff' }}
+              >
+                {assigningSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ship className="h-3.5 w-3.5" />}
+                {selectedBatchId ? 'Assigner au batch' : 'Retirer du batch'}
+              </Button>
             </div>
-            {request.shipment_id && (
-              <p className="text-[11px] text-indigo-700">
-                Actuellement dans : <span className="font-bold">{batches.find(b => b.id === request.shipment_id)?.batch_code ?? request.shipment_id.slice(0,8)}</span>
-              </p>
-            )}
-            <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
-              <SelectTrigger className="rounded-xl bg-white border-indigo-200 text-sm">
-                <SelectValue placeholder="Choisir un batch…" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">— Aucun batch —</SelectItem>
-                {batches.map(b => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.batch_code} · {b.status}
-                    {b.vessel_info ? ` · ${b.vessel_info}` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              size="sm"
-              className="w-full rounded-xl gap-2"
-              onClick={handleAssignBatch}
-              disabled={assigningSaving || selectedBatchId === (request.shipment_id ?? '')}
-              style={{ background: '#4F46E5', color: '#fff' }}
-            >
-              {assigningSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ship className="h-3.5 w-3.5" />}
-              {selectedBatchId ? 'Assigner au batch' : 'Retirer du batch'}
-            </Button>
-          </div>
+          )}
         </div>
 
         <SheetFooter className="flex-col gap-2">
@@ -352,33 +356,21 @@ function AdminActionSheet({
               </Button>
               <Button
                 className="w-full rounded-xl gap-2"
-                onClick={handleSendQuote}
+                onClick={handleMarkReceived}
                 disabled={saving}
                 style={BTN_ORANGE}
               >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-                Envoyer le devis
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Box className="h-4 w-4" />}
+                Marquer reçu en entrepôt
               </Button>
             </>
           )}
           {s === 'reviewing' && (
             <Button
               className="w-full rounded-xl gap-2"
-              onClick={handleSendQuote}
-              disabled={saving}
-              style={BTN_ORANGE}
-            >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-              Envoyer le devis
-            </Button>
-          )}
-          {(s === 'submitted' || s === 'reviewing' || s === 'quoted') && (
-            <Button
-              className="w-full rounded-xl gap-2"
               onClick={handleMarkReceived}
               disabled={saving}
-              variant={s === 'quoted' ? 'default' : 'outline'}
-              style={s === 'quoted' ? BTN_ORANGE : undefined}
+              style={BTN_ORANGE}
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Box className="h-4 w-4" />}
               Marquer reçu en entrepôt
@@ -387,12 +379,12 @@ function AdminActionSheet({
           {s === 'received' && (
             <Button
               className="w-full rounded-xl gap-2"
-              onClick={handleInvoice}
+              onClick={handleSendQuote}
               disabled={saving}
               style={BTN_ORANGE}
             >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
-              Facturer — débiter le portefeuille
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              Envoyer le devis officiel
             </Button>
           )}
           <Button variant="outline" className="w-full rounded-xl" onClick={onClose}>
