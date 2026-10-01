@@ -43,9 +43,9 @@ const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
 interface NotifItem {
   id: string
   title: string
-  message: string
+  body: string
   type: string
-  read_at: string | null
+  read: boolean
   created_at: string
 }
 
@@ -59,7 +59,7 @@ function useUnread(userId: string | undefined) {
         .from('notifications')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .is('read_at', null)
+        .eq('read', false)
         .then(({ count }) => setUnread(count ?? 0))
 
     fetch()
@@ -96,7 +96,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
     setLoading(true)
     const { data } = await supabase
       .from('notifications')
-      .select('id, title, message, type, read_at, created_at')
+      .select('id, title, body, type, read, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(5)
@@ -146,13 +146,13 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
               <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer">
                 <div className={cn(
                   'flex h-9 w-9 items-center justify-center rounded-xl shrink-0 mt-0.5',
-                  n.read_at ? 'bg-muted' : 'bg-primary/8'
+                  n.read ? 'bg-muted' : 'bg-primary/8'
                 )}>
                   <NotifIcon type={n.type} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold leading-tight truncate">{n.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.body}</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-1 flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {formatDistanceToNow(new Date(n.created_at), {
@@ -161,7 +161,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
                     })}
                   </p>
                 </div>
-                {!n.read_at && (
+                {!n.read && (
                   <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-2" />
                 )}
               </div>
