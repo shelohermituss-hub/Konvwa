@@ -4,12 +4,21 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, ShoppingBag, Package, Truck, Headphones, Clock } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { createPayment } from '@/lib/payment-api'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+
+const SHORTCUTS = [
+  { icon: ShoppingBag, label: 'Importer',    to: '/submit' },
+  { icon: Package,     label: 'Commandes',   to: '/orders' },
+  { icon: Truck,       label: 'Livraisons',  to: '/shipments' },
+  { icon: Clock,       label: 'Activité',    to: '/activity-log' },
+  { icon: Headphones,  label: 'Support',     to: '/support' },
+] as const
 
 interface WalletData {
   id: string
@@ -225,7 +234,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
 }
 
 export function WalletPage() {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -328,9 +337,6 @@ export function WalletPage() {
 
   const balance = wallet?.available_balance ?? 0
 
-  const cardNumber = user?.id
-    ? `${user.id.slice(0, 4).toUpperCase()}  ${user.id.slice(9, 13).toUpperCase()}  ${user.id.slice(14, 18).toUpperCase()}  ${user.id.slice(19, 23).toUpperCase()}`
-    : '——  ——  ——  ——'
 
   const totalDeposited = transactions
     .filter(t => t.type === 'deposit' && t.status === 'completed')
@@ -585,102 +591,90 @@ export function WalletPage() {
         </Dialog>
       </div>
 
-      {/* ── Wallet Card ── */}
-      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '60ms' }}>
-        <div
-          className="rounded-3xl text-white relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #0A1628 0%, #162340 55%, #1C2F50 100%)',
-            boxShadow: '0 12px 40px rgba(10,22,40,0.45)',
-            aspectRatio: '1.586',
-          }}
-        >
-          {/* Subtle orange glow top-right */}
-          <div
-            className="absolute"
-            style={{
-              top: '-40%', right: '-20%',
-              width: '55%', paddingTop: '55%',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(240,90,40,0.18) 0%, transparent 70%)',
-              pointerEvents: 'none',
-            }}
-          />
-
-          <div className="absolute inset-0 flex flex-col justify-between p-5">
-            {/* Top row: brand + eye toggle */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-white text-base tracking-widest">KONVWA</span>
-                <span
-                  className="text-[9px] font-bold tracking-widest rounded-sm px-1.5 py-0.5"
-                  style={{ background: 'rgba(240,90,40,0.22)', color: '#F97B50' }}
-                >
-                  PAY
-                </span>
-              </div>
+      {/* ── Balance cards (compact 2-col) ── */}
+      <div className="px-4 pb-4 stagger-item" style={{ animationDelay: '60ms' }}>
+        <div className="flex gap-3">
+          {/* Solde disponible */}
+          <div className="flex-1 rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-muted-foreground font-medium">Solde HTG</p>
               <button
                 onClick={() => setBalanceVisible(v => !v)}
-                className="flex h-7 w-7 items-center justify-center rounded-full transition-colors"
-                style={{ background: 'rgba(255,255,255,0.08)' }}
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100"
               >
                 {balanceVisible
-                  ? <Eye className="h-3.5 w-3.5 text-white/60" />
-                  : <EyeOff className="h-3.5 w-3.5 text-white/60" />}
+                  ? <Eye className="h-3 w-3 text-muted-foreground" />
+                  : <EyeOff className="h-3 w-3 text-muted-foreground" />}
               </button>
             </div>
-
-            {/* Center: balance */}
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-1">
-                Solde disponible
+            {loading ? (
+              <Skeleton className="h-7 w-28 rounded-lg mb-1" />
+            ) : (
+              <p className="text-xl font-extrabold tracking-tight text-foreground">
+                {balanceVisible ? balance.toLocaleString('fr-HT') : '•••••'}
               </p>
-              {loading ? (
-                <Skeleton className="h-8 w-40 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              ) : (
-                <p className="text-[2rem] font-bold tracking-tight leading-none text-white">
-                  {balanceVisible ? `${balance.toLocaleString('fr-HT')} HTG` : '••••• HTG'}
-                </p>
-              )}
-            </div>
+            )}
+            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Disponible</p>
+          </div>
 
-            {/* Bottom row: name + account number */}
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">Titulaire</p>
-                <p className="text-[13px] font-semibold text-white/80 tracking-wider uppercase">
-                  {profile?.full_name || user?.email?.split('@')[0] || '—'}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">N° Compte</p>
-                <p className="text-[11px] font-mono font-semibold text-white/60 tracking-widest">{cardNumber}</p>
-              </div>
+          {/* Solde bloqué */}
+          <div className="flex-1 rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-muted-foreground font-medium">En attente</p>
+              <span className="h-6 w-6 flex items-center justify-center rounded-full bg-amber-50">
+                <Clock className="h-3 w-3 text-amber-500" />
+              </span>
             </div>
+            {loading ? (
+              <Skeleton className="h-7 w-28 rounded-lg mb-1" />
+            ) : (
+              <p className="text-xl font-extrabold tracking-tight text-amber-500">
+                {balanceVisible ? (wallet?.blocked_balance ?? 0).toLocaleString('fr-HT') : '•••••'}
+              </p>
+            )}
+            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">HTG bloqués</p>
           </div>
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '100ms' }}>
+      {/* ── Action buttons ── */}
+      <div className="px-4 pb-4 stagger-item" style={{ animationDelay: '100ms' }}>
         <div className="flex gap-3">
           <button
             onClick={() => setTopupOpen(true)}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity pressable"
-            style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white bg-[#0A1628] hover:bg-[#0d1e38] transition-colors pressable shadow-sm"
           >
             <ArrowDownLeft className="h-4 w-4" />
-            Recharger
+            Dépôt
           </button>
-          <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors pressable shadow-sm">
+          <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-[#0A1628] border-2 border-[#0A1628] bg-transparent hover:bg-[#0A1628]/5 transition-colors pressable">
             <ArrowUpRight className="h-4 w-4" />
             Retirer
           </button>
         </div>
       </div>
 
+      {/* ── Raccourcis ── */}
+      <div className="px-4 pb-5 stagger-item" style={{ animationDelay: '130ms' }}>
+        <p className="text-sm font-semibold text-muted-foreground mb-3">Vos raccourcis</p>
+        <div className="flex gap-5 overflow-x-auto pb-1 scrollbar-none">
+          {SHORTCUTS.map(({ icon: Icon, label, to }) => (
+            <Link
+              key={to}
+              to={to}
+              className="flex flex-col items-center gap-2 min-w-[56px]"
+            >
+              <div className="h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors pressable">
+                <Icon className="h-6 w-6 text-foreground" />
+              </div>
+              <span className="text-[11px] text-center text-muted-foreground font-medium leading-tight">{label}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Stats mini cards */}
-      <div className="px-4 pb-5 grid grid-cols-2 gap-3 stagger-item" style={{ animationDelay: '140ms' }}>
+      <div className="px-4 pb-5 grid grid-cols-2 gap-3 stagger-item" style={{ animationDelay: '160ms' }}>
         <div className="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 mb-2">
             <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
