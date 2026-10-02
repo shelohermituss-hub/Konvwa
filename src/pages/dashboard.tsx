@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { haptics } from '@/lib/haptic'
 import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Plus, Eye, EyeOff, ArrowDownLeft, TrendingUp,
   Send, Ship, ShoppingBag, HelpCircle, Search, X, Package,
@@ -104,7 +103,7 @@ function ProductCard({ product }: { product: Product }) {
 }
 
 export function DashboardPage() {
-  const { profile, user } = useAuth()
+  const { user } = useAuth()
   const { t } = useI18n()
 
   const [wallet, setWallet]           = useState<WalletData | null>(null)
@@ -200,10 +199,6 @@ export function DashboardPage() {
     return () => observer.disconnect()
   }, [hasMore, loadingMore, loadingInitial, page, fetchPage])
 
-  const firstName = profile?.full_name?.split(' ')[0] || 'Client'
-  const initials  = profile?.full_name
-    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'U'
   const balance = wallet?.available_balance ?? 0
 
   // Split products into two offset columns
@@ -218,47 +213,46 @@ export function DashboardPage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <div className="shrink-0 bg-[#F4F5F7] pt-5 pb-3 px-4 space-y-3 border-b border-gray-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
 
-        {/* ── Greeting row ── */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 ring-2 ring-black/8 shadow-sm shrink-0">
-              <AvatarImage src={profile?.avatar_url || ''} />
-              <AvatarFallback className="bg-slate-100 text-slate-700 text-sm font-bold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-[11px] text-muted-foreground font-medium leading-none mb-0.5">{t('dash.greeting')}</p>
-              <h1 className="text-base font-bold tracking-tight text-foreground leading-none">{firstName} 👋</h1>
+        {/* ── Balance hero row ── */}
+        <div className="flex items-end justify-between">
+          <div>
+            {/* Big balance number + eye toggle */}
+            <div className="flex items-center gap-2.5">
+              {walletLoading ? (
+                <Skeleton className="h-12 w-44 rounded-xl" />
+              ) : (
+                <p className="text-5xl font-black tracking-tight text-foreground leading-none">
+                  {balanceVisible ? Math.floor(balance).toLocaleString('fr-HT') : '• • •'}
+                </p>
+              )}
+              <button
+                onClick={() => setBalanceVisible(v => !v)}
+                className="text-muted-foreground hover:text-foreground transition-colors pb-0.5"
+              >
+                {balanceVisible ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+              </button>
+            </div>
+
+            {/* Subtitle: label + currency badge + blocked */}
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-sm text-muted-foreground font-medium">Solde en</span>
+              <span className="bg-primary text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full tracking-wide">
+                HTG
+              </span>
+              {wallet && wallet.blocked_balance > 0 && balanceVisible && (
+                <span className="text-[11px] text-amber-500 font-semibold">
+                  +{wallet.blocked_balance.toLocaleString('fr-HT')} en attente
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Balance compact */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setBalanceVisible(v => !v)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {balanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-            </button>
-            {walletLoading ? (
-              <Skeleton className="h-6 w-20 rounded-lg" />
-            ) : (
-              <div className="text-right">
-                <p className="text-2xl font-black tracking-tight text-foreground leading-none">
-                  {balanceVisible ? Math.floor(balance).toLocaleString('fr-HT') : '•••••'}
-                  <span className="text-xs font-semibold text-muted-foreground ml-1">HTG</span>
-                </p>
-                {wallet && wallet.blocked_balance > 0 && balanceVisible && (
-                  <p className="text-[10px] text-amber-500 font-semibold leading-none mt-0.5">
-                    {wallet.blocked_balance.toLocaleString('fr-HT')} en attente
-                  </p>
-                )}
-              </div>
-            )}
+          {/* Right: flag + Nouveau button */}
+          <div className="flex items-center gap-2.5 mb-0.5">
+            <span className="text-3xl leading-none">🇭🇹</span>
             <Link to="/submit" onClick={handleTap}>
               <button
-                className="flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-white shadow-sm pressable"
+                className="flex items-center gap-1 rounded-full px-3.5 py-2 text-xs font-bold text-white shadow-sm pressable"
                 style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               >
                 <Plus className="h-3 w-3" />
