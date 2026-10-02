@@ -127,3 +127,96 @@ export function TimelineStep({ currentStatus, className }: TimelineStepProps) {
     </div>
   )
 }
+
+// ── Generic list: same look as the order timeline, with custom steps (e.g. cargo requests) ──
+
+export const TIMELINE_ICONS = {
+  creation:    IconCreation,
+  devis:       IconDevis,
+  acceptation: IconAcceptation,
+  paiement:    IconPaiement,
+  paye:        IconPaye,
+  achat:       IconAchat,
+  entrepot:    IconEntrepot,
+  navire:      IconNavire,
+  douane:      IconDouane,
+  arrivee:     IconArrivee,
+  livraison:   IconLivraison,
+  livre:       IconLivre,
+} as const
+
+export interface TimelineItem {
+  key: string
+  label: string
+  description: string
+  icon: string
+}
+
+export function TimelineList({
+  steps,
+  currentIndex,
+  className,
+}: {
+  steps: TimelineItem[]
+  currentIndex: number
+  className?: string
+}) {
+  const finished = currentIndex === steps.length - 1
+
+  return (
+    <div className={cn('space-y-0', className)}>
+      {steps.map((step, index) => {
+        const isCompleted = currentIndex >= 0 && (index < currentIndex || (finished && index === currentIndex))
+        const isCurrent = !finished && index === currentIndex
+        const isLast = index === steps.length - 1
+
+        return (
+          <div key={step.key} className="relative flex gap-4">
+            <div className="flex flex-col items-center shrink-0">
+              <div
+                className={cn(
+                  'relative z-10 flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all duration-200',
+                  isCompleted
+                    ? 'border-primary/30 bg-white shadow-sm'
+                    : isCurrent
+                    ? 'border-primary bg-white shadow-md ring-4 ring-primary/10'
+                    : 'border-border/40 bg-muted/30'
+                )}
+              >
+                <img
+                  src={step.icon}
+                  alt=""
+                  className={cn('h-6 w-6 object-contain', !isCompleted && !isCurrent ? 'opacity-30 grayscale' : '')}
+                />
+                {isCompleted && (
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary border-2 border-white">
+                    <svg viewBox="0 0 10 10" className="h-2.5 w-2.5 fill-white">
+                      <polyline points="1.5,5.5 3.5,7.5 8.5,2.5" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+              {!isLast && (
+                <div className={cn('w-0.5 flex-1 min-h-[28px] mt-1', index < currentIndex ? 'bg-primary/40' : 'bg-border/40')} />
+              )}
+            </div>
+
+            <div className={cn('flex-1 pb-5 pt-1.5', isLast && 'pb-1')}>
+              <p className={cn('font-semibold text-sm leading-tight', isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground/60')}>
+                {step.label}
+                {isCurrent && (
+                  <span className="ml-2 inline-flex items-center rounded-full bg-primary/12 text-primary text-[10px] font-bold px-2 py-0.5">
+                    En cours
+                  </span>
+                )}
+              </p>
+              <p className={cn('text-xs mt-0.5', isCompleted || isCurrent ? 'text-muted-foreground' : 'text-muted-foreground/40')}>
+                {step.description}
+              </p>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}

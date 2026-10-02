@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import {
-  ArrowLeft, Package, Clock, CheckCircle2, Wallet,
-  Ship, MapPin, Anchor, Box, Scale, Building2,
-  Eye, Tag, Download, Copy, Check,
+  ArrowLeft, Package, Clock, CheckCircle2,
+  MapPin, Box, Scale, Building2,
+  Download, Copy,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { downloadShippingPDF, type ShippingRequestForPDF } from '@/lib/pdf'
 import { ShippingQuotePanel, ShippingBalancePanel } from '@/components/shared/shipping-payment-panel'
+import { TimelineList } from '@/components/shared/timeline-step'
+import { cargoSteps, cargoActiveIndex, cargoStatusLabel } from '@/lib/cargo-tracking'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -33,16 +35,8 @@ interface ShippingRequest {
   origin_country: string | null
   destination_address: string | null
   shipment_id: string | null
-  shipment: {
-    id: string
-    batch_code: string
-    status: string
-    vessel_info: string | null
-    departure_date: string | null
-    estimated_arrival: string | null
-    actual_arrival: string | null
-    container_number: string | null
-  } | null
+  payment_plan: string | null
+  shipment: { id: string; status: string } | null
   warehouse: {
     id: string; code: string; name: string
     flag_emoji: string | null; country_code: string
@@ -60,149 +54,16 @@ interface ShippingRequest {
   } | null
 }
 
-// ── Step definitions ──────────────────────────────────────────────────────────
-
-const REQ_STEPS = [
-  { key: 'submitted', label: 'Demande soumise',  shortLabel: 'Soumis', Icon: Clock },
-  { key: 'reviewing', label: 'En examen',         shortLabel: 'Examen', Icon: Eye },
-  { key: 'received',  label: 'Colis reçus',       shortLabel: 'Reçus',  Icon: Box },
-  { key: 'quoted',    label: 'Devis officiel',    shortLabel: 'Devis',  Icon: Tag },
-  { key: 'deposit_paid', label: 'Acompte payé',    shortLabel: 'Acompte', Icon: Wallet },
-  { key: 'invoiced',  label: 'Payé',              shortLabel: 'Payé',   Icon: CheckCircle2 },
-] as const
-
-const STATUS_ORDER = ['submitted', 'reviewing', 'received', 'quoted', 'deposit_paid', 'invoiced']
-
-const SHIPMENT_STEPS = [
-  { key: 'pending',       label: 'En attente' },
-  { key: 'consolidating', label: 'Consolidation' },
-  { key: 'packed',        label: 'Emballé' },
-  { key: 'loaded',        label: 'Chargé' },
-  { key: 'sailing',       label: 'En mer' },
-  { key: 'arrived',       label: 'Arrivé' },
-  { key: 'cleared',       label: 'Dédouané' },
-  { key: 'distributing',  label: 'Distribution' },
-  { key: 'completed',     label: 'Livré' },
-]
+// ── Status presentation ───────────────────────────────────────────────────────
 
 const STATUS_BADGE: Record<string, string> = {
-  submitted: 'bg-amber-50 text-amber-700 border-amber-200',
-  reviewing: 'bg-sky-50 text-sky-700 border-sky-200',
-  received:  'bg-indigo-50 text-indigo-700 border-indigo-200',
-  quoted:    'bg-orange-50 text-orange-700 border-orange-200',
+  submitted:    'bg-amber-50 text-amber-700 border-amber-200',
+  reviewing:    'bg-sky-50 text-sky-700 border-sky-200',
+  received:     'bg-indigo-50 text-indigo-700 border-indigo-200',
+  quoted:       'bg-orange-50 text-orange-700 border-orange-200',
   deposit_paid: 'bg-teal-50 text-teal-700 border-teal-200',
-  invoiced:  'bg-emerald-50 text-emerald-700 border-emerald-200',
-  cancelled: 'bg-gray-100 text-gray-500 border-gray-200',
-}
-
-const STATUS_LABEL: Record<string, string> = {
-  submitted: 'Soumis',
-  reviewing: 'En examen',
-  received:  'Colis reçus',
-  quoted:    'Devis reçu',
-  deposit_paid: 'Acompte payé',
-  invoiced:  'Payé',
-  cancelled: 'Annulé',
-}
-
-// ── Horizontal quick-track bar ────────────────────────────────────────────────
-
-function ShipmentQuickTrack({ status }: { status: string }) {
-  const activeIndex = STATUS_ORDER.indexOf(status)
-  return (
-    <div className="overflow-x-auto scrollbar-hide">
-      <div className="flex items-center min-w-max px-1 py-2">
-        {REQ_STEPS.map((step, index) => {
-          const isDone     = index < activeIndex
-          const isActive   = index === activeIndex
-          const isUpcoming = index > activeIndex
-          const Icon       = step.Icon
-          return (
-            <div key={step.key} className="flex items-center">
-              <div className="flex flex-col items-center gap-1.5">
-                <div className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all',
-                  isDone    && 'border-primary bg-primary text-primary-foreground',
-                  isActive  && 'border-primary bg-primary/10 text-primary shadow-sm',
-                  isUpcoming && 'border-border bg-background text-muted-foreground',
-                )}>
-                  {isDone
-                    ? <Check className="h-4 w-4" strokeWidth={2.5} />
-                    : <Icon className={cn('h-3.5 w-3.5', isActive && 'animate-pulse')} />
-                  }
-                </div>
-                <span className={cn(
-                  'text-[10px] font-medium whitespace-nowrap',
-                  isDone    && 'text-primary',
-                  isActive  && 'text-primary font-semibold',
-                  isUpcoming && 'text-muted-foreground',
-                )}>
-                  {step.shortLabel}
-                </span>
-              </div>
-              {index < REQ_STEPS.length - 1 && (
-                <div className={cn(
-                  'h-0.5 w-8 mx-1 mb-5 rounded-full transition-colors',
-                  index < activeIndex ? 'bg-primary' : 'bg-border',
-                )} />
-              )}
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ── Vertical status tracker ───────────────────────────────────────────────────
-
-function VerticalStatusTracker({ status }: { status: string }) {
-  const activeIndex = STATUS_ORDER.indexOf(status)
-  return (
-    <div>
-      {REQ_STEPS.map((step, idx) => {
-        const isDone    = idx < activeIndex
-        const isCurrent = idx === activeIndex
-        const isLast    = idx === REQ_STEPS.length - 1
-        const Icon      = step.Icon
-        return (
-          <div key={step.key} className="flex gap-3">
-            <div className="flex flex-col items-center">
-              <div className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full shrink-0 border-2 transition-all z-10',
-                isDone    ? 'border-primary bg-primary text-white' :
-                isCurrent ? 'border-primary bg-primary/10 text-primary' :
-                            'border-border bg-background text-muted-foreground',
-              )}>
-                {isDone
-                  ? <Check className="h-4 w-4" strokeWidth={2.5} />
-                  : <Icon className="h-3.5 w-3.5" />
-                }
-              </div>
-              {!isLast && (
-                <div className={cn('w-0.5 flex-1 min-h-[28px] mt-0.5', isDone ? 'bg-primary' : 'bg-border/50')} />
-              )}
-            </div>
-            <div className={cn('flex-1 flex items-start justify-between', isLast ? 'pb-0' : 'pb-7')}>
-              <span className={cn(
-                'text-sm pt-0.5',
-                isDone    && 'font-semibold text-foreground',
-                isCurrent && 'font-bold text-foreground',
-                !isDone && !isCurrent && 'text-muted-foreground',
-              )}>
-                {step.label}
-              </span>
-              {isCurrent && (
-                <span className="mt-0.5 bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0">
-                  Actuel
-                </span>
-              )}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
+  invoiced:     'bg-emerald-50 text-emerald-700 border-emerald-200',
+  cancelled:    'bg-gray-100 text-gray-500 border-gray-200',
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -226,14 +87,14 @@ export function ShipmentDetailPage() {
           estimated_cbm, estimated_kg, actual_cbm, actual_kg,
           quoted_amount_htg, actual_amount_htg,
           quoted_at, received_at, invoiced_at, package_count,
-          origin_country, destination_address, shipment_id,
+          origin_country, destination_address, shipment_id, payment_plan,
           warehouse:warehouses(
             id, code, name, flag_emoji, country_code,
             address_line1, address_line2, address_line3,
             city, state, postal_code, contact_info, instructions
           ),
           product_rate_category:product_rate_categories(id, name, slug, rate_multiplier),
-          shipment:shipments(id, batch_code, status, vessel_info, departure_date, estimated_arrival, actual_arrival, container_number)
+          shipment:shipments(id, status)
         `)
         .eq('id', id)
         .eq('user_id', user.id)
@@ -299,9 +160,11 @@ export function ShipmentDetailPage() {
               <h1 className="text-base font-bold text-foreground">Demande d'expédition</h1>
               <span className={cn(
                 'rounded-full px-3 py-0.5 text-xs font-semibold border shrink-0',
-                STATUS_BADGE[req.status] ?? 'bg-gray-100 text-gray-500 border-gray-200'
+                (req.shipment && (req.status === 'invoiced' || req.status === 'deposit_paid') && cargoStatusLabel(req) !== (req.status === 'invoiced' ? 'Payé' : 'Acompte payé'))
+                  ? 'bg-sky-50 text-sky-700 border-sky-200'
+                  : STATUS_BADGE[req.status] ?? 'bg-gray-100 text-gray-500 border-gray-200'
               )}>
-                {STATUS_LABEL[req.status] ?? req.status}
+                {cargoStatusLabel(req)}
               </span>
             </div>
             <p className="text-xs text-muted-foreground font-mono">{req.id.slice(0, 8).toUpperCase()}</p>
@@ -320,11 +183,6 @@ export function ShipmentDetailPage() {
       </div>
 
       <div className="px-4 pt-4 space-y-3">
-
-        {/* Horizontal quick-track bar */}
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm px-4 py-3">
-          <ShipmentQuickTrack status={req.status} />
-        </div>
 
         {/* Contextual banners */}
         {(req.status === 'submitted' || req.status === 'reviewing') && (
@@ -350,8 +208,10 @@ export function ShipmentDetailPage() {
             <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
             <p className="text-sm text-emerald-800 font-medium">
               Paiement confirmé —{' '}
-              {(req.actual_amount_htg ?? req.quoted_amount_htg ?? 0).toLocaleString('fr-HT')} HTG.
-              Votre cargaison sera assignée à une prochaine expédition.
+              {(req.actual_amount_htg ?? req.quoted_amount_htg ?? 0).toLocaleString('fr-HT')} HTG.{' '}
+              {req.shipment
+                ? <>Statut actuel de votre cargaison : <strong>{cargoStatusLabel(req)}</strong>.</>
+                : 'Votre cargaison sera assignée à une prochaine expédition.'}
             </p>
           </div>
         )}
@@ -539,10 +399,15 @@ export function ShipmentDetailPage() {
           </div>
         </div>
 
-        {/* Vertical status tracker */}
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-4">Suivi de la demande</p>
-          <VerticalStatusTracker status={req.status} />
+        {/* Tracking — same statuses as order tracking */}
+        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-bold text-foreground">Suivi de la cargaison</p>
+          </div>
+          <div className="px-4 py-4">
+            <TimelineList steps={cargoSteps(req)} currentIndex={cargoActiveIndex(req)} />
+          </div>
         </div>
 
         {/* Notes */}
@@ -552,87 +417,6 @@ export function ShipmentDetailPage() {
             <p className="text-sm text-foreground leading-relaxed">{req.notes}</p>
           </div>
         )}
-
-        {/* Shipment tracking */}
-        {req.shipment && (() => {
-          const shipmentStepIdx = SHIPMENT_STEPS.findIndex(s => s.key === req.shipment!.status)
-          return (
-            <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Expédition</p>
-                <div className="flex items-center gap-2">
-                  <Ship className="h-3.5 w-3.5 text-primary" />
-                  <span className="font-mono text-sm font-bold">{req.shipment!.batch_code}</span>
-                </div>
-              </div>
-              <div className="px-4 py-4 space-y-4">
-                {(req.shipment!.departure_date || req.shipment!.estimated_arrival) && (
-                  <div className="flex gap-6">
-                    {req.shipment!.departure_date && (
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">Départ</p>
-                        <p className="text-sm font-semibold">
-                          {new Date(req.shipment!.departure_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                        </p>
-                      </div>
-                    )}
-                    {req.shipment!.estimated_arrival && (
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">Arrivée estimée</p>
-                        <p className="text-sm font-semibold">
-                          {new Date(req.shipment!.estimated_arrival).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {req.shipment!.vessel_info && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Anchor className="h-3.5 w-3.5" />
-                    {req.shipment!.vessel_info}
-                  </div>
-                )}
-                <div className="space-y-2.5">
-                  {SHIPMENT_STEPS.map((step, idx) => {
-                    const isDone    = idx < shipmentStepIdx
-                    const isCurrent = idx === shipmentStepIdx
-                    return (
-                      <div key={step.key} className="flex items-center gap-3">
-                        <div className={cn(
-                          'flex h-6 w-6 items-center justify-center rounded-full shrink-0',
-                          isDone    ? 'bg-primary text-white' :
-                          isCurrent ? 'bg-primary/15 text-primary ring-2 ring-primary/25' :
-                                      'bg-muted text-muted-foreground'
-                        )}>
-                          {isDone
-                            ? <Check className="h-3 w-3" strokeWidth={2.5} />
-                            : <span className="text-[9px] font-bold">{idx + 1}</span>
-                          }
-                        </div>
-                        <div className="flex-1 flex items-center justify-between">
-                          <span className={cn('text-xs', isDone || isCurrent ? 'font-semibold text-foreground' : 'text-muted-foreground')}>
-                            {step.label}
-                          </span>
-                          {isCurrent && (
-                            <span className="bg-primary/10 text-primary text-[9px] px-2 py-0.5 rounded-full font-semibold">
-                              Actuel
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-                {req.shipment!.container_number && (
-                  <div className="rounded-xl bg-muted/40 px-3 py-2 flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">N° conteneur</p>
-                    <p className="text-sm font-mono font-semibold">{req.shipment!.container_number}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )
-        })()}
 
         {/* Timeline */}
         <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">

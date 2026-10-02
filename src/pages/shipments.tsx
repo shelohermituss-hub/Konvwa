@@ -6,8 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  Ship, Package, MapPin, Calendar, Anchor, CheckCircle2, Clock, Truck,
-  ChevronDown, ChevronUp, Plus, Loader2, Copy, Check,
+  Package, MapPin, ChevronUp, Plus, Loader2, Copy, Check,
   Tag, Building2, AlertCircle, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
@@ -16,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
 import IconNavire from 'flat-color-icons/svg/in_transit.svg'
+import { cargoStatusLabel } from '@/lib/cargo-tracking'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,50 +64,13 @@ interface ShippingRequest {
   origin_country: string | null
   destination_address: string | null
   shipment_id: string | null
-  shipment: { id: string; batch_code: string; status: string; vessel_info: string | null; departure_date: string | null; estimated_arrival: string | null; actual_arrival: string | null; container_number: string | null } | null
+  payment_plan: string | null
+  shipment: { id: string; status: string } | null
   warehouse: Warehouse | null
   product_rate_category: ProductRateCategory | null
 }
 
-interface MyShipment {
-  shipment_id: string
-  batch_code: string
-  status: string
-  vessel_info: string | null
-  departure_date: string | null
-  estimated_arrival: string | null
-  actual_arrival: string | null
-  container_number: string | null
-  order_id: string
-  order_tracking: string
-  product_name: string
-}
-
 // ── Constants ────────────────────────────────────────────────────────────────
-
-const SHIPMENT_STEPS = [
-  { key: 'pending',       label: 'En attente',   icon: Clock },
-  { key: 'consolidating', label: 'Consolidation', icon: Package },
-  { key: 'packed',        label: 'Emballé',       icon: Package },
-  { key: 'loaded',        label: 'Chargé',        icon: Anchor },
-  { key: 'sailing',       label: 'En mer',        icon: Ship },
-  { key: 'arrived',       label: 'Arrivé',        icon: MapPin },
-  { key: 'cleared',       label: 'Dédouané',      icon: CheckCircle2 },
-  { key: 'distributing',  label: 'Distribution',  icon: Truck },
-  { key: 'completed',     label: 'Livré',         icon: CheckCircle2 },
-]
-
-const SHIPMENT_STATUS_COLOR: Record<string, string> = {
-  pending:       'bg-muted text-muted-foreground',
-  consolidating: 'bg-amber-50 text-amber-700',
-  packed:        'bg-amber-50 text-amber-700',
-  loaded:        'bg-sky-50 text-sky-700',
-  sailing:       'bg-primary/10 text-primary',
-  arrived:       'bg-emerald-50 text-emerald-700',
-  cleared:       'bg-emerald-50 text-emerald-700',
-  distributing:  'bg-emerald-50 text-emerald-700',
-  completed:     'bg-emerald-50 text-emerald-700',
-}
 
 const REQ_STATUS: Record<string, { label: string; color: string }> = {
   submitted: { label: 'En attente',    color: 'bg-amber-50 text-amber-700' },
@@ -209,113 +172,12 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
   )
 }
 
-// ── ShipmentCard ─────────────────────────────────────────────────────────────
-
-function ShipmentCard({ shipment }: { shipment: MyShipment }) {
-  const [expanded, setExpanded] = useState(false)
-  const stepIdx = SHIPMENT_STEPS.findIndex(s => s.key === shipment.status)
-
-  return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-      <div
-        className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/20 transition-colors"
-        onClick={() => setExpanded(e => !e)}
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 shrink-0">
-          <img src={IconNavire} alt="" className="h-8 w-8 object-contain" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-bold text-sm font-mono">{shipment.batch_code}</p>
-            <span className={cn(
-              'rounded-full text-[10px] px-2 py-0.5 font-semibold',
-              SHIPMENT_STATUS_COLOR[shipment.status] ?? 'bg-muted text-muted-foreground'
-            )}>
-              {SHIPMENT_STEPS.find(s => s.key === shipment.status)?.label ?? shipment.status}
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground truncate mt-0.5">{shipment.product_name}</p>
-          {shipment.vessel_info && (
-            <p className="text-xs text-muted-foreground/70 mt-0.5 flex items-center gap-1">
-              <Anchor className="h-3 w-3" />
-              {shipment.vessel_info}
-            </p>
-          )}
-        </div>
-        {expanded
-          ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
-          : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
-      </div>
-
-      {expanded && (
-        <div className="px-4 pb-5 pt-2 border-t border-border">
-          <div className="flex gap-4 mb-5 text-xs">
-            {shipment.departure_date && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Calendar className="h-3.5 w-3.5" />
-                Départ : {new Date(shipment.departure_date).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
-              </div>
-            )}
-            {shipment.estimated_arrival && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5" />
-                Arrivée : {new Date(shipment.estimated_arrival).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short' })}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            {SHIPMENT_STEPS.map((step, idx) => {
-              const Icon = step.icon
-              const isDone    = idx < stepIdx
-              const isCurrent = idx === stepIdx
-              return (
-                <div key={step.key} className="flex items-center gap-3">
-                  <div className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-full shrink-0',
-                    isDone    ? 'bg-primary text-primary-foreground' :
-                    isCurrent ? 'bg-primary/20 text-primary ring-2 ring-primary/30' :
-                                'bg-muted text-muted-foreground'
-                  )}>
-                    {isDone ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-3.5 w-3.5" />}
-                  </div>
-                  <div className="flex-1 flex items-center justify-between">
-                    <span className={cn('text-sm', isDone || isCurrent ? 'font-medium' : 'text-muted-foreground')}>
-                      {step.label}
-                    </span>
-                    {isCurrent && (
-                      <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold">
-                        Actuel
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          <div className="mt-4 rounded-xl bg-muted/40 p-3 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground">Code commande</p>
-              <p className="text-sm font-mono font-semibold">{shipment.order_tracking}</p>
-            </div>
-            {shipment.container_number && (
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Conteneur</p>
-                <p className="text-sm font-mono font-semibold">{shipment.container_number}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ── ShippingRequestCard ───────────────────────────────────────────────────────
 
 function ShippingRequestCard({ req }: { req: ShippingRequest }) {
-  const s = REQ_STATUS[req.status] ?? { label: req.status, color: 'bg-muted text-muted-foreground' }
+  const base = REQ_STATUS[req.status] ?? { label: req.status, color: 'bg-muted text-muted-foreground' }
+  const tracked = !!req.shipment && (req.status === 'invoiced' || req.status === 'deposit_paid') && cargoStatusLabel(req) !== base.label
+  const s = tracked ? { label: cargoStatusLabel(req), color: 'bg-sky-50 text-sky-700' } : base
   const displayAmount = req.actual_amount_htg ?? req.quoted_amount_htg
   const isQuoted      = req.status === 'quoted'
   const isInvoiced    = req.status === 'invoiced'
@@ -760,26 +622,16 @@ function WarehousesSection({ warehouses }: { warehouses: Warehouse[] }) {
 
 export function ShipmentsPage() {
   const { user } = useAuth()
-  const [shipments,        setShipments]        = useState<MyShipment[]>([])
   const [shippingRequests, setShippingRequests] = useState<ShippingRequest[]>([])
   const [warehouses,       setWarehouses]       = useState<Warehouse[]>([])
   const [loading,          setLoading]          = useState(true)
-  const [tab,              setTab]              = useState<'cargaisons' | 'expeditions'>('cargaisons')
   const [showForm,         setShowForm]         = useState(false)
 
   const load = useCallback(async () => {
     if (!user) return
     setLoading(true)
 
-    const [shipmentsRes, requestsRes, warehousesRes] = await Promise.all([
-      supabase
-        .from('order_shipments')
-        .select(`
-          order_id,
-          orders!inner(tracking_code, user_id, quotes(product_requests(product_name))),
-          shipments(id, batch_code, status, vessel_info, departure_date, estimated_arrival, actual_arrival, container_number)
-        `)
-        .eq('orders.user_id', user.id),
+    const [requestsRes, warehousesRes] = await Promise.all([
       supabase
         .from('product_requests')
         .select(`
@@ -787,10 +639,10 @@ export function ShipmentsPage() {
           estimated_cbm, estimated_kg, actual_cbm, actual_kg,
           quoted_amount_htg, actual_amount_htg, quoted_at, received_at, invoiced_at,
           payment_due_at, paid_amount_htg,
-          package_count, origin_country, destination_address, shipment_id,
+          package_count, origin_country, destination_address, shipment_id, payment_plan,
           warehouse:warehouses(id, code, name, country_code, flag_emoji, address_line1, address_line2, address_line3, city, state, postal_code, contact_info, instructions, for_category),
           product_rate_category:product_rate_categories(id, name, slug, rate_multiplier, description),
-          shipment:shipments(id, batch_code, status, vessel_info, departure_date, estimated_arrival, actual_arrival, container_number)
+          shipment:shipments(id, status)
         `)
         .eq('user_id', user.id)
         .eq('request_type', 'shipping')
@@ -798,22 +650,6 @@ export function ShipmentsPage() {
         .order('created_at', { ascending: false }),
       supabase.from('warehouses').select('*').eq('active', true).order('sort_order'),
     ])
-
-    if (shipmentsRes.data) {
-      setShipments(shipmentsRes.data.map((d: any) => ({
-        shipment_id:       d.shipments?.id || '',
-        batch_code:        d.shipments?.batch_code || '',
-        status:            d.shipments?.status || 'pending',
-        vessel_info:       d.shipments?.vessel_info,
-        departure_date:    d.shipments?.departure_date,
-        estimated_arrival: d.shipments?.estimated_arrival,
-        actual_arrival:    d.shipments?.actual_arrival,
-        container_number:  d.shipments?.container_number,
-        order_id:          d.order_id,
-        order_tracking:    d.orders?.tracking_code || '',
-        product_name:      d.orders?.quotes?.product_requests?.product_name || 'Produit',
-      })))
-    }
 
     if (requestsRes.data) {
       setShippingRequests(requestsRes.data as unknown as ShippingRequest[])
@@ -828,28 +664,6 @@ export function ShipmentsPage() {
 
   useEffect(() => { load() }, [load])
 
-  // Expéditions tab: order_shipments batches + shipping-request-linked batches (deduplicated)
-  const cargoLinkedShipments: MyShipment[] = shippingRequests
-    .filter(r => r.shipment != null)
-    .map(r => ({
-      shipment_id:       r.shipment!.id,
-      batch_code:        r.shipment!.batch_code,
-      status:            r.shipment!.status,
-      vessel_info:       r.shipment!.vessel_info,
-      departure_date:    r.shipment!.departure_date,
-      estimated_arrival: r.shipment!.estimated_arrival,
-      actual_arrival:    r.shipment!.actual_arrival,
-      container_number:  r.shipment!.container_number,
-      order_id:          '',
-      order_tracking:    '',
-      product_name:      r.product_rate_category?.name ?? 'Cargaison',
-    }))
-  const allBatchIds = new Set(shipments.map(s => s.shipment_id))
-  const mergedShipments = [
-    ...shipments,
-    ...cargoLinkedShipments.filter(s => !allBatchIds.has(s.shipment_id)),
-  ]
-
   const hasQuoted = shippingRequests.some(r => r.status === 'quoted')
 
   return (
@@ -859,7 +673,7 @@ export function ShipmentsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Expéditions</h1>
           <p className="text-sm text-muted-foreground">
-            {shippingRequests.length} cargaison{shippingRequests.length !== 1 ? 's' : ''} · {mergedShipments.length} expédition{mergedShipments.length !== 1 ? 's' : ''}
+            {shippingRequests.length} cargaison{shippingRequests.length !== 1 ? 's' : ''}
           </p>
         </div>
         <button
@@ -895,7 +709,7 @@ export function ShipmentsPage() {
       )}
 
       {/* Empty CTA */}
-      {!loading && shippingRequests.length === 0 && shipments.length === 0 && (
+      {!loading && shippingRequests.length === 0 && (
         <div className="px-4 mb-4">
           <button
             onClick={() => setShowForm(true)}
@@ -915,69 +729,20 @@ export function ShipmentsPage() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="px-4 pb-4 flex gap-2">
-        {([
-          { key: 'cargaisons',  label: 'Cargaisons',   count: shippingRequests.length },
-          { key: 'expeditions', label: 'Expéditions',   count: mergedShipments.length  },
-        ] as const).map(({ key, label, count }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={cn(
-              'flex-1 rounded-full py-2 text-sm font-semibold transition-colors border flex items-center justify-center gap-1.5',
-              tab === key
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background text-muted-foreground border-border'
-            )}
-          >
-            {label}
-            {count > 0 && (
-              <span className={cn(
-                'text-[10px] font-bold px-1.5 py-0.5 rounded-full',
-                tab === key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
-              )}>
-                {count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
+      {/* Cargo requests */}
       <div className="px-4 pb-6 space-y-3">
         {loading ? (
           [1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)
-        ) : tab === 'cargaisons' ? (
-          <>
-            {shippingRequests.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
-                <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
-                <p className="font-semibold text-muted-foreground">Aucune demande</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">Appuyez sur + pour créer une demande</p>
-              </div>
-            ) : (
-              shippingRequests.map(r => (
-                <ShippingRequestCard key={r.id} req={r} />
-              ))
-            )}
-          </>
+        ) : shippingRequests.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
+            <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
+            <p className="font-semibold text-muted-foreground">Aucune demande</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Appuyez sur + pour créer une demande</p>
+          </div>
         ) : (
-          <>
-            {mergedShipments.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
-                <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
-                <p className="font-semibold text-muted-foreground">Aucune expédition assignée</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">
-                  Votre cargaison sera assignée à un batch par notre équipe
-                </p>
-              </div>
-            ) : (
-              mergedShipments.map(s => (
-                <ShipmentCard key={`${s.shipment_id}-${s.order_id}`} shipment={s} />
-              ))
-            )}
-          </>
+          shippingRequests.map(r => (
+            <ShippingRequestCard key={r.id} req={r} />
+          ))
         )}
       </div>
 

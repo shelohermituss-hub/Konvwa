@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
+import { shipmentStatusLabel } from '@/lib/cargo-tracking'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -58,6 +59,7 @@ interface ShippingRequest {
   shipment_id: string | null
   admin_notes: string | null
   user_id: string
+  shipment: { batch_code: string; status: string } | null
   profiles: { full_name: string | null; phone: string | null } | null
   warehouse: {
     id: string; code: string; name: string; flag_emoji: string | null
@@ -496,7 +498,7 @@ function AdminActionSheet({
                   <SelectItem value="">— Aucun batch —</SelectItem>
                   {batches.map(b => (
                     <SelectItem key={b.id} value={b.id}>
-                      {b.batch_code} · {b.status}
+                      {b.batch_code} · {shipmentStatusLabel(b.status)}
                       {b.vessel_info ? ` · ${b.vessel_info}` : ''}
                     </SelectItem>
                   ))}
@@ -646,6 +648,12 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
                 {request.estimated_kg != null ? `${request.estimated_kg} kg` : '—'} / {request.actual_kg != null ? `${request.actual_kg} kg` : '—'}
               </p>
             </div>
+            {request.shipment && (
+              <div>
+                <p className="text-muted-foreground">Expédition (lot {request.shipment.batch_code})</p>
+                <p className="font-medium text-sky-700">{shipmentStatusLabel(request.shipment.status)}</p>
+              </div>
+            )}
             {request.payment_due_at && (s === 'quoted' || s === 'received') && (
               <div>
                 <p className="text-muted-foreground">Échéance de paiement</p>
@@ -740,7 +748,8 @@ export function AdminShippingRequestsPage() {
         payment_due_at, paid_amount_htg, late_fee_htg,
         user_id,
         warehouse:warehouses(id, code, name, flag_emoji, country_code),
-        product_rate_category:product_rate_categories(id, name, slug, rate_multiplier)
+        product_rate_category:product_rate_categories(id, name, slug, rate_multiplier),
+        shipment:shipments(batch_code, status)
       `)
       .eq('request_type', 'shipping')
       .order('created_at', { ascending: false })

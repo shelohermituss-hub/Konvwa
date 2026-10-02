@@ -18,15 +18,13 @@ export type OrderStatus =
   | 'cancelled'
 
 export type ShipmentStatus =
-  | 'pending'
-  | 'consolidating'
-  | 'packed'
-  | 'loaded'
-  | 'sailing'
-  | 'arrived'
-  | 'cleared'
-  | 'distributing'
-  | 'completed'
+  | 'in_china_warehouse'
+  | 'shipped'
+  | 'in_transit'
+  | 'arrived_haiti'
+  | 'customs_processing'
+  | 'out_for_delivery'
+  | 'delivered'
 
 export type QuoteStatus = 'pending' | 'accepted' | 'rejected' | 'expired'
 
