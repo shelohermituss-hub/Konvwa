@@ -328,9 +328,17 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
   const acceptTerms = watch('acceptTerms')
 
   async function onSubmit(values: RegisterForm) {
-    const { error } = await signUp(values.email, values.password, values.fullName, values.phone)
+    const { error, needsConfirmation } = await signUp(values.email, values.password, values.fullName, values.phone)
     if (error) {
       toast.error('Inscription échouée', { description: error.message })
+      return
+    }
+    if (needsConfirmation) {
+      toast.success('Compte créé !', {
+        description: `Un e-mail de confirmation a été envoyé à ${values.email}. Cliquez sur le lien pour activer votre compte.`,
+        duration: 10000,
+      })
+      onSwitch()
       return
     }
     const { data: { user } } = await supabase.auth.getUser()

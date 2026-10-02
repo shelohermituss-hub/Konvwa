@@ -19,7 +19,7 @@ interface AuthContextType {
   session: Session | null
   profile: Profile | null
   loading: boolean
-  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null }>
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null; needsConfirmation?: boolean }>
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -114,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           full_name: fullName,
           phone: phone || null,
@@ -123,6 +124,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       return { error: new Error(error.message) }
+    }
+
+    // No session means "Confirm email" is on: the profile/wallet are created by the DB trigger
+    if (!data.session) {
+      return { error: null, needsConfirmation: true }
     }
 
     // Ensure profile + wallet exist (trigger may not have fired yet)
