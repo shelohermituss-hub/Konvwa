@@ -708,7 +708,7 @@ function WarehousesSection({ warehouses }: { warehouses: Warehouse[] }) {
         className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 flex items-center gap-3 transition-colors hover:bg-muted/20"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-          <Building2 className="h-5 w-5 text-primary" />
+          <img src="/icon-warehouse.png" alt="Entrepôt" className="h-6 w-6 object-contain" />
         </div>
         <div className="flex-1 text-left min-w-0">
           <p className="text-sm font-bold">Adresses de nos entrepôts</p>
