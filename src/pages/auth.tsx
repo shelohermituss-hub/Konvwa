@@ -163,6 +163,59 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
   )
 }
 
+// ── Social sign-in (Google / Facebook via Supabase OAuth) ─────────────────────
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
+      <path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.27-2.09 3.57-5.17 3.57-8.81z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.87-3c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.1A12 12 0 0 0 12 24z" />
+      <path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.37-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.1z" />
+      <path fill="#EA4335" d="M12 4.75c1.76 0 3.34.61 4.59 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l4 3.1C6.22 6.86 8.87 4.75 12 4.75z" />
+    </svg>
+  )
+}
+
+function FacebookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
+      <path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.88v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z" />
+    </svg>
+  )
+}
+
+function SocialButtons() {
+  const [loading, setLoading] = useState<'google' | 'facebook' | null>(null)
+
+  async function signInWith(provider: 'google' | 'facebook') {
+    setLoading(provider)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    })
+    if (error) {
+      setLoading(null)
+      toast.error('Connexion impossible', {
+        description: `Connexion ${provider === 'google' ? 'Google' : 'Facebook'} indisponible pour le moment.`,
+      })
+    }
+  }
+
+  const base = 'flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-foreground transition-colors hover:bg-gray-50 active:scale-[0.99] disabled:opacity-60'
+
+  return (
+    <div className="space-y-2.5">
+      <button type="button" onClick={() => signInWith('google')} disabled={loading !== null} className={base}>
+        {loading === 'google' ? <Loader2 className="h-5 w-5 animate-spin" /> : <GoogleIcon />}
+        Continuer avec Google
+      </button>
+      <button type="button" onClick={() => signInWith('facebook')} disabled={loading !== null} className={base}>
+        {loading === 'facebook' ? <Loader2 className="h-5 w-5 animate-spin" /> : <FacebookIcon />}
+        Continuer avec Facebook
+      </button>
+    </div>
+  )
+}
+
 // ── Tab switcher (login / register only) ──────────────────────────────────────
 function AuthTabs({ view, onChange }: { view: 'login' | 'register'; onChange: (v: 'login' | 'register') => void }) {
   return (
@@ -209,6 +262,9 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
         <h2 className="text-2xl font-bold tracking-tight">Bon retour !</h2>
         <p className="text-sm text-muted-foreground mt-1">Connectez-vous à votre compte KONVWA</p>
       </div>
+
+      <SocialButtons />
+      <Divider />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Field id="l-email" label="Adresse e-mail" error={errors.email?.message}>
@@ -303,6 +359,9 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
         <h2 className="text-2xl font-bold tracking-tight">Créer un compte</h2>
         <p className="text-sm text-muted-foreground mt-1">Rejoignez KONVWA gratuitement aujourd'hui</p>
       </div>
+
+      <SocialButtons />
+      <Divider />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Field id="r-name" label="Nom complet" error={errors.fullName?.message}>
