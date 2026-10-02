@@ -270,70 +270,50 @@ export function HomePage() {
           </p>
         </div>
 
-        {/* Right: brand logos + devis mockup */}
-        <div className="relative mx-auto flex w-full max-w-sm flex-col gap-4">
+        {/* Right: hero lifestyle image */}
+        <div className="relative mx-auto w-full max-w-sm">
           <div
-            className="absolute inset-0 -z-10 rounded-[2rem] blur-3xl opacity-20 pointer-events-none"
+            className="absolute inset-0 -z-10 rounded-[2rem] blur-3xl opacity-25 pointer-events-none"
             aria-hidden
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           />
 
-          {/* Brand logos card */}
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
-            <div className="border-b border-border px-4 py-2.5">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Boutiques supportées
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-0 divide-x divide-border">
-              {BRANDS.map((brand) => (
-                <div
-                  key={brand.name}
-                  className={`flex flex-col items-center justify-center gap-2 px-3 py-5 ${brand.bg}`}
-                >
-                  <img
-                    src={brand.logo}
-                    alt={brand.name}
-                    className="h-8 w-auto max-w-[64px] object-contain"
-                  />
-                  <span className="text-[10px] font-semibold text-muted-foreground">
-                    {brand.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <div className="relative overflow-hidden rounded-3xl shadow-2xl ring-1 ring-white/10">
+            <img
+              src={IMAGES.woman}
+              alt="Colis importé livré en Haïti"
+              className="aspect-[3/4] w-full object-cover"
+            />
 
-          {/* Devis mockup card */}
-          <div className="rounded-3xl border border-border bg-card p-4 shadow-xl">
-            <div className="mb-3 flex items-center gap-1.5">
-              <div className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
-              <div className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
-              <div className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-              <span className="ml-2 text-xs font-medium text-muted-foreground">Votre devis</span>
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+
+            {/* Payment badge — top right */}
+            <div className="absolute top-4 right-4 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 shadow-lg backdrop-blur-sm">
+              <span className="text-[11px] font-bold text-gray-800">MonCash · NatCash</span>
             </div>
-            <div className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2">
-              <img src="/brands/alibaba.png" alt="Alibaba" className="h-4 w-auto object-contain" />
-              <span className="text-xs text-muted-foreground truncate">alibaba.com/product/…</span>
-            </div>
-            <div className="space-y-2">
-              {[
-                { label: 'Produit', price: '3 250 HTG' },
-                { label: 'Service KONVWA', price: '350 HTG' },
-                { label: 'Expédition + douane', price: '890 HTG' },
-              ].map((line) => (
-                <div key={line.label} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{line.label}</span>
-                  <span className="font-medium text-foreground">{line.price}</span>
-                </div>
-              ))}
-            </div>
-            <div
-              className="mt-3 flex items-center justify-between rounded-xl px-3 py-2.5"
-              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-            >
-              <span className="text-sm font-medium text-white">Total estimé</span>
-              <span className="text-sm font-bold text-white">4 490 HTG</span>
+
+            {/* Brand logos — bottom overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-5">
+              <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-widest text-white/60">
+                Commandez depuis
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {BRANDS.map((brand) => (
+                  <div
+                    key={brand.name}
+                    className="flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-white/20"
+                    style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)' }}
+                  >
+                    <img
+                      src={brand.logo}
+                      alt={brand.name}
+                      className="h-3.5 w-auto max-w-[26px] object-contain"
+                    />
+                    <span className="text-[11px] font-semibold text-white">{brand.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
