@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import {
   LayoutDashboard, ShoppingBag, Ship, Bell, User, Wallet, HelpCircle, Send,
   Globe, ChevronDown, Check, LogOut, Settings, Activity, CreditCard,
-  ShoppingCart, Clock, Package, AlertCircle, Info,
+  ShoppingCart, Clock, Package, AlertCircle, Info, Download,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n, type Lang } from '@/lib/i18n-context'
@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { PwaExperience } from '@/components/shared/pwa-experience'
+import { isStandalone, requestInstall } from '@/lib/pwa'
 import { formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
 
@@ -188,6 +189,7 @@ function ProfileMenu() {
   const { profile, user, signOut } = useAuth()
   const navigate = useNavigate()
   const { t } = useI18n()
+  const [canInstall] = useState(() => !isStandalone())
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -232,6 +234,15 @@ function ProfileMenu() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium text-sm">{t('billing.title')}</span>
           </DropdownMenuItem>
+          {canInstall && (
+            <DropdownMenuItem
+              className="rounded-xl cursor-pointer px-3 py-2.5 gap-3"
+              onSelect={() => { void requestInstall() }}
+            >
+              <Download className="h-4 w-4 text-primary" />
+              <span className="font-medium text-sm">Installer l'application</span>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator className="mx-2 my-1" />
           <DropdownMenuItem
             className="rounded-xl cursor-pointer px-3 py-2.5 gap-3 text-destructive focus:text-destructive focus:bg-destructive/8"

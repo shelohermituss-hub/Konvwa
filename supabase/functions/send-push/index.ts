@@ -12,6 +12,12 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const json = (data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
+
+// Subscriptions the push service will never accept again (deleted, expired, or created with a different VAPID key)
+const DEAD_STATUSES = [401, 403, 404, 410]
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS })
@@ -24,12 +30,11 @@ serve(async (req) => {
     const SUPABASE_URL      = Deno.env.get('SUPABASE_URL')      ?? ''
     const SERVICE_ROLE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-    console.log(`[send-push] VAPID_PUBLIC_KEY set=${!!VAPID_PUBLIC_KEY} VAPID_PRIVATE_KEY set=${!!VAPID_PRIVATE_KEY} SERVICE_ROLE_KEY set=${!!SERVICE_ROLE_KEY}`)
+    // The public key is not secret; its prefix lets us check it matches the one the app uses
+    console.log(`[send-push] vapid_public_prefix=${VAPID_PUBLIC_KEY.slice(0, 12)} private_set=${!!VAPID_PRIVATE_KEY} service_role_set=${!!SERVICE_ROLE_KEY}`)
 
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-      return new Response(JSON.stringify({ error: 'VAPID keys not configured' }), {
-        status: 500, headers: { ...CORS, 'Content-Type': 'application/json' },
-      })
+      return json({ error: 'VAPID keys not configured' }, 500)
     }
 
     webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
@@ -44,12 +49,23 @@ serve(async (req) => {
     } = await req.json()
 
     if (!body.user_id || !body.title) {
-      return new Response(JSON.stringify({ error: 'user_id and title required' }), {
-        status: 400, headers: { ...CORS, 'Content-Type': 'application/json' },
-      })
+      return json({ error: 'user_id and title required' }, 400)
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+
+    // Only push what was really written to the notifications table (the endpoint is public)
+    const { data: real } = await admin
+      .from('notifications')
+      .select('id')
+      .eq('user_id', body.user_id)
+      .eq('title', body.title)
+      .gt('created_at', new Date(Date.now() - 5 * 60_000).toISOString())
+      .limit(1)
+    if (!real?.length) {
+      console.warn(`[send-push] rejected: no recent notification for user=${body.user_id}`)
+      return json({ error: 'No matching notification' }, 403)
+    }
 
     const { data: subs, error: subErr } = await admin
       .from('push_subscriptions')
@@ -58,9 +74,7 @@ serve(async (req) => {
 
     if (subErr || !subs?.length) {
       console.log(`[send-push] no subscriptions for user=${body.user_id} err=${subErr?.message}`)
-      return new Response(JSON.stringify({ sent: 0, reason: 'no subscriptions' }), {
-        status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
-      })
+      return json({ sent: 0, reason: 'no subscriptions' })
     }
 
     console.log(`[send-push] found ${subs.length} subscriptions for user=${body.user_id}`)
@@ -85,7 +99,7 @@ serve(async (req) => {
       return !types || types.includes(category)
     })
 
-    const staleEndpoints: string[] = []
+    const deadEndpoints: string[] = []
 
     const results = await Promise.all(
       eligible.map(async (s) => {
@@ -97,22 +111,22 @@ serve(async (req) => {
           const err = e as { statusCode?: number; body?: string }
           const status = err?.statusCode ?? 0
           console.error(`[send-push] status=${status} err=${String(err?.body ?? e).slice(0, 150)} endpoint=...${sub.endpoint.slice(-20)}`)
-          if (status === 410 || status === 404) staleEndpoints.push(sub.endpoint)
+          if (DEAD_STATUSES.includes(status)) deadEndpoints.push(sub.endpoint)
           return { ok: false, status, endpoint: sub.endpoint }
         }
       })
     )
 
-    if (staleEndpoints.length > 0) {
+    if (deadEndpoints.length > 0) {
       await Promise.all(
-        staleEndpoints.map((ep) =>
+        deadEndpoints.map((ep) =>
           admin.from('push_subscriptions')
             .delete()
             .eq('user_id', body.user_id)
             .filter('subscription->>endpoint', 'eq', ep)
         )
       )
-      console.log(`[send-push] removed ${staleEndpoints.length} stale subscription(s)`)
+      console.log(`[send-push] removed ${deadEndpoints.length} dead subscription(s)`)
     }
 
     const sent   = results.filter((r) => r.ok).length
@@ -120,13 +134,9 @@ serve(async (req) => {
 
     console.log(`[send-push] user=${body.user_id} sent=${sent} failed=${failed}`)
 
-    return new Response(JSON.stringify({ sent, failed, total: results.length }), {
-      status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
-    })
+    return json({ sent, failed, removed: deadEndpoints.length, total: results.length })
   } catch (e) {
     console.error('[send-push] error:', e)
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500, headers: { ...CORS, 'Content-Type': 'application/json' },
-    })
+    return json({ error: String(e) }, 500)
   }
 })

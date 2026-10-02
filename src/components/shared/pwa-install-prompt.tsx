@@ -1,34 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Download, Share, SquarePlus, X } from 'lucide-react'
+import { Download, MoreVertical, Share, SquarePlus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
-}
-
-declare global {
-  interface Window {
-    __installPrompt?: BeforeInstallPromptEvent
-  }
-}
+import {
+  INSTALLED_KEY, OPEN_INSTALL_EVENT, isIos, isStandalone,
+  type BeforeInstallPromptEvent,
+} from '@/lib/pwa'
 
 const DISMISSED_KEY = 'konvwa_pwa_dismissed_at'
-const INSTALLED_KEY = 'konvwa_pwa_installed'
 const SNOOZE_MS = 3 * 24 * 60 * 60 * 1000
 const SHOW_DELAY_MS = 1500
-
-function isStandalone() {
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as unknown as { standalone?: boolean }).standalone === true
-  )
-}
-
-function isIos() {
-  const ua = window.navigator.userAgent
-  return /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && navigator.maxTouchPoints > 1)
-}
 
 function isSnoozed() {
   try {
@@ -48,6 +29,12 @@ export function PwaInstallPrompt() {
   const [visible, setVisible] = useState(false)
   const [installing, setInstalling] = useState(false)
   const [slideOut, setSlideOut] = useState(false)
+
+  useEffect(() => {
+    const onOpen = () => { setSlideOut(false); setVisible(true) }
+    window.addEventListener(OPEN_INSTALL_EVENT, onOpen)
+    return () => window.removeEventListener(OPEN_INSTALL_EVENT, onOpen)
+  }, [])
 
   useEffect(() => {
     const onInstallable = () => setDeferredPrompt(window.__installPrompt ?? null)
@@ -147,7 +134,7 @@ export function PwaInstallPrompt() {
             <Download className="h-4 w-4" />
             {installing ? 'Installation…' : "Installer l'application"}
           </button>
-        ) : (
+        ) : ios ? (
           <ol className="mt-3.5 space-y-2 rounded-xl bg-gray-50 p-3 text-sm text-foreground">
             <li className="flex items-center gap-2">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -160,6 +147,21 @@ export function PwaInstallPrompt() {
                 <SquarePlus className="h-3.5 w-3.5" />
               </span>
               Choisissez <strong>Sur l'écran d'accueil</strong>
+            </li>
+          </ol>
+        ) : (
+          <ol className="mt-3.5 space-y-2 rounded-xl bg-gray-50 p-3 text-sm text-foreground">
+            <li className="flex items-center gap-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <MoreVertical className="h-3.5 w-3.5" />
+              </span>
+              Ouvrez le <strong>menu ⋮</strong> de votre navigateur
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Download className="h-3.5 w-3.5" />
+              </span>
+              Choisissez <strong>Installer l'application</strong>
             </li>
           </ol>
         )}

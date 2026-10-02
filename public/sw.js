@@ -84,8 +84,10 @@ self.addEventListener('push', (event) => {
     badge,
     vibrate:  [200, 100, 200],
     data:     { clickUrl },
-    tag:      type,
-    renotify: false,
+    // One tag per event: a shared tag per type made each notification silently replace the previous one
+    tag:      `${title}|${clickUrl}`,
+    renotify: true,
+    timestamp: Date.now(),
     requireInteraction: false,
     actions: [
       { action: 'open',    title: 'Ouvrir' },
@@ -103,7 +105,7 @@ self.addEventListener('notificationclick', (event) => {
 
   if (event.action === 'dismiss') return
 
-  const clickUrl = event.notification.data?.clickUrl ?? '/'
+  const clickUrl = new URL(event.notification.data?.clickUrl ?? '/', self.location.origin).href
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
