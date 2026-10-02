@@ -464,7 +464,7 @@ export function ClientLayout() {
   const unread = useUnread(user?.id)
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-dvh bg-background overflow-hidden">
       <DesktopSidebar unread={unread} />
 
       <div className="flex-1 min-w-0 flex flex-col lg:ml-[240px] xl:ml-[260px] h-full min-h-0">
@@ -474,7 +474,7 @@ export function ClientLayout() {
 
         <main className="flex-1 min-h-0 overflow-y-auto pb-24 lg:pb-8">
           <PwaExperience userId={user?.id} />
-          <div key={location.pathname} className="page-enter h-full">
+          <div key={location.pathname} className="page-enter flex min-h-full flex-col [&>*]:flex-1">
             <Outlet />
           </div>
         </main>
