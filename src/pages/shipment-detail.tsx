@@ -370,13 +370,20 @@ export function ShipmentDetailPage() {
         {req.warehouse && (
           <div className="rounded-2xl border border-sky-200 bg-sky-50/60 shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-sky-700/70">
-                  Adresse de l'entrepôt
-                </p>
-                <p className="text-sm font-bold text-foreground mt-0.5">
-                  {req.warehouse.flag_emoji} {req.warehouse.name}
-                </p>
+              <div className="flex items-center gap-3">
+                <img
+                  src="/icon-warehouse.png"
+                  alt="Entrepôt"
+                  className="h-10 w-10 object-contain shrink-0"
+                />
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-sky-700/70">
+                    Adresse de l'entrepôt
+                  </p>
+                  <p className="text-sm font-bold text-foreground mt-0.5">
+                    {req.warehouse.flag_emoji} {req.warehouse.name}
+                  </p>
+                </div>
               </div>
               <button
                 type="button"

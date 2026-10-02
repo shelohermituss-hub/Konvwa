@@ -328,12 +328,7 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
         isInvoiced ? 'bg-emerald-50' :
                      'bg-amber-50'
       )}>
-        <Package className={cn(
-          'h-6 w-6',
-          isQuoted   ? 'text-primary' :
-          isInvoiced ? 'text-emerald-600' :
-                       'text-amber-600'
-        )} />
+        <img src="/icon-container.png" alt="Cargaison" className="h-8 w-8 object-contain" />
       </div>
 
       <div className="flex-1 min-w-0">

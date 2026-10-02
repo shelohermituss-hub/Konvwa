@@ -473,7 +473,7 @@ export function DashboardPage() {
                   idx < orders.length - 1 && 'border-b border-border/50'
                 )}>
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 shrink-0">
-                    <Package className="h-5 w-5 text-primary" strokeWidth={1.6} />
+                    <img src="/icon-box.jpg" alt="Commande" className="h-7 w-7 object-contain" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate text-foreground">
