@@ -404,3 +404,150 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
 
   doc.save(`KONVWA-DEVIS-${order.tracking_code}.pdf`)
 }
+
+// ── Shipping request PDF ──────────────────────────────────────────────────────
+
+export interface ShippingRequestForPDF {
+  id: string
+  status: string
+  created_at: string
+  quoted_at: string | null
+  invoiced_at: string | null
+  package_count: number | null
+  estimated_cbm: number | null
+  actual_cbm: number | null
+  estimated_kg: number | null
+  actual_kg: number | null
+  quoted_amount_htg: number | null
+  actual_amount_htg: number | null
+  notes: string | null
+  origin_country: string | null
+  warehouse: {
+    name: string
+    flag_emoji: string | null
+    country_code: string
+    address_line1: string | null
+    address_line2: string | null
+    address_line3: string | null
+    city: string | null
+    state: string | null
+    postal_code: string | null
+    contact_info: string | null
+  } | null
+  product_rate_category: { name: string } | null
+}
+
+export async function downloadShippingPDF(req: ShippingRequestForPDF): Promise<void> {
+  const logo = await loadLogo()
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  let y = M
+
+  function clr(r: number, g: number, b: number) { doc.setTextColor(r, g, b) }
+  function bold(size: number)   { doc.setFont('helvetica', 'bold');   doc.setFontSize(size) }
+  function normal(size: number) { doc.setFont('helvetica', 'normal'); doc.setFontSize(size) }
+  function L(text: string, yy: number, x = M)     { doc.text(text, x, yy) }
+  function R(text: string, yy: number, x = W - M) { doc.text(text, x, yy, { align: 'right' }) }
+  function rule(yy: number) {
+    doc.setDrawColor(...RULE); doc.setLineWidth(0.2)
+    doc.line(M, yy, W - M, yy)
+    return yy + 6
+  }
+
+  // HEADER
+  const LOGO_W = 22
+  const LOGO_H = LOGO_W * (72 / 110)
+  if (logo) doc.addImage(logo, 'PNG', M, y, LOGO_W, LOGO_H)
+
+  const coY = y + LOGO_H + 3
+  bold(10); clr(...INK);  L('KONVWA', coY)
+  normal(8); clr(...MID); L('Importation Chine & USA → Haïti', coY + 5)
+  L('support@konvwa.com', coY + 9.5)
+  L('konvwa.com', coY + 14)
+
+  bold(38); clr(...DARK); R('EXPÉDITION', y + 18)
+  bold(11); clr(...INK);  R(`# ${req.id.slice(0, 8).toUpperCase()}`, y + 27)
+
+  y = Math.max(coY + 18, y + 34)
+  y = rule(y)
+
+  // STATUS + DATE
+  const statusLabels: Record<string, string> = {
+    submitted: 'Soumis', reviewing: 'En examen', received: 'Colis reçus',
+    quoted: 'Devis reçu', invoiced: 'Payé',
+  }
+  normal(8); clr(...MID); L('Statut :', y)
+  bold(8);   clr(...INK); L(statusLabels[req.status] ?? req.status, y, M + 22)
+  normal(8); clr(...MID); L('Date soumission :', W - M - 70, y)
+  normal(8); clr(...INK); R(fmtDate(req.created_at), y)
+  y += 10
+
+  // WAREHOUSE
+  if (req.warehouse) {
+    y = rule(y)
+    bold(9);   clr(...INK); L('Entrepôt de destination', y); y += 6
+    normal(8); clr(...INK)
+    L(`${req.warehouse.flag_emoji ?? ''} ${req.warehouse.name}`, y); y += 5
+    if (req.warehouse.address_line1) { L(req.warehouse.address_line1, y); y += 5 }
+    if (req.warehouse.address_line2) { L(req.warehouse.address_line2, y); y += 5 }
+    if (req.warehouse.address_line3) { L(req.warehouse.address_line3, y); y += 5 }
+    const cityLine = [req.warehouse.city, req.warehouse.state, req.warehouse.postal_code].filter(Boolean).join(', ')
+    if (cityLine) { L(cityLine, y); y += 5 }
+    if (req.warehouse.contact_info) { normal(8); clr(...MID); L(req.warehouse.contact_info, y); y += 5 }
+    y += 3
+  }
+
+  y = rule(y)
+
+  // DETAILS TABLE
+  const rows: [string, string][] = []
+  if (req.product_rate_category) rows.push(['Type de produit', req.product_rate_category.name])
+  if (req.origin_country) {
+    const cn2 = req.origin_country === 'CN' ? 'Chine' : req.origin_country === 'US' ? 'États-Unis' : req.origin_country
+    rows.push(['Origine', cn2])
+  }
+  if (req.package_count != null)  rows.push(['Nombre de colis', String(req.package_count)])
+  const cbm = req.actual_cbm ?? req.estimated_cbm
+  if (cbm != null) rows.push(['Volume', `${cbm.toFixed(4)} m³${!req.actual_cbm ? ' (estimé)' : ''}`])
+  const kg = req.actual_kg ?? req.estimated_kg
+  if (kg != null) rows.push(['Poids', `${kg.toFixed(2)} kg${!req.actual_kg ? ' (estimé)' : ''}`])
+
+  for (const [label, value] of rows) {
+    normal(8); clr(...MID); L(label, y)
+    bold(8);   clr(...INK); R(value, y)
+    y += 7
+    doc.setDrawColor(...RULE); doc.setLineWidth(0.15)
+    doc.line(M, y - 0.5, W - M, y - 0.5)
+  }
+  y += 5
+
+  // AMOUNT BLOCK
+  const amount = req.actual_amount_htg ?? req.quoted_amount_htg
+  if (amount != null) {
+    doc.setFillColor(50, 50, 50)
+    doc.rect(M, y, CW, 12, 'F')
+    bold(9);  clr(255, 255, 255); L('Montant', y + 7.5, M + 3)
+    bold(10); clr(255, 255, 255); R(`${fmtHTG(amount)} HTG`, y + 7.5)
+    y += 16
+  }
+
+  // NOTES
+  if (req.notes) {
+    y += 4
+    bold(9); clr(...INK); L('Notes', y); y += 5
+    normal(8); clr(...INK)
+    const lines2 = doc.splitTextToSize(req.notes, CW)
+    doc.text(lines2, M, y)
+    y += lines2.length * 5 + 4
+  }
+
+  // FOOTER
+  const footerY = 285
+  doc.setDrawColor(...RULE); doc.setLineWidth(0.3)
+  doc.line(M, footerY, W - M, footerY)
+  normal(7.5); clr(...MID); doc.text('CONÇU PAR', M, footerY + 6)
+  if (logo) doc.addImage(logo, 'PNG', M + 22, footerY + 1, 11, 7.2)
+  bold(7.5); clr(...MID); doc.text('KONVWA', M + 34, footerY + 6)
+  normal(7); clr(...MID); doc.text(String(doc.getNumberOfPages()), W - M, footerY + 6, { align: 'right' })
+
+  doc.save(`KONVWA-EXPEDITION-${req.id.slice(0, 8).toUpperCase()}.pdf`)
+}
