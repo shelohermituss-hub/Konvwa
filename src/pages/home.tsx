@@ -270,51 +270,53 @@ export function HomePage() {
           </p>
         </div>
 
-        {/* Right: hero lifestyle image */}
-        <div className="relative mx-auto w-full max-w-sm">
+        {/* Right: hero import visual composition */}
+        <div className="relative mx-auto w-full max-w-[440px]">
+          {/* Glow */}
           <div
-            className="absolute inset-0 -z-10 rounded-[2rem] blur-3xl opacity-25 pointer-events-none"
+            className="absolute inset-0 -z-10 rounded-[3rem] blur-3xl opacity-20 pointer-events-none"
             aria-hidden
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           />
 
-          <div className="relative overflow-hidden rounded-3xl shadow-2xl ring-1 ring-white/10">
+          {/* Plane — main large visual */}
+          <div className="relative z-10">
             <img
-              src={IMAGES.woman}
-              alt="Colis importé livré en Haïti"
-              className="aspect-[3/4] w-full object-cover"
+              src="/hero/plane.jpg"
+              alt="Avion cargo importation internationale"
+              className="w-full drop-shadow-2xl"
             />
+          </div>
 
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+          {/* Forklift — offset bottom-right, overlapping */}
+          <div className="relative -mt-16 ml-auto w-[58%] z-20 drop-shadow-xl">
+            <img
+              src="/hero/forklift.jpg"
+              alt="Conteneur logistique"
+              className="w-full"
+            />
+          </div>
 
-            {/* Payment badge — top right */}
-            <div className="absolute top-4 right-4 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 shadow-lg backdrop-blur-sm">
-              <span className="text-[11px] font-bold text-gray-800">MonCash · NatCash</span>
-            </div>
+          {/* Payment badge — floating top-right */}
+          <div className="absolute top-4 right-0 z-30 flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 shadow-lg">
+            <span className="text-[11px] font-bold text-foreground">MonCash · NatCash</span>
+          </div>
 
-            {/* Brand logos — bottom overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-widest text-white/60">
-                Commandez depuis
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {BRANDS.map((brand) => (
-                  <div
-                    key={brand.name}
-                    className="flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-white/20"
-                    style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)' }}
-                  >
-                    <img
-                      src={brand.logo}
-                      alt={brand.name}
-                      className="h-3.5 w-auto max-w-[26px] object-contain"
-                    />
-                    <span className="text-[11px] font-semibold text-white">{brand.name}</span>
-                  </div>
-                ))}
+          {/* Brand logos — floating bottom-left */}
+          <div className="absolute bottom-4 left-0 z-30 flex flex-wrap gap-1.5">
+            {BRANDS.map((brand) => (
+              <div
+                key={brand.name}
+                className="flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 shadow-sm"
+              >
+                <img
+                  src={brand.logo}
+                  alt={brand.name}
+                  className="h-3.5 w-auto max-w-[26px] object-contain"
+                />
+                <span className="text-[11px] font-semibold text-foreground">{brand.name}</span>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
