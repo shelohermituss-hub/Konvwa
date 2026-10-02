@@ -16,9 +16,68 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style id="kv-splash-css">
+      html, body { background: #fff; margin: 0; }
+      .kv-splash { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #fff; font-family: 'Poppins', system-ui, sans-serif; }
+      .kv-logo { width: 132px; height: auto; overflow: visible; }
+      .kv-b { transform-box: fill-box; transform-origin: center; opacity: 0; animation: kv-in .6s cubic-bezier(.16,1,.3,1) forwards, kv-wave 1.8s ease-in-out infinite; }
+      .kv-b1 { animation-delay: 0s, 1s; }
+      .kv-b2 { animation-delay: .18s, 1.18s; }
+      .kv-b3 { animation-delay: .36s, 1.36s; }
+      .kv-word { color: #0A1628; font-weight: 700; font-size: 18px; letter-spacing: .32em; padding-left: .32em; opacity: 0; animation: kv-fade .6s ease .7s forwards; }
+      .kv-bar { position: relative; width: 88px; height: 3px; border-radius: 3px; background: #f1ece9; overflow: hidden; opacity: 0; animation: kv-fade .4s ease 1s forwards; }
+      .kv-bar::after { content: ''; position: absolute; inset: 0 auto 0 0; width: 40%; border-radius: 3px; background: linear-gradient(90deg, #F05A28, #FF7252); animation: kv-slide 1.2s ease-in-out infinite; }
+      .kv-resume .kv-b { opacity: 1; animation: kv-wave 1.8s ease-in-out infinite; }
+      .kv-resume .kv-b1 { animation-delay: 0s; }
+      .kv-resume .kv-b2 { animation-delay: .18s; }
+      .kv-resume .kv-b3 { animation-delay: .36s; }
+      .kv-resume .kv-word, .kv-resume .kv-bar { opacity: 1; animation: none; }
+      .kv-resume .kv-bar::after { animation: kv-slide 1.2s ease-in-out infinite; }
+      @keyframes kv-in { from { opacity: 0; transform: translateY(16px) scale(.8); } to { opacity: 1; transform: none; } }
+      @keyframes kv-wave { 0%, 100% { transform: translateY(0); } 35% { transform: translateY(-5px); } 70% { transform: translateY(0); } }
+      @keyframes kv-fade { to { opacity: 1; } }
+      @keyframes kv-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+      @media (prefers-reduced-motion: reduce) {
+        .kv-b, .kv-resume .kv-b { animation: none; opacity: 1; }
+        .kv-word, .kv-bar { animation: none; opacity: 1; }
+        .kv-bar::after { animation: none; width: 100%; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="kv-splash" role="status" aria-label="Chargement de KONVWA">
+      <svg class="kv-logo" viewBox="0 0 110 72" fill="none"  aria-hidden="true">
+        <g class="kv-b kv-b1">
+          <rect x="1" y="45" width="40" height="24" rx="6" fill="black" opacity="0.10" />
+          <rect x="0" y="42" width="40" height="24" rx="6" fill="#8B2200" />
+          <rect x="0" y="42" width="9" height="24" rx="6" fill="#6B1800" />
+          <rect x="31" y="42" width="9" height="24" rx="6" fill="#6B1800" />
+          <rect x="9" y="48" width="22" height="2.5" rx="1.2" fill="#7A1E00" />
+          <rect x="9" y="52.5" width="22" height="2.5" rx="1.2" fill="#7A1E00" />
+          <rect x="9" y="57" width="22" height="2.5" rx="1.2" fill="#7A1E00" />
+        </g>
+        <g class="kv-b kv-b2">
+          <rect x="35" y="29" width="40" height="24" rx="6" fill="black" opacity="0.10" />
+          <rect x="34" y="26" width="40" height="24" rx="6" fill="#E53D15" />
+          <rect x="34" y="26" width="9" height="24" rx="6" fill="#C23010" />
+          <rect x="65" y="26" width="9" height="24" rx="6" fill="#C23010" />
+          <rect x="43" y="32" width="22" height="2.5" rx="1.2" fill="#CC3510" />
+          <rect x="43" y="36.5" width="22" height="2.5" rx="1.2" fill="#CC3510" />
+          <rect x="43" y="41" width="22" height="2.5" rx="1.2" fill="#CC3510" />
+        </g>
+        <g class="kv-b kv-b3">
+          <rect x="69" y="13" width="40" height="24" rx="6" fill="black" opacity="0.10" />
+          <rect x="68" y="10" width="40" height="24" rx="6" fill="#FF7252" />
+          <rect x="68" y="10" width="9" height="24" rx="6" fill="#E05A3A" />
+          <rect x="99" y="10" width="9" height="24" rx="6" fill="#E05A3A" />
+          <rect x="77" y="16" width="22" height="2.5" rx="1.2" fill="#EE6040" />
+          <rect x="77" y="20.5" width="22" height="2.5" rx="1.2" fill="#EE6040" />
+          <rect x="77" y="25" width="22" height="2.5" rx="1.2" fill="#EE6040" />
+        </g>
+      </svg>
+      <span class="kv-word">KONVWA</span>
+      <span class="kv-bar" aria-hidden="true"></span>
+    </div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

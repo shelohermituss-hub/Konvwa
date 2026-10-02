@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
 import type { ReactNode } from 'react'
+import { SplashScreen } from '@/components/shared/splash-screen'
 
 interface AuthGuardProps {
   children: ReactNode
@@ -13,11 +14,7 @@ export function AuthGuard({ children, requireAuth = true, redirectTo = '/auth' }
   const location = useLocation()
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Chargement...</div>
-      </div>
-    )
+    return <SplashScreen />
   }
 
   if (requireAuth && !user) {
@@ -41,11 +38,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
   const location = useLocation()
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Chargement...</div>
-      </div>
-    )
+    return <SplashScreen />
   }
 
   if (!profile || (profile.role !== 'admin' && profile.role !== 'manager')) {
