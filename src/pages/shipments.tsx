@@ -58,6 +58,8 @@ interface ShippingRequest {
   quoted_at: string | null
   received_at: string | null
   invoiced_at: string | null
+  payment_due_at: string | null
+  paid_amount_htg: number | null
   package_count: number | null
   origin_country: string | null
   destination_address: string | null
@@ -112,7 +114,8 @@ const REQ_STATUS: Record<string, { label: string; color: string }> = {
   reviewing: { label: 'En examen',     color: 'bg-sky-50 text-sky-700' },
   quoted:    { label: 'Devis reçu',    color: 'bg-primary/10 text-primary' },
   received:  { label: 'Colis reçu',   color: 'bg-indigo-50 text-indigo-700' },
-  invoiced:  { label: 'Facturé',       color: 'bg-emerald-50 text-emerald-700' },
+  deposit_paid: { label: 'Acompte payé', color: 'bg-teal-50 text-teal-700' },
+  invoiced:  { label: 'Payé',          color: 'bg-emerald-50 text-emerald-700' },
   cancelled: { label: 'Annulé',        color: 'bg-gray-100 text-gray-500' },
 }
 
@@ -316,6 +319,12 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
   const displayAmount = req.actual_amount_htg ?? req.quoted_amount_htg
   const isQuoted      = req.status === 'quoted'
   const isInvoiced    = req.status === 'invoiced'
+  const isDeposit     = req.status === 'deposit_paid'
+  const dueAt         = req.payment_due_at ? new Date(req.payment_due_at) : null
+  const lateDays      = isQuoted && dueAt && dueAt.getTime() < Date.now()
+    ? Math.ceil((Date.now() - dueAt.getTime()) / 86_400_000) : 0
+  const daysLeft      = isQuoted && dueAt && lateDays === 0
+    ? Math.ceil((dueAt.getTime() - Date.now()) / 86_400_000) : null
 
   return (
     <Link
@@ -324,6 +333,7 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
     >
       <div className={cn(
         'flex h-12 w-12 items-center justify-center rounded-xl shrink-0',
+        lateDays > 0 ? 'bg-red-50' :
         isQuoted   ? 'bg-primary/10' :
         isInvoiced ? 'bg-emerald-50' :
                      'bg-amber-50'
@@ -336,6 +346,16 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
           <span className={cn('rounded-full text-[10px] px-2 py-0.5 font-semibold', s.color)}>
             {s.label}
           </span>
+          {lateDays > 0 && (
+            <span className="rounded-full bg-red-50 text-red-700 text-[10px] px-2 py-0.5 font-semibold">
+              En retard · {lateDays} j
+            </span>
+          )}
+          {daysLeft !== null && daysLeft <= 5 && (
+            <span className="rounded-full bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 font-semibold">
+              {daysLeft} j pour payer
+            </span>
+          )}
           {req.product_rate_category && (
             <span className={cn(
               'rounded-full text-[10px] px-2 py-0.5 font-semibold',
@@ -358,10 +378,14 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
       <div className="shrink-0 flex flex-col items-end gap-1">
         {displayAmount != null ? (
           <>
-            <p className={cn('text-sm font-bold', isInvoiced ? 'text-emerald-600' : 'text-primary')}>
+            <p className={cn('text-sm font-bold', isInvoiced ? 'text-emerald-600' : lateDays > 0 ? 'text-red-600' : 'text-primary')}>
               {displayAmount.toLocaleString('fr-HT')} HTG
             </p>
-            <p className="text-[10px] text-muted-foreground">{isInvoiced ? 'Payé' : isQuoted ? 'Officiel' : 'Estimation'}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {isInvoiced ? 'Payé'
+                : isDeposit ? `Reste ${Math.max((req.quoted_amount_htg ?? 0) - (req.paid_amount_htg ?? 0), 0).toLocaleString('fr-HT')}`
+                : isQuoted ? 'Officiel' : 'Estimation'}
+            </p>
           </>
         ) : (
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -762,6 +786,7 @@ export function ShipmentsPage() {
           id, status, notes, created_at,
           estimated_cbm, estimated_kg, actual_cbm, actual_kg,
           quoted_amount_htg, actual_amount_htg, quoted_at, received_at, invoiced_at,
+          payment_due_at, paid_amount_htg,
           package_count, origin_country, destination_address, shipment_id,
           warehouse:warehouses(id, code, name, country_code, flag_emoji, address_line1, address_line2, address_line3, city, state, postal_code, contact_info, instructions, for_category),
           product_rate_category:product_rate_categories(id, name, slug, rate_multiplier, description),

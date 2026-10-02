@@ -49,6 +49,9 @@ interface ShippingRequest {
   quoted_at: string | null
   received_at: string | null
   invoiced_at: string | null
+  payment_due_at: string | null
+  paid_amount_htg: number | null
+  late_fee_htg: number | null
   package_count: number | null
   origin_country: string | null
   destination_address: string | null
@@ -70,7 +73,8 @@ const STATUS_LABELS: Record<string, string> = {
   reviewing: 'En révision',
   quoted:    'Devis envoyé',
   received:  'Reçu en entrepôt',
-  invoiced:  'Facturé',
+  deposit_paid: 'Acompte payé',
+  invoiced:  'Payé',
   cancelled: 'Annulé',
 }
 
@@ -79,6 +83,7 @@ const STATUS_COLORS: Record<string, string> = {
   reviewing: 'bg-sky-50 text-sky-700 border-sky-200',
   quoted:    'bg-orange-50 text-orange-700 border-orange-200',
   received:  'bg-indigo-50 text-indigo-700 border-indigo-200',
+  deposit_paid: 'bg-teal-50 text-teal-700 border-teal-200',
   invoiced:  'bg-emerald-50 text-emerald-700 border-emerald-200',
   cancelled: 'bg-gray-100 text-gray-500 border-gray-200',
 }
@@ -217,7 +222,26 @@ function AdminActionSheet({
     onDone()
   }
 
+  async function handleCollectBalance() {
+    setSaving(true)
+    const { data, error } = await supabase.rpc('admin_collect_shipping_balance', {
+      p_request_id: request.id,
+      p_note:       form.admin_notes || null,
+    })
+    setSaving(false)
+    if (error || !data?.success) {
+      toast.error(data?.error ?? error?.message ?? 'Erreur')
+      return
+    }
+    toast.success(`Solde de ${fmt(data.collected)} HTG encaissé ✓`)
+    onDone()
+  }
+
   const s = request.status
+  const dueAt = request.payment_due_at ? new Date(request.payment_due_at) : null
+  const lateDays = s === 'quoted' && dueAt && dueAt.getTime() < Date.now()
+    ? Math.ceil((Date.now() - dueAt.getTime()) / 86_400_000) : 0
+  const balanceRemaining = Math.max((request.quoted_amount_htg ?? 0) - (request.paid_amount_htg ?? 0), 0)
   const oceanRates = rates.filter(r => r.mode === 'ocean')
   const airRates   = rates.filter(r => r.mode === 'air')
 
@@ -252,7 +276,27 @@ function AdminActionSheet({
             <div className="rounded-xl bg-orange-50 border border-orange-200 px-3.5 py-3 flex items-start gap-2.5">
               <AlertCircle className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
               <p className="text-sm text-orange-800 leading-relaxed">
-                Devis envoyé — le client doit régler <span className="font-bold">{fmt(request.quoted_amount_htg)} HTG</span>.
+                Devis envoyé — le client doit régler <span className="font-bold">{fmt(request.quoted_amount_htg)} HTG</span>
+                {dueAt && <> avant le <span className="font-bold">{dueAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span></>}.
+              </p>
+            </div>
+          )}
+          {lateDays > 0 && (
+            <div className="rounded-xl bg-red-50 border border-red-200 px-3.5 py-3 flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800 leading-relaxed">
+                En retard de <span className="font-bold">{lateDays} jour{lateDays > 1 ? 's' : ''}</span> — frais de retard courants :{' '}
+                <span className="font-bold">{fmt(lateDays * 500)} HTG</span>. Ils sont ajoutés automatiquement au paiement du client.
+              </p>
+            </div>
+          )}
+          {s === 'deposit_paid' && (
+            <div className="rounded-xl bg-teal-50 border border-teal-200 px-3.5 py-3 flex items-start gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-teal-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-teal-800 leading-relaxed">
+                Acompte reçu : <span className="font-bold">{fmt(request.paid_amount_htg)} HTG</span>
+                {(request.late_fee_htg ?? 0) > 0 && <> (+ {fmt(request.late_fee_htg)} HTG de frais de retard)</>}.
+                Solde à encaisser à la livraison : <span className="font-bold">{fmt(balanceRemaining)} HTG</span>.
               </p>
             </div>
           )}
@@ -283,7 +327,7 @@ function AdminActionSheet({
           </div>
 
           {/* ── Mesures + calcul automatique (statut received) ── */}
-          {(s === 'received' || s === 'quoted' || s === 'invoiced') && (
+          {(s === 'received' || s === 'quoted' || s === 'deposit_paid' || s === 'invoiced') && (
             <div className="space-y-4">
               <p className="text-sm font-semibold">Mesures réelles</p>
 
@@ -410,7 +454,7 @@ function AdminActionSheet({
               )}
 
               {/* Affichage des montants déjà définis */}
-              {(s === 'quoted' || s === 'invoiced') && (
+              {(s === 'quoted' || s === 'deposit_paid' || s === 'invoiced') && (
                 <div className="rounded-xl bg-orange-50 border border-orange-200 px-3.5 py-2.5 flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">Devis envoyé</p>
                   <p className="font-bold text-orange-700">{fmt(request.quoted_amount_htg)} HTG</p>
@@ -432,8 +476,8 @@ function AdminActionSheet({
             />
           </div>
 
-          {/* Assign to shipment batch (shown once invoiced) */}
-          {s === 'invoiced' && (
+          {/* Assign to shipment batch (shown once paid or deposit received) */}
+          {(s === 'invoiced' || s === 'deposit_paid') && (
             <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3.5 space-y-2.5">
               <div className="flex items-center gap-2">
                 <Ship className="h-4 w-4 text-indigo-600 shrink-0" />
@@ -517,6 +561,17 @@ function AdminActionSheet({
               Envoyer le devis — {finalAmount ? `${new Intl.NumberFormat('fr-HT').format(finalAmount)} HTG` : 'saisir les données'}
             </Button>
           )}
+          {s === 'deposit_paid' && (
+            <Button
+              className="w-full rounded-xl gap-2"
+              onClick={handleCollectBalance}
+              disabled={saving || balanceRemaining <= 0}
+              style={BTN_ORANGE}
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCheck className="h-4 w-4" />}
+              Solde encaissé à la livraison — {fmt(balanceRemaining)} HTG
+            </Button>
+          )}
           <Button variant="outline" className="w-full rounded-xl" onClick={onClose}>
             Fermer
           </Button>
@@ -591,6 +646,20 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
                 {request.estimated_kg != null ? `${request.estimated_kg} kg` : '—'} / {request.actual_kg != null ? `${request.actual_kg} kg` : '—'}
               </p>
             </div>
+            {request.payment_due_at && (s === 'quoted' || s === 'received') && (
+              <div>
+                <p className="text-muted-foreground">Échéance de paiement</p>
+                <p className={cn('font-medium', new Date(request.payment_due_at).getTime() < Date.now() && s === 'quoted' ? 'text-red-600' : '')}>
+                  {new Date(request.payment_due_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+            )}
+            {s === 'deposit_paid' && (
+              <div>
+                <p className="text-muted-foreground">Solde à la livraison</p>
+                <p className="font-medium text-teal-700">{fmt(Math.max((request.quoted_amount_htg ?? 0) - (request.paid_amount_htg ?? 0), 0))} HTG</p>
+              </div>
+            )}
             {request.quoted_amount_htg != null && (
               <div>
                 <p className="text-muted-foreground">Devis estimatif</p>
@@ -610,7 +679,7 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
             <span>Créé {fmtDate(request.created_at)}</span>
             {request.quoted_at && <span className="text-orange-600">Devis {fmtDate(request.quoted_at)}</span>}
             {request.received_at && <span className="text-indigo-600">Reçu {fmtDate(request.received_at)}</span>}
-            {request.invoiced_at && <span className="text-emerald-600">Facturé {fmtDate(request.invoiced_at)}</span>}
+            {request.invoiced_at && <span className="text-emerald-600">Payé {fmtDate(request.invoiced_at)}</span>}
           </div>
 
           {request.notes && (
@@ -639,7 +708,7 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type FilterTab = 'active' | 'submitted' | 'reviewing' | 'quoted' | 'received' | 'invoiced' | 'all'
+type FilterTab = 'active' | 'submitted' | 'reviewing' | 'quoted' | 'received' | 'deposit_paid' | 'invoiced' | 'all'
 
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: 'active',    label: 'Actives'       },
@@ -647,7 +716,8 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: 'reviewing', label: 'En révision'   },
   { key: 'quoted',    label: 'Devis envoyé'  },
   { key: 'received',  label: 'Reçues'        },
-  { key: 'invoiced',  label: 'Facturées'     },
+  { key: 'deposit_paid', label: 'Acompte payé' },
+  { key: 'invoiced',  label: 'Payées'        },
   { key: 'all',       label: 'Toutes'        },
 ]
 
@@ -667,6 +737,7 @@ export function AdminShippingRequestsPage() {
         estimated_cbm, estimated_kg, actual_cbm, actual_kg,
         quoted_amount_htg, actual_amount_htg,
         quoted_at, received_at, invoiced_at, package_count, admin_notes,
+        payment_due_at, paid_amount_htg, late_fee_htg,
         user_id,
         warehouse:warehouses(id, code, name, flag_emoji, country_code),
         product_rate_category:product_rate_categories(id, name, slug, rate_multiplier)
@@ -720,6 +791,7 @@ export function AdminShippingRequestsPage() {
     reviewing: requests.filter(r => r.status === 'reviewing').length,
     quoted:    requests.filter(r => r.status === 'quoted').length,
     received:  requests.filter(r => r.status === 'received').length,
+    deposit_paid: requests.filter(r => r.status === 'deposit_paid').length,
     invoiced:  requests.filter(r => r.status === 'invoiced').length,
     all:       requests.length,
   }

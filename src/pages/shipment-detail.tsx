@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import {
-  ArrowLeft, Package, Clock, CheckCircle2, Wallet, Loader2,
+  ArrowLeft, Package, Clock, CheckCircle2, Wallet,
   Ship, MapPin, Anchor, Box, Scale, Building2,
   Eye, Tag, Download, Copy, Check,
 } from 'lucide-react'
@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { downloadShippingPDF, type ShippingRequestForPDF } from '@/lib/pdf'
+import { ShippingQuotePanel, ShippingBalancePanel } from '@/components/shared/shipping-payment-panel'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -66,10 +67,11 @@ const REQ_STEPS = [
   { key: 'reviewing', label: 'En examen',         shortLabel: 'Examen', Icon: Eye },
   { key: 'received',  label: 'Colis reçus',       shortLabel: 'Reçus',  Icon: Box },
   { key: 'quoted',    label: 'Devis officiel',    shortLabel: 'Devis',  Icon: Tag },
+  { key: 'deposit_paid', label: 'Acompte payé',    shortLabel: 'Acompte', Icon: Wallet },
   { key: 'invoiced',  label: 'Payé',              shortLabel: 'Payé',   Icon: CheckCircle2 },
 ] as const
 
-const STATUS_ORDER = ['submitted', 'reviewing', 'received', 'quoted', 'invoiced']
+const STATUS_ORDER = ['submitted', 'reviewing', 'received', 'quoted', 'deposit_paid', 'invoiced']
 
 const SHIPMENT_STEPS = [
   { key: 'pending',       label: 'En attente' },
@@ -88,6 +90,7 @@ const STATUS_BADGE: Record<string, string> = {
   reviewing: 'bg-sky-50 text-sky-700 border-sky-200',
   received:  'bg-indigo-50 text-indigo-700 border-indigo-200',
   quoted:    'bg-orange-50 text-orange-700 border-orange-200',
+  deposit_paid: 'bg-teal-50 text-teal-700 border-teal-200',
   invoiced:  'bg-emerald-50 text-emerald-700 border-emerald-200',
   cancelled: 'bg-gray-100 text-gray-500 border-gray-200',
 }
@@ -97,6 +100,7 @@ const STATUS_LABEL: Record<string, string> = {
   reviewing: 'En examen',
   received:  'Colis reçus',
   quoted:    'Devis reçu',
+  deposit_paid: 'Acompte payé',
   invoiced:  'Payé',
   cancelled: 'Annulé',
 }
@@ -211,7 +215,6 @@ export function ShipmentDetailPage() {
   const [req,           setReq]           = useState<ShippingRequest | null>(null)
   const [loading,       setLoading]       = useState(true)
   const [walletBalance, setWalletBalance] = useState(0)
-  const [paying,        setPaying]        = useState(false)
 
   async function load() {
     if (!user || !id) return
@@ -255,19 +258,6 @@ export function ShipmentDetailPage() {
 
   useEffect(() => { load() }, [user, id])
 
-  async function handlePay() {
-    if (!req) return
-    setPaying(true)
-    const { data, error } = await supabase.rpc('pay_shipping_quote', { p_request_id: req.id })
-    setPaying(false)
-    if (error || !data?.success) {
-      toast.error(data?.error ?? error?.message ?? 'Erreur de paiement')
-      return
-    }
-    toast.success(`${(req.quoted_amount_htg ?? 0).toLocaleString('fr-HT')} HTG débités — paiement confirmé`)
-    load()
-  }
-
   async function handleDownloadPDF() {
     if (!req) return
     await downloadShippingPDF(req as unknown as ShippingRequestForPDF)
@@ -289,7 +279,7 @@ export function ShipmentDetailPage() {
   const displayAmount = req.actual_amount_htg ?? req.quoted_amount_htg
   const isQuoted      = req.status === 'quoted'
   const isInvoiced    = req.status === 'invoiced'
-  const canPay        = isQuoted && displayAmount != null && walletBalance >= displayAmount
+  const isDeposit     = req.status === 'deposit_paid'
 
   return (
     <div className="min-h-full bg-[#F4F5F7] pb-10">
@@ -316,7 +306,7 @@ export function ShipmentDetailPage() {
             </div>
             <p className="text-xs text-muted-foreground font-mono">{req.id.slice(0, 8).toUpperCase()}</p>
           </div>
-          {(isQuoted || isInvoiced) && (
+          {(isQuoted || isInvoiced || isDeposit) && (
             <button
               type="button"
               onClick={handleDownloadPDF}
@@ -436,7 +426,7 @@ export function ShipmentDetailPage() {
         )}
 
         {/* Estimation indicative — only for pre-quote stages */}
-        {!isQuoted && !isInvoiced && (
+        {!isQuoted && !isInvoiced && !isDeposit && (
           <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">
               Estimation indicative
@@ -463,40 +453,12 @@ export function ShipmentDetailPage() {
 
         {/* Quote / pay section */}
         {isQuoted && displayAmount != null && (
-          <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="font-bold text-foreground">Devis officiel</p>
-              <p className="text-xl font-bold text-primary">
-                {displayAmount.toLocaleString('fr-HT')} HTG
-              </p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Devis établi après réception de vos colis. Réglez maintenant pour confirmer votre expédition.
-            </p>
-            {canPay ? (
-              <button
-                type="button"
-                onClick={handlePay}
-                disabled={paying}
-                className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-              >
-                {paying
-                  ? <><Loader2 className="h-4 w-4 animate-spin" />Paiement en cours…</>
-                  : <><Wallet className="h-4 w-4" />Payer {displayAmount.toLocaleString('fr-HT')} HTG</>
-                }
-              </button>
-            ) : (
-              <Link
-                to="/wallet"
-                className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white transition-all"
-                style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-              >
-                <Wallet className="h-4 w-4" />
-                Recharger — solde insuffisant
-              </Link>
-            )}
-          </div>
+          <ShippingQuotePanel requestId={req.id} walletBalance={walletBalance} onPaid={load} />
+        )}
+
+        {/* Deposit paid: balance due at delivery */}
+        {isDeposit && (
+          <ShippingBalancePanel requestId={req.id} walletBalance={walletBalance} onPaid={load} />
         )}
 
         {/* Paid amount */}
