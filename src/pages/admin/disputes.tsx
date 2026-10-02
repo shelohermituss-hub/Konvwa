@@ -119,7 +119,7 @@ export function AdminDisputesPage() {
     await supabase.from('notifications').insert({
       user_id: activeTicket.user_id,
       title: 'Réponse de support',
-      message: `Notre équipe a répondu à votre ticket: "${activeTicket.subject}"`,
+      body: `Notre équipe a répondu à votre ticket: "${activeTicket.subject}"`,
       type: 'info',
     })
     setReplyText('')

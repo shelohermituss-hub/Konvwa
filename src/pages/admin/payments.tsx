@@ -104,15 +104,6 @@ export function AdminPaymentsPage() {
     if (wallet) {
       await supabase.from('wallets').update({ available_balance: wallet.available_balance + tx.amount, updated_at: new Date().toISOString() }).eq('id', tx.wallet_id)
     }
-    const { data: walletRow } = await supabase.from('wallets').select('user_id').eq('id', tx.wallet_id).maybeSingle()
-    if (walletRow) {
-      await supabase.from('notifications').insert({
-        user_id: walletRow.user_id,
-        title: 'Recharge confirmée',
-        message: `Votre recharge de ${tx.amount.toLocaleString()} HTG a été validée.`,
-        type: 'success',
-      })
-    }
     toast.success('Paiement approuvé et wallet crédité.')
     setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'completed' } : t))
     setApproveDialog(null)
@@ -122,15 +113,6 @@ export function AdminPaymentsPage() {
   async function handleReject(tx: WalletTx) {
     setSaving(true)
     await supabase.from('wallet_transactions').update({ status: 'cancelled' }).eq('id', tx.id)
-    const { data: walletRow } = await supabase.from('wallets').select('user_id').eq('id', tx.wallet_id).maybeSingle()
-    if (walletRow) {
-      await supabase.from('notifications').insert({
-        user_id: walletRow.user_id,
-        title: 'Recharge refusée',
-        message: `Votre demande de recharge de ${tx.amount.toLocaleString()} HTG a été refusée.`,
-        type: 'warning',
-      })
-    }
     toast.success('Transaction refusée.')
     setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'cancelled' } : t))
     setSaving(false)
