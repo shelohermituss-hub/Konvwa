@@ -98,6 +98,13 @@ const PAYMENT_METHODS = [
   },
 ]
 
+const IMAGES = {
+  woman:    'https://images.unsplash.com/photo-1770013413878-2530e2c3d82b?w=1080&q=80&auto=format&fit=crop',
+  shopping: 'https://images.unsplash.com/photo-1539278383962-a7774385fa02?w=1080&q=80&auto=format&fit=crop',
+  delivery: 'https://images.unsplash.com/photo-1614018453562-77f6180ce036?w=1080&q=80&auto=format&fit=crop',
+  phone:    'https://images.unsplash.com/photo-1521572089244-e5aaacacca6b?w=1080&q=80&auto=format&fit=crop',
+}
+
 const FAQS = [
   {
     question: "Comment fonctionne le service ?",
@@ -362,6 +369,59 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ── Visual showcase ───────────────────────────────────────────── */}
+      <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 md:py-24">
+        <div className="grid gap-10 md:grid-cols-2 md:items-center md:gap-16">
+          <Reveal className="order-2 md:order-1">
+            <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-border">
+              <img
+                src={IMAGES.woman}
+                alt="Colis reçu à domicile"
+                className="aspect-[4/3] w-full object-cover"
+              />
+            </div>
+          </Reveal>
+          <Reveal delay={120} className="order-1 md:order-2 flex flex-col gap-5">
+            <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+              La boutique internationale, livrée jusqu'à votre porte
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Plus besoin de connaître quelqu'un à l'étranger.
+              KONVWA achète pour vous, dédouane et livre directement en Haïti.
+            </p>
+            <ul className="space-y-3">
+              {[
+                'Achat sécurisé auprès des fournisseurs internationaux',
+                'Dédouanement entièrement pris en charge',
+                'Livraison directe en Haïti — sans intermédiaire',
+              ].map((point) => (
+                <li key={point} className="flex items-start gap-3 text-sm text-muted-foreground">
+                  <span
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                    style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+                  >
+                    ✓
+                  </span>
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <div className="pt-2">
+              <Button
+                asChild
+                size="lg"
+                className="btn-gradient rounded-full px-8"
+              >
+                <Link to="/auth">
+                  Créer mon compte gratuitement
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ── Features ──────────────────────────────────────────────────── */}
       <section
         id="features"
@@ -374,6 +434,29 @@ export function HomePage() {
           <p className="mt-3 text-lg text-muted-foreground">
             Un service complet de l'achat à la livraison — sans complexité.
           </p>
+        </Reveal>
+
+        {/* Shopping lifestyle banner */}
+        <Reveal className="mb-8 overflow-hidden rounded-3xl shadow-lg ring-1 ring-border">
+          <div className="relative">
+            <img
+              src={IMAGES.shopping}
+              alt="Shopping en ligne depuis Haïti"
+              className="h-52 w-full object-cover sm:h-64"
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: 'linear-gradient(to right, rgba(10,22,40,0.80) 0%, rgba(10,22,40,0.20) 60%, transparent 100%)' }}
+            />
+            <div className="absolute inset-0 flex flex-col justify-center px-8">
+              <p className="text-sm font-semibold uppercase tracking-widest text-white/70">
+                100% en ligne
+              </p>
+              <p className="mt-1 max-w-xs text-xl font-extrabold text-white sm:text-2xl">
+                Commandez depuis Alibaba, Shein ou Temu sans carte étrangère
+              </p>
+            </div>
+          </div>
         </Reveal>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -439,32 +522,65 @@ export function HomePage() {
               </Reveal>
             ))}
           </div>
+
+          {/* Delivery lifestyle image */}
+          <Reveal className="mt-14 overflow-hidden rounded-3xl shadow-xl ring-1 ring-border">
+            <div className="relative">
+              <img
+                src={IMAGES.delivery}
+                alt="Colis livré à la porte"
+                className="h-64 w-full object-cover sm:h-80"
+              />
+              <div
+                className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+                style={{ background: 'linear-gradient(to top, rgba(10,22,40,0.75) 0%, transparent 50%)' }}
+              >
+                <p className="mt-auto pb-8 text-center text-xl font-bold text-white drop-shadow-md sm:text-2xl">
+                  Votre colis, livré directement chez vous en Haïti
+                </p>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ── Payment Methods ───────────────────────────────────────────── */}
       <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 md:py-24">
-        <Reveal className="mx-auto mb-12 max-w-2xl text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Payez comme vous êtes habitués
-          </h2>
-          <p className="mt-3 text-lg text-muted-foreground">
-            Rechargez votre portefeuille avec les moyens de paiement les plus utilisés en Haïti.
-          </p>
-        </Reveal>
+        <div className="grid gap-12 md:grid-cols-2 md:items-center md:gap-16">
+          <Reveal className="flex flex-col gap-8">
+            <div>
+              <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                Payez comme vous êtes habitués
+              </h2>
+              <p className="mt-3 text-lg text-muted-foreground">
+                Rechargez votre portefeuille avec les moyens de paiement les plus utilisés en Haïti.
+              </p>
+            </div>
 
-        <div className="mx-auto grid max-w-2xl gap-6 sm:grid-cols-2">
-          {PAYMENT_METHODS.map((method, i) => (
-            <Reveal
-              key={method.name}
-              delay={i * 100}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
-            >
-              <img src={method.icon} alt="" aria-hidden className="h-9 w-9" />
-              <h3 className="text-lg font-semibold text-foreground">{method.name}</h3>
-              <p className="text-sm text-muted-foreground">{method.description}</p>
-            </Reveal>
-          ))}
+            <div className="grid gap-4 sm:grid-cols-2">
+              {PAYMENT_METHODS.map((method, i) => (
+                <Reveal
+                  key={method.name}
+                  delay={i * 100}
+                  className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
+                >
+                  <img src={method.icon} alt="" aria-hidden className="h-9 w-9" />
+                  <h3 className="text-lg font-semibold text-foreground">{method.name}</h3>
+                  <p className="text-sm text-muted-foreground">{method.description}</p>
+                </Reveal>
+              ))}
+            </div>
+          </Reveal>
+
+          <Reveal delay={150}>
+            <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-border">
+              <img
+                src={IMAGES.phone}
+                alt="Paiement mobile MonCash NatCash"
+                className="aspect-[4/5] w-full object-cover"
+              />
+            </div>
+          </Reveal>
         </div>
       </section>
 
