@@ -12,6 +12,12 @@ import { ArrowRight } from 'lucide-react'
 
 // ── Data ────────────────────────────────────────────────────────────────
 
+const BRANDS = [
+  { name: 'Alibaba', logo: '/brands/alibaba.png', bg: 'bg-orange-50' },
+  { name: 'Shein', logo: '/brands/shein.png', bg: 'bg-gray-50' },
+  { name: 'Temu', logo: '/brands/temu.jpg', bg: 'bg-orange-50' },
+]
+
 const FEATURES = [
   {
     icon: '/icons/glass/cart.svg',
@@ -257,32 +263,41 @@ export function HomePage() {
           </p>
         </div>
 
-        {/* Right: devis mockup card */}
+        {/* Right: brand logos + devis mockup */}
         <div className="relative mx-auto flex w-full max-w-sm flex-col gap-4">
           <div
-            className="absolute inset-0 -z-10 rounded-[2rem] blur-3xl opacity-25 pointer-events-none"
+            className="absolute inset-0 -z-10 rounded-[2rem] blur-3xl opacity-20 pointer-events-none"
             aria-hidden
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           />
 
+          {/* Brand logos card */}
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
-            <div className="flex w-full items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 px-6 py-8">
-              <div className="grid w-full grid-cols-3 gap-3">
-                {['Alibaba', 'Shein', 'Temu'].map((store) => (
-                  <div
-                    key={store}
-                    className="flex flex-col items-center gap-2 rounded-xl border border-border bg-background p-3"
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                      <span className="text-xs font-bold text-primary">{store[0]}</span>
-                    </div>
-                    <span className="text-xs font-medium text-foreground">{store}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="border-b border-border px-4 py-2.5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Boutiques supportées
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-0 divide-x divide-border">
+              {BRANDS.map((brand) => (
+                <div
+                  key={brand.name}
+                  className={`flex flex-col items-center justify-center gap-2 px-3 py-5 ${brand.bg}`}
+                >
+                  <img
+                    src={brand.logo}
+                    alt={brand.name}
+                    className="h-8 w-auto max-w-[64px] object-contain"
+                  />
+                  <span className="text-[10px] font-semibold text-muted-foreground">
+                    {brand.name}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
+          {/* Devis mockup card */}
           <div className="rounded-3xl border border-border bg-card p-4 shadow-xl">
             <div className="mb-3 flex items-center gap-1.5">
               <div className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
@@ -290,10 +305,14 @@ export function HomePage() {
               <div className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
               <span className="ml-2 text-xs font-medium text-muted-foreground">Votre devis</span>
             </div>
+            <div className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-3 py-2">
+              <img src="/brands/alibaba.png" alt="Alibaba" className="h-4 w-auto object-contain" />
+              <span className="text-xs text-muted-foreground truncate">alibaba.com/product/…</span>
+            </div>
             <div className="space-y-2">
               {[
-                { label: 'Produit (Alibaba)', price: '3 250 HTG' },
-                { label: 'Frais de service', price: '350 HTG' },
+                { label: 'Produit', price: '3 250 HTG' },
+                { label: 'Service KONVWA', price: '350 HTG' },
                 { label: 'Expédition + douane', price: '890 HTG' },
               ].map((line) => (
                 <div key={line.label} className="flex items-center justify-between text-sm">
@@ -306,15 +325,34 @@ export function HomePage() {
               className="mt-3 flex items-center justify-between rounded-xl px-3 py-2.5"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
-              <span className="text-sm font-medium text-white">Total</span>
+              <span className="text-sm font-medium text-white">Total estimé</span>
               <span className="text-sm font-bold text-white">4 490 HTG</span>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ── Trust bar — brand logos ───────────────────────────────────── */}
+      <section className="border-y border-border bg-muted/30 px-4 py-8 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <p className="mb-6 text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Commandez depuis vos boutiques préférées
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16">
+            {BRANDS.map((brand) => (
+              <img
+                key={brand.name}
+                src={brand.logo}
+                alt={brand.name}
+                className="h-8 w-auto max-w-[100px] object-contain opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Stats ─────────────────────────────────────────────────────── */}
-      <section className="border-y border-border bg-muted/40 px-4 py-12 sm:px-6">
+      <section className="border-b border-border bg-muted/40 px-4 py-12 sm:px-6">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 sm:grid-cols-4">
           {STATS.map((stat, i) => (
             <Reveal key={stat.label} delay={i * 80}>
@@ -376,7 +414,9 @@ export function HomePage() {
                 className="flex flex-col items-center gap-3 text-center"
               >
                 <div className="relative">
-                  <img src={step.icon} alt="" aria-hidden className="h-12 w-12" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card shadow-sm">
+                    <img src={step.icon} alt="" aria-hidden className="h-8 w-8" />
+                  </div>
                   <span
                     className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white"
                     style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
@@ -388,6 +428,14 @@ export function HomePage() {
                 <p className="max-w-[180px] text-sm text-muted-foreground">
                   {step.description}
                 </p>
+                {i === 0 && (
+                  <div className="flex items-center gap-2 mt-1">
+                    {BRANDS.map((b) => (
+                      <img key={b.name} src={b.logo} alt={b.name}
+                        className="h-4 w-auto max-w-[36px] object-contain opacity-60" />
+                    ))}
+                  </div>
+                )}
               </Reveal>
             ))}
           </div>
