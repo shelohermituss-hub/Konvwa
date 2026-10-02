@@ -446,9 +446,9 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
           />
           <Label htmlFor="terms" className="text-sm leading-normal cursor-pointer font-normal">
             J'accepte les{' '}
-            <span className="text-primary font-semibold">conditions d'utilisation</span>
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">conditions d'utilisation</a>
             {' '}et la{' '}
-            <span className="text-primary font-semibold">politique de confidentialité</span>
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">politique de confidentialité</a>
           </Label>
         </div>
         {errors.acceptTerms && (

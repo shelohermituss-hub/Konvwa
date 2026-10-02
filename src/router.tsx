@@ -15,6 +15,7 @@ import { AuthPage } from '@/pages/auth'
 
 // Public pages
 import { HomePage } from '@/pages/home'
+import { TermsPage, PrivacyPage } from '@/pages/legal'
 
 // Client pages
 import { DashboardPage } from '@/pages/dashboard'
@@ -78,6 +79,8 @@ export const router = createBrowserRouter([
       { path: 'prices', element: <HomePage /> },
       { path: 'faq', element: <HomePage /> },
       { path: 'contact', element: <HomePage /> },
+      { path: 'terms', element: <TermsPage /> },
+      { path: 'privacy', element: <PrivacyPage /> },
     ],
   },
 
