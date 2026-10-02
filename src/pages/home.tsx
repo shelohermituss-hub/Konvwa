@@ -271,43 +271,43 @@ export function HomePage() {
         </div>
 
         {/* Right: hero import visual composition */}
-        <div className="relative mx-auto w-full max-w-[440px]">
-          {/* Glow */}
+        <div className="relative mx-auto w-full">
+          {/* Orange glow halo */}
           <div
-            className="absolute inset-0 -z-10 rounded-[3rem] blur-3xl opacity-20 pointer-events-none"
+            className="absolute left-1/2 top-1/3 -z-10 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl opacity-30 pointer-events-none"
             aria-hidden
-            style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            style={{ background: 'radial-gradient(circle, #F05A28, transparent 70%)' }}
           />
 
-          {/* Plane — main large visual */}
-          <div className="relative z-10">
-            <img
-              src="/hero/plane.jpg"
-              alt="Avion cargo importation internationale"
-              className="w-full drop-shadow-2xl"
-            />
-          </div>
+          {/* Plane — main large visual, bg removed via multiply */}
+          <img
+            src="/hero/plane.jpg"
+            alt="Avion cargo importation internationale"
+            className="relative z-10 w-full"
+            style={{ mixBlendMode: 'multiply' }}
+          />
 
-          {/* Forklift — offset bottom-right, overlapping */}
-          <div className="relative -mt-16 ml-auto w-[58%] z-20 drop-shadow-xl">
+          {/* Forklift — larger, right-aligned, overlapping plane */}
+          <div className="relative -mt-[22%] ml-auto w-[65%] z-20">
             <img
               src="/hero/forklift.jpg"
               alt="Conteneur logistique"
               className="w-full"
+              style={{ mixBlendMode: 'multiply' }}
             />
           </div>
 
           {/* Payment badge — floating top-right */}
-          <div className="absolute top-4 right-0 z-30 flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 shadow-lg">
+          <div className="absolute top-6 right-0 z-30 flex items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 shadow-md backdrop-blur-sm">
             <span className="text-[11px] font-bold text-foreground">MonCash · NatCash</span>
           </div>
 
           {/* Brand logos — floating bottom-left */}
-          <div className="absolute bottom-4 left-0 z-30 flex flex-wrap gap-1.5">
+          <div className="absolute bottom-6 left-0 z-30 flex flex-wrap gap-1.5">
             {BRANDS.map((brand) => (
               <div
                 key={brand.name}
-                className="flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 shadow-sm"
+                className="flex items-center gap-1.5 rounded-full border border-border bg-background/90 px-2.5 py-1 shadow-sm backdrop-blur-sm"
               >
                 <img
                   src={brand.logo}
