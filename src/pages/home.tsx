@@ -231,7 +231,7 @@ export function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="mx-auto grid w-full max-w-6xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-28">
+      <section className="mx-auto grid w-full max-w-6xl gap-12 px-4 pt-6 pb-16 sm:px-6 md:grid-cols-2 md:items-center md:pt-10 md:pb-28">
         <div className="flex flex-col gap-6">
           <span className="inline-flex w-fit items-center rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
             🇭🇹 Service d'importation haïtien
@@ -272,42 +272,40 @@ export function HomePage() {
 
         {/* Right: hero import visual composition */}
         <div className="relative mx-auto w-full">
-          {/* Orange glow halo */}
+          {/* Orange glow — rendered first so multiply-blended images reveal it */}
           <div
-            className="absolute left-1/2 top-1/3 -z-10 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl opacity-30 pointer-events-none"
+            className="pointer-events-none absolute left-1/2 top-1/3 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl opacity-40"
             aria-hidden
-            style={{ background: 'radial-gradient(circle, #F05A28, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, #F05A28 0%, transparent 70%)' }}
           />
 
-          {/* Plane — main large visual, bg removed via multiply */}
+          {/* Plane — no z-index so mix-blend-mode blends against page bg */}
           <img
             src="/hero/plane.jpg"
             alt="Avion cargo importation internationale"
-            className="relative z-10 w-full"
+            className="relative w-full"
             style={{ mixBlendMode: 'multiply' }}
           />
 
-          {/* Forklift — larger, right-aligned, overlapping plane */}
-          <div className="relative -mt-[22%] ml-auto w-[65%] z-20">
-            <img
-              src="/hero/forklift.jpg"
-              alt="Conteneur logistique"
-              className="w-full"
-              style={{ mixBlendMode: 'multiply' }}
-            />
-          </div>
+          {/* Forklift — negative margin overlap, DOM order paints it on top, no z-index stacking context */}
+          <img
+            src="/hero/forklift.jpg"
+            alt="Conteneur logistique"
+            className="relative -mt-[22%] ml-auto block w-[65%]"
+            style={{ mixBlendMode: 'multiply' }}
+          />
 
-          {/* Payment badge — floating top-right */}
-          <div className="absolute top-6 right-0 z-30 flex items-center gap-1.5 rounded-full border border-border bg-background/90 px-3 py-1.5 shadow-md backdrop-blur-sm">
+          {/* Payment badge */}
+          <div className="absolute top-4 right-0 z-10 flex items-center gap-1.5 rounded-full border border-border bg-background/95 px-3 py-1.5 shadow-md backdrop-blur-sm">
             <span className="text-[11px] font-bold text-foreground">MonCash · NatCash</span>
           </div>
 
-          {/* Brand logos — floating bottom-left */}
-          <div className="absolute bottom-6 left-0 z-30 flex flex-wrap gap-1.5">
+          {/* Brand logos */}
+          <div className="absolute bottom-4 left-0 z-10 flex flex-wrap gap-1.5">
             {BRANDS.map((brand) => (
               <div
                 key={brand.name}
-                className="flex items-center gap-1.5 rounded-full border border-border bg-background/90 px-2.5 py-1 shadow-sm backdrop-blur-sm"
+                className="flex items-center gap-1.5 rounded-full border border-border bg-background/95 px-2.5 py-1 shadow-sm backdrop-blur-sm"
               >
                 <img
                   src={brand.logo}
