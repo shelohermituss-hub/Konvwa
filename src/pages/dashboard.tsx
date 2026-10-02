@@ -219,9 +219,9 @@ export function DashboardPage() {
             {/* Big balance number + eye toggle */}
             <div className="flex items-center gap-2.5">
               {walletLoading ? (
-                <Skeleton className="h-12 w-44 rounded-xl" />
+                <Skeleton className="h-9 w-36 rounded-xl" />
               ) : (
-                <p className="text-5xl font-black tracking-tight text-foreground leading-none">
+                <p className="text-3xl font-black tracking-tight text-foreground leading-none">
                   {balanceVisible ? Math.floor(balance).toLocaleString('fr-HT') : '• • •'}
                 </p>
               )}
