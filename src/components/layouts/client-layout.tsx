@@ -472,7 +472,7 @@ export function ClientLayout() {
           <TopHeader unread={unread} userId={user?.id} />
         </div>
 
-        <main className="flex-1 min-h-0 overflow-y-auto pb-24 lg:pb-8">
+        <main className="flex-1 min-h-0 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-8">
           <PwaExperience userId={user?.id} />
           <div key={location.pathname} className="page-enter flex min-h-full flex-col [&>*]:flex-1">
             <Outlet />
