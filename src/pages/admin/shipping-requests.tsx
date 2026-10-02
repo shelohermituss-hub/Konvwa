@@ -166,9 +166,9 @@ function AdminActionSheet({
 
   async function handleMarkReviewing() {
     setSaving(true)
-    const { error } = await supabase.from('product_requests')
-      .update({ status: 'reviewing', updated_at: new Date().toISOString() })
-      .eq('id', request.id)
+    const { error } = await supabase.rpc('admin_mark_shipping_reviewing', {
+      p_request_id: request.id,
+    })
     setSaving(false)
     if (error) { toast.error('Erreur : ' + error.message); return }
     toast.success('Demande marquée en révision')
