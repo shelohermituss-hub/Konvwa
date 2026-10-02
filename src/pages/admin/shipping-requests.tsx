@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,8 +11,17 @@ import { cn } from '@/lib/utils'
 import {
   Package, Loader2, ChevronDown, ChevronUp,
   CheckCheck, FileText, Scale, Box, Ship, RefreshCw,
-  Clock, CheckCircle2, AlertCircle,
+  Clock, CheckCircle2, AlertCircle, Calculator, Plane,
 } from 'lucide-react'
+
+interface ShippingRateOption {
+  id: string
+  mode: 'ocean' | 'air'
+  name: string
+  base_fee_usd: number
+  per_cbm_usd: number | null
+  per_kg_usd: number | null
+}
 
 
 interface ShipmentBatch {
@@ -99,22 +108,49 @@ function AdminActionSheet({
 }) {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
-    actual_cbm:        String(request.actual_cbm ?? request.estimated_cbm ?? ''),
-    actual_kg:         String(request.actual_kg  ?? request.estimated_kg  ?? ''),
-    quoted_amount_htg: String(request.quoted_amount_htg ?? ''),
-    final_amount_htg:  String(request.actual_amount_htg ?? request.quoted_amount_htg ?? ''),
-    admin_notes:       request.admin_notes ?? '',
+    actual_cbm:       String(request.actual_cbm ?? request.estimated_cbm ?? ''),
+    actual_kg:        String(request.actual_kg  ?? request.estimated_kg  ?? ''),
+    override_amount:  '',
+    admin_notes:      request.admin_notes ?? '',
+    selected_rate_id: '',
   })
+  const [rates, setRates] = useState<ShippingRateOption[]>([])
+  const [usdToHtg, setUsdToHtg] = useState(140)
   const [batches, setBatches] = useState<ShipmentBatch[]>([])
   const [selectedBatchId, setSelectedBatchId] = useState<string>(request.shipment_id ?? '')
   const [assigningSaving, setAssigningSaving] = useState(false)
 
   useEffect(() => {
-    supabase.from('shipments').select('id, batch_code, status, vessel_info, estimated_arrival')
-      .not('status', 'eq', 'cancelled')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => setBatches((data as ShipmentBatch[]) ?? []))
+    Promise.all([
+      supabase.from('shipping_rates')
+        .select('id, mode, name, base_fee_usd, per_cbm_usd, per_kg_usd')
+        .eq('active', true)
+        .order('mode').order('sort_order'),
+      supabase.from('app_settings').select('value').eq('key', 'usd_to_htg_rate').single(),
+      supabase.from('shipments').select('id, batch_code, status, vessel_info, estimated_arrival')
+        .not('status', 'eq', 'cancelled')
+        .order('created_at', { ascending: false }),
+    ]).then(([ratesRes, settingRes, batchesRes]) => {
+      if (ratesRes.data) setRates(ratesRes.data as ShippingRateOption[])
+      if (settingRes.data) setUsdToHtg(parseFloat(settingRes.data.value) || 140)
+      if (batchesRes.data) setBatches(batchesRes.data as ShipmentBatch[])
+    })
   }, [])
+
+  // Auto-calculate HTG amount from selected rate + CBM/KG
+  const calcResult = useMemo(() => {
+    const rate = rates.find(r => r.id === form.selected_rate_id)
+    if (!rate) return null
+    const cbm = parseFloat(form.actual_cbm) || 0
+    const kg  = parseFloat(form.actual_kg)  || 0
+    const mult = request.product_rate_category?.rate_multiplier ?? 1
+    const usd  = rate.base_fee_usd + (rate.per_cbm_usd ?? 0) * cbm + (rate.per_kg_usd ?? 0) * kg
+    return { usd, htg: Math.round(usd * mult * usdToHtg) }
+  }, [form.selected_rate_id, form.actual_cbm, form.actual_kg, rates, usdToHtg, request.product_rate_category])
+
+  const finalAmount = form.override_amount
+    ? parseFloat(form.override_amount)
+    : calcResult?.htg ?? null
 
   async function handleAssignBatch() {
     setAssigningSaving(true)
@@ -140,8 +176,12 @@ function AdminActionSheet({
   }
 
   async function handleSendQuote() {
-    if (!form.actual_cbm || !form.actual_kg || !form.quoted_amount_htg) {
-      toast.error('CBM, poids et montant du devis sont obligatoires')
+    if (!form.actual_cbm || !form.actual_kg) {
+      toast.error('CBM réel et poids réel sont obligatoires')
+      return
+    }
+    if (!finalAmount) {
+      toast.error('Sélectionnez un tarif ou saisissez un montant de remplacement')
       return
     }
     setSaving(true)
@@ -149,7 +189,8 @@ function AdminActionSheet({
       p_request_id:        request.id,
       p_actual_cbm:        parseFloat(form.actual_cbm),
       p_actual_kg:         parseFloat(form.actual_kg),
-      p_quoted_amount_htg: parseFloat(form.quoted_amount_htg),
+      p_quoted_amount_htg: finalAmount,
+      p_quoted_rate_id:    form.selected_rate_id || null,
       p_admin_notes:       form.admin_notes || null,
     })
     setSaving(false)
@@ -157,7 +198,7 @@ function AdminActionSheet({
       toast.error(data?.error ?? error?.message ?? 'Erreur')
       return
     }
-    toast.success('Devis envoyé au client')
+    toast.success('Devis envoyé au client ✓')
     onDone()
   }
 
@@ -177,6 +218,8 @@ function AdminActionSheet({
   }
 
   const s = request.status
+  const oceanRates = rates.filter(r => r.mode === 'ocean')
+  const airRates   = rates.filter(r => r.mode === 'air')
 
   return (
     <Sheet open onOpenChange={v => !v && onClose()}>
@@ -193,7 +236,7 @@ function AdminActionSheet({
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-3 flex items-start gap-2.5">
               <Clock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
               <p className="text-sm text-amber-800 leading-relaxed">
-                En attente de réception — marquez les colis reçus à l'entrepôt pour pourvoir établir le devis officiel.
+                En attente de réception — marquez les colis reçus à l'entrepôt pour établir le devis.
               </p>
             </div>
           )}
@@ -201,7 +244,7 @@ function AdminActionSheet({
             <div className="rounded-xl bg-indigo-50 border border-indigo-200 px-3.5 py-3 flex items-start gap-2.5">
               <Box className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
               <p className="text-sm text-indigo-800 leading-relaxed">
-                Colis reçus — mesurez et pesez les colis, puis envoyez le devis officiel au client.
+                Colis reçus — saisissez les mesures réelles, choisissez le tarif et envoyez le devis.
               </p>
             </div>
           )}
@@ -209,7 +252,7 @@ function AdminActionSheet({
             <div className="rounded-xl bg-orange-50 border border-orange-200 px-3.5 py-3 flex items-start gap-2.5">
               <AlertCircle className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
               <p className="text-sm text-orange-800 leading-relaxed">
-                Devis envoyé — le client doit régler <span className="font-bold">{fmt(request.quoted_amount_htg)} HTG</span> depuis son portefeuille.
+                Devis envoyé — le client doit régler <span className="font-bold">{fmt(request.quoted_amount_htg)} HTG</span>.
               </p>
             </div>
           )}
@@ -227,7 +270,7 @@ function AdminActionSheet({
             <p className="font-semibold">{request.profiles?.full_name ?? 'Client inconnu'}</p>
             {request.profiles?.phone && <p className="text-muted-foreground">{request.profiles.phone}</p>}
             <p className="text-muted-foreground">
-              {request.product_rate_category?.name ?? '—'} ·{' '}
+              {request.product_rate_category?.name ?? '—'} · {' '}
               {request.warehouse?.flag_emoji} {request.warehouse?.name ?? '—'}
             </p>
             {request.origin_country && (
@@ -235,17 +278,15 @@ function AdminActionSheet({
                 Origine : {request.origin_country === 'CN' ? '🇨🇳 Chine' : request.origin_country === 'US' ? '🇺🇸 États-Unis' : request.origin_country}
               </p>
             )}
-            {request.destination_address && (
-              <p className="text-muted-foreground">Destination : {request.destination_address}</p>
-            )}
             <p className="text-muted-foreground">Créé le {fmtDate(request.created_at)}</p>
             {request.notes && <p className="text-muted-foreground italic">"{request.notes}"</p>}
           </div>
 
-          {/* Dimensions + quote — only shown once packages are received */}
+          {/* ── Mesures + calcul automatique (statut received) ── */}
           {(s === 'received' || s === 'quoted' || s === 'invoiced') && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <p className="text-sm font-semibold">Mesures réelles</p>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">CBM réel (m³)</Label>
@@ -257,7 +298,7 @@ function AdminActionSheet({
                     disabled={s !== 'received'}
                   />
                   {request.estimated_cbm != null && (
-                    <p className="text-[10px] text-muted-foreground">Estimé: {request.estimated_cbm} m³</p>
+                    <p className="text-[10px] text-muted-foreground">Estimé : {request.estimated_cbm} m³</p>
                   )}
                 </div>
                 <div className="space-y-1">
@@ -270,20 +311,109 @@ function AdminActionSheet({
                     disabled={s !== 'received'}
                   />
                   {request.estimated_kg != null && (
-                    <p className="text-[10px] text-muted-foreground">Estimé: {request.estimated_kg} kg</p>
+                    <p className="text-[10px] text-muted-foreground">Estimé : {request.estimated_kg} kg</p>
                   )}
                 </div>
               </div>
 
+              {/* Tarif + calcul auto — seulement lors de la saisie du devis */}
               {s === 'received' && (
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">Montant du devis officiel (HTG)</Label>
-                  <Input
-                    type="number" step="1" placeholder="12 000"
-                    value={form.quoted_amount_htg}
-                    onChange={e => setForm(p => ({ ...p, quoted_amount_htg: e.target.value }))}
-                    className="rounded-xl"
-                  />
+                <>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Tarif d'expédition applicable
+                    </Label>
+                    <Select
+                      value={form.selected_rate_id}
+                      onValueChange={v => setForm(p => ({ ...p, selected_rate_id: v, override_amount: '' }))}
+                    >
+                      <SelectTrigger className="rounded-xl text-sm h-11">
+                        <SelectValue placeholder="Choisir un tarif…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {oceanRates.length > 0 && (
+                          <>
+                            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                              <Ship className="h-3 w-3" /> Fret maritime
+                            </div>
+                            {oceanRates.map(r => (
+                              <SelectItem key={r.id} value={r.id}>
+                                {r.name}
+                                {r.per_cbm_usd != null && ` · $${r.per_cbm_usd}/m³`}
+                                {r.per_kg_usd  != null && ` · $${r.per_kg_usd}/kg`}
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                        {airRates.length > 0 && (
+                          <>
+                            <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 mt-1">
+                              <Plane className="h-3 w-3" /> Fret aérien
+                            </div>
+                            {airRates.map(r => (
+                              <SelectItem key={r.id} value={r.id}>
+                                {r.name}
+                                {r.per_kg_usd != null && ` · $${r.per_kg_usd}/kg`}
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Résultat du calcul automatique */}
+                  {calcResult && (
+                    <div className="rounded-xl bg-primary/6 border border-primary/20 p-3.5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calculator className="h-4 w-4 text-primary shrink-0" />
+                        <p className="text-sm font-semibold text-primary">Montant calculé automatiquement</p>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <p className="text-2xl font-bold text-foreground">
+                          {new Intl.NumberFormat('fr-HT').format(calcResult.htg)}
+                        </p>
+                        <p className="text-sm text-muted-foreground font-medium">HTG</p>
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          ≈ ${calcResult.usd.toFixed(2)} USD × {usdToHtg} × ×{request.product_rate_category?.rate_multiplier ?? 1}
+                        </span>
+                      </div>
+                      {form.override_amount && (
+                        <p className="text-[11px] text-amber-600 mt-1">⚠ Montant de remplacement actif</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Montant de remplacement (optionnel) */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">
+                      Montant de remplacement (HTG) <span className="font-normal italic">— optionnel, remplace le calcul</span>
+                    </Label>
+                    <Input
+                      type="number" step="1" placeholder={calcResult ? String(calcResult.htg) : 'ex. 15 000'}
+                      value={form.override_amount}
+                      onChange={e => setForm(p => ({ ...p, override_amount: e.target.value }))}
+                      className="rounded-xl"
+                    />
+                  </div>
+
+                  {/* Résumé final */}
+                  {finalAmount != null && (
+                    <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 flex items-center justify-between">
+                      <p className="text-sm font-semibold text-emerald-800">Devis à envoyer</p>
+                      <p className="text-lg font-bold text-emerald-700">
+                        {new Intl.NumberFormat('fr-HT').format(finalAmount)} HTG
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Affichage des montants déjà définis */}
+              {(s === 'quoted' || s === 'invoiced') && (
+                <div className="rounded-xl bg-orange-50 border border-orange-200 px-3.5 py-2.5 flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">Devis envoyé</p>
+                  <p className="font-bold text-orange-700">{fmt(request.quoted_amount_htg)} HTG</p>
                 </div>
               )}
             </div>
@@ -380,11 +510,11 @@ function AdminActionSheet({
             <Button
               className="w-full rounded-xl gap-2"
               onClick={handleSendQuote}
-              disabled={saving}
+              disabled={saving || !finalAmount}
               style={BTN_ORANGE}
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-              Envoyer le devis officiel
+              Envoyer le devis — {finalAmount ? `${new Intl.NumberFormat('fr-HT').format(finalAmount)} HTG` : 'saisir les données'}
             </Button>
           )}
           <Button variant="outline" className="w-full rounded-xl" onClick={onClose}>
