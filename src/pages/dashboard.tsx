@@ -10,7 +10,6 @@ import {
 import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
-import { cn } from '@/lib/utils'
 
 interface WalletData {
   available_balance: number
