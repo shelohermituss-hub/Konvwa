@@ -11,6 +11,13 @@ import { CartProvider } from "@/lib/cart-context"
 import { Toaster } from "sonner"
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt"
 
+// Chrome fires this once, possibly before React mounts: keep it for the install popup.
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault()
+  window.__installPrompt = e as Window['__installPrompt']
+  window.dispatchEvent(new Event('konvwa:installable'))
+})
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {})
