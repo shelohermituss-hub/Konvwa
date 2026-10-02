@@ -211,12 +211,12 @@ export function DashboardPage() {
   const rightCol = products.filter((_, i) => i % 2 === 1)
 
   return (
-    <div className="min-h-full bg-[#F4F5F7] w-full flex flex-col">
+    <div className="h-full bg-[#F4F5F7] w-full flex flex-col overflow-hidden">
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          STICKY HEADER
+          FIXED HEADER (shrink-0 = never scrolls)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="sticky top-0 z-10 bg-[#F4F5F7] pt-5 pb-3 px-4 space-y-3 border-b border-gray-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+      <div className="shrink-0 bg-[#F4F5F7] pt-5 pb-3 px-4 space-y-3 border-b border-gray-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
 
         {/* ── Greeting row ── */}
         <div className="flex items-center justify-between">
@@ -245,9 +245,9 @@ export function DashboardPage() {
               <Skeleton className="h-6 w-20 rounded-lg" />
             ) : (
               <div className="text-right">
-                <p className="text-base font-extrabold tracking-tight text-foreground leading-none">
+                <p className="text-2xl font-black tracking-tight text-foreground leading-none">
                   {balanceVisible ? Math.floor(balance).toLocaleString('fr-HT') : '•••••'}
-                  <span className="text-[10px] font-semibold text-muted-foreground ml-0.5">HTG</span>
+                  <span className="text-xs font-semibold text-muted-foreground ml-1">HTG</span>
                 </p>
                 {wallet && wallet.blocked_balance > 0 && balanceVisible && (
                   <p className="text-[10px] text-amber-500 font-semibold leading-none mt-0.5">
@@ -325,7 +325,7 @@ export function DashboardPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           SCROLLABLE PRODUCTS GRID
       ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="flex-1 px-4 pt-4 pb-28">
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-28">
 
         {/* Section header */}
         <div className="flex items-center justify-between mb-3">
