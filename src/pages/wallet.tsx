@@ -119,106 +119,100 @@ function ProofUpload({
 }
 
 function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
-  const [copied, setCopied] = useState(false)
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
   const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
   const badge = STATUS_BADGE[tx.status] ?? STATUS_BADGE.pending
+  const AmountIcon = isCredit ? ArrowDownLeft : ArrowUpRight
 
-  function copy(text: string) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  function copy(key: string, text: string) {
     navigator.clipboard.writeText(text).then(() => {
       haptics.copy()
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setCopiedKey(key)
+      setTimeout(() => setCopiedKey(null), 2000)
     })
   }
 
-  const rows: { label: string; value: string; copyable?: boolean }[] = [
-    { label: 'Statut',      value: badge.label },
-    { label: 'Type',        value: config.label },
+  const rows: { label: string; value: string; copyText?: string }[] = [
+    { label: 'Type', value: config.label },
     ...(tx.payment_method ? [{ label: 'Méthode', value: METHOD_LABEL[tx.payment_method] ?? tx.payment_method }] : []),
-    ...(tx.reference ? [{ label: 'Référence', value: tx.reference, copyable: true }] : []),
-    ...(tx.proof_url ? [{ label: 'Preuve', value: 'Soumise ✓' }] : []),
-    { label: 'ID Transaction', value: tx.id.slice(0, 16) + '…', copyable: true },
+    ...(tx.description ? [{ label: 'Description', value: tx.description }] : []),
+    ...(tx.reference ? [{ label: 'Référence', value: tx.reference, copyText: tx.reference }] : []),
+    ...(tx.proof_url ? [{ label: 'Preuve de paiement', value: 'Soumise' }] : []),
+    { label: 'ID transaction', value: tx.id.slice(0, 8).toUpperCase(), copyText: tx.id },
     { label: 'Date', value: new Date(tx.created_at).toLocaleString('fr-HT', { dateStyle: 'medium', timeStyle: 'short' }) },
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4" onClick={onClose}>
-      {/* Backdrop */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #4F2A8F 0%, #6B3FAF 40%, #3B1F7A 100%)', opacity: 0.95 }} />
-
+    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Détails de la transaction">
       <div
-        className="relative w-full max-w-sm"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute -top-10 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-        >
-          <X className="h-4 w-4 text-white" />
-        </button>
+        className="absolute inset-0 bg-black/45 backdrop-blur-[2px] animate-in fade-in duration-200"
+        onClick={onClose}
+      />
 
-        {/* Receipt card */}
-        <div className="rounded-3xl bg-white overflow-hidden shadow-2xl">
-          {/* Amount header */}
-          <div className="px-6 pt-7 pb-6 text-center" style={{ background: 'linear-gradient(160deg, #4F2A8F, #6B3FAF)' }}>
-            <p className="text-xs uppercase tracking-widest text-white/60 font-semibold mb-2">
+      <div className="relative flex max-h-[min(92dvh,720px)] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl animate-in slide-in-from-bottom duration-300 sm:rounded-3xl">
+        {/* Grab handle + header */}
+        <div className="shrink-0 px-5 pt-2.5">
+          <div className="mx-auto h-1 w-10 rounded-full bg-gray-200 sm:hidden" />
+          <div className="mt-2 flex items-center justify-between">
+            <h2 className="text-base font-bold tracking-tight">Détails de la transaction</h2>
+            <button
+              onClick={onClose}
+              aria-label="Fermer"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 active:scale-95"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4">
+          {/* Amount hero */}
+          <div className="flex flex-col items-center rounded-2xl bg-[#F4F5F7] px-4 py-6 text-center">
+            <div className={cn('flex h-14 w-14 items-center justify-center rounded-2xl', config.bg)}>
+              <AmountIcon className={cn('h-6 w-6', config.color)} strokeWidth={2.2} />
+            </div>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               {isCredit ? 'Montant crédité' : 'Montant débité'}
             </p>
-            <p className={cn('text-4xl font-black', isCredit ? 'text-emerald-300' : 'text-white')}>
+            <p className={cn('mt-1 text-4xl font-extrabold tracking-tight tabular-nums', isCredit ? 'text-emerald-600' : 'text-foreground')}>
               {isCredit ? '+' : '-'}{tx.amount.toLocaleString('fr-HT')}
+              <span className="ml-1.5 text-base font-bold text-muted-foreground">HTG</span>
             </p>
-            <p className="text-white/50 text-sm font-semibold mt-1">HTG</p>
-
-            {/* Status pill */}
-            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
-              style={{
-                background: tx.status === 'completed' ? 'rgba(52,211,153,0.2)' : tx.status === 'failed' ? 'rgba(248,113,113,0.2)' : 'rgba(251,191,36,0.2)',
-                color: tx.status === 'completed' ? '#34d399' : tx.status === 'failed' ? '#f87171' : '#fbbf24',
-              }}
-            >
-              <span className="h-1.5 w-1.5 rounded-full"
-                style={{ background: tx.status === 'completed' ? '#34d399' : tx.status === 'failed' ? '#f87171' : '#fbbf24' }}
-              />
+            <span className={cn('mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold', badge.className)}>
+              <span className="h-1.5 w-1.5 rounded-full bg-current" />
               {badge.label}
-            </div>
+            </span>
           </div>
 
-          {/* Jagged edge separator */}
-          <div className="relative h-4 overflow-hidden" style={{ background: 'linear-gradient(160deg, #4F2A8F, #6B3FAF)' }}>
-            <svg viewBox="0 0 360 16" preserveAspectRatio="none" className="absolute bottom-0 w-full h-4" fill="white">
-              <path d="M0,16 L0,8 L18,16 L36,8 L54,16 L72,8 L90,16 L108,8 L126,16 L144,8 L162,16 L180,8 L198,16 L216,8 L234,16 L252,8 L270,16 L288,8 L306,16 L324,8 L342,16 L360,8 L360,16 Z" />
-            </svg>
-          </div>
-
-          {/* Detail rows */}
-          <div className="px-6 pt-3 pb-7 space-y-3.5">
+          {/* Details */}
+          <div className="mt-4 divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-white">
             {rows.map((row) => (
-              <div key={row.label} className="flex items-center justify-between gap-4">
-                <span className="text-xs text-muted-foreground font-medium shrink-0">{row.label}</span>
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-xs font-semibold text-foreground text-right truncate max-w-[180px]">{row.value}</span>
-                  {row.copyable && (
+              <div key={row.label} className="flex items-center justify-between gap-4 px-4 py-3.5">
+                <span className="shrink-0 text-sm text-muted-foreground">{row.label}</span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="min-w-0 break-words text-right text-sm font-semibold text-foreground">{row.value}</span>
+                  {row.copyText && (
                     <button
-                      onClick={() => copy(row.value)}
-                      className="shrink-0 rounded p-0.5 hover:bg-muted transition-colors"
+                      onClick={() => copy(row.label, row.copyText!)}
+                      aria-label={`Copier ${row.label}`}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-gray-100 active:scale-95"
                     >
-                      {copied
-                        ? <CheckCheck className="h-3 w-3 text-emerald-500" />
-                        : <Copy className="h-3 w-3 text-muted-foreground" />}
+                      {copiedKey === row.label
+                        ? <CheckCheck className="h-4 w-4 text-emerald-500" />
+                        : <Copy className="h-4 w-4" />}
                     </button>
                   )}
                 </div>
               </div>
             ))}
-
-            {/* Divider */}
-            <div className="border-t border-dashed border-border/60 pt-3">
-              <p className="text-center text-[10px] text-muted-foreground/50 font-medium">
-                Propulsé par MonCash & NatCash
-              </p>
-            </div>
           </div>
         </div>
       </div>
