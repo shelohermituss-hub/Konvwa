@@ -8,10 +8,10 @@ import { AdminLayout } from '@/components/layouts/admin-layout'
 // Guards
 import { AuthGuard } from '@/components/shared/auth-guard'
 import { AdminGuard } from '@/components/shared/auth-guard'
+import { HomeGuard } from '@/components/shared/home-guard'
 
 // Auth
 import { AuthPage } from '@/pages/auth'
-import { OnboardingPage } from '@/pages/onboarding'
 
 // Public pages
 import { HomePage } from '@/pages/home'
@@ -51,18 +51,6 @@ import { AdminProductsPage } from '@/pages/admin/products'
 import { AdminNotificationsPage } from '@/pages/admin/notifications'
 
 export const router = createBrowserRouter([
-  // Root: show onboarding if never seen, otherwise go to auth
-  {
-    path: '/',
-    element: (() => {
-      try {
-        if (localStorage.getItem('konvwa_onboarding_seen')) return <Navigate to="/auth" replace />
-      } catch { /* */ }
-      return <OnboardingPage />
-    })(),
-  },
-  { path: '/onboarding', element: <OnboardingPage /> },
-
   // Payment return — public (MonCash/NatCash redirect callback)
   { path: '/payment/return', element: <PaymentReturnPage /> },
 
@@ -80,11 +68,12 @@ export const router = createBrowserRouter([
   { path: '/login',    element: <Navigate to="/auth" replace /> },
   { path: '/register', element: <Navigate to="/auth" replace /> },
 
-  // Public marketing routes (retain for SEO / direct links)
+  // Public marketing routes (landing page + sub-pages)
   {
     path: '/',
     element: <PublicLayout />,
     children: [
+      { index: true, element: <HomeGuard><HomePage /></HomeGuard> },
       { path: 'how-it-works', element: <HomePage /> },
       { path: 'prices', element: <HomePage /> },
       { path: 'faq', element: <HomePage /> },
