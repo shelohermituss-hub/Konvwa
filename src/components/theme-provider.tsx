@@ -94,7 +94,7 @@ export function ThemeProvider({
       root.classList.add(resolvedTheme)
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute("content", resolvedTheme === "dark" ? "#0b1220" : "#FFFFFF")
+        ?.setAttribute("content", resolvedTheme === "dark" ? "#171717" : "#FFFFFF")
 
       if (restoreTransitions) {
         restoreTransitions()

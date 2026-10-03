@@ -7,6 +7,6 @@
     root.classList.remove('light', 'dark')
     root.classList.add(dark ? 'dark' : 'light')
     var meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', dark ? '#0b1220' : '#FFFFFF')
+    if (meta) meta.setAttribute('content', dark ? '#171717' : '#FFFFFF')
   } catch (e) { /* storage blocked: stay light */ }
 })()
