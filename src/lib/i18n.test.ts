@@ -25,6 +25,7 @@ describe('server rule order', () => {
     }
     expect(match('Paiement commande KW-123 (échéance 2/3)')).toBe('Order payment KW-123 (installment 2/3)')
     expect(match('Paiement commande KW-123')).toBe('Order payment KW-123')
+    expect(match("Frais d'expédition commande produits #ABCD1234")).toBe('Shipping fee, catalogue order #ABCD1234')
   })
 })
 

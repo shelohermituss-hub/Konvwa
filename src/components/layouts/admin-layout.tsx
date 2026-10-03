@@ -28,6 +28,7 @@ function AdminSidebar() {
     { title: tr('Notifications'), url: '/admin/notifications', icon: Bell },
     { title: tr('Scan réception'), url: '/admin/scan', icon: ScanLine },
     { title: tr('Dem. expédition'), url: '/admin/shipping-requests', icon: PackageSearch },
+    { title: tr('Commandes catalogue'), url: '/admin/product-orders', icon: Package },
     { title: tr('Retrait et livraison'), url: '/admin/delivery-options', icon: MapPin },
     { title: tr('Config. expédition'), url: '/admin/shipping-config', icon: Truck },
     { title: tr('Vérification d\'identité'), url: '/admin/kyc', icon: BadgeCheck },

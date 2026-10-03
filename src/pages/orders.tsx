@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 
 import { IllustrationEmptyOrders } from '@/components/shared/illustrations'
 
+import { needsShippingPayment, productOrderStage, productOrderStageLabel } from '@/lib/product-order'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface OrderRow {
   id: string
@@ -24,6 +25,11 @@ interface OrderRow {
     estimated_delivery_days: number | null
     product_requests: { product_name: string } | null
   } | null
+}
+
+interface CatalogOrderRow {
+  id: string; status: string; payment_status: string; total_htg: number; created_at: string
+  received_at: string | null; shipping_amount_htg: number | null; shipping_paid_at: string | null
 }
 
 interface DraftRow {
@@ -55,6 +61,7 @@ export function OrdersPage() {
   const { t } = useI18n()
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [drafts, setDrafts] = useState<DraftRow[]>([])
+  const [catalogOrders, setCatalogOrders] = useState<CatalogOrderRow[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -75,7 +82,14 @@ export function OrdersPage() {
         .or('request_type.is.null,request_type.neq.shipping')
         .in('status', ['submitted', 'reviewing'])
         .order('created_at', { ascending: false }),
-    ]).then(([ordersRes, draftsRes]) => {
+      supabase
+        .from('product_orders')
+        .select('id, status, payment_status, total_htg, created_at, received_at, shipping_amount_htg, shipping_paid_at')
+        .eq('user_id', user.id)
+        .neq('payment_status', 'unpaid')
+        .order('created_at', { ascending: false }),
+    ]).then(([ordersRes, draftsRes, catalogRes]) => {
+      if (catalogRes.data) setCatalogOrders(catalogRes.data as CatalogOrderRow[])
       if (ordersRes.data) setOrders(ordersRes.data as unknown as OrderRow[])
       if (draftsRes.data) setDrafts(draftsRes.data as DraftRow[])
       setLoading(false)
@@ -103,8 +117,9 @@ export function OrdersPage() {
     return d
   }
 
-  const isEmpty = filteredOrders.length === 0 && filteredDrafts.length === 0
-  const totalCount = orders.length + drafts.length
+  const showCatalog = statusFilter === 'all' && !search && catalogOrders.length > 0
+  const isEmpty = filteredOrders.length === 0 && filteredDrafts.length === 0 && !showCatalog
+  const totalCount = orders.length + drafts.length + catalogOrders.length
 
   return (
     <div className="min-h-full bg-[#F4F5F7] w-full">
@@ -224,6 +239,35 @@ export function OrdersPage() {
                     </div>
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* ── Achats du catalogue ── */}
+            {statusFilter === 'all' && !search && catalogOrders.length > 0 && (
+              <div className="space-y-2.5">
+                <p className="px-1 pt-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">{tr('Achats du catalogue')}</p>
+                {catalogOrders.map((co) => {
+                  const stage = productOrderStage(co)
+                  const due = needsShippingPayment(co)
+                  return (
+                    <Link key={co.id} to={`/product-orders/${co.id}`}>
+                      <div className={cn('flex items-center gap-3 rounded-2xl border bg-white p-4 shadow-sm transition-colors hover:border-primary/20', due ? 'border-amber-300' : 'border-gray-100')}>
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/8">
+                          <img src="/icon-box.jpg" alt="" className="h-7 w-7 object-contain" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold">{tr('Commande catalogue')} #{co.id.slice(0, 8).toUpperCase()}</p>
+                          <p className={cn('mt-1 text-xs font-semibold', due ? 'text-amber-700' : 'text-muted-foreground')}>{productOrderStageLabel(stage)}</p>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                          <p className="text-sm font-bold">{co.total_htg.toLocaleString(LOCALE_TAG)}</p>
+                          <p className="text-[10px] text-muted-foreground">HTG</p>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
               </div>
             )}
 

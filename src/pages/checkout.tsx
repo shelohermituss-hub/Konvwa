@@ -26,6 +26,7 @@ export function CheckoutPage() {
   const [loadingWallet, setLoadingWallet] = useState(true)
   const [paying, setPaying] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -71,6 +72,7 @@ export function CheckoutPage() {
       if (rpcResult && rpcResult.success === false) throw new Error(rpcResult.error ?? tr('Paiement refusé'))
 
       await clearCart()
+      setOrderId(order.id)
       setSuccess(true)
       inviteInstall()
     } catch (e: unknown) {
@@ -90,11 +92,14 @@ export function CheckoutPage() {
           </div>
           <h1 className="text-lg font-bold mb-2">{t('checkout.success')}</h1>
           <p className="text-sm text-muted-foreground mb-2">{t('checkout.success_sub')}</p>
-          <p className="text-2xl font-black text-emerald-700 mb-6">
+          <p className="text-2xl font-black text-emerald-700 mb-3">
             {total.toLocaleString(LOCALE_TAG)} HTG
           </p>
+          <p className="mb-6 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            {tr('Vous avez payé l\'achat des produits. À l\'arrivée du colis à l\'entrepôt, nous vous préviendrons pour payer l\'expédition.')}
+          </p>
           <button
-            onClick={() => navigate('/orders')}
+            onClick={() => navigate(orderId ? `/product-orders/${orderId}` : '/orders')}
             className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white mb-3"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
@@ -128,6 +133,11 @@ export function CheckoutPage() {
       </div>
 
       <div className="px-4 pt-4 space-y-4">
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-foreground">
+          <p className="font-bold">{tr('Achat seul')}</p>
+          <p className="mt-0.5 text-muted-foreground">{tr('Vous payez ici l\'achat des produits. L\'expédition se paie plus tard, quand votre colis est arrivé à l\'entrepôt et que nous vous prévenons.')}</p>
+        </div>
+
         {/* Order summary */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">

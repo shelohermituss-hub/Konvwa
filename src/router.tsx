@@ -23,6 +23,7 @@ import { TermsPage, PrivacyPage } from '@/pages/legal'
 import { DashboardPage } from '@/pages/dashboard'
 import { SubmitPage } from '@/pages/submit'
 import { OrdersPage } from '@/pages/orders'
+import { ProductOrderDetailPage } from '@/pages/product-order-detail'
 import { OrderDetailPage } from '@/pages/order-detail'
 import { ShipmentsPage } from '@/pages/shipments'
 import { ShipmentDetailPage } from '@/pages/shipment-detail'
@@ -54,6 +55,7 @@ import { AdminPaymentsPage } from '@/pages/admin/payments'
 import { AdminUsersPage } from '@/pages/admin/users'
 import { AdminDisputesPage } from '@/pages/admin/disputes'
 import { AdminSettingsPage } from '@/pages/admin/settings'
+import { AdminProductOrdersPage } from '@/pages/admin/product-orders'
 import { AdminDeliveryOptionsPage } from '@/pages/admin/delivery-options'
 import { AdminShippingConfigPage } from '@/pages/admin/shipping-config'
 import { AdminShippingRequestsPage } from '@/pages/admin/shipping-requests'
@@ -127,6 +129,7 @@ export const router = createBrowserRouter([
       { path: 'submit', element: <SubmitPage /> },
       { path: 'orders', element: <OrdersPage /> },
       { path: 'orders/:id', element: <OrderDetailPage /> },
+      { path: 'product-orders/:id', element: <ProductOrderDetailPage /> },
       { path: 'shipments', element: <ShipmentsPage /> },
       { path: 'shipments/:id', element: <ShipmentDetailPage /> },
       { path: 'wallet', element: <WalletPage /> },
@@ -167,6 +170,7 @@ export const router = createBrowserRouter([
       { path: 'disputes', element: <AdminDisputesPage /> },
       { path: 'analytics', element: <AdminDashboard /> },
       { path: 'products', element: <AdminProductsPage /> },
+      { path: 'product-orders', element: <AdminProductOrdersPage /> },
       { path: 'delivery-options', element: <AdminDeliveryOptionsPage /> },
       { path: 'shipping-config', element: <AdminShippingConfigPage /> },
       { path: 'shipping-requests', element: <AdminShippingRequestsPage /> },
