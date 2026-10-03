@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
-  Plus, Eye, EyeOff, ArrowDownLeft, TrendingUp,
+  Wallet, Eye, EyeOff, ArrowDownLeft, TrendingUp,
   Send, Ship, ShoppingBag, HelpCircle, Search, X, Package,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
@@ -229,7 +229,7 @@ export function DashboardPage() {
             </Avatar>
             <div>
               <p className="text-[11px] text-muted-foreground font-medium leading-none mb-0.5">{t('dash.greeting')}</p>
-              <h1 className="text-base font-bold tracking-tight text-foreground leading-none">{firstName} 👋</h1>
+              <h1 className="text-base font-bold tracking-tight text-foreground leading-none">{firstName}</h1>
             </div>
           </div>
 
@@ -256,14 +256,14 @@ export function DashboardPage() {
                 )}
               </div>
             )}
-            <Link to="/submit" onClick={handleTap}>
-              <button
-                className="flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-white shadow-sm pressable"
-                style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-              >
-                <Plus className="h-3 w-3" />
-                {t('common.new')}
-              </button>
+            <Link
+              to="/wallet"
+              onClick={handleTap}
+              aria-label="Portefeuille"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white shadow-sm pressable"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
+              <Wallet className="h-4 w-4" />
             </Link>
           </div>
         </div>
