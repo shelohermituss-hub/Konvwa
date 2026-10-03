@@ -479,4 +479,11 @@ export const FEATURES_EN: Record<string, string> = {
   "Les notifications sont obligatoires pour continuer.": "Notifications are required to continue.",
   "Validez d'abord le captcha.": "Complete the captcha first.",
   "Captcha indisponible. Vérifiez votre connexion puis rechargez la page.": "Captcha unavailable. Check your connection and reload the page.",
+  "Clair": "Light",
+  "Sombre": "Dark",
+  "Système": "System",
+  "Apparence": "Appearance",
+  "Passer en mode clair": "Switch to light mode",
+  "Passer en mode sombre": "Switch to dark mode",
+  "Choisissez l'apparence de l'application. « Système » suit le réglage de votre téléphone.": "Choose how the app looks. “System” follows your phone's setting.",
 }

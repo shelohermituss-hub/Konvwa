@@ -20,6 +20,7 @@ import { isStandalone, requestInstall } from '@/lib/pwa'
 import { formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
 
+import { ThemeQuickToggle } from '@/components/shared/theme-switch'
 import { tr, pickLocalized } from '@/lib/i18n'
 const NAV_ITEMS = [
   { labelKey: 'nav.home',      Icon: LayoutDashboard, path: '/dashboard' },
@@ -418,6 +419,7 @@ function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
       </Link>
       <div className="flex items-center gap-1">
         <LanguageSwitcher />
+        <ThemeQuickToggle />
         <CartBadge />
         <NotifPopover userId={userId} unread={unread} />
         <ProfileMenu />

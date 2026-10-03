@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
   Eye, EyeOff, Loader2, LayoutDashboard, ChevronRight,
-  LogOut, Upload, User, Lock, Bell, Activity, CreditCard, Heart, Gift, Store, ArrowLeft, Check, FileText, HelpCircle,
+  LogOut, Upload, User, Lock, Bell, Activity, CreditCard, Heart, Gift, Store, ArrowLeft, Palette, Check, FileText, HelpCircle,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -17,13 +17,14 @@ import { cn } from '@/lib/utils'
 
 import { tr } from '@/lib/i18n'
 import { AddressSection } from '@/components/shared/address-section'
+import { ThemeSwitch } from '@/components/shared/theme-switch'
 import { PasskeysSection } from '@/components/shared/passkeys-section'
 import { SecuritySection } from '@/components/shared/security-section'
 import { KycSection } from '@/components/shared/kyc-section'
 import { RewardsSection } from '@/components/shared/rewards-section'
 
-type Section = 'personal' | 'notifications' | 'security' | 'rewards'
-const SECTION_KEYS: Section[] = ['personal', 'notifications', 'security', 'rewards']
+type Section = 'personal' | 'appearance' | 'notifications' | 'security' | 'rewards'
+const SECTION_KEYS: Section[] = ['personal', 'appearance', 'notifications', 'security', 'rewards']
 
 export function ProfilePage() {
   const { user, profile, signOut, isAdmin, refreshProfile } = useAuth()
@@ -82,6 +83,17 @@ export function ProfilePage() {
         </>
       ),
     },
+    appearance: {
+      title: tr('Apparence'),
+      body: (
+        <Card>
+          <div className="space-y-3 p-5">
+            <p className="text-sm text-muted-foreground">{tr('Choisissez l\'apparence de l\'application. « Système » suit le réglage de votre téléphone.')}</p>
+            <ThemeSwitch />
+          </div>
+        </Card>
+      ),
+    },
     notifications: { title: tr('Notifications'), body: <Card><PreferencesSection /></Card> },
     security: {
       title: tr('Confidentialité & sécurité'),
@@ -107,6 +119,7 @@ export function ProfilePage() {
 
   const menu: Array<{ key: Section; label: string; Icon: typeof User }> = [
     { key: 'personal', label: tr('Informations personnelles'), Icon: User },
+    { key: 'appearance', label: tr('Apparence'), Icon: Palette },
     { key: 'notifications', label: tr('Notifications'), Icon: Bell },
     { key: 'security', label: tr('Confidentialité & sécurité'), Icon: Lock },
     { key: 'rewards', label: tr('Parrainage & fidélité'), Icon: Gift },

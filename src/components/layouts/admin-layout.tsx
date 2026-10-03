@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
+import { ThemeQuickToggle } from '@/components/shared/theme-switch'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger, SidebarRail } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -115,7 +116,8 @@ function AdminTopBar() {
   return (
     <header className="flex h-14 items-center justify-between border-b border-gray-100 bg-white px-6">
       <SidebarTrigger className="-ml-2" />
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <ThemeQuickToggle />
         <Button variant="ghost" size="icon">
           <Bell className="h-4 w-4" />
         </Button>

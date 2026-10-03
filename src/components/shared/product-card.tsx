@@ -33,7 +33,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
         {product.images.length > 0 ? (
           <img src={product.images[0]} alt={product.name} loading="lazy" className="block h-auto w-full" />
         ) : (
-          <div className="flex aspect-square w-full flex-col items-center justify-center gap-1.5" style={{ background: 'linear-gradient(140deg, #F4F5F7 0%, #EEF0F3 100%)' }}>
+          <div className="flex aspect-square w-full flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 shadow-sm">
               <Package className="h-5 w-5 text-primary/40" strokeWidth={1.5} />
             </div>
