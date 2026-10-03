@@ -7,7 +7,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
-import { CATALOG_DETAIL_SELECT, CATALOG_LIST_SELECT, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_DETAIL_SELECT, CATALOG_LIST_SELECT, localizeProduct, type CatalogProduct } from '@/lib/catalog'
 import { formatHtg, tierRows, unitPriceFor } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
 import { ProductReviews } from '@/components/shared/product-reviews'
@@ -70,7 +70,8 @@ export function ProductDetailPage() {
       .eq('active', true)
       .maybeSingle()
       .then(({ data }) => {
-        const p = data as unknown as CatalogProduct | null
+        const raw = data as unknown as CatalogProduct | null
+        const p = raw ? localizeProduct(raw) : null
         setProduct(p)
         if (p) setQuantity(p.moq)
         setActiveImg(0)
@@ -88,7 +89,7 @@ export function ProductDetailPage() {
       .eq('category', product.category)
       .neq('id', product.id)
       .limit(8)
-      .then(({ data }) => setRelated((data ?? []) as unknown as CatalogProduct[]))
+      .then(({ data }) => setRelated(((data ?? []) as unknown as CatalogProduct[]).map(localizeProduct)))
   }, [product?.id, product?.category])
 
   const goToImage = useCallback((index: number) => {
@@ -191,7 +192,7 @@ export function ProductDetailPage() {
           <button
             onClick={handleWhatsApp}
             aria-label={tr('Partager sur WhatsApp')}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-emerald-600 transition-colors hover:bg-muted"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-emerald-700 transition-colors hover:bg-muted"
           >
             <MessageCircle className="h-5 w-5" strokeWidth={1.8} />
           </button>

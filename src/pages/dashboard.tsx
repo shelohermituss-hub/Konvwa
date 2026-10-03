@@ -238,6 +238,7 @@ export function DashboardPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setBalanceVisible(v => !v)}
+              aria-label={balanceVisible ? tr('Masquer le solde') : tr('Afficher le solde')}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               {balanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -315,6 +316,7 @@ export function DashboardPage() {
           {search && (
             <button
               onClick={() => setSearch('')}
+              aria-label={tr('Effacer la recherche')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="h-4 w-4" />
@@ -391,7 +393,7 @@ export function DashboardPage() {
 
         {/* End of list */}
         {!hasMore && products.length > 0 && (
-          <p className="text-center text-[11px] text-muted-foreground/50 py-6 font-medium">
+          <p className="text-center text-[11px] text-muted-foreground py-6 font-medium">
             {tr('— Fin du catalogue —')}
           </p>
         )}

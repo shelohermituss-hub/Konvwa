@@ -79,9 +79,9 @@ export function RewardsSection() {
             <div className="mt-3 flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2.5">
               <span className="flex-1 font-mono text-lg font-bold tracking-widest">{code}</span>
               <button onClick={() => void copy()} aria-label={tr('Copier le lien')} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white">
-                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="h-4 w-4 text-emerald-700" /> : <Copy className="h-4 w-4" />}
               </button>
-              <button onClick={whatsapp} aria-label={tr('Partager sur WhatsApp')} className="flex h-9 w-9 items-center justify-center rounded-lg text-emerald-600 hover:bg-white">
+              <button onClick={whatsapp} aria-label={tr('Partager sur WhatsApp')} className="flex h-9 w-9 items-center justify-center rounded-lg text-emerald-700 hover:bg-white">
                 <MessageCircle className="h-4 w-4" />
               </button>
             </div>

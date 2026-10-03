@@ -187,7 +187,7 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
           className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
         >
           {copied
-            ? <><Check className="h-3.5 w-3.5 text-emerald-600" /><span className="text-emerald-600">{tr('Copié !')}</span></>
+            ? <><Check className="h-3.5 w-3.5 text-emerald-700" /><span className="text-emerald-700">{tr('Copié !')}</span></>
             : <><Copy className="h-3.5 w-3.5" />{tr('Copier l\'adresse')}</>
           }
         </button>
@@ -256,7 +256,7 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
         <p className="text-xs text-muted-foreground mt-1 truncate">
           {req.warehouse?.name ?? tr('Entrepôt inconnu')}
         </p>
-        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+        <p className="text-[10px] text-muted-foreground mt-0.5">
           {new Date(req.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
       </div>
@@ -264,7 +264,7 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
       <div className="shrink-0 flex flex-col items-end gap-1">
         {displayAmount != null ? (
           <>
-            <p className={cn('text-sm font-bold', isInvoiced ? 'text-emerald-600' : lateDays > 0 ? 'text-red-600' : 'text-primary')}>
+            <p className={cn('text-sm font-bold', isInvoiced ? 'text-emerald-700' : lateDays > 0 ? 'text-red-600' : 'text-primary')}>
               {displayAmount.toLocaleString(LOCALE_TAG)} HTG
             </p>
             <p className="text-[10px] text-muted-foreground">
@@ -398,7 +398,7 @@ function QuoteRequestSheet({
 
             {/* ── Origine ── */}
             <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-primary" />
                 {tr('Pays d\'origine')}{' '}<span className="text-destructive">*</span>
               </p>
@@ -432,7 +432,7 @@ function QuoteRequestSheet({
             {/* ── Product type (Chine only) ── */}
             {originCountry === 'CN' && (
             <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                 <Tag className="h-3.5 w-3.5 text-primary" />
                 {tr('Type de produit')}{' '}<span className="text-destructive">*</span>
               </p>
@@ -477,7 +477,7 @@ function QuoteRequestSheet({
 
             {/* ── Optional estimates ── */}
             <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                 <Package className="h-3.5 w-3.5 text-primary" />
                 {tr('Informations optionnelles')}
               </p>
@@ -531,9 +531,9 @@ function QuoteRequestSheet({
 
             {/* ── Destination en Haïti ── */}
             <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-primary" />
-                {tr('Destination en Haïti')}{' '}<span className="text-xs font-normal normal-case tracking-normal text-muted-foreground/50">(optionnel)</span>
+                {tr('Destination en Haïti')}{' '}<span className="text-xs font-normal normal-case tracking-normal text-muted-foreground">(optionnel)</span>
               </p>
               <Input
                 placeholder={tr('Port-au-Prince, Pétion-Ville, Cap-Haïtien…')}
@@ -730,7 +730,7 @@ export function ShipmentsPage() {
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
             <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
             <p className="font-semibold text-muted-foreground">{tr('Aucune demande')}</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">{tr('Appuyez sur + pour créer une demande')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{tr('Appuyez sur + pour créer une demande')}</p>
           </div>
         ) : (
           shippingRequests.map(r => (

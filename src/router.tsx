@@ -57,15 +57,18 @@ import { AdminAuditLogsPage } from '@/pages/admin/audit-logs'
 import { AdminKycPage } from '@/pages/admin/kyc'
 import { AdminPromosPage } from '@/pages/admin/promos'
 import { AdminInsightsPage } from '@/pages/admin/insights'
+import { RouteError } from '@/pages/route-error'
+import { AdminErrorsPage } from '@/pages/admin/errors'
 import { AdminReconciliationPage } from '@/pages/admin/reconciliation'
 
 export const router = createBrowserRouter([
   // Payment return — public (MonCash/NatCash redirect callback)
-  { path: '/payment/return', element: <PaymentReturnPage /> },
+  { path: '/payment/return', element: <PaymentReturnPage />, errorElement: <RouteError /> },
 
   // Auth page (login, register, forgot, otp, reset, denied)
   {
     path: '/auth',
+    errorElement: <RouteError />,
     element: (
       <AuthGuard requireAuth={false}>
         <AuthPage />
@@ -81,6 +84,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <PublicLayout />,
+    errorElement: <RouteError />,
     children: [
       { index: true, element: <HomeGuard><HomePage /></HomeGuard> },
       { path: 'how-it-works', element: <HomePage /> },
@@ -95,6 +99,7 @@ export const router = createBrowserRouter([
   // Client routes (authenticated)
   {
     path: '/',
+    errorElement: <RouteError />,
     element: (
       <AuthGuard>
         <MfaGate enroll={false}><ClientLayout /></MfaGate>
@@ -125,6 +130,7 @@ export const router = createBrowserRouter([
   // Admin routes (authenticated + admin role)
   {
     path: '/admin',
+    errorElement: <RouteError />,
     element: (
       <AuthGuard>
         <AdminGuard>
@@ -147,6 +153,7 @@ export const router = createBrowserRouter([
       { path: 'shipping-requests', element: <AdminShippingRequestsPage /> },
       { path: 'notifications', element: <AdminNotificationsPage /> },
       { path: 'insights', element: <AdminInsightsPage /> },
+      { path: 'errors', element: <SuperAdminGuard><AdminErrorsPage /></SuperAdminGuard> },
       { path: 'audit-logs', element: <SuperAdminGuard><AdminAuditLogsPage /></SuperAdminGuard> },
       { path: 'kyc', element: <AdminKycPage /> },
       { path: 'promos', element: <SuperAdminGuard><AdminPromosPage /></SuperAdminGuard> },

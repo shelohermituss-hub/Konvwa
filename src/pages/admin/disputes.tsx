@@ -200,7 +200,7 @@ export function AdminDisputesPage() {
           <div className="p-12 text-center">
             <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
             <p className="font-semibold text-muted-foreground">{tr('Aucun ticket')}</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Aucun ticket de support ne correspond')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{tr('Aucun ticket de support ne correspond')}</p>
           </div>
         ) : (
           <Table>
@@ -254,7 +254,7 @@ export function AdminDisputesPage() {
                             setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, status: 'resolved' } : t))
                             toast.success(tr('Ticket marqué comme résolu.'))
                           }}>
-                            <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />{tr('Marquer résolu')}
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-700" />{tr('Marquer résolu')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

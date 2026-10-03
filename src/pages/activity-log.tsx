@@ -128,13 +128,13 @@ export function ActivityLogPage() {
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-12 text-center">
             <Activity className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
             <p className="font-semibold text-sm text-muted-foreground">{t('activity.empty')}</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">{t('activity.empty_sub')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('activity.empty_sub')}</p>
           </div>
         ) : (
           <>
             {dateKeys.map((dateKey) => (
               <div key={dateKey}>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-1 mb-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1 mb-2">
                   {dateKey}
                 </p>
                 <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden divide-y divide-border/40">
@@ -169,7 +169,7 @@ export function ActivityLogPage() {
                         </div>
 
                         {item.message && item.message.length > 60 && (
-                          <ChevronDown className={cn('h-4 w-4 text-muted-foreground/50 shrink-0 mt-1 transition-transform', expanded === item.id && 'rotate-180')} />
+                          <ChevronDown className={cn('h-4 w-4 text-muted-foreground shrink-0 mt-1 transition-transform', expanded === item.id && 'rotate-180')} />
                         )}
                       </div>
 

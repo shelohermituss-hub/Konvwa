@@ -88,7 +88,7 @@ export function CheckoutPage() {
           </div>
           <h1 className="text-lg font-bold mb-2">{t('checkout.success')}</h1>
           <p className="text-sm text-muted-foreground mb-2">{t('checkout.success_sub')}</p>
-          <p className="text-2xl font-black text-emerald-600 mb-6">
+          <p className="text-2xl font-black text-emerald-700 mb-6">
             {total.toLocaleString(LOCALE_TAG)} HTG
           </p>
           <button
@@ -177,7 +177,7 @@ export function CheckoutPage() {
           ) : (
             <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
               <p className="text-sm text-muted-foreground">{t('checkout.balance')}</p>
-              <p className={`text-base font-black ${insufficient ? 'text-destructive' : 'text-emerald-600'}`}>
+              <p className={`text-base font-black ${insufficient ? 'text-destructive' : 'text-emerald-700'}`}>
                 {(wallet?.available_balance ?? 0).toLocaleString(LOCALE_TAG)} HTG
               </p>
             </div>

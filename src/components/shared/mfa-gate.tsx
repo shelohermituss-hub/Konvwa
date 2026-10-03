@@ -90,7 +90,7 @@ export function MfaGate({ children, enroll = true }: { children: ReactNode; enro
             <p className="mt-2 text-sm text-muted-foreground">
               {tr('La double authentification n\'est pas disponible pour le moment. Activez le TOTP (MFA) dans Supabase → Authentication.')}
             </p>
-            {step.reason && <p className="mt-2 text-xs text-muted-foreground/70">{step.reason}</p>}
+            {step.reason && <p className="mt-2 text-xs text-muted-foreground">{step.reason}</p>}
             <div className="mt-5 flex gap-2">
               <Button variant="outline" className="rounded-xl" onClick={() => setBypass(true)}>{tr('Continuer sans')}</Button>
               <Button variant="ghost" className="rounded-xl" onClick={() => void signOut()}>{tr('Se déconnecter')}</Button>

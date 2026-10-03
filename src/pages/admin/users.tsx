@@ -203,7 +203,7 @@ export function AdminUsersPage() {
           <div className="p-12 text-center">
             <Users className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
             <p className="font-semibold text-muted-foreground">{tr('Aucun utilisateur trouvé')}</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Modifiez vos filtres de recherche')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{tr('Modifiez vos filtres de recherche')}</p>
           </div>
         ) : (
           <>

@@ -78,7 +78,7 @@ function SectionHeader({ icon: Icon, label }: { icon: React.ElementType; label: 
   return (
     <div className="flex items-center gap-2">
       <Icon className="h-4 w-4 text-primary" />
-      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">{label}</p>
+      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
     </div>
   )
 }
@@ -572,7 +572,7 @@ export function SubmitPage() {
                     <p className="text-sm font-semibold text-muted-foreground">
                       {tr('Capture d\'écran du produit')}
                     </p>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">{tr('JPG, PNG, WEBP · max 5 MB')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{tr('JPG, PNG, WEBP · max 5 MB')}</p>
                   </div>
                 )}
                 <input
@@ -635,7 +635,7 @@ export function SubmitPage() {
               <div className="px-5 pt-5 pb-1">
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="h-4 w-4 text-primary" />
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                     {tr('Récapitulatif')}
                   </p>
                 </div>
@@ -647,7 +647,7 @@ export function SubmitPage() {
                       <Package className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">{tr('Produit')}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{tr('Produit')}</p>
                       {productName ? (
                         <p className="text-sm font-semibold text-foreground leading-tight truncate">{productName}</p>
                       ) : (
@@ -668,7 +668,7 @@ export function SubmitPage() {
                         <Truck className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">{tr('Trajet')}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{tr('Trajet')}</p>
                         <p className="text-sm font-semibold text-foreground leading-tight">
                           {origins.find(o => o.id === shipFromId)?.flag_emoji}{' '}
                           {origins.find(o => o.id === shipFromId)?.name || '…'}
@@ -686,7 +686,7 @@ export function SubmitPage() {
                       <Truck className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">{tr('Expédition')}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{tr('Expédition')}</p>
                       <p className="text-sm font-semibold text-foreground">
                         {shippingOption === 'all_inclusive' ? tr('Tout inclus') : tr('Séparée')}
                       </p>
@@ -705,7 +705,7 @@ export function SubmitPage() {
                         <Zap className="h-4 w-4 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">{tr('Prix affiché')}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{tr('Prix affiché')}</p>
                         <p className="text-sm font-bold text-foreground">
                           ${price.toFixed(2)}{qty > 1 ? <span className="font-normal text-muted-foreground"> × {qty}</span> : null}
                         </p>
@@ -744,7 +744,7 @@ export function SubmitPage() {
             {/* Étapes du flux */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
                   {tr('Comment ça marche')}
                 </p>
                 <div className="relative">

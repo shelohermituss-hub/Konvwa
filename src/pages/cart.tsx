@@ -6,7 +6,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyCart } from '@/components/shared/illustrations'
 
-import { LOCALE_TAG } from '@/lib/i18n'
+import { LOCALE_TAG, tr } from '@/lib/i18n'
 export function CartPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
@@ -18,6 +18,7 @@ export function CartPage() {
       <div className="sticky top-0 z-30 flex h-14 items-center gap-3 bg-white/95 backdrop-blur-md px-4 border-b border-gray-100 shadow-sm">
         <button
           onClick={() => navigate(-1)}
+          aria-label={tr('Retour')}
           className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -106,7 +107,7 @@ export function CartPage() {
                       <p className="text-sm font-black text-primary">{subtotal.toLocaleString(LOCALE_TAG)} HTG</p>
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-destructive/8 hover:text-destructive text-muted-foreground/50 transition-colors"
+                        className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-destructive/8 hover:text-destructive text-muted-foreground transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

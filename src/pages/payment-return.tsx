@@ -65,7 +65,7 @@ export function PaymentReturnPage() {
             </div>
             <h1 className="text-lg font-bold mb-2">{tr('Paiement confirmé !')}</h1>
             {amount && (
-              <p className="text-3xl font-black text-emerald-600 mb-1">
+              <p className="text-3xl font-black text-emerald-700 mb-1">
                 +{amount.toLocaleString(LOCALE_TAG)} HTG
               </p>
             )}
@@ -127,7 +127,7 @@ export function PaymentReturnPage() {
             </div>
             <h1 className="text-lg font-bold mb-2">{tr('Erreur')}</h1>
             <p className="text-sm text-muted-foreground mb-2">{errMsg}</p>
-            <p className="text-xs text-muted-foreground/70 mb-6">
+            <p className="text-xs text-muted-foreground mb-6">
               {tr('Si vous avez effectué un paiement, contactez le support avec votre référence.')}
             </p>
             <Link

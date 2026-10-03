@@ -182,28 +182,28 @@ export function ProfilePage() {
               <Heart className="h-4 w-4 text-muted-foreground" />
             </div>
             <span className="flex-1 text-sm font-medium">{tr('Mes favoris')}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
           <Link to="/activity-log" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
               <Activity className="h-4 w-4 text-muted-foreground" />
             </div>
             <span className="flex-1 text-sm font-medium">{tr('Journal d\'activité')}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
           <Link to="/billing" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </div>
             <span className="flex-1 text-sm font-medium">{tr('Facturation')}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
           <Link to="/support" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
               <BadgeCheck className="h-4 w-4 text-muted-foreground" />
             </div>
             <span className="flex-1 text-sm font-medium">{tr('Support & Aide')}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         </div>
 
@@ -320,8 +320,9 @@ function PersonalInfoForm({
 
       {/* Email */}
       <div className="space-y-1.5">
-        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{tr('Adresse email')}</Label>
+        <Label htmlFor="profile-email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{tr('Adresse email')}</Label>
         <Input
+          id="profile-email"
           value={user?.email || ''}
           disabled
           className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium opacity-60"
@@ -419,7 +420,7 @@ function AddressSection() {
               {a.default && <span className="rounded-full bg-primary/15 text-primary text-[9px] font-bold px-2 py-0.5">{tr('Principal')}</span>}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">{a.address}</p>
-            {a.phone && <p className="text-xs text-muted-foreground/70 mt-0.5">{a.phone}</p>}
+            {a.phone && <p className="text-xs text-muted-foreground mt-0.5">{a.phone}</p>}
             {!a.default && (
               <button onClick={() => handleSetDefault(a.id)} className="text-[11px] text-primary font-semibold mt-1.5">
                 {tr('Définir par défaut')}
@@ -490,7 +491,7 @@ function PreferencesSection() {
             <p className="text-sm font-medium text-foreground">{item.label}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
           </div>
-          <Switch checked={item.value} onCheckedChange={item.set} className="shrink-0" />
+          <Switch checked={item.value} onCheckedChange={item.set} aria-label={item.label} className="shrink-0" />
         </div>
       ))}
     </div>

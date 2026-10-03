@@ -112,7 +112,7 @@ export function AdminSettingsPage() {
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50">
-              <CreditCard className="h-4 w-4 text-emerald-600" />
+              <CreditCard className="h-4 w-4 text-emerald-700" />
             </div>
             <div>
               <p className="font-semibold text-sm">{tr('API Paiement')}</p>
@@ -259,7 +259,7 @@ export function AdminSettingsPage() {
                         {suffix}
                       </span>
                     </div>
-                    <p className="text-[11px] text-muted-foreground/70">
+                    <p className="text-[11px] text-muted-foreground">
                       {tr('Dernière mise à jour :')}{' '}{new Date(setting.updated_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>

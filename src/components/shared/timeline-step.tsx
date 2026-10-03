@@ -108,7 +108,7 @@ export function TimelineStep({ currentStatus, className }: TimelineStepProps) {
               <p
                 className={cn(
                   'font-semibold text-sm leading-tight transition-colors',
-                  isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground/60'
+                  isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground'
                 )}
               >
                 {step.label}
@@ -203,7 +203,7 @@ export function TimelineList({
             </div>
 
             <div className={cn('flex-1 pb-5 pt-1.5', isLast && 'pb-1')}>
-              <p className={cn('font-semibold text-sm leading-tight', isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground/60')}>
+              <p className={cn('font-semibold text-sm leading-tight', isCompleted || isCurrent ? 'text-foreground' : 'text-muted-foreground')}>
                 {step.label}
                 {isCurrent && (
                   <span className="ml-2 inline-flex items-center rounded-full bg-primary/12 text-primary text-[10px] font-bold px-2 py-0.5">

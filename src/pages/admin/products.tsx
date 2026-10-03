@@ -42,6 +42,11 @@ interface Product {
   customization_options: string[]
   tags: string[]
   certifications: string[]
+  name_en?: string | null
+  description_en?: string | null
+  tags_en?: string[]
+  customization_options_en?: string[]
+  certifications_en?: string[]
   created_at: string
 }
 
@@ -98,6 +103,12 @@ export function AdminProductsPage() {
   const [optionsRaw, setOptionsRaw] = useState('')
   const [tagsRaw, setTagsRaw] = useState('')
   const [certsRaw, setCertsRaw] = useState('')
+  // English version (shown when the customer uses the app in English)
+  const [nameEn, setNameEn] = useState('')
+  const [descEn, setDescEn] = useState('')
+  const [optionsEnRaw, setOptionsEnRaw] = useState('')
+  const [tagsEnRaw, setTagsEnRaw] = useState('')
+  const [certsEnRaw, setCertsEnRaw] = useState('')
 
   async function load() {
     setLoading(true)
@@ -119,6 +130,7 @@ export function AdminProductsPage() {
     setOptionsRaw('')
     setTagsRaw('')
     setCertsRaw('')
+    setNameEn(''); setDescEn(''); setOptionsEnRaw(''); setTagsEnRaw(''); setCertsEnRaw('')
     setSpecKey('')
     setSpecVal('')
     setDialogOpen(true)
@@ -157,6 +169,10 @@ export function AdminProductsPage() {
     setOptionsRaw(p.customization_options.join('\n'))
     setTagsRaw(p.tags.join('\n'))
     setCertsRaw(p.certifications.join('\n'))
+    setNameEn(p.name_en ?? ''); setDescEn(p.description_en ?? '')
+    setOptionsEnRaw((p.customization_options_en ?? []).join('\n'))
+    setTagsEnRaw((p.tags_en ?? []).join('\n'))
+    setCertsEnRaw((p.certifications_en ?? []).join('\n'))
     setImagesRaw(p.images.join(', '))
     setSpecKey('')
     setSpecVal('')
@@ -215,6 +231,11 @@ export function AdminProductsPage() {
       customization_options: lines(optionsRaw),
       tags: lines(tagsRaw),
       certifications: lines(certsRaw),
+      name_en: nameEn.trim() || null,
+      description_en: descEn.trim() || null,
+      customization_options_en: lines(optionsEnRaw),
+      tags_en: lines(tagsEnRaw),
+      certifications_en: lines(certsEnRaw),
     }
 
     if (editing) {
@@ -313,12 +334,12 @@ export function AdminProductsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/60">
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Produit')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Prix HTG')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('MOQ')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Catégorie')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Statut')}</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Actions')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('Produit')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('Prix HTG')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('MOQ')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('Catégorie')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('Statut')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -503,6 +524,36 @@ export function AdminProductsPage() {
                 <Textarea value={certsRaw} onChange={e => setCertsRaw(e.target.value)} rows={3} placeholder={tr('CE certifié')} />
               </div>
             </div>
+
+            {/* English version */}
+            <details className="rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+              <summary className="cursor-pointer text-sm font-semibold">{tr('Version anglaise (optionnelle)')}</summary>
+              <div className="mt-3 space-y-3">
+                <p className="text-xs text-muted-foreground">{tr('Affichée aux clients qui utilisent l\'application en anglais. Un champ vide reprend le texte français.')}</p>
+                <div className="space-y-1.5">
+                  <Label>{tr('Nom (anglais)')}</Label>
+                  <Input value={nameEn} onChange={e => setNameEn(e.target.value)} maxLength={200} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{tr('Description (anglais)')}</Label>
+                  <Textarea value={descEn} onChange={e => setDescEn(e.target.value)} rows={4} maxLength={5000} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{tr('Options de personnalisation (anglais, une par ligne)')}</Label>
+                  <Textarea value={optionsEnRaw} onChange={e => setOptionsEnRaw(e.target.value)} rows={3} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>{tr('Points forts (anglais, un par ligne)')}</Label>
+                    <Textarea value={tagsEnRaw} onChange={e => setTagsEnRaw(e.target.value)} rows={3} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>{tr('Certifications (anglais, une par ligne)')}</Label>
+                    <Textarea value={certsEnRaw} onChange={e => setCertsEnRaw(e.target.value)} rows={3} />
+                  </div>
+                </div>
+              </div>
+            </details>
 
             {/* Specs */}
             <div className="space-y-2">

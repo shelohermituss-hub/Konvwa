@@ -90,7 +90,7 @@ export function KycSection() {
   return (
     <div className="mt-5 border-t border-border/50 pt-5">
       <p className="flex items-center gap-1.5 text-sm font-semibold">
-        {kyc?.status === 'approved' ? <BadgeCheck className="h-4 w-4 text-emerald-600" />
+        {kyc?.status === 'approved' ? <BadgeCheck className="h-4 w-4 text-emerald-700" />
           : kyc?.status === 'pending' ? <Clock className="h-4 w-4 text-amber-500" />
           : <ShieldAlert className="h-4 w-4 text-muted-foreground" />}
         {tr('Vérification d\'identité')}
@@ -110,7 +110,7 @@ export function KycSection() {
               ? tr('Vérification refusée : {0}. Vous pouvez renvoyer vos documents.', kyc.reject_reason ?? '—')
               : tr('Vérifiez votre identité pour sécuriser votre compte et pouvoir effectuer de gros paiements.')}
           </p>
-          <NativeSelect value={docType} onChange={(e) => setDocType(e.target.value)} className="w-full">
+          <NativeSelect value={docType} onChange={(e) => setDocType(e.target.value)} aria-label={tr('Type de document')} className="w-full">
             <NativeSelectOption value="id_card">{tr('Carte d\'identité nationale (CIN)')}</NativeSelectOption>
             <NativeSelectOption value="passport">{tr('Passeport')}</NativeSelectOption>
             <NativeSelectOption value="driver_license">{tr('Permis de conduire')}</NativeSelectOption>
@@ -120,7 +120,7 @@ export function KycSection() {
           <Button onClick={() => void submit()} disabled={busy || !doc || !selfie} className="h-11 w-full rounded-xl">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : tr('Envoyer pour vérification')}
           </Button>
-          <p className="text-[11px] text-muted-foreground/80">{tr('Vos documents sont stockés de façon privée et vus uniquement par notre équipe.')}</p>
+          <p className="text-[11px] text-muted-foreground">{tr('Vos documents sont stockés de façon privée et vus uniquement par notre équipe.')}</p>
         </div>
       )}
     </div>

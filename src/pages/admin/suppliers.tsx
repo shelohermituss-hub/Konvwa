@@ -204,7 +204,7 @@ export function AdminSuppliersPage() {
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: tr('Total'),    value: total,   sub: 'fournisseurs',  color: 'text-foreground' },
-          { label: tr('Vérifiés'), value: verified, sub: 'actifs',        color: 'text-emerald-600' },
+          { label: tr('Vérifiés'), value: verified, sub: 'actifs',        color: 'text-emerald-700' },
           { label: tr('Score moy.'),value: avgScore,sub: '/ 100',        color: 'text-primary' },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
@@ -244,9 +244,9 @@ export function AdminSuppliersPage() {
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
         {/* Column header */}
         <div className="grid grid-cols-[1fr_auto_auto_auto] items-center px-4 py-2.5 border-b border-gray-100 bg-gray-50/70">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Fournisseur')}</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 w-20 text-center">{tr('Score')}</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 w-24 text-center hidden sm:block">{tr('Statut')}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tr('Fournisseur')}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-20 text-center">{tr('Score')}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-24 text-center hidden sm:block">{tr('Statut')}</span>
           <span className="w-8" />
         </div>
 
@@ -258,7 +258,7 @@ export function AdminSuppliersPage() {
           <div className="py-16 text-center">
             <Store className="h-10 w-10 mx-auto text-muted-foreground/25 mb-3" />
             <p className="font-semibold text-sm text-muted-foreground">{tr('Aucun fournisseur')}</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Ajoutez votre premier fournisseur.')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{tr('Ajoutez votre premier fournisseur.')}</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -291,7 +291,7 @@ export function AdminSuppliersPage() {
                           </span>
                         )}
                         {s.total_orders > 0 && (
-                          <span className="text-[10px] text-muted-foreground/60">{s.total_orders}{' '}{tr('cmds')}</span>
+                          <span className="text-[10px] text-muted-foreground">{s.total_orders}{' '}{tr('cmds')}</span>
                         )}
                       </div>
                     </div>

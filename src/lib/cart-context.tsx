@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
+import { LANG } from '@/lib/i18n'
 import { useAuth } from '@/lib/auth-context'
 import { unitPriceFor } from '@/lib/product-pricing'
 
@@ -44,10 +45,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     const { data } = await supabase
       .from('cart_items')
-      .select('id, product_id, quantity, products(id, name, price_htg, price_tiers, images, unit, moq, stock_available)')
+      .select('id, product_id, quantity, products(id, name, name_en, price_htg, price_tiers, images, unit, moq, stock_available)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
-    if (data) setItems(data as unknown as CartItem[])
+    if (data) {
+      setItems((data as unknown as Array<CartItem & { products: (CartItem['products'] & { name_en?: string | null }) | null }>).map((i) => (
+        i.products ? { ...i, products: { ...i.products, name: LANG === 'en' && i.products.name_en?.trim() ? i.products.name_en : i.products.name } } : i
+      )) as CartItem[])
+    }
     setLoading(false)
   }, [user])
 

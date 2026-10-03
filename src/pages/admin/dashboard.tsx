@@ -34,7 +34,7 @@ function KpiCard({ title, value, icon: Icon, iconClass, bgClass, trend, loading 
         {trend && (
           <div className={cn(
             'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold',
-            trend.positive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
+            trend.positive ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-500'
           )}>
             <TrendingUp className={cn('h-3 w-3', !trend.positive && 'rotate-180')} />
             {trend.value}
@@ -121,7 +121,7 @@ export function AdminDashboard() {
           title={tr('Revenus encaissés')}
           value={stats.loading ? '—' : `${(stats.totalRevenuePaid / 1000).toFixed(0)}k HTG`}
           icon={CreditCard}
-          iconClass="text-emerald-600"
+          iconClass="text-emerald-700"
           bgClass="bg-emerald-50"
           loading={stats.loading}
         />

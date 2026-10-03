@@ -72,10 +72,10 @@ export function BillingPage() {
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           {/* Table header */}
           <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-x-3 items-center px-4 py-3 border-b border-border/50 bg-muted/30">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">{t('billing.reference')}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">{t('billing.product')}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">{t('billing.date')}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 text-right">{t('billing.amount')}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('billing.reference')}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('billing.product')}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('billing.date')}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">{t('billing.amount')}</span>
           </div>
 
           {loading ? (
@@ -88,7 +88,7 @@ export function BillingPage() {
             <div className="py-16 text-center">
               <CreditCard className="h-10 w-10 mx-auto text-muted-foreground/25 mb-3" />
               <p className="font-semibold text-sm text-muted-foreground">{t('billing.empty')}</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">{t('billing.empty_sub')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('billing.empty_sub')}</p>
             </div>
           ) : (
             <div className="divide-y divide-border/40">

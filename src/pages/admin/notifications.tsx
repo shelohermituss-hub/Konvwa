@@ -42,9 +42,9 @@ interface UserOption {
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Bell; color: string }> = {
   order:   { label: tr('Commande'),  icon: Package,      color: 'text-blue-600 bg-blue-50' },
-  payment: { label: tr('Paiement'),  icon: CreditCard,   color: 'text-emerald-600 bg-emerald-50' },
+  payment: { label: tr('Paiement'),  icon: CreditCard,   color: 'text-emerald-700 bg-emerald-50' },
   quote:   { label: tr('Devis'),     icon: Mail,         color: 'text-violet-600 bg-violet-50' },
-  success: { label: tr('Succès'),    icon: CheckCheck,   color: 'text-emerald-600 bg-emerald-50' },
+  success: { label: tr('Succès'),    icon: CheckCheck,   color: 'text-emerald-700 bg-emerald-50' },
   warning: { label: tr('Alerte'),    icon: AlertTriangle,color: 'text-amber-600 bg-amber-50' },
   error:   { label: tr('Erreur'),    icon: AlertTriangle,color: 'text-red-600 bg-red-50' },
   info:    { label: tr('Info'),      icon: Info,         color: 'text-sky-600 bg-sky-50' },
@@ -279,11 +279,11 @@ function NotifRow({ n, usersMap, onMarkRead }: { n: Notification; usersMap: Map<
           </div>
           <p className="text-xs text-muted-foreground mt-0.5 truncate">{pickLocalized(n.body, n.body_en)}</p>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className="text-[11px] text-muted-foreground/70">
+            <span className="text-[11px] text-muted-foreground">
               {usersMap.get(n.user_id) ?? n.user_id.slice(0, 8)}
             </span>
-            <span className="text-[11px] text-muted-foreground/50">·</span>
-            <span className="text-[11px] text-muted-foreground/70">
+            <span className="text-[11px] text-muted-foreground">·</span>
+            <span className="text-[11px] text-muted-foreground">
               {new Date(n.created_at).toLocaleString(LOCALE_TAG, {
                 day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
               })}
@@ -411,7 +411,7 @@ export function AdminNotificationsPage() {
 
       {/* Admin push subscription */}
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
           {tr('Mes notifications push (cet appareil)')}
         </p>
         <PushSettingsRow userId={user?.id} />
@@ -422,7 +422,7 @@ export function AdminNotificationsPage() {
         {[
           { label: tr('Total'), value: total, icon: Bell, color: 'text-foreground' },
           { label: tr('Non lues'), value: unread, icon: BellOff, color: 'text-primary' },
-          { label: tr('Lues'), value: read, icon: CheckCheck, color: 'text-emerald-600' },
+          { label: tr('Lues'), value: read, icon: CheckCheck, color: 'text-emerald-700' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60 shrink-0">
@@ -487,7 +487,7 @@ export function AdminNotificationsPage() {
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
             <Bell className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
             <p className="font-semibold text-muted-foreground">{tr('Aucune notification')}</p>
-            <p className="text-sm text-muted-foreground/60 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {search || filterType !== 'all' || filterRead !== 'all'
                 ? tr('Aucun résultat pour ces filtres')
                 : tr('Créez la première notification')}

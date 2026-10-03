@@ -136,7 +136,7 @@ export function SupportPage() {
             <div className="space-y-1.5">
               <Label htmlFor="priority" className="text-sm font-semibold">{tr('Priorité')}</Label>
               <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium focus:ring-1 focus:ring-primary/40">
+                <SelectTrigger id="priority" className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium focus:ring-1 focus:ring-primary/40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -186,7 +186,7 @@ export function SupportPage() {
             <div className="p-10 text-center">
               <HelpCircle className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
               <p className="font-semibold text-sm text-muted-foreground">{tr('Aucune demande')}</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">{tr('Vous n\'avez pas encore ouvert de ticket de support.')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{tr('Vous n\'avez pas encore ouvert de ticket de support.')}</p>
             </div>
           ) : (
             <div className="divide-y divide-border/50">
@@ -218,7 +218,7 @@ export function SupportPage() {
                         </span>
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                   </button>
                 )
               })}

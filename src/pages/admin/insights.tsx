@@ -71,7 +71,7 @@ export function AdminInsightsPage() {
               label={tr('Chiffre d\'affaires (30 j)')}
               value={htg(data.revenue_30d)}
               hint={delta == null ? tr('Pas de période précédente') : (
-                <span className={cn('inline-flex items-center gap-0.5 font-semibold', delta >= 0 ? 'text-emerald-600' : 'text-destructive')}>
+                <span className={cn('inline-flex items-center gap-0.5 font-semibold', delta >= 0 ? 'text-emerald-700' : 'text-destructive')}>
                   {delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}{Math.abs(Math.round(delta))} % {tr('vs 30 j précédents')}
                 </span>
               )}

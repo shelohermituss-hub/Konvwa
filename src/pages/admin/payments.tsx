@@ -173,8 +173,8 @@ export function AdminPaymentsPage() {
         {[
           { label: tr('En attente'),       value: transactions.filter(t => t.status === 'pending').length,    icon: Clock,       bg: 'bg-amber-50',   iconColor: 'text-amber-600',   valueColor: 'text-amber-700' },
           { label: tr('Montant en attente'), value: `${pendingTotal.toLocaleString(LOCALE_TAG)} HTG`,                    icon: CreditCard,  bg: 'bg-amber-50',   iconColor: 'text-amber-600',   valueColor: 'text-amber-700' },
-          { label: tr('Validés'),          value: transactions.filter(t => t.status === 'completed').length,  icon: CheckCircle2, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
-          { label: tr('Total validé'),     value: `${transactions.filter(t => t.status === 'completed' && t.type === 'deposit').reduce((s, t) => s + t.amount, 0).toLocaleString(LOCALE_TAG)} HTG`, icon: TrendingUp, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
+          { label: tr('Validés'),          value: transactions.filter(t => t.status === 'completed').length,  icon: CheckCircle2, bg: 'bg-emerald-50', iconColor: 'text-emerald-700', valueColor: 'text-emerald-700' },
+          { label: tr('Total validé'),     value: `${transactions.filter(t => t.status === 'completed' && t.type === 'deposit').reduce((s, t) => s + t.amount, 0).toLocaleString(LOCALE_TAG)} HTG`, icon: TrendingUp, bg: 'bg-emerald-50', iconColor: 'text-emerald-700', valueColor: 'text-emerald-700' },
         ].map(kpi => (
           <div key={kpi.label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
             <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl mb-3', kpi.bg)}>
@@ -213,7 +213,7 @@ export function AdminPaymentsPage() {
           <div className="p-12 text-center">
             <CreditCard className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
             <p className="font-semibold text-muted-foreground">{tr('Aucune transaction')}</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Modifiez vos filtres de recherche')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{tr('Modifiez vos filtres de recherche')}</p>
           </div>
         ) : (
           <Table>
@@ -273,7 +273,7 @@ export function AdminPaymentsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="rounded-xl w-44">
                             <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => openApproveDialog(tx)}>
-                              <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />{tr('Approuver')}
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-700" />{tr('Approuver')}
                             </DropdownMenuItem>
                             <DropdownMenuItem className="rounded-lg cursor-pointer text-destructive focus:text-destructive" onClick={() => handleReject(tx)}>
                               <XCircle className="mr-2 h-4 w-4" />{tr('Refuser')}
@@ -331,7 +331,7 @@ export function AdminPaymentsPage() {
           </DialogHeader>
           <div className="py-4 rounded-xl bg-emerald-50 border border-emerald-100 text-center">
             <p className="text-3xl font-bold text-emerald-700">{approveDialog?.amount.toLocaleString(LOCALE_TAG)} HTG</p>
-            <p className="text-sm text-emerald-600/80 mt-1 capitalize">{approveDialog?.payment_method}</p>
+            <p className="text-sm text-emerald-700/80 mt-1 capitalize">{approveDialog?.payment_method}</p>
           </div>
 
           {/* Transaction hash / reference */}

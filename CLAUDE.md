@@ -86,4 +86,5 @@ Adaptées du guide d'architecture PatwonPro (Next.js + Supabase) à cette stack 
 9. **Service role** : uniquement dans les Edge Functions pour des contextes sans session (webhook, cron, paiement serveur-à-serveur) ; jamais dans le code `src/`. Les secrets ne sont jamais dans `VITE_*` (public, injecté au build) ni commités : `.env` est ignoré, `.env.example` documente les variables. Après changement d'une variable Vercel : redéployer.
 10. **Pas de `any`** (règle ESLint en erreur). Dates en UTC (`timestamptz`).
 11. **Avant de terminer une tâche** : `npm run check` (lint + typecheck + build) ; après toute migration touchant une policy ou une fonction, test d'impersonation en transaction annulée (`SET LOCAL ROLE authenticated` + `request.jwt.claims`) pour chaque rôle concerné ; relire `get_advisors` (sécurité) — aucune nouvelle alerte tolérée ; revue visuelle de toute UI.
-12. Les migrations sont versionnées dans `supabase/migrations/` et décrivent exactement ce qui a été appliqué.
+12. Après toute migration touchant une policy, une fonction ou un droit : relancer `supabase/tests/security.sql` (tout est annulé à la fin, une assertion échouée arrête le script). `npm run check` inclut lint, i18n, tests unitaires (`npm test`), typecheck et build.
+13. Les migrations sont versionnées dans `supabase/migrations/` et décrivent exactement ce qui a été appliqué.

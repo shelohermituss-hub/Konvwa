@@ -344,7 +344,7 @@ export function OrderDetailPage() {
               {/* Détail par carton */}
               {hasPkgs && pkgs.length > 0 && (
                 <div className="px-4 pb-3">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">{tr('Détail par carton')}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">{tr('Détail par carton')}</p>
                   <div className="space-y-1.5">
                     {pkgs.map(p => {
                       const cbm = p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : null)
@@ -443,7 +443,7 @@ export function OrderDetailPage() {
                   <Wallet className="h-3.5 w-3.5" />
                   {tr('Solde disponible')}
                 </span>
-                <span className={`font-bold ${canPay ? 'text-emerald-600' : 'text-destructive'}`}>
+                <span className={`font-bold ${canPay ? 'text-emerald-700' : 'text-destructive'}`}>
                   {(wallet?.available_balance ?? 0).toLocaleString(LOCALE_TAG)} HTG
                 </span>
               </div>
@@ -521,7 +521,7 @@ export function OrderDetailPage() {
         {/* Détails commande */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">{tr('Détails commande')}</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{tr('Détails commande')}</p>
           </div>
           <div className="px-4 divide-y divide-border/50">
             <InfoRow label={tr('Plateforme')} value={(order.quotes?.product_requests?.source_platform || '—').toUpperCase()} />
@@ -535,7 +535,7 @@ export function OrderDetailPage() {
             <InfoRow
               label={tr('Statut paiement')}
               value={order.payment_status === 'paid' ? 'Payé' : order.payment_status === 'partial' ? 'Partiel' : 'Impayé'}
-              valueClass={order.payment_status === 'paid' ? 'text-emerald-600' : 'text-warning'}
+              valueClass={order.payment_status === 'paid' ? 'text-emerald-700' : 'text-warning'}
             />
 
             {/* Route d'expédition */}
@@ -673,7 +673,7 @@ export function OrderDetailPage() {
         {order.quotes && (
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">{tr('Résumé paiement')}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{tr('Résumé paiement')}</p>
             </div>
             <div className="px-4 py-2">
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
@@ -737,8 +737,8 @@ export function OrderDetailPage() {
                 </div>
               )}
               <div className="flex justify-between pb-3 text-sm">
-                <span className="text-emerald-600 font-medium">{tr('Déjà payé (total)')}</span>
-                <span className="text-emerald-600 font-semibold">{order.total_paid.toLocaleString(LOCALE_TAG)} HTG</span>
+                <span className="text-emerald-700 font-medium">{tr('Déjà payé (total)')}</span>
+                <span className="text-emerald-700 font-semibold">{order.total_paid.toLocaleString(LOCALE_TAG)} HTG</span>
               </div>
             </div>
           </div>
@@ -750,7 +750,7 @@ export function OrderDetailPage() {
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
               <FileText className="h-4 w-4 text-primary" />
               <p className="text-sm font-bold text-foreground">{tr('Facture expédition')}</p>
-              <span className="ml-auto text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{tr('Payée')}</span>
+              <span className="ml-auto text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">{tr('Payée')}</span>
             </div>
             <div className="px-4 py-2">
               {(order.chosen_shipping_method || order.chosen_shipping_rate) && (

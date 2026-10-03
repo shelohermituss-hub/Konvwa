@@ -200,7 +200,7 @@ export function AdminAuditLogsPage() {
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
           <ScrollText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
           <p className="font-semibold text-muted-foreground">{tr('Aucune entrée')}</p>
-          <p className="mt-1 text-xs text-muted-foreground/70">{tr('Les prochaines actions apparaîtront ici.')}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{tr('Les prochaines actions apparaîtront ici.')}</p>
         </div>
       ) : (
         <ul className="space-y-3">

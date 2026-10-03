@@ -120,7 +120,7 @@ export function NotificationsPage() {
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center shadow-sm">
             <Bell className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
             <p className="font-semibold text-muted-foreground">{tr('Aucune notification')}</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">{tr('Vous serez notifié des mises à jour ici')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{tr('Vous serez notifié des mises à jour ici')}</p>
           </div>
         ) : (
           <>
@@ -154,7 +154,7 @@ export function NotificationsPage() {
                         {isUnread && <span className={cn('h-2 w-2 rounded-full shrink-0', config.dotColor)} />}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{pickLocalized(n.message, n.body_en)}</p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-1.5">{timeAgo(n.created_at)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1.5">{timeAgo(n.created_at)}</p>
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); deleteOne(n.id) }}

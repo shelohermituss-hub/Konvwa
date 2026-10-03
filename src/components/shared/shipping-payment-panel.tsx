@@ -255,7 +255,7 @@ export function ShippingBalancePanel({ requestId, walletBalance, onPaid }: {
   return (
     <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
       <div className="flex items-start gap-2.5">
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
         <p className="text-sm font-medium leading-relaxed text-emerald-900">
           {tr('Acompte reçu :')}{' '}<span className="font-bold">{htg(summary.paid)}</span>
           {summary.late_fee > 0 && tr(' (+ {0} de frais de retard)', htg(summary.late_fee))}{tr('. Votre cargaison sera assignée à une prochaine expédition.')}
@@ -264,7 +264,7 @@ export function ShippingBalancePanel({ requestId, walletBalance, onPaid }: {
 
       <div className="space-y-1 rounded-xl bg-white px-3.5 py-3 text-sm">
         <div className="flex justify-between"><span className="text-muted-foreground">{tr('Devis')}</span><span className="font-semibold">{htg(summary.quote)}</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">{tr('Déjà payé')}</span><span className="font-semibold text-emerald-600">− {htg(summary.paid)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">{tr('Déjà payé')}</span><span className="font-semibold text-emerald-700">− {htg(summary.paid)}</span></div>
         <div className="flex justify-between border-t border-border/50 pt-1">
           <span className="font-bold">{tr('Reste à payer à la livraison')}</span>
           <span className="font-bold text-primary">{htg(rest)}</span>

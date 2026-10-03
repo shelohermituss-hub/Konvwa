@@ -142,7 +142,7 @@ export function SecuritySection() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-sm font-semibold">
-              {factorId ? <ShieldCheck className="h-4 w-4 text-emerald-600" /> : <ShieldOff className="h-4 w-4 text-muted-foreground" />}
+              {factorId ? <ShieldCheck className="h-4 w-4 text-emerald-700" /> : <ShieldOff className="h-4 w-4 text-muted-foreground" />}
               {tr('Double authentification')}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">

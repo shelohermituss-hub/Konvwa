@@ -32,9 +32,9 @@ interface Transaction {
 }
 
 const TX_CONFIG: Record<string, { label: string; color: string; bg: string; sign: '+' | '-' }> = {
-  deposit:    { label: tr('Dépôt'),          color: 'text-emerald-600', bg: 'bg-emerald-50',    sign: '+' },
-  refund:     { label: tr('Remboursement'),  color: 'text-emerald-600', bg: 'bg-emerald-50',    sign: '+' },
-  unblock:    { label: tr('Débloqué'),       color: 'text-emerald-600', bg: 'bg-emerald-50',    sign: '+' },
+  deposit:    { label: tr('Dépôt'),          color: 'text-emerald-700', bg: 'bg-emerald-50',    sign: '+' },
+  refund:     { label: tr('Remboursement'),  color: 'text-emerald-700', bg: 'bg-emerald-50',    sign: '+' },
+  unblock:    { label: tr('Débloqué'),       color: 'text-emerald-700', bg: 'bg-emerald-50',    sign: '+' },
   withdrawal: { label: tr('Retrait'),        color: 'text-destructive', bg: 'bg-destructive/8', sign: '-' },
   payment:    { label: tr('Paiement'),       color: 'text-destructive', bg: 'bg-destructive/8', sign: '-' },
   block:      { label: tr('Bloqué'),         color: 'text-warning',     bg: 'bg-warning/10',    sign: '-' },
@@ -133,7 +133,7 @@ function ProofUpload({
       ) : (
         <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 bg-[#F8F8FA] py-5 cursor-pointer hover:border-primary/40 transition-colors">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-gray-100 shadow-sm">
-            <Upload className="h-5 w-5 text-muted-foreground/60" />
+            <Upload className="h-5 w-5 text-muted-foreground" />
           </div>
           <div className="text-center">
             <p className="text-xs font-semibold text-foreground">{tr('Appuyez pour ajouter une preuve')}</p>
@@ -235,7 +235,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
             <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               {isCredit ? tr('Montant crédité') : tr('Montant débité')}
             </p>
-            <p className={cn('mt-1 text-4xl font-extrabold tracking-tight tabular-nums', isCredit ? 'text-emerald-600' : 'text-foreground')}>
+            <p className={cn('mt-1 text-4xl font-extrabold tracking-tight tabular-nums', isCredit ? 'text-emerald-700' : 'text-foreground')}>
               {isCredit ? '+' : '-'}{tx.amount.toLocaleString(LOCALE_TAG)}
               <span className="ml-1.5 text-base font-bold text-muted-foreground">HTG</span>
             </p>
@@ -739,6 +739,7 @@ export function WalletPage() {
               </div>
               <button
                 onClick={() => setBalanceVisible(v => !v)}
+                aria-label={balanceVisible ? tr('Masquer le solde') : tr('Afficher le solde')}
                 className="flex h-7 w-7 items-center justify-center rounded-full transition-colors"
                 style={{ background: 'rgba(255,255,255,0.08)' }}
               >
@@ -801,11 +802,11 @@ export function WalletPage() {
       <div className="px-4 pb-5 grid grid-cols-2 gap-3 animate-fade-in-up delay-4">
         <div className="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 mb-2">
-            <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
+            <ArrowDownLeft className="h-5 w-5 text-emerald-700" />
           </div>
           <p className="text-xs text-muted-foreground font-medium">{tr('Total rechargé')}</p>
           {loading ? <Skeleton className="h-6 w-24 mt-1" /> : (
-            <p className="text-lg font-bold text-emerald-600 mt-0.5">
+            <p className="text-lg font-bold text-emerald-700 mt-0.5">
               +{totalDeposited.toLocaleString(LOCALE_TAG)}
             </p>
           )}
@@ -831,7 +832,7 @@ export function WalletPage() {
 
         {/* Search */}
         <div className="relative mb-3">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -886,7 +887,7 @@ export function WalletPage() {
                 {/* Date header */}
                 <div className="flex items-center justify-between mb-2 px-1">
                   <span className="text-xs font-semibold text-muted-foreground">{group.label}</span>
-                  <span className={cn('text-xs font-semibold', group.total >= 0 ? 'text-emerald-600' : 'text-destructive')}>
+                  <span className={cn('text-xs font-semibold', group.total >= 0 ? 'text-emerald-700' : 'text-destructive')}>
                     {group.total >= 0 ? '+' : ''}{group.total.toLocaleString(LOCALE_TAG)} HTG
                   </span>
                 </div>
@@ -915,10 +916,10 @@ export function WalletPage() {
                           </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className={cn('font-bold text-sm', isCredit ? 'text-emerald-600' : 'text-foreground')}>
+                          <p className={cn('font-bold text-sm', isCredit ? 'text-emerald-700' : 'text-foreground')}>
                             {isCredit ? '+' : '-'}{tx.amount.toLocaleString(LOCALE_TAG)} HTG
                           </p>
-                          <p className={cn('text-[11px] font-medium mt-0.5', badge.className.includes('emerald') ? 'text-emerald-600' : badge.className.includes('red') ? 'text-red-500' : badge.className.includes('amber') ? 'text-amber-500' : 'text-gray-400')}>
+                          <p className={cn('text-[11px] font-medium mt-0.5', badge.className.includes('emerald') ? 'text-emerald-700' : badge.className.includes('red') ? 'text-red-500' : badge.className.includes('amber') ? 'text-amber-500' : 'text-gray-400')}>
                             {badge.label}
                           </p>
                         </div>

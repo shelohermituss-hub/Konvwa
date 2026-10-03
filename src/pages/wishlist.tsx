@@ -4,7 +4,7 @@ import { ChevronLeft, Heart } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useWishlist } from '@/lib/wishlist-context'
 import { ProductCard } from '@/components/shared/product-card'
-import { CATALOG_LIST_SELECT, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_LIST_SELECT, localizeProduct, type CatalogProduct } from '@/lib/catalog'
 import { tr } from '@/lib/i18n'
 
 export function WishlistPage() {
@@ -19,7 +19,7 @@ export function WishlistPage() {
     let cancelled = false
     void supabase.from('products').select(CATALOG_LIST_SELECT).eq('active', true).in('id', list).then(({ data }) => {
       if (cancelled) return
-      setProducts((data ?? []) as unknown as CatalogProduct[])
+      setProducts(((data ?? []) as unknown as CatalogProduct[]).map(localizeProduct))
       setLoading(false)
     })
     return () => { cancelled = true }

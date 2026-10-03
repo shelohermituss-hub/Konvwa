@@ -304,7 +304,7 @@ function AdminActionSheet({
           )}
           {s === 'invoiced' && (
             <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-3 flex items-center gap-2.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
               <p className="text-sm text-emerald-800 font-medium">
                 {tr('Paiement reçu —')}{' '}{fmt(request.actual_amount_htg ?? request.quoted_amount_htg)}{' '}{tr('HTG. Assignez au batch.')}
               </p>
@@ -677,7 +677,7 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
             {request.actual_amount_htg != null && (
               <div>
                 <p className="text-muted-foreground">{tr('Montant facturé')}</p>
-                <p className="font-medium text-emerald-600">{fmt(request.actual_amount_htg)} HTG</p>
+                <p className="font-medium text-emerald-700">{fmt(request.actual_amount_htg)} HTG</p>
               </div>
             )}
           </div>
@@ -687,7 +687,7 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
             <span>{tr('Créé')}{' '}{fmtDate(request.created_at)}</span>
             {request.quoted_at && <span className="text-orange-600">{tr('Devis')}{' '}{fmtDate(request.quoted_at)}</span>}
             {request.received_at && <span className="text-indigo-600">{tr('Reçu')}{' '}{fmtDate(request.received_at)}</span>}
-            {request.invoiced_at && <span className="text-emerald-600">{tr('Payé')}{' '}{fmtDate(request.invoiced_at)}</span>}
+            {request.invoiced_at && <span className="text-emerald-700">{tr('Payé')}{' '}{fmtDate(request.invoiced_at)}</span>}
           </div>
 
           {request.notes && (

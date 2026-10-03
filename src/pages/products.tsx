@@ -8,7 +8,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
 import { ProductCard } from '@/components/shared/product-card'
-import { CATALOG_LIST_SELECT, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_LIST_SELECT, localizeProduct, type CatalogProduct } from '@/lib/catalog'
 
 import { tr } from '@/lib/i18n'
 export function ProductsPage() {
@@ -36,7 +36,7 @@ export function ProductsPage() {
         .eq('active', true)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
-      if (data) setProducts(data as unknown as CatalogProduct[])
+      if (data) setProducts((data as unknown as CatalogProduct[]).map(localizeProduct))
       setLoading(false)
     }
     load()
@@ -79,6 +79,7 @@ export function ProductsPage() {
         </div>
         <button
           onClick={() => navigate('/cart')}
+          aria-label={tr('Panier')}
           className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-white border border-gray-100 shadow-sm"
         >
           <ShoppingCart className="h-5 w-5 text-foreground" strokeWidth={1.8} />

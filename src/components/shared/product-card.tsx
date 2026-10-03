@@ -38,7 +38,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
               <Package className="h-5 w-5 text-primary/40" strokeWidth={1.5} />
             </div>
             {product.category && (
-              <span className="px-2 text-center text-[9px] font-semibold uppercase leading-tight tracking-wider text-muted-foreground/60">
+              <span className="px-2 text-center text-[9px] font-semibold uppercase leading-tight tracking-wider text-muted-foreground">
                 {tr(product.category)}
               </span>
             )}
@@ -81,7 +81,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
 
         {extra && (
           <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Check className="h-3 w-3 shrink-0 text-emerald-600" aria-hidden />
+            <Check className="h-3 w-3 shrink-0 text-emerald-700" aria-hidden />
             <span className="truncate">{extra}</span>
           </p>
         )}

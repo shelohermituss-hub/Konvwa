@@ -204,7 +204,7 @@ export function ShipmentDetailPage() {
         )}
         {isInvoiced && (
           <div className="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center gap-3">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
             <p className="text-sm text-emerald-800 font-medium">
               {tr('Paiement confirmé —')}{' '}
               {(req.actual_amount_htg ?? req.quoted_amount_htg ?? 0).toLocaleString(LOCALE_TAG)}{' '}{tr('HTG.')}{' '}
@@ -287,7 +287,7 @@ export function ShipmentDetailPage() {
         {/* Estimation indicative — only for pre-quote stages */}
         {!isQuoted && !isInvoiced && !isDeposit && (
           <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
               {tr('Estimation indicative')}
             </p>
             <div className="flex items-center justify-between gap-3">
@@ -324,7 +324,7 @@ export function ShipmentDetailPage() {
         {isInvoiced && displayAmount != null && (
           <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm p-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{tr('Montant payé')}</p>
-            <p className="text-xl font-bold text-emerald-600">
+            <p className="text-xl font-bold text-emerald-700">
               {displayAmount.toLocaleString(LOCALE_TAG)} HTG
             </p>
           </div>
@@ -332,7 +332,7 @@ export function ShipmentDetailPage() {
 
         {/* Details */}
         <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">{tr('Détails')}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">{tr('Détails')}</p>
           <div className="divide-y divide-border/40">
             {req.warehouse && (
               <div className="flex items-center justify-between py-2.5">
@@ -412,14 +412,14 @@ export function ShipmentDetailPage() {
         {/* Notes */}
         {req.notes && (
           <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">{tr('Notes')}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{tr('Notes')}</p>
             <p className="text-sm text-foreground leading-relaxed">{req.notes}</p>
           </div>
         )}
 
         {/* Timeline */}
         <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">{tr('Historique')}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">{tr('Historique')}</p>
           <div className="space-y-2.5">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />

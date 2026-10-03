@@ -115,7 +115,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors">
+        <button aria-label={tr('Notifications')} className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors">
           <Bell className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
           {unread > 0 && (
             <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white leading-none">
@@ -157,7 +157,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold leading-tight truncate">{pickLocalized(n.title, n.title_en)}</p>
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{pickLocalized(n.body, n.body_en)}</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1 flex items-center gap-1">
+                  <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {formatDistanceToNow(new Date(n.created_at), {
                       addSuffix: true,
@@ -267,7 +267,7 @@ function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 hover:bg-muted transition-colors text-muted-foreground">
+        <button aria-label="Language / Langue" className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 hover:bg-muted transition-colors text-muted-foreground">
           <Globe className="h-4 w-4" />
           <span className="text-xs font-semibold uppercase hidden sm:block">{current.code}</span>
           <ChevronDown className="h-3 w-3 hidden sm:block" />
@@ -312,7 +312,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pt-4 pb-2 space-y-0.5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pb-2">{tr('Navigation')}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-3 pb-2">{tr('Navigation')}</p>
         {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
@@ -339,7 +339,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
         })}
 
         <div className="pt-4 pb-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pb-2">{tr('Actions')}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-3 pb-2">{tr('Actions')}</p>
           {SIDEBAR_EXTRAS.map((item) => {
             const isActive = location.pathname === item.path
             const isNotif = item.path === '/notifications'
@@ -397,6 +397,7 @@ function CartBadge() {
   return (
     <button
       onClick={() => navigate('/cart')}
+      aria-label={tr('Panier')}
       className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors"
     >
       <ShoppingCart className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />

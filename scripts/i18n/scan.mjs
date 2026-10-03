@@ -24,7 +24,7 @@ function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name)
     if (e.isDirectory()) { if (!SKIP_DIRS.has(e.name)) walk(p, out) }
-    else if (/\.(tsx?|ts)$/.test(e.name) && !e.name.endsWith('.d.ts')) out.push(p)
+    else if (/\.(tsx?|ts)$/.test(e.name) && !e.name.endsWith('.d.ts') && !/\.test\.tsx?$/.test(e.name)) out.push(p)
   }
   return out
 }

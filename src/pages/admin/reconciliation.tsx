@@ -65,7 +65,7 @@ export function AdminReconciliationPage() {
       ) : (
         <>
           <div className={cn('flex items-center gap-3 rounded-2xl border p-4', mismatches.length ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50')}>
-            {mismatches.length ? <AlertTriangle className="h-5 w-5 text-amber-600" /> : <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+            {mismatches.length ? <AlertTriangle className="h-5 w-5 text-amber-600" /> : <CheckCircle2 className="h-5 w-5 text-emerald-700" />}
             <p className="text-sm font-semibold">
               {mismatches.length
                 ? tr('{0} portefeuille(s) avec un écart entre le solde et les transactions.', mismatches.length)

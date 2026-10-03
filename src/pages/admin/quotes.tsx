@@ -341,7 +341,7 @@ export function AdminQuotesPage() {
           <div className="p-12 text-center">
             <FileText className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
             <p className="font-semibold text-muted-foreground">{tr('Aucune demande')}</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Aucune demande ne correspond à votre filtre')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{tr('Aucune demande ne correspond à votre filtre')}</p>
           </div>
         ) : (
           <Table>

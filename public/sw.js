@@ -1,5 +1,5 @@
-const CACHE_NAME = 'konvwa-v2'
-const STATIC_ASSETS = ['/manifest.json', '/icon-192.png', '/icon-512.png']
+const CACHE_NAME = 'konvwa-v3'
+const STATIC_ASSETS = ['/manifest.json', '/icon-192.png', '/icon-512.png', '/offline.html']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -26,7 +26,9 @@ self.addEventListener('fetch', (event) => {
 
   // Pages: always network so a new deploy is picked up; never serve a stale index.html
   if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request))
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/offline.html').then((r) => r || Response.error()))
+    )
     return
   }
 

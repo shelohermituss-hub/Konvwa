@@ -173,7 +173,7 @@ export function OrdersPage() {
             <p className="font-bold text-foreground/70">
               {search || (statusFilter !== 'all' && statusFilter !== 'drafts') ? t('common.no_result') : t('orders.no_orders')}
             </p>
-            <p className="text-xs text-muted-foreground/70 mt-1 mb-4 leading-relaxed">
+            <p className="text-xs text-muted-foreground mt-1 mb-4 leading-relaxed">
               {search ? t('orders.try_other') : t('orders.submit_first')}
             </p>
             {!search && (
@@ -191,7 +191,7 @@ export function OrdersPage() {
             {/* ── Brouillons (product_requests en attente de traitement admin) ── */}
             {filteredDrafts.length > 0 && (
               <div className="space-y-2.5">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">
                   {t('orders.pending_section')}
                 </p>
                 {filteredDrafts.map((draft) => (
@@ -220,7 +220,7 @@ export function OrdersPage() {
                       <p className="text-[10px] text-muted-foreground">
                         {new Date(draft.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                       </p>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </button>
                 ))}
@@ -231,7 +231,7 @@ export function OrdersPage() {
             {filteredOrders.length > 0 && (
               <div className="space-y-2.5">
                 {filteredDrafts.length > 0 && (
-                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1 pt-1">
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1 pt-1">
                     {tr('Commandes')}
                   </p>
                 )}

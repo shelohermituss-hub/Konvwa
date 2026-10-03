@@ -101,7 +101,7 @@ export function PwaExperience({ userId, className }: Props) {
       {/* Expandable type selection */}
       {expanded && (
         <div className="border-t border-border/40 px-4 py-3 bg-[#F8F9FB] space-y-2.5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             {tr('Types de notifications')}
           </p>
           {TYPE_LABELS.map(({ key, label, desc }) => (
@@ -149,7 +149,7 @@ export function PushSettingsRow({ userId }: { userId?: string }) {
   if (!isSupported) {
     return (
       <div className="flex items-center gap-3 py-3">
-        <BellOff className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+        <BellOff className="h-4 w-4 text-muted-foreground shrink-0" />
         <span className="text-sm text-muted-foreground">{tr('Non supporté sur cet appareil')}</span>
       </div>
     )
