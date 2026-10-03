@@ -18,7 +18,7 @@ type Step =
  * Requires a verified TOTP code (aal2) before the admin area is shown.
  * The database enforces the same rule once the `staff_mfa_required` setting is "true".
  */
-export function MfaGate({ children }: { children: ReactNode }) {
+export function MfaGate({ children, enroll = true }: { children: ReactNode; enroll?: boolean }) {
   const { signOut } = useAuth()
   const [step, setStep] = useState<Step>({ kind: 'loading' })
   const [code, setCode] = useState('')
@@ -34,6 +34,8 @@ export function MfaGate({ children }: { children: ReactNode }) {
     const verified = factors?.totp?.find((f) => f.status === 'verified')
     if (verified) return setStep({ kind: 'challenge', factorId: verified.id })
 
+    if (!enroll) return setStep({ kind: 'ok' })  // optional MFA (clients): only challenge those who enabled it
+
     // Remove abandoned enrolments so a new one can be started
     for (const f of factors?.all ?? []) {
       if (f.factor_type === 'totp' && f.status === 'unverified') await supabase.auth.mfa.unenroll({ factorId: f.id })
@@ -41,11 +43,14 @@ export function MfaGate({ children }: { children: ReactNode }) {
     const { data, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'KONVWA' })
     if (enrollError || !data) return setStep({ kind: 'unavailable', reason: enrollError?.message ?? '' })
     setStep({ kind: 'enroll', factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret })
-  }, [])
+  }, [enroll])
 
   useEffect(() => {
-    evaluate().catch((e: unknown) => setStep({ kind: 'unavailable', reason: e instanceof Error ? e.message : '' }))
-  }, [evaluate])
+    evaluate().catch((e: unknown) => {
+      if (!enroll) return setStep({ kind: 'ok' })
+      setStep({ kind: 'unavailable', reason: e instanceof Error ? e.message : '' })
+    })
+  }, [evaluate, enroll])
 
   async function verify(factorId: string) {
     setBusy(true)

@@ -12,6 +12,7 @@ import { Toaster, toast } from "sonner"
 import { trServer, tr, LANG } from "@/lib/i18n"
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt"
 import { AuthErrorToast } from "@/components/shared/auth-error-toast"
+import { StepUpProvider } from '@/lib/step-up'
 import { UpdateBanner } from "@/components/shared/update-banner"
 
 // Server errors (RPC) are written in French: show them in the user's language
@@ -44,11 +45,13 @@ createRoot(document.getElementById("root")!).render(
       <I18nProvider>
         <AuthProvider>
           <CartProvider>
-            <RouterProvider router={router} />
-            <Toaster richColors position="top-center" />
-            <PwaInstallPrompt />
-            <AuthErrorToast />
-            <UpdateBanner />
+            <StepUpProvider>
+              <RouterProvider router={router} />
+              <Toaster richColors position="top-center" />
+              <PwaInstallPrompt />
+              <AuthErrorToast />
+              <UpdateBanner />
+            </StepUpProvider>
           </CartProvider>
         </AuthProvider>
       </I18nProvider>

@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 import { tr } from '@/lib/i18n'
+import { SecuritySection } from '@/components/shared/security-section'
 interface AddressEntry {
   id: string
   label: string
@@ -139,6 +140,7 @@ export function ProfilePage() {
                 {tr('Modifier')}
               </button>
             </div>
+            <SecuritySection />
           </div>
         </div>
 

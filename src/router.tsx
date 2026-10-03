@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 // Layouts
 import { PublicLayout } from '@/components/layouts/public-layout'
 import { ClientLayout } from '@/components/layouts/client-layout'
+import { MfaGate } from '@/components/shared/mfa-gate'
 import { AdminLayout } from '@/components/layouts/admin-layout'
 
 // Guards
@@ -90,7 +91,7 @@ export const router = createBrowserRouter([
     path: '/',
     element: (
       <AuthGuard>
-        <ClientLayout />
+        <MfaGate enroll={false}><ClientLayout /></MfaGate>
       </AuthGuard>
     ),
     children: [

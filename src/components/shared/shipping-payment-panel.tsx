@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { useStepUp } from '@/lib/step-up'
 interface PaymentSummary {
   success: boolean
   status: string
@@ -73,6 +74,7 @@ export function ShippingQuotePanel({ requestId, walletBalance, onPaid }: {
   walletBalance: number
   onPaid: () => void
 }) {
+  const { confirmPayment } = useStepUp()
   const [refresh, setRefresh] = useState(0)
   const summary = useSummary(requestId, String(refresh))
   const [plan, setPlan] = useState<'full' | 'half'>('full')
@@ -89,6 +91,7 @@ export function ShippingQuotePanel({ requestId, walletBalance, onPaid }: {
   const canPay = walletBalance >= amount
 
   async function pay() {
+    if (!(await confirmPayment(amount))) return
     setPaying(true)
     const { data, error } = await supabase.rpc('pay_shipping_quote', { p_request_id: requestId, p_plan: plan })
     setPaying(false)
@@ -225,6 +228,7 @@ export function ShippingBalancePanel({ requestId, walletBalance, onPaid }: {
   walletBalance: number
   onPaid: () => void
 }) {
+  const { confirmPayment } = useStepUp()
   const summary = useSummary(requestId, 'balance')
   const [paying, setPaying] = useState(false)
 
@@ -236,6 +240,7 @@ export function ShippingBalancePanel({ requestId, walletBalance, onPaid }: {
   const canPay = walletBalance >= rest
 
   async function pay() {
+    if (!(await confirmPayment(rest))) return
     setPaying(true)
     const { data, error } = await supabase.rpc('pay_shipping_balance', { p_request_id: requestId })
     setPaying(false)

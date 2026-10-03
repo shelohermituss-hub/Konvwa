@@ -1,5 +1,6 @@
 import { detachPushFromThisDevice } from '@/hooks/use-push-notifications'
 import { LANG, hasStoredLang, setLanguage } from '@/lib/i18n'
+import { getDeviceId, deviceLabel } from '@/lib/device'
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
@@ -190,6 +191,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function refreshProfile() {
     if (user) await fetchProfile(user.id)
   }
+
+  // Remember this device; a device never seen before triggers a "new sign-in" notification (done by the database)
+  useEffect(() => {
+    if (!user?.id) return
+    void supabase.rpc('register_device', { p_device_id: getDeviceId(), p_label: deviceLabel() })
+  }, [user?.id])
 
   // The account remembers its language (used for server-side notifications and across devices)
   useEffect(() => {

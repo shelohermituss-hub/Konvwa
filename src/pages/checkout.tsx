@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { toast } from 'sonner'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { useStepUp } from '@/lib/step-up'
 interface WalletData {
   id: string
   available_balance: number
@@ -19,6 +20,7 @@ export function CheckoutPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { items, total, clearCart } = useCart()
+  const { confirmPayment } = useStepUp()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [loadingWallet, setLoadingWallet] = useState(true)
   const [paying, setPaying] = useState(false)
@@ -50,6 +52,7 @@ export function CheckoutPage() {
       toast.error(tr('Solde insuffisant'), { description: tr('Rechargez votre portefeuille pour continuer.') })
       return
     }
+    if (!(await confirmPayment(total))) return
 
     setPaying(true)
     try {

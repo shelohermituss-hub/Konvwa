@@ -16,6 +16,7 @@ import type { OrderStatus } from '@/types'
 import { OrderStatusTracker } from '@/components/shared/order-status-tracker'
 
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { useStepUp } from '@/lib/step-up'
 interface ChosenShippingMethod {
   id: string
   name: string
@@ -107,6 +108,7 @@ function InfoRow({ label, value, valueClass }: { label: string; value: string; v
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
+  const { confirmPayment } = useStepUp()
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -200,6 +202,7 @@ export function OrderDetailPage() {
       toast.error(tr('Solde insuffisant. Veuillez recharger votre portefeuille.'))
       return
     }
+    if (!(await confirmPayment(total))) return
     setPaying(true)
     try {
       const { data, error } = await supabase.rpc('pay_order', { p_order_id: order.id })
