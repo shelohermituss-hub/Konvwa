@@ -743,3 +743,12 @@ html, body, #root {
 .dark img[style*="mix-blend-mode"] { mix-blend-mode: screen !important; filter: invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.1); }
 /* the forklift photo has a baked-in checkerboard that only disappears with multiply on white */
 .dark img[src$="forklift.jpg"] { display: none; }
+
+/* wallet card: slow light sweep across the glass */
+@keyframes walletShine {
+  0%, 55% { transform: translateX(0) skewX(-12deg); opacity: 0; }
+  62% { opacity: 1; }
+  100% { transform: translateX(520%) skewX(-12deg); opacity: 0; }
+}
+.wallet-shine { animation: walletShine 7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .wallet-shine { animation: none; opacity: 0; } }

@@ -5,11 +5,12 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, Search, Info, Download } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, Search, Info, Download } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { createPayment } from '@/lib/payment-api'
 import { useStepUp } from '@/lib/step-up'
+import { WalletGlassCard } from '@/components/shared/wallet-glass-card'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -716,79 +717,14 @@ export function WalletPage() {
 
       {/* ── Wallet Card ── */}
       <div className="px-4 pb-5 animate-fade-in-up delay-2">
-        <div
-          className="rounded-3xl text-white relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #0A1628 0%, #162340 55%, #1C2F50 100%)',
-            boxShadow: '0 12px 40px rgba(10,22,40,0.45)',
-            aspectRatio: '1.586',
-          }}
-        >
-          {/* Subtle orange glow top-right */}
-          <div
-            className="absolute"
-            style={{
-              top: '-40%', right: '-20%',
-              width: '55%', paddingTop: '55%',
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(240,90,40,0.18) 0%, transparent 70%)',
-              pointerEvents: 'none',
-            }}
-          />
-
-          <div className="absolute inset-0 flex flex-col justify-between p-5">
-            {/* Top row: brand + eye toggle */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-white text-base tracking-widest">KONVWA</span>
-                <span
-                  className="text-[9px] font-bold tracking-widest rounded-sm px-1.5 py-0.5"
-                  style={{ background: 'rgba(240,90,40,0.22)', color: '#F97B50' }}
-                >
-                  PAY
-                </span>
-              </div>
-              <button
-                onClick={() => setBalanceVisible(v => !v)}
-                aria-label={balanceVisible ? tr('Masquer le solde') : tr('Afficher le solde')}
-                className="flex h-7 w-7 items-center justify-center rounded-full transition-colors"
-                style={{ background: 'rgba(255,255,255,0.08)' }}
-              >
-                {balanceVisible
-                  ? <Eye className="h-3.5 w-3.5 text-white/60" />
-                  : <EyeOff className="h-3.5 w-3.5 text-white/60" />}
-              </button>
-            </div>
-
-            {/* Center: balance */}
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-1">
-                {tr('Solde disponible')}
-              </p>
-              {loading ? (
-                <Skeleton className="h-8 w-40 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              ) : (
-                <p className="text-[2rem] font-bold tracking-tight leading-none text-white">
-                  {balanceVisible ? `${balance.toLocaleString(LOCALE_TAG)} HTG` : '••••• HTG'}
-                </p>
-              )}
-            </div>
-
-            {/* Bottom row: name + account number */}
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">{tr('Titulaire')}</p>
-                <p className="text-[13px] font-semibold text-white/80 tracking-wider uppercase">
-                  {profile?.full_name || user?.email?.split('@')[0] || '—'}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">{tr('N° Compte')}</p>
-                <p className="text-[11px] font-mono font-semibold text-white/60 tracking-widest">{cardNumber}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <WalletGlassCard
+          balance={balance}
+          visible={balanceVisible}
+          loading={loading}
+          onToggle={() => setBalanceVisible(v => !v)}
+          holder={profile?.full_name || user?.email?.split('@')[0] || '—'}
+          cardNumber={cardNumber}
+        />
       </div>
 
       {/* Action buttons */}
