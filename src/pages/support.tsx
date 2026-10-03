@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { MessageSquare, Plus, ChevronRight, Clock, Loader2, HelpCircle } from 'lucide-react'
+import { MessageSquare, Plus, ChevronRight, Clock, Loader2, HelpCircle, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -32,6 +32,8 @@ export function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
   const location = useLocation()
+  const navigate = useNavigate()
+  const [whatsapp, setWhatsapp] = useState('')
   const [subject, setSubject] = useState(() => (location.state as { subject?: string } | null)?.subject ?? '')
   const [priority, setPriority] = useState('normal')
   const [message, setMessage] = useState('')
@@ -49,6 +51,11 @@ export function SupportPage() {
   }
 
   useEffect(() => { loadTickets() }, [user])
+
+  useEffect(() => {
+    void supabase.from('app_settings').select('value').eq('key', 'support_whatsapp').maybeSingle()
+      .then(({ data }) => setWhatsapp(((data?.value as string | undefined) ?? '').replace(/\D/g, '')))
+  }, [])
 
   async function handleSubmit() {
     if (!subject || !message || !user) return
@@ -88,6 +95,22 @@ export function SupportPage() {
       </div>
 
       <div className="px-4 pb-6 space-y-4">
+        {whatsapp.length >= 8 && (
+          <a
+            href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(tr('Bonjour KONVWA, j\'ai besoin d\'aide.'))}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 transition-colors hover:bg-emerald-100"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white"><MessageCircle className="h-5 w-5" /></div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-emerald-900">{tr('Discuter sur WhatsApp')}</p>
+              <p className="text-xs text-emerald-800/80">{tr('Réponse rapide de notre équipe')}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-emerald-700" />
+          </a>
+        )}
+
         {/* New ticket form */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
@@ -170,7 +193,12 @@ export function SupportPage() {
               {tickets.map((ticket) => {
                 const cfg = STATUS_CONFIG[ticket.status] || STATUS_CONFIG.open
                 return (
-                  <div key={ticket.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors cursor-pointer">
+                  <button
+                    key={ticket.id}
+                    type="button"
+                    onClick={() => navigate(`/support/${ticket.id}`)}
+                    className="flex w-full items-center gap-3 px-5 py-3.5 text-left hover:bg-muted/20 transition-colors"
+                  >
                     <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl shrink-0', cfg.bg)}>
                       {ticket.status === 'open' ? (
                         <Clock className={cn('h-4 w-4', cfg.text)} />
@@ -191,7 +219,7 @@ export function SupportPage() {
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                  </div>
+                  </button>
                 )
               })}
             </div>

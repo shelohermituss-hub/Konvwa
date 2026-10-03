@@ -33,6 +33,7 @@ import { ActivityLogPage } from '@/pages/activity-log'
 import { BillingPage } from '@/pages/billing'
 import { ProductsPage } from '@/pages/products'
 import { WishlistPage } from '@/pages/wishlist'
+import { SupportTicketPage } from '@/pages/support-ticket'
 import { ProductDetailPage } from '@/pages/product-detail'
 import { CartPage } from '@/pages/cart'
 import { CheckoutPage } from '@/pages/checkout'
@@ -113,6 +114,7 @@ export const router = createBrowserRouter([
       { path: 'billing', element: <BillingPage /> },
       { path: 'products', element: <ProductsPage /> },
       { path: 'wishlist', element: <WishlistPage /> },
+      { path: 'support/:id', element: <SupportTicketPage /> },
       { path: 'products/:id', element: <ProductDetailPage /> },
       { path: 'cart', element: <CartPage /> },
       { path: 'checkout', element: <CheckoutPage /> },

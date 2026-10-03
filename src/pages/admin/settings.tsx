@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Loader2, Save, RefreshCw, DollarSign, Plane, Landmark, Percent, CreditCard, Eye, EyeOff, Link, Settings2, CheckCircle } from 'lucide-react'
 
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { AdminSecuritySettings } from '@/components/shared/admin-security-settings'
 interface Setting {
   key: string
   value: string
@@ -209,6 +210,8 @@ export function AdminSettingsPage() {
           )}
         </div>
       </div>
+
+      <AdminSecuritySettings />
 
       {/* Calculation parameters */}
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
