@@ -321,6 +321,13 @@ export function WalletPage() {
 
   useEffect(() => { loadData() }, [user])
 
+  // /wallet#transactions (Historique on the home page) lands on the list
+  useEffect(() => {
+    if (window.location.hash !== '#transactions') return
+    const t = setTimeout(() => document.getElementById('transactions')?.scrollIntoView({ behavior: 'smooth' }), 300)
+    return () => clearTimeout(t)
+  }, [])
+
   async function handleTopup() {
     if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet) return
     if (topupMethod === 'virement' || topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') {
@@ -827,7 +834,7 @@ export function WalletPage() {
       </div>
 
       {/* Transactions */}
-      <div className="px-4 pb-8 animate-fade-in-up delay-5">
+      <div id="transactions" className="px-4 pb-8 animate-fade-in-up delay-5 scroll-mt-4">
         <h2 className="text-base font-bold mb-3 px-1">{tr('Dernières transactions')}</h2>
 
         {/* Search */}

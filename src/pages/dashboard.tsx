@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { haptics } from '@/lib/haptic'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { ProductCard } from '@/components/shared/product-card'
+import { CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Wallet, Eye, EyeOff, ArrowDownLeft, TrendingUp,
-  Send, Ship, ShoppingBag, HelpCircle, Search, X, Package,
+  Send, Ship, ShoppingBag, HelpCircle, Search, X,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
@@ -17,21 +19,6 @@ interface WalletData {
   blocked_balance: number
 }
 
-interface Product {
-  id: string
-  name: string
-  price_htg: number
-  moq: number
-  unit: string
-  category: string | null
-  supplier_name: string | null
-  images: string[]
-  stock_available: boolean
-  featured: boolean
-  delivery_days_min: number | null
-  delivery_days_max: number | null
-}
-
 const PAGE_SIZE = 12
 
 const QUICK_ACTIONS = [
@@ -41,78 +28,17 @@ const QUICK_ACTIONS = [
   { label: tr('Support'),    Icon: HelpCircle, path: '/support' },
 ]
 
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <Link
-      to={`/products/${product.id}`}
-      className="flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden active:scale-[0.97] transition-transform duration-100"
-    >
-      <div className="w-full aspect-[4/3] bg-gray-50 flex items-center justify-center overflow-hidden relative">
-        {product.images?.[0] ? (
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div
-            className="flex flex-col items-center justify-center gap-1.5 w-full h-full"
-            style={{ background: 'linear-gradient(140deg, #F4F5F7 0%, #EEF0F3 100%)' }}
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 shadow-sm">
-              <Package className="h-5 w-5 text-primary/40" strokeWidth={1.5} />
-            </div>
-          </div>
-        )}
-        {product.featured && (
-          <span className="absolute top-2 left-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-            {tr('Vedette')}
-          </span>
-        )}
-        {!product.stock_available && (
-          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-destructive bg-white/90 px-2 py-1 rounded-full border border-destructive/20">
-              {tr('Rupture')}
-            </span>
-          </div>
-        )}
-      </div>
-      <div className="p-2.5 flex flex-col gap-1">
-        <p className="text-xs font-bold text-foreground leading-snug line-clamp-2">{product.name}</p>
-        {product.supplier_name && (
-          <p className="text-[10px] text-muted-foreground truncate">{product.supplier_name}</p>
-        )}
-        <div className="mt-auto pt-1.5 flex items-end justify-between gap-1">
-          <div>
-            <p className="text-sm font-black text-primary leading-none">
-              {product.price_htg.toLocaleString(LOCALE_TAG)}
-              <span className="text-[10px] font-semibold text-muted-foreground"> HTG</span>
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              {tr('Min.')}{' '}{product.moq} {product.unit}
-            </p>
-          </div>
-          {product.delivery_days_min && (
-            <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-              {product.delivery_days_min}–{product.delivery_days_max ?? product.delivery_days_min}{tr('j')}
-            </p>
-          )}
-        </div>
-      </div>
-    </Link>
-  )
-}
-
 export function DashboardPage() {
   const { profile, user } = useAuth()
+  const navigate = useNavigate()
+  const isReseller = !!profile?.is_reseller
   const { t } = useI18n()
 
   const [wallet, setWallet]           = useState<WalletData | null>(null)
   const [walletLoading, setWalletLoading] = useState(true)
   const [balanceVisible, setBalanceVisible] = useState(true)
 
-  const [products, setProducts]       = useState<Product[]>([])
+  const [products, setProducts]       = useState<CatalogProduct[]>([])
   const [page, setPage]               = useState(0)
   const [hasMore, setHasMore]         = useState(true)
   const [loadingInitial, setLoadingInitial] = useState(true)
@@ -159,7 +85,7 @@ export function DashboardPage() {
   const fetchPage = useCallback(async (pageIndex: number) => {
     let q = supabase
       .from('products')
-      .select('id, name, price_htg, moq, unit, category, supplier_name, images, stock_available, featured, delivery_days_min, delivery_days_max')
+      .select(CATALOG_LIST_SELECT)
       .eq('active', true)
       .order('featured', { ascending: false })
       .order('created_at', { ascending: false })
@@ -172,7 +98,8 @@ export function DashboardPage() {
     const { data, error } = await q
     if (error || !data) return
 
-    setProducts(prev => pageIndex === 0 ? (data as Product[]) : [...prev, ...(data as Product[])])
+    const rows = (data as unknown as CatalogProduct[]).map(localizeProduct)
+    setProducts(prev => pageIndex === 0 ? rows : [...prev, ...rows])
     setHasMore(data.length === PAGE_SIZE)
     setLoadingInitial(false)
     setLoadingMore(false)
@@ -208,8 +135,6 @@ export function DashboardPage() {
   const balance = wallet?.available_balance ?? 0
 
   // Split products into two offset columns
-  const leftCol  = products.filter((_, i) => i % 2 === 0)
-  const rightCol = products.filter((_, i) => i % 2 === 1)
 
   return (
     <div className="h-full bg-[#F4F5F7] w-full flex flex-col overflow-hidden">
@@ -295,7 +220,7 @@ export function DashboardPage() {
               {tr('Dépôt')}
             </button>
           </Link>
-          <Link to="/orders" className="flex-1">
+          <Link to="/wallet#transactions" className="flex-1">
             <button onClick={handleTap} className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold text-[#0A1628] border-2 border-[#0A1628] bg-transparent hover:bg-[#0A1628]/5 transition-colors pressable">
               <TrendingUp className="h-3.5 w-3.5" />
               {tr('Historique')}
@@ -369,15 +294,10 @@ export function DashboardPage() {
           </div>
         ) : (
           /* ── Staggered 2-column grid ── */
-          <div className="flex gap-3">
-            {/* Left column */}
-            <div className="flex-1 flex flex-col gap-3">
-              {leftCol.map(p => <ProductCard key={p.id} product={p} />)}
-            </div>
-            {/* Right column — offset by mt-6 for stagger effect */}
-            <div className="flex-1 flex flex-col gap-3 mt-6">
-              {rightCol.map(p => <ProductCard key={p.id} product={p} />)}
-            </div>
+          <div className="columns-2 gap-3">
+            {products.map(p => (
+              <ProductCard key={p.id} product={resellerPriced(p, isReseller)} onPress={() => navigate(`/products/${p.id}`)} />
+            ))}
           </div>
         )}
 

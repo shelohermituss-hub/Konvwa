@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
-  Eye, EyeOff, Loader2, BadgeCheck, LayoutDashboard, ChevronRight,
-  Plus, Trash2, MapPin, LogOut, Upload, User, Lock, Bell, Activity, CreditCard, Heart, Gift, Store,
+  Eye, EyeOff, Loader2, LayoutDashboard, ChevronRight,
+  Plus, Trash2, MapPin, LogOut, Upload, User, Lock, Bell, Activity, CreditCard, Heart, Gift, Store, ArrowLeft, Check, FileText, HelpCircle,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -27,8 +27,19 @@ interface AddressEntry {
   default: boolean
 }
 
+type Section = 'personal' | 'notifications' | 'security' | 'rewards'
+const SECTION_KEYS: Section[] = ['personal', 'notifications', 'security', 'rewards']
+
 export function ProfilePage() {
-  const { user, signOut, isAdmin, refreshProfile } = useAuth()
+  const { user, profile, signOut, isAdmin, refreshProfile } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const sectionParam = searchParams.get('section') as Section | null
+  const active = sectionParam && SECTION_KEYS.includes(sectionParam) ? sectionParam : null
+  const [verified, setVerified] = useState(false)
+  useEffect(() => {
+    if (!user) return
+    void supabase.from('kyc_submissions').select('status').eq('user_id', user.id).maybeSingle().then(({ data }) => setVerified(data?.status === 'approved'))
+  }, [user])
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -59,176 +70,142 @@ export function ProfilePage() {
     else { await refreshProfile(); toast.success(tr('Photo supprimée.')) }
   }
 
-  return (
-    <div className="min-h-full bg-[#F4F5F7]">
-      <div className="px-5 pt-5 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">{tr('Mon profil')}</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{tr('Gérez vos informations et paramètres')}</p>
-      </div>
+  const initials = profile?.full_name
+    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'U'
 
-      <div className="px-4 pb-6 space-y-4">
-
-        {/* Admin shortcut */}
-        {isAdmin && (
-          <Link to="/admin">
-            <div className="flex items-center gap-3 rounded-2xl p-4 bg-primary text-white shadow-md hover:bg-primary/90 transition-colors">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 shrink-0">
-                <LayoutDashboard className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-sm">{tr('Tableau de bord')}</p>
-                <p className="text-xs text-white/70 mt-0.5">{tr('Gérer les commandes, devis & clients')}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-white/60 shrink-0" />
-            </div>
-          </Link>
-        )}
-
-        {/* Personal information */}
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-              <User className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">{tr('Informations personnelles')}</p>
-              <p className="text-xs text-muted-foreground">{tr('Modifier vos informations')}</p>
-            </div>
-          </div>
-
-          <PersonalInfoForm
-            avatarUploading={avatarUploading}
-            onAvatarUpload={() => fileInputRef.current?.click()}
-            onAvatarRemove={handleRemoveAvatar}
-          />
-          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarChange} />
-        </div>
-
-        {/* Address information */}
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
-              <MapPin className="h-4 w-4 text-blue-500" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">{tr('Adresses de livraison')}</p>
-              <p className="text-xs text-muted-foreground">{tr('Gérer vos adresses de livraison')}</p>
-            </div>
-          </div>
-          <AddressSection />
-        </div>
-
-        {/* Security */}
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50">
-              <Lock className="h-4 w-4 text-amber-500" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">{tr('Sécurité')}</p>
-              <p className="text-xs text-muted-foreground">{tr('Mot de passe et sécurité')}</p>
-            </div>
-          </div>
+  const sections: Record<Section, { title: string; body: React.ReactNode }> = {
+    personal: {
+      title: tr('Informations personnelles'),
+      body: (
+        <>
+          <Card>
+            <PersonalInfoForm avatarUploading={avatarUploading} onAvatarUpload={() => fileInputRef.current?.click()} onAvatarRemove={handleRemoveAvatar} />
+          </Card>
+          <p className="px-1 pt-2 text-sm font-semibold">{tr('Adresses de livraison')}</p>
+          <Card><AddressSection /></Card>
+        </>
+      ),
+    },
+    notifications: { title: tr('Notifications'), body: <Card><PreferencesSection /></Card> },
+    security: {
+      title: tr('Confidentialité & sécurité'),
+      body: (
+        <Card>
           <div className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold">{tr('Mot de passe')}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{tr('Modifier votre mot de passe')}</p>
               </div>
-              <button
-                onClick={() => setShowPasswordModal(true)}
-                className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
-              >
-                {tr('Modifier')}
-              </button>
+              <button onClick={() => setShowPasswordModal(true)} className="text-xs font-bold text-primary hover:text-primary/80 transition-colors">{tr('Modifier')}</button>
             </div>
             <SecuritySection />
             <KycSection />
           </div>
-        </div>
+        </Card>
+      ),
+    },
+    rewards: { title: tr('Parrainage & codes promo'), body: <Card><RewardsSection /></Card> },
+  }
 
-        {/* Rewards */}
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-              <Gift className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">{tr('Parrainage & codes promo')}</p>
-              <p className="text-xs text-muted-foreground">{tr('Gagnez des bonus pour vous et vos amis')}</p>
-            </div>
+  const menu: Array<{ key: Section; label: string; Icon: typeof User }> = [
+    { key: 'personal', label: tr('Informations personnelles'), Icon: User },
+    { key: 'notifications', label: tr('Notifications'), Icon: Bell },
+    { key: 'security', label: tr('Confidentialité & sécurité'), Icon: Lock },
+    { key: 'rewards', label: tr('Parrainage & fidélité'), Icon: Gift },
+  ]
+  const links: Array<{ to: string; label: string; Icon: typeof User }> = [
+    { to: '/reseller', label: tr('Espace revendeur'), Icon: Store },
+    { to: '/wishlist', label: tr('Mes favoris'), Icon: Heart },
+    { to: '/activity-log', label: tr('Journal d\'activité'), Icon: Activity },
+    { to: '/billing', label: tr('Facturation'), Icon: CreditCard },
+    { to: '/terms', label: tr('Conditions générales'), Icon: FileText },
+    { to: '/support', label: tr('Support & Aide'), Icon: HelpCircle },
+  ]
+
+  return (
+    <div className="min-h-full bg-[#F4F5F7]">
+      {active ? (
+        <div className="px-4 pb-6 pt-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSearchParams({}, { replace: false })} aria-label={tr('Retour')} className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white">
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <h1 className="text-lg font-bold tracking-tight">{sections[active].title}</h1>
           </div>
-          <RewardsSection />
+          {sections[active].body}
         </div>
-
-        {/* Preferences */}
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50">
-              <Bell className="h-4 w-4 text-emerald-500" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">{tr('Notifications')}</p>
-              <p className="text-xs text-muted-foreground">{tr('Gérer vos préférences de notification')}</p>
-            </div>
+      ) : (
+        <div className="px-4 pb-6 pt-6 space-y-4">
+          {/* Identity */}
+          <div className="flex flex-col items-center text-center">
+            <button onClick={() => { setSearchParams({ section: 'personal' }) }} aria-label={tr('Informations personnelles')} className="relative">
+              <Avatar className="shadow-md" style={{ height: '7.5rem', width: '7.5rem' }}>
+                <AvatarImage src={profile?.avatar_url || ''} />
+                <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">{initials}</AvatarFallback>
+              </Avatar>
+            </button>
+            <h1 className="mt-4 text-xl font-bold tracking-tight">{profile?.full_name || user?.email}</h1>
+            {verified && (
+              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-bold text-white">
+                <Check className="h-4 w-4" aria-hidden="true" />{tr('Vérifié')}
+              </span>
+            )}
           </div>
-          <PreferencesSection />
-        </div>
 
-        {/* Quick links */}
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden divide-y divide-border/50">
-          <Link to="/reseller" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
-              <Store className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <span className="flex-1 text-sm font-medium">{tr('Espace revendeur')}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-          </Link>
-          <Link to="/wishlist" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
-              <Heart className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <span className="flex-1 text-sm font-medium">{tr('Mes favoris')}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </Link>
-          <Link to="/activity-log" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <span className="flex-1 text-sm font-medium">{tr('Journal d\'activité')}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </Link>
-          <Link to="/billing" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <span className="flex-1 text-sm font-medium">{tr('Facturation')}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </Link>
-          <Link to="/support" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
-              <BadgeCheck className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <span className="flex-1 text-sm font-medium">{tr('Support & Aide')}</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </Link>
-        </div>
+          {isAdmin && (
+            <Link to="/admin" className="flex items-center gap-3 rounded-2xl bg-primary p-4 text-white shadow-md">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15"><LayoutDashboard className="h-5 w-5" /></div>
+              <div className="flex-1">
+                <p className="text-sm font-bold">{tr('Tableau de bord')}</p>
+                <p className="mt-0.5 text-xs text-white/70">{tr('Gérer les commandes, devis & clients')}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-white/60" />
+            </Link>
+          )}
 
-        {/* Logout */}
-        <button
-          onClick={() => signOut()}
-          className="w-full rounded-2xl bg-white border border-destructive/20 px-5 py-4 flex items-center gap-3 hover:bg-destructive/5 transition-colors shadow-sm"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-destructive/8 shrink-0">
-            <LogOut className="h-4 w-4 text-destructive" />
+          <div className="overflow-hidden rounded-3xl bg-white shadow-sm divide-y divide-gray-100">
+            {menu.map(({ key, label, Icon }) => (
+              <button key={key} onClick={() => setSearchParams({ section: key })} className="flex w-full items-center gap-4 px-4 py-4 text-left hover:bg-muted/20 transition-colors">
+                <IconBubble Icon={Icon} />
+                <span className="flex-1 text-base font-medium">{label}</span>
+                <ChevronRight className="h-5 w-5 text-muted-foreground/60" />
+              </button>
+            ))}
           </div>
-          <span className="text-sm font-bold text-destructive">{tr('Se déconnecter')}</span>
-        </button>
-      </div>
 
-      {/* Password modal */}
+          <div className="overflow-hidden rounded-3xl bg-white shadow-sm divide-y divide-gray-100">
+            {links.map(({ to, label, Icon }) => (
+              <Link key={to} to={to} className="flex items-center gap-4 px-4 py-4 hover:bg-muted/20 transition-colors">
+                <IconBubble Icon={Icon} />
+                <span className="flex-1 text-base font-medium">{label}</span>
+                <ChevronRight className="h-5 w-5 text-muted-foreground/60" />
+              </Link>
+            ))}
+          </div>
+
+          <button onClick={() => signOut()} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white shadow-sm">
+            <LogOut className="h-5 w-5" aria-hidden="true" />{tr('Se déconnecter')}
+          </button>
+        </div>
+      )}
+
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarChange} />
       <PasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </div>
+  )
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+  return <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">{children}</div>
+}
+
+function IconBubble({ Icon }: { Icon: typeof User }) {
+  return (
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-50">
+      <Icon className="h-5 w-5 text-indigo-600" aria-hidden="true" />
+    </span>
   )
 }
 

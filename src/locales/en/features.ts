@@ -414,4 +414,7 @@ export const FEATURES_EN: Record<string, string> = {
   "Remise fidélité de {0} % déjà appliquée aux frais de service.": "Loyalty discount of {0}% already applied to the service fee.",
   "Recommander cet article": "Order this item again",
   "Demande pré-remplie : vérifiez les informations avant d'envoyer.": "Request pre-filled: check the details before sending.",
+  "Confidentialité & sécurité": "Privacy & security",
+  "Parrainage & fidélité": "Referral & loyalty",
+  "Conditions générales": "Terms and conditions",
 }
