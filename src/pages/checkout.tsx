@@ -51,37 +51,18 @@ export function CheckoutPage() {
 
     setPaying(true)
     try {
-      // Create the product_order
-      const { data: order, error: orderErr } = await supabase
-        .from('product_orders')
-        .insert({
-          user_id: user.id,
-          total_htg: total,
-          status: 'pending',
-          payment_status: 'unpaid',
-        })
-        .select('id')
-        .single()
-
-      if (orderErr || !order) throw new Error(orderErr?.message ?? 'Erreur création commande')
-
-      // Insert order items
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        product_name: item.products?.name ?? '',
-        product_price_htg: item.products?.price_htg ?? 0,
-        quantity: item.quantity,
-        subtotal_htg: (item.products?.price_htg ?? 0) * item.quantity,
-      }))
-
-      const { error: itemsErr } = await supabase.from('product_order_items').insert(orderItems)
-      if (itemsErr) throw new Error(itemsErr.message)
+      // The order, its prices and its total are computed by the database from the product ids
+      const { data: created, error: createErr } = await supabase.rpc('create_product_order', {
+        p_items: items.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
+      })
+      if (createErr) throw new Error(createErr.message)
+      if (!created?.success) throw new Error(created?.error ?? 'Erreur création commande')
+      const order = { id: created.order_id as string }
 
       // Deduct wallet via RPC
       const { data: rpcResult, error: rpcErr } = await supabase.rpc('pay_product_order', { p_order_id: order.id })
       if (rpcErr) throw new Error(rpcErr.message)
-      if (rpcResult?.error) throw new Error(rpcResult.error)
+      if (rpcResult && rpcResult.success === false) throw new Error(rpcResult.error ?? 'Paiement refusé')
 
       await clearCart()
       setSuccess(true)
