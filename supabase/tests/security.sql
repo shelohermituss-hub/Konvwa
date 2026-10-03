@@ -221,5 +221,23 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); r jsonb; BEGIN
   ASSERT NOT has_function_privilege('anon', 'public.complete_onboarding(text[],boolean)', 'execute'), 'anon can complete onboarding';
 END $$;
 
+-- 15. MFA scope: a client with MFA needs a fresh code for large top-ups (not for small ones); nothing is asked otherwise
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); w uuid; BEGIN
+  SELECT id INTO w FROM wallets WHERE user_id = a;
+  PERFORM pg_temp.as_user(a);
+  INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, description) VALUES (w, 'deposit', 50000, 'pending', 'virement', 'no factor');
+  RESET ROLE;
+  INSERT INTO auth.mfa_factors (id, user_id, factor_type, status, created_at, updated_at) VALUES (gen_random_uuid(), a, 'totp', 'verified', now(), now());
+  PERFORM pg_temp.as_user(a);
+  BEGIN
+    INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, description) VALUES (w, 'deposit', 50000, 'pending', 'virement', 'no code');
+    RAISE EXCEPTION 'large top-up accepted without a code';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, description) VALUES (w, 'deposit', 500, 'pending', 'virement', 'small');
+  ASSERT public.check_mfa(50000) = false, 'check_mfa should refuse without a recent code';
+  RESET ROLE;
+  ASSERT NOT has_function_privilege('anon', 'public.check_mfa(numeric)', 'execute'), 'anon can call check_mfa';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

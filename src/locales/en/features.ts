@@ -467,7 +467,7 @@ export const FEATURES_EN: Record<string, string> = {
   "Où livrer vos colis ?": "Where should we deliver your packages?",
   "Ajoutez une adresse maintenant pour commander plus vite. Vous pourrez en ajouter d'autres plus tard.": "Add an address now to order faster. You can add more later.",
   "Protégez votre argent": "Protect your money",
-  "La double authentification ajoute un code de votre téléphone pour vous connecter et pour les gros paiements. Même avec votre mot de passe, personne ne peut agir à votre place.": "Two-step verification adds a code from your phone to sign in and for large payments. Even with your password, nobody can act in your place.",
+  "La double authentification ajoute un code de votre téléphone pour les gros paiements et les recharges. Même avec votre mot de passe, personne ne peut déplacer votre argent à votre place.": "Two-step verification adds a code from your phone for large payments and top-ups. Even with your password, nobody can move your money in your place.",
   "Vérifiez votre identité": "Verify your identity",
   "Une pièce d'identité et un selfie débloquent les gros montants et le badge « Vérifié ». L'équipe examine votre dossier rapidement.": "An ID document and a selfie unlock large amounts and the “Verified” badge. The team reviews your file quickly.",
   "Votre compte est prêt !": "Your account is ready!",

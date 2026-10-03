@@ -9,6 +9,7 @@ import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X,
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { createPayment } from '@/lib/payment-api'
+import { useStepUp } from '@/lib/step-up'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -286,6 +287,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
 
 export function WalletPage() {
   const { user, profile } = useAuth()
+  const { confirmPayment } = useStepUp()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -334,8 +336,9 @@ export function WalletPage() {
       await handleManualDeposit()
       return
     }
-    setSubmitting(true)
     const amount = parseFloat(topupAmount)
+    if (!(await confirmPayment(amount))) return
+    setSubmitting(true)
     try {
       const result = await createPayment({ amount, method: topupMethod as 'moncash' | 'natcash', wallet_id: wallet.id })
       sessionStorage.setItem('konvwa_pay_ref', result.reference_id)
@@ -354,6 +357,7 @@ export function WalletPage() {
     if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet || !user) return
     const isCrypto = topupMethod !== 'virement'
     if (isCrypto && !proofFile) return
+    if (!(await confirmPayment(parseFloat(topupAmount)))) return
     setSubmitting(true)
     try {
       const amount = parseFloat(topupAmount)

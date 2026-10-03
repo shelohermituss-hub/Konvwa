@@ -82,9 +82,9 @@ export function StepUpProvider({ children }: { children: ReactNode }) {
       <Dialog open={open} onOpenChange={(o) => { if (!o) finish(false) }}>
         <DialogContent className="rounded-2xl sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" />{tr('Confirmez le paiement')}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" />{tr('Confirmez l\'opération')}</DialogTitle>
             <DialogDescription>
-              {tr('Pour un paiement de {0} HTG, entrez le code à 6 chiffres de votre application d\'authentification.', amount.toLocaleString(LOCALE_TAG))}
+              {tr('Pour une opération de {0} HTG (paiement ou recharge), entrez le code à 6 chiffres de votre application d\'authentification.', amount.toLocaleString(LOCALE_TAG))}
             </DialogDescription>
           </DialogHeader>
           <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void verify() }}>

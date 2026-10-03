@@ -147,8 +147,8 @@ export function SecuritySection() {
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {factorId
-                ? tr('Activée : un code de votre application est demandé à la connexion et pour les paiements de {0} HTG ou plus.', STEP_UP_THRESHOLD_HTG.toLocaleString(LOCALE_TAG))
-                : tr('Ajoutez une protection : même avec votre mot de passe, personne ne pourra se connecter ou payer sans votre téléphone.')}
+                ? tr('Activée : un code de votre application est demandé pour les paiements et les recharges de {0} HTG ou plus. Rien n\'est demandé à la connexion.', STEP_UP_THRESHOLD_HTG.toLocaleString(LOCALE_TAG))
+                : tr('Ajoutez une protection : même avec votre mot de passe, personne ne pourra payer ou recharger votre portefeuille sans votre téléphone.')}
             </p>
           </div>
           {mfaLoading ? (

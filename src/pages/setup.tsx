@@ -288,7 +288,7 @@ export function SetupPage() {
 
         {step === 'mfa' && (
           <>
-            <StepHeader Icon={ShieldCheck} required={false} title={tr('Protégez votre argent')} body={tr('La double authentification ajoute un code de votre téléphone pour vous connecter et pour les gros paiements. Même avec votre mot de passe, personne ne peut agir à votre place.')} />
+            <StepHeader Icon={ShieldCheck} required={false} title={tr('Protégez votre argent')} body={tr('La double authentification ajoute un code de votre téléphone pour les gros paiements et les recharges. Même avec votre mot de passe, personne ne peut déplacer votre argent à votre place.')} />
             <MfaEnroll onChange={onMfa} />
           </>
         )}

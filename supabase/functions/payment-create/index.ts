@@ -36,6 +36,16 @@ Deno.serve(async (req) => {
     if (typeof amount !== 'number' || !Number.isFinite(amount) || amount < 20 || amount > 1_000_000) return new Response(JSON.stringify({ error: 'Montant minimum 20 HTG' }), { status: 400, headers: CORS })
     if (!method || !['moncash', 'natcash'].includes(method)) return new Response(JSON.stringify({ error: 'Méthode invalide' }), { status: 400, headers: CORS })
 
+    // Top-ups need the same fresh MFA code as payments (clients who enabled MFA, from the threshold amount).
+    // The check runs with the caller's own JWT so it reads their session (amr claim).
+    const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
+    })
+    const { data: mfaOk } = await userClient.rpc('check_mfa', { p_amount: amount })
+    if (mfaOk === false) {
+      return new Response(JSON.stringify({ error: 'Confirmation par code requise pour cette recharge.', code: 'mfa_required' }), { status: 403, headers: CORS })
+    }
+
     // Read payment settings (service role bypasses RLS)
     const { data: settings } = await supabaseAdmin.from('app_settings').select('key, value').in('key', ['payment_client_id', 'payment_base_url'])
     const cfg = Object.fromEntries((settings ?? []).map((s: { key: string; value: string }) => [s.key, s.value]))

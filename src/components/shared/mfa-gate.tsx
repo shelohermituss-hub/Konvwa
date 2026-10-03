@@ -17,6 +17,8 @@ type Step =
 /**
  * Requires a verified TOTP code (aal2) before the admin area is shown.
  * The database enforces the same rule once the `staff_mfa_required` setting is "true".
+ * With `enroll={false}` (client area) nothing is asked at sign-in: clients are asked for their code only when they
+ * pay or top up (see StepUpProvider and mfa_ok() in the database).
  */
 export function MfaGate({ children, enroll = true }: { children: ReactNode; enroll?: boolean }) {
   const { signOut } = useAuth()
@@ -27,6 +29,7 @@ export function MfaGate({ children, enroll = true }: { children: ReactNode; enro
   const [bypass, setBypass] = useState(false)
 
   const evaluate = useCallback(async () => {
+    if (!enroll) return setStep({ kind: 'ok' })
     const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (aal?.currentLevel === 'aal2') return setStep({ kind: 'ok' })
 
