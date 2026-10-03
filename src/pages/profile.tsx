@@ -137,25 +137,25 @@ export function ProfilePage() {
           {sections[active].body}
         </div>
       ) : (
-        <div className="px-4 pb-6 pt-6 space-y-4">
+        <div className="px-4 pb-6 pt-5 space-y-4">
           {/* Identity */}
           <div className="flex flex-col items-center text-center">
             <button onClick={() => { setSearchParams({ section: 'personal' }) }} aria-label={tr('Informations personnelles')} className="relative">
-              <Avatar className="shadow-md" style={{ height: '7.5rem', width: '7.5rem' }}>
+              <Avatar className="shadow-md" style={{ height: '5.5rem', width: '5.5rem' }}>
                 <AvatarImage src={profile?.avatar_url || ''} />
-                <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">{initials}</AvatarFallback>
               </Avatar>
             </button>
-            <h1 className="mt-4 text-xl font-bold tracking-tight">{profile?.full_name || user?.email}</h1>
+            <h1 className="mt-3 text-lg font-bold tracking-tight">{profile?.full_name || user?.email}</h1>
             {verified && (
-              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-bold text-white">
-                <Check className="h-4 w-4" aria-hidden="true" />{tr('Vérifié')}
+              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700">
+                <Check className="h-3.5 w-3.5" aria-hidden="true" />{tr('Vérifié')}
               </span>
             )}
           </div>
 
           {isAdmin && (
-            <Link to="/admin" className="flex items-center gap-3 rounded-2xl bg-primary p-4 text-white shadow-md">
+            <Link to="/admin" className="flex items-center gap-3 rounded-2xl bg-primary p-4 text-white shadow-md hover:bg-primary/90 transition-colors">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15"><LayoutDashboard className="h-5 w-5" /></div>
               <div className="flex-1">
                 <p className="text-sm font-bold">{tr('Tableau de bord')}</p>
@@ -165,28 +165,29 @@ export function ProfilePage() {
             </Link>
           )}
 
-          <div className="overflow-hidden rounded-3xl bg-white shadow-sm divide-y divide-gray-100">
+          <div className="overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm divide-y divide-border/50">
             {menu.map(({ key, label, Icon }) => (
-              <button key={key} onClick={() => setSearchParams({ section: key })} className="flex w-full items-center gap-4 px-4 py-4 text-left hover:bg-muted/20 transition-colors">
+              <button key={key} onClick={() => setSearchParams({ section: key })} className="flex w-full items-center gap-3 px-5 py-3.5 text-left hover:bg-muted/20 transition-colors">
                 <IconBubble Icon={Icon} />
-                <span className="flex-1 text-base font-medium">{label}</span>
-                <ChevronRight className="h-5 w-5 text-muted-foreground/60" />
+                <span className="flex-1 text-sm font-medium">{label}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
             ))}
           </div>
 
-          <div className="overflow-hidden rounded-3xl bg-white shadow-sm divide-y divide-gray-100">
+          <div className="overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm divide-y divide-border/50">
             {links.map(({ to, label, Icon }) => (
-              <Link key={to} to={to} className="flex items-center gap-4 px-4 py-4 hover:bg-muted/20 transition-colors">
+              <Link key={to} to={to} className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
                 <IconBubble Icon={Icon} />
-                <span className="flex-1 text-base font-medium">{label}</span>
-                <ChevronRight className="h-5 w-5 text-muted-foreground/60" />
+                <span className="flex-1 text-sm font-medium">{label}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </Link>
             ))}
           </div>
 
-          <button onClick={() => signOut()} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white shadow-sm">
-            <LogOut className="h-5 w-5" aria-hidden="true" />{tr('Se déconnecter')}
+          <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-2xl border border-destructive/20 bg-white px-5 py-3.5 shadow-sm transition-colors hover:bg-destructive/5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10"><LogOut className="h-4 w-4 text-destructive" aria-hidden="true" /></span>
+            <span className="text-sm font-bold text-destructive">{tr('Se déconnecter')}</span>
           </button>
         </div>
       )}
@@ -203,8 +204,8 @@ function Card({ children }: { children: React.ReactNode }) {
 
 function IconBubble({ Icon }: { Icon: typeof User }) {
   return (
-    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-50">
-      <Icon className="h-5 w-5 text-indigo-600" aria-hidden="true" />
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+      <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
     </span>
   )
 }
