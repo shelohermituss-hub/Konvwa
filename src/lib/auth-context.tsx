@@ -27,8 +27,8 @@ interface AuthContextType {
   session: Session | null
   profile: Profile | null
   loading: boolean
-  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null; needsConfirmation?: boolean }>
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
+  signUp: (email: string, password: string, fullName: string, phone?: string, captchaToken?: string) => Promise<{ error: Error | null; needsConfirmation?: boolean }>
+  signIn: (email: string, password: string, captchaToken?: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
   isAdmin: boolean
@@ -117,11 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }
 
-  async function signUp(email: string, password: string, fullName: string, phone?: string) {
+  async function signUp(email: string, password: string, fullName: string, phone?: string, captchaToken?: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        captchaToken,
         emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           full_name: fullName,
@@ -158,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null }
   }
 
-  async function signIn(email: string, password: string) {
+  async function signIn(email: string, password: string, captchaToken?: string) {
     // Temporary lockout after repeated failures (counted in the database, per e-mail)
     const { data: locked } = await supabase.rpc('login_lock_seconds', { p_email: email })
     if (typeof locked === 'number' && locked > 0) {
@@ -167,7 +168,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
+      options: { captchaToken },
     })
 
     if (error) {

@@ -477,4 +477,6 @@ export const FEATURES_EN: Record<string, string> = {
   "Continuer": "Continue",
   "Accéder à mon compte": "Go to my account",
   "Les notifications sont obligatoires pour continuer.": "Notifications are required to continue.",
+  "Validez d'abord le captcha.": "Complete the captcha first.",
+  "Captcha indisponible. Vérifiez votre connexion puis rechargez la page.": "Captcha unavailable. Check your connection and reload the page.",
 }

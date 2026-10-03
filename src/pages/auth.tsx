@@ -20,6 +20,7 @@ import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 
 import { tr } from '@/lib/i18n'
 import { isCancelled, passkeysSupported } from '@/lib/passkeys'
+import { useCaptcha } from '@/components/shared/captcha'
 import { LanguageToggle } from '@/components/shared/language-toggle'
 type AuthView = 'login' | 'register' | 'forgot' | 'otp' | 'reset' | 'denied'
 
@@ -254,11 +255,14 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
     resolver: zodResolver(loginSchema),
   })
 
+  const captcha = useCaptcha()
   const [passkeyBusy, setPasskeyBusy] = useState(false)
   async function signInWithPasskey() {
+    if (!captcha.ready) { toast.error(tr('Validez d\'abord le captcha.')); return }
     setPasskeyBusy(true)
-    const { error } = await supabase.auth.signInWithPasskey()
+    const { error } = await supabase.auth.signInWithPasskey({ options: { captchaToken: captcha.token } })
     setPasskeyBusy(false)
+    captcha.reset()
     if (error) {
       if (!isCancelled(error)) toast.error(tr('Connexion par passkey impossible'), { description: tr('Aucune passkey reconnue sur cet appareil. Connectez-vous avec votre mot de passe, puis ajoutez-en une dans Profil > Confidentialité & sécurité.') })
       return
@@ -268,7 +272,8 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
   }
 
   async function onSubmit(values: LoginForm) {
-    const { error } = await signIn(values.email, values.password)
+    const { error } = await signIn(values.email, values.password, captcha.token)
+    captcha.reset()
     if (error) {
       toast.error(tr('Connexion échouée'), { description: error.message })
       return
@@ -288,7 +293,7 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
         <button
           type="button"
           onClick={() => void signInWithPasskey()}
-          disabled={passkeyBusy}
+          disabled={passkeyBusy || !captcha.ready}
           className="mb-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary/30 bg-primary/5 text-sm font-bold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
         >
           {passkeyBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" aria-hidden="true" />}
@@ -332,7 +337,9 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
           {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
         </div>
 
-        <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
+        {captcha.widget}
+
+        <PrimaryBtn type="submit" disabled={isSubmitting || !captcha.ready} className="mt-2">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {tr('Se connecter')}
         </PrimaryBtn>
@@ -359,9 +366,11 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
     defaultValues: { acceptTerms: false },
   })
   const acceptTerms = watch('acceptTerms')
+  const captcha = useCaptcha()
 
   async function onSubmit(values: RegisterForm) {
-    const { error, needsConfirmation } = await signUp(values.email, values.password, values.fullName, values.phone)
+    const { error, needsConfirmation } = await signUp(values.email, values.password, values.fullName, values.phone, captcha.token)
+    captcha.reset()
     if (error) {
       toast.error(tr('Inscription échouée'), { description: error.message })
       return
@@ -489,7 +498,9 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
           <p className="text-xs text-destructive">{errors.acceptTerms.message}</p>
         )}
 
-        <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
+        {captcha.widget}
+
+        <PrimaryBtn type="submit" disabled={isSubmitting || !captcha.ready} className="mt-2">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {tr('Créer mon compte')}
         </PrimaryBtn>
@@ -510,6 +521,7 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
 // ── Forgot password ───────────────────────────────────────────────────────────
 function ForgotView({ onBack }: { onBack: () => void }) {
   const [sent, setSent] = useState(false)
+  const captcha = useCaptcha()
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotForm>({
     resolver: zodResolver(forgotSchema),
   })
@@ -517,7 +529,9 @@ function ForgotView({ onBack }: { onBack: () => void }) {
   async function onSubmit(values: ForgotForm) {
     const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
       redirectTo: `${window.location.origin}/auth?type=reset`,
+      captchaToken: captcha.token,
     })
+    captcha.reset()
     if (error) {
       toast.error(tr('Erreur'), { description: error.message })
       return
@@ -566,7 +580,9 @@ function ForgotView({ onBack }: { onBack: () => void }) {
           />
         </Field>
 
-        <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
+        {captcha.widget}
+
+        <PrimaryBtn type="submit" disabled={isSubmitting || !captcha.ready} className="mt-2">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {tr('Envoyer le lien')}
         </PrimaryBtn>
@@ -594,8 +610,12 @@ function OtpView({ email, onBack }: { email: string; onBack: () => void }) {
     navigate('/dashboard', { replace: true })
   }
 
+  const captcha = useCaptcha()
   async function resend() {
-    await supabase.auth.signInWithOtp({ email })
+    if (!captcha.ready) { toast.error(tr('Validez d\'abord le captcha.')); return }
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { captchaToken: captcha.token } })
+    captcha.reset()
+    if (error) { toast.error(tr('Erreur'), { description: error.message }); return }
     toast.success(tr('Code renvoyé !'))
   }
 
@@ -634,10 +654,11 @@ function OtpView({ email, onBack }: { email: string; onBack: () => void }) {
 
         <p className="text-center text-sm text-muted-foreground">
           {tr('Pas reçu le code ?')}{' '}
-          <button type="button" onClick={resend} className="text-primary font-bold hover:underline">
+          <button type="button" onClick={resend} disabled={!captcha.ready} className="text-primary font-bold hover:underline disabled:opacity-50 disabled:no-underline">
             {tr('Renvoyer')}
           </button>
         </p>
+        {captcha.widget}
       </div>
     </div>
   )
