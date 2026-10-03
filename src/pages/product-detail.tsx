@@ -10,6 +10,8 @@ import { useI18n } from '@/lib/i18n-context'
 import { CATALOG_DETAIL_SELECT, CATALOG_LIST_SELECT, type CatalogProduct } from '@/lib/catalog'
 import { formatHtg, tierRows, unitPriceFor } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
+import { ProductReviews } from '@/components/shared/product-reviews'
+import { WishlistButton } from '@/components/shared/wishlist-button'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -126,6 +128,12 @@ export function ProductDetailPage() {
     }
   }
 
+  function handleWhatsApp() {
+    if (!product) return
+    const text = tr('Regarde ce produit sur KONVWA : {0}', `${product.name} — ${window.location.href}`)
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F4F5F7]">
@@ -178,6 +186,14 @@ export function ProductDetailPage() {
           >
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="truncate text-sm text-muted-foreground">{product.category ? tr(product.category) : tr('Rechercher un produit')}</span>
+          </button>
+          <WishlistButton productId={product.id} className="h-11 w-11 shrink-0 bg-transparent shadow-none hover:bg-muted" />
+          <button
+            onClick={handleWhatsApp}
+            aria-label={tr('Partager sur WhatsApp')}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-emerald-600 transition-colors hover:bg-muted"
+          >
+            <MessageCircle className="h-5 w-5" strokeWidth={1.8} />
           </button>
           <button
             onClick={handleShare}
@@ -492,6 +508,8 @@ export function ProductDetailPage() {
             <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{product.description}</p>
           </Section>
         )}
+
+        <ProductReviews productId={product.id} />
       </div>
 
       {related.length > 0 && (

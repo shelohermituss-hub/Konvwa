@@ -2,6 +2,7 @@ import { BadgeCheck, Check, Package } from 'lucide-react'
 import { useI18n } from '@/lib/i18n-context'
 import { formatPriceRange } from '@/lib/product-pricing'
 import type { CatalogProduct } from '@/lib/catalog'
+import { WishlistButton } from '@/components/shared/wishlist-button'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 /** The single most persuasive fact we have about the product, shown under the supplier line. */
@@ -22,10 +23,11 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
   ].filter(Boolean).join(' · ')
 
   return (
+    <div className="relative mb-3 break-inside-avoid">
     <button
       type="button"
       onClick={onPress}
-      className="mb-3 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition-transform duration-100 active:scale-[0.98]"
+      className="block w-full overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition-transform duration-100 active:scale-[0.98]"
     >
       <div className="relative min-h-32 bg-gray-50">
         {product.images.length > 0 ? (
@@ -85,5 +87,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
         )}
       </div>
     </button>
+    <WishlistButton productId={product.id} className="absolute right-2 top-2" />
+    </div>
   )
 }

@@ -32,6 +32,7 @@ import { SupportPage } from '@/pages/support'
 import { ActivityLogPage } from '@/pages/activity-log'
 import { BillingPage } from '@/pages/billing'
 import { ProductsPage } from '@/pages/products'
+import { WishlistPage } from '@/pages/wishlist'
 import { ProductDetailPage } from '@/pages/product-detail'
 import { CartPage } from '@/pages/cart'
 import { CheckoutPage } from '@/pages/checkout'
@@ -53,6 +54,7 @@ import { AdminProductsPage } from '@/pages/admin/products'
 import { AdminNotificationsPage } from '@/pages/admin/notifications'
 import { AdminAuditLogsPage } from '@/pages/admin/audit-logs'
 import { AdminKycPage } from '@/pages/admin/kyc'
+import { AdminPromosPage } from '@/pages/admin/promos'
 import { AdminReconciliationPage } from '@/pages/admin/reconciliation'
 
 export const router = createBrowserRouter([
@@ -110,6 +112,7 @@ export const router = createBrowserRouter([
       { path: 'activity-log', element: <ActivityLogPage /> },
       { path: 'billing', element: <BillingPage /> },
       { path: 'products', element: <ProductsPage /> },
+      { path: 'wishlist', element: <WishlistPage /> },
       { path: 'products/:id', element: <ProductDetailPage /> },
       { path: 'cart', element: <CartPage /> },
       { path: 'checkout', element: <CheckoutPage /> },
@@ -142,6 +145,7 @@ export const router = createBrowserRouter([
       { path: 'notifications', element: <AdminNotificationsPage /> },
       { path: 'audit-logs', element: <AdminAuditLogsPage /> },
       { path: 'kyc', element: <AdminKycPage /> },
+      { path: 'promos', element: <AdminPromosPage /> },
       { path: 'reconciliation', element: <AdminReconciliationPage /> },
       { path: 'settings', element: <AdminSettingsPage /> },
     ],

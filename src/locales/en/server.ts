@@ -53,6 +53,8 @@ export const SERVER_RULES: Array<[RegExp, string]> = [
   [/^Produit en rupture de stock : (.+)$/, 'Product out of stock: {0}'],
   [/^Quantité minimale pour « (.+) » : (\d+) (.+)$/, 'Minimum quantity for "{0}": {1} {2}'],
   // wallet transaction descriptions written by the payment functions
+  [/^Code promo (.+)$/, 'Promo code {0}'],
+  [/^Remboursement : (.+) \(réf\. (.+)\)$/, 'Refund: {0} (ref. {1})'],
   [/^Paiement commande produits #(.+)$/, 'Product order payment #{0}'],
   [/^Paiement commande (.+)$/, 'Order payment {0}'],
   [/^Frais d'expédition — acompte (.+) % — demande #(.+)$/, 'Shipping fees — deposit {0}% — request #{1}'],

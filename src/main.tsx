@@ -13,6 +13,7 @@ import { trServer, tr, LANG } from "@/lib/i18n"
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt"
 import { AuthErrorToast } from "@/components/shared/auth-error-toast"
 import { StepUpProvider } from '@/lib/step-up'
+import { WishlistProvider } from '@/lib/wishlist-context'
 import { UpdateBanner } from "@/components/shared/update-banner"
 
 // Server errors (RPC) are written in French: show them in the user's language
@@ -25,6 +26,12 @@ toast.error = ((message: Parameters<typeof toast.error>[0], data?: Parameters<ty
 
 // Pages other than the public ones keep the generic title: follow the language
 if (LANG === 'en') document.title = tr('KONVWA — Importez depuis Alibaba, Shein et Temu en Haïti')
+
+// A friend's referral link (?ref=CODE) is remembered until the new account exists
+try {
+  const ref = new URLSearchParams(window.location.search).get('ref')
+  if (ref && /^[A-Za-z0-9]{4,12}$/.test(ref)) localStorage.setItem('konvwa-ref', ref.toUpperCase())
+} catch { /* storage unavailable */ }
 
 // Chrome fires this once, possibly before React mounts: keep it for the install popup.
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -46,11 +53,13 @@ createRoot(document.getElementById("root")!).render(
         <AuthProvider>
           <CartProvider>
             <StepUpProvider>
+              <WishlistProvider>
               <RouterProvider router={router} />
               <Toaster richColors position="top-center" />
               <PwaInstallPrompt />
               <AuthErrorToast />
               <UpdateBanner />
+              </WishlistProvider>
             </StepUpProvider>
           </CartProvider>
         </AuthProvider>

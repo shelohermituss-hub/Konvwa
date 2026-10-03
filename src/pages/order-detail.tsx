@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
 import type { OrderStatus } from '@/types'
 import { OrderStatusTracker } from '@/components/shared/order-status-tracker'
+import { OrderHistory } from '@/components/shared/order-history'
 
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 import { useStepUp } from '@/lib/step-up'
@@ -290,6 +291,8 @@ export function OrderDetailPage() {
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm px-4 py-4">
           <OrderStatusTracker status={order.status} shippingOption={order.shipping_option} />
         </div>
+
+        <OrderHistory orderId={order.id} />
 
         {/* ── CARGAISON EN ENTREPÔT CHINE — informations volume/poids ── */}
         {order.status === 'in_china_warehouse' && (() => {

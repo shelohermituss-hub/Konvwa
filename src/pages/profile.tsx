@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
   Eye, EyeOff, Loader2, BadgeCheck, LayoutDashboard, ChevronRight,
-  Plus, Trash2, MapPin, LogOut, Upload, User, Lock, Bell, Activity, CreditCard,
+  Plus, Trash2, MapPin, LogOut, Upload, User, Lock, Bell, Activity, CreditCard, Heart, Gift,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { tr } from '@/lib/i18n'
 import { SecuritySection } from '@/components/shared/security-section'
 import { KycSection } from '@/components/shared/kyc-section'
+import { RewardsSection } from '@/components/shared/rewards-section'
 interface AddressEntry {
   id: string
   label: string
@@ -146,6 +147,20 @@ export function ProfilePage() {
           </div>
         </div>
 
+        {/* Rewards */}
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+              <Gift className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">{tr('Parrainage & codes promo')}</p>
+              <p className="text-xs text-muted-foreground">{tr('Gagnez des bonus pour vous et vos amis')}</p>
+            </div>
+          </div>
+          <RewardsSection />
+        </div>
+
         {/* Preferences */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2.5">
@@ -162,6 +177,13 @@ export function ProfilePage() {
 
         {/* Quick links */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden divide-y divide-border/50">
+          <Link to="/wishlist" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
+              <Heart className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <span className="flex-1 text-sm font-medium">{tr('Mes favoris')}</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+          </Link>
           <Link to="/activity-log" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
               <Activity className="h-4 w-4 text-muted-foreground" />

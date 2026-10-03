@@ -198,6 +198,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void supabase.rpc('register_device', { p_device_id: getDeviceId(), p_label: deviceLabel() })
   }, [user?.id])
 
+  // Apply a referral code remembered from an invitation link (the database refuses it when it no longer qualifies)
+  useEffect(() => {
+    if (!user?.id) return
+    let ref: string | null = null
+    try { ref = localStorage.getItem('konvwa-ref') } catch { /* storage unavailable */ }
+    if (!ref) return
+    void supabase.rpc('apply_referral', { p_code: ref }).then(() => {
+      try { localStorage.removeItem('konvwa-ref') } catch { /* storage unavailable */ }
+    })
+  }, [user?.id])
+
   // The account remembers its language (used for server-side notifications and across devices)
   useEffect(() => {
     if (!profile?.user_id) return
