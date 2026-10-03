@@ -13,9 +13,8 @@ interface NotifActivity {
   title: string
   message: string
   type: string
-  read_at: string | null
+  read: boolean
   created_at: string
-  metadata?: Record<string, string>
 }
 
 const PAGE_SIZE = 10
@@ -70,7 +69,7 @@ export function ActivityLogPage() {
 
     const { data } = await supabase
       .from('notifications')
-      .select('id, title, message, type, read_at, created_at, metadata')
+      .select('id, title, message:body, type, read, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1)
@@ -96,14 +95,13 @@ export function ActivityLogPage() {
     setExpanded(expanded === item.id ? null : item.id)
 
     // Mark as read if not already
-    if (!item.read_at) {
-      const now = new Date().toISOString()
+    if (!item.read) {
       setActivities((prev) =>
-        prev.map((a) => (a.id === item.id ? { ...a, read_at: now } : a))
+        prev.map((a) => (a.id === item.id ? { ...a, read: true } : a))
       )
       await supabase
         .from('notifications')
-        .update({ read_at: now })
+        .update({ read: true })
         .eq('id', item.id)
     }
   }
@@ -153,7 +151,7 @@ export function ActivityLogPage() {
                           <div className="flex items-start justify-between gap-2">
                             <p className="text-sm font-semibold leading-tight">{item.title}</p>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              {!item.read_at && (
+                              {!item.read && (
                                 <div className="h-2 w-2 rounded-full bg-blue-500" />
                               )}
                               <p className="text-[10px] text-muted-foreground whitespace-nowrap">
