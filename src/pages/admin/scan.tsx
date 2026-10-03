@@ -6,6 +6,19 @@ import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { tr } from '@/lib/i18n'
+import { PackagePhotos } from '@/components/shared/package-photos'
+
+function PhotoShortcut({ requestId }: { requestId: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="shrink-0">
+      <button type="button" onClick={() => setOpen((v) => !v)} className="flex h-8 items-center gap-1 rounded-lg border border-gray-200 px-2 text-xs font-semibold hover:bg-muted">
+        <Camera className="h-3.5 w-3.5" aria-hidden="true" />{tr('Photo')}
+      </button>
+      {open && <div className="fixed inset-x-3 bottom-3 z-40 max-h-[70vh] overflow-auto rounded-2xl bg-white p-2 shadow-xl"><PackagePhotos requestId={requestId} canUpload /></div>}
+    </div>
+  )
+}
 
 interface Result {
   at: number
@@ -13,6 +26,7 @@ interface Result {
   ok: boolean
   text: string
   received?: boolean
+  requestId?: string
 }
 
 /** Reception scanner: point the camera at a package label (or type the code, or use a USB scanner). */
@@ -32,13 +46,13 @@ export function AdminScanPage() {
     if (!code || (lastRef.current.code === code && now - lastRef.current.at < 4000)) return
     lastRef.current = { code, at: now }
     const { data, error } = await supabase.rpc('admin_scan_package', { p_code: code })
-    const r = data as { success?: boolean; error?: string; customer?: string; package_no?: number; total?: number; scanned?: number; already_scanned?: boolean; received?: boolean } | null
+    const r = data as { success?: boolean; error?: string; customer?: string; package_no?: number; total?: number; scanned?: number; already_scanned?: boolean; received?: boolean; request_id?: string } | null
     const ok = !error && !!r?.success
     const text = ok
       ? `${r?.customer || '—'} · ${tr('colis {0}/{1}', r?.package_no ?? 0, r?.total ?? 0)} · ${r?.already_scanned ? tr('déjà scanné') : tr('{0} scanné(s)', r?.scanned ?? 0)}${r?.received ? ` · ${tr('TOUS REÇUS')}` : ''}`
       : (r?.error ?? error?.message ?? tr('Étiquette non reconnue.'))
     if (navigator.vibrate) navigator.vibrate(ok ? 60 : [60, 60, 60])
-    setResults((prev) => [{ at: now, code, ok, text, received: r?.received }, ...prev].slice(0, 30))
+    setResults((prev) => [{ at: now, code, ok, text, received: r?.received, requestId: ok ? r?.request_id : undefined }, ...prev].slice(0, 30))
   }, [])
 
   useEffect(() => {
@@ -110,7 +124,8 @@ export function AdminScanPage() {
         {results.map((r) => (
           <li key={r.at} className={cn('flex items-start gap-2 rounded-xl border px-3 py-2.5 text-sm', r.ok ? (r.received ? 'border-emerald-300 bg-emerald-50' : 'border-gray-100 bg-white') : 'border-destructive/30 bg-destructive/5')}>
             {r.ok ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> : <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />}
-            <span className="min-w-0 break-words">{r.text}</span>
+            <span className="min-w-0 flex-1 break-words">{r.text}</span>
+            {r.requestId && <PhotoShortcut requestId={r.requestId} />}
           </li>
         ))}
       </ul>

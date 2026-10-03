@@ -28,6 +28,8 @@ interface HaitiRegion {
   name: string
 }
 
+interface DeliveryOption { id: string; kind: 'pickup' | 'home'; label: string; details: string | null; price_htg: number }
+
 interface HaitiCity {
   id: string
   region_id: string
@@ -99,6 +101,8 @@ export function SubmitPage() {
   // Route
   const [shipFromId, setShipFromId] = useState('')
   const [regionId,   setRegionId]   = useState('')
+  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[]>([])
+  const [deliveryOptionId, setDeliveryOptionId] = useState('')
   const [cityId,     setCityId]     = useState('')
 
   // Product
@@ -156,7 +160,11 @@ export function SubmitPage() {
     setRegionId(id)
     setCityId('')
     setCities([])
+    setDeliveryOptions([])
+    setDeliveryOptionId('')
     if (!id) return
+    void supabase.from('delivery_options').select('id,kind,label,details,price_htg').eq('region_id', id).eq('active', true).order('sort_order')
+      .then(({ data }) => setDeliveryOptions((data ?? []) as DeliveryOption[]))
     setLoadingCities(true)
     const { data } = await supabase
       .from('haiti_cities')
@@ -272,6 +280,7 @@ export function SubmitPage() {
       ship_from_id:           shipFromId || null,
       destination_region_id:  regionId   || null,
       destination_city_id:    cityId     || null,
+      delivery_option_id:     deliveryOptionId || null,
       product_image_url:      imageUrl ?? importedImage,
       variant_info: {
         size:           size  || null,
@@ -531,6 +540,30 @@ export function SubmitPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Retrait / livraison : prix affiché avant de commander */}
+                {deliveryOptions.length > 0 && (
+                  <fieldset className="space-y-2">
+                    <legend className="text-sm font-bold">
+                      {tr('Retrait ou livraison')}{' '}
+                      <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                    </legend>
+                    {deliveryOptions.map(o => (
+                      <label key={o.id} className={cn(
+                        'flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 text-sm',
+                        deliveryOptionId === o.id ? 'border-primary bg-primary/5' : 'border-transparent bg-[#F0F1F5]',
+                      )}>
+                        <input type="radio" name="delivery_option" value={o.id} checked={deliveryOptionId === o.id}
+                          onChange={() => setDeliveryOptionId(o.id)} className="mt-1 accent-[var(--primary)]" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-semibold">{o.kind === 'pickup' ? tr('Retrait') : tr('Livraison à domicile')} — {o.label}</span>
+                          {o.details && <span className="block text-xs text-muted-foreground">{o.details}</span>}
+                        </span>
+                        <span className="shrink-0 font-bold">{o.price_htg > 0 ? `${o.price_htg.toLocaleString(LOCALE_TAG)} HTG` : tr('Gratuit')}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+                )}
               </div>
             </div>
 

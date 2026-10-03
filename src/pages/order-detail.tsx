@@ -17,6 +17,7 @@ import { OrderStatusTracker } from '@/components/shared/order-status-tracker'
 import { OrderHistory } from '@/components/shared/order-history'
 import { InstallmentOptions, InstallmentSchedule } from '@/components/shared/order-installments'
 
+import { PackagePhotos } from '@/components/shared/package-photos'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 import { useStepUp } from '@/lib/step-up'
 interface ChosenShippingMethod {
@@ -63,7 +64,9 @@ interface OrderDetail {
     customs_fee: number
     local_delivery_fee: number
     estimated_delivery_days: number | null
+    usd_to_htg_rate: number | null
     product_requests: {
+      id: string
       product_name: string
       product_url: string
       source_platform: string
@@ -134,9 +137,9 @@ export function OrderDetailPage() {
           quotes(
             id, total, product_price, quantity,
             service_fee, purchase_fee, shipping_fee, customs_fee, local_delivery_fee,
-            estimated_delivery_days,
+            estimated_delivery_days, usd_to_htg_rate,
             product_requests(
-              product_name, product_url, source_platform, product_image_url,
+              id, product_name, product_url, source_platform, product_image_url,
               box_length_cm, box_width_cm, box_height_cm,
               weight_lbs, weight_kg, invoice_value_usd, unit_system,
               shipping_origins!ship_from_id(name, flag_emoji),
@@ -392,6 +395,11 @@ export function OrderDetailPage() {
                   {tr('Total :')}{' '}<span className="font-bold text-primary">{total.toLocaleString(LOCALE_TAG)} HTG</span>
                   {order.quotes.estimated_delivery_days && tr(' · {0} jours', order.quotes.estimated_delivery_days)}
                 </p>
+                {order.quotes.usd_to_htg_rate && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {tr('Taux figé à la création du devis : 1 USD = {0} HTG', order.quotes.usd_to_htg_rate.toLocaleString(LOCALE_TAG))}
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex gap-2.5">
@@ -509,6 +517,10 @@ export function OrderDetailPage() {
         )}
 
         {/* Product image */}
+        {order.quotes?.product_requests?.id && (
+          <PackagePhotos requestId={order.quotes.product_requests.id} hideWhenEmpty />
+        )}
+
         {order.quotes?.product_requests?.product_image_url && (
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">

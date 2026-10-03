@@ -53,6 +53,7 @@ import { AdminPaymentsPage } from '@/pages/admin/payments'
 import { AdminUsersPage } from '@/pages/admin/users'
 import { AdminDisputesPage } from '@/pages/admin/disputes'
 import { AdminSettingsPage } from '@/pages/admin/settings'
+import { AdminDeliveryOptionsPage } from '@/pages/admin/delivery-options'
 import { AdminShippingConfigPage } from '@/pages/admin/shipping-config'
 import { AdminShippingRequestsPage } from '@/pages/admin/shipping-requests'
 import { AdminProductsPage } from '@/pages/admin/products'
@@ -154,6 +155,7 @@ export const router = createBrowserRouter([
       { path: 'disputes', element: <AdminDisputesPage /> },
       { path: 'analytics', element: <AdminDashboard /> },
       { path: 'products', element: <AdminProductsPage /> },
+      { path: 'delivery-options', element: <AdminDeliveryOptionsPage /> },
       { path: 'shipping-config', element: <AdminShippingConfigPage /> },
       { path: 'shipping-requests', element: <AdminShippingRequestsPage /> },
       { path: 'notifications', element: <AdminNotificationsPage /> },

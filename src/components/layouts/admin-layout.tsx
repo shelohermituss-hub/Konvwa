@@ -4,7 +4,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, Bell, BarChart3, FileText, Truck, PackageSearch, ScrollText, BadgeCheck, Scale, Ticket, Gauge, Bug, Store, ScanLine } from 'lucide-react'
+import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, Bell, BarChart3, FileText, Truck, PackageSearch, ScrollText, BadgeCheck, Scale, Ticket, Gauge, Bug, Store, ScanLine, MapPin } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { MfaGate } from '@/components/shared/mfa-gate'
 
@@ -27,6 +27,7 @@ function AdminSidebar() {
     { title: tr('Notifications'), url: '/admin/notifications', icon: Bell },
     { title: tr('Scan réception'), url: '/admin/scan', icon: ScanLine },
     { title: tr('Dem. expédition'), url: '/admin/shipping-requests', icon: PackageSearch },
+    { title: tr('Retrait et livraison'), url: '/admin/delivery-options', icon: MapPin },
     { title: tr('Config. expédition'), url: '/admin/shipping-config', icon: Truck },
     { title: tr('Vérification d\'identité'), url: '/admin/kyc', icon: BadgeCheck },
     { title: tr('Revendeurs'), url: '/admin/resellers', icon: Store },

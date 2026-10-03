@@ -126,5 +126,54 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); w uuid; n integer; BEGIN
   ASSERT n = 0, 'client can see a wholesale-only product';
 END $$;
 
+-- 11. trust: insurance only through the function (debits the wallet, guard keeps columns), delivery options and photo RLS
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b FROM ctx); adm uuid := (SELECT admin_id FROM ctx);
+  rid uuid; w0 numeric; r jsonb; n integer; reg uuid; opt uuid; BEGIN
+  INSERT INTO product_requests (user_id, request_type, status, product_name) VALUES (a, 'shipping', 'quoted', 'test insurance') RETURNING id INTO rid;
+  UPDATE wallets SET available_balance = 100000 WHERE user_id = a;
+  PERFORM pg_temp.as_user(a);
+  UPDATE product_requests SET insured = true, insurance_fee_htg = 0 WHERE id = rid;
+  RESET ROLE;
+  ASSERT (SELECT insured FROM product_requests WHERE id = rid) = false, 'client could self-insure';
+  PERFORM pg_temp.as_user(a);
+  ASSERT (public.buy_shipping_insurance(rid, 50) ->> 'success')::boolean = false, 'value under minimum accepted';
+  RESET ROLE;
+  SELECT available_balance INTO w0 FROM wallets WHERE user_id = a;
+  PERFORM pg_temp.as_user(b);
+  ASSERT (public.buy_shipping_insurance(rid, 200) ->> 'success')::boolean = false, 'someone else insured the request';
+  RESET ROLE;
+  PERFORM pg_temp.as_user(a);
+  r := public.buy_shipping_insurance(rid, 200);
+  RESET ROLE;
+  ASSERT (r ->> 'success')::boolean, 'insurance purchase failed: ' || r::text;
+  ASSERT (SELECT available_balance FROM wallets WHERE user_id = a) = w0 - (r ->> 'fee')::numeric, 'wallet not debited by the fee';
+  PERFORM pg_temp.as_user(a);
+  ASSERT (public.buy_shipping_insurance(rid, 200) ->> 'success')::boolean = false, 'double insurance accepted';
+  RESET ROLE;
+
+  SELECT id INTO reg FROM haiti_regions LIMIT 1;
+  INSERT INTO delivery_options (region_id, kind, label, price_htg, active) VALUES (reg, 'pickup', 'test pickup', 100, false) RETURNING id INTO opt;
+  PERFORM pg_temp.as_user(a);
+  SELECT count(*) INTO n FROM delivery_options WHERE id = opt;
+  ASSERT n = 0, 'client sees an inactive delivery option';
+  BEGIN
+    INSERT INTO delivery_options (region_id, kind, label, price_htg) VALUES (reg, 'home', 'hack', 0);
+    RAISE EXCEPTION 'client created a delivery option';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+
+  INSERT INTO package_photos (request_id, path) VALUES (rid, rid::text || '/x.jpg');
+  PERFORM pg_temp.as_user(a);
+  SELECT count(*) INTO n FROM package_photos WHERE request_id = rid;
+  ASSERT n = 1, 'owner cannot see their package photo';
+  RESET ROLE;
+  PERFORM pg_temp.as_user(b);
+  SELECT count(*) INTO n FROM package_photos WHERE request_id = rid;
+  ASSERT n = 0, 'another client sees a package photo';
+  ASSERT (public.admin_add_package_photo(rid, rid::text || '/y.jpg') ->> 'success')::boolean = false, 'client added a package photo';
+  RESET ROLE;
+  ASSERT NOT has_function_privilege('anon', 'public.buy_shipping_insurance(uuid,numeric)', 'execute'), 'anon can buy insurance';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

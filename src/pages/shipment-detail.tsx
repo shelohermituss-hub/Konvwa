@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { downloadShippingPDF, type ShippingRequestForPDF } from '@/lib/pdf'
 import { ShippingQuotePanel, ShippingBalancePanel } from '@/components/shared/shipping-payment-panel'
+import { PackagePhotos } from '@/components/shared/package-photos'
+import { ShippingInsurance } from '@/components/shared/shipping-insurance'
 import { TimelineList } from '@/components/shared/timeline-step'
 import { cargoSteps, cargoActiveIndex, cargoStatusLabel } from '@/lib/cargo-tracking'
 
@@ -37,6 +39,9 @@ interface ShippingRequest {
   destination_address: string | null
   shipment_id: string | null
   payment_plan: string | null
+  insured: boolean
+  insured_value_usd: number | null
+  insurance_fee_htg: number | null
   shipment: { id: string; status: string } | null
   warehouse: {
     id: string; code: string; name: string
@@ -89,6 +94,7 @@ export function ShipmentDetailPage() {
           quoted_amount_htg, actual_amount_htg,
           quoted_at, received_at, invoiced_at, package_count,
           origin_country, destination_address, shipment_id, payment_plan,
+          insured, insured_value_usd, insurance_fee_htg,
           warehouse:warehouses(
             id, code, name, flag_emoji, country_code,
             address_line1, address_line2, address_line3,
@@ -282,6 +288,13 @@ export function ShipmentDetailPage() {
               </div>
             )}
           </div>
+        )}
+
+        <PackagePhotos requestId={req.id} hideWhenEmpty />
+
+        {['quoted', 'received', 'deposit_paid'].includes(req.status) && (
+          <ShippingInsurance requestId={req.id} insured={req.insured} insuredValueUsd={req.insured_value_usd}
+            feeHtg={req.insurance_fee_htg} onChange={() => void load()} />
         )}
 
         {/* Estimation indicative — only for pre-quote stages */}

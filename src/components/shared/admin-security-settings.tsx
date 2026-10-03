@@ -19,6 +19,9 @@ const KEYS = [
   'referral_reward_htg',
   'referral_min_payment_htg',
   'support_whatsapp',
+  'insurance_rate_percent',
+  'insurance_min_value_usd',
+  'insurance_max_value_usd',
 ]
 
 /** Security, rewards and support settings. The database only lets full admins change the critical ones. */

@@ -36,6 +36,7 @@ interface ProductRequest {
   status: string
   created_at: string
   user_id: string
+  delivery_option_id?: string | null
   customer_name?: string
   has_quote: boolean
   packages: PackageEntry[] | null
@@ -89,6 +90,17 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
 
   const [rates, setRates] = useState<Rates>(DEFAULT_RATES)
   const [suggested, setSuggested] = useState<QuoteSuggestion | null>(null)
+  const [deliveryChoice, setDeliveryChoice] = useState<{ label: string; price: number } | null>(null)
+
+  // The customer saw this price when they chose how to receive the goods: start from it
+  useEffect(() => {
+    if (!request.delivery_option_id) return
+    void supabase.from('delivery_options').select('label, price_htg').eq('id', request.delivery_option_id).maybeSingle().then(({ data }) => {
+      if (!data) return
+      setDeliveryChoice({ label: data.label as string, price: Number(data.price_htg) })
+      setLocalFee(String(data.price_htg))
+    })
+  }, [request.delivery_option_id])
 
   useEffect(() => {
     void supabase.from('app_settings').select('key,value').in('key', ['usd_to_htg_rate', 'freight_per_kg_usd', 'duty_rate_percent', 'service_margin_percent']).then(({ data }) => {
@@ -194,6 +206,11 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
           <span>{URGENCY_LABELS[request.urgency]}</span>
           {request.budget_estimate && <><span>·</span><span>{tr('Budget:')}{' '}{request.budget_estimate.toLocaleString(LOCALE_TAG)} HTG</span></>}
         </div>
+        {deliveryChoice && (
+          <p className="text-xs font-medium text-primary">
+            {tr('Livraison choisie par le client : {0} — {1} HTG (reprise dans « Livraison locale »)', deliveryChoice.label, deliveryChoice.price.toLocaleString(LOCALE_TAG))}
+          </p>
+        )}
         {/* Logistics info */}
         <div className="grid grid-cols-2 gap-1.5 pt-1">
           {request.shipping_origin_name && (
@@ -292,7 +309,7 @@ export function AdminQuotesPage() {
       .from('product_requests')
       .select(`
         id, product_name, product_url, source_platform, category, quantity, urgency,
-        budget_estimate, notes, status, created_at, user_id,
+        budget_estimate, notes, status, created_at, user_id, delivery_option_id,
         packages, weight_kg, invoice_value_usd, variant_info,
         shipping_origins!ship_from_id(name),
         shipping_rates!shipping_rate_id(mode, name)
