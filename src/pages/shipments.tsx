@@ -33,6 +33,7 @@ interface Warehouse {
   postal_code: string | null
   contact_info: string | null
   instructions: string | null
+  copy_text?: string | null
   for_category: 'generic' | 'branded' | 'usa' | 'all'
 }
 
@@ -95,7 +96,9 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
     wh.country_code === 'US' ? 'US' : null,
   ].filter(Boolean)
 
-  const fullAddress = [
+  // Admin-written full text wins: it is shown and copied exactly as written
+  const customText = wh.copy_text?.trim() || null
+  const fullAddress = customText ?? [
     ...(wh.contact_info ? [wh.contact_info] : []),
     ...addressLines,
   ].join('\n')
@@ -141,14 +144,34 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
 
       {/* Address */}
       <div className="px-4 py-3">
-        {wh.contact_info && (
-          <p className="text-sm font-semibold text-foreground mb-1">{wh.contact_info}</p>
+        {customText ? (
+          <div className="rounded-xl bg-muted/40 px-4 py-3 font-mono text-[13px] leading-relaxed">
+            {customText.split('\n').map((line, i) => (
+              <p
+                key={i}
+                className={cn(
+                  'break-words select-all',
+                  /^[A-Z]{2}\d{4,}$/.test(line.trim()) || /^[A-Z]{2}$/.test(line.trim())
+                    ? 'text-sky-700'
+                    : 'text-foreground'
+                )}
+              >
+                {line}
+              </p>
+            ))}
+          </div>
+        ) : (
+          <>
+            {wh.contact_info && (
+              <p className="text-sm font-semibold text-foreground mb-1">{wh.contact_info}</p>
+            )}
+            {addressLines.map((line, i) => (
+              <p key={i} className="text-sm text-muted-foreground leading-snug">{line}</p>
+            ))}
+          </>
         )}
-        {addressLines.map((line, i) => (
-          <p key={i} className="text-sm text-muted-foreground leading-snug">{line}</p>
-        ))}
 
-        {wh.instructions && (
+        {wh.instructions && !customText && (
           <div className="mt-3 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2">
             <div className="flex items-start gap-2">
               <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />

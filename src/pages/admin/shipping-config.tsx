@@ -29,7 +29,7 @@ interface WarehouseEntry {
   id: string; code: string; name: string; country_code: string
   flag_emoji: string | null; address_line1: string | null; address_line2: string | null
   address_line3: string | null; city: string | null; state: string | null
-  postal_code: string | null; contact_info: string | null; instructions: string | null
+  postal_code: string | null; contact_info: string | null; instructions: string | null; copy_text: string | null
   for_category: 'generic' | 'branded' | 'usa' | 'all'; active: boolean; sort_order: number
 }
 interface ProductRateCategory {
@@ -97,7 +97,7 @@ type WhForm = {
   code: string; name: string; country_code: string; flag_emoji: string
   address_line1: string; address_line2: string; address_line3: string
   city: string; state: string; postal_code: string
-  contact_info: string; instructions: string
+  contact_info: string; instructions: string; copy_text: string
   for_category: 'generic' | 'branded' | 'usa' | 'all'
 }
 
@@ -105,7 +105,7 @@ const EMPTY_WH: WhForm = {
   code: '', name: '', country_code: 'CN', flag_emoji: '🇨🇳',
   address_line1: '', address_line2: '', address_line3: '',
   city: '', state: '', postal_code: '',
-  contact_info: '', instructions: '', for_category: 'all',
+  contact_info: '', instructions: '', copy_text: '', for_category: 'all',
 }
 
 function WarehousesSection() {
@@ -131,7 +131,7 @@ function WarehousesSection() {
       address_line1: w.address_line1 ?? '', address_line2: w.address_line2 ?? '',
       address_line3: w.address_line3 ?? '', city: w.city ?? '', state: w.state ?? '',
       postal_code: w.postal_code ?? '', contact_info: w.contact_info ?? '',
-      instructions: w.instructions ?? '', for_category: w.for_category,
+      instructions: w.instructions ?? '', copy_text: w.copy_text ?? '', for_category: w.for_category,
     }
   }
 
@@ -154,6 +154,7 @@ function WarehousesSection() {
       postal_code: form.postal_code.trim() || null,
       contact_info: form.contact_info.trim() || null,
       instructions: form.instructions.trim() || null,
+      copy_text: form.copy_text.trim() || null,
       for_category: form.for_category,
     }
     if (editing) {
@@ -304,6 +305,19 @@ function WarehousesSection() {
                 placeholder="Instructions pour le client…"
                 className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm resize-none"
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Texte complet à copier (optionnel)</Label>
+              <textarea
+                rows={6}
+                value={form.copy_text}
+                onChange={e => setForm(p => ({ ...p, copy_text: e.target.value }))}
+                placeholder={'Nom\nAdresse\nLocker ID\nVille, État, Code postal\nPays'}
+                className="w-full rounded-xl border border-input bg-background px-3 py-2 font-mono text-xs resize-none"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Si rempli, le client voit ce texte tel quel et le bouton « Copier l'adresse » le copie en entier.
+              </p>
             </div>
           </div>
           <DialogFooter>
