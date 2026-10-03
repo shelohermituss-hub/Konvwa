@@ -47,6 +47,9 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
         {product.featured && (
           <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">{tr('Vedette')}</span>
         )}
+        {product.reseller_price && (
+          <span className="absolute bottom-2 left-2 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold text-white">{tr('Prix revendeur')}</span>
+        )}
         {!product.stock_available && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70">
             <span className="rounded-full border border-destructive/20 bg-white/90 px-2 py-1 text-[10px] font-bold text-destructive">

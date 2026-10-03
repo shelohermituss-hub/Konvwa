@@ -17,6 +17,7 @@ interface Profile {
   role: UserRole
   avatar_url: string | null
   language?: 'fr' | 'en'
+  is_reseller?: boolean
 }
 
 interface AuthContextType {

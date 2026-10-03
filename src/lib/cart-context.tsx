@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { LANG } from '@/lib/i18n'
 import { useAuth } from '@/lib/auth-context'
 import { unitPriceFor } from '@/lib/product-pricing'
+import { resellerPriced } from '@/lib/catalog'
 
 export interface CartItem {
   id: string
@@ -36,7 +37,8 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const isReseller = !!profile?.is_reseller
   const [items, setItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -45,16 +47,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     const { data } = await supabase
       .from('cart_items')
-      .select('id, product_id, quantity, products(id, name, name_en, price_htg, price_tiers, images, unit, moq, stock_available)')
+      .select('id, product_id, quantity, products(id, name, name_en, reseller_discount_pct, price_htg, price_tiers, images, unit, moq, stock_available)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
     if (data) {
       setItems((data as unknown as Array<CartItem & { products: (CartItem['products'] & { name_en?: string | null }) | null }>).map((i) => (
-        i.products ? { ...i, products: { ...i.products, name: LANG === 'en' && i.products.name_en?.trim() ? i.products.name_en : i.products.name } } : i
+        i.products ? { ...i, products: resellerPriced({ ...i.products, name: LANG === 'en' && i.products.name_en?.trim() ? i.products.name_en : i.products.name }, isReseller) } : i
       )) as CartItem[])
     }
     setLoading(false)
-  }, [user])
+  }, [user, isReseller])
 
   useEffect(() => { refresh() }, [refresh])
 

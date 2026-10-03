@@ -33,6 +33,8 @@ import { ActivityLogPage } from '@/pages/activity-log'
 import { BillingPage } from '@/pages/billing'
 import { ProductsPage } from '@/pages/products'
 import { WishlistPage } from '@/pages/wishlist'
+import { ResellerPage } from '@/pages/reseller'
+import { AdminResellersPage } from '@/pages/admin/resellers'
 import { SupportTicketPage } from '@/pages/support-ticket'
 import { ProductDetailPage } from '@/pages/product-detail'
 import { CartPage } from '@/pages/cart'
@@ -120,6 +122,7 @@ export const router = createBrowserRouter([
       { path: 'billing', element: <BillingPage /> },
       { path: 'products', element: <ProductsPage /> },
       { path: 'wishlist', element: <WishlistPage /> },
+      { path: 'reseller', element: <ResellerPage /> },
       { path: 'support/:id', element: <SupportTicketPage /> },
       { path: 'products/:id', element: <ProductDetailPage /> },
       { path: 'cart', element: <CartPage /> },
@@ -156,6 +159,7 @@ export const router = createBrowserRouter([
       { path: 'errors', element: <SuperAdminGuard><AdminErrorsPage /></SuperAdminGuard> },
       { path: 'audit-logs', element: <SuperAdminGuard><AdminAuditLogsPage /></SuperAdminGuard> },
       { path: 'kyc', element: <AdminKycPage /> },
+      { path: 'resellers', element: <AdminResellersPage /> },
       { path: 'promos', element: <SuperAdminGuard><AdminPromosPage /></SuperAdminGuard> },
       { path: 'reconciliation', element: <SuperAdminGuard><AdminReconciliationPage /></SuperAdminGuard> },
       { path: 'settings', element: <SuperAdminGuard><AdminSettingsPage /></SuperAdminGuard> },

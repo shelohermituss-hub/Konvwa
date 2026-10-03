@@ -42,6 +42,8 @@ interface Product {
   customization_options: string[]
   tags: string[]
   certifications: string[]
+  reseller_discount_pct?: number
+  wholesale_only?: boolean
   name_en?: string | null
   description_en?: string | null
   tags_en?: string[]
@@ -79,6 +81,8 @@ const emptyDraft = (): ProductDraft => ({
   customization_options: [],
   tags: [],
   certifications: [],
+  reseller_discount_pct: 0,
+  wholesale_only: false,
 })
 
 const lines = (raw: string) => raw.split('\n').map(l => l.trim()).filter(Boolean)
@@ -165,6 +169,8 @@ export function AdminProductsPage() {
       customization_options: p.customization_options,
       tags: p.tags,
       certifications: p.certifications,
+      reseller_discount_pct: p.reseller_discount_pct ?? 0,
+      wholesale_only: p.wholesale_only ?? false,
     })
     setOptionsRaw(p.customization_options.join('\n'))
     setTagsRaw(p.tags.join('\n'))
@@ -523,6 +529,18 @@ export function AdminProductsPage() {
                 <Label>{tr('Certifications (une par ligne)')}</Label>
                 <Textarea value={certsRaw} onChange={e => setCertsRaw(e.target.value)} rows={3} placeholder={tr('CE certifié')} />
               </div>
+            </div>
+
+            {/* Reseller pricing */}
+            <div className="grid grid-cols-2 gap-4 rounded-xl border border-gray-200 bg-gray-50/60 p-3">
+              <div className="space-y-1.5">
+                <Label>{tr('Remise revendeur (%)')}</Label>
+                <Input type="number" min={0} max={60} step="0.5" value={draft.reseller_discount_pct ?? 0} onChange={e => setField('reseller_discount_pct', Math.min(60, Math.max(0, Number(e.target.value) || 0)))} />
+              </div>
+              <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                <input type="checkbox" checked={!!draft.wholesale_only} onChange={e => setField('wholesale_only', e.target.checked)} className="h-4 w-4 accent-[#F05A28]" />
+                {tr('Réservé aux revendeurs (gros)')}
+              </label>
             </div>
 
             {/* English version */}

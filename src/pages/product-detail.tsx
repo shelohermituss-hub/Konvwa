@@ -7,7 +7,8 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
-import { CATALOG_DETAIL_SELECT, CATALOG_LIST_SELECT, localizeProduct, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_DETAIL_SELECT, CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
+import { useAuth } from '@/lib/auth-context'
 import { formatHtg, tierRows, unitPriceFor } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
 import { ProductReviews } from '@/components/shared/product-reviews'
@@ -48,6 +49,8 @@ export function ProductDetailPage() {
   const navigate = useNavigate()
   const { t } = useI18n()
   const { addItem, count } = useCart()
+  const { profile } = useAuth()
+  const isReseller = !!profile?.is_reseller
   const [product, setProduct] = useState<CatalogProduct | null>(null)
   const [related, setRelated] = useState<CatalogProduct[]>([])
   const [loading, setLoading] = useState(true)
@@ -71,14 +74,14 @@ export function ProductDetailPage() {
       .maybeSingle()
       .then(({ data }) => {
         const raw = data as unknown as CatalogProduct | null
-        const p = raw ? localizeProduct(raw) : null
+        const p = raw ? resellerPriced(localizeProduct(raw), isReseller) : null
         setProduct(p)
         if (p) setQuantity(p.moq)
         setActiveImg(0)
         setLoading(false)
         window.scrollTo?.({ top: 0 })
       })
-  }, [id])
+  }, [id, isReseller])
 
   useEffect(() => {
     if (!product?.category) { setRelated([]); return }
@@ -89,8 +92,8 @@ export function ProductDetailPage() {
       .eq('category', product.category)
       .neq('id', product.id)
       .limit(8)
-      .then(({ data }) => setRelated(((data ?? []) as unknown as CatalogProduct[]).map(localizeProduct)))
-  }, [product?.id, product?.category])
+      .then(({ data }) => setRelated(((data ?? []) as unknown as CatalogProduct[]).map(localizeProduct).map(r => resellerPriced(r, isReseller))))
+  }, [product?.id, product?.category, isReseller])
 
   const goToImage = useCallback((index: number) => {
     const el = galleryRef.current

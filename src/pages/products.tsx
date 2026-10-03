@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, ShoppingCart, Loader2, Tag, SlidersHorizontal } from 'lucide-react'
 import { priceRange } from '@/lib/product-pricing'
@@ -8,13 +8,17 @@ import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
 import { ProductCard } from '@/components/shared/product-card'
-import { CATALOG_LIST_SELECT, localizeProduct, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
+import { useAuth } from '@/lib/auth-context'
 
 import { tr } from '@/lib/i18n'
 export function ProductsPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { count } = useCart()
+  const { profile } = useAuth()
+  const isReseller = !!profile?.is_reseller
+  const [wholesaleOnly, setWholesaleOnly] = useState(false)
   const [products, setProducts] = useState<CatalogProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [params] = useSearchParams()
@@ -42,9 +46,11 @@ export function ProductsPage() {
     load()
   }, [])
 
-  const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[]
+  const shown = useMemo(() => products.map(p => resellerPriced(p, isReseller)), [products, isReseller])
+  const categories = Array.from(new Set(shown.map(p => p.category).filter(Boolean))) as string[]
 
-  const filtered = products.filter(p => {
+  const filtered = shown.filter(p => {
+    if (wholesaleOnly && !(p.wholesale_only || (p.reseller_discount_pct ?? 0) > 0)) return false
     const matchSearch = !search ||
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       (p.description ?? '').toLowerCase().includes(search.toLowerCase()) ||
@@ -146,6 +152,12 @@ export function ProductsPage() {
             <input type="checkbox" checked={verifiedOnly} onChange={e => setVerifiedOnly(e.target.checked)} className="h-4 w-4 accent-[#F05A28]" />
             {tr('Fournisseurs vérifiés seulement')}
           </label>
+          {isReseller && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={wholesaleOnly} onChange={e => setWholesaleOnly(e.target.checked)} className="h-4 w-4 accent-[#F05A28]" />
+              {tr('Catalogue en gros (prix revendeur)')}
+            </label>
+          )}
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} className="h-4 w-4 accent-[#F05A28]" />
             {tr('En stock seulement')}

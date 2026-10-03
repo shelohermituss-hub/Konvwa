@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
   Eye, EyeOff, Loader2, BadgeCheck, LayoutDashboard, ChevronRight,
-  Plus, Trash2, MapPin, LogOut, Upload, User, Lock, Bell, Activity, CreditCard, Heart, Gift,
+  Plus, Trash2, MapPin, LogOut, Upload, User, Lock, Bell, Activity, CreditCard, Heart, Gift, Store,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -177,6 +177,13 @@ export function ProfilePage() {
 
         {/* Quick links */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden divide-y divide-border/50">
+          <Link to="/reseller" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
+              <Store className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <span className="flex-1 text-sm font-medium">{tr('Espace revendeur')}</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+          </Link>
           <Link to="/wishlist" className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/20 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted shrink-0">
               <Heart className="h-4 w-4 text-muted-foreground" />

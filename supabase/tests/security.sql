@@ -114,5 +114,17 @@ DO $$ DECLARE oid_ uuid; BEGIN
   END IF;
 END $$;
 
+-- 10. resellers: a client cannot grant themselves the status nor see wholesale-only products
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); w uuid; n integer; BEGIN
+  SELECT id INTO w FROM products WHERE active LIMIT 1;
+  UPDATE products SET wholesale_only = true WHERE id = w;
+  PERFORM pg_temp.as_user(a);
+  UPDATE profiles SET is_reseller = true WHERE user_id = a;
+  SELECT count(*) INTO n FROM products WHERE id = w;
+  RESET ROLE;
+  ASSERT (SELECT is_reseller FROM profiles WHERE user_id = a) = false, 'client could set is_reseller';
+  ASSERT n = 0, 'client can see a wholesale-only product';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

@@ -32,10 +32,13 @@ export interface CatalogProduct {
   tags_en: string[]
   customization_options_en: string[]
   certifications_en: string[]
+  reseller_discount_pct?: number
+  wholesale_only?: boolean
+  reseller_price?: boolean
 }
 
 export const CATALOG_LIST_SELECT =
-  'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en'
+  'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, reseller_discount_pct, wholesale_only'
 
 /** In English, shows the English content the admin wrote (field by field, falling back to the original). */
 export function localizeProduct<T extends CatalogProduct>(p: T): T {
@@ -49,6 +52,17 @@ export function localizeProduct<T extends CatalogProduct>(p: T): T {
     customization_options: pick(p.customization_options ?? [], p.customization_options_en),
     certifications: pick(p.certifications ?? [], p.certifications_en),
   }
+}
+
+/** Reseller price (display only: the order function applies the same discount in the database). */
+export function resellerPriced<T extends { price_htg: number; price_tiers?: unknown; reseller_discount_pct?: number }>(p: T, isReseller: boolean): T & { reseller_price?: boolean } {
+  const pct = p.reseller_discount_pct ?? 0
+  if (!isReseller || pct <= 0) return p
+  const factor = 1 - pct / 100
+  const tiers = Array.isArray(p.price_tiers)
+    ? p.price_tiers.map((t) => ({ ...(t as object), price_htg: Math.round(Number((t as { price_htg: number }).price_htg) * factor * 100) / 100 }))
+    : p.price_tiers
+  return { ...p, price_htg: Math.round(p.price_htg * factor * 100) / 100, price_tiers: tiers, reseller_price: true }
 }
 
 export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications`
