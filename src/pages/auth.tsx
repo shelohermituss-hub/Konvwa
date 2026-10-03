@@ -258,11 +258,12 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
   const captcha = useCaptcha()
   const [passkeyBusy, setPasskeyBusy] = useState(false)
   async function signInWithPasskey() {
-    if (!captcha.ready) { toast.error(tr('Validez d\'abord le captcha.')); return }
+    // the passkey itself proves the user is present: no captcha is required (a solved one is still sent)
+    const usedToken = captcha.token
     setPasskeyBusy(true)
-    const { error } = await supabase.auth.signInWithPasskey({ options: { captchaToken: captcha.token } })
+    const { error } = await supabase.auth.signInWithPasskey({ options: { captchaToken: usedToken } })
     setPasskeyBusy(false)
-    captcha.reset()
+    if (usedToken) captcha.reset()
     if (error) {
       if (!isCancelled(error)) toast.error(tr('Connexion par passkey impossible'), { description: tr('Aucune passkey reconnue sur cet appareil. Connectez-vous avec votre mot de passe, puis ajoutez-en une dans Profil > Confidentialité & sécurité.') })
       return
@@ -293,7 +294,7 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
         <button
           type="button"
           onClick={() => void signInWithPasskey()}
-          disabled={passkeyBusy || !captcha.ready}
+          disabled={passkeyBusy}
           className="mb-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary/30 bg-primary/5 text-sm font-bold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
         >
           {passkeyBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" aria-hidden="true" />}
