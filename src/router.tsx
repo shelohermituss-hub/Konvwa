@@ -52,6 +52,8 @@ import { AdminShippingRequestsPage } from '@/pages/admin/shipping-requests'
 import { AdminProductsPage } from '@/pages/admin/products'
 import { AdminNotificationsPage } from '@/pages/admin/notifications'
 import { AdminAuditLogsPage } from '@/pages/admin/audit-logs'
+import { AdminKycPage } from '@/pages/admin/kyc'
+import { AdminReconciliationPage } from '@/pages/admin/reconciliation'
 
 export const router = createBrowserRouter([
   // Payment return — public (MonCash/NatCash redirect callback)
@@ -139,6 +141,8 @@ export const router = createBrowserRouter([
       { path: 'shipping-requests', element: <AdminShippingRequestsPage /> },
       { path: 'notifications', element: <AdminNotificationsPage /> },
       { path: 'audit-logs', element: <AdminAuditLogsPage /> },
+      { path: 'kyc', element: <AdminKycPage /> },
+      { path: 'reconciliation', element: <AdminReconciliationPage /> },
       { path: 'settings', element: <AdminSettingsPage /> },
     ],
   },

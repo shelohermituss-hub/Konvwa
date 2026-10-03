@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Search, MoreHorizontal, CheckCircle2, XCircle, CreditCard, Smartphone, Clock, TrendingUp, ImageOff, ExternalLink } from 'lucide-react'
+import { Search, MoreHorizontal, CheckCircle2, XCircle, CreditCard, Smartphone, Clock, TrendingUp, ImageOff, ExternalLink, Undo2 } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -23,6 +24,7 @@ interface WalletTx {
   proof_url: string | null
   created_at: string
   wallet_id: string
+  refund_of: string | null
   customer_name?: string
   customer_phone?: string
 }
@@ -59,11 +61,13 @@ export function AdminPaymentsPage() {
   const [approveDialog, setApproveDialog] = useState<WalletTx | null>(null)
   const [proofSignedUrl, setProofSignedUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [refundDialog, setRefundDialog] = useState<WalletTx | null>(null)
+  const [refundReason, setRefundReason] = useState('')
 
   async function loadTransactions() {
     const { data: txData } = await supabase
       .from('wallet_transactions')
-      .select('id, type, amount, status, payment_method, description, reference, proof_url, created_at, wallet_id')
+      .select('id, type, amount, status, payment_method, description, reference, proof_url, created_at, wallet_id, refund_of')
       .order('created_at', { ascending: false })
       .limit(200)
 
@@ -110,6 +114,24 @@ export function AdminPaymentsPage() {
     toast.success(approve ? tr('Paiement approuvé et portefeuille crédité.') : tr('Transaction refusée.'))
     setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: approve ? 'completed' : 'cancelled' } : t))
     return true
+  }
+
+  const refundedIds = new Set(transactions.map(t => t.refund_of).filter(Boolean) as string[])
+
+  async function submitRefund() {
+    if (!refundDialog) return
+    setSaving(true)
+    const { data, error } = await supabase.rpc('admin_refund_transaction', { p_tx_id: refundDialog.id, p_reason: refundReason })
+    setSaving(false)
+    const result = data as { success?: boolean; error?: string } | null
+    if (error || !result?.success) {
+      toast.error(result?.error ?? error?.message ?? tr('Action impossible.'))
+      return
+    }
+    toast.success(tr('Remboursement effectué et portefeuille crédité.'))
+    setRefundDialog(null)
+    setRefundReason('')
+    void loadTransactions()
   }
 
   async function handleApprove(tx: WalletTx) {
@@ -228,6 +250,11 @@ export function AdminPaymentsPage() {
                       {new Date(tx.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                     </TableCell>
                     <TableCell>
+                      {tx.status === 'completed' && tx.type === 'payment' && !refundedIds.has(tx.id) && (
+                        <Button variant="ghost" size="sm" className="h-8 gap-1 rounded-lg text-xs" onClick={() => { setRefundDialog(tx); setRefundReason('') }}>
+                          <Undo2 className="h-3.5 w-3.5" />{tr('Rembourser')}
+                        </Button>
+                      )}
                       {tx.status === 'pending' && tx.type === 'deposit' && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -253,6 +280,36 @@ export function AdminPaymentsPage() {
           </Table>
         )}
       </div>
+
+      {/* Refund dialog */}
+      <Dialog open={!!refundDialog} onOpenChange={o => { if (!o) setRefundDialog(null) }}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>{tr('Rembourser ce paiement')}</DialogTitle>
+            <DialogDescription>
+              {tr('Le montant sera recrédité sur le portefeuille de')}{' '}<span className="font-semibold">{refundDialog?.customer_name}</span>{' '}
+              {tr('et la commande liée sera annulée. Cette action est tracée dans le journal d\'audit.')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-3 rounded-xl bg-amber-50 border border-amber-100 text-center">
+            <p className="text-2xl font-bold text-amber-700">{refundDialog?.amount.toLocaleString(LOCALE_TAG)} HTG</p>
+            <p className="mt-1 px-3 text-xs text-amber-700/80">{refundDialog?.description}</p>
+          </div>
+          <Textarea
+            value={refundReason}
+            onChange={e => setRefundReason(e.target.value)}
+            maxLength={200}
+            placeholder={tr('Motif du remboursement (obligatoire)')}
+            className="rounded-xl"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRefundDialog(null)} className="rounded-xl">{tr('Annuler')}</Button>
+            <Button onClick={() => void submitRefund()} disabled={saving || refundReason.trim().length < 3} className="rounded-xl">
+              {saving ? tr('Remboursement...') : tr('Rembourser')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Confirm approve dialog */}
       <Dialog open={!!approveDialog} onOpenChange={o => { if (!o) { setApproveDialog(null); setProofSignedUrl(null) } }}>

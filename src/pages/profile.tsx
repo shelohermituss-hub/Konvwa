@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 
 import { tr } from '@/lib/i18n'
 import { SecuritySection } from '@/components/shared/security-section'
+import { KycSection } from '@/components/shared/kyc-section'
 interface AddressEntry {
   id: string
   label: string
@@ -141,6 +142,7 @@ export function ProfilePage() {
               </button>
             </div>
             <SecuritySection />
+            <KycSection />
           </div>
         </div>
 

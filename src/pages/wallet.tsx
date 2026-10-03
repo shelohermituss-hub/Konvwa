@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, Search, Info } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, Search, Info, Download } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { createPayment } from '@/lib/payment-api'
@@ -156,7 +156,9 @@ function ProofUpload({
 }
 
 function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+  const { user, profile } = useAuth()
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  const [pdfBusy, setPdfBusy] = useState(false)
   const config = TX_CONFIG[tx.type] || TX_CONFIG.payment
   const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
   const badge = STATUS_BADGE[tx.status] ?? STATUS_BADGE.pending
@@ -167,6 +169,20 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  async function downloadReceipt() {
+    setPdfBusy(true)
+    try {
+      const { downloadReceiptPDF } = await import('@/lib/pdf')
+      await downloadReceiptPDF(
+        { ...tx, description: tx.description ? trServer(tx.description) : null },
+        { name: profile?.full_name ?? '', email: user?.email },
+        { type: config.label, method: tx.payment_method ? (METHOD_LABEL[tx.payment_method] ?? tx.payment_method) : null, status: badge.label },
+      )
+    } finally {
+      setPdfBusy(false)
+    }
+  }
 
   function copy(key: string, text: string) {
     navigator.clipboard.writeText(text).then(() => {
@@ -251,6 +267,17 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
               </div>
             ))}
           </div>
+
+          {tx.status === 'completed' && (
+            <button
+              onClick={() => void downloadReceipt()}
+              disabled={pdfBusy}
+              className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 text-sm font-semibold transition-colors hover:bg-gray-50 active:scale-[0.99] disabled:opacity-60"
+            >
+              {pdfBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {tr('Télécharger le reçu (PDF)')}
+            </button>
+          )}
         </div>
       </div>
     </div>

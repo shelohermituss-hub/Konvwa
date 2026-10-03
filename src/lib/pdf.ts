@@ -552,3 +552,93 @@ export async function downloadShippingPDF(req: ShippingRequestForPDF): Promise<v
 
   doc.save(tr('KONVWA-EXPEDITION-{0}.pdf', req.id.slice(0, 8).toUpperCase()))
 }
+
+// ── Wallet receipt PDF ────────────────────────────────────────────────────────
+
+export interface ReceiptForPDF {
+  id: string
+  type: string
+  amount: number
+  status: string
+  payment_method: string | null
+  description: string | null
+  reference: string | null
+  created_at: string
+}
+
+export function receiptNumber(tx: Pick<ReceiptForPDF, 'id' | 'created_at'>): string {
+  const d = new Date(tx.created_at)
+  const ymd = `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`
+  return `KW-R-${ymd}-${tx.id.slice(0, 6).toUpperCase()}`
+}
+
+export async function downloadReceiptPDF(
+  tx: ReceiptForPDF,
+  customer: { name: string; email?: string | null },
+  labels: { type: string; method: string | null; status: string },
+): Promise<void> {
+  const logo = await loadLogo()
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  let y = M
+
+  function clr(r: number, g: number, b: number) { doc.setTextColor(r, g, b) }
+  function bold(size: number)   { doc.setFont('helvetica', 'bold');   doc.setFontSize(size) }
+  function normal(size: number) { doc.setFont('helvetica', 'normal'); doc.setFontSize(size) }
+  function L(text: string, yy: number, x = M)     { doc.text(text, x, yy) }
+  function R(text: string, yy: number, x = W - M) { doc.text(text, x, yy, { align: 'right' }) }
+  function rule(yy: number) {
+    doc.setDrawColor(...RULE); doc.setLineWidth(0.2)
+    doc.line(M, yy, W - M, yy)
+    return yy + 6
+  }
+
+  const LOGO_W = 22
+  const LOGO_H = LOGO_W * (72 / 110)
+  if (logo) doc.addImage(logo, 'PNG', M, y, LOGO_W, LOGO_H)
+
+  const coY = y + LOGO_H + 3
+  bold(10); clr(...INK);  L('KONVWA', coY)
+  normal(8); clr(...MID); L(tr('Importation Chine & USA → Haïti'), coY + 5)
+  L('support@konvwa.com', coY + 9.5)
+  L('konvwa.com', coY + 14)
+
+  bold(40); clr(...DARK); R(tr('REÇU'), y + 18)
+  bold(11); clr(...INK);  R(`# ${receiptNumber(tx)}`, y + 27)
+
+  y = rule(Math.max(coY + 18, y + 34))
+
+  normal(8); clr(...MID); L(tr('Client'), y)
+  bold(10); clr(...INK);  L(customer.name || tr('Client KONVWA'), y + 5.5)
+  if (customer.email) { normal(8); clr(...MID); L(customer.email, y + 10.5) }
+  normal(8); clr(...MID); L(tr('Date :'), W - M - 52, y)
+  normal(8); clr(...INK); R(new Date(tx.created_at).toLocaleString(DATE_LOCALE, { dateStyle: 'medium', timeStyle: 'short' }), y)
+  y += 22
+  y = rule(y)
+
+  const rows: Array<[string, string]> = [
+    [tr('Type'), labels.type],
+    ...(labels.method ? [[tr('Méthode'), labels.method] as [string, string]] : []),
+    ...(tx.description ? [[tr('Description'), tx.description] as [string, string]] : []),
+    ...(tx.reference ? [[tr('Référence'), tx.reference] as [string, string]] : []),
+    [tr('ID transaction'), tx.id],
+    [tr('Statut'), labels.status],
+  ]
+  for (const [k, v] of rows) {
+    normal(8.5); clr(...MID); L(k, y)
+    normal(9); clr(...INK)
+    const lines = doc.splitTextToSize(v, CW - 45) as string[]
+    doc.text(lines, M + 45, y)
+    y += Math.max(6, lines.length * 4.6)
+  }
+  y = rule(y + 2)
+
+  bold(11); clr(...INK); L(tr('Montant'), y + 6)
+  bold(20); clr(...DARK); R(`${fmtHTG(tx.amount)} HTG`, y + 7)
+  y += 20
+
+  normal(7.5); clr(...MID)
+  const note = doc.splitTextToSize(tr('Ce reçu atteste d\'une opération enregistrée sur votre portefeuille KONVWA. Conservez-le pour vos archives.'), CW) as string[]
+  doc.text(note, M, y)
+
+  doc.save(tr('KONVWA-RECU-{0}.pdf', receiptNumber(tx)))
+}
