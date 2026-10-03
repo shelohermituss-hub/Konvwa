@@ -239,51 +239,37 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); w uuid; BEGIN
   ASSERT NOT has_function_privilege('anon', 'public.check_mfa(numeric)', 'execute'), 'anon can call check_mfa';
 END $$;
 
--- 16. catalogue orders: shipping is fixed by the team on arrival, paid by the customer, and gates shipped/delivered
+-- 16. catalogue orders: the arrival opens a normal shipping request (received); only the team can do it, once
 DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b FROM ctx); adm uuid := (SELECT admin_id FROM ctx);
-  oid uuid; w uuid; w0 numeric; r jsonb; BEGIN
-  SELECT id INTO w FROM wallets WHERE user_id = a;
-  UPDATE wallets SET available_balance = 100000 WHERE id = w;
+  oid uuid; wh uuid; slug text; r jsonb; rid uuid; n integer; BEGIN
+  SELECT id INTO wh FROM warehouses WHERE active LIMIT 1;
+  SELECT pc.slug INTO slug FROM product_rate_categories pc WHERE active LIMIT 1;
   INSERT INTO product_orders (user_id, total_htg, status, payment_status) VALUES (a, 1000, 'processing', 'paid') RETURNING id INTO oid;
 
-  -- a client cannot mark the parcel as arrived, nor pay before it arrived
   PERFORM pg_temp.as_user(a);
-  ASSERT (public.admin_product_order_received(oid, 0) ->> 'success')::boolean = false, 'client marked a parcel as arrived';
-  ASSERT (public.pay_product_order_shipping(oid) ->> 'success')::boolean = false, 'paid shipping before the parcel arrived';
+  ASSERT (public.admin_product_order_received(oid, wh, slug) ->> 'success')::boolean = false, 'client marked a parcel as arrived';
   RESET ROLE;
 
-  -- the team marks it arrived with a shipping fee
   PERFORM pg_temp.as_user(adm, 'aal2');
-  r := public.admin_product_order_received(oid, 2500, 'test');
+  r := public.admin_product_order_received(oid, wh, slug, 2, 'test');
   ASSERT (r ->> 'success')::boolean, 'arrival failed: ' || r::text;
-  ASSERT (public.admin_product_order_received(oid, 2500) ->> 'success')::boolean = false, 'arrival accepted twice';
+  rid := (r ->> 'request_id')::uuid;
+  ASSERT (public.admin_product_order_received(oid, wh, slug) ->> 'success')::boolean = false, 'arrival accepted twice';
   RESET ROLE;
 
-  -- not shippable while unpaid
-  BEGIN
-    UPDATE product_orders SET status = 'shipped' WHERE id = oid;
-    RAISE EXCEPTION 'shipped while shipping unpaid';
-  EXCEPTION WHEN check_violation THEN NULL; END;
+  ASSERT (SELECT status FROM product_requests WHERE id = rid) = 'received', 'shipping request is not in received status';
+  ASSERT (SELECT request_type FROM product_requests WHERE id = rid) = 'shipping', 'not a shipping request';
+  ASSERT (SELECT shipping_request_id FROM product_orders WHERE id = oid) = rid, 'order not linked to its shipping request';
 
-  -- someone else cannot pay it; the owner pays once, the right amount
+  PERFORM pg_temp.as_user(a);
+  SELECT count(*) INTO n FROM product_requests WHERE id = rid;
+  ASSERT n = 1, 'the owner cannot see the shipping request';
+  RESET ROLE;
   PERFORM pg_temp.as_user(b);
-  ASSERT (public.pay_product_order_shipping(oid) ->> 'success')::boolean = false, 'another client paid the shipping';
+  SELECT count(*) INTO n FROM product_requests WHERE id = rid;
+  ASSERT n = 0, 'another client sees the shipping request';
   RESET ROLE;
-  SELECT available_balance INTO w0 FROM wallets WHERE id = w;
-  PERFORM pg_temp.as_user(a);
-  r := public.pay_product_order_shipping(oid);
-  ASSERT (r ->> 'success')::boolean, 'shipping payment failed: ' || r::text;
-  ASSERT (public.pay_product_order_shipping(oid) ->> 'success')::boolean = false, 'shipping paid twice';
-  RESET ROLE;
-  ASSERT (SELECT available_balance FROM wallets WHERE id = w) = w0 - 2500, 'wallet not debited by the shipping fee';
-  UPDATE product_orders SET status = 'shipped' WHERE id = oid;  -- now allowed
-
-  -- a client cannot edit the order
-  PERFORM pg_temp.as_user(a);
-  UPDATE product_orders SET shipping_amount_htg = 0, shipping_paid_at = NULL WHERE id = oid;
-  RESET ROLE;
-  ASSERT (SELECT shipping_amount_htg FROM product_orders WHERE id = oid) = 2500, 'client edited the shipping fee';
-  ASSERT NOT has_function_privilege('anon', 'public.pay_product_order_shipping(uuid)', 'execute'), 'anon can pay shipping';
+  ASSERT NOT has_function_privilege('authenticated', 'public.pay_product_order_shipping(uuid)', 'execute'), 'legacy shipping payment is still callable';
 END $$;
 
 SELECT 'all security tests passed' AS result;

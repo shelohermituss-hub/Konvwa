@@ -29,7 +29,7 @@ interface OrderRow {
 
 interface CatalogOrderRow {
   id: string; status: string; payment_status: string; total_htg: number; created_at: string
-  received_at: string | null; shipping_amount_htg: number | null; shipping_paid_at: string | null
+  shipping_request: { status: string; quoted_amount_htg: number | null } | null
 }
 
 interface DraftRow {
@@ -84,12 +84,12 @@ export function OrdersPage() {
         .order('created_at', { ascending: false }),
       supabase
         .from('product_orders')
-        .select('id, status, payment_status, total_htg, created_at, received_at, shipping_amount_htg, shipping_paid_at')
+        .select('id, status, payment_status, total_htg, created_at, shipping_request:product_requests(status, quoted_amount_htg)')
         .eq('user_id', user.id)
         .neq('payment_status', 'unpaid')
         .order('created_at', { ascending: false }),
     ]).then(([ordersRes, draftsRes, catalogRes]) => {
-      if (catalogRes.data) setCatalogOrders(catalogRes.data as CatalogOrderRow[])
+      if (catalogRes.data) setCatalogOrders(catalogRes.data as unknown as CatalogOrderRow[])
       if (ordersRes.data) setOrders(ordersRes.data as unknown as OrderRow[])
       if (draftsRes.data) setDrafts(draftsRes.data as DraftRow[])
       setLoading(false)
