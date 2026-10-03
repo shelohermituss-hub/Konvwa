@@ -3,12 +3,13 @@ import { useI18n } from '@/lib/i18n-context'
 import { formatPriceRange } from '@/lib/product-pricing'
 import type { CatalogProduct } from '@/lib/catalog'
 
+import { tr, LOCALE_TAG } from '@/lib/i18n'
 /** The single most persuasive fact we have about the product, shown under the supplier line. */
 function highlight(p: CatalogProduct): string | null {
-  if (p.repurchase_rate != null) return `Taux de réachat de ${p.repurchase_rate} %`
+  if (p.repurchase_rate != null) return tr('Taux de réachat de {0} %', p.repurchase_rate)
   if (p.tags.length > 0) return p.tags[0]
-  if (p.sold_count > 0) return `${p.sold_count.toLocaleString('fr-HT')} vendus`
-  if (p.processing_days) return `Expédition sous ${p.processing_days} jours`
+  if (p.sold_count > 0) return tr('{0} vendus', p.sold_count.toLocaleString(LOCALE_TAG))
+  if (p.processing_days) return tr('Expédition sous {0} jours', p.processing_days)
   return null
 }
 
@@ -36,13 +37,13 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
             </div>
             {product.category && (
               <span className="px-2 text-center text-[9px] font-semibold uppercase leading-tight tracking-wider text-muted-foreground/60">
-                {product.category}
+                {tr(product.category)}
               </span>
             )}
           </div>
         )}
         {product.featured && (
-          <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">Vedette</span>
+          <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">{tr('Vedette')}</span>
         )}
         {!product.stock_available && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70">
@@ -61,7 +62,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
             {formatPriceRange(product)}
             <span className="ml-1 text-[11px] font-semibold text-muted-foreground">HTG</span>
           </span>
-          <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">MOQ : {product.moq}</span>
+          <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">{tr('MOQ :')}{' '}{product.moq}</span>
         </p>
 
         {(product.supplier_verified || supplierMeta) && (
@@ -69,7 +70,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
             {product.supplier_verified && (
               <span className="inline-flex items-center gap-0.5 font-bold text-sky-700">
                 <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-                Vérifié
+                {tr('Vérifié')}
               </span>
             )}
             {supplierMeta && <span>{supplierMeta}</span>}

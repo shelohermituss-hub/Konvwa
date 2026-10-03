@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Loader2, Save, RefreshCw, DollarSign, Plane, Landmark, Percent, CreditCard, Eye, EyeOff, Link, Settings2, CheckCircle } from 'lucide-react'
 
-import { tr } from '@/lib/i18n'
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface Setting {
   key: string
   value: string
@@ -64,8 +64,8 @@ export function AdminSettingsPage() {
       updated_at: new Date().toISOString(),
     }))
     const { error } = await supabase.from('app_settings').upsert(updates, { onConflict: 'key' })
-    if (error) toast.error('Erreur lors de la sauvegarde.')
-    else { toast.success('Paramètres de calcul mis à jour.'); await loadSettings() }
+    if (error) toast.error(tr('Erreur lors de la sauvegarde.'))
+    else { toast.success(tr('Paramètres de calcul mis à jour.')); await loadSettings() }
     setSaving(false)
   }
 
@@ -81,8 +81,8 @@ export function AdminSettingsPage() {
       updated_at: new Date().toISOString(),
     }))
     const { error } = await supabase.from('app_settings').upsert(updates, { onConflict: 'key' })
-    if (error) toast.error('Erreur lors de la sauvegarde.')
-    else { toast.success('Configuration API paiement enregistrée.'); await loadSettings() }
+    if (error) toast.error(tr('Erreur lors de la sauvegarde.'))
+    else { toast.success(tr('Configuration API paiement enregistrée.')); await loadSettings() }
     setSavingPayment(false)
   }
 
@@ -98,7 +98,7 @@ export function AdminSettingsPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{tr('Paramètres')}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Configurez les taux et marges utilisés dans les estimations clients</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{tr('Configurez les taux et marges utilisés dans les estimations clients')}</p>
         </div>
         <Button onClick={handleSave} disabled={saving || !hasChanges} className="rounded-xl gap-2 shrink-0">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
@@ -114,8 +114,8 @@ export function AdminSettingsPage() {
               <CreditCard className="h-4 w-4 text-emerald-600" />
             </div>
             <div>
-              <p className="font-semibold text-sm">API Paiement</p>
-              <p className="text-xs text-muted-foreground">Clés MonCash & NatCash — configuration sécurisée</p>
+              <p className="font-semibold text-sm">{tr('API Paiement')}</p>
+              <p className="text-xs text-muted-foreground">{tr('Clés MonCash & NatCash — configuration sécurisée')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export function AdminSettingsPage() {
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                   <Settings2 className="h-3.5 w-3.5" /> Client ID
                 </Label>
-                <p className="text-[11px] text-muted-foreground">Identifiant marchand MonCash (format : pp_...)</p>
+                <p className="text-[11px] text-muted-foreground">{tr('Identifiant marchand MonCash (format : pp_...)')}</p>
                 <Input
                   value={values['payment_client_id'] ?? ''}
                   onChange={e => setValues(p => ({ ...p, payment_client_id: e.target.value }))}
@@ -146,9 +146,9 @@ export function AdminSettingsPage() {
               {/* Client Secret */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                  <Eye className="h-3.5 w-3.5" /> Clé Privée (Hash 64 chars)
+                  <Eye className="h-3.5 w-3.5" />{' '}{tr('Clé Privée (Hash 64 chars)')}
                 </Label>
-                <p className="text-[11px] text-muted-foreground">Clé secrète HMAC — ne jamais partager, invisible aux clients</p>
+                <p className="text-[11px] text-muted-foreground">{tr('Clé secrète HMAC — ne jamais partager, invisible aux clients')}</p>
                 <div className="relative">
                   <Input
                     type={showSecret ? 'text' : 'password'}
@@ -170,9 +170,9 @@ export function AdminSettingsPage() {
               {/* Return URL */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                  <Link className="h-3.5 w-3.5" /> URL de retour
+                  <Link className="h-3.5 w-3.5" />{' '}{tr('URL de retour')}
                 </Label>
-                <p className="text-[11px] text-muted-foreground">URL de votre site où MonCash redirige après paiement</p>
+                <p className="text-[11px] text-muted-foreground">{tr('URL de votre site où MonCash redirige après paiement')}</p>
                 <Input
                   value={values['payment_return_url'] ?? ''}
                   onChange={e => setValues(p => ({ ...p, payment_return_url: e.target.value }))}
@@ -184,7 +184,7 @@ export function AdminSettingsPage() {
               {/* Methods */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                  <CheckCircle className="h-3.5 w-3.5" /> Méthodes actives
+                  <CheckCircle className="h-3.5 w-3.5" />{' '}{tr('Méthodes actives')}
                 </Label>
                 <Input
                   value={values['payment_methods'] ?? 'moncash,natcash'}
@@ -192,7 +192,7 @@ export function AdminSettingsPage() {
                   placeholder="moncash,natcash"
                   className="text-sm rounded-xl"
                 />
-                <p className="text-[11px] text-muted-foreground">Valeurs possibles : moncash · natcash · moncash,natcash · all</p>
+                <p className="text-[11px] text-muted-foreground">{tr('Valeurs possibles : moncash · natcash · moncash,natcash · all')}</p>
               </div>
 
               <div className="pt-2 flex justify-end">
@@ -202,7 +202,7 @@ export function AdminSettingsPage() {
                   className="rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700"
                 >
                   {savingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Enregistrer l'API paiement
+                  {tr('Enregistrer l\'API paiement')}
                 </Button>
               </div>
             </>
@@ -217,8 +217,8 @@ export function AdminSettingsPage() {
             <DollarSign className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-semibold text-sm">Paramètres de calcul</p>
-            <p className="text-xs text-muted-foreground">Ces valeurs s'appliquent en temps réel dans le calculateur de soumission</p>
+            <p className="font-semibold text-sm">{tr('Paramètres de calcul')}</p>
+            <p className="text-xs text-muted-foreground">{tr('Ces valeurs s\'appliquent en temps réel dans le calculateur de soumission')}</p>
           </div>
         </div>
         <div className="p-5">
@@ -257,7 +257,7 @@ export function AdminSettingsPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground/70">
-                      {tr('Dernière mise à jour :')}{' '} {new Date(setting.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      {tr('Dernière mise à jour :')}{' '}{new Date(setting.updated_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>
                 )
@@ -275,8 +275,8 @@ export function AdminSettingsPage() {
               <RefreshCw className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
-              <p className="font-semibold text-sm">Aperçu d'une commande exemple</p>
-              <p className="text-xs text-muted-foreground">50 unités à $4.50/u · 0.25 kg/u avec les paramètres actuels</p>
+              <p className="font-semibold text-sm">{tr('Aperçu d\'une commande exemple')}</p>
+              <p className="text-xs text-muted-foreground">{tr('50 unités à $4.50/u · 0.25 kg/u avec les paramètres actuels')}</p>
             </div>
           </div>
           <div className="p-5">
@@ -294,16 +294,16 @@ export function AdminSettingsPage() {
               const serviceUSD = subtotal * (svc / 100)
               const totalUSD = subtotal + serviceUSD
               const totalHTG = totalUSD * rate
-              const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR')
+              const fmt = (n: number) => Math.round(n).toLocaleString(LOCALE_TAG)
               const fmtU = (n: number) => '$' + n.toFixed(2)
               return (
                 <div className="grid sm:grid-cols-2 gap-4 text-sm">
                   <div className="space-y-2.5">
                     {[
-                      { label: 'Produit (50 × $4.50)', value: fmtU(productUSD) },
-                      { label: `Fret (12.5 kg × $${freight}/kg)`, value: `+ ${fmtU(freightUSD)}` },
-                      { label: `Douane (${duty}% CIF)`, value: `+ ${fmtU(dutyUSD)}` },
-                      { label: `Service (${svc}%)`, value: `+ ${fmtU(serviceUSD)}` },
+                      { label: tr('Produit (50 × $4.50)'), value: fmtU(productUSD) },
+                      { label: tr('Fret (12.5 kg × ${0}/kg)', freight), value: `+ ${fmtU(freightUSD)}` },
+                      { label: tr('Douane ({0}% CIF)', duty), value: `+ ${fmtU(dutyUSD)}` },
+                      { label: tr('Service ({0}%)', svc), value: `+ ${fmtU(serviceUSD)}` },
                     ].map(row => (
                       <div key={row.label} className="flex justify-between items-center py-2 border-b border-border/40 last:border-0">
                         <span className="text-muted-foreground">{row.label}</span>
@@ -312,12 +312,12 @@ export function AdminSettingsPage() {
                     ))}
                   </div>
                   <div className="rounded-2xl bg-primary/5 border border-primary/20 p-5 flex flex-col justify-center">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Total rendu</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">{tr('Total rendu')}</p>
                     <p className="text-3xl font-bold font-mono text-primary">{fmt(totalHTG)}</p>
                     <p className="text-sm text-muted-foreground mt-0.5">HTG</p>
                     <p className="text-xs text-muted-foreground font-mono mt-2">≈ {fmtU(totalUSD)}</p>
                     <div className="mt-3 pt-3 border-t border-primary/20">
-                      <p className="text-xs text-muted-foreground">{fmt(totalHTG / qty)} HTG / unité</p>
+                      <p className="text-xs text-muted-foreground">{fmt(totalHTG / qty)}{' '}{tr('HTG / unité')}</p>
                     </div>
                   </div>
                 </div>
@@ -331,7 +331,7 @@ export function AdminSettingsPage() {
         <div className="sticky bottom-4 flex justify-center">
           <Button onClick={handleSave} disabled={saving} className="shadow-lg gap-2 rounded-full px-6">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Enregistrer les modifications
+            {tr('Enregistrer les modifications')}
           </Button>
         </div>
       )}

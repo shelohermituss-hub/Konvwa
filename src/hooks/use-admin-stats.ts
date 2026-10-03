@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
+import { DATE_LOCALE } from '@/lib/i18n'
 interface RecentOrderRow {
   id: string
   user_id: string
@@ -47,7 +48,7 @@ const PENDING_STATUSES = [
 ]
 
 function monthLabel(d: Date) {
-  return d.toLocaleDateString('fr-FR', { month: 'short' })
+  return d.toLocaleDateString(DATE_LOCALE, { month: 'short' })
 }
 
 export function useAdminStats(): AdminStats {

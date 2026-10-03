@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 
+import { tr } from '@/lib/i18n'
 export interface CreatePaymentResult {
   url: string
   reference_id: string
@@ -17,7 +18,7 @@ export interface VerifyPaymentResult {
 
 async function invoke<T>(fn: string, body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke(fn, { body })
-  if (error) throw new Error(error.message || 'Erreur réseau')
+  if (error) throw new Error(error.message || tr('Erreur réseau'))
   if (data?.error) throw new Error(data.error)
   return data as T
 }

@@ -10,9 +10,12 @@ import { PushSettingsRow } from '@/components/shared/pwa-experience'
 
 import IconValide from 'flat-color-icons/svg/ok.svg'
 
+import { tr, pickLocalized } from '@/lib/i18n'
 interface Notification {
   id: string
   title: string
+  title_en?: string | null
+  body_en?: string | null
   message: string
   type: 'info' | 'success' | 'warning' | 'error'
   read: boolean
@@ -45,7 +48,7 @@ export function NotificationsPage() {
     if (!user) return
     const { data } = await supabase
       .from('notifications')
-      .select('id, title, message:body, type, read, created_at, link')
+      .select('id, title, title_en, message:body, body_en, type, read, created_at, link')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     if (data) setNotifications(data as Notification[])
@@ -58,7 +61,7 @@ export function NotificationsPage() {
     if (!user) return
     await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false)
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-    toast.success('Toutes les notifications lues.')
+    toast.success(tr('Toutes les notifications lues.'))
   }
 
   async function open(n: Notification) {
@@ -80,9 +83,9 @@ export function NotificationsPage() {
     const diff = Date.now() - new Date(dateStr).getTime()
     const h = Math.floor(diff / 3600000)
     const d = Math.floor(h / 24)
-    if (d > 0) return `il y a ${d}j`
-    if (h > 0) return `il y a ${h}h`
-    return "À l'instant"
+    if (d > 0) return tr('il y a {0}j', d)
+    if (h > 0) return tr('il y a {0}h', h)
+    return tr('À l\'instant')
   }
 
   return (
@@ -90,15 +93,15 @@ export function NotificationsPage() {
       {/* Header */}
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Notifications')}</h1>
           {unread.length > 0 && (
-            <p className="text-sm text-muted-foreground">{unread.length} non lue{unread.length > 1 ? 's' : ''}</p>
+            <p className="text-sm text-muted-foreground">{unread.length}{' '}{tr('non lue')}{unread.length > 1 ? 's' : ''}</p>
           )}
         </div>
         {unread.length > 0 && (
           <button onClick={markAllRead} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary bg-primary/8 hover:bg-primary/15 transition-colors">
             <Check className="h-3.5 w-3.5" />
-            Tout lire
+            {tr('Tout lire')}
           </button>
         )}
       </div>
@@ -116,13 +119,13 @@ export function NotificationsPage() {
         ) : notifications.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center shadow-sm">
             <Bell className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="font-semibold text-muted-foreground">Aucune notification</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Vous serez notifié des mises à jour ici</p>
+            <p className="font-semibold text-muted-foreground">{tr('Aucune notification')}</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">{tr('Vous serez notifié des mises à jour ici')}</p>
           </div>
         ) : (
           <>
             {unread.length > 0 && (
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1 pb-1">Non lues</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1 pb-1">{tr('Non lues')}</p>
             )}
             {notifications.map((n, i) => {
               const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.info
@@ -133,7 +136,7 @@ export function NotificationsPage() {
               return (
                 <div key={n.id}>
                   {showReadHeader && (
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1 pb-1 pt-3">Lues</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1 pb-1 pt-3">{tr('Lues')}</p>
                   )}
                   <div className={cn(
                     'relative flex gap-3 rounded-2xl p-4 transition-colors',
@@ -147,10 +150,10 @@ export function NotificationsPage() {
                     </div>
                     <div className="flex-1 min-w-0 pr-8">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm leading-tight">{n.title}</p>
+                        <p className="font-semibold text-sm leading-tight">{pickLocalized(n.title, n.title_en)}</p>
                         {isUnread && <span className={cn('h-2 w-2 rounded-full shrink-0', config.dotColor)} />}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{pickLocalized(n.message, n.body_en)}</p>
                       <p className="text-[10px] text-muted-foreground/60 mt-1.5">{timeAgo(n.created_at)}</p>
                     </div>
                     <button

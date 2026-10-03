@@ -13,19 +13,20 @@ import { ProductCard } from '@/components/shared/product-card'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { tr, LOCALE_TAG } from '@/lib/i18n'
 type TabId = 'overview' | 'details' | 'related'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'overview', label: 'Aperçu' },
-  { id: 'details', label: 'Détails' },
-  { id: 'related', label: 'Autres produits' },
+  { id: 'overview', label: tr('Aperçu') },
+  { id: 'details', label: tr('Détails') },
+  { id: 'related', label: tr('Autres produits') },
 ]
 
 const PROTECTIONS = [
-  { icon: ShieldCheck, label: 'Paiements sécurisés' },
-  { icon: Truck, label: 'Suivi de commande' },
-  { icon: Headset, label: 'Service client' },
-  { icon: Lock, label: 'Confidentialité des données' },
+  { icon: ShieldCheck, label: tr('Paiements sécurisés') },
+  { icon: Truck, label: tr('Suivi de commande') },
+  { icon: Headset, label: tr('Service client') },
+  { icon: Lock, label: tr('Confidentialité des données') },
 ]
 
 const SPEC_PREVIEW = 6
@@ -107,7 +108,7 @@ export function ProductDetailPage() {
     setAdding(false)
     toast.success(t('products.added'), {
       description: `${quantity} × ${product.name}`,
-      action: { label: 'Voir panier', onClick: () => navigate('/cart') },
+      action: { label: tr('Voir panier'), onClick: () => navigate('/cart') },
     })
   }
 
@@ -118,7 +119,7 @@ export function ProductDetailPage() {
       if (navigator.share) await navigator.share({ title: product.name, url })
       else {
         await navigator.clipboard.writeText(url)
-        toast.success('Lien copié')
+        toast.success(tr('Lien copié'))
       }
     } catch {
       /* the user closed the share sheet */
@@ -137,9 +138,9 @@ export function ProductDetailPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#F4F5F7] px-8 text-center">
         <Package className="h-12 w-12 text-muted-foreground/30" />
-        <p className="font-semibold">Produit introuvable</p>
+        <p className="font-semibold">{tr('Produit introuvable')}</p>
         <button onClick={() => navigate('/products')} className="text-sm font-medium text-primary">
-          Retour aux produits
+          {tr('Retour aux produits')}
         </button>
       </div>
     )
@@ -156,7 +157,7 @@ export function ProductDetailPage() {
     product.supplier_country,
   ].filter(Boolean).join(' · ')
   const delivery = product.delivery_days_min
-    ? `${product.delivery_days_min}–${product.delivery_days_max ?? product.delivery_days_min} jours`
+    ? tr('{0}–{1} jours', product.delivery_days_min, product.delivery_days_max ?? product.delivery_days_min)
     : null
 
   return (
@@ -166,7 +167,7 @@ export function ProductDetailPage() {
         <div className="flex h-14 items-center gap-2 px-3">
           <button
             onClick={() => navigate(-1)}
-            aria-label="Retour"
+            aria-label={tr('Retour')}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -176,18 +177,18 @@ export function ProductDetailPage() {
             className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border-2 border-primary/60 bg-white px-3 text-left"
           >
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="truncate text-sm text-muted-foreground">{product.category ?? 'Rechercher un produit'}</span>
+            <span className="truncate text-sm text-muted-foreground">{product.category ? tr(product.category) : tr('Rechercher un produit')}</span>
           </button>
           <button
             onClick={handleShare}
-            aria-label="Partager"
+            aria-label={tr('Partager')}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted"
           >
             <Share2 className="h-5 w-5" strokeWidth={1.8} />
           </button>
           <button
             onClick={() => navigate('/cart')}
-            aria-label="Panier"
+            aria-label={tr('Panier')}
             className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted"
           >
             <ShoppingCart className="h-5 w-5" strokeWidth={1.8} />
@@ -247,7 +248,7 @@ export function ProductDetailPage() {
             </div>
             {product.images.length > 1 && (
               <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
-                Photos {activeImg + 1}/{product.images.length}
+                {tr('Photos')}{' '}{activeImg + 1}/{product.images.length}
               </span>
             )}
           </div>
@@ -257,7 +258,7 @@ export function ProductDetailPage() {
                 <button
                   key={img + i}
                   onClick={() => goToImage(i)}
-                  aria-label={`Photo ${i + 1}`}
+                  aria-label={tr('Photo {0}', i + 1)}
                   className={cn(
                     'h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-colors',
                     activeImg === i ? 'border-foreground' : 'border-gray-100',
@@ -283,22 +284,22 @@ export function ProductDetailPage() {
               <ChevronDown className={cn('mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform', titleOpen && 'rotate-180')} />
             </button>
             <p className="mt-2 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-              {product.sold_count > 0 && <span>{product.sold_count.toLocaleString('fr-HT')} vendus</span>}
+              {product.sold_count > 0 && <span>{product.sold_count.toLocaleString(LOCALE_TAG)}{' '}{tr('vendus')}</span>}
               {product.rating != null && (
                 <span className="inline-flex items-center gap-1">
                   {product.sold_count > 0 && <span aria-hidden>·</span>}
-                  Note : <strong className="text-foreground">{String(product.rating).replace('.', ',')}</strong>
+                  {tr('Note :')}{' '}<strong className="text-foreground">{String(product.rating).replace('.', ',')}</strong>
                   <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
                   {product.review_count > 0 && <span className="underline">({product.review_count})</span>}
                 </span>
               )}
               {!product.stock_available && (
-                <span className="rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-bold text-destructive">Rupture de stock</span>
+                <span className="rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-bold text-destructive">{tr('Rupture de stock')}</span>
               )}
             </p>
 
             {/* Price by quantity */}
-            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-muted/50 p-3" aria-label="Prix selon la quantité">
+            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-muted/50 p-3" aria-label={tr('Prix selon la quantité')}>
               {rows.map((r) => {
                 const active = quantity >= r.from && (r.to === null || quantity <= r.to)
                 return (
@@ -308,7 +309,7 @@ export function ProductDetailPage() {
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {rows.length > 1 && r === rows[0]
-                        ? `Commande minimale : ${r.from} ${product.unit}`
+                        ? tr('Commande minimale : {0} {1}', r.from, product.unit)
                         : r.to === null ? `≥ ${r.from} ${product.unit}` : `${r.from}–${r.to} ${product.unit}`}
                     </p>
                   </div>
@@ -316,13 +317,13 @@ export function ProductDetailPage() {
               })}
             </div>
             {rows.length === 1 && (
-              <p className="mt-2 text-sm text-muted-foreground">Commande minimale : {product.moq} {product.unit}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{tr('Commande minimale :')}{' '}{product.moq} {product.unit}</p>
             )}
 
             {/* Quantity */}
             <div className="mt-3 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quantité</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tr('Quantité')}</p>
                 <p className="text-sm text-muted-foreground">
                   {formatHtg(unitPrice)} HTG / {product.unit}
                 </p>
@@ -331,7 +332,7 @@ export function ProductDetailPage() {
                 <button
                   onClick={() => setQuantity((q) => Math.max(product.moq, q - 1))}
                   disabled={quantity <= product.moq}
-                  aria-label="Diminuer la quantité"
+                  aria-label={tr('Diminuer la quantité')}
                   className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white disabled:opacity-30"
                 >
                   <Minus className="h-4 w-4" />
@@ -341,13 +342,13 @@ export function ProductDetailPage() {
                   inputMode="numeric"
                   min={product.moq}
                   value={quantity}
-                  aria-label="Quantité"
+                  aria-label={tr('Quantité')}
                   onChange={(e) => setQuantity(Math.max(product.moq, Math.floor(Number(e.target.value)) || product.moq))}
                   className="h-10 w-16 bg-transparent text-center text-sm font-bold tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <button
                   onClick={() => setQuantity((q) => q + 1)}
-                  aria-label="Augmenter la quantité"
+                  aria-label={tr('Augmenter la quantité')}
                   className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white"
                 >
                   <Plus className="h-4 w-4" />
@@ -361,8 +362,8 @@ export function ProductDetailPage() {
             <div className="grid grid-cols-2 gap-3">
               {delivery ? (
                 <div className="rounded-xl bg-white p-3 shadow-sm">
-                  <p className="font-bold">Livraison</p>
-                  <p className="mt-0.5 truncate text-sm text-muted-foreground">Estimée : {delivery}</p>
+                  <p className="font-bold">{tr('Livraison')}</p>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">{tr('Estimée :')}{' '}{delivery}</p>
                 </div>
               ) : <span />}
               {product.customization_options.length > 0 && (
@@ -371,7 +372,7 @@ export function ProductDetailPage() {
                   onClick={() => document.getElementById('section-custom')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                   className="rounded-xl bg-white p-3 text-left shadow-sm"
                 >
-                  <p className="font-bold">Personnalisation</p>
+                  <p className="font-bold">{tr('Personnalisation')}</p>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">{product.customization_options.slice(0, 2).join(', ')}</p>
                 </button>
               )}
@@ -389,9 +390,9 @@ export function ProductDetailPage() {
           )}
 
           {/* Protection */}
-          <Section title="Protection des commandes KONVWA">
+          <Section title={tr('Protection des commandes KONVWA')}>
             <p className="-mt-1 mb-3 text-sm text-muted-foreground">
-              Payez avec votre portefeuille KONVWA, rechargé par MonCash, NatCash ou virement.
+              {tr('Payez avec votre portefeuille KONVWA, rechargé par MonCash, NatCash ou virement.')}
             </p>
             <div className="grid grid-cols-2 gap-2.5">
               {PROTECTIONS.map(({ icon: Icon, label }) => (
@@ -402,7 +403,7 @@ export function ProductDetailPage() {
               ))}
             </div>
             <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Wallet className="h-3.5 w-3.5" aria-hidden /> Paiements pris en charge : Portefeuille · MonCash · NatCash
+              <Wallet className="h-3.5 w-3.5" aria-hidden />{' '}{tr('Paiements pris en charge : Portefeuille · MonCash · NatCash')}
             </p>
           </Section>
         </div>
@@ -411,7 +412,7 @@ export function ProductDetailPage() {
       <div id="section-details" className="scroll-mt-28 space-y-3 px-3 pt-3">
         {/* Characteristics */}
         {specs.length > 0 && (
-          <Section title="Caractéristiques">
+          <Section title={tr('Caractéristiques')}>
             <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-gray-100">
               {shownSpecs.map(([key, val]) => (
                 <div key={key} className="bg-muted/40 p-3">
@@ -422,7 +423,7 @@ export function ProductDetailPage() {
             </dl>
             {specs.length > SPEC_PREVIEW && (
               <button onClick={() => setAllSpecs((v) => !v)} className="mt-3 h-11 w-full text-sm font-semibold text-primary">
-                {allSpecs ? 'Réduire' : `Voir les ${specs.length} caractéristiques`}
+                {allSpecs ? tr('Réduire') : tr('Voir les {0} caractéristiques', specs.length)}
               </button>
             )}
           </Section>
@@ -430,7 +431,7 @@ export function ProductDetailPage() {
 
         {/* Customization */}
         {product.customization_options.length > 0 && (
-          <Section id="section-custom" title="Options de personnalisation">
+          <Section id="section-custom" title={tr('Options de personnalisation')}>
             <ul className="space-y-2.5">
               {shownOptions.map((o) => (
                 <li key={o} className="flex items-center gap-2.5 text-[15px]">
@@ -441,24 +442,24 @@ export function ProductDetailPage() {
             </ul>
             {product.customization_options.length > OPTION_PREVIEW && (
               <button onClick={() => setAllOptions((v) => !v)} className="mt-2 h-11 text-sm text-muted-foreground">
-                {allOptions ? 'Réduire' : `+${product.customization_options.length - OPTION_PREVIEW} options supplémentaires`}
+                {allOptions ? tr('Réduire') : tr('+{0} options supplémentaires', product.customization_options.length - OPTION_PREVIEW)}
               </button>
             )}
             <p className="mt-2 text-xs text-muted-foreground">
-              Pour une personnalisation, utilisez « Discuter ici » avant de commander.
+              {tr('Pour une personnalisation, utilisez « Discuter ici » avant de commander.')}
             </p>
           </Section>
         )}
 
         {/* Processing time */}
         {(product.processing_days || delivery) && (
-          <Section title="Délais">
+          <Section title={tr('Délais')}>
             <div className="space-y-2 rounded-xl bg-muted/50 p-3 text-sm">
               {product.processing_days && (
-                <p className="flex justify-between gap-3"><span className="text-muted-foreground">Temps de traitement</span><strong>{product.processing_days} jours</strong></p>
+                <p className="flex justify-between gap-3"><span className="text-muted-foreground">{tr('Temps de traitement')}</span><strong>{product.processing_days}{' '}{tr('jours')}</strong></p>
               )}
               {delivery && (
-                <p className="flex justify-between gap-3"><span className="text-muted-foreground">Livraison estimée</span><strong>{delivery}</strong></p>
+                <p className="flex justify-between gap-3"><span className="text-muted-foreground">{tr('Livraison estimée')}</span><strong>{delivery}</strong></p>
               )}
             </div>
           </Section>
@@ -466,7 +467,7 @@ export function ProductDetailPage() {
 
         {/* Supplier */}
         {product.supplier_name && (
-          <Section title="Fournisseur">
+          <Section title={tr('Fournisseur')}>
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted">
                 <Store className="h-6 w-6 text-muted-foreground" aria-hidden />
@@ -476,7 +477,7 @@ export function ProductDetailPage() {
                 <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
                   {product.supplier_verified && (
                     <span className="inline-flex items-center gap-0.5 font-bold text-sky-700">
-                      <BadgeCheck className="h-4 w-4" aria-hidden /> Vérifié
+                      <BadgeCheck className="h-4 w-4" aria-hidden />{' '}{tr('Vérifié')}
                     </span>
                   )}
                   {supplierMeta && <span>{supplierMeta}</span>}
@@ -487,7 +488,7 @@ export function ProductDetailPage() {
         )}
 
         {product.description && (
-          <Section title="Description">
+          <Section title={tr('Description')}>
             <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{product.description}</p>
           </Section>
         )}
@@ -495,7 +496,7 @@ export function ProductDetailPage() {
 
       {related.length > 0 && (
         <div id="section-related" className="scroll-mt-28 px-3 pt-4">
-          <h2 className="mb-3 px-1 text-base font-bold tracking-tight">Autres produits</h2>
+          <h2 className="mb-3 px-1 text-base font-bold tracking-tight">{tr('Autres produits')}</h2>
           <div className="columns-2 gap-3">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} onPress={() => navigate(`/products/${p.id}`)} />
@@ -510,17 +511,17 @@ export function ProductDetailPage() {
           <button
             onClick={() => navigate(`/products?q=${encodeURIComponent(product.supplier_name ?? '')}`)}
             className="flex h-12 w-14 shrink-0 flex-col items-center justify-center gap-0.5 text-foreground"
-            aria-label="Voir la boutique du fournisseur"
+            aria-label={tr('Voir la boutique du fournisseur')}
           >
             <Store className="h-5 w-5" strokeWidth={1.8} />
-            <span className="text-[11px]">Magasin</span>
+            <span className="text-[11px]">{tr('Magasin')}</span>
           </button>
           <button
             onClick={() => navigate('/support', { state: { subject: `Question sur : ${product.name}` } })}
             className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border-2 border-foreground bg-white text-sm font-bold"
           >
             <MessageCircle className="h-4 w-4" aria-hidden />
-            Discuter ici
+            {tr('Discuter ici')}
           </button>
           <button
             onClick={handleAddToCart}

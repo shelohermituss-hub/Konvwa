@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
 import { toast } from 'sonner'
 
+import { tr, LOCALE_TAG } from '@/lib/i18n'
 interface WalletData {
   id: string
   available_balance: number
@@ -46,7 +47,7 @@ export function CheckoutPage() {
   async function handlePay() {
     if (!wallet || !user) return
     if (wallet.available_balance < total) {
-      toast.error('Solde insuffisant', { description: 'Rechargez votre portefeuille pour continuer.' })
+      toast.error(tr('Solde insuffisant'), { description: tr('Rechargez votre portefeuille pour continuer.') })
       return
     }
 
@@ -57,19 +58,19 @@ export function CheckoutPage() {
         p_items: items.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
       })
       if (createErr) throw new Error(createErr.message)
-      if (!created?.success) throw new Error(created?.error ?? 'Erreur création commande')
+      if (!created?.success) throw new Error(created?.error ?? tr('Erreur création commande'))
       const order = { id: created.order_id as string }
 
       // Deduct wallet via RPC
       const { data: rpcResult, error: rpcErr } = await supabase.rpc('pay_product_order', { p_order_id: order.id })
       if (rpcErr) throw new Error(rpcErr.message)
-      if (rpcResult && rpcResult.success === false) throw new Error(rpcResult.error ?? 'Paiement refusé')
+      if (rpcResult && rpcResult.success === false) throw new Error(rpcResult.error ?? tr('Paiement refusé'))
 
       await clearCart()
       setSuccess(true)
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Erreur inconnue'
-      toast.error('Paiement échoué', { description: msg })
+      const msg = e instanceof Error ? e.message : tr('Erreur inconnue')
+      toast.error(tr('Paiement échoué'), { description: msg })
     } finally {
       setPaying(false)
     }
@@ -85,7 +86,7 @@ export function CheckoutPage() {
           <h1 className="text-lg font-bold mb-2">{t('checkout.success')}</h1>
           <p className="text-sm text-muted-foreground mb-2">{t('checkout.success_sub')}</p>
           <p className="text-2xl font-black text-emerald-600 mb-6">
-            {total.toLocaleString('fr-HT')} HTG
+            {total.toLocaleString(LOCALE_TAG)} HTG
           </p>
           <button
             onClick={() => navigate('/orders')}
@@ -99,7 +100,7 @@ export function CheckoutPage() {
             onClick={() => navigate('/products')}
             className="w-full rounded-xl py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
           >
-            Continuer mes achats
+            {tr('Continuer mes achats')}
           </button>
         </div>
       </div>
@@ -139,17 +140,17 @@ export function CheckoutPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{item.products?.name}</p>
-                  <p className="text-xs text-muted-foreground">{item.quantity} × {(item.products ? unitPriceFor(item.products, item.quantity) : 0).toLocaleString('fr-HT')} HTG</p>
+                  <p className="text-xs text-muted-foreground">{item.quantity} × {(item.products ? unitPriceFor(item.products, item.quantity) : 0).toLocaleString(LOCALE_TAG)} HTG</p>
                 </div>
                 <p className="text-sm font-bold text-primary shrink-0">
-                  {((item.products ? unitPriceFor(item.products, item.quantity) : 0) * item.quantity).toLocaleString('fr-HT')} HTG
+                  {((item.products ? unitPriceFor(item.products, item.quantity) : 0) * item.quantity).toLocaleString(LOCALE_TAG)} HTG
                 </p>
               </div>
             ))}
           </div>
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/50">
             <span className="text-sm font-bold">{t('cart.total')}</span>
-            <span className="text-lg font-black text-primary">{total.toLocaleString('fr-HT')} HTG</span>
+            <span className="text-lg font-black text-primary">{total.toLocaleString(LOCALE_TAG)} HTG</span>
           </div>
         </div>
 
@@ -161,20 +162,20 @@ export function CheckoutPage() {
             </div>
             <div>
               <p className="text-sm font-bold">{t('checkout.payment')}</p>
-              <p className="text-xs text-muted-foreground">Paiement instantané depuis votre solde</p>
+              <p className="text-xs text-muted-foreground">{tr('Paiement instantané depuis votre solde')}</p>
             </div>
           </div>
 
           {loadingWallet ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Chargement du solde…
+              {tr('Chargement du solde…')}
             </div>
           ) : (
             <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
               <p className="text-sm text-muted-foreground">{t('checkout.balance')}</p>
               <p className={`text-base font-black ${insufficient ? 'text-destructive' : 'text-emerald-600'}`}>
-                {(wallet?.available_balance ?? 0).toLocaleString('fr-HT')} HTG
+                {(wallet?.available_balance ?? 0).toLocaleString(LOCALE_TAG)} HTG
               </p>
             </div>
           )}
@@ -183,7 +184,7 @@ export function CheckoutPage() {
             <div className="mt-3 p-3 rounded-xl bg-destructive/8 border border-destructive/20">
               <p className="text-xs font-semibold text-destructive mb-1">{t('checkout.insufficient')}</p>
               <p className="text-xs text-muted-foreground">
-                Il vous manque {(total - (wallet?.available_balance ?? 0)).toLocaleString('fr-HT')} HTG.
+                {tr('Il vous manque')}{' '}{(total - (wallet?.available_balance ?? 0)).toLocaleString(LOCALE_TAG)}{' '}{tr('HTG.')}
               </p>
             </div>
           )}
@@ -215,7 +216,7 @@ export function CheckoutPage() {
               </>
             ) : (
               <>
-                {t('checkout.confirm')} · {total.toLocaleString('fr-HT')} HTG
+                {t('checkout.confirm')} · {total.toLocaleString(LOCALE_TAG)} HTG
               </>
             )}
           </button>

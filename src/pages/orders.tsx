@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 
 import { IllustrationEmptyOrders } from '@/components/shared/illustrations'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface OrderRow {
   id: string
   tracking_code: string
@@ -113,7 +114,7 @@ export function OrdersPage() {
           <h1 className="text-2xl font-bold tracking-tight">{t('orders.title')}</h1>
           <p className="text-sm text-muted-foreground">
             {totalCount} {t('orders.title').toLowerCase().replace(/s$/, '')}{totalCount !== 1 ? 's' : ''}
-            {drafts.length > 0 && ` · ${drafts.length} brouillon${drafts.length > 1 ? 's' : ''}`}
+            {drafts.length > 0 && tr(' · {0} brouillon{1}', drafts.length, drafts.length > 1 ? 's' : '')}
           </p>
         </div>
         <Link
@@ -207,7 +208,7 @@ export function OrdersPage() {
                         {draft.product_name}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-                        {draft.category || 'Autre'} · {draft.urgency === 'express' ? 'Express' : draft.urgency === 'urgent' ? 'Urgent' : 'Normal'}
+                        {draft.category || tr('Autre')} · {draft.urgency === 'express' ? tr('Express') : draft.urgency === 'urgent' ? tr('Urgent') : tr('Normal')}
                       </p>
                       <div className="mt-1.5">
                         <span className="inline-flex items-center rounded-full bg-warning/15 text-warning text-[10px] font-bold px-2 py-0.5">
@@ -217,7 +218,7 @@ export function OrdersPage() {
                     </div>
                     <div className="text-right shrink-0 flex flex-col items-end gap-1">
                       <p className="text-[10px] text-muted-foreground">
-                        {new Date(draft.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        {new Date(draft.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                       </p>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                     </div>
@@ -231,7 +232,7 @@ export function OrdersPage() {
               <div className="space-y-2.5">
                 {filteredDrafts.length > 0 && (
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 px-1 pt-1">
-                    Commandes
+                    {tr('Commandes')}
                   </p>
                 )}
                 {filteredOrders.map((order) => {
@@ -240,24 +241,24 @@ export function OrdersPage() {
                     <Link key={order.id} to={`/orders/${order.id}`}>
                       <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:border-primary/20 transition-colors">
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/8 shrink-0">
-                          <img src="/icon-box.jpg" alt="Commande" className="h-7 w-7 object-contain" />
+                          <img src="/icon-box.jpg" alt={tr('Commande')} className="h-7 w-7 object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">
-                            {order.quotes?.product_requests?.product_name || 'Produit'}
+                            {order.quotes?.product_requests?.product_name || tr('Produit')}
                           </p>
                           <p className="text-xs text-muted-foreground font-mono mt-0.5">{order.tracking_code}</p>
                           <div className="flex items-center gap-2 mt-1.5">
                             <StatusBadge status={order.status} />
                             {delivery && (
                               <span className="text-[10px] text-muted-foreground">
-                                {t('common.delivery')} {delivery.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                {t('common.delivery')} {delivery.toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                               </span>
                             )}
                           </div>
                         </div>
                         <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                          <p className="font-bold text-sm">{(order.quotes?.total ?? order.total_paid).toLocaleString()}</p>
+                          <p className="font-bold text-sm">{(order.quotes?.total ?? order.total_paid).toLocaleString(LOCALE_TAG)}</p>
                           <p className="text-[10px] text-muted-foreground">HTG</p>
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
@@ -277,49 +278,49 @@ export function OrdersPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <Clock className="h-4 w-4 text-warning shrink-0" />
-              Demande en cours d'examen
+              {tr('Demande en cours d\'examen')}
             </DialogTitle>
           </DialogHeader>
           {selectedDraft && (
             <div className="space-y-3 pb-2">
               <div className="rounded-xl bg-warning/8 border border-warning/20 p-3">
                 <p className="text-xs text-warning font-semibold">
-                  Votre demande a bien été reçue. Notre équipe l'examine et vous enverra un devis sous peu.
+                  {tr('Votre demande a bien été reçue. Notre équipe l\'examine et vous enverra un devis sous peu.')}
                 </p>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between py-1.5 border-b border-border/50">
-                  <span className="text-muted-foreground">Produit</span>
+                  <span className="text-muted-foreground">{tr('Produit')}</span>
                   <span className="font-semibold text-right max-w-[55%] text-xs">{selectedDraft.product_name}</span>
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-border/50">
-                  <span className="text-muted-foreground">Catégorie</span>
-                  <span className="font-semibold capitalize">{selectedDraft.category || 'Autre'}</span>
+                  <span className="text-muted-foreground">{tr('Catégorie')}</span>
+                  <span className="font-semibold capitalize">{selectedDraft.category || tr('Autre')}</span>
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-border/50">
-                  <span className="text-muted-foreground">Quantité</span>
+                  <span className="text-muted-foreground">{tr('Quantité')}</span>
                   <span className="font-semibold">{selectedDraft.quantity}</span>
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-border/50">
-                  <span className="text-muted-foreground">Urgence</span>
+                  <span className="text-muted-foreground">{tr('Urgence')}</span>
                   <span className="font-semibold">
-                    {selectedDraft.urgency === 'express' ? 'Express (1-2 sem.)' : selectedDraft.urgency === 'urgent' ? 'Urgent (2-3 sem.)' : 'Normal (4-6 sem.)'}
+                    {selectedDraft.urgency === 'express' ? tr('Express (1-2 sem.)') : selectedDraft.urgency === 'urgent' ? tr('Urgent (2-3 sem.)') : tr('Normal (4-6 sem.)')}
                   </span>
                 </div>
                 {selectedDraft.budget_estimate && (
                   <div className="flex justify-between py-1.5 border-b border-border/50">
-                    <span className="text-muted-foreground">Budget estimé</span>
-                    <span className="font-semibold">{selectedDraft.budget_estimate.toLocaleString()} HTG</span>
+                    <span className="text-muted-foreground">{tr('Budget estimé')}</span>
+                    <span className="font-semibold">{selectedDraft.budget_estimate.toLocaleString(LOCALE_TAG)} HTG</span>
                   </div>
                 )}
                 <div className="flex justify-between py-1.5">
-                  <span className="text-muted-foreground">Soumis le</span>
-                  <span className="font-semibold">{new Date(selectedDraft.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  <span className="text-muted-foreground">{tr('Soumis le')}</span>
+                  <span className="font-semibold">{new Date(selectedDraft.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                 </div>
               </div>
               {selectedDraft.notes && (
                 <div className="rounded-xl bg-muted/40 p-3">
-                  <p className="text-xs text-muted-foreground font-medium mb-1">Notes</p>
+                  <p className="text-xs text-muted-foreground font-medium mb-1">{tr('Notes')}</p>
                   <p className="text-xs">{selectedDraft.notes}</p>
                 </div>
               )}

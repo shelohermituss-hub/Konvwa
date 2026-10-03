@@ -5,29 +5,30 @@ import { Button } from '@/components/ui/button'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { cn } from '@/lib/utils'
 
+import { tr } from '@/lib/i18n'
 const SLIDES = [
   {
     image: 'https://images.unsplash.com/photo-1605629921852-f9b3d997c14a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
     icon: ShoppingBag,
-    tag: 'Commandez',
-    title: 'Importez depuis les meilleurs sites',
-    body: 'Alibaba, Shein, Temu — commandez vos produits directement depuis la Chine et recevez-les en Haïti.',
+    tag: tr('Commandez'),
+    title: tr('Importez depuis les meilleurs sites'),
+    body: tr('Alibaba, Shein, Temu — commandez vos produits directement depuis la Chine et recevez-les en Haïti.'),
     accent: '#F05A28',
   },
   {
     image: 'https://images.unsplash.com/photo-1556742521-9713bf272865?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
     icon: Wallet,
-    tag: 'Payez',
-    title: 'Payez facilement en gourdes',
-    body: 'MonCash, NatCash, virement bancaire — réglez vos commandes avec les méthodes de paiement locales haïtiennes.',
+    tag: tr('Payez'),
+    title: tr('Payez facilement en gourdes'),
+    body: tr('MonCash, NatCash, virement bancaire — réglez vos commandes avec les méthodes de paiement locales haïtiennes.'),
     accent: '#10B981',
   },
   {
     image: 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
     icon: Package,
-    tag: 'Recevez',
-    title: 'Livré jusqu\'à votre porte',
-    body: 'Suivez votre colis en temps réel et recevez vos articles directement chez vous, en Haïti.',
+    tag: tr('Recevez'),
+    title: tr('Livré jusqu\'à votre porte'),
+    body: tr('Suivez votre colis en temps réel et recevez vos articles directement chez vous, en Haïti.'),
     accent: '#6366F1',
   },
 ] as const
@@ -95,7 +96,7 @@ export function OnboardingPage() {
           onClick={finish}
           className="text-sm font-medium text-white/60 hover:text-white transition-colors"
         >
-          Passer
+          {tr('Passer')}
         </button>
       </div>
 
@@ -154,9 +155,9 @@ export function OnboardingPage() {
             style={{ backgroundColor: slide.accent, color: '#fff' }}
           >
             {step < SLIDES.length - 1 ? (
-              <>Suivant <ChevronRight size={16} className="ml-1" /></>
+              <>{tr('Suivant')}{' '}<ChevronRight size={16} className="ml-1" /></>
             ) : (
-              'Commencer'
+              tr('Commencer')
             )}
           </Button>
         </div>

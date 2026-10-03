@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface WalletTx {
   id: string
   type: string
@@ -27,10 +28,10 @@ interface WalletTx {
 }
 
 const TX_STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  pending:   { label: 'En attente', bg: 'bg-amber-50',      text: 'text-amber-700' },
-  completed: { label: 'Validé',     bg: 'bg-emerald-50',    text: 'text-emerald-700' },
-  failed:    { label: 'Échoué',     bg: 'bg-destructive/10', text: 'text-destructive' },
-  cancelled: { label: 'Refusé',     bg: 'bg-muted',          text: 'text-muted-foreground' },
+  pending:   { label: tr('En attente'), bg: 'bg-amber-50',      text: 'text-amber-700' },
+  completed: { label: tr('Validé'),     bg: 'bg-emerald-50',    text: 'text-emerald-700' },
+  failed:    { label: tr('Échoué'),     bg: 'bg-destructive/10', text: 'text-destructive' },
+  cancelled: { label: tr('Refusé'),     bg: 'bg-muted',          text: 'text-muted-foreground' },
 }
 
 const METHOD_ICON: Record<string, React.ReactNode> = {
@@ -40,14 +41,14 @@ const METHOD_ICON: Record<string, React.ReactNode> = {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  deposit: 'Dépôt', withdrawal: 'Retrait', payment: 'Paiement', refund: 'Remboursement', block: 'Bloqué', unblock: 'Débloqué',
+  deposit: tr('Dépôt'), withdrawal: tr('Retrait'), payment: tr('Paiement'), refund: tr('Remboursement'), block: tr('Bloqué'), unblock: tr('Débloqué'),
 }
 
 const STATUS_FILTERS = [
-  { value: 'pending',   label: 'En attente' },
-  { value: 'completed', label: 'Confirmés' },
-  { value: 'cancelled', label: 'Refusés' },
-  { value: 'all',       label: 'Tous' },
+  { value: 'pending',   label: tr('En attente') },
+  { value: 'completed', label: tr('Confirmés') },
+  { value: 'cancelled', label: tr('Refusés') },
+  { value: 'all',       label: tr('Tous') },
 ]
 
 export function AdminPaymentsPage() {
@@ -103,10 +104,10 @@ export function AdminPaymentsPage() {
     setSaving(false)
     const result = data as { success?: boolean; error?: string; status?: string } | null
     if (error || !result?.success) {
-      toast.error(result?.error ?? error?.message ?? 'Action impossible.')
+      toast.error(result?.error ?? error?.message ?? tr('Action impossible.'))
       return false
     }
-    toast.success(approve ? 'Paiement approuvé et portefeuille crédité.' : 'Transaction refusée.')
+    toast.success(approve ? tr('Paiement approuvé et portefeuille crédité.') : tr('Transaction refusée.'))
     setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: approve ? 'completed' : 'cancelled' } : t))
     return true
   }
@@ -132,17 +133,17 @@ export function AdminPaymentsPage() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Gestion des paiements</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Validez les recharges MonCash/NatCash et consultez les transactions</p>
+        <h1 className="text-2xl font-bold tracking-tight">{tr('Gestion des paiements')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{tr('Validez les recharges MonCash/NatCash et consultez les transactions')}</p>
       </div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'En attente',       value: transactions.filter(t => t.status === 'pending').length,    icon: Clock,       bg: 'bg-amber-50',   iconColor: 'text-amber-600',   valueColor: 'text-amber-700' },
-          { label: 'Montant en attente', value: `${pendingTotal.toLocaleString()} HTG`,                    icon: CreditCard,  bg: 'bg-amber-50',   iconColor: 'text-amber-600',   valueColor: 'text-amber-700' },
-          { label: 'Validés',          value: transactions.filter(t => t.status === 'completed').length,  icon: CheckCircle2, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
-          { label: 'Total validé',     value: `${transactions.filter(t => t.status === 'completed' && t.type === 'deposit').reduce((s, t) => s + t.amount, 0).toLocaleString()} HTG`, icon: TrendingUp, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
+          { label: tr('En attente'),       value: transactions.filter(t => t.status === 'pending').length,    icon: Clock,       bg: 'bg-amber-50',   iconColor: 'text-amber-600',   valueColor: 'text-amber-700' },
+          { label: tr('Montant en attente'), value: `${pendingTotal.toLocaleString(LOCALE_TAG)} HTG`,                    icon: CreditCard,  bg: 'bg-amber-50',   iconColor: 'text-amber-600',   valueColor: 'text-amber-700' },
+          { label: tr('Validés'),          value: transactions.filter(t => t.status === 'completed').length,  icon: CheckCircle2, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
+          { label: tr('Total validé'),     value: `${transactions.filter(t => t.status === 'completed' && t.type === 'deposit').reduce((s, t) => s + t.amount, 0).toLocaleString(LOCALE_TAG)} HTG`, icon: TrendingUp, bg: 'bg-emerald-50', iconColor: 'text-emerald-600', valueColor: 'text-emerald-700' },
         ].map(kpi => (
           <div key={kpi.label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
             <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl mb-3', kpi.bg)}>
@@ -160,7 +161,7 @@ export function AdminPaymentsPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Rechercher par client ou description..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 rounded-xl" />
+              <Input placeholder={tr('Rechercher par client ou description...')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9 rounded-xl" />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-44 rounded-xl">
@@ -180,19 +181,19 @@ export function AdminPaymentsPage() {
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center">
             <CreditCard className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="font-semibold text-muted-foreground">Aucune transaction</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Modifiez vos filtres de recherche</p>
+            <p className="font-semibold text-muted-foreground">{tr('Aucune transaction')}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Modifiez vos filtres de recherche')}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Client</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Type</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Méthode</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Montant</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Statut</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Date</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Client')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{tr('Type')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Méthode')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">{tr('Montant')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Statut')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">{tr('Date')}</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
@@ -217,14 +218,14 @@ export function AdminPaymentsPage() {
                       ) : '—'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <p className="font-semibold text-sm">{tx.amount.toLocaleString()}</p>
+                      <p className="font-semibold text-sm">{tx.amount.toLocaleString(LOCALE_TAG)}</p>
                       <p className="text-[10px] text-muted-foreground">HTG</p>
                     </TableCell>
                     <TableCell>
                       <span className={cn('text-xs font-semibold rounded-full px-2.5 py-1', cfg.bg, cfg.text)}>{cfg.label}</span>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                      {new Date(tx.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {new Date(tx.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                     </TableCell>
                     <TableCell>
                       {tx.status === 'pending' && tx.type === 'deposit' && (
@@ -236,10 +237,10 @@ export function AdminPaymentsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="rounded-xl w-44">
                             <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => openApproveDialog(tx)}>
-                              <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />Approuver
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />{tr('Approuver')}
                             </DropdownMenuItem>
                             <DropdownMenuItem className="rounded-lg cursor-pointer text-destructive focus:text-destructive" onClick={() => handleReject(tx)}>
-                              <XCircle className="mr-2 h-4 w-4" />Refuser
+                              <XCircle className="mr-2 h-4 w-4" />{tr('Refuser')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -257,20 +258,20 @@ export function AdminPaymentsPage() {
       <Dialog open={!!approveDialog} onOpenChange={o => { if (!o) { setApproveDialog(null); setProofSignedUrl(null) } }}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Approuver le paiement</DialogTitle>
+            <DialogTitle>{tr('Approuver le paiement')}</DialogTitle>
             <DialogDescription>
-              Confirmer la réception et créditer le wallet de <span className="font-semibold">{approveDialog?.customer_name}</span>
+              {tr('Confirmer la réception et créditer le wallet de')}{' '}<span className="font-semibold">{approveDialog?.customer_name}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 rounded-xl bg-emerald-50 border border-emerald-100 text-center">
-            <p className="text-3xl font-bold text-emerald-700">{approveDialog?.amount.toLocaleString()} HTG</p>
+            <p className="text-3xl font-bold text-emerald-700">{approveDialog?.amount.toLocaleString(LOCALE_TAG)} HTG</p>
             <p className="text-sm text-emerald-600/80 mt-1 capitalize">{approveDialog?.payment_method}</p>
           </div>
 
           {/* Transaction hash / reference */}
           {approveDialog?.reference && (
             <div className="rounded-xl bg-muted/40 border border-muted px-3 py-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Référence / Hash</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">{tr('Référence / Hash')}</p>
               <p className="text-xs font-mono break-all">{approveDialog.reference}</p>
             </div>
           )}
@@ -278,12 +279,12 @@ export function AdminPaymentsPage() {
           {/* Proof image */}
           {approveDialog?.proof_url && (
             <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Preuve de paiement</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{tr('Preuve de paiement')}</p>
               {proofSignedUrl ? (
                 <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
                   <img
                     src={proofSignedUrl}
-                    alt="Preuve de paiement"
+                    alt={tr('Preuve de paiement')}
                     className="w-full max-h-64 object-contain"
                   />
                   <a
@@ -292,26 +293,26 @@ export function AdminPaymentsPage() {
                     rel="noopener noreferrer"
                     className="absolute top-2 right-2 flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1 text-[10px] text-white hover:bg-black/80 transition-colors"
                   >
-                    <ExternalLink className="h-3 w-3" />Agrandir
+                    <ExternalLink className="h-3 w-3" />{tr('Agrandir')}
                   </a>
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 bg-gray-50 h-20 text-muted-foreground text-xs">
-                  <ImageOff className="h-4 w-4" />Chargement de la preuve…
+                  <ImageOff className="h-4 w-4" />{tr('Chargement de la preuve…')}
                 </div>
               )}
             </div>
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setApproveDialog(null)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setApproveDialog(null)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button
               onClick={() => approveDialog && handleApprove(approveDialog)}
               disabled={saving}
               className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               <CheckCircle2 className="mr-2 h-4 w-4" />
-              {saving ? 'Validation...' : 'Approuver et créditer'}
+              {saving ? tr('Validation...') : tr('Approuver et créditer')}
             </Button>
           </DialogFooter>
         </DialogContent>

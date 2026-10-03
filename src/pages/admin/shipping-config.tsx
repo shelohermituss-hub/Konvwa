@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Plus, Pencil, Trash2, Loader2, Truck, MapPin, Package, Globe, Ship, Plane, DollarSign, Warehouse, Tag } from 'lucide-react'
 
+import { tr } from '@/lib/i18n'
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface ShippingOrigin {
@@ -60,7 +61,7 @@ function ActiveBadge({ active, onToggle }: { active: boolean; onToggle: () => vo
         active ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
       )}
     >
-      {active ? 'Actif' : 'Inactif'}
+      {active ? tr('Actif') : tr('Inactif')}
     </button>
   )
 }
@@ -70,7 +71,7 @@ function SectionCard({ title, count, children }: { title: string; count: number;
     <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
       <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
         <p className="font-semibold text-sm text-foreground">{title}</p>
-        <span className="text-xs text-muted-foreground">{count} entrée{count !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-muted-foreground">{count}{' '}{tr('entrée')}{count !== 1 ? 's' : ''}</span>
       </div>
       {children}
     </div>
@@ -82,13 +83,13 @@ function SectionCard({ title, count, children }: { title: string; count: number;
 type Tab = 'origins' | 'regions' | 'cities' | 'types' | 'rates' | 'warehouses' | 'categories'
 
 const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
-  { key: 'warehouses',  label: 'Entrepôts',   icon: Warehouse  },
-  { key: 'categories',  label: 'Catégories',  icon: Tag        },
-  { key: 'origins',     label: 'Origines',    icon: Globe      },
-  { key: 'regions',     label: 'Régions',     icon: MapPin     },
-  { key: 'cities',      label: 'Villes',      icon: Truck      },
-  { key: 'types',       label: 'Types',       icon: Package    },
-  { key: 'rates',       label: 'Tarifs',      icon: DollarSign },
+  { key: 'warehouses',  label: tr('Entrepôts'),   icon: Warehouse  },
+  { key: 'categories',  label: tr('Catégories'),  icon: Tag        },
+  { key: 'origins',     label: tr('Origines'),    icon: Globe      },
+  { key: 'regions',     label: tr('Régions'),     icon: MapPin     },
+  { key: 'cities',      label: tr('Villes'),      icon: Truck      },
+  { key: 'types',       label: tr('Types'),       icon: Package    },
+  { key: 'rates',       label: tr('Tarifs'),      icon: DollarSign },
 ]
 
 // ── Warehouses section ────────────────────────────────────────────────────────
@@ -139,7 +140,7 @@ function WarehousesSection() {
   function openEdit(w: WarehouseEntry) { setEditing(w); setForm(toForm(w)); setOpen(true) }
 
   async function handleSave() {
-    if (!form.name.trim() || !form.code.trim()) { toast.error('Code et nom requis.'); return }
+    if (!form.name.trim() || !form.code.trim()) { toast.error(tr('Code et nom requis.')); return }
     setSaving(true)
     const payload = {
       code: form.code.trim().toUpperCase(),
@@ -159,39 +160,39 @@ function WarehousesSection() {
     }
     if (editing) {
       const { error } = await supabase.from('warehouses').update(payload).eq('id', editing.id)
-      if (error) { toast.error('Erreur : ' + error.message); setSaving(false); return }
-      toast.success('Entrepôt mis à jour.')
+      if (error) { toast.error(tr('Erreur : ') + error.message); setSaving(false); return }
+      toast.success(tr('Entrepôt mis à jour.'))
     } else {
       const maxOrder = items.reduce((m, i) => Math.max(m, i.sort_order), 0)
       const { error } = await supabase.from('warehouses').insert({ ...payload, sort_order: maxOrder + 1 })
-      if (error) { toast.error('Erreur : ' + error.message); setSaving(false); return }
-      toast.success('Entrepôt ajouté.')
+      if (error) { toast.error(tr('Erreur : ') + error.message); setSaving(false); return }
+      toast.success(tr('Entrepôt ajouté.'))
     }
     setSaving(false); setOpen(false); load()
   }
 
   async function handleToggle(w: WarehouseEntry) {
     const { error } = await supabase.from('warehouses').update({ active: !w.active }).eq('id', w.id)
-    if (error) { toast.error('Erreur.'); return }
+    if (error) { toast.error(tr('Erreur.')); return }
     setItems(prev => prev.map(i => i.id === w.id ? { ...i, active: !i.active } : i))
   }
 
-  const CAT_LABELS: Record<string, string> = { generic: 'Générique', branded: 'Marque', usa: 'USA', all: 'Tous' }
+  const CAT_LABELS: Record<string, string> = { generic: tr('Générique'), branded: tr('Marque'), usa: 'USA', all: tr('Tous') }
 
   return (
     <>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted-foreground">Adresses d'entrepôt affichées aux clients</p>
+        <p className="text-sm text-muted-foreground">{tr('Adresses d\'entrepôt affichées aux clients')}</p>
         <Button size="sm" onClick={openAdd} className="rounded-xl gap-1.5" style={BTN_ORANGE}>
-          <Plus className="h-3.5 w-3.5" /> Ajouter
+          <Plus className="h-3.5 w-3.5" />{' '}{tr('Ajouter')}
         </Button>
       </div>
 
-      <SectionCard title="Entrepôts" count={items.length}>
+      <SectionCard title={tr('Entrepôts')} count={items.length}>
         {loading ? (
           <div className="p-4 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
         ) : items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">Aucun entrepôt.</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">{tr('Aucun entrepôt.')}</p>
         ) : (
           <div className="divide-y divide-gray-100">
             {items.map(w => (
@@ -220,111 +221,111 @@ function WarehousesSection() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Modifier' : 'Ajouter'} un entrepôt</DialogTitle>
+            <DialogTitle>{editing ? tr('Modifier') : tr('Ajouter')}{' '}{tr('un entrepôt')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-1">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Code <span className="text-destructive">*</span></Label>
+                <Label className="text-sm font-semibold">{tr('Code')}{' '}<span className="text-destructive">*</span></Label>
                 <Input placeholder="MCO-WH1" value={form.code} className="rounded-xl font-mono"
                   onChange={e => setForm(p => ({ ...p, code: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Catégorie</Label>
+                <Label className="text-sm font-semibold">{tr('Catégorie')}</Label>
                 <Select value={form.for_category} onValueChange={v => setForm(p => ({ ...p, for_category: v as WhForm['for_category'] }))}>
                   <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="generic">Générique</SelectItem>
-                    <SelectItem value="branded">Marque</SelectItem>
+                    <SelectItem value="generic">{tr('Générique')}</SelectItem>
+                    <SelectItem value="branded">{tr('Marque')}</SelectItem>
                     <SelectItem value="usa">USA</SelectItem>
-                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="all">{tr('Tous')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Nom <span className="text-destructive">*</span></Label>
-              <Input placeholder="Entrepôt USA — Orlando" value={form.name} className="rounded-xl"
+              <Label className="text-sm font-semibold">{tr('Nom')}{' '}<span className="text-destructive">*</span></Label>
+              <Input placeholder={tr('Entrepôt USA — Orlando')} value={form.name} className="rounded-xl"
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Pays</Label>
+                <Label className="text-sm font-semibold">{tr('Pays')}</Label>
                 <Input placeholder="US" value={form.country_code} maxLength={2} className="rounded-xl font-mono"
                   onChange={e => setForm(p => ({ ...p, country_code: e.target.value.toUpperCase() }))} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Drapeau</Label>
+                <Label className="text-sm font-semibold">{tr('Drapeau')}</Label>
                 <Input placeholder="🇺🇸" value={form.flag_emoji} className="rounded-xl text-xl"
                   onChange={e => setForm(p => ({ ...p, flag_emoji: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Code postal</Label>
+                <Label className="text-sm font-semibold">{tr('Code postal')}</Label>
                 <Input placeholder="32810" value={form.postal_code} className="rounded-xl"
                   onChange={e => setForm(p => ({ ...p, postal_code: e.target.value }))} />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Adresse ligne 1</Label>
+              <Label className="text-sm font-semibold">{tr('Adresse ligne 1')}</Label>
               <Input placeholder="6325 N Orange Blossom Trl Ste 132" value={form.address_line1} className="rounded-xl"
                 onChange={e => setForm(p => ({ ...p, address_line1: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Adresse ligne 2</Label>
-              <Input placeholder="(détails…)" value={form.address_line2} className="rounded-xl"
+              <Label className="text-sm font-semibold">{tr('Adresse ligne 2')}</Label>
+              <Input placeholder={tr('(détails…)')} value={form.address_line2} className="rounded-xl"
                 onChange={e => setForm(p => ({ ...p, address_line2: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Adresse ligne 3</Label>
+              <Label className="text-sm font-semibold">{tr('Adresse ligne 3')}</Label>
               <Input placeholder="(suite…)" value={form.address_line3} className="rounded-xl"
                 onChange={e => setForm(p => ({ ...p, address_line3: e.target.value }))} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Ville</Label>
+                <Label className="text-sm font-semibold">{tr('Ville')}</Label>
                 <Input placeholder="Orlando" value={form.city} className="rounded-xl"
                   onChange={e => setForm(p => ({ ...p, city: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">État / Province</Label>
+                <Label className="text-sm font-semibold">{tr('État / Province')}</Label>
                 <Input placeholder="Florida" value={form.state} className="rounded-xl"
                   onChange={e => setForm(p => ({ ...p, state: e.target.value }))} />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Contact</Label>
-              <Input placeholder="Nom · Tél · WeChat" value={form.contact_info} className="rounded-xl"
+              <Label className="text-sm font-semibold">{tr('Contact')}</Label>
+              <Input placeholder={tr('Nom · Tél · WeChat')} value={form.contact_info} className="rounded-xl"
                 onChange={e => setForm(p => ({ ...p, contact_info: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Instructions</Label>
+              <Label className="text-sm font-semibold">{tr('Instructions')}</Label>
               <textarea
                 rows={4}
                 value={form.instructions}
                 onChange={e => setForm(p => ({ ...p, instructions: e.target.value }))}
-                placeholder="Instructions pour le client…"
+                placeholder={tr('Instructions pour le client…')}
                 className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm resize-none"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Texte complet à copier (optionnel)</Label>
+              <Label className="text-sm font-semibold">{tr('Texte complet à copier (optionnel)')}</Label>
               <textarea
                 rows={6}
                 value={form.copy_text}
                 onChange={e => setForm(p => ({ ...p, copy_text: e.target.value }))}
-                placeholder={'Nom\nAdresse\nLocker ID\nVille, État, Code postal\nPays'}
+                placeholder={tr('Nom\nAdresse\nLocker ID\nVille, État, Code postal\nPays')}
                 className="w-full rounded-xl border border-input bg-background px-3 py-2 font-mono text-xs resize-none"
               />
               <p className="text-[11px] text-muted-foreground">
-                Si rempli, le client voit ce texte tel quel et le bouton « Copier l'adresse » le copie en entier.
+                {tr('Si rempli, le client voit ce texte tel quel et le bouton « Copier l\'adresse » le copie en entier.')}
               </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Enregistrer
+              {tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -359,33 +360,33 @@ function CategoriesSection() {
   }
 
   async function handleSave() {
-    if (!form.name.trim()) { toast.error('Nom requis.'); return }
+    if (!form.name.trim()) { toast.error(tr('Nom requis.')); return }
     const mult = parseFloat(form.rate_multiplier)
-    if (isNaN(mult) || mult <= 0) { toast.error('Multiplicateur invalide.'); return }
+    if (isNaN(mult) || mult <= 0) { toast.error(tr('Multiplicateur invalide.')); return }
     setSaving(true)
     if (editing) {
       const { error } = await supabase.from('product_rate_categories')
         .update({ name: form.name.trim(), description: form.description.trim() || null, rate_multiplier: mult })
         .eq('id', editing.id)
-      if (error) { toast.error('Erreur : ' + error.message); setSaving(false); return }
-      toast.success('Catégorie mise à jour.')
+      if (error) { toast.error(tr('Erreur : ') + error.message); setSaving(false); return }
+      toast.success(tr('Catégorie mise à jour.'))
     }
     setSaving(false); setOpen(false); load()
   }
 
   async function handleToggle(c: ProductRateCategory) {
     const { error } = await supabase.from('product_rate_categories').update({ active: !c.active }).eq('id', c.id)
-    if (error) { toast.error('Erreur.'); return }
+    if (error) { toast.error(tr('Erreur.')); return }
     setItems(prev => prev.map(i => i.id === c.id ? { ...i, active: !i.active } : i))
   }
 
   return (
     <>
       <div className="mb-3">
-        <p className="text-sm text-muted-foreground">Catégories de produits et leurs multiplicateurs de tarif</p>
+        <p className="text-sm text-muted-foreground">{tr('Catégories de produits et leurs multiplicateurs de tarif')}</p>
       </div>
 
-      <SectionCard title="Catégories de tarif" count={items.length}>
+      <SectionCard title={tr('Catégories de tarif')} count={items.length}>
         {loading ? (
           <div className="p-4 space-y-3">{[1,2].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
         ) : (
@@ -413,38 +414,38 @@ function CategoriesSection() {
       </SectionCard>
 
       <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4 text-sm text-amber-800 mt-3">
-        <p className="font-semibold mb-1">Note</p>
-        <p>Les slugs <code className="font-mono text-xs">generic</code> et <code className="font-mono text-xs">branded</code> sont fixes et utilisés par le système. Seuls le nom, la description et le multiplicateur sont modifiables.</p>
+        <p className="font-semibold mb-1">{tr('Note')}</p>
+        <p>{tr('Les slugs')}{' '}<code className="font-mono text-xs">generic</code>{' '}{tr('et')}{' '}<code className="font-mono text-xs">branded</code>{' '}{tr('sont fixes et utilisés par le système. Seuls le nom, la description et le multiplicateur sont modifiables.')}</p>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Modifier la catégorie</DialogTitle>
+            <DialogTitle>{tr('Modifier la catégorie')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Nom <span className="text-destructive">*</span></Label>
-              <Input placeholder="Générique (sans marque)" value={form.name} className="rounded-xl"
+              <Label className="text-sm font-semibold">{tr('Nom')}{' '}<span className="text-destructive">*</span></Label>
+              <Input placeholder={tr('Générique (sans marque)')} value={form.name} className="rounded-xl"
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Multiplicateur de tarif <span className="text-destructive">*</span></Label>
+              <Label className="text-sm font-semibold">{tr('Multiplicateur de tarif')}{' '}<span className="text-destructive">*</span></Label>
               <Input type="number" step="0.01" min="0.01" placeholder="1.00" value={form.rate_multiplier} className="rounded-xl"
                 onChange={e => setForm(p => ({ ...p, rate_multiplier: e.target.value }))} />
-              <p className="text-[11px] text-muted-foreground">1.00 = tarif standard · 1.30 = +30 %</p>
+              <p className="text-[11px] text-muted-foreground">{tr('1.00 = tarif standard · 1.30 = +30 %')}</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Description</Label>
-              <Input placeholder="Produits de marque…" value={form.description} className="rounded-xl"
+              <Label className="text-sm font-semibold">{tr('Description')}</Label>
+              <Input placeholder={tr('Produits de marque…')} value={form.description} className="rounded-xl"
                 onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Enregistrer
+              {tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -485,22 +486,22 @@ function OriginsSection() {
   }
 
   async function handleSave() {
-    if (!form.name.trim() || !form.city.trim()) { toast.error('Nom et ville requis.'); return }
+    if (!form.name.trim() || !form.city.trim()) { toast.error(tr('Nom et ville requis.')); return }
     setSaving(true)
     if (editing) {
       const { error } = await supabase.from('shipping_origins').update({
         name: form.name.trim(), country_code: form.country_code.toUpperCase(), city: form.city.trim(), flag_emoji: form.flag_emoji,
       }).eq('id', editing.id)
-      if (error) { toast.error('Erreur lors de la mise à jour.'); setSaving(false); return }
-      toast.success('Origine mise à jour.')
+      if (error) { toast.error(tr('Erreur lors de la mise à jour.')); setSaving(false); return }
+      toast.success(tr('Origine mise à jour.'))
     } else {
       const maxOrder = items.reduce((m, i) => Math.max(m, i.sort_order), 0)
       const { error } = await supabase.from('shipping_origins').insert({
         name: form.name.trim(), country_code: form.country_code.toUpperCase(), city: form.city.trim(),
         flag_emoji: form.flag_emoji, sort_order: maxOrder + 1,
       })
-      if (error) { toast.error('Erreur lors de la création.'); setSaving(false); return }
-      toast.success('Origine ajoutée.')
+      if (error) { toast.error(tr('Erreur lors de la création.')); setSaving(false); return }
+      toast.success(tr('Origine ajoutée.'))
     }
     setSaving(false)
     setOpen(false)
@@ -509,32 +510,32 @@ function OriginsSection() {
 
   async function handleToggle(item: ShippingOrigin) {
     const { error } = await supabase.from('shipping_origins').update({ active: !item.active }).eq('id', item.id)
-    if (error) { toast.error('Erreur.'); return }
+    if (error) { toast.error(tr('Erreur.')); return }
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, active: !i.active } : i))
   }
 
   async function handleDelete(item: ShippingOrigin) {
-    if (!confirm(`Supprimer "${item.name}" ?`)) return
+    if (!confirm(tr('Supprimer "{0}" ?', item.name))) return
     const { error } = await supabase.from('shipping_origins').delete().eq('id', item.id)
-    if (error) { toast.error('Impossible de supprimer (référencé par des commandes).'); return }
-    toast.success('Supprimé.')
+    if (error) { toast.error(tr('Impossible de supprimer (référencé par des commandes).')); return }
+    toast.success(tr('Supprimé.'))
     load()
   }
 
   return (
     <>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted-foreground">Entrepôts de départ disponibles pour les clients</p>
+        <p className="text-sm text-muted-foreground">{tr('Entrepôts de départ disponibles pour les clients')}</p>
         <Button size="sm" onClick={openAdd} className="rounded-xl gap-1.5" style={BTN_ORANGE}>
-          <Plus className="h-3.5 w-3.5" /> Ajouter
+          <Plus className="h-3.5 w-3.5" />{' '}{tr('Ajouter')}
         </Button>
       </div>
 
-      <SectionCard title="Origines d'expédition" count={items.length}>
+      <SectionCard title={tr('Origines d\'expédition')} count={items.length}>
         {loading ? (
           <div className="p-4 space-y-3">{[1,2].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
         ) : items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">Aucune origine.</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">{tr('Aucune origine.')}</p>
         ) : (
           <div className="divide-y divide-gray-100">
             {items.map(item => (
@@ -560,37 +561,37 @@ function OriginsSection() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Modifier' : 'Ajouter'} une origine</DialogTitle>
+            <DialogTitle>{editing ? tr('Modifier') : tr('Ajouter')}{' '}{tr('une origine')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Nom complet <span className="text-destructive">*</span></Label>
+              <Label className="text-sm font-semibold">{tr('Nom complet')}{' '}<span className="text-destructive">*</span></Label>
               <Input placeholder="Shenzhen, CN Warehouse" value={form.name}
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="rounded-xl" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Ville <span className="text-destructive">*</span></Label>
+                <Label className="text-sm font-semibold">{tr('Ville')}{' '}<span className="text-destructive">*</span></Label>
                 <Input placeholder="Shenzhen" value={form.city}
                   onChange={e => setForm(p => ({ ...p, city: e.target.value }))} className="rounded-xl" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Code pays</Label>
+                <Label className="text-sm font-semibold">{tr('Code pays')}</Label>
                 <Input placeholder="CN" value={form.country_code} maxLength={2}
                   onChange={e => setForm(p => ({ ...p, country_code: e.target.value.toUpperCase() }))} className="rounded-xl font-mono" />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Emoji drapeau</Label>
+              <Label className="text-sm font-semibold">{tr('Emoji drapeau')}</Label>
               <Input placeholder="🇨🇳" value={form.flag_emoji}
                 onChange={e => setForm(p => ({ ...p, flag_emoji: e.target.value }))} className="rounded-xl text-xl" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Enregistrer
+              {tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -622,48 +623,48 @@ function RegionsSection() {
   function openEdit(item: HaitiRegion) { setEditing(item); setForm({ name: item.name }); setOpen(true) }
 
   async function handleSave() {
-    if (!form.name.trim()) { toast.error('Nom requis.'); return }
+    if (!form.name.trim()) { toast.error(tr('Nom requis.')); return }
     setSaving(true)
     if (editing) {
       const { error } = await supabase.from('haiti_regions').update({ name: form.name.trim() }).eq('id', editing.id)
-      if (error) { toast.error('Erreur.'); setSaving(false); return }
-      toast.success('Région mise à jour.')
+      if (error) { toast.error(tr('Erreur.')); setSaving(false); return }
+      toast.success(tr('Région mise à jour.'))
     } else {
       const maxOrder = items.reduce((m, i) => Math.max(m, i.sort_order), 0)
       const { error } = await supabase.from('haiti_regions').insert({ name: form.name.trim(), sort_order: maxOrder + 1 })
-      if (error) { toast.error('Erreur.'); setSaving(false); return }
-      toast.success('Région ajoutée.')
+      if (error) { toast.error(tr('Erreur.')); setSaving(false); return }
+      toast.success(tr('Région ajoutée.'))
     }
     setSaving(false); setOpen(false); load()
   }
 
   async function handleToggle(item: HaitiRegion) {
     const { error } = await supabase.from('haiti_regions').update({ active: !item.active }).eq('id', item.id)
-    if (error) { toast.error('Erreur.'); return }
+    if (error) { toast.error(tr('Erreur.')); return }
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, active: !i.active } : i))
   }
 
   async function handleDelete(item: HaitiRegion) {
-    if (!confirm(`Supprimer la région "${item.name}" et toutes ses villes ?`)) return
+    if (!confirm(tr('Supprimer la région "{0}" et toutes ses villes ?', item.name))) return
     const { error } = await supabase.from('haiti_regions').delete().eq('id', item.id)
-    if (error) { toast.error('Impossible de supprimer (commandes référencées).'); return }
-    toast.success('Région supprimée.'); load()
+    if (error) { toast.error(tr('Impossible de supprimer (commandes référencées).')); return }
+    toast.success(tr('Région supprimée.')); load()
   }
 
   return (
     <>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted-foreground">Régions disponibles pour la livraison en Haïti</p>
+        <p className="text-sm text-muted-foreground">{tr('Régions disponibles pour la livraison en Haïti')}</p>
         <Button size="sm" onClick={openAdd} className="rounded-xl gap-1.5" style={BTN_ORANGE}>
-          <Plus className="h-3.5 w-3.5" /> Ajouter
+          <Plus className="h-3.5 w-3.5" />{' '}{tr('Ajouter')}
         </Button>
       </div>
 
-      <SectionCard title="Régions Haïti" count={items.length}>
+      <SectionCard title={tr('Régions Haïti')} count={items.length}>
         {loading ? (
           <div className="p-4 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>
         ) : items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">Aucune région.</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">{tr('Aucune région.')}</p>
         ) : (
           <div className="divide-y divide-gray-100">
             {items.map(item => (
@@ -688,18 +689,18 @@ function RegionsSection() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Modifier' : 'Ajouter'} une région</DialogTitle>
+            <DialogTitle>{editing ? tr('Modifier') : tr('Ajouter')}{' '}{tr('une région')}</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <Label className="text-sm font-semibold">Nom de la région <span className="text-destructive">*</span></Label>
-            <Input placeholder="Ouest" value={form.name}
+            <Label className="text-sm font-semibold">{tr('Nom de la région')}{' '}<span className="text-destructive">*</span></Label>
+            <Input placeholder={tr('Ouest')} value={form.name}
               onChange={e => setForm({ name: e.target.value })} className="rounded-xl mt-1.5" />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Enregistrer
+              {tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -751,20 +752,20 @@ function CitiesSection() {
   }
 
   async function handleSave() {
-    if (!form.name.trim()) { toast.error('Nom requis.'); return }
-    if (!form.region_id)   { toast.error('Région requise.'); return }
+    if (!form.name.trim()) { toast.error(tr('Nom requis.')); return }
+    if (!form.region_id)   { toast.error(tr('Région requise.')); return }
     setSaving(true)
     if (editing) {
       const { error } = await supabase.from('haiti_cities')
         .update({ name: form.name.trim(), region_id: form.region_id }).eq('id', editing.id)
-      if (error) { toast.error('Erreur.'); setSaving(false); return }
-      toast.success('Ville mise à jour.')
+      if (error) { toast.error(tr('Erreur.')); setSaving(false); return }
+      toast.success(tr('Ville mise à jour.'))
     } else {
       const maxOrder = items.reduce((m, i) => Math.max(m, i.sort_order), 0)
       const { error } = await supabase.from('haiti_cities')
         .insert({ name: form.name.trim(), region_id: form.region_id, sort_order: maxOrder + 1 })
-      if (error) { toast.error('Erreur.'); setSaving(false); return }
-      toast.success('Ville ajoutée.')
+      if (error) { toast.error(tr('Erreur.')); setSaving(false); return }
+      toast.success(tr('Ville ajoutée.'))
     }
     setSaving(false); setOpen(false)
     if (form.region_id === selectedRegion) loadCities(selectedRegion)
@@ -772,23 +773,23 @@ function CitiesSection() {
 
   async function handleToggle(item: HaitiCity) {
     const { error } = await supabase.from('haiti_cities').update({ active: !item.active }).eq('id', item.id)
-    if (error) { toast.error('Erreur.'); return }
+    if (error) { toast.error(tr('Erreur.')); return }
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, active: !i.active } : i))
   }
 
   async function handleDelete(item: HaitiCity) {
-    if (!confirm(`Supprimer "${item.name}" ?`)) return
+    if (!confirm(tr('Supprimer "{0}" ?', item.name))) return
     const { error } = await supabase.from('haiti_cities').delete().eq('id', item.id)
-    if (error) { toast.error('Impossible de supprimer.'); return }
-    toast.success('Supprimée.'); loadCities(selectedRegion)
+    if (error) { toast.error(tr('Impossible de supprimer.')); return }
+    toast.success(tr('Supprimée.')); loadCities(selectedRegion)
   }
 
   return (
     <>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted-foreground">Villes par région disponibles à la livraison</p>
+        <p className="text-sm text-muted-foreground">{tr('Villes par région disponibles à la livraison')}</p>
         <Button size="sm" onClick={openAdd} disabled={!selectedRegion} className="rounded-xl gap-1.5" style={BTN_ORANGE}>
-          <Plus className="h-3.5 w-3.5" /> Ajouter
+          <Plus className="h-3.5 w-3.5" />{' '}{tr('Ajouter')}
         </Button>
       </div>
 
@@ -796,7 +797,7 @@ function CitiesSection() {
       <div className="mb-4">
         <Select value={selectedRegion} onValueChange={handleRegionChange}>
           <SelectTrigger className="h-11 rounded-xl bg-white border border-gray-200">
-            <SelectValue placeholder="Sélectionner une région" />
+            <SelectValue placeholder={tr('Sélectionner une région')} />
           </SelectTrigger>
           <SelectContent>
             {regions.map(r => (
@@ -806,13 +807,13 @@ function CitiesSection() {
         </Select>
       </div>
 
-      <SectionCard title={`Villes${selectedRegion ? ' — ' + (regions.find(r => r.id === selectedRegion)?.name || '') : ''}`} count={items.length}>
+      <SectionCard title={tr('Villes{0}', selectedRegion ? ' — ' + (regions.find(r => r.id === selectedRegion)?.name || '') : '')} count={items.length}>
         {!selectedRegion ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">Sélectionnez une région pour voir ses villes.</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">{tr('Sélectionnez une région pour voir ses villes.')}</p>
         ) : loading ? (
           <div className="p-4 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>
         ) : items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">Aucune ville pour cette région.</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">{tr('Aucune ville pour cette région.')}</p>
         ) : (
           <div className="divide-y divide-gray-100">
             {items.map(item => (
@@ -834,29 +835,29 @@ function CitiesSection() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Modifier' : 'Ajouter'} une ville</DialogTitle>
+            <DialogTitle>{editing ? tr('Modifier') : tr('Ajouter')}{' '}{tr('une ville')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Région <span className="text-destructive">*</span></Label>
+              <Label className="text-sm font-semibold">{tr('Région')}{' '}<span className="text-destructive">*</span></Label>
               <Select value={form.region_id} onValueChange={v => setForm(p => ({ ...p, region_id: v }))}>
-                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Choisir une région" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder={tr('Choisir une région')} /></SelectTrigger>
                 <SelectContent>
                   {regions.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Nom de la ville <span className="text-destructive">*</span></Label>
+              <Label className="text-sm font-semibold">{tr('Nom de la ville')}{' '}<span className="text-destructive">*</span></Label>
               <Input placeholder="Port-au-Prince" value={form.name}
                 onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="rounded-xl" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Enregistrer
+              {tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -888,48 +889,48 @@ function ProductTypesSection() {
   function openEdit(item: ProductType) { setEditing(item); setForm({ name: item.name }); setOpen(true) }
 
   async function handleSave() {
-    if (!form.name.trim()) { toast.error('Nom requis.'); return }
+    if (!form.name.trim()) { toast.error(tr('Nom requis.')); return }
     setSaving(true)
     if (editing) {
       const { error } = await supabase.from('product_types').update({ name: form.name.trim() }).eq('id', editing.id)
-      if (error) { toast.error('Erreur.'); setSaving(false); return }
-      toast.success('Type mis à jour.')
+      if (error) { toast.error(tr('Erreur.')); setSaving(false); return }
+      toast.success(tr('Type mis à jour.'))
     } else {
       const maxOrder = items.reduce((m, i) => Math.max(m, i.sort_order), 0)
       const { error } = await supabase.from('product_types').insert({ name: form.name.trim(), sort_order: maxOrder + 1 })
-      if (error) { toast.error('Erreur.'); setSaving(false); return }
-      toast.success('Type ajouté.')
+      if (error) { toast.error(tr('Erreur.')); setSaving(false); return }
+      toast.success(tr('Type ajouté.'))
     }
     setSaving(false); setOpen(false); load()
   }
 
   async function handleToggle(item: ProductType) {
     const { error } = await supabase.from('product_types').update({ active: !item.active }).eq('id', item.id)
-    if (error) { toast.error('Erreur.'); return }
+    if (error) { toast.error(tr('Erreur.')); return }
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, active: !i.active } : i))
   }
 
   async function handleDelete(item: ProductType) {
-    if (!confirm(`Supprimer "${item.name}" ?`)) return
+    if (!confirm(tr('Supprimer "{0}" ?', item.name))) return
     const { error } = await supabase.from('product_types').delete().eq('id', item.id)
-    if (error) { toast.error('Impossible de supprimer.'); return }
-    toast.success('Supprimé.'); load()
+    if (error) { toast.error(tr('Impossible de supprimer.')); return }
+    toast.success(tr('Supprimé.')); load()
   }
 
   return (
     <>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted-foreground">Types de produits disponibles dans le formulaire client</p>
+        <p className="text-sm text-muted-foreground">{tr('Types de produits disponibles dans le formulaire client')}</p>
         <Button size="sm" onClick={openAdd} className="rounded-xl gap-1.5" style={BTN_ORANGE}>
-          <Plus className="h-3.5 w-3.5" /> Ajouter
+          <Plus className="h-3.5 w-3.5" />{' '}{tr('Ajouter')}
         </Button>
       </div>
 
-      <SectionCard title="Types de produit" count={items.length}>
+      <SectionCard title={tr('Types de produit')} count={items.length}>
         {loading ? (
           <div className="p-4 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>
         ) : items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">Aucun type.</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">{tr('Aucun type.')}</p>
         ) : (
           <div className="divide-y divide-gray-100">
             {items.map(item => (
@@ -954,18 +955,18 @@ function ProductTypesSection() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Modifier' : 'Ajouter'} un type</DialogTitle>
+            <DialogTitle>{editing ? tr('Modifier') : tr('Ajouter')}{' '}{tr('un type')}</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <Label className="text-sm font-semibold">Nom du type <span className="text-destructive">*</span></Label>
-            <Input placeholder="Électronique" value={form.name}
+            <Label className="text-sm font-semibold">{tr('Nom du type')}{' '}<span className="text-destructive">*</span></Label>
+            <Input placeholder={tr('Électronique')} value={form.name}
               onChange={e => setForm({ name: e.target.value })} className="rounded-xl mt-1.5" />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Enregistrer
+              {tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1054,33 +1055,33 @@ function ShippingRatesSection() {
   }
 
   async function handleSave() {
-    if (!form.name.trim()) { toast.error('Nom requis.'); return }
-    if (form.mode === 'ocean' && !form.per_cbm_usd) { toast.error('Tarif CBM requis pour l\'océan.'); return }
-    if (form.mode === 'air'   && !form.per_kg_usd)  { toast.error('Tarif kg requis pour l\'aérien.'); return }
+    if (!form.name.trim()) { toast.error(tr('Nom requis.')); return }
+    if (form.mode === 'ocean' && !form.per_cbm_usd) { toast.error(tr('Tarif CBM requis pour l\'océan.')); return }
+    if (form.mode === 'air'   && !form.per_kg_usd)  { toast.error(tr('Tarif kg requis pour l\'aérien.')); return }
     setSaving(true)
     if (editing) {
       const { error } = await supabase.from('shipping_rates').update(buildPayload()).eq('id', editing.id)
-      if (error) { toast.error('Erreur mise à jour.'); setSaving(false); return }
-      toast.success('Tarif mis à jour.')
+      if (error) { toast.error(tr('Erreur mise à jour.')); setSaving(false); return }
+      toast.success(tr('Tarif mis à jour.'))
     } else {
       const { error } = await supabase.from('shipping_rates').insert(buildPayload())
-      if (error) { toast.error('Erreur création.'); setSaving(false); return }
-      toast.success('Tarif ajouté.')
+      if (error) { toast.error(tr('Erreur création.')); setSaving(false); return }
+      toast.success(tr('Tarif ajouté.'))
     }
     setSaving(false); setOpen(false); load()
   }
 
   async function handleToggle(item: ShippingRate) {
     const { error } = await supabase.from('shipping_rates').update({ active: !item.active }).eq('id', item.id)
-    if (error) { toast.error('Erreur.'); return }
+    if (error) { toast.error(tr('Erreur.')); return }
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, active: !i.active } : i))
   }
 
   async function handleDelete(item: ShippingRate) {
-    if (!confirm(`Supprimer le tarif "${item.name}" ?`)) return
+    if (!confirm(tr('Supprimer le tarif "{0}" ?', item.name))) return
     const { error } = await supabase.from('shipping_rates').delete().eq('id', item.id)
-    if (error) { toast.error('Impossible de supprimer.'); return }
-    toast.success('Tarif supprimé.'); load()
+    if (error) { toast.error(tr('Impossible de supprimer.')); return }
+    toast.success(tr('Tarif supprimé.')); load()
   }
 
   const ocean = items.filter(r => r.mode === 'ocean')
@@ -1094,7 +1095,7 @@ function ShippingRatesSection() {
           {rates.map(item => {
             const org = item.shipping_origins
             const transit = item.transit_days_min != null
-              ? `${item.transit_days_min}${item.transit_days_max != null ? '–' + item.transit_days_max : ''} j`
+              ? tr('{0}{1} j', item.transit_days_min, item.transit_days_max != null ? '–' + item.transit_days_max : '')
               : null
             const rate = item.mode === 'ocean'
               ? (item.per_cbm_usd != null ? `$${item.per_cbm_usd}/CBM` : '—')
@@ -1134,9 +1135,9 @@ function ShippingRatesSection() {
   return (
     <>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted-foreground">Tarifs de fret utilisés pour calculer le coût d'expédition</p>
+        <p className="text-sm text-muted-foreground">{tr('Tarifs de fret utilisés pour calculer le coût d\'expédition')}</p>
         <Button size="sm" onClick={openAdd} className="rounded-xl gap-1.5" style={BTN_ORANGE}>
-          <Plus className="h-3.5 w-3.5" /> Ajouter
+          <Plus className="h-3.5 w-3.5" />{' '}{tr('Ajouter')}
         </Button>
       </div>
 
@@ -1144,19 +1145,19 @@ function ShippingRatesSection() {
         <div className="space-y-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
       ) : items.length === 0 ? (
         <div className="rounded-2xl bg-white border border-gray-100 py-14 text-center">
-          <p className="text-sm text-muted-foreground">Aucun tarif configuré.</p>
+          <p className="text-sm text-muted-foreground">{tr('Aucun tarif configuré.')}</p>
         </div>
       ) : (
         <div className="space-y-4">
-          <RateGroup title="Fret maritime" icon={Ship} rates={ocean} color="text-blue-600" />
-          <RateGroup title="Fret aérien"   icon={Plane} rates={air}   color="text-sky-500" />
+          <RateGroup title={tr('Fret maritime')} icon={Ship} rates={ocean} color="text-blue-600" />
+          <RateGroup title={tr('Fret aérien')}   icon={Plane} rates={air}   color="text-sky-500" />
         </div>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Modifier' : 'Ajouter'} un tarif</DialogTitle>
+            <DialogTitle>{editing ? tr('Modifier') : tr('Ajouter')}{' '}{tr('un tarif')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-1">
 
@@ -1170,7 +1171,7 @@ function ShippingRatesSection() {
                   )}
                 >
                   {m === 'ocean' ? <Ship className="h-4 w-4" /> : <Plane className="h-4 w-4" />}
-                  {m === 'ocean' ? 'Maritime' : 'Aérien'}
+                  {m === 'ocean' ? tr('Maritime') : tr('Aérien')}
                 </button>
               ))}
             </div>
@@ -1178,24 +1179,24 @@ function ShippingRatesSection() {
             {/* Name + type */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Nom <span className="text-destructive">*</span></Label>
-                <Input placeholder="Express Chine" value={form.name}
+                <Label className="text-sm font-semibold">{tr('Nom')}{' '}<span className="text-destructive">*</span></Label>
+                <Input placeholder={tr('Express Chine')} value={form.name}
                   onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="rounded-xl" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Type</Label>
-                <Input placeholder="Standard / Express" value={form.type_label}
+                <Label className="text-sm font-semibold">{tr('Type')}</Label>
+                <Input placeholder={tr('Standard / Express')} value={form.type_label}
                   onChange={e => setForm(p => ({ ...p, type_label: e.target.value }))} className="rounded-xl" />
               </div>
             </div>
 
             {/* Origin */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Origine (optionnel)</Label>
+              <Label className="text-sm font-semibold">{tr('Origine (optionnel)')}</Label>
               <Select value={form.origin_id} onValueChange={v => setForm(p => ({ ...p, origin_id: v === '__none' ? '' : v }))}>
-                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Toutes origines" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder={tr('Toutes origines')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none">Toutes origines</SelectItem>
+                  <SelectItem value="__none">{tr('Toutes origines')}</SelectItem>
                   {origins.map(o => <SelectItem key={o.id} value={o.id}>{o.flag_emoji} {o.name}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -1205,12 +1206,12 @@ function ShippingRatesSection() {
             {form.mode === 'ocean' ? (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">Tarif / CBM (USD) <span className="text-destructive">*</span></Label>
+                  <Label className="text-sm font-semibold">{tr('Tarif / CBM (USD)')}{' '}<span className="text-destructive">*</span></Label>
                   <Input type="number" step="0.01" placeholder="790" value={form.per_cbm_usd}
                     onChange={e => setForm(p => ({ ...p, per_cbm_usd: e.target.value }))} className="rounded-xl" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">Minimum (USD)</Label>
+                  <Label className="text-sm font-semibold">{tr('Minimum (USD)')}</Label>
                   <Input type="number" step="0.01" placeholder="0" value={form.min_amount_usd}
                     onChange={e => setForm(p => ({ ...p, min_amount_usd: e.target.value }))} className="rounded-xl" />
                 </div>
@@ -1218,12 +1219,12 @@ function ShippingRatesSection() {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">Tarif / kg (USD) <span className="text-destructive">*</span></Label>
+                  <Label className="text-sm font-semibold">{tr('Tarif / kg (USD)')}{' '}<span className="text-destructive">*</span></Label>
                   <Input type="number" step="0.001" placeholder="10.978" value={form.per_kg_usd}
                     onChange={e => setForm(p => ({ ...p, per_kg_usd: e.target.value }))} className="rounded-xl" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">Minimum (USD)</Label>
+                  <Label className="text-sm font-semibold">{tr('Minimum (USD)')}</Label>
                   <Input type="number" step="0.01" placeholder="0" value={form.min_amount_usd}
                     onChange={e => setForm(p => ({ ...p, min_amount_usd: e.target.value }))} className="rounded-xl" />
                 </div>
@@ -1233,12 +1234,12 @@ function ShippingRatesSection() {
             {/* Transit */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Délai min (jours)</Label>
+                <Label className="text-sm font-semibold">{tr('Délai min (jours)')}</Label>
                 <Input type="number" placeholder="60" value={form.transit_days_min}
                   onChange={e => setForm(p => ({ ...p, transit_days_min: e.target.value }))} className="rounded-xl" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Délai max (jours)</Label>
+                <Label className="text-sm font-semibold">{tr('Délai max (jours)')}</Label>
                 <Input type="number" placeholder="70" value={form.transit_days_max}
                   onChange={e => setForm(p => ({ ...p, transit_days_max: e.target.value }))} className="rounded-xl" />
               </div>
@@ -1246,15 +1247,15 @@ function ShippingRatesSection() {
 
             {/* Sort order */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Ordre d'affichage</Label>
+              <Label className="text-sm font-semibold">{tr('Ordre d\'affichage')}</Label>
               <Input type="number" placeholder="0" value={form.sort_order}
                 onChange={e => setForm(p => ({ ...p, sort_order: e.target.value }))} className="rounded-xl" />
             </div>
 
             {/* Description */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Description (optionnel)</Label>
-              <Input placeholder="Détails sur ce tarif…" value={form.description}
+              <Label className="text-sm font-semibold">{tr('Description (optionnel)')}</Label>
+              <Input placeholder={tr('Détails sur ce tarif…')} value={form.description}
                 onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="rounded-xl" />
             </div>
 
@@ -1265,16 +1266,16 @@ function ShippingRatesSection() {
                   form.active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'
                 )}
               >
-                {form.active ? 'Actif' : 'Inactif'}
+                {form.active ? tr('Actif') : tr('Inactif')}
               </button>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleSave} disabled={saving} className="rounded-xl gap-2" style={BTN_ORANGE}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Enregistrer
+              {tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1292,9 +1293,9 @@ export function AdminShippingConfigPage() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configuration expédition</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tr('Configuration expédition')}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Entrepôts, catégories de tarif, origines, régions, villes et tarifs de fret
+          {tr('Entrepôts, catégories de tarif, origines, régions, villes et tarifs de fret')}
         </p>
       </div>
 

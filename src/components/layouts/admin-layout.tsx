@@ -7,25 +7,26 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, Bell, BarChart3, FileText, Truck, PackageSearch, ScrollText } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
+import { tr } from '@/lib/i18n'
 function AdminSidebar() {
   const { profile, signOut } = useAuth()
   const location = useLocation()
 
   const items = [
-    { title: 'Tableau de bord', url: '/admin', icon: LayoutDashboard },
-    { title: 'Commandes', url: '/admin/orders', icon: Package },
-    { title: 'Devis', url: '/admin/quotes', icon: FileText },
-    { title: 'Expéditions', url: '/admin/shipments', icon: Ship },
-    { title: 'Paiements', url: '/admin/payments', icon: CreditCard },
-    { title: 'Produits', url: '/admin/products', icon: Package },
-    { title: 'Utilisateurs', url: '/admin/users', icon: Users },
-    { title: 'Litiges', url: '/admin/disputes', icon: AlertTriangle },
-    { title: 'Analytics', url: '/admin/analytics', icon: BarChart3 },
-    { title: 'Notifications', url: '/admin/notifications', icon: Bell },
-    { title: 'Dem. expédition', url: '/admin/shipping-requests', icon: PackageSearch },
-    { title: 'Config. expédition', url: '/admin/shipping-config', icon: Truck },
-    { title: 'Journal d\'audit', url: '/admin/audit-logs', icon: ScrollText },
-    { title: 'Paramètres', url: '/admin/settings', icon: Settings },
+    { title: tr('Tableau de bord'), url: '/admin', icon: LayoutDashboard },
+    { title: tr('Commandes'), url: '/admin/orders', icon: Package },
+    { title: tr('Devis'), url: '/admin/quotes', icon: FileText },
+    { title: tr('Expéditions'), url: '/admin/shipments', icon: Ship },
+    { title: tr('Paiements'), url: '/admin/payments', icon: CreditCard },
+    { title: tr('Produits'), url: '/admin/products', icon: Package },
+    { title: tr('Utilisateurs'), url: '/admin/users', icon: Users },
+    { title: tr('Litiges'), url: '/admin/disputes', icon: AlertTriangle },
+    { title: tr('Analytics'), url: '/admin/analytics', icon: BarChart3 },
+    { title: tr('Notifications'), url: '/admin/notifications', icon: Bell },
+    { title: tr('Dem. expédition'), url: '/admin/shipping-requests', icon: PackageSearch },
+    { title: tr('Config. expédition'), url: '/admin/shipping-config', icon: Truck },
+    { title: tr('Journal d\'audit'), url: '/admin/audit-logs', icon: ScrollText },
+    { title: tr('Paramètres'), url: '/admin/settings', icon: Settings },
   ]
 
   const initials = profile?.full_name
@@ -37,12 +38,12 @@ function AdminSidebar() {
       <SidebarHeader className="border-b border-sidebar-border px-6 py-4">
         <Link to="/admin" className="flex items-center gap-2">
           <KonvwaLogo size={26} />
-          <span className="text-xs text-muted-foreground ml-1">Administration</span>
+          <span className="text-xs text-muted-foreground ml-1">{tr('Administration')}</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Gestion</SidebarGroupLabel>
+          <SidebarGroupLabel>{tr('Gestion')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -77,18 +78,18 @@ function AdminSidebar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Administration</DropdownMenuLabel>
+            <DropdownMenuLabel>{tr('Administration')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link to="/dashboard">
                 <LayoutDashboard className="mr-2 h-4 w-4" />
-                Portail client
+                {tr('Portail client')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
+              {tr('Déconnexion')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { tr } from '@/lib/i18n'
 interface Supplier {
   id: string
   name: string
@@ -50,7 +51,7 @@ function avatarColor(id: string) {
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
-  alibaba: 'Alibaba', shein: 'Shein', temu: 'Temu', other: 'Autre',
+  alibaba: 'Alibaba', shein: 'Shein', temu: 'Temu', other: tr('Autre'),
 }
 const PLATFORM_COLORS: Record<string, string> = {
   alibaba: 'bg-orange-50 text-orange-700',
@@ -61,9 +62,9 @@ const PLATFORM_COLORS: Record<string, string> = {
 
 const VERIF_CONFIG: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
   premium:    { label: 'Premium',     icon: <ShieldCheck className="h-3 w-3" />, className: 'bg-amber-50 text-amber-700' },
-  verified:   { label: 'Vérifié',     icon: <ShieldCheck className="h-3 w-3" />, className: 'bg-emerald-50 text-emerald-700' },
-  basic:      { label: 'Basique',     icon: <Shield      className="h-3 w-3" />, className: 'bg-blue-50 text-blue-700' },
-  unverified: { label: 'Non vérifié', icon: <ShieldAlert className="h-3 w-3" />, className: 'bg-muted text-muted-foreground' },
+  verified:   { label: tr('Vérifié'),     icon: <ShieldCheck className="h-3 w-3" />, className: 'bg-emerald-50 text-emerald-700' },
+  basic:      { label: tr('Basique'),     icon: <Shield      className="h-3 w-3" />, className: 'bg-blue-50 text-blue-700' },
+  unverified: { label: tr('Non vérifié'), icon: <ShieldAlert className="h-3 w-3" />, className: 'bg-muted text-muted-foreground' },
 }
 
 function TrustBadge({ score }: { score: number }) {
@@ -132,9 +133,9 @@ export function AdminSuppliersPage() {
       notes: newNotes || null,
     })
     if (error) {
-      toast.error("Erreur lors de l'ajout.")
+      toast.error(tr('Erreur lors de l\'ajout.'))
     } else {
-      toast.success('Fournisseur ajouté.')
+      toast.success(tr('Fournisseur ajouté.'))
       setAddOpen(false)
       setNewName(''); setNewPlatform(''); setNewCountry(''); setNewUrl(''); setNewNotes('')
       await loadSuppliers()
@@ -157,9 +158,9 @@ export function AdminSuppliersPage() {
       verification_status: editVerif,
     }).eq('id', editSupplier.id)
     if (error) {
-      toast.error('Erreur lors de la mise à jour.')
+      toast.error(tr('Erreur lors de la mise à jour.'))
     } else {
-      toast.success('Fournisseur mis à jour.')
+      toast.success(tr('Fournisseur mis à jour.'))
       setEditOpen(false)
       await loadSuppliers()
     }
@@ -167,10 +168,10 @@ export function AdminSuppliersPage() {
   }
 
   async function handleDelete(id: string, name: string) {
-    if (!confirm(`Supprimer "${name}" ?`)) return
+    if (!confirm(tr('Supprimer "{0}" ?', name))) return
     const { error } = await supabase.from('suppliers').delete().eq('id', id)
-    if (error) toast.error('Erreur lors de la suppression.')
-    else { toast.success('Fournisseur supprimé.'); await loadSuppliers() }
+    if (error) toast.error(tr('Erreur lors de la suppression.'))
+    else { toast.success(tr('Fournisseur supprimé.')); await loadSuppliers() }
   }
 
   // Stats
@@ -184,9 +185,9 @@ export function AdminSuppliersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Fournisseurs</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Fournisseurs')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {loading ? '…' : `${total} fournisseur${total !== 1 ? 's' : ''}`}
+            {loading ? '…' : tr('{0} fournisseur{1}', total, total !== 1 ? 's' : '')}
           </p>
         </div>
         <button
@@ -195,16 +196,16 @@ export function AdminSuppliersPage() {
           style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
         >
           <Plus className="h-4 w-4" />
-          Ajouter
+          {tr('Ajouter')}
         </button>
       </div>
 
       {/* KPI mini-cards */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total',    value: total,   sub: 'fournisseurs',  color: 'text-foreground' },
-          { label: 'Vérifiés', value: verified, sub: 'actifs',        color: 'text-emerald-600' },
-          { label: 'Score moy.',value: avgScore,sub: '/ 100',        color: 'text-primary' },
+          { label: tr('Total'),    value: total,   sub: 'fournisseurs',  color: 'text-foreground' },
+          { label: tr('Vérifiés'), value: verified, sub: 'actifs',        color: 'text-emerald-600' },
+          { label: tr('Score moy.'),value: avgScore,sub: '/ 100',        color: 'text-primary' },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
             <p className="text-xs text-muted-foreground font-medium">{kpi.label}</p>
@@ -220,7 +221,7 @@ export function AdminSuppliersPage() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Rechercher un fournisseur…"
+            placeholder={tr('Rechercher un fournisseur…')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 h-11 rounded-xl bg-white border border-gray-200 text-sm font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -231,11 +232,11 @@ export function AdminSuppliersPage() {
           onChange={(e) => setPlatformFilter(e.target.value)}
           className="h-11 rounded-xl bg-white border border-gray-200 px-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
         >
-          <option value="all">Toutes</option>
+          <option value="all">{tr('Toutes')}</option>
           <option value="alibaba">Alibaba</option>
           <option value="shein">Shein</option>
           <option value="temu">Temu</option>
-          <option value="other">Autre</option>
+          <option value="other">{tr('Autre')}</option>
         </select>
       </div>
 
@@ -243,9 +244,9 @@ export function AdminSuppliersPage() {
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
         {/* Column header */}
         <div className="grid grid-cols-[1fr_auto_auto_auto] items-center px-4 py-2.5 border-b border-gray-100 bg-gray-50/70">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Fournisseur</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 w-20 text-center">Score</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 w-24 text-center hidden sm:block">Statut</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Fournisseur')}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 w-20 text-center">{tr('Score')}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 w-24 text-center hidden sm:block">{tr('Statut')}</span>
           <span className="w-8" />
         </div>
 
@@ -256,8 +257,8 @@ export function AdminSuppliersPage() {
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <Store className="h-10 w-10 mx-auto text-muted-foreground/25 mb-3" />
-            <p className="font-semibold text-sm text-muted-foreground">Aucun fournisseur</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Ajoutez votre premier fournisseur.</p>
+            <p className="font-semibold text-sm text-muted-foreground">{tr('Aucun fournisseur')}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Ajoutez votre premier fournisseur.')}</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -290,7 +291,7 @@ export function AdminSuppliersPage() {
                           </span>
                         )}
                         {s.total_orders > 0 && (
-                          <span className="text-[10px] text-muted-foreground/60">{s.total_orders} cmds</span>
+                          <span className="text-[10px] text-muted-foreground/60">{s.total_orders}{' '}{tr('cmds')}</span>
                         )}
                       </div>
                     </div>
@@ -328,12 +329,12 @@ export function AdminSuppliersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="rounded-xl w-48">
                         <DropdownMenuItem className="rounded-lg cursor-pointer gap-2" onClick={() => openEdit(s)}>
-                          <Edit className="h-4 w-4" />Modifier le score
+                          <Edit className="h-4 w-4" />{tr('Modifier le score')}
                         </DropdownMenuItem>
                         {s.supplier_url && (
                           <DropdownMenuItem className="rounded-lg cursor-pointer gap-2" asChild>
                             <a href={s.supplier_url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4" />Voir sur plateforme
+                              <ExternalLink className="h-4 w-4" />{tr('Voir sur plateforme')}
                             </a>
                           </DropdownMenuItem>
                         )}
@@ -341,7 +342,7 @@ export function AdminSuppliersPage() {
                           className="rounded-lg cursor-pointer gap-2 text-destructive focus:text-destructive"
                           onClick={() => handleDelete(s.id, s.name)}
                         >
-                          <Trash2 className="h-4 w-4" />Supprimer
+                          <Trash2 className="h-4 w-4" />{tr('Supprimer')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -357,46 +358,46 @@ export function AdminSuppliersPage() {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Ajouter un fournisseur</DialogTitle>
-            <DialogDescription>Enregistrez un nouveau fournisseur dans votre réseau</DialogDescription>
+            <DialogTitle>{tr('Ajouter un fournisseur')}</DialogTitle>
+            <DialogDescription>{tr('Enregistrez un nouveau fournisseur dans votre réseau')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-3">
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Nom *</Label>
+              <Label className="text-sm font-semibold">{tr('Nom *')}</Label>
               <Input placeholder="Shenzhen Electronics Co." value={newName} onChange={e => setNewName(e.target.value)} className="rounded-xl" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Plateforme *</Label>
+                <Label className="text-sm font-semibold">{tr('Plateforme *')}</Label>
                 <Select value={newPlatform} onValueChange={setNewPlatform}>
                   <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Choisir" />
+                    <SelectValue placeholder={tr('Choisir')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="alibaba">Alibaba</SelectItem>
                     <SelectItem value="shein">Shein</SelectItem>
                     <SelectItem value="temu">Temu</SelectItem>
-                    <SelectItem value="other">Autre</SelectItem>
+                    <SelectItem value="other">{tr('Autre')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Pays</Label>
-                <Input placeholder="Chine" value={newCountry} onChange={e => setNewCountry(e.target.value)} className="rounded-xl" />
+                <Label className="text-sm font-semibold">{tr('Pays')}</Label>
+                <Input placeholder={tr('Chine')} value={newCountry} onChange={e => setNewCountry(e.target.value)} className="rounded-xl" />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">URL du fournisseur</Label>
+              <Label className="text-sm font-semibold">{tr('URL du fournisseur')}</Label>
               <Input placeholder="https://www.alibaba.com/…" value={newUrl} onChange={e => setNewUrl(e.target.value)} className="rounded-xl" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Notes</Label>
-              <Textarea placeholder="Informations sur le fournisseur…" rows={3} value={newNotes} onChange={e => setNewNotes(e.target.value)} className="rounded-xl resize-none" />
+              <Label className="text-sm font-semibold">{tr('Notes')}</Label>
+              <Textarea placeholder={tr('Informations sur le fournisseur…')} rows={3} value={newNotes} onChange={e => setNewNotes(e.target.value)} className="rounded-xl resize-none" />
             </div>
           </div>
           <DialogFooter>
             <button onClick={() => setAddOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">
-              Annuler
+              {tr('Annuler')}
             </button>
             <button
               onClick={handleAdd}
@@ -404,7 +405,7 @@ export function AdminSuppliersPage() {
               className="rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 hover:opacity-90 transition-opacity"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
-              {saving ? 'Ajout…' : 'Ajouter'}
+              {saving ? tr('Ajout…') : tr('Ajouter')}
             </button>
           </DialogFooter>
         </DialogContent>
@@ -414,12 +415,12 @@ export function AdminSuppliersPage() {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Modifier {editSupplier?.name}</DialogTitle>
-            <DialogDescription>Mettre à jour le score de confiance et la vérification</DialogDescription>
+            <DialogTitle>{tr('Modifier')}{' '}{editSupplier?.name}</DialogTitle>
+            <DialogDescription>{tr('Mettre à jour le score de confiance et la vérification')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-3">
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Score de confiance (0–100)</Label>
+              <Label className="text-sm font-semibold">{tr('Score de confiance (0–100)')}</Label>
               <Input
                 type="number"
                 min={0}
@@ -441,15 +442,15 @@ export function AdminSuppliersPage() {
               )}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Statut de vérification</Label>
+              <Label className="text-sm font-semibold">{tr('Statut de vérification')}</Label>
               <Select value={editVerif} onValueChange={setEditVerif}>
                 <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unverified">Non vérifié</SelectItem>
-                  <SelectItem value="basic">Basique</SelectItem>
-                  <SelectItem value="verified">Vérifié</SelectItem>
+                  <SelectItem value="unverified">{tr('Non vérifié')}</SelectItem>
+                  <SelectItem value="basic">{tr('Basique')}</SelectItem>
+                  <SelectItem value="verified">{tr('Vérifié')}</SelectItem>
                   <SelectItem value="premium">Premium</SelectItem>
                 </SelectContent>
               </Select>
@@ -457,7 +458,7 @@ export function AdminSuppliersPage() {
           </div>
           <DialogFooter>
             <button onClick={() => setEditOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">
-              Annuler
+              {tr('Annuler')}
             </button>
             <button
               onClick={handleEdit}
@@ -465,7 +466,7 @@ export function AdminSuppliersPage() {
               className="rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 hover:opacity-90 transition-opacity"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
-              {editSaving ? 'Enregistrement…' : 'Enregistrer'}
+              {editSaving ? tr('Enregistrement…') : tr('Enregistrer')}
             </button>
           </DialogFooter>
         </DialogContent>

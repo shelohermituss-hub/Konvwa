@@ -8,9 +8,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineCh
 import { useAdminStats } from '@/hooks/use-admin-stats'
 import { cn } from '@/lib/utils'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 const chartConfig = {
-  orders: { label: 'Commandes', color: 'var(--chart-1)' },
-  revenue: { label: 'Revenu (HTG)', color: 'var(--chart-2)' },
+  orders: { label: tr('Commandes'), color: 'var(--chart-1)' },
+  revenue: { label: tr('Revenu (HTG)'), color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
 interface KpiCardProps {
@@ -79,7 +80,7 @@ function MetricBadge({ icon: Icon, value, label, colorClass, bgClass, href }: {
 export function AdminDashboard() {
   const stats = useAdminStats()
 
-  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const today = new Date().toLocaleDateString(DATE_LOCALE, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <div className="space-y-6">
@@ -87,13 +88,13 @@ export function AdminDashboard() {
       {/* Header bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Tableau de bord</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Tableau de bord')}</h1>
           <p className="text-sm text-muted-foreground capitalize mt-0.5">{today}</p>
         </div>
         <Link to="/admin/orders">
           <Button variant="outline" size="sm" className="rounded-xl gap-1.5">
             <Package className="h-4 w-4" />
-            Commandes
+            {tr('Commandes')}
           </Button>
         </Link>
       </div>
@@ -101,7 +102,7 @@ export function AdminDashboard() {
       {/* ── KPI Cards ── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          title="Commandes totales"
+          title={tr('Commandes totales')}
           value={stats.totalOrders}
           icon={Package}
           iconClass="text-primary"
@@ -109,7 +110,7 @@ export function AdminDashboard() {
           loading={stats.loading}
         />
         <KpiCard
-          title="En attente de traitement"
+          title={tr('En attente de traitement')}
           value={stats.pendingOrders}
           icon={Clock}
           iconClass="text-amber-600"
@@ -117,7 +118,7 @@ export function AdminDashboard() {
           loading={stats.loading}
         />
         <KpiCard
-          title="Revenus encaissés"
+          title={tr('Revenus encaissés')}
           value={stats.loading ? '—' : `${(stats.totalRevenuePaid / 1000).toFixed(0)}k HTG`}
           icon={CreditCard}
           iconClass="text-emerald-600"
@@ -125,7 +126,7 @@ export function AdminDashboard() {
           loading={stats.loading}
         />
         <KpiCard
-          title="Clients enregistrés"
+          title={tr('Clients enregistrés')}
           value={stats.totalUsers}
           icon={Users}
           iconClass="text-blue-600"
@@ -139,8 +140,8 @@ export function AdminDashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
-            <h3 className="font-semibold text-sm text-foreground">Commandes par mois</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">6 derniers mois</p>
+            <h3 className="font-semibold text-sm text-foreground">{tr('Commandes par mois')}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{tr('6 derniers mois')}</p>
           </div>
           <div className="p-5">
             {stats.loading ? (
@@ -163,8 +164,8 @@ export function AdminDashboard() {
 
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
-            <h3 className="font-semibold text-sm text-foreground">Revenus par mois</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">En HTG, 6 derniers mois</p>
+            <h3 className="font-semibold text-sm text-foreground">{tr('Revenus par mois')}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{tr('En HTG, 6 derniers mois')}</p>
           </div>
           <div className="p-5">
             {stats.loading ? (
@@ -198,7 +199,7 @@ export function AdminDashboard() {
         <MetricBadge
           icon={Package}
           value={stats.loading ? '—' : stats.pendingOrders}
-          label="Commandes en attente"
+          label={tr('Commandes en attente')}
           colorClass="text-white"
           bgClass="bg-primary"
           href="/admin/orders"
@@ -206,7 +207,7 @@ export function AdminDashboard() {
         <MetricBadge
           icon={Ship}
           value={stats.loading ? '—' : stats.activeShipments}
-          label="Expéditions actives"
+          label={tr('Expéditions actives')}
           colorClass="text-blue-700"
           bgClass="bg-blue-100"
           href="/admin/shipments"
@@ -214,7 +215,7 @@ export function AdminDashboard() {
         <MetricBadge
           icon={AlertTriangle}
           value={stats.loading ? '—' : stats.openTickets}
-          label="Tickets ouverts"
+          label={tr('Tickets ouverts')}
           colorClass="text-amber-700"
           bgClass="bg-amber-100"
           href="/admin/tickets"
@@ -222,7 +223,7 @@ export function AdminDashboard() {
         <MetricBadge
           icon={Users}
           value={stats.loading ? '—' : stats.newUsersThisMonth}
-          label="Nouveaux clients ce mois"
+          label={tr('Nouveaux clients ce mois')}
           colorClass="text-foreground"
           bgClass="bg-card border border-gray-100"
           href="/admin/users"
@@ -233,12 +234,12 @@ export function AdminDashboard() {
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
-            <h3 className="font-semibold text-sm text-foreground">Commandes récentes</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Dernières commandes reçues</p>
+            <h3 className="font-semibold text-sm text-foreground">{tr('Commandes récentes')}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">{tr('Dernières commandes reçues')}</p>
           </div>
           <Link to="/admin/orders">
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs rounded-xl">
-              Voir tout <ChevronRight className="h-3.5 w-3.5" />
+              {tr('Voir tout')}{' '}<ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </Link>
         </div>
@@ -250,7 +251,7 @@ export function AdminDashboard() {
         ) : stats.recentOrders.length === 0 ? (
           <div className="p-10 text-center">
             <Package className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">Aucune commande pour le moment</p>
+            <p className="text-sm text-muted-foreground">{tr('Aucune commande pour le moment')}</p>
           </div>
         ) : (
           <div className="divide-y divide-border/50">
@@ -261,18 +262,18 @@ export function AdminDashboard() {
                     <Package className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">{order.product_name ?? 'Produit'}</p>
+                    <p className="font-medium text-sm truncate">{order.product_name ?? tr('Produit')}</p>
                     <p className="text-xs text-muted-foreground">{order.customer_name ?? '—'} · <span className="font-mono">{order.tracking_code}</span></p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">
                   <StatusBadge status={order.status} />
                   <div className="text-right hidden sm:block">
-                    <p className="font-semibold text-sm">{order.total_paid != null ? `${order.total_paid.toLocaleString()}` : '—'}</p>
+                    <p className="font-semibold text-sm">{order.total_paid != null ? `${order.total_paid.toLocaleString(LOCALE_TAG)}` : '—'}</p>
                     <p className="text-[10px] text-muted-foreground">HTG</p>
                   </div>
                   <p className="text-xs text-muted-foreground hidden md:block">
-                    {new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    {new Date(order.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                   </p>
                 </div>
               </div>

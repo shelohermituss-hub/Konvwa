@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 
+import { tr } from '@/lib/i18n'
 const CHECK_EVERY_MS = 5 * 60 * 1000
 const BUNDLE_RE = /\/assets\/index-[^"']+\.js/
 
@@ -57,13 +58,13 @@ export function UpdateBanner() {
     >
       <div className="flex w-full max-w-md items-center gap-3 rounded-2xl bg-[#0A1628] px-4 py-3 text-white shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
         <RefreshCw className="size-4 shrink-0 text-[#F05A28]" aria-hidden />
-        <p className="flex-1 text-sm font-medium leading-snug">Une nouvelle version de KONVWA est disponible.</p>
+        <p className="flex-1 text-sm font-medium leading-snug">{tr('Une nouvelle version de KONVWA est disponible.')}</p>
         <button
           type="button"
           onClick={() => window.location.reload()}
           className="shrink-0 rounded-xl bg-[#F05A28] px-3 py-1.5 text-sm font-semibold text-white transition-transform active:scale-95"
         >
-          Actualiser
+          {tr('Actualiser')}
         </button>
       </div>
     </div>

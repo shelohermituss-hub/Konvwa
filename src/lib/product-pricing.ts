@@ -1,3 +1,6 @@
+
+import { LOCALE_TAG } from '@/lib/i18n'
+
 export interface PriceTier {
   min_qty: number
   price_htg: number
@@ -49,7 +52,7 @@ export function tierRows(product: PricedProduct): TierRow[] {
 }
 
 export function formatHtg(value: number): string {
-  return value.toLocaleString('fr-HT', { maximumFractionDigits: 2 })
+  return value.toLocaleString(LOCALE_TAG, { maximumFractionDigits: 2 })
 }
 
 export function formatPriceRange(product: PricedProduct): string {

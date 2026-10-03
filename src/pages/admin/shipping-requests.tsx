@@ -15,6 +15,7 @@ import {
   Clock, CheckCircle2, AlertCircle, Calculator, Plane,
 } from 'lucide-react'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface ShippingRateOption {
   id: string
   mode: 'ocean' | 'air'
@@ -71,13 +72,13 @@ interface ShippingRequest {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  submitted: 'Soumis',
-  reviewing: 'En révision',
-  quoted:    'Devis envoyé',
-  received:  'Reçu en entrepôt',
-  deposit_paid: 'Acompte payé',
-  invoiced:  'Payé',
-  cancelled: 'Annulé',
+  submitted: tr('Soumis'),
+  reviewing: tr('En révision'),
+  quoted:    tr('Devis envoyé'),
+  received:  tr('Reçu en entrepôt'),
+  deposit_paid: tr('Acompte payé'),
+  invoiced:  tr('Payé'),
+  cancelled: tr('Annulé'),
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -94,12 +95,12 @@ const BTN_ORANGE = { background: 'linear-gradient(135deg, #F05A28, #D44E21)', co
 
 function fmt(n: number | null | undefined) {
   if (n == null) return '—'
-  return new Intl.NumberFormat('fr-HT').format(n)
+  return new Intl.NumberFormat(LOCALE_TAG).format(n)
 }
 
 function fmtDate(s: string | null | undefined) {
   if (!s) return null
-  return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(s).toLocaleDateString(DATE_LOCALE, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 // ── Action sheet ──────────────────────────────────────────────────────────────
@@ -166,8 +167,8 @@ function AdminActionSheet({
       .update({ shipment_id: selectedBatchId || null })
       .eq('id', request.id)
     setAssigningSaving(false)
-    if (error) { toast.error('Erreur : ' + error.message); return }
-    toast.success(selectedBatchId ? 'Cargaison assignée au batch' : 'Assignation retirée')
+    if (error) { toast.error(tr('Erreur : ') + error.message); return }
+    toast.success(selectedBatchId ? tr('Cargaison assignée au batch') : tr('Assignation retirée'))
     onDone()
   }
 
@@ -177,18 +178,18 @@ function AdminActionSheet({
       p_request_id: request.id,
     })
     setSaving(false)
-    if (error) { toast.error('Erreur : ' + error.message); return }
-    toast.success('Demande marquée en révision')
+    if (error) { toast.error(tr('Erreur : ') + error.message); return }
+    toast.success(tr('Demande marquée en révision'))
     onDone()
   }
 
   async function handleSendQuote() {
     if (!form.actual_cbm || !form.actual_kg) {
-      toast.error('CBM réel et poids réel sont obligatoires')
+      toast.error(tr('CBM réel et poids réel sont obligatoires'))
       return
     }
     if (!finalAmount) {
-      toast.error('Sélectionnez un tarif ou saisissez un montant de remplacement')
+      toast.error(tr('Sélectionnez un tarif ou saisissez un montant de remplacement'))
       return
     }
     setSaving(true)
@@ -202,10 +203,10 @@ function AdminActionSheet({
     })
     setSaving(false)
     if (error || !data?.success) {
-      toast.error(data?.error ?? error?.message ?? 'Erreur')
+      toast.error(data?.error ?? error?.message ?? tr('Erreur'))
       return
     }
-    toast.success('Devis envoyé au client ✓')
+    toast.success(tr('Devis envoyé au client ✓'))
     onDone()
   }
 
@@ -217,10 +218,10 @@ function AdminActionSheet({
     })
     setSaving(false)
     if (error || !data?.success) {
-      toast.error(data?.error ?? error?.message ?? 'Erreur')
+      toast.error(data?.error ?? error?.message ?? tr('Erreur'))
       return
     }
-    toast.success('Colis marqué reçu en entrepôt')
+    toast.success(tr('Colis marqué reçu en entrepôt'))
     onDone()
   }
 
@@ -232,10 +233,10 @@ function AdminActionSheet({
     })
     setSaving(false)
     if (error || !data?.success) {
-      toast.error(data?.error ?? error?.message ?? 'Erreur')
+      toast.error(data?.error ?? error?.message ?? tr('Erreur'))
       return
     }
-    toast.success(`Solde de ${fmt(data.collected)} HTG encaissé ✓`)
+    toast.success(tr('Solde de {0} HTG encaissé ✓', fmt(data.collected)))
     onDone()
   }
 
@@ -252,7 +253,7 @@ function AdminActionSheet({
       <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="text-base">
-            Demande #{request.id.slice(0, 8).toUpperCase()}
+            {tr('Demande #')}{request.id.slice(0, 8).toUpperCase()}
           </SheetTitle>
         </SheetHeader>
 
@@ -262,7 +263,7 @@ function AdminActionSheet({
             <div className="rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-3 flex items-start gap-2.5">
               <Clock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
               <p className="text-sm text-amber-800 leading-relaxed">
-                En attente de réception — marquez les colis reçus à l'entrepôt pour établir le devis.
+                {tr('En attente de réception — marquez les colis reçus à l\'entrepôt pour établir le devis.')}
               </p>
             </div>
           )}
@@ -270,7 +271,7 @@ function AdminActionSheet({
             <div className="rounded-xl bg-indigo-50 border border-indigo-200 px-3.5 py-3 flex items-start gap-2.5">
               <Box className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
               <p className="text-sm text-indigo-800 leading-relaxed">
-                Colis reçus — saisissez les mesures réelles, choisissez le tarif et envoyez le devis.
+                {tr('Colis reçus — saisissez les mesures réelles, choisissez le tarif et envoyez le devis.')}
               </p>
             </div>
           )}
@@ -278,8 +279,8 @@ function AdminActionSheet({
             <div className="rounded-xl bg-orange-50 border border-orange-200 px-3.5 py-3 flex items-start gap-2.5">
               <AlertCircle className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
               <p className="text-sm text-orange-800 leading-relaxed">
-                Devis envoyé — le client doit régler <span className="font-bold">{fmt(request.quoted_amount_htg)} HTG</span>
-                {dueAt && <> avant le <span className="font-bold">{dueAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span></>}.
+                {tr('Devis envoyé — le client doit régler')}{' '}<span className="font-bold">{fmt(request.quoted_amount_htg)} HTG</span>
+                {dueAt && <>{' '}{tr('avant le')}{' '}<span className="font-bold">{dueAt.toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })}</span></>}.
               </p>
             </div>
           )}
@@ -287,8 +288,8 @@ function AdminActionSheet({
             <div className="rounded-xl bg-red-50 border border-red-200 px-3.5 py-3 flex items-start gap-2.5">
               <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
               <p className="text-sm text-red-800 leading-relaxed">
-                En retard de <span className="font-bold">{lateDays} jour{lateDays > 1 ? 's' : ''}</span> — frais de retard courants :{' '}
-                <span className="font-bold">{fmt(lateDays * 500)} HTG</span>. Ils sont ajoutés automatiquement au paiement du client.
+                {tr('En retard de')}{' '}<span className="font-bold">{lateDays}{' '}{tr('jour')}{lateDays > 1 ? 's' : ''}</span>{' '}{tr('— frais de retard courants :')}{' '}
+                <span className="font-bold">{fmt(lateDays * 500)} HTG</span>{tr('. Ils sont ajoutés automatiquement au paiement du client.')}
               </p>
             </div>
           )}
@@ -296,9 +297,8 @@ function AdminActionSheet({
             <div className="rounded-xl bg-teal-50 border border-teal-200 px-3.5 py-3 flex items-start gap-2.5">
               <CheckCircle2 className="h-4 w-4 text-teal-600 shrink-0 mt-0.5" />
               <p className="text-sm text-teal-800 leading-relaxed">
-                Acompte reçu : <span className="font-bold">{fmt(request.paid_amount_htg)} HTG</span>
-                {(request.late_fee_htg ?? 0) > 0 && <> (+ {fmt(request.late_fee_htg)} HTG de frais de retard)</>}.
-                Solde à encaisser à la livraison : <span className="font-bold">{fmt(balanceRemaining)} HTG</span>.
+                {tr('Acompte reçu :')}{' '}<span className="font-bold">{fmt(request.paid_amount_htg)} HTG</span>
+                {(request.late_fee_htg ?? 0) > 0 && <> (+ {fmt(request.late_fee_htg)}{' '}{tr('HTG de frais de retard)')}</>}{tr('. Solde à encaisser à la livraison :')}{' '}<span className="font-bold">{fmt(balanceRemaining)} HTG</span>.
               </p>
             </div>
           )}
@@ -306,14 +306,14 @@ function AdminActionSheet({
             <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-3 flex items-center gap-2.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
               <p className="text-sm text-emerald-800 font-medium">
-                Paiement reçu — {fmt(request.actual_amount_htg ?? request.quoted_amount_htg)} HTG. Assignez au batch.
+                {tr('Paiement reçu —')}{' '}{fmt(request.actual_amount_htg ?? request.quoted_amount_htg)}{' '}{tr('HTG. Assignez au batch.')}
               </p>
             </div>
           )}
 
           {/* Client info */}
           <div className="rounded-xl bg-gray-50 p-3.5 space-y-1 text-sm">
-            <p className="font-semibold">{request.profiles?.full_name ?? 'Client inconnu'}</p>
+            <p className="font-semibold">{request.profiles?.full_name ?? tr('Client inconnu')}</p>
             {request.profiles?.phone && <p className="text-muted-foreground">{request.profiles.phone}</p>}
             <p className="text-muted-foreground">
               {request.product_rate_category?.name ?? '—'} · {' '}
@@ -321,21 +321,21 @@ function AdminActionSheet({
             </p>
             {request.origin_country && (
               <p className="text-muted-foreground">
-                Origine : {request.origin_country === 'CN' ? '🇨🇳 Chine' : request.origin_country === 'US' ? '🇺🇸 États-Unis' : request.origin_country}
+                {tr('Origine :')}{' '}{request.origin_country === 'CN' ? tr('🇨🇳 Chine') : request.origin_country === 'US' ? tr('🇺🇸 États-Unis') : request.origin_country}
               </p>
             )}
-            <p className="text-muted-foreground">Créé le {fmtDate(request.created_at)}</p>
+            <p className="text-muted-foreground">{tr('Créé le')}{' '}{fmtDate(request.created_at)}</p>
             {request.notes && <p className="text-muted-foreground italic">"{request.notes}"</p>}
           </div>
 
           {/* ── Mesures + calcul automatique (statut received) ── */}
           {(s === 'received' || s === 'quoted' || s === 'deposit_paid' || s === 'invoiced') && (
             <div className="space-y-4">
-              <p className="text-sm font-semibold">Mesures réelles</p>
+              <p className="text-sm font-semibold">{tr('Mesures réelles')}</p>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">CBM réel (m³)</Label>
+                  <Label className="text-xs text-muted-foreground">{tr('CBM réel (m³)')}</Label>
                   <Input
                     type="number" step="0.001" placeholder="0.500"
                     value={form.actual_cbm}
@@ -344,11 +344,11 @@ function AdminActionSheet({
                     disabled={s !== 'received'}
                   />
                   {request.estimated_cbm != null && (
-                    <p className="text-[10px] text-muted-foreground">Estimé : {request.estimated_cbm} m³</p>
+                    <p className="text-[10px] text-muted-foreground">{tr('Estimé :')}{' '}{request.estimated_cbm} m³</p>
                   )}
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Poids réel (kg)</Label>
+                  <Label className="text-xs text-muted-foreground">{tr('Poids réel (kg)')}</Label>
                   <Input
                     type="number" step="0.1" placeholder="5.0"
                     value={form.actual_kg}
@@ -357,7 +357,7 @@ function AdminActionSheet({
                     disabled={s !== 'received'}
                   />
                   {request.estimated_kg != null && (
-                    <p className="text-[10px] text-muted-foreground">Estimé : {request.estimated_kg} kg</p>
+                    <p className="text-[10px] text-muted-foreground">{tr('Estimé :')}{' '}{request.estimated_kg} kg</p>
                   )}
                 </div>
               </div>
@@ -367,20 +367,20 @@ function AdminActionSheet({
                 <>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Tarif d'expédition applicable
+                      {tr('Tarif d\'expédition applicable')}
                     </Label>
                     <Select
                       value={form.selected_rate_id}
                       onValueChange={v => setForm(p => ({ ...p, selected_rate_id: v, override_amount: '' }))}
                     >
                       <SelectTrigger className="rounded-xl text-sm h-11">
-                        <SelectValue placeholder="Choisir un tarif…" />
+                        <SelectValue placeholder={tr('Choisir un tarif…')} />
                       </SelectTrigger>
                       <SelectContent>
                         {oceanRates.length > 0 && (
                           <>
                             <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                              <Ship className="h-3 w-3" /> Fret maritime
+                              <Ship className="h-3 w-3" />{' '}{tr('Fret maritime')}
                             </div>
                             {oceanRates.map(r => (
                               <SelectItem key={r.id} value={r.id}>
@@ -394,7 +394,7 @@ function AdminActionSheet({
                         {airRates.length > 0 && (
                           <>
                             <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5 mt-1">
-                              <Plane className="h-3 w-3" /> Fret aérien
+                              <Plane className="h-3 w-3" />{' '}{tr('Fret aérien')}
                             </div>
                             {airRates.map(r => (
                               <SelectItem key={r.id} value={r.id}>
@@ -413,11 +413,11 @@ function AdminActionSheet({
                     <div className="rounded-xl bg-primary/6 border border-primary/20 p-3.5">
                       <div className="flex items-center gap-2 mb-2">
                         <Calculator className="h-4 w-4 text-primary shrink-0" />
-                        <p className="text-sm font-semibold text-primary">Montant calculé automatiquement</p>
+                        <p className="text-sm font-semibold text-primary">{tr('Montant calculé automatiquement')}</p>
                       </div>
                       <div className="flex items-baseline gap-2">
                         <p className="text-2xl font-bold text-foreground">
-                          {new Intl.NumberFormat('fr-HT').format(calcResult.htg)}
+                          {new Intl.NumberFormat(LOCALE_TAG).format(calcResult.htg)}
                         </p>
                         <p className="text-sm text-muted-foreground font-medium">HTG</p>
                         <span className="text-xs text-muted-foreground ml-auto">
@@ -425,7 +425,7 @@ function AdminActionSheet({
                         </span>
                       </div>
                       {form.override_amount && (
-                        <p className="text-[11px] text-amber-600 mt-1">⚠ Montant de remplacement actif</p>
+                        <p className="text-[11px] text-amber-600 mt-1">{tr('⚠ Montant de remplacement actif')}</p>
                       )}
                     </div>
                   )}
@@ -433,10 +433,10 @@ function AdminActionSheet({
                   {/* Montant de remplacement (optionnel) */}
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">
-                      Montant de remplacement (HTG) <span className="font-normal italic">— optionnel, remplace le calcul</span>
+                      {tr('Montant de remplacement (HTG)')}{' '}<span className="font-normal italic">{tr('— optionnel, remplace le calcul')}</span>
                     </Label>
                     <Input
-                      type="number" step="1" placeholder={calcResult ? String(calcResult.htg) : 'ex. 15 000'}
+                      type="number" step="1" placeholder={calcResult ? String(calcResult.htg) : tr('ex. 15 000')}
                       value={form.override_amount}
                       onChange={e => setForm(p => ({ ...p, override_amount: e.target.value }))}
                       className="rounded-xl"
@@ -446,9 +446,9 @@ function AdminActionSheet({
                   {/* Résumé final */}
                   {finalAmount != null && (
                     <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 flex items-center justify-between">
-                      <p className="text-sm font-semibold text-emerald-800">Devis à envoyer</p>
+                      <p className="text-sm font-semibold text-emerald-800">{tr('Devis à envoyer')}</p>
                       <p className="text-lg font-bold text-emerald-700">
-                        {new Intl.NumberFormat('fr-HT').format(finalAmount)} HTG
+                        {new Intl.NumberFormat(LOCALE_TAG).format(finalAmount)} HTG
                       </p>
                     </div>
                   )}
@@ -458,7 +458,7 @@ function AdminActionSheet({
               {/* Affichage des montants déjà définis */}
               {(s === 'quoted' || s === 'deposit_paid' || s === 'invoiced') && (
                 <div className="rounded-xl bg-orange-50 border border-orange-200 px-3.5 py-2.5 flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">Devis envoyé</p>
+                  <p className="text-xs text-muted-foreground">{tr('Devis envoyé')}</p>
                   <p className="font-bold text-orange-700">{fmt(request.quoted_amount_htg)} HTG</p>
                 </div>
               )}
@@ -467,13 +467,13 @@ function AdminActionSheet({
 
           {/* Admin notes */}
           <div className="space-y-1.5">
-            <Label className="text-sm font-semibold">Notes admin (internes)</Label>
+            <Label className="text-sm font-semibold">{tr('Notes admin (internes)')}</Label>
             <textarea
               value={form.admin_notes}
               onChange={e => setForm(p => ({ ...p, admin_notes: e.target.value }))}
               rows={3}
               disabled={s === 'invoiced' || s === 'cancelled'}
-              placeholder="Notes visibles seulement par l'admin…"
+              placeholder={tr('Notes visibles seulement par l\'admin…')}
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm resize-none disabled:opacity-50"
             />
           </div>
@@ -483,19 +483,19 @@ function AdminActionSheet({
             <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3.5 space-y-2.5">
               <div className="flex items-center gap-2">
                 <Ship className="h-4 w-4 text-indigo-600 shrink-0" />
-                <p className="text-sm font-semibold text-indigo-800">Assigner à un batch d'expédition</p>
+                <p className="text-sm font-semibold text-indigo-800">{tr('Assigner à un batch d\'expédition')}</p>
               </div>
               {request.shipment_id && (
                 <p className="text-[11px] text-indigo-700">
-                  Actuellement dans : <span className="font-bold">{batches.find(b => b.id === request.shipment_id)?.batch_code ?? request.shipment_id.slice(0,8)}</span>
+                  {tr('Actuellement dans :')}{' '}<span className="font-bold">{batches.find(b => b.id === request.shipment_id)?.batch_code ?? request.shipment_id.slice(0,8)}</span>
                 </p>
               )}
               <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
                 <SelectTrigger className="rounded-xl bg-white border-indigo-200 text-sm">
-                  <SelectValue placeholder="Choisir un batch…" />
+                  <SelectValue placeholder={tr('Choisir un batch…')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">— Aucun batch —</SelectItem>
+                  <SelectItem value="">{tr('— Aucun batch —')}</SelectItem>
                   {batches.map(b => (
                     <SelectItem key={b.id} value={b.id}>
                       {b.batch_code} · {shipmentStatusLabel(b.status)}
@@ -512,7 +512,7 @@ function AdminActionSheet({
                 style={{ background: '#4F46E5', color: '#fff' }}
               >
                 {assigningSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ship className="h-3.5 w-3.5" />}
-                {selectedBatchId ? 'Assigner au batch' : 'Retirer du batch'}
+                {selectedBatchId ? tr('Assigner au batch') : tr('Retirer du batch')}
               </Button>
             </div>
           )}
@@ -528,7 +528,7 @@ function AdminActionSheet({
                 variant="outline"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scale className="h-4 w-4" />}
-                Marquer en révision
+                {tr('Marquer en révision')}
               </Button>
               <Button
                 className="w-full rounded-xl gap-2"
@@ -537,7 +537,7 @@ function AdminActionSheet({
                 style={BTN_ORANGE}
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Box className="h-4 w-4" />}
-                Marquer reçu en entrepôt
+                {tr('Marquer reçu en entrepôt')}
               </Button>
             </>
           )}
@@ -549,7 +549,7 @@ function AdminActionSheet({
               style={BTN_ORANGE}
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Box className="h-4 w-4" />}
-              Marquer reçu en entrepôt
+              {tr('Marquer reçu en entrepôt')}
             </Button>
           )}
           {s === 'received' && (
@@ -560,7 +560,7 @@ function AdminActionSheet({
               style={BTN_ORANGE}
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-              Envoyer le devis — {finalAmount ? `${new Intl.NumberFormat('fr-HT').format(finalAmount)} HTG` : 'saisir les données'}
+              {tr('Envoyer le devis —')}{' '}{finalAmount ? `${new Intl.NumberFormat(LOCALE_TAG).format(finalAmount)} HTG` : tr('saisir les données')}
             </Button>
           )}
           {s === 'deposit_paid' && (
@@ -571,11 +571,11 @@ function AdminActionSheet({
               style={BTN_ORANGE}
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCheck className="h-4 w-4" />}
-              Solde encaissé à la livraison — {fmt(balanceRemaining)} HTG
+              {tr('Solde encaissé à la livraison —')}{' '}{fmt(balanceRemaining)} HTG
             </Button>
           )}
           <Button variant="outline" className="w-full rounded-xl" onClick={onClose}>
-            Fermer
+            {tr('Fermer')}
           </Button>
         </SheetFooter>
       </SheetContent>
@@ -601,13 +601,13 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm truncate">
-            {request.profiles?.full_name ?? 'Client inconnu'}
+            {request.profiles?.full_name ?? tr('Client inconnu')}
           </p>
           <p className="text-[11px] text-muted-foreground truncate">
             {request.origin_country === 'CN' ? '🇨🇳' : request.origin_country === 'US' ? '🇺🇸' : ''}{' '}
             {request.product_rate_category?.name ?? '—'} ·{' '}
             {request.warehouse?.code ?? '—'}
-            {request.package_count != null && ` · ${request.package_count} colis`}
+            {request.package_count != null && tr(' · {0} colis', request.package_count)}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -624,59 +624,59 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
           <div className="grid grid-cols-2 gap-2 text-xs">
             {request.origin_country && (
               <div>
-                <p className="text-muted-foreground">Origine</p>
+                <p className="text-muted-foreground">{tr('Origine')}</p>
                 <p className="font-medium">
-                  {request.origin_country === 'CN' ? '🇨🇳 Chine' : request.origin_country === 'US' ? '🇺🇸 États-Unis' : request.origin_country}
+                  {request.origin_country === 'CN' ? tr('🇨🇳 Chine') : request.origin_country === 'US' ? tr('🇺🇸 États-Unis') : request.origin_country}
                 </p>
               </div>
             )}
             {request.destination_address && (
               <div>
-                <p className="text-muted-foreground">Destination</p>
+                <p className="text-muted-foreground">{tr('Destination')}</p>
                 <p className="font-medium">{request.destination_address}</p>
               </div>
             )}
             <div>
-              <p className="text-muted-foreground">CBM estimé / réel</p>
+              <p className="text-muted-foreground">{tr('CBM estimé / réel')}</p>
               <p className="font-medium">
                 {request.estimated_cbm != null ? `${request.estimated_cbm} m³` : '—'} / {request.actual_cbm != null ? `${request.actual_cbm} m³` : '—'}
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground">Poids estimé / réel</p>
+              <p className="text-muted-foreground">{tr('Poids estimé / réel')}</p>
               <p className="font-medium">
                 {request.estimated_kg != null ? `${request.estimated_kg} kg` : '—'} / {request.actual_kg != null ? `${request.actual_kg} kg` : '—'}
               </p>
             </div>
             {request.shipment && (
               <div>
-                <p className="text-muted-foreground">Expédition (lot {request.shipment.batch_code})</p>
+                <p className="text-muted-foreground">{tr('Expédition (lot')}{' '}{request.shipment.batch_code})</p>
                 <p className="font-medium text-sky-700">{shipmentStatusLabel(request.shipment.status)}</p>
               </div>
             )}
             {request.payment_due_at && (s === 'quoted' || s === 'received') && (
               <div>
-                <p className="text-muted-foreground">Échéance de paiement</p>
+                <p className="text-muted-foreground">{tr('Échéance de paiement')}</p>
                 <p className={cn('font-medium', new Date(request.payment_due_at).getTime() < Date.now() && s === 'quoted' ? 'text-red-600' : '')}>
-                  {new Date(request.payment_due_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  {new Date(request.payment_due_at).toLocaleDateString(DATE_LOCALE, { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
             )}
             {s === 'deposit_paid' && (
               <div>
-                <p className="text-muted-foreground">Solde à la livraison</p>
+                <p className="text-muted-foreground">{tr('Solde à la livraison')}</p>
                 <p className="font-medium text-teal-700">{fmt(Math.max((request.quoted_amount_htg ?? 0) - (request.paid_amount_htg ?? 0), 0))} HTG</p>
               </div>
             )}
             {request.quoted_amount_htg != null && (
               <div>
-                <p className="text-muted-foreground">Devis estimatif</p>
+                <p className="text-muted-foreground">{tr('Devis estimatif')}</p>
                 <p className="font-medium">{fmt(request.quoted_amount_htg)} HTG</p>
               </div>
             )}
             {request.actual_amount_htg != null && (
               <div>
-                <p className="text-muted-foreground">Montant facturé</p>
+                <p className="text-muted-foreground">{tr('Montant facturé')}</p>
                 <p className="font-medium text-emerald-600">{fmt(request.actual_amount_htg)} HTG</p>
               </div>
             )}
@@ -684,17 +684,17 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
 
           {/* Timeline */}
           <div className="flex gap-4 text-[11px] text-muted-foreground flex-wrap">
-            <span>Créé {fmtDate(request.created_at)}</span>
-            {request.quoted_at && <span className="text-orange-600">Devis {fmtDate(request.quoted_at)}</span>}
-            {request.received_at && <span className="text-indigo-600">Reçu {fmtDate(request.received_at)}</span>}
-            {request.invoiced_at && <span className="text-emerald-600">Payé {fmtDate(request.invoiced_at)}</span>}
+            <span>{tr('Créé')}{' '}{fmtDate(request.created_at)}</span>
+            {request.quoted_at && <span className="text-orange-600">{tr('Devis')}{' '}{fmtDate(request.quoted_at)}</span>}
+            {request.received_at && <span className="text-indigo-600">{tr('Reçu')}{' '}{fmtDate(request.received_at)}</span>}
+            {request.invoiced_at && <span className="text-emerald-600">{tr('Payé')}{' '}{fmtDate(request.invoiced_at)}</span>}
           </div>
 
           {request.notes && (
-            <p className="text-xs text-muted-foreground italic">Client : "{request.notes}"</p>
+            <p className="text-xs text-muted-foreground italic">{tr('Client : "')}{request.notes}"</p>
           )}
           {request.admin_notes && (
-            <p className="text-xs text-orange-700 bg-orange-50 rounded-lg px-2.5 py-1.5">Admin : {request.admin_notes}</p>
+            <p className="text-xs text-orange-700 bg-orange-50 rounded-lg px-2.5 py-1.5">{tr('Admin :')}{' '}{request.admin_notes}</p>
           )}
 
           {s !== 'invoiced' && s !== 'cancelled' && (
@@ -705,7 +705,7 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
               onClick={() => onAction(request)}
             >
               <CheckCheck className="h-4 w-4" />
-              Gérer cette demande
+              {tr('Gérer cette demande')}
             </Button>
           )}
         </div>
@@ -719,14 +719,14 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
 type FilterTab = 'active' | 'submitted' | 'reviewing' | 'quoted' | 'received' | 'deposit_paid' | 'invoiced' | 'all'
 
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
-  { key: 'active',    label: 'Actives'       },
-  { key: 'submitted', label: 'Soumises'      },
-  { key: 'reviewing', label: 'En révision'   },
-  { key: 'quoted',    label: 'Devis envoyé'  },
-  { key: 'received',  label: 'Reçues'        },
-  { key: 'deposit_paid', label: 'Acompte payé' },
-  { key: 'invoiced',  label: 'Payées'        },
-  { key: 'all',       label: 'Toutes'        },
+  { key: 'active',    label: tr('Actives')       },
+  { key: 'submitted', label: tr('Soumises')      },
+  { key: 'reviewing', label: tr('En révision')   },
+  { key: 'quoted',    label: tr('Devis envoyé')  },
+  { key: 'received',  label: tr('Reçues')        },
+  { key: 'deposit_paid', label: tr('Acompte payé') },
+  { key: 'invoiced',  label: tr('Payées')        },
+  { key: 'all',       label: tr('Toutes')        },
 ]
 
 export function AdminShippingRequestsPage() {
@@ -753,7 +753,7 @@ export function AdminShippingRequestsPage() {
       `)
       .eq('request_type', 'shipping')
       .order('created_at', { ascending: false })
-    if (error) { setLoading(false); toast.error('Erreur chargement : ' + error.message); return }
+    if (error) { setLoading(false); toast.error(tr('Erreur chargement : ') + error.message); return }
 
     const rows = data ?? []
     const userIds = [...new Set(rows.map((r: Record<string, unknown>) => r.user_id as string))]
@@ -810,20 +810,20 @@ export function AdminShippingRequestsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Demandes d'expédition</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Demandes d\'expédition')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Gérez les devis, réceptions et facturations de fret
+            {tr('Gérez les devis, réceptions et facturations de fret')}
           </p>
         </div>
         <Button variant="outline" size="sm" className="rounded-xl gap-1.5" onClick={load}>
           <RefreshCw className="h-4 w-4" />
-          Actualiser
+          {tr('Actualiser')}
         </Button>
       </div>
 
       {/* Search */}
       <Input
-        placeholder="Rechercher par client, ID, entrepôt…"
+        placeholder={tr('Rechercher par client, ID, entrepôt…')}
         value={search}
         onChange={e => setSearch(e.target.value)}
         className="rounded-xl"
@@ -862,9 +862,9 @@ export function AdminShippingRequestsPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">Aucune demande</p>
+          <p className="font-medium">{tr('Aucune demande')}</p>
           <p className="text-sm mt-0.5">
-            {search ? 'Aucun résultat pour cette recherche' : 'Pas de demandes dans cet onglet'}
+            {search ? tr('Aucun résultat pour cette recherche') : tr('Pas de demandes dans cet onglet')}
           </p>
         </div>
       ) : (

@@ -8,9 +8,12 @@ import { cn } from '@/lib/utils'
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
+import { pickLocalized } from '@/lib/i18n'
 interface NotifActivity {
   id: string
   title: string
+  title_en?: string | null
+  body_en?: string | null
   message: string
   type: string
   read: boolean
@@ -69,7 +72,7 @@ export function ActivityLogPage() {
 
     const { data } = await supabase
       .from('notifications')
-      .select('id, title, message:body, type, read, created_at')
+      .select('id, title, title_en, message:body, body_en, type, read, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1)
@@ -149,7 +152,7 @@ export function ActivityLogPage() {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-semibold leading-tight">{item.title}</p>
+                            <p className="text-sm font-semibold leading-tight">{pickLocalized(item.title, item.title_en)}</p>
                             <div className="flex items-center gap-1.5 shrink-0">
                               {!item.read && (
                                 <div className="h-2 w-2 rounded-full bg-blue-500" />
@@ -162,7 +165,7 @@ export function ActivityLogPage() {
                               </p>
                             </div>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{item.message}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{pickLocalized(item.message, item.body_en)}</p>
                         </div>
 
                         {item.message && item.message.length > 60 && (
@@ -183,7 +186,7 @@ export function ActivityLogPage() {
                                 {format(new Date(item.created_at), 'HH:mm')}
                               </span>
                             </div>
-                            <p className="text-xs text-muted-foreground leading-relaxed italic">"{item.message}"</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed italic">"{pickLocalized(item.message, item.body_en)}"</p>
                           </div>
                         </div>
                       )}

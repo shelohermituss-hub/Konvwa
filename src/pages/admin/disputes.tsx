@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { TicketStatus, TicketPriority } from '@/types'
 
+import { tr, DATE_LOCALE } from '@/lib/i18n'
 interface AdminTicket {
   id: string
   subject: string
@@ -36,25 +37,25 @@ interface TicketMessage {
 }
 
 const TICKET_STATUS_CONFIG: Record<TicketStatus, { label: string; bg: string; text: string; dot: string; icon: React.ElementType }> = {
-  open:        { label: 'Ouvert',   bg: 'bg-amber-50',    text: 'text-amber-700',  dot: 'bg-amber-400',   icon: Clock },
-  in_progress: { label: 'En cours', bg: 'bg-primary/10',  text: 'text-primary',    dot: 'bg-primary',     icon: MessageSquare },
-  resolved:    { label: 'Résolu',   bg: 'bg-emerald-50',  text: 'text-emerald-700', dot: 'bg-emerald-500', icon: CheckCircle2 },
-  closed:      { label: 'Fermé',    bg: 'bg-muted',       text: 'text-muted-foreground', dot: 'bg-muted-foreground', icon: XCircle },
+  open:        { label: tr('Ouvert'),   bg: 'bg-amber-50',    text: 'text-amber-700',  dot: 'bg-amber-400',   icon: Clock },
+  in_progress: { label: tr('En cours'), bg: 'bg-primary/10',  text: 'text-primary',    dot: 'bg-primary',     icon: MessageSquare },
+  resolved:    { label: tr('Résolu'),   bg: 'bg-emerald-50',  text: 'text-emerald-700', dot: 'bg-emerald-500', icon: CheckCircle2 },
+  closed:      { label: tr('Fermé'),    bg: 'bg-muted',       text: 'text-muted-foreground', dot: 'bg-muted-foreground', icon: XCircle },
 }
 
 const PRIORITY_CONFIG: Record<TicketPriority, { label: string; color: string }> = {
-  low:    { label: 'Basse',   color: 'text-muted-foreground' },
-  normal: { label: 'Normale', color: 'text-foreground' },
-  high:   { label: 'Haute',   color: 'text-amber-600' },
-  urgent: { label: 'Urgente', color: 'text-destructive' },
+  low:    { label: tr('Basse'),   color: 'text-muted-foreground' },
+  normal: { label: tr('Normale'), color: 'text-foreground' },
+  high:   { label: tr('Haute'),   color: 'text-amber-600' },
+  urgent: { label: tr('Urgente'), color: 'text-destructive' },
 }
 
 const STATUS_FILTERS = [
-  { value: 'open',        label: 'Ouverts' },
-  { value: 'in_progress', label: 'En cours' },
-  { value: 'resolved',    label: 'Résolus' },
-  { value: 'closed',      label: 'Fermés' },
-  { value: 'all',         label: 'Tous' },
+  { value: 'open',        label: tr('Ouverts') },
+  { value: 'in_progress', label: tr('En cours') },
+  { value: 'resolved',    label: tr('Résolus') },
+  { value: 'closed',      label: tr('Fermés') },
+  { value: 'all',         label: tr('Tous') },
 ]
 
 export function AdminDisputesPage() {
@@ -132,7 +133,7 @@ export function AdminDisputesPage() {
     await supabase.from('support_tickets').update({ status: newStatus }).eq('id', activeTicket.id)
     setTickets(prev => prev.map(t => t.id === activeTicket.id ? { ...t, status: newStatus } : t))
     setActiveTicket(prev => prev ? { ...prev, status: newStatus } : null)
-    toast.success('Statut mis à jour.')
+    toast.success(tr('Statut mis à jour.'))
   }
 
   const filtered = tickets.filter(t => {
@@ -146,8 +147,8 @@ export function AdminDisputesPage() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Support & Litiges</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Gérez les tickets de support et les demandes clients</p>
+        <h1 className="text-2xl font-bold tracking-tight">{tr('Support & Litiges')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{tr('Gérez les tickets de support et les demandes clients')}</p>
       </div>
 
       {/* KPI cards */}
@@ -173,7 +174,7 @@ export function AdminDisputesPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Rechercher par client ou sujet..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 rounded-xl" />
+              <Input placeholder={tr('Rechercher par client ou sujet...')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9 rounded-xl" />
             </div>
             <div className="flex gap-2 flex-wrap">
               {STATUS_FILTERS.map(f => (
@@ -198,18 +199,18 @@ export function AdminDisputesPage() {
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center">
             <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="font-semibold text-muted-foreground">Aucun ticket</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Aucun ticket de support ne correspond</p>
+            <p className="font-semibold text-muted-foreground">{tr('Aucun ticket')}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Aucun ticket de support ne correspond')}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Client</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Sujet</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Priorité</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Statut</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Date</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Client')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Sujet')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{tr('Priorité')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Statut')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">{tr('Date')}</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
@@ -235,7 +236,7 @@ export function AdminDisputesPage() {
                       </span>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                      {new Date(ticket.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {new Date(ticket.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                     </TableCell>
                     <TableCell onClick={e => e.stopPropagation()}>
                       <DropdownMenu>
@@ -246,14 +247,14 @@ export function AdminDisputesPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-xl w-48">
                           <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => openTicket(ticket)}>
-                            <MessageSquare className="mr-2 h-4 w-4" />Ouvrir conversation
+                            <MessageSquare className="mr-2 h-4 w-4" />{tr('Ouvrir conversation')}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={async () => {
                             await supabase.from('support_tickets').update({ status: 'resolved' }).eq('id', ticket.id)
                             setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, status: 'resolved' } : t))
-                            toast.success('Ticket marqué comme résolu.')
+                            toast.success(tr('Ticket marqué comme résolu.'))
                           }}>
-                            <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />Marquer résolu
+                            <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />{tr('Marquer résolu')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -289,7 +290,7 @@ export function AdminDisputesPage() {
 
           {/* Status change */}
           <div className="flex items-center gap-3 pb-3 border-b border-border">
-            <Label className="text-sm shrink-0 font-semibold">Statut :</Label>
+            <Label className="text-sm shrink-0 font-semibold">{tr('Statut :')}</Label>
             <Select value={newStatus} onValueChange={v => setNewStatus(v as TicketStatus)}>
               <SelectTrigger className="h-8 w-44 rounded-lg">
                 <SelectValue />
@@ -300,14 +301,14 @@ export function AdminDisputesPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" variant="outline" onClick={handleStatusChange} className="rounded-lg">Appliquer</Button>
+            <Button size="sm" variant="outline" onClick={handleStatusChange} className="rounded-lg">{tr('Appliquer')}</Button>
           </div>
 
           {/* Messages */}
           <ScrollArea className="flex-1 min-h-0 max-h-64">
             <div className="space-y-3 pr-2 py-2">
               {messages.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Aucun message</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{tr('Aucun message')}</p>
               ) : (
                 messages.map(msg => (
                   <div key={msg.id} className={cn('flex', msg.is_admin ? 'justify-end' : 'justify-start')}>
@@ -318,7 +319,7 @@ export function AdminDisputesPage() {
                       <p className="text-[10px] font-semibold opacity-70 mb-1">{msg.sender_name}</p>
                       <p className="leading-relaxed">{msg.message}</p>
                       <p className={cn('text-[10px] mt-1 opacity-60', msg.is_admin ? 'text-right' : '')}>
-                        {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(msg.created_at).toLocaleTimeString(DATE_LOCALE, { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>
@@ -330,7 +331,7 @@ export function AdminDisputesPage() {
           {/* Reply */}
           <div className="flex gap-2 pt-3 border-t border-border">
             <Textarea
-              placeholder="Répondre au client..."
+              placeholder={tr('Répondre au client...')}
               value={replyText}
               onChange={e => setReplyText(e.target.value)}
               rows={2}

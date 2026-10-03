@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useAuth } from '@/lib/auth-context'
 import { Loader2 } from 'lucide-react'
 
+import { tr } from '@/lib/i18n'
 export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -43,9 +44,9 @@ export function LoginPage() {
               H
             </div>
           </Link>
-          <CardTitle className="text-2xl">Connexion</CardTitle>
+          <CardTitle className="text-2xl">{tr('Connexion')}</CardTitle>
           <CardDescription>
-            Connectez-vous à votre compte HaitiImport
+            {tr('Connectez-vous à votre compte HaitiImport')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -56,11 +57,11 @@ export function LoginPage() {
               </Alert>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Adresse e-mail</Label>
+              <Label htmlFor="email">{tr('Adresse e-mail')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="votre@email.com"
+                placeholder={tr('votre@email.com')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -69,9 +70,9 @@ export function LoginPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Mot de passe</Label>
+                <Label htmlFor="password">{tr('Mot de passe')}</Label>
                 <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Mot de passe oublié ?
+                  {tr('Mot de passe oublié ?')}
                 </Link>
               </div>
               <Input
@@ -88,12 +89,12 @@ export function LoginPage() {
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Se connecter
+              {tr('Se connecter')}
             </Button>
             <p className="text-sm text-center text-muted-foreground">
-              Pas encore de compte ?{' '}
+              {tr('Pas encore de compte ?')}{' '}
               <Link to="/register" className="text-primary hover:underline">
-                Créer un compte
+                {tr('Créer un compte')}
               </Link>
             </p>
           </CardFooter>

@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
 
+import { tr, LOCALE_TAG } from '@/lib/i18n'
 interface WalletData {
   available_balance: number
   blocked_balance: number
@@ -34,10 +35,10 @@ interface Product {
 const PAGE_SIZE = 12
 
 const QUICK_ACTIONS = [
-  { label: 'Soumettre', Icon: Send,        path: '/submit' },
-  { label: 'Commandes', Icon: ShoppingBag, path: '/orders' },
-  { label: 'Expédition', Icon: Ship,       path: '/shipments' },
-  { label: 'Support',    Icon: HelpCircle, path: '/support' },
+  { label: tr('Soumettre'), Icon: Send,        path: '/submit' },
+  { label: tr('Commandes'), Icon: ShoppingBag, path: '/orders' },
+  { label: tr('Expédition'), Icon: Ship,       path: '/shipments' },
+  { label: tr('Support'),    Icon: HelpCircle, path: '/support' },
 ]
 
 function ProductCard({ product }: { product: Product }) {
@@ -66,13 +67,13 @@ function ProductCard({ product }: { product: Product }) {
         )}
         {product.featured && (
           <span className="absolute top-2 left-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-            Vedette
+            {tr('Vedette')}
           </span>
         )}
         {!product.stock_available && (
           <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
             <span className="text-[10px] font-bold text-destructive bg-white/90 px-2 py-1 rounded-full border border-destructive/20">
-              Rupture
+              {tr('Rupture')}
             </span>
           </div>
         )}
@@ -85,16 +86,16 @@ function ProductCard({ product }: { product: Product }) {
         <div className="mt-auto pt-1.5 flex items-end justify-between gap-1">
           <div>
             <p className="text-sm font-black text-primary leading-none">
-              {product.price_htg.toLocaleString('fr-HT')}
+              {product.price_htg.toLocaleString(LOCALE_TAG)}
               <span className="text-[10px] font-semibold text-muted-foreground"> HTG</span>
             </p>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              Min. {product.moq} {product.unit}
+              {tr('Min.')}{' '}{product.moq} {product.unit}
             </p>
           </div>
           {product.delivery_days_min && (
             <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-              {product.delivery_days_min}–{product.delivery_days_max ?? product.delivery_days_min}j
+              {product.delivery_days_min}–{product.delivery_days_max ?? product.delivery_days_min}{tr('j')}
             </p>
           )}
         </div>
@@ -200,7 +201,7 @@ export function DashboardPage() {
     return () => observer.disconnect()
   }, [hasMore, loadingMore, loadingInitial, page, fetchPage])
 
-  const firstName = profile?.full_name?.split(' ')[0] || 'Client'
+  const firstName = profile?.full_name?.split(' ')[0] || tr('Client')
   const initials  = profile?.full_name
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U'
@@ -246,12 +247,12 @@ export function DashboardPage() {
             ) : (
               <div className="text-right">
                 <p className="text-xl font-extrabold tracking-tight text-foreground leading-none">
-                  {balanceVisible ? Math.floor(balance).toLocaleString('fr-HT') : '•••••'}
+                  {balanceVisible ? Math.floor(balance).toLocaleString(LOCALE_TAG) : '•••••'}
                   <span className="text-[10px] font-semibold text-muted-foreground ml-0.5">HTG</span>
                 </p>
                 {wallet && wallet.blocked_balance > 0 && balanceVisible && (
                   <p className="text-[10px] text-amber-500 font-semibold leading-none mt-0.5">
-                    {wallet.blocked_balance.toLocaleString('fr-HT')} en attente
+                    {wallet.blocked_balance.toLocaleString(LOCALE_TAG)}{' '}{tr('en attente')}
                   </p>
                 )}
               </div>
@@ -259,7 +260,7 @@ export function DashboardPage() {
             <Link
               to="/wallet"
               onClick={handleTap}
-              aria-label="Portefeuille"
+              aria-label={tr('Portefeuille')}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white shadow-sm pressable"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
@@ -290,13 +291,13 @@ export function DashboardPage() {
           <Link to="/wallet" className="flex-1">
             <button onClick={handleTap} className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold text-white bg-[#0A1628] hover:bg-[#0d1e38] transition-colors shadow-sm pressable">
               <ArrowDownLeft className="h-3.5 w-3.5" />
-              Dépôt
+              {tr('Dépôt')}
             </button>
           </Link>
           <Link to="/orders" className="flex-1">
             <button onClick={handleTap} className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold text-[#0A1628] border-2 border-[#0A1628] bg-transparent hover:bg-[#0A1628]/5 transition-colors pressable">
               <TrendingUp className="h-3.5 w-3.5" />
-              Historique
+              {tr('Historique')}
             </button>
           </Link>
         </div>
@@ -306,7 +307,7 @@ export function DashboardPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
             type="search"
-            placeholder="Rechercher un produit…"
+            placeholder={tr('Rechercher un produit…')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-9 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
@@ -330,11 +331,11 @@ export function DashboardPage() {
         {/* Section header */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-bold text-foreground">
-            {query ? `Résultats pour "${query}"` : 'Catalogue'}
+            {query ? tr('Résultats pour "{0}"', query) : tr('Catalogue')}
           </h2>
           {!query && (
             <Link to="/products" className="text-xs font-semibold text-primary">
-              Voir tout
+              {tr('Voir tout')}
             </Link>
           )}
         </div>
@@ -356,11 +357,11 @@ export function DashboardPage() {
               <Search className="h-7 w-7 text-muted-foreground/40" />
             </div>
             <p className="text-sm font-bold text-foreground/70">
-              {query ? 'Aucun produit trouvé' : 'Aucun produit disponible'}
+              {query ? tr('Aucun produit trouvé') : tr('Aucun produit disponible')}
             </p>
             {query && (
               <button onClick={() => setSearch('')} className="text-xs font-semibold text-primary">
-                Effacer la recherche
+                {tr('Effacer la recherche')}
               </button>
             )}
           </div>
@@ -391,7 +392,7 @@ export function DashboardPage() {
         {/* End of list */}
         {!hasMore && products.length > 0 && (
           <p className="text-center text-[11px] text-muted-foreground/50 py-6 font-medium">
-            — Fin du catalogue —
+            {tr('— Fin du catalogue —')}
           </p>
         )}
       </div>

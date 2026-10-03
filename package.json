@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "lint": "eslint src",
-    "check": "npm run lint && tsc -b && vite build"
+    "check": "npm run lint && npm run i18n:check && tsc -b && vite build",
+    "i18n:check": "node scripts/i18n/check.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

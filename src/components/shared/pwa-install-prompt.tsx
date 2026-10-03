@@ -7,6 +7,7 @@ import {
   type BeforeInstallPromptEvent,
 } from '@/lib/pwa'
 
+import { tr } from '@/lib/i18n'
 const DISMISSED_KEY = 'konvwa_pwa_dismissed_at'
 const SNOOZE_MS = 3 * 24 * 60 * 60 * 1000
 const SHOW_DELAY_MS = 1500
@@ -93,7 +94,7 @@ export function PwaInstallPrompt() {
     <div className="fixed inset-x-0 bottom-0 z-[70] flex items-end justify-center px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pointer-events-none [body:has(nav.fixed.bottom-0)_&]:pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-6">
       <div
         role="dialog"
-        aria-label="Installer KONVWA"
+        aria-label={tr('Installer KONVWA')}
         className={cn(
           'w-full max-w-sm bg-white rounded-2xl shadow-xl border border-gray-100 p-4 pointer-events-auto',
           'transition-all duration-300',
@@ -109,15 +110,15 @@ export function PwaInstallPrompt() {
           </div>
 
           <div className="flex-1 min-w-0 pr-1">
-            <p className="font-bold text-[15px] text-foreground leading-tight">Installer KONVWA</p>
+            <p className="font-bold text-[15px] text-foreground leading-tight">{tr('Installer KONVWA')}</p>
             <p className="text-sm text-muted-foreground mt-0.5 leading-snug">
-              Accès rapide, notifications, mode hors ligne
+              {tr('Accès rapide, notifications, mode hors ligne')}
             </p>
           </div>
 
           <button
             onClick={dismiss}
-            aria-label="Fermer"
+            aria-label={tr('Fermer')}
             className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors shrink-0 -mt-0.5"
           >
             <X className="h-3.5 w-3.5 text-gray-500" />
@@ -132,7 +133,7 @@ export function PwaInstallPrompt() {
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
             <Download className="h-4 w-4" />
-            {installing ? 'Installation…' : "Installer l'application"}
+            {installing ? tr('Installation…') : tr('Installer l\'application')}
           </button>
         ) : ios ? (
           <ol className="mt-3.5 space-y-2 rounded-xl bg-gray-50 p-3 text-sm text-foreground">
@@ -140,13 +141,13 @@ export function PwaInstallPrompt() {
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Share className="h-3.5 w-3.5" />
               </span>
-              Appuyez sur <strong>Partager</strong> dans Safari
+              {tr('Appuyez sur')}{' '}<strong>{tr('Partager')}</strong>{' '}{tr('dans Safari')}
             </li>
             <li className="flex items-center gap-2">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <SquarePlus className="h-3.5 w-3.5" />
               </span>
-              Choisissez <strong>Sur l'écran d'accueil</strong>
+              {tr('Choisissez')}{' '}<strong>{tr('Sur l\'écran d\'accueil')}</strong>
             </li>
           </ol>
         ) : (
@@ -155,13 +156,13 @@ export function PwaInstallPrompt() {
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <MoreVertical className="h-3.5 w-3.5" />
               </span>
-              Ouvrez le <strong>menu ⋮</strong> de votre navigateur
+              {tr('Ouvrez le')}{' '}<strong>{tr('menu ⋮')}</strong>{' '}{tr('de votre navigateur')}
             </li>
             <li className="flex items-center gap-2">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Download className="h-3.5 w-3.5" />
               </span>
-              Choisissez <strong>Installer l'application</strong>
+              {tr('Choisissez')}{' '}<strong>{tr('Installer l\'application')}</strong>
             </li>
           </ol>
         )}

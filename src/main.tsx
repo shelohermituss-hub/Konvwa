@@ -8,10 +8,22 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth-context"
 import { I18nProvider } from "@/lib/i18n-context"
 import { CartProvider } from "@/lib/cart-context"
-import { Toaster } from "sonner"
+import { Toaster, toast } from "sonner"
+import { trServer, tr, LANG } from "@/lib/i18n"
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt"
 import { AuthErrorToast } from "@/components/shared/auth-error-toast"
 import { UpdateBanner } from "@/components/shared/update-banner"
+
+// Server errors (RPC) are written in French: show them in the user's language
+const originalToastError = toast.error.bind(toast)
+toast.error = ((message: Parameters<typeof toast.error>[0], data?: Parameters<typeof toast.error>[1]) =>
+  originalToastError(
+    typeof message === 'string' ? trServer(message) : message,
+    data && typeof data.description === 'string' ? { ...data, description: trServer(data.description) } : data,
+  )) as typeof toast.error
+
+// Pages other than the public ones keep the generic title: follow the language
+if (LANG === 'en') document.title = tr('KONVWA — Importez depuis Alibaba, Shein et Temu en Haïti')
 
 // Chrome fires this once, possibly before React mounts: keep it for the install popup.
 window.addEventListener('beforeinstallprompt', (e) => {

@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface UserRow {
   user_id: string
   full_name: string
@@ -24,18 +25,18 @@ interface UserRow {
 }
 
 const ROLE_CONFIG: Record<UserRole, { label: string; dot: string; badge: string }> = {
-  client:  { label: 'Client',   dot: 'bg-muted-foreground', badge: 'bg-muted text-muted-foreground' },
+  client:  { label: tr('Client'),   dot: 'bg-muted-foreground', badge: 'bg-muted text-muted-foreground' },
   agent:   { label: 'Agent',    dot: 'bg-blue-500',         badge: 'bg-blue-50 text-blue-700' },
   manager: { label: 'Manager',  dot: 'bg-primary',          badge: 'bg-primary/10 text-primary' },
   admin:   { label: 'Admin',    dot: 'bg-destructive',      badge: 'bg-destructive/10 text-destructive' },
 }
 
 const ROLE_FILTERS = [
-  { value: 'all',     label: 'Tous' },
-  { value: 'client',  label: 'Clients' },
-  { value: 'agent',   label: 'Agents' },
-  { value: 'manager', label: 'Managers' },
-  { value: 'admin',   label: 'Admins' },
+  { value: 'all',     label: tr('Tous') },
+  { value: 'client',  label: tr('Clients') },
+  { value: 'agent',   label: tr('Agents') },
+  { value: 'manager', label: tr('Managers') },
+  { value: 'admin',   label: tr('Admins') },
 ]
 
 const PAGE_SIZE = 15
@@ -93,12 +94,12 @@ export function AdminUsersPage() {
     setSaving(true)
     const { data, error } = await supabase
       .from('profiles').update({ role: newRole }).eq('user_id', editUser.user_id).select('role').maybeSingle()
-    if (error) toast.error('Erreur lors de la mise à jour du rôle.')
+    if (error) toast.error(tr('Erreur lors de la mise à jour du rôle.'))
     else if (data?.role !== newRole) {
       // the database keeps the old role when the caller is not an administrator
-      toast.error('Seul un administrateur peut changer les rôles.')
+      toast.error(tr('Seul un administrateur peut changer les rôles.'))
     } else {
-      toast.success('Rôle mis à jour.')
+      toast.success(tr('Rôle mis à jour.'))
       setUsers(prev => prev.map(u => u.user_id === editUser.user_id ? { ...u, role: newRole } : u))
       setEditUser(null)
     }
@@ -117,9 +118,9 @@ export function AdminUsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Utilisateurs</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Utilisateurs')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {loading ? '…' : `${filtered.length} utilisateur${filtered.length !== 1 ? 's' : ''}`}
+            {loading ? '…' : tr('{0} utilisateur{1}', filtered.length, filtered.length !== 1 ? 's' : '')}
           </p>
         </div>
       </div>
@@ -127,9 +128,9 @@ export function AdminUsersPage() {
       {/* KPI mini cards */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total utilisateurs', value: stats.total, icon: Users, iconClass: 'text-primary', bgClass: 'bg-primary/10' },
-          { label: 'Clients',            value: stats.clients, icon: UserCircle2, iconClass: 'text-blue-600', bgClass: 'bg-blue-50' },
-          { label: 'Équipe',             value: stats.staff,   icon: Shield, iconClass: 'text-amber-600', bgClass: 'bg-amber-50' },
+          { label: tr('Total utilisateurs'), value: stats.total, icon: Users, iconClass: 'text-primary', bgClass: 'bg-primary/10' },
+          { label: tr('Clients'),            value: stats.clients, icon: UserCircle2, iconClass: 'text-blue-600', bgClass: 'bg-blue-50' },
+          { label: tr('Équipe'),             value: stats.staff,   icon: Shield, iconClass: 'text-amber-600', bgClass: 'bg-amber-50' },
         ].map(kpi => (
           <div key={kpi.label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
             {loading ? (
@@ -155,7 +156,7 @@ export function AdminUsersPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher par nom ou téléphone..."
+              placeholder={tr('Rechercher par nom ou téléphone...')}
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(0) }}
               className="pl-9 rounded-xl"
@@ -194,20 +195,20 @@ export function AdminUsersPage() {
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center">
             <Users className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="font-semibold text-muted-foreground">Aucun utilisateur trouvé</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Modifiez vos filtres de recherche</p>
+            <p className="font-semibold text-muted-foreground">{tr('Aucun utilisateur trouvé')}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Modifiez vos filtres de recherche')}</p>
           </div>
         ) : (
           <>
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Utilisateur</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Téléphone</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Rôle</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell text-right">Commandes</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell text-right">Solde</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Inscrit le</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Utilisateur')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{tr('Téléphone')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Rôle')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell text-right">{tr('Commandes')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell text-right">{tr('Solde')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden lg:table-cell">{tr('Inscrit le')}</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -240,14 +241,14 @@ export function AdminUsersPage() {
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-right">
                         <span className="text-sm font-semibold">{user.order_count}</span>
-                        <span className="text-xs text-muted-foreground ml-1">cmd</span>
+                        <span className="text-xs text-muted-foreground ml-1">{tr('cmd')}</span>
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-right">
-                        <p className="text-sm font-semibold">{(user.wallet_balance || 0).toLocaleString()}</p>
+                        <p className="text-sm font-semibold">{(user.wallet_balance || 0).toLocaleString(LOCALE_TAG)}</p>
                         <p className="text-[10px] text-muted-foreground">HTG</p>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                        {new Date(user.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(user.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -261,7 +262,7 @@ export function AdminUsersPage() {
                               className="rounded-lg cursor-pointer"
                               onClick={() => { setEditUser(user); setNewRole(user.role) }}
                             >
-                              <Edit className="mr-2 h-4 w-4" />Changer le rôle
+                              <Edit className="mr-2 h-4 w-4" />{tr('Changer le rôle')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -275,7 +276,7 @@ export function AdminUsersPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
                 <p className="text-xs text-muted-foreground">
-                  {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} sur {filtered.length}
+                  {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)}{' '}{tr('sur')}{' '}{filtered.length}
                 </p>
                 <div className="flex items-center gap-1">
                   <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>
@@ -300,14 +301,14 @@ export function AdminUsersPage() {
       <Dialog open={!!editUser} onOpenChange={o => { if (!o) setEditUser(null) }}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Modifier le rôle</DialogTitle>
+            <DialogTitle>{tr('Modifier le rôle')}</DialogTitle>
             <DialogDescription>
-              Utilisateur : <span className="font-semibold">{editUser?.full_name}</span>
+              {tr('Utilisateur :')}{' '}<span className="font-semibold">{editUser?.full_name}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-3">
             <div>
-              <p className="text-sm font-semibold mb-2">Rôle actuel</p>
+              <p className="text-sm font-semibold mb-2">{tr('Rôle actuel')}</p>
               {editUser && (
                 <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-2.5 py-1', ROLE_CONFIG[editUser.role]?.badge)}>
                   <span className={cn('h-1.5 w-1.5 rounded-full', ROLE_CONFIG[editUser.role]?.dot)} />
@@ -316,13 +317,13 @@ export function AdminUsersPage() {
               )}
             </div>
             <div>
-              <p className="text-sm font-semibold mb-2">Nouveau rôle</p>
+              <p className="text-sm font-semibold mb-2">{tr('Nouveau rôle')}</p>
               <Select value={newRole} onValueChange={v => setNewRole(v as UserRole)}>
                 <SelectTrigger className="rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="client">Client</SelectItem>
+                  <SelectItem value="client">{tr('Client')}</SelectItem>
                   <SelectItem value="agent">Agent</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
@@ -331,9 +332,9 @@ export function AdminUsersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditUser(null)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setEditUser(null)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleRoleUpdate} disabled={saving || newRole === editUser?.role} className="rounded-xl">
-              {saving ? 'Enregistrement…' : 'Enregistrer'}
+              {saving ? tr('Enregistrement…') : tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>

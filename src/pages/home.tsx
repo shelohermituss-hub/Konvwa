@@ -10,6 +10,7 @@ import {
 import { cn } from '@/lib/utils'
 import { ArrowRight } from 'lucide-react'
 
+import { tr, LOCALE_TAG } from '@/lib/i18n'
 // ── Data ────────────────────────────────────────────────────────────────
 
 const BRANDS = [
@@ -21,67 +22,67 @@ const BRANDS = [
 const FEATURES = [
   {
     icon: '/icons/glass/cart.svg',
-    title: 'Commandez partout',
-    description: "Soumettez un lien depuis Alibaba, Shein ou Temu — sans carte bancaire étrangère.",
+    title: tr('Commandez partout'),
+    description: tr('Soumettez un lien depuis Alibaba, Shein ou Temu — sans carte bancaire étrangère.'),
   },
   {
     icon: '/icons/glass/document.svg',
-    title: 'Devis transparent',
-    description: "Recevez un devis complet avec tous les frais détaillés en moins de 24h.",
+    title: tr('Devis transparent'),
+    description: tr('Recevez un devis complet avec tous les frais détaillés en moins de 24h.'),
   },
   {
     icon: '/icons/glass/credit-card.svg',
-    title: 'Paiement local',
-    description: "Payez via MonCash ou NatCash, directement depuis Haïti.",
+    title: tr('Paiement local'),
+    description: tr('Payez via MonCash ou NatCash, directement depuis Haïti.'),
   },
   {
     icon: '/icons/glass/clipboard.svg',
-    title: 'Suivi en temps réel',
-    description: "Suivez votre commande à chaque étape, de l'achat jusqu'à votre porte.",
+    title: tr('Suivi en temps réel'),
+    description: tr('Suivez votre commande à chaque étape, de l\'achat jusqu\'à votre porte.'),
   },
   {
     icon: '/icons/glass/database.svg',
-    title: 'Douane incluse',
-    description: "Tous les frais douaniers sont calculés et inclus dans votre devis.",
+    title: tr('Douane incluse'),
+    description: tr('Tous les frais douaniers sont calculés et inclus dans votre devis.'),
   },
   {
     icon: '/icons/glass/chart.svg',
-    title: 'Tableau de bord',
-    description: "Gérez toutes vos commandes depuis un espace personnel sécurisé.",
+    title: tr('Tableau de bord'),
+    description: tr('Gérez toutes vos commandes depuis un espace personnel sécurisé.'),
   },
 ]
 
 const STATS = [
-  { value: 4800, suffix: '+', label: 'Clients satisfaits' },
-  { value: 12000, suffix: '+', label: 'Commandes livrées' },
-  { value: 98, suffix: '%', label: 'Taux de satisfaction' },
-  { value: 24, suffix: 'h', label: 'Délai de devis' },
+  { value: 4800, suffix: '+', label: tr('Clients satisfaits') },
+  { value: 12000, suffix: '+', label: tr('Commandes livrées') },
+  { value: 98, suffix: '%', label: tr('Taux de satisfaction') },
+  { value: 24, suffix: 'h', label: tr('Délai de devis') },
 ]
 
 const STEPS = [
   {
     number: '1',
     icon: '/icons/glass/cart.svg',
-    title: 'Soumettez un lien',
-    description: "Collez l'URL du produit depuis Alibaba, Shein ou Temu dans votre espace client.",
+    title: tr('Soumettez un lien'),
+    description: tr('Collez l\'URL du produit depuis Alibaba, Shein ou Temu dans votre espace client.'),
   },
   {
     number: '2',
     icon: '/icons/glass/document.svg',
-    title: 'Recevez un devis',
-    description: "Obtenez un devis complet avec tous les frais détaillés en moins de 24h.",
+    title: tr('Recevez un devis'),
+    description: tr('Obtenez un devis complet avec tous les frais détaillés en moins de 24h.'),
   },
   {
     number: '3',
     icon: '/icons/glass/credit-card.svg',
-    title: 'Payez en Haïti',
-    description: "Rechargez votre portefeuille via MonCash ou NatCash et confirmez la commande.",
+    title: tr('Payez en Haïti'),
+    description: tr('Rechargez votre portefeuille via MonCash ou NatCash et confirmez la commande.'),
   },
   {
     number: '4',
     icon: '/icons/glass/clipboard.svg',
-    title: 'Recevez chez vous',
-    description: "Suivez votre colis en temps réel et recevez-le directement à domicile.",
+    title: tr('Recevez chez vous'),
+    description: tr('Suivez votre colis en temps réel et recevez-le directement à domicile.'),
   },
 ]
 
@@ -89,12 +90,12 @@ const PAYMENT_METHODS = [
   {
     icon: '/icons/glass/credit-card.svg',
     name: 'MonCash',
-    description: "Paiement mobile Digicel — payez instantanément depuis votre téléphone.",
+    description: tr('Paiement mobile Digicel — payez instantanément depuis votre téléphone.'),
   },
   {
     icon: '/icons/glass/currency.svg',
     name: 'NatCash',
-    description: "Paiement mobile Natcom — une autre façon rapide de régler vos commandes.",
+    description: tr('Paiement mobile Natcom — une autre façon rapide de régler vos commandes.'),
   },
 ]
 
@@ -107,24 +108,24 @@ const IMAGES = {
 
 const FAQS = [
   {
-    question: "Comment fonctionne le service ?",
-    answer: "Vous soumettez un lien produit, nous calculons un devis tout inclus (produit, service, douane, livraison), vous payez via MonCash ou NatCash, et nous gérons l'achat et l'expédition jusqu'à la livraison.",
+    question: tr('Comment fonctionne le service ?'),
+    answer: tr('Vous soumettez un lien produit, nous calculons un devis tout inclus (produit, service, douane, livraison), vous payez via MonCash ou NatCash, et nous gérons l\'achat et l\'expédition jusqu\'à la livraison.'),
   },
   {
-    question: "Quels produits puis-je importer ?",
-    answer: "Vous pouvez importer la plupart des produits disponibles sur Alibaba, Shein et Temu : électronique, vêtements, équipements, articles ménagers, etc. Certains produits sont soumis à des restrictions douanières.",
+    question: tr('Quels produits puis-je importer ?'),
+    answer: tr('Vous pouvez importer la plupart des produits disponibles sur Alibaba, Shein et Temu : électronique, vêtements, équipements, articles ménagers, etc. Certains produits sont soumis à des restrictions douanières.'),
   },
   {
-    question: "Quels sont les délais de livraison ?",
-    answer: "Les délais varient de 3 à 6 semaines selon le produit et le fournisseur. Le délai estimé est toujours indiqué dans votre devis avant paiement.",
+    question: tr('Quels sont les délais de livraison ?'),
+    answer: tr('Les délais varient de 3 à 6 semaines selon le produit et le fournisseur. Le délai estimé est toujours indiqué dans votre devis avant paiement.'),
   },
   {
-    question: "Comment sont calculés les frais ?",
-    answer: "Le prix inclut le coût du produit, nos frais de service, l'expédition maritime, la douane estimée et la livraison locale en Haïti. Tout est détaillé ligne par ligne dans votre devis.",
+    question: tr('Comment sont calculés les frais ?'),
+    answer: tr('Le prix inclut le coût du produit, nos frais de service, l\'expédition maritime, la douane estimée et la livraison locale en Haïti. Tout est détaillé ligne par ligne dans votre devis.'),
   },
   {
-    question: "Puis-je suivre ma commande ?",
-    answer: "Oui, vous recevez des notifications à chaque étape : achat confirmé, arrivée à l'entrepôt, expédition, arrivée en Haïti, dédouanement et livraison.",
+    question: tr('Puis-je suivre ma commande ?'),
+    answer: tr('Oui, vous recevez des notifications à chaque étape : achat confirmé, arrivée à l\'entrepôt, expédition, arrivée en Haïti, dédouanement et livraison.'),
   },
 ]
 
@@ -217,7 +218,7 @@ function StatCounter({
   return (
     <div ref={ref} className="flex flex-col gap-1">
       <span className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-        {count.toLocaleString('fr-HT')}
+        {count.toLocaleString(LOCALE_TAG)}
         <span className="text-primary">{suffix}</span>
       </span>
       <span className="text-sm text-muted-foreground">{label}</span>
@@ -234,16 +235,15 @@ export function HomePage() {
       <section className="mx-auto grid w-full max-w-6xl gap-12 px-4 pt-6 pb-16 sm:px-6 md:grid-cols-2 md:items-center md:pt-10 md:pb-28">
         <div className="flex flex-col gap-6">
           <span className="inline-flex w-fit items-center rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            🇭🇹 Service d'importation haïtien
+            {tr('🇭🇹 Service d\'importation haïtien')}
           </span>
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            Importez depuis{' '}
-            <span className="text-primary">Alibaba, Shein</span>
-            {' '}et Temu en Haïti
+            {tr('Importez depuis')}{' '}
+            <span className="text-primary">{tr('Alibaba, Shein')}</span>
+            {' '}{tr('et Temu en Haïti')}
           </h1>
           <p className="max-w-md text-lg text-muted-foreground">
-            Commandez depuis n'importe quelle boutique internationale et payez
-            via MonCash ou NatCash. Sans carte bancaire étrangère.
+            {tr('Commandez depuis n\'importe quelle boutique internationale et payez via MonCash ou NatCash. Sans carte bancaire étrangère.')}
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <Button
@@ -252,7 +252,7 @@ export function HomePage() {
               className="btn-gradient min-h-12 rounded-full px-8 text-base"
             >
               <Link to="/auth">
-                Commencer gratuitement
+                {tr('Commencer gratuitement')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -262,11 +262,11 @@ export function HomePage() {
               size="lg"
               className="min-h-12 rounded-full px-8 text-base"
             >
-              <Link to="/auth">Se connecter</Link>
+              <Link to="/auth">{tr('Se connecter')}</Link>
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            Pas besoin de carte bancaire. Créez votre compte en moins de 2 minutes.
+            {tr('Pas besoin de carte bancaire. Créez votre compte en moins de 2 minutes.')}
           </p>
         </div>
 
@@ -282,7 +282,7 @@ export function HomePage() {
           {/* Plane — no z-index so mix-blend-mode blends against page bg */}
           <img
             src="/hero/plane.jpg"
-            alt="Avion cargo importation internationale"
+            alt={tr('Avion cargo importation internationale')}
             className="relative w-full"
             style={{ mixBlendMode: 'multiply' }}
           />
@@ -290,14 +290,14 @@ export function HomePage() {
           {/* Forklift — negative margin overlap, DOM order paints it on top, no z-index stacking context */}
           <img
             src="/hero/forklift.jpg"
-            alt="Conteneur logistique"
+            alt={tr('Conteneur logistique')}
             className="relative -mt-[22%] ml-auto block w-[65%]"
             style={{ mixBlendMode: 'multiply' }}
           />
 
           {/* Payment badge */}
           <div className="absolute top-4 right-0 z-10 flex items-center gap-1.5 rounded-full border border-border bg-background/95 px-3 py-1.5 shadow-md backdrop-blur-sm">
-            <span className="text-[11px] font-bold text-foreground">MonCash · NatCash</span>
+            <span className="text-[11px] font-bold text-foreground">{tr('MonCash · NatCash')}</span>
           </div>
 
           {/* Brand logos */}
@@ -323,7 +323,7 @@ export function HomePage() {
       <section className="border-y border-border bg-muted/30 px-4 py-8 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <p className="mb-6 text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Commandez depuis vos boutiques préférées
+            {tr('Commandez depuis vos boutiques préférées')}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16">
             {BRANDS.map((brand) => (
@@ -356,24 +356,23 @@ export function HomePage() {
             <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-border">
               <img
                 src={IMAGES.woman}
-                alt="Colis reçu à domicile"
+                alt={tr('Colis reçu à domicile')}
                 className="aspect-[4/3] w-full object-cover"
               />
             </div>
           </Reveal>
           <Reveal delay={120} className="order-1 md:order-2 flex flex-col gap-5">
             <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              La boutique internationale, livrée jusqu'à votre porte
+              {tr('La boutique internationale, livrée jusqu\'à votre porte')}
             </h2>
             <p className="text-lg text-muted-foreground">
-              Plus besoin de connaître quelqu'un à l'étranger.
-              KONVWA achète pour vous, dédouane et livre directement en Haïti.
+              {tr('Plus besoin de connaître quelqu\'un à l\'étranger. KONVWA achète pour vous, dédouane et livre directement en Haïti.')}
             </p>
             <ul className="space-y-3">
               {[
-                'Achat sécurisé auprès des fournisseurs internationaux',
-                'Dédouanement entièrement pris en charge',
-                'Livraison directe en Haïti — sans intermédiaire',
+                tr('Achat sécurisé auprès des fournisseurs internationaux'),
+                tr('Dédouanement entièrement pris en charge'),
+                tr('Livraison directe en Haïti — sans intermédiaire'),
               ].map((point) => (
                 <li key={point} className="flex items-start gap-3 text-sm text-muted-foreground">
                   <span
@@ -393,7 +392,7 @@ export function HomePage() {
                 className="btn-gradient rounded-full px-8"
               >
                 <Link to="/auth">
-                  Créer mon compte gratuitement
+                  {tr('Créer mon compte gratuitement')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -409,10 +408,10 @@ export function HomePage() {
       >
         <Reveal className="mx-auto mb-12 max-w-2xl text-center">
           <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Tout ce dont vous avez besoin
+            {tr('Tout ce dont vous avez besoin')}
           </h2>
           <p className="mt-3 text-lg text-muted-foreground">
-            Un service complet de l'achat à la livraison — sans complexité.
+            {tr('Un service complet de l\'achat à la livraison — sans complexité.')}
           </p>
         </Reveal>
 
@@ -421,7 +420,7 @@ export function HomePage() {
           <div className="relative">
             <img
               src={IMAGES.shopping}
-              alt="Shopping en ligne depuis Haïti"
+              alt={tr('Shopping en ligne depuis Haïti')}
               className="h-52 w-full object-cover sm:h-64"
             />
             <div
@@ -430,10 +429,10 @@ export function HomePage() {
             />
             <div className="absolute inset-0 flex flex-col justify-center px-8">
               <p className="text-sm font-semibold uppercase tracking-widest text-white/70">
-                100% en ligne
+                {tr('100% en ligne')}
               </p>
               <p className="mt-1 max-w-xs text-xl font-extrabold text-white sm:text-2xl">
-                Commandez depuis Alibaba, Shein ou Temu sans carte étrangère
+                {tr('Commandez depuis Alibaba, Shein ou Temu sans carte étrangère')}
               </p>
             </div>
           </div>
@@ -462,10 +461,10 @@ export function HomePage() {
         <div className="mx-auto max-w-6xl">
           <Reveal className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              Comment ça marche
+              {tr('Comment ça marche')}
             </h2>
             <p className="mt-3 text-lg text-muted-foreground">
-              Quatre étapes simples pour recevoir vos produits en Haïti.
+              {tr('Quatre étapes simples pour recevoir vos produits en Haïti.')}
             </p>
           </Reveal>
 
@@ -508,7 +507,7 @@ export function HomePage() {
             <div className="relative">
               <img
                 src={IMAGES.delivery}
-                alt="Colis livré à la porte"
+                alt={tr('Colis livré à la porte')}
                 className="h-64 w-full object-cover sm:h-80"
               />
               <div
@@ -516,7 +515,7 @@ export function HomePage() {
                 style={{ background: 'linear-gradient(to top, rgba(10,22,40,0.75) 0%, transparent 50%)' }}
               >
                 <p className="mt-auto pb-8 text-center text-xl font-bold text-white drop-shadow-md sm:text-2xl">
-                  Votre colis, livré directement chez vous en Haïti
+                  {tr('Votre colis, livré directement chez vous en Haïti')}
                 </p>
               </div>
             </div>
@@ -530,10 +529,10 @@ export function HomePage() {
           <Reveal className="flex flex-col gap-8">
             <div>
               <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                Payez comme vous êtes habitués
+                {tr('Payez comme vous êtes habitués')}
               </h2>
               <p className="mt-3 text-lg text-muted-foreground">
-                Rechargez votre portefeuille avec les moyens de paiement les plus utilisés en Haïti.
+                {tr('Rechargez votre portefeuille avec les moyens de paiement les plus utilisés en Haïti.')}
               </p>
             </div>
 
@@ -556,7 +555,7 @@ export function HomePage() {
             <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-border">
               <img
                 src={IMAGES.phone}
-                alt="Paiement mobile MonCash NatCash"
+                alt={tr('Paiement mobile MonCash NatCash')}
                 className="aspect-[4/5] w-full object-cover"
               />
             </div>
@@ -572,7 +571,7 @@ export function HomePage() {
         <div className="mx-auto max-w-3xl">
           <Reveal className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              Questions fréquentes
+              {tr('Questions fréquentes')}
             </h2>
           </Reveal>
 
@@ -612,12 +611,10 @@ export function HomePage() {
             <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="max-w-md">
                 <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-                  Prêt à importer en Haïti ?
+                  {tr('Prêt à importer en Haïti ?')}
                 </h2>
                 <p className="mt-3 text-white/80">
-                  Créez votre compte gratuitement et soumettez votre première
-                  commande aujourd'hui — sans engagement, sans carte bancaire
-                  étrangère.
+                  {tr('Créez votre compte gratuitement et soumettez votre première commande aujourd\'hui — sans engagement, sans carte bancaire étrangère.')}
                 </p>
               </div>
               <Button
@@ -626,7 +623,7 @@ export function HomePage() {
                 className="min-h-12 shrink-0 rounded-full bg-white px-8 text-base text-foreground hover:bg-white/90"
               >
                 <Link to="/auth">
-                  Commencer gratuitement
+                  {tr('Commencer gratuitement')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

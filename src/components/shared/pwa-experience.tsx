@@ -5,11 +5,12 @@ import { cn } from '@/lib/utils'
 import { usePushNotifications, type NotificationTypes } from '@/hooks/use-push-notifications'
 import { toast } from 'sonner'
 
+import { tr } from '@/lib/i18n'
 const TYPE_LABELS: { key: keyof NotificationTypes; label: string; desc: string }[] = [
-  { key: 'orders',   label: 'Commandes',   desc: 'Statut de vos commandes et livraisons' },
-  { key: 'payments', label: 'Paiements',   desc: 'Confirmations MonCash / NatCash' },
-  { key: 'quotes',   label: 'Devis',       desc: 'Nouveau devis disponible' },
-  { key: 'alerts',   label: 'Alertes',     desc: 'Informations et mises à jour importantes' },
+  { key: 'orders',   label: tr('Commandes'),   desc: tr('Statut de vos commandes et livraisons') },
+  { key: 'payments', label: tr('Paiements'),   desc: tr('Confirmations MonCash / NatCash') },
+  { key: 'quotes',   label: tr('Devis'),       desc: tr('Nouveau devis disponible') },
+  { key: 'alerts',   label: tr('Alertes'),     desc: tr('Informations et mises à jour importantes') },
 ]
 
 interface Props {
@@ -45,12 +46,12 @@ export function PwaExperience({ userId, className }: Props) {
   async function handleSubscribe() {
     const ok = await subscribe(localTypes)
     if (ok) {
-      toast.success('Notifications activées', {
-        description: 'Vous recevrez les mises à jour directement sur cet appareil.',
+      toast.success(tr('Notifications activées'), {
+        description: tr('Vous recevrez les mises à jour directement sur cet appareil.'),
       })
     } else {
-      toast.error('Permission refusée', {
-        description: 'Activez les notifications dans les paramètres du navigateur.',
+      toast.error(tr('Permission refusée'), {
+        description: tr('Activez les notifications dans les paramètres du navigateur.'),
       })
     }
   }
@@ -73,24 +74,24 @@ export function PwaExperience({ userId, className }: Props) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground leading-tight">
-            Activer les notifications
+            {tr('Activer les notifications')}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
-            Commandes, paiements et devis en temps réel
+            {tr('Commandes, paiements et devis en temps réel')}
           </p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => setExpanded((v) => !v)}
             className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-muted/60 transition-colors text-muted-foreground"
-            aria-label="Voir les options"
+            aria-label={tr('Voir les options')}
           >
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
           <button
             onClick={dismiss}
             className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-muted/60 transition-colors text-muted-foreground"
-            aria-label="Fermer"
+            aria-label={tr('Fermer')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -101,7 +102,7 @@ export function PwaExperience({ userId, className }: Props) {
       {expanded && (
         <div className="border-t border-border/40 px-4 py-3 bg-[#F8F9FB] space-y-2.5">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-            Types de notifications
+            {tr('Types de notifications')}
           </p>
           {TYPE_LABELS.map(({ key, label, desc }) => (
             <div key={key} className="flex items-center gap-3">
@@ -130,7 +131,7 @@ export function PwaExperience({ userId, className }: Props) {
           )}
           style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
         >
-          {loading ? 'Activation…' : 'Activer les notifications'}
+          {loading ? tr('Activation…') : tr('Activer les notifications')}
         </button>
       </div>
     </div>
@@ -149,7 +150,7 @@ export function PushSettingsRow({ userId }: { userId?: string }) {
     return (
       <div className="flex items-center gap-3 py-3">
         <BellOff className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-        <span className="text-sm text-muted-foreground">Non supporté sur cet appareil</span>
+        <span className="text-sm text-muted-foreground">{tr('Non supporté sur cet appareil')}</span>
       </div>
     )
   }
@@ -157,11 +158,11 @@ export function PushSettingsRow({ userId }: { userId?: string }) {
   async function toggle() {
     if (subscribed) {
       await unsubscribe()
-      toast.info('Notifications désactivées')
+      toast.info(tr('Notifications désactivées'))
     } else {
       const ok = await subscribe(localTypes)
-      if (ok) toast.success('Notifications activées')
-      else toast.error('Permission refusée — vérifiez les paramètres du navigateur')
+      if (ok) toast.success(tr('Notifications activées'))
+      else toast.error(tr('Permission refusée — vérifiez les paramètres du navigateur'))
     }
   }
 
@@ -183,13 +184,13 @@ export function PushSettingsRow({ userId }: { userId?: string }) {
             <Bell className={cn('h-4 w-4', subscribed ? 'text-primary' : 'text-muted-foreground')} strokeWidth={1.8} />
           </div>
           <div>
-            <p className="text-sm font-semibold">Notifications push</p>
+            <p className="text-sm font-semibold">{tr('Notifications push')}</p>
             <p className="text-xs text-muted-foreground">
               {permission === 'denied'
-                ? 'Bloquées — modifier dans les paramètres du navigateur'
+                ? tr('Bloquées — modifier dans les paramètres du navigateur')
                 : subscribed
-                ? 'Activées sur cet appareil'
-                : 'Désactivées'}
+                ? tr('Activées sur cet appareil')
+                : tr('Désactivées')}
             </p>
           </div>
         </div>

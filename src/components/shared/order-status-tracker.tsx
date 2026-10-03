@@ -1,27 +1,28 @@
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 
+import { tr } from '@/lib/i18n'
 const FULL_STEPS = [
-  { key: 'submitted',  label: 'Soumis',    statuses: ['draft', 'submitted', 'reviewing', 'quote_sent'] },
-  { key: 'quoted',     label: 'Devis',     statuses: ['quoted'] },
-  { key: 'paid',       label: 'Payé',      statuses: ['awaiting_payment', 'paid', 'purchasing'] },
-  { key: 'warehouse',  label: 'Entrepôt',  statuses: ['in_china_warehouse'] },
-  { key: 'shipped',    label: 'Expédié',   statuses: ['shipped'] },
-  { key: 'transit',    label: 'Transit',   statuses: ['in_transit'] },
-  { key: 'arrived',    label: 'Arrivée',   statuses: ['arrived', 'customs', 'customs_clearance'] },
-  { key: 'delivering', label: 'Livraison', statuses: ['delivery', 'delivering'] },
-  { key: 'delivered',  label: 'Livré',     statuses: ['delivered', 'completed'] },
+  { key: 'submitted',  label: tr('Soumis'),    statuses: ['draft', 'submitted', 'reviewing', 'quote_sent'] },
+  { key: 'quoted',     label: tr('Devis'),     statuses: ['quoted'] },
+  { key: 'paid',       label: tr('Payé'),      statuses: ['awaiting_payment', 'paid', 'purchasing'] },
+  { key: 'warehouse',  label: tr('Entrepôt'),  statuses: ['in_china_warehouse'] },
+  { key: 'shipped',    label: tr('Expédié'),   statuses: ['shipped'] },
+  { key: 'transit',    label: tr('Transit'),   statuses: ['in_transit'] },
+  { key: 'arrived',    label: tr('Arrivée'),   statuses: ['arrived', 'customs', 'customs_clearance'] },
+  { key: 'delivering', label: tr('Livraison'), statuses: ['delivery', 'delivering'] },
+  { key: 'delivered',  label: tr('Livré'),     statuses: ['delivered', 'completed'] },
 ] as const
 
 // For separate (achat seulement) orders, the tracker ends at Entrepôt.
 // Any status beyond in_china_warehouse also maps to the last step so it shows complete.
 const SEPARATE_STEPS = [
-  { key: 'submitted', label: 'Soumis',   statuses: ['draft', 'submitted', 'reviewing', 'quote_sent'] },
-  { key: 'quoted',    label: 'Devis',    statuses: ['quoted'] },
-  { key: 'paid',      label: 'Payé',     statuses: ['awaiting_payment', 'paid', 'purchasing'] },
+  { key: 'submitted', label: tr('Soumis'),   statuses: ['draft', 'submitted', 'reviewing', 'quote_sent'] },
+  { key: 'quoted',    label: tr('Devis'),    statuses: ['quoted'] },
+  { key: 'paid',      label: tr('Payé'),     statuses: ['awaiting_payment', 'paid', 'purchasing'] },
   {
     key: 'warehouse',
-    label: 'Entrepôt',
+    label: tr('Entrepôt'),
     statuses: [
       'in_china_warehouse',
       'shipped', 'in_transit', 'arrived', 'customs', 'customs_clearance',
@@ -53,7 +54,7 @@ export function OrderStatusTracker({ status, shippingOption, className }: OrderS
   if (isCancelled) {
     return (
       <div className={cn('rounded-2xl border border-destructive/20 bg-destructive/5 px-5 py-4 text-center', className)}>
-        <p className="text-sm font-semibold text-destructive">Commande annulée</p>
+        <p className="text-sm font-semibold text-destructive">{tr('Commande annulée')}</p>
       </div>
     )
   }

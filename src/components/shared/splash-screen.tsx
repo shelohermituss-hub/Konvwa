@@ -1,8 +1,9 @@
-// Styles live in index.html (<style id="kv-splash-css">) so the splash also paints before JS loads.
+
+import { tr } from '@/lib/i18n'// Styles live in index.html (<style id="kv-splash-css">) so the splash also paints before JS loads.
 // `resume` skips the intro so the React splash continues the static one without restarting it.
 export function SplashScreen({ resume = true }: { resume?: boolean }) {
   return (
-    <div className={resume ? 'kv-splash kv-resume' : 'kv-splash'} role="status" aria-label="Chargement de KONVWA">
+    <div className={resume ? 'kv-splash kv-resume' : 'kv-splash'} role="status" aria-label={tr('Chargement de KONVWA')}>
       <svg className="kv-logo" viewBox="0 0 110 72" fill="none" aria-hidden>
         <g className="kv-b kv-b1">
           <rect x="1" y="45" width="40" height="24" rx="6" fill="black" opacity="0.10" />

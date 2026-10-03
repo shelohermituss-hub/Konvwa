@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 // ── Palette (minimal — mostly grayscale like Basinex) ─────────────────────────
 const DARK  = [50,  50,  50]  as const  // "DEVIS" title, table header
 const INK   = [30,  30,  30]  as const  // body text
@@ -59,10 +60,10 @@ const M = 14
 const CW = W - M * 2   // 182 mm
 
 function fmtHTG(n: number) {
-  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return n.toLocaleString(LOCALE_TAG, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(iso).toLocaleDateString(DATE_LOCALE, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 // Load logo SVG → PNG data URL via canvas
@@ -125,7 +126,7 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
   bold(10); clr(...INK)
   L('KONVWA', coY)
   normal(8); clr(...MID)
-  L('Importation Chine & USA → Haïti', coY + 5)
+  L(tr('Importation Chine & USA → Haïti'), coY + 5)
   L('support@konvwa.com', coY + 9.5)
   L('konvwa.com', coY + 14)
 
@@ -147,24 +148,24 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
 
   // Left: Facturer à
   normal(8); clr(...MID)
-  L('Facturer à', y)
+  L(tr('Facturer à'), y)
   bold(9); clr(...INK)
-  L('Client KONVWA', y + 5.5)
+  L(tr('Client KONVWA'), y + 5.5)
 
   // Right: Date + Ref
   normal(8); clr(...MID)
-  L('Date du Devis :', metaLabelX, y)
+  L(tr('Date du Devis :'), metaLabelX, y)
   normal(8); clr(...INK)
   R(fmtDate(order.created_at), y)
 
   normal(8); clr(...MID)
-  L('N° de référence :', metaLabelX, y + 6)
+  L(tr('N° de référence :'), metaLabelX, y + 6)
   normal(8); clr(...INK)
   R(order.tracking_code, y + 6)
 
   if (req?.shipping_origins) {
     normal(8); clr(...MID)
-    L('Origine :', metaLabelX, y + 12)
+    L(tr('Origine :'), metaLabelX, y + 12)
     normal(8); clr(...INK)
     R(req.shipping_origins.name, y + 12)
   }
@@ -173,10 +174,10 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
 
   // ── Objet ────────────────────────────────────────────────────────────────────
   normal(8); clr(...MID)
-  L('Objet :', y)
+  L(tr('Objet :'), y)
   y += 5.5
   bold(9); clr(...INK)
-  L('Transport', y)
+  L(tr('Transport'), y)
   y += 10
 
   // ── SECTION 3 — LINE ITEMS TABLE ────────────────────────────────────────────
@@ -192,10 +193,10 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
   doc.rect(M, y, CW, 9, 'F')
   bold(7.5); clr(255, 255, 255)
   L('#',             y + 6, C_NUM + 2)
-  L('Article & Description', y + 6, C_DESC)
-  doc.text('Quantité', C_QTY, y + 6, { align: 'center' })
-  doc.text('Taux',     C_RATE, y + 6, { align: 'right' })
-  doc.text('Montant',  C_AMT,  y + 6, { align: 'right' })
+  L(tr('Article & Description'), y + 6, C_DESC)
+  doc.text(tr('Quantité'), C_QTY, y + 6, { align: 'center' })
+  doc.text(tr('Taux'),     C_RATE, y + 6, { align: 'right' })
+  doc.text(tr('Montant'),  C_AMT,  y + 6, { align: 'right' })
   y += 9
 
   // Build line items
@@ -218,10 +219,10 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
 
     const p0 = pkgs[0]
     const dimStr = (p0 && p0.length_cm && p0.width_cm && p0.height_cm)
-      ? `Dimensions: ${p0.length_cm}×${p0.width_cm}×${p0.height_cm} cm`
+      ? tr('Dimensions: {0}×{1}×{2} cm', p0.length_cm, p0.width_cm, p0.height_cm)
       : ''
     const wtKg = req.weight_kg ?? (req.weight_lbs ? req.weight_lbs * 0.453592 : (p0?.weight_kg ?? null))
-    const wtStr = wtKg ? `Poids: ${wtKg.toFixed(1)} kg` : ''
+    const wtStr = wtKg ? tr('Poids: {0} kg', wtKg.toFixed(1)) : ''
     const sub = [dimStr, wtStr].filter(Boolean).join('  ·  ')
     const unitPrice = quot.product_price / Math.max(quot.quantity, 1)
 
@@ -245,35 +246,35 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
           amt:  quot.shipping_fee,
         })
       } else {
-        lines.push({ desc: 'Frais d\'expédition', qty: '1.00', rate: quot.shipping_fee, amt: quot.shipping_fee })
+        lines.push({ desc: tr('Frais d\'expédition'), qty: '1.00', rate: quot.shipping_fee, amt: quot.shipping_fee })
       }
     }
 
     // ── Frais de réception entrepôt Chine ──────────────────────────────────
     if (quot.purchase_fee > 0) {
-      lines.push({ desc: 'Frais de réception entrepôt Chine', qty: '1.00', rate: quot.purchase_fee, amt: quot.purchase_fee })
+      lines.push({ desc: tr('Frais de réception entrepôt Chine'), qty: '1.00', rate: quot.purchase_fee, amt: quot.purchase_fee })
     }
 
     // ── Droits de douane ───────────────────────────────────────────────────
     if (quot.customs_fee > 0) {
-      lines.push({ desc: 'Droits de douane', qty: '1.00', rate: quot.customs_fee, amt: quot.customs_fee })
+      lines.push({ desc: tr('Droits de douane'), qty: '1.00', rate: quot.customs_fee, amt: quot.customs_fee })
     }
 
     // ── Frais de service ───────────────────────────────────────────────────
     if (quot.service_fee > 0) {
-      lines.push({ desc: 'Frais de service KONVWA', qty: '1.00', rate: quot.service_fee, amt: quot.service_fee })
+      lines.push({ desc: tr('Frais de service KONVWA'), qty: '1.00', rate: quot.service_fee, amt: quot.service_fee })
     }
 
     // ── Livraison locale ───────────────────────────────────────────────────
     if (quot.local_delivery_fee > 0) {
-      lines.push({ desc: 'Livraison locale en Haïti', qty: '1.00', rate: quot.local_delivery_fee, amt: quot.local_delivery_fee })
+      lines.push({ desc: tr('Livraison locale en Haïti'), qty: '1.00', rate: quot.local_delivery_fee, amt: quot.local_delivery_fee })
     }
 
     // ── Expédition séparée (payée) ─────────────────────────────────────────
     if (order.shipping_amount_paid && order.shipping_amount_paid > 0 && order.chosen_shipping_method) {
       lines.push({
-        desc: `Expédition séparée — ${order.chosen_shipping_method.name}`,
-        sub: `${order.chosen_shipping_method.duration_days_min}–${order.chosen_shipping_method.duration_days_max} jours`,
+        desc: tr('Expédition séparée — {0}', order.chosen_shipping_method.name),
+        sub: tr('{0}–{1} jours', order.chosen_shipping_method.duration_days_min, order.chosen_shipping_method.duration_days_max),
         qty:  '1.00',
         rate: order.shipping_amount_paid,
         amt:  order.shipping_amount_paid,
@@ -334,7 +335,7 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
   doc.line(TOT_LX, y, TOT_RX, y)
   y += 6
   normal(8); clr(...MID)
-  doc.text('Sous-total', TOT_LX, y)
+  doc.text(tr('Sous-total'), TOT_LX, y)
   normal(8); clr(...INK)
   doc.text(fmtHTG(grandTotal), TOT_RX, y, { align: 'right' })
   y += 2
@@ -346,7 +347,7 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
   doc.setFillColor(50, 50, 50)
   doc.rect(TOT_LX, y, 60, 9, 'F')
   bold(9); clr(255, 255, 255)
-  doc.text('Total', TOT_LX + 3, y + 6)
+  doc.text(tr('Total'), TOT_LX + 3, y + 6)
   bold(9)
   doc.text(`${fmtHTG(quot?.total ?? grandTotal)} HTG`, TOT_RX, y + 6, { align: 'right' })
   y += 13
@@ -354,7 +355,7 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
   // "Déjà payé" row (if applicable)
   if (order.total_paid > 0) {
     normal(8); clr(...MID)
-    doc.text('Déjà payé :', TOT_LX, y)
+    doc.text(tr('Déjà payé :'), TOT_LX, y)
     normal(8); clr(22, 163, 74)
     doc.text(fmtHTG(order.total_paid) + ' HTG', TOT_RX, y, { align: 'right' })
     y += 7
@@ -364,21 +365,21 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
 
   // ── REMARQUES ─────────────────────────────────────────────────────────────
   bold(9); clr(...INK)
-  L('Remarques', y)
+  L(tr('Remarques'), y)
   y += 5
   normal(8); clr(...INK)
-  L('Au plaisir de faire affaire avec vous dans le futur.', y)
+  L(tr('Au plaisir de faire affaire avec vous dans le futur.'), y)
   y += 12
 
   // ── CONDITIONS D'UTILISATION ─────────────────────────────────────────────
   bold(9); clr(...INK)
-  L("Conditions d'utilisation", y)
+  L(tr('Conditions d\'utilisation'), y)
   y += 5
   normal(8); clr(...INK)
   const terms = [
-    "NB : En cas de différence entre les informations fournies et celles de l'entrepôt, le devis sera modifié.",
-    "À compter de l'arrivée du colis en Haïti, un délai de 10 jours ouvrables est offert pour le retrait.",
-    "Passé ce délai, des frais d'entreposage seront facturés jusqu'au retrait complet du colis.",
+    tr('NB : En cas de différence entre les informations fournies et celles de l\'entrepôt, le devis sera modifié.'),
+    tr('À compter de l\'arrivée du colis en Haïti, un délai de 10 jours ouvrables est offert pour le retrait.'),
+    tr('Passé ce délai, des frais d\'entreposage seront facturés jusqu\'au retrait complet du colis.'),
   ]
   for (const t of terms) {
     const lines2 = doc.splitTextToSize(t, CW)
@@ -392,7 +393,7 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
   doc.line(M, footerY, W - M, footerY)
 
   normal(7.5); clr(...MID)
-  doc.text('CONÇU PAR', M, footerY + 6)
+  doc.text(tr('CONÇU PAR'), M, footerY + 6)
   if (logo) {
     doc.addImage(logo, 'PNG', M + 22, footerY + 1, 11, 7.2)
   }
@@ -402,7 +403,7 @@ export async function downloadOrderPDF(order: OrderForPDF): Promise<void> {
   normal(7); clr(...MID)
   doc.text(String(doc.getNumberOfPages()), W - M, footerY + 6, { align: 'right' })
 
-  doc.save(`KONVWA-DEVIS-${order.tracking_code}.pdf`)
+  doc.save(tr('KONVWA-DEVIS-{0}.pdf', order.tracking_code))
 }
 
 // ── Shipping request PDF ──────────────────────────────────────────────────────
@@ -460,11 +461,11 @@ export async function downloadShippingPDF(req: ShippingRequestForPDF): Promise<v
 
   const coY = y + LOGO_H + 3
   bold(10); clr(...INK);  L('KONVWA', coY)
-  normal(8); clr(...MID); L('Importation Chine & USA → Haïti', coY + 5)
+  normal(8); clr(...MID); L(tr('Importation Chine & USA → Haïti'), coY + 5)
   L('support@konvwa.com', coY + 9.5)
   L('konvwa.com', coY + 14)
 
-  bold(38); clr(...DARK); R('EXPÉDITION', y + 18)
+  bold(38); clr(...DARK); R(tr('EXPÉDITION'), y + 18)
   bold(11); clr(...INK);  R(`# ${req.id.slice(0, 8).toUpperCase()}`, y + 27)
 
   y = Math.max(coY + 18, y + 34)
@@ -472,19 +473,19 @@ export async function downloadShippingPDF(req: ShippingRequestForPDF): Promise<v
 
   // STATUS + DATE
   const statusLabels: Record<string, string> = {
-    submitted: 'Soumis', reviewing: 'En examen', received: 'Colis reçus',
-    quoted: 'Devis reçu', invoiced: 'Payé',
+    submitted: tr('Soumis'), reviewing: tr('En examen'), received: tr('Colis reçus'),
+    quoted: tr('Devis reçu'), invoiced: tr('Payé'),
   }
-  normal(8); clr(...MID); L('Statut :', y)
+  normal(8); clr(...MID); L(tr('Statut :'), y)
   bold(8);   clr(...INK); L(statusLabels[req.status] ?? req.status, y, M + 22)
-  normal(8); clr(...MID); L('Date soumission :', W - M - 70, y)
+  normal(8); clr(...MID); L(tr('Date soumission :'), W - M - 70, y)
   normal(8); clr(...INK); R(fmtDate(req.created_at), y)
   y += 10
 
   // WAREHOUSE
   if (req.warehouse) {
     y = rule(y)
-    bold(9);   clr(...INK); L('Entrepôt de destination', y); y += 6
+    bold(9);   clr(...INK); L(tr('Entrepôt de destination'), y); y += 6
     normal(8); clr(...INK)
     L(`${req.warehouse.flag_emoji ?? ''} ${req.warehouse.name}`, y); y += 5
     if (req.warehouse.address_line1) { L(req.warehouse.address_line1, y); y += 5 }
@@ -500,16 +501,16 @@ export async function downloadShippingPDF(req: ShippingRequestForPDF): Promise<v
 
   // DETAILS TABLE
   const rows: [string, string][] = []
-  if (req.product_rate_category) rows.push(['Type de produit', req.product_rate_category.name])
+  if (req.product_rate_category) rows.push([tr('Type de produit'), req.product_rate_category.name])
   if (req.origin_country) {
-    const cn2 = req.origin_country === 'CN' ? 'Chine' : req.origin_country === 'US' ? 'États-Unis' : req.origin_country
-    rows.push(['Origine', cn2])
+    const cn2 = req.origin_country === 'CN' ? tr('Chine') : req.origin_country === 'US' ? tr('États-Unis') : req.origin_country
+    rows.push([tr('Origine'), cn2])
   }
-  if (req.package_count != null)  rows.push(['Nombre de colis', String(req.package_count)])
+  if (req.package_count != null)  rows.push([tr('Nombre de colis'), String(req.package_count)])
   const cbm = req.actual_cbm ?? req.estimated_cbm
-  if (cbm != null) rows.push(['Volume', `${cbm.toFixed(4)} m³${!req.actual_cbm ? ' (estimé)' : ''}`])
+  if (cbm != null) rows.push([tr('Volume'), `${cbm.toFixed(4)} m³${!req.actual_cbm ? tr(' (estimé)') : ''}`])
   const kg = req.actual_kg ?? req.estimated_kg
-  if (kg != null) rows.push(['Poids', `${kg.toFixed(2)} kg${!req.actual_kg ? ' (estimé)' : ''}`])
+  if (kg != null) rows.push([tr('Poids'), `${kg.toFixed(2)} kg${!req.actual_kg ? tr(' (estimé)') : ''}`])
 
   for (const [label, value] of rows) {
     normal(8); clr(...MID); L(label, y)
@@ -525,7 +526,7 @@ export async function downloadShippingPDF(req: ShippingRequestForPDF): Promise<v
   if (amount != null) {
     doc.setFillColor(50, 50, 50)
     doc.rect(M, y, CW, 12, 'F')
-    bold(9);  clr(255, 255, 255); L('Montant', y + 7.5, M + 3)
+    bold(9);  clr(255, 255, 255); L(tr('Montant'), y + 7.5, M + 3)
     bold(10); clr(255, 255, 255); R(`${fmtHTG(amount)} HTG`, y + 7.5)
     y += 16
   }
@@ -533,7 +534,7 @@ export async function downloadShippingPDF(req: ShippingRequestForPDF): Promise<v
   // NOTES
   if (req.notes) {
     y += 4
-    bold(9); clr(...INK); L('Notes', y); y += 5
+    bold(9); clr(...INK); L(tr('Notes'), y); y += 5
     normal(8); clr(...INK)
     const lines2 = doc.splitTextToSize(req.notes, CW)
     doc.text(lines2, M, y)
@@ -544,10 +545,10 @@ export async function downloadShippingPDF(req: ShippingRequestForPDF): Promise<v
   const footerY = 285
   doc.setDrawColor(...RULE); doc.setLineWidth(0.3)
   doc.line(M, footerY, W - M, footerY)
-  normal(7.5); clr(...MID); doc.text('CONÇU PAR', M, footerY + 6)
+  normal(7.5); clr(...MID); doc.text(tr('CONÇU PAR'), M, footerY + 6)
   if (logo) doc.addImage(logo, 'PNG', M + 22, footerY + 1, 11, 7.2)
   bold(7.5); clr(...MID); doc.text('KONVWA', M + 34, footerY + 6)
   normal(7); clr(...MID); doc.text(String(doc.getNumberOfPages()), W - M, footerY + 6, { align: 'right' })
 
-  doc.save(`KONVWA-EXPEDITION-${req.id.slice(0, 8).toUpperCase()}.pdf`)
+  doc.save(tr('KONVWA-EXPEDITION-{0}.pdf', req.id.slice(0, 8).toUpperCase()))
 }

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { normalizeTiers, type PriceTier } from '@/lib/product-pricing'
 
+import { tr, LOCALE_TAG } from '@/lib/i18n'
 interface Product {
   id: string
   name: string
@@ -49,7 +50,7 @@ const emptyDraft = (): ProductDraft => ({
   description: '',
   price_htg: 0,
   moq: 1,
-  unit: 'unité',
+  unit: tr('unité'),
   supplier_name: '',
   category: '',
   delivery_days_min: null,
@@ -189,12 +190,12 @@ export function AdminProductsPage() {
 
   async function handleSave() {
     if (!draft.name.trim() || draft.price_htg <= 0) {
-      toast.error('Veuillez renseigner le nom et un prix valide.')
+      toast.error(tr('Veuillez renseigner le nom et un prix valide.'))
       return
     }
     const tiers = normalizeTiers(draft.price_tiers)
     if (tiers.some(t => t.min_qty <= draft.moq)) {
-      toast.error('Chaque palier doit commencer au-dessus de la quantité minimum (MOQ).')
+      toast.error(tr('Chaque palier doit commencer au-dessus de la quantité minimum (MOQ).'))
       return
     }
 
@@ -216,11 +217,11 @@ export function AdminProductsPage() {
     if (editing) {
       const { error } = await supabase.from('products').update(payload).eq('id', editing.id)
       if (error) { toast.error(error.message); setSaving(false); return }
-      toast.success('Produit mis à jour')
+      toast.success(tr('Produit mis à jour'))
     } else {
       const { error } = await supabase.from('products').insert(payload)
       if (error) { toast.error(error.message); setSaving(false); return }
-      toast.success('Produit ajouté')
+      toast.success(tr('Produit ajouté'))
     }
 
     setSaving(false)
@@ -231,7 +232,7 @@ export function AdminProductsPage() {
   async function handleDelete(id: string) {
     const { error } = await supabase.from('products').delete().eq('id', id)
     if (error) { toast.error(error.message); return }
-    toast.success('Produit supprimé')
+    toast.success(tr('Produit supprimé'))
     setDeleteConfirm(null)
     load()
   }
@@ -258,12 +259,12 @@ export function AdminProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Produits</h1>
-          <p className="text-sm text-muted-foreground">Catalogue de sourcing ({products.length} produits)</p>
+          <h1 className="text-2xl font-bold">{tr('Produits')}</h1>
+          <p className="text-sm text-muted-foreground">{tr('Catalogue de sourcing (')}{products.length}{' '}{tr('produits)')}</p>
         </div>
         <Button onClick={openAdd} className="gap-2">
           <Plus className="h-4 w-4" />
-          Ajouter un produit
+          {tr('Ajouter un produit')}
         </Button>
       </div>
 
@@ -271,7 +272,7 @@ export function AdminProductsPage() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Rechercher..."
+          placeholder={tr('Rechercher...')}
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="pl-9"
@@ -283,13 +284,13 @@ export function AdminProductsPage() {
         {loading ? (
           <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
-            Chargement…
+            {tr('Chargement…')}
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
             <Package className="h-10 w-10 text-muted-foreground/30" />
             <p className="text-sm text-muted-foreground">
-              {search ? 'Aucun résultat' : 'Aucun produit. Commencez par en ajouter un.'}
+              {search ? tr('Aucun résultat') : tr('Aucun produit. Commencez par en ajouter un.')}
             </p>
           </div>
         ) : (
@@ -297,12 +298,12 @@ export function AdminProductsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/60">
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Produit</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Prix HTG</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">MOQ</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Catégorie</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Statut</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Produit')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Prix HTG')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('MOQ')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Catégorie')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Statut')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{tr('Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -323,23 +324,23 @@ export function AdminProductsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-bold text-primary">{p.price_htg.toLocaleString('fr-HT')}</td>
+                    <td className="px-4 py-3 font-bold text-primary">{p.price_htg.toLocaleString(LOCALE_TAG)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{p.moq} {p.unit}</td>
                     <td className="px-4 py-3">
                       {p.category ? <Badge variant="secondary">{p.category}</Badge> : <span className="text-muted-foreground/40">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
-                        <button onClick={() => toggleActive(p)} title={p.active ? 'Désactiver' : 'Activer'}>
+                        <button onClick={() => toggleActive(p)} title={p.active ? tr('Désactiver') : tr('Activer')}>
                           {p.active
                             ? <ToggleRight className="h-5 w-5 text-emerald-500" />
                             : <ToggleLeft className="h-5 w-5 text-muted-foreground/40" />}
                         </button>
-                        <button onClick={() => toggleFeatured(p)} title={p.featured ? 'Retirer vedette' : 'Mettre en vedette'}>
+                        <button onClick={() => toggleFeatured(p)} title={p.featured ? tr('Retirer vedette') : tr('Mettre en vedette')}>
                           <Star className={cn('h-4 w-4', p.featured ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30')} />
                         </button>
                         {!p.stock_available && (
-                          <Badge variant="destructive" className="text-[10px]">Rupture</Badge>
+                          <Badge variant="destructive" className="text-[10px]">{tr('Rupture')}</Badge>
                         )}
                       </div>
                     </td>
@@ -370,70 +371,70 @@ export function AdminProductsPage() {
       <Dialog open={dialogOpen} onOpenChange={open => { if (!open) closeDialog() }}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Modifier le produit' : 'Ajouter un produit'}</DialogTitle>
+            <DialogTitle>{editing ? tr('Modifier le produit') : tr('Ajouter un produit')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2 space-y-1.5">
-                <Label>Nom du produit *</Label>
-                <Input value={draft.name} onChange={e => setField('name', e.target.value)} placeholder="ex: iPhone 15 Pro Max" />
+                <Label>{tr('Nom du produit *')}</Label>
+                <Input value={draft.name} onChange={e => setField('name', e.target.value)} placeholder={tr('ex: iPhone 15 Pro Max')} />
               </div>
               <div className="space-y-1.5">
-                <Label>Prix (HTG) *</Label>
+                <Label>{tr('Prix (HTG) *')}</Label>
                 <Input type="number" min={0} value={draft.price_htg || ''} onChange={e => setField('price_htg', parseFloat(e.target.value) || 0)} placeholder="0" />
               </div>
               <div className="space-y-1.5">
-                <Label>Unité</Label>
-                <Input value={draft.unit} onChange={e => setField('unit', e.target.value)} placeholder="unité, kg, paire…" />
+                <Label>{tr('Unité')}</Label>
+                <Input value={draft.unit} onChange={e => setField('unit', e.target.value)} placeholder={tr('unité, kg, paire…')} />
               </div>
               <div className="space-y-1.5">
-                <Label>Quantité minimum (MOQ)</Label>
+                <Label>{tr('Quantité minimum (MOQ)')}</Label>
                 <Input type="number" min={1} value={draft.moq || ''} onChange={e => setField('moq', parseInt(e.target.value) || 1)} />
               </div>
               <div className="space-y-1.5">
-                <Label>Catégorie</Label>
-                <Input value={draft.category ?? ''} onChange={e => setField('category', e.target.value)} placeholder="Électronique, Mode…" />
+                <Label>{tr('Catégorie')}</Label>
+                <Input value={draft.category ?? ''} onChange={e => setField('category', e.target.value)} placeholder={tr('Électronique, Mode…')} />
               </div>
               <div className="space-y-1.5">
-                <Label>Fournisseur</Label>
-                <Input value={draft.supplier_name ?? ''} onChange={e => setField('supplier_name', e.target.value)} placeholder="Nom du fournisseur" />
+                <Label>{tr('Fournisseur')}</Label>
+                <Input value={draft.supplier_name ?? ''} onChange={e => setField('supplier_name', e.target.value)} placeholder={tr('Nom du fournisseur')} />
               </div>
               <div className="space-y-1.5">
-                <Label>Livraison min (jours)</Label>
+                <Label>{tr('Livraison min (jours)')}</Label>
                 <Input type="number" min={1} value={draft.delivery_days_min ?? ''} onChange={e => setField('delivery_days_min', parseInt(e.target.value) || null)} />
               </div>
               <div className="space-y-1.5">
-                <Label>Livraison max (jours)</Label>
+                <Label>{tr('Livraison max (jours)')}</Label>
                 <Input type="number" min={1} value={draft.delivery_days_max ?? ''} onChange={e => setField('delivery_days_max', parseInt(e.target.value) || null)} />
               </div>
               <div className="col-span-2 space-y-1.5">
-                <Label>Description</Label>
-                <Textarea value={draft.description ?? ''} onChange={e => setField('description', e.target.value)} rows={3} placeholder="Description du produit…" />
+                <Label>{tr('Description')}</Label>
+                <Textarea value={draft.description ?? ''} onChange={e => setField('description', e.target.value)} rows={3} placeholder={tr('Description du produit…')} />
               </div>
               <div className="col-span-2 space-y-1.5">
-                <Label>Images (URLs séparées par des virgules)</Label>
+                <Label>{tr('Images (URLs séparées par des virgules)')}</Label>
                 <Input value={imagesRaw} onChange={e => setImagesRaw(e.target.value)} placeholder="https://…, https://…" />
               </div>
             </div>
 
             {/* Price by quantity */}
             <div className="space-y-2">
-              <Label>Prix par quantité (paliers)</Label>
+              <Label>{tr('Prix par quantité (paliers)')}</Label>
               <p className="text-xs text-muted-foreground">
-                Le prix de base s'applique dès le MOQ. Chaque palier donne un prix unitaire plus bas à partir d'une quantité.
+                {tr('Le prix de base s\'applique dès le MOQ. Chaque palier donne un prix unitaire plus bas à partir d\'une quantité.')}
               </p>
               {draft.price_tiers.map((tier, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <Input type="number" min={1} value={tier.min_qty || ''} onChange={e => setTier(i, { min_qty: parseInt(e.target.value) || 0 })} placeholder="À partir de (qté)" className="flex-1" />
-                  <Input type="number" min={0} value={tier.price_htg || ''} onChange={e => setTier(i, { price_htg: parseFloat(e.target.value) || 0 })} placeholder="Prix unitaire HTG" className="flex-1" />
-                  <button type="button" onClick={() => setDraft(prev => ({ ...prev, price_tiers: prev.price_tiers.filter((_, j) => j !== i) }))} className="text-destructive hover:text-destructive/80" aria-label="Retirer le palier">
+                  <Input type="number" min={1} value={tier.min_qty || ''} onChange={e => setTier(i, { min_qty: parseInt(e.target.value) || 0 })} placeholder={tr('À partir de (qté)')} className="flex-1" />
+                  <Input type="number" min={0} value={tier.price_htg || ''} onChange={e => setTier(i, { price_htg: parseFloat(e.target.value) || 0 })} placeholder={tr('Prix unitaire HTG')} className="flex-1" />
+                  <button type="button" onClick={() => setDraft(prev => ({ ...prev, price_tiers: prev.price_tiers.filter((_, j) => j !== i) }))} className="text-destructive hover:text-destructive/80" aria-label={tr('Retirer le palier')}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={() => setDraft(prev => ({ ...prev, price_tiers: [...prev.price_tiers, { min_qty: 0, price_htg: 0 }] }))}>
-                + Ajouter un palier
+                {tr('+ Ajouter un palier')}
               </Button>
             </div>
 
@@ -441,56 +442,56 @@ export function AdminProductsPage() {
             <div className="grid grid-cols-2 gap-4">
               <label className="col-span-2 flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={draft.supplier_verified} onChange={e => setField('supplier_verified', e.target.checked)} className="h-4 w-4 rounded" />
-                <span className="text-sm font-medium">Fournisseur vérifié</span>
+                <span className="text-sm font-medium">{tr('Fournisseur vérifié')}</span>
               </label>
               <div className="space-y-1.5">
-                <Label>Années d'activité du fournisseur</Label>
+                <Label>{tr('Années d\'activité du fournisseur')}</Label>
                 <Input type="number" min={0} value={draft.supplier_years ?? ''} onChange={e => setField('supplier_years', numOrNull(e.target.value))} />
               </div>
               <div className="space-y-1.5">
-                <Label>Pays du fournisseur</Label>
+                <Label>{tr('Pays du fournisseur')}</Label>
                 <Input value={draft.supplier_country ?? ''} onChange={e => setField('supplier_country', e.target.value)} placeholder="CN" maxLength={2} />
               </div>
               <div className="space-y-1.5">
-                <Label>Nombre de ventes</Label>
+                <Label>{tr('Nombre de ventes')}</Label>
                 <Input type="number" min={0} value={draft.sold_count || ''} onChange={e => setField('sold_count', parseInt(e.target.value) || 0)} />
               </div>
               <div className="space-y-1.5">
-                <Label>Note (0 à 5)</Label>
+                <Label>{tr('Note (0 à 5)')}</Label>
                 <Input type="number" min={0} max={5} step={0.1} value={draft.rating ?? ''} onChange={e => setField('rating', numOrNull(e.target.value))} />
               </div>
               <div className="space-y-1.5">
-                <Label>Nombre d'avis</Label>
+                <Label>{tr('Nombre d\'avis')}</Label>
                 <Input type="number" min={0} value={draft.review_count || ''} onChange={e => setField('review_count', parseInt(e.target.value) || 0)} />
               </div>
               <div className="space-y-1.5">
-                <Label>Taux de réachat (%)</Label>
+                <Label>{tr('Taux de réachat (%)')}</Label>
                 <Input type="number" min={0} max={100} value={draft.repurchase_rate ?? ''} onChange={e => setField('repurchase_rate', numOrNull(e.target.value))} />
               </div>
               <div className="space-y-1.5">
-                <Label>Temps de traitement (jours)</Label>
+                <Label>{tr('Temps de traitement (jours)')}</Label>
                 <Input type="number" min={0} value={draft.processing_days ?? ''} onChange={e => setField('processing_days', numOrNull(e.target.value))} />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label>Options de personnalisation (une par ligne)</Label>
-              <Textarea value={optionsRaw} onChange={e => setOptionsRaw(e.target.value)} rows={3} placeholder={'Design de logo/graphique\nEmballage\nÉtiquette à accrocher'} />
+              <Label>{tr('Options de personnalisation (une par ligne)')}</Label>
+              <Textarea value={optionsRaw} onChange={e => setOptionsRaw(e.target.value)} rows={3} placeholder={tr('Design de logo/graphique\nEmballage\nÉtiquette à accrocher')} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Points forts (un par ligne)</Label>
-                <Textarea value={tagsRaw} onChange={e => setTagsRaw(e.target.value)} rows={3} placeholder={'Retour facile\nExpédition sous 14 jours'} />
+                <Label>{tr('Points forts (un par ligne)')}</Label>
+                <Textarea value={tagsRaw} onChange={e => setTagsRaw(e.target.value)} rows={3} placeholder={tr('Retour facile\nExpédition sous 14 jours')} />
               </div>
               <div className="space-y-1.5">
-                <Label>Certifications (une par ligne)</Label>
-                <Textarea value={certsRaw} onChange={e => setCertsRaw(e.target.value)} rows={3} placeholder="CE certifié" />
+                <Label>{tr('Certifications (une par ligne)')}</Label>
+                <Textarea value={certsRaw} onChange={e => setCertsRaw(e.target.value)} rows={3} placeholder={tr('CE certifié')} />
               </div>
             </div>
 
             {/* Specs */}
             <div className="space-y-2">
-              <Label>Caractéristiques (affichées en grille sur la fiche)</Label>
+              <Label>{tr('Caractéristiques (affichées en grille sur la fiche)')}</Label>
               {Object.entries(draft.specifications).map(([k, v]) => (
                 <div key={k} className="flex items-center gap-2 text-sm bg-gray-50 rounded-lg px-3 py-2">
                   <span className="font-medium flex-1">{k}</span>
@@ -501,8 +502,8 @@ export function AdminProductsPage() {
                 </div>
               ))}
               <div className="flex gap-2">
-                <Input value={specKey} onChange={e => setSpecKey(e.target.value)} placeholder="Clé (ex: Poids)" className="flex-1" />
-                <Input value={specVal} onChange={e => setSpecVal(e.target.value)} placeholder="Valeur (ex: 200g)" className="flex-1" />
+                <Input value={specKey} onChange={e => setSpecKey(e.target.value)} placeholder={tr('Clé (ex: Poids)')} className="flex-1" />
+                <Input value={specVal} onChange={e => setSpecVal(e.target.value)} placeholder={tr('Valeur (ex: 200g)')} className="flex-1" />
                 <Button type="button" variant="outline" size="sm" onClick={addSpec}>+</Button>
               </div>
             </div>
@@ -511,24 +512,24 @@ export function AdminProductsPage() {
             <div className="flex gap-6 pt-1">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={draft.active} onChange={e => setField('active', e.target.checked)} className="h-4 w-4 rounded" />
-                <span className="text-sm font-medium">Actif</span>
+                <span className="text-sm font-medium">{tr('Actif')}</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={draft.featured} onChange={e => setField('featured', e.target.checked)} className="h-4 w-4 rounded" />
-                <span className="text-sm font-medium">Vedette</span>
+                <span className="text-sm font-medium">{tr('Vedette')}</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={draft.stock_available} onChange={e => setField('stock_available', e.target.checked)} className="h-4 w-4 rounded" />
-                <span className="text-sm font-medium">En stock</span>
+                <span className="text-sm font-medium">{tr('En stock')}</span>
               </label>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>Annuler</Button>
+            <Button variant="outline" onClick={closeDialog}>{tr('Annuler')}</Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {editing ? 'Enregistrer' : 'Ajouter'}
+              {editing ? tr('Enregistrer') : tr('Ajouter')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -538,15 +539,15 @@ export function AdminProductsPage() {
       <Dialog open={!!deleteConfirm} onOpenChange={open => { if (!open) setDeleteConfirm(null) }}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Supprimer ce produit ?</DialogTitle>
+            <DialogTitle>{tr('Supprimer ce produit ?')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground py-2">
-            Cette action est irréversible. Le produit sera retiré du catalogue.
+            {tr('Cette action est irréversible. Le produit sera retiré du catalogue.')}
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>{tr('Annuler')}</Button>
             <Button variant="destructive" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>
-              Supprimer
+              {tr('Supprimer')}
             </Button>
           </DialogFooter>
         </DialogContent>

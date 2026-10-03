@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { Loader2 } from 'lucide-react'
 
+import { tr } from '@/lib/i18n'
 export function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -27,17 +28,17 @@ export function RegisterPage() {
     setError(null)
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas')
+      setError(tr('Les mots de passe ne correspondent pas'))
       return
     }
 
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères')
+      setError(tr('Le mot de passe doit contenir au moins 6 caractères'))
       return
     }
 
     if (!acceptedTerms) {
-      setError('Vous devez accepter les conditions d\'utilisation')
+      setError(tr('Vous devez accepter les conditions d\'utilisation'))
       return
     }
 
@@ -81,9 +82,9 @@ export function RegisterPage() {
               H
             </div>
           </Link>
-          <CardTitle className="text-2xl">Créer un compte</CardTitle>
+          <CardTitle className="text-2xl">{tr('Créer un compte')}</CardTitle>
           <CardDescription>
-            Rejoignez HaitiImport pour importer facilement
+            {tr('Rejoignez HaitiImport pour importer facilement')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -94,11 +95,11 @@ export function RegisterPage() {
               </Alert>
             )}
             <div className="space-y-2">
-              <Label htmlFor="fullName">Nom complet</Label>
+              <Label htmlFor="fullName">{tr('Nom complet')}</Label>
               <Input
                 id="fullName"
                 type="text"
-                placeholder="Jean Dupont"
+                placeholder={tr('Jean Dupont')}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
@@ -106,11 +107,11 @@ export function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Adresse e-mail</Label>
+              <Label htmlFor="email">{tr('Adresse e-mail')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="votre@email.com"
+                placeholder={tr('votre@email.com')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -118,7 +119,7 @@ export function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Téléphone (optionnel)</Label>
+              <Label htmlFor="phone">{tr('Téléphone (optionnel)')}</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -129,7 +130,7 @@ export function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">{tr('Mot de passe')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -141,7 +142,7 @@ export function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Label htmlFor="confirmPassword">{tr('Confirmer le mot de passe')}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -159,13 +160,13 @@ export function RegisterPage() {
                 onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
               />
               <Label htmlFor="terms" className="text-sm leading-normal">
-                J'accepte les{' '}
+                {tr('J\'accepte les')}{' '}
                 <Link to="/terms" className="text-primary hover:underline">
-                  conditions d'utilisation
+                  {tr('conditions d\'utilisation')}
                 </Link>{' '}
-                et la{' '}
+                {tr('et la')}{' '}
                 <Link to="/privacy" className="text-primary hover:underline">
-                  politique de confidentialité
+                  {tr('politique de confidentialité')}
                 </Link>
               </Label>
             </div>
@@ -173,12 +174,12 @@ export function RegisterPage() {
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Créer mon compte
+              {tr('Créer mon compte')}
             </Button>
             <p className="text-sm text-center text-muted-foreground">
-              Déjà inscrit ?{' '}
+              {tr('Déjà inscrit ?')}{' '}
               <Link to="/login" className="text-primary hover:underline">
-                Se connecter
+                {tr('Se connecter')}
               </Link>
             </p>
           </CardFooter>

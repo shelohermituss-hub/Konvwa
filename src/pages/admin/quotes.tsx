@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface PackageEntry {
   number: number
   length_cm: number | null
@@ -45,24 +46,24 @@ interface ProductRequest {
 }
 
 const REQUEST_STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  submitted: { label: 'Soumis',      bg: 'bg-amber-50',    text: 'text-amber-700',   dot: 'bg-amber-400' },
-  reviewing: { label: 'En révision', bg: 'bg-primary/10',  text: 'text-primary',     dot: 'bg-primary' },
-  quoted:    { label: 'Devisé',      bg: 'bg-emerald-50',  text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  rejected:  { label: 'Refusé',      bg: 'bg-destructive/10', text: 'text-destructive', dot: 'bg-destructive' },
+  submitted: { label: tr('Soumis'),      bg: 'bg-amber-50',    text: 'text-amber-700',   dot: 'bg-amber-400' },
+  reviewing: { label: tr('En révision'), bg: 'bg-primary/10',  text: 'text-primary',     dot: 'bg-primary' },
+  quoted:    { label: tr('Devisé'),      bg: 'bg-emerald-50',  text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  rejected:  { label: tr('Refusé'),      bg: 'bg-destructive/10', text: 'text-destructive', dot: 'bg-destructive' },
 }
 
 const URGENCY_LABELS: Record<string, string> = {
-  normal:  'Normal (4-6 sem.)',
-  urgent:  'Urgent (2-3 sem.)',
-  express: 'Express (1-2 sem.)',
+  normal:  tr('Normal (4-6 sem.)'),
+  urgent:  tr('Urgent (2-3 sem.)'),
+  express: tr('Express (1-2 sem.)'),
 }
 
 const STATUS_FILTERS = [
-  { value: 'submitted', label: 'Soumis' },
-  { value: 'reviewing', label: 'En révision' },
-  { value: 'quoted',    label: 'Devisés' },
-  { value: 'rejected',  label: 'Refusés' },
-  { value: 'all',       label: 'Tous' },
+  { value: 'submitted', label: tr('Soumis') },
+  { value: 'reviewing', label: tr('En révision') },
+  { value: 'quoted',    label: tr('Devisés') },
+  { value: 'rejected',  label: tr('Refusés') },
+  { value: 'all',       label: tr('Tous') },
 ]
 
 function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductRequest; onCreated: () => void; onCancel: () => void }) {
@@ -118,7 +119,7 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
       .maybeSingle()
 
     if (error || !quoteData) {
-      toast.error('Erreur lors de la création du devis.')
+      toast.error(tr('Erreur lors de la création du devis.'))
       setSaving(false)
       return
     }
@@ -126,22 +127,22 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
     await supabase.from('product_requests').update({ status: 'quoted' }).eq('id', request.id)
     await supabase.from('orders').insert({ user_id: request.user_id, quote_id: quoteData.id, status: 'quote_sent' })
 
-    toast.success('Devis créé et commande ouverte.')
+    toast.success(tr('Devis créé et commande ouverte.'))
     setSaving(false)
     onCreated()
   }
 
   const fields = [
-    { label: 'Prix produit (HTG) *', value: productPrice, onChange: setProductPrice },
-    { label: 'Quantité', value: quantity, onChange: setQuantity },
-    { label: 'Frais de service', value: serviceFee, onChange: setServiceFee },
-    { label: "Frais d'achat", value: purchaseFee, onChange: setPurchaseFee },
-    { label: isAir ? 'Fret aérien' : 'Fret maritime', value: shippingFee, onChange: setShippingFee },
-    { label: 'Douane estimée', value: customsFee, onChange: setCustomsFee },
-    { label: 'Livraison locale', value: localFee, onChange: setLocalFee },
-    { label: 'Marge', value: margin, onChange: setMargin },
-    { label: 'Imprévus', value: contingency, onChange: setContingency },
-    { label: 'Délai livraison (jours)', value: deliveryDays, onChange: setDeliveryDays },
+    { label: tr('Prix produit (HTG) *'), value: productPrice, onChange: setProductPrice },
+    { label: tr('Quantité'), value: quantity, onChange: setQuantity },
+    { label: tr('Frais de service'), value: serviceFee, onChange: setServiceFee },
+    { label: tr('Frais d\'achat'), value: purchaseFee, onChange: setPurchaseFee },
+    { label: isAir ? tr('Fret aérien') : tr('Fret maritime'), value: shippingFee, onChange: setShippingFee },
+    { label: tr('Douane estimée'), value: customsFee, onChange: setCustomsFee },
+    { label: tr('Livraison locale'), value: localFee, onChange: setLocalFee },
+    { label: tr('Marge'), value: margin, onChange: setMargin },
+    { label: tr('Imprévus'), value: contingency, onChange: setContingency },
+    { label: tr('Délai livraison (jours)'), value: deliveryDays, onChange: setDeliveryDays },
   ]
 
   return (
@@ -150,47 +151,47 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
       <div className="rounded-xl bg-muted/40 p-3 space-y-2">
         <p className="font-semibold text-sm">{request.product_name}</p>
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-          <span>Qté: {request.quantity}</span>
+          <span>{tr('Qté:')}{' '}{request.quantity}</span>
           <span>·</span>
           <span>{URGENCY_LABELS[request.urgency]}</span>
-          {request.budget_estimate && <><span>·</span><span>Budget: {request.budget_estimate.toLocaleString()} HTG</span></>}
+          {request.budget_estimate && <><span>·</span><span>{tr('Budget:')}{' '}{request.budget_estimate.toLocaleString(LOCALE_TAG)} HTG</span></>}
         </div>
         {/* Logistics info */}
         <div className="grid grid-cols-2 gap-1.5 pt-1">
           {request.shipping_origin_name && (
             <div className="rounded-lg bg-white px-2.5 py-1.5">
-              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Origine</p>
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">{tr('Origine')}</p>
               <p className="text-xs font-semibold">{request.shipping_origin_name}</p>
             </div>
           )}
           {request.shipping_rate_name && (
             <div className="rounded-lg bg-white px-2.5 py-1.5">
-              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Tarif choisi</p>
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">{tr('Tarif choisi')}</p>
               <p className="text-xs font-semibold">{isAir ? '✈ ' : '🚢 '}{request.shipping_rate_name}</p>
             </div>
           )}
           {totalCBM > 0 && (
             <div className="rounded-lg bg-white px-2.5 py-1.5">
-              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Volume total</p>
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">{tr('Volume total')}</p>
               <p className="text-xs font-semibold">{totalCBM.toFixed(4)} m³</p>
             </div>
           )}
           {totalWeightKg > 0 && (
             <div className="rounded-lg bg-white px-2.5 py-1.5">
-              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Poids total</p>
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">{tr('Poids total')}</p>
               <p className="text-xs font-semibold">{totalWeightKg.toFixed(2)} kg</p>
             </div>
           )}
           {request.invoice_value_usd && (
             <div className="rounded-lg bg-white px-2.5 py-1.5">
-              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">Valeur déclarée</p>
+              <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">{tr('Valeur déclarée')}</p>
               <p className="text-xs font-semibold">${request.invoice_value_usd} USD</p>
             </div>
           )}
         </div>
         {(request.packages || []).length > 0 && (
           <div className="rounded-lg bg-white px-2.5 py-2 space-y-1">
-            <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">{(request.packages || []).length} colis</p>
+            <p className="text-[9px] text-muted-foreground uppercase font-semibold tracking-wide">{(request.packages || []).length}{' '}{tr('colis')}</p>
             {(request.packages || []).map((p, i) => (
               <p key={i} className="text-xs text-muted-foreground">
                 #{p.number} — {[p.length_cm, p.width_cm, p.height_cm].filter(Boolean).join('×')} cm{p.weight_kg ? ` · ${p.weight_kg} kg` : ''}{p.cbm ? ` · ${p.cbm.toFixed(4)} m³` : ''}
@@ -211,30 +212,30 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs font-semibold">Notes internes</Label>
+        <Label className="text-xs font-semibold">{tr('Notes internes')}</Label>
         <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="text-sm rounded-xl resize-none" />
       </div>
 
       {/* Total preview */}
       <div className="rounded-xl border border-border bg-card p-3 space-y-2 text-sm">
         <div className="flex justify-between text-muted-foreground">
-          <span>Produit ({quantity} × {productPrice || 0} HTG)</span>
-          <span className="font-mono">{subtotal.toLocaleString()} HTG</span>
+          <span>{tr('Produit (')}{quantity} × {productPrice || 0}{' '}{tr('HTG)')}</span>
+          <span className="font-mono">{subtotal.toLocaleString(LOCALE_TAG)} HTG</span>
         </div>
         <div className="flex justify-between text-muted-foreground">
-          <span>Frais & marges</span>
-          <span className="font-mono">+ {totalFees.toLocaleString()} HTG</span>
+          <span>{tr('Frais & marges')}</span>
+          <span className="font-mono">+ {totalFees.toLocaleString(LOCALE_TAG)} HTG</span>
         </div>
         <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
-          <span>Total client</span>
-          <span className="text-primary font-mono">{total.toLocaleString()} HTG</span>
+          <span>{tr('Total client')}</span>
+          <span className="text-primary font-mono">{total.toLocaleString(LOCALE_TAG)} HTG</span>
         </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-1">
-        <Button variant="outline" onClick={onCancel} className="rounded-xl">Annuler</Button>
+        <Button variant="outline" onClick={onCancel} className="rounded-xl">{tr('Annuler')}</Button>
         <Button onClick={handleCreate} disabled={saving || !productPrice} className="rounded-xl">
-          {saving ? 'Création...' : 'Créer le devis'}
+          {saving ? tr('Création...') : tr('Créer le devis')}
         </Button>
       </div>
     </div>
@@ -294,9 +295,9 @@ export function AdminQuotesPage() {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Gestion des devis</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tr('Gestion des devis')}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          {loading ? '…' : `${filtered.length} demande${filtered.length !== 1 ? 's' : ''}`}
+          {loading ? '…' : tr('{0} demande{1}', filtered.length, filtered.length !== 1 ? 's' : '')}
         </p>
       </div>
 
@@ -306,7 +307,7 @@ export function AdminQuotesPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Rechercher par client ou produit..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 rounded-xl" />
+              <Input placeholder={tr('Rechercher par client ou produit...')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9 rounded-xl" />
             </div>
             <div className="flex gap-2 flex-wrap">
               {STATUS_FILTERS.map(f => (
@@ -339,21 +340,21 @@ export function AdminQuotesPage() {
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center">
             <FileText className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="font-semibold text-muted-foreground">Aucune demande</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Aucune demande ne correspond à votre filtre</p>
+            <p className="font-semibold text-muted-foreground">{tr('Aucune demande')}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Aucune demande ne correspond à votre filtre')}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Client</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Produit</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Plateforme</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell text-right">Qté</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Urgence</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell text-right">Budget</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Statut</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Date</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Client')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Produit')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{tr('Plateforme')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell text-right">{tr('Qté')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">{tr('Urgence')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell text-right">{tr('Budget')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Statut')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden lg:table-cell">{tr('Date')}</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
@@ -377,7 +378,7 @@ export function AdminQuotesPage() {
                     <TableCell className="hidden sm:table-cell text-right text-sm">{r.quantity}</TableCell>
                     <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{r.urgency}</TableCell>
                     <TableCell className="hidden md:table-cell text-right">
-                      <span className="text-sm font-semibold">{r.budget_estimate ? r.budget_estimate.toLocaleString() : '—'}</span>
+                      <span className="text-sm font-semibold">{r.budget_estimate ? r.budget_estimate.toLocaleString(LOCALE_TAG) : '—'}</span>
                     </TableCell>
                     <TableCell>
                       <span className={cn('inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-1', cfg.bg, cfg.text)}>
@@ -386,7 +387,7 @@ export function AdminQuotesPage() {
                       </span>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
-                      {new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {new Date(r.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -400,14 +401,14 @@ export function AdminQuotesPage() {
                             <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={async () => {
                               await supabase.from('product_requests').update({ status: 'reviewing' }).eq('id', r.id)
                               setRequests(prev => prev.map(x => x.id === r.id ? { ...x, status: 'reviewing' } : x))
-                              toast.success('Demande mise en révision.')
+                              toast.success(tr('Demande mise en révision.'))
                             }}>
-                              <Eye className="mr-2 h-4 w-4" />Mettre en révision
+                              <Eye className="mr-2 h-4 w-4" />{tr('Mettre en révision')}
                             </DropdownMenuItem>
                           )}
                           {(r.status === 'submitted' || r.status === 'reviewing') && !r.has_quote && (
                             <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => setQuoteRequest(r)}>
-                              <Calculator className="mr-2 h-4 w-4" />Créer devis
+                              <Calculator className="mr-2 h-4 w-4" />{tr('Créer devis')}
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem className="rounded-lg cursor-pointer text-destructive focus:text-destructive" onClick={async () => {
@@ -419,9 +420,9 @@ export function AdminQuotesPage() {
                               type: 'warning',
                             })
                             setRequests(prev => prev.map(x => x.id === r.id ? { ...x, status: 'rejected' } : x))
-                            toast.success('Demande refusée.')
+                            toast.success(tr('Demande refusée.'))
                           }}>
-                            <XCircle className="mr-2 h-4 w-4" />Refuser
+                            <XCircle className="mr-2 h-4 w-4" />{tr('Refuser')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -440,10 +441,10 @@ export function AdminQuotesPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              Créer un devis
+              {tr('Créer un devis')}
             </DialogTitle>
             <DialogDescription>
-              Calculez le devis tout-compris pour <span className="font-semibold">{quoteRequest?.customer_name}</span>
+              {tr('Calculez le devis tout-compris pour')}{' '}<span className="font-semibold">{quoteRequest?.customer_name}</span>
             </DialogDescription>
           </DialogHeader>
           {quoteRequest && (

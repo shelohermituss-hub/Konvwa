@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 import IconNavire from 'flat-color-icons/svg/in_transit.svg'
 import { cargoStatusLabel } from '@/lib/cargo-tracking'
 
+import { tr, LOCALE_TAG, DATE_LOCALE } from '@/lib/i18n'
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface Warehouse {
@@ -74,13 +75,13 @@ interface ShippingRequest {
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const REQ_STATUS: Record<string, { label: string; color: string }> = {
-  submitted: { label: 'En attente',    color: 'bg-amber-50 text-amber-700' },
-  reviewing: { label: 'En examen',     color: 'bg-sky-50 text-sky-700' },
-  quoted:    { label: 'Devis reçu',    color: 'bg-primary/10 text-primary' },
-  received:  { label: 'Colis reçu',   color: 'bg-indigo-50 text-indigo-700' },
-  deposit_paid: { label: 'Acompte payé', color: 'bg-teal-50 text-teal-700' },
-  invoiced:  { label: 'Payé',          color: 'bg-emerald-50 text-emerald-700' },
-  cancelled: { label: 'Annulé',        color: 'bg-gray-100 text-gray-500' },
+  submitted: { label: tr('En attente'),    color: 'bg-amber-50 text-amber-700' },
+  reviewing: { label: tr('En examen'),     color: 'bg-sky-50 text-sky-700' },
+  quoted:    { label: tr('Devis reçu'),    color: 'bg-primary/10 text-primary' },
+  received:  { label: tr('Colis reçu'),   color: 'bg-indigo-50 text-indigo-700' },
+  deposit_paid: { label: tr('Acompte payé'), color: 'bg-teal-50 text-teal-700' },
+  invoiced:  { label: tr('Payé'),          color: 'bg-emerald-50 text-emerald-700' },
+  cancelled: { label: tr('Annulé'),        color: 'bg-gray-100 text-gray-500' },
 }
 
 // ── WarehouseAddressCard ─────────────────────────────────────────────────────
@@ -107,10 +108,10 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
     try {
       await navigator.clipboard.writeText(fullAddress)
       setCopied(true)
-      toast.success('Adresse copiée')
+      toast.success(tr('Adresse copiée'))
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('Impossible de copier')
+      toast.error(tr('Impossible de copier'))
     }
   }
 
@@ -123,10 +124,10 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
   const categoryLabel = wh.for_category === 'usa'
     ? 'USA'
     : wh.for_category === 'branded'
-      ? 'Produits marque'
+      ? tr('Produits marque')
       : wh.for_category === 'generic'
-        ? 'Produits génériques'
-        : 'Tous produits'
+        ? tr('Produits génériques')
+        : tr('Tous produits')
 
   return (
     <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
@@ -134,7 +135,7 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
       <div className={cn('px-4 py-3 flex items-center gap-3', bgColor)}>
         <span className="text-2xl leading-none">{wh.flag_emoji ?? '🏭'}</span>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm truncate">{wh.name}</p>
+          <p className="font-bold text-sm truncate">{tr(wh.name)}</p>
           <p className="text-xs text-muted-foreground font-mono">{wh.code}</p>
         </div>
         <span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-white/60 text-foreground/70 shrink-0">
@@ -186,8 +187,8 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
           className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
         >
           {copied
-            ? <><Check className="h-3.5 w-3.5 text-emerald-600" /><span className="text-emerald-600">Copié !</span></>
-            : <><Copy className="h-3.5 w-3.5" />Copier l'adresse</>
+            ? <><Check className="h-3.5 w-3.5 text-emerald-600" /><span className="text-emerald-600">{tr('Copié !')}</span></>
+            : <><Copy className="h-3.5 w-3.5" />{tr('Copier l\'adresse')}</>
           }
         </button>
       </div>
@@ -223,7 +224,7 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
         isInvoiced ? 'bg-emerald-50' :
                      'bg-amber-50'
       )}>
-        <img src="/icon-container.png" alt="Cargaison" className="h-8 w-8 object-contain" />
+        <img src="/icon-container.png" alt={tr('Cargaison')} className="h-8 w-8 object-contain" />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -233,12 +234,12 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
           </span>
           {lateDays > 0 && (
             <span className="rounded-full bg-red-50 text-red-700 text-[10px] px-2 py-0.5 font-semibold">
-              En retard · {lateDays} j
+              {tr('En retard ·')}{' '}{lateDays}{' '}{tr('j')}
             </span>
           )}
           {daysLeft !== null && daysLeft <= 5 && (
             <span className="rounded-full bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5 font-semibold">
-              {daysLeft} j pour payer
+              {daysLeft}{' '}{tr('j pour payer')}
             </span>
           )}
           {req.product_rate_category && (
@@ -248,15 +249,15 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
                 ? 'bg-orange-50 text-orange-700'
                 : 'bg-sky-50 text-sky-700'
             )}>
-              {req.product_rate_category.slug === 'branded' ? 'Marque' : 'Générique'}
+              {req.product_rate_category.slug === 'branded' ? tr('Marque') : tr('Générique')}
             </span>
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-1 truncate">
-          {req.warehouse?.name ?? 'Entrepôt inconnu'}
+          {req.warehouse?.name ?? tr('Entrepôt inconnu')}
         </p>
         <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-          {new Date(req.created_at).toLocaleDateString('fr-HT', { day: 'numeric', month: 'short', year: 'numeric' })}
+          {new Date(req.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
       </div>
 
@@ -264,12 +265,12 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
         {displayAmount != null ? (
           <>
             <p className={cn('text-sm font-bold', isInvoiced ? 'text-emerald-600' : lateDays > 0 ? 'text-red-600' : 'text-primary')}>
-              {displayAmount.toLocaleString('fr-HT')} HTG
+              {displayAmount.toLocaleString(LOCALE_TAG)} HTG
             </p>
             <p className="text-[10px] text-muted-foreground">
-              {isInvoiced ? 'Payé'
-                : isDeposit ? `Reste ${Math.max((req.quoted_amount_htg ?? 0) - (req.paid_amount_htg ?? 0), 0).toLocaleString('fr-HT')}`
-                : isQuoted ? 'Officiel' : 'Estimation'}
+              {isInvoiced ? tr('Payé')
+                : isDeposit ? tr('Reste {0}', Math.max((req.quoted_amount_htg ?? 0) - (req.paid_amount_htg ?? 0), 0).toLocaleString(LOCALE_TAG))
+                : isQuoted ? tr('Officiel') : tr('Estimation')}
             </p>
           </>
         ) : (
@@ -347,9 +348,9 @@ function QuoteRequestSheet({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
-    if (!originCountry) { toast.error('Sélectionnez le pays d\'origine.'); return }
-    if (originCountry === 'CN' && !categorySlug) { toast.error('Sélectionnez le type de produit.'); return }
-    if (!warehouseId)  { toast.error('Aucun entrepôt disponible pour cette origine.'); return }
+    if (!originCountry) { toast.error(tr('Sélectionnez le pays d\'origine.')); return }
+    if (originCountry === 'CN' && !categorySlug) { toast.error(tr('Sélectionnez le type de produit.')); return }
+    if (!warehouseId)  { toast.error(tr('Aucun entrepôt disponible pour cette origine.')); return }
 
     setSubmitting(true)
     try {
@@ -365,17 +366,17 @@ function QuoteRequestSheet({
       })
       if (error) throw error
       if (!data?.success) {
-        toast.error(data?.error || 'Erreur lors de la soumission.')
+        toast.error(data?.error || tr('Erreur lors de la soumission.'))
         return
       }
-      toast.success('Demande envoyée !', {
-        description: "Notre équipe vous enverra un devis estimatif sous 24h.",
+      toast.success(tr('Demande envoyée !'), {
+        description: tr('Notre équipe vous enverra un devis estimatif sous 24h.'),
       })
       reset()
       onSuccess()
       onClose()
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erreur inconnue.')
+      toast.error(e instanceof Error ? e.message : tr('Erreur inconnue.'))
     } finally {
       setSubmitting(false)
     }
@@ -386,9 +387,9 @@ function QuoteRequestSheet({
     <Sheet open={open} onOpenChange={(v) => { if (!v) { reset(); onClose() } }}>
       <SheetContent side="bottom" className="h-[92dvh] rounded-t-2xl p-0 overflow-hidden flex flex-col">
         <SheetHeader className="px-5 pt-5 pb-4 border-b border-border shrink-0">
-          <SheetTitle className="text-left text-lg font-bold">Demander un devis d'expédition</SheetTitle>
+          <SheetTitle className="text-left text-lg font-bold">{tr('Demander un devis d\'expédition')}</SheetTitle>
           <p className="text-sm text-muted-foreground text-left -mt-1">
-            Indiquez le type de vos produits — nous calculons une estimation et vous facturons à la réception.
+            {tr('Indiquez le type de vos produits — nous calculons une estimation et vous facturons à la réception.')}
           </p>
         </SheetHeader>
 
@@ -399,12 +400,12 @@ function QuoteRequestSheet({
             <div className="space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-primary" />
-                Pays d'origine <span className="text-destructive">*</span>
+                {tr('Pays d\'origine')}{' '}<span className="text-destructive">*</span>
               </p>
               <div className="grid grid-cols-2 gap-2.5">
                 {([
-                  { code: 'CN', flag: '🇨🇳', label: 'Chine', sub: 'Shenzhen / Foshan' },
-                  { code: 'US', flag: '🇺🇸', label: 'États-Unis', sub: 'Orlando, FL' },
+                  { code: 'CN', flag: '🇨🇳', label: tr('Chine'), sub: 'Shenzhen / Foshan' },
+                  { code: 'US', flag: '🇺🇸', label: tr('États-Unis'), sub: 'Orlando, FL' },
                 ] as const).map(o => (
                   <button
                     key={o.code}
@@ -433,7 +434,7 @@ function QuoteRequestSheet({
             <div className="space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
                 <Tag className="h-3.5 w-3.5 text-primary" />
-                Type de produit <span className="text-destructive">*</span>
+                {tr('Type de produit')}{' '}<span className="text-destructive">*</span>
               </p>
               <div className="grid grid-cols-2 gap-2.5">
                 {categories.map(cat => (
@@ -452,17 +453,17 @@ function QuoteRequestSheet({
                       'text-sm font-bold leading-tight',
                       categorySlug === cat.slug ? 'text-primary' : 'text-foreground'
                     )}>
-                      {cat.slug === 'generic' ? 'Générique' : 'Marque'}
+                      {cat.slug === 'generic' ? tr('Générique') : tr('Marque')}
                     </p>
                     <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
-                      {cat.description}
+                      {cat.description ? tr(cat.description) : null}
                     </p>
                     {cat.rate_multiplier !== 1 && (
                       <p className={cn(
                         'text-[10px] font-bold mt-1.5',
                         categorySlug === cat.slug ? 'text-primary' : 'text-muted-foreground'
                       )}>
-                        +{Math.round((cat.rate_multiplier - 1) * 100)}% sur tarif standard
+                        +{Math.round((cat.rate_multiplier - 1) * 100)}{tr('% sur tarif standard')}
                       </p>
                     )}
                   </button>
@@ -478,12 +479,12 @@ function QuoteRequestSheet({
             <div className="space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
                 <Package className="h-3.5 w-3.5 text-primary" />
-                Informations optionnelles
+                {tr('Informations optionnelles')}
               </p>
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1 col-span-1">
-                  <Label className="text-xs font-semibold text-muted-foreground">Nb colis</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground">{tr('Nb colis')}</Label>
                   <Input
                     type="number" inputMode="numeric" min="1"
                     placeholder="1"
@@ -503,7 +504,7 @@ function QuoteRequestSheet({
                   />
                 </div>
                 <div className="space-y-1 col-span-1">
-                  <Label className="text-xs font-semibold text-muted-foreground">Poids (kg)</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground">{tr('Poids (kg)')}</Label>
                   <Input
                     type="number" inputMode="decimal" min="0" step="0.01"
                     placeholder="0.0"
@@ -516,10 +517,10 @@ function QuoteRequestSheet({
 
               <div className="space-y-1">
                 <Label className="text-sm font-bold">
-                  Notes <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                  {tr('Notes')}{' '}<span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
                 </Label>
                 <Textarea
-                  placeholder="Type de marchandise, instructions particulières, nom du fournisseur…"
+                  placeholder={tr('Type de marchandise, instructions particulières, nom du fournisseur…')}
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   rows={3}
@@ -532,10 +533,10 @@ function QuoteRequestSheet({
             <div className="space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-primary" />
-                Destination en Haïti <span className="text-xs font-normal normal-case tracking-normal text-muted-foreground/50">(optionnel)</span>
+                {tr('Destination en Haïti')}{' '}<span className="text-xs font-normal normal-case tracking-normal text-muted-foreground/50">(optionnel)</span>
               </p>
               <Input
-                placeholder="Port-au-Prince, Pétion-Ville, Cap-Haïtien…"
+                placeholder={tr('Port-au-Prince, Pétion-Ville, Cap-Haïtien…')}
                 value={destinationAddress}
                 onChange={e => setDestinationAddress(e.target.value)}
                 className="h-11 rounded-xl bg-[#F0F1F5] border-0 text-sm"
@@ -545,8 +546,7 @@ function QuoteRequestSheet({
             {/* Info note */}
             <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
               <p className="text-xs text-sky-800 leading-relaxed">
-                Aucun paiement n'est requis maintenant. Vous recevrez un devis estimatif sous 24h.
-                La facture sera établie après réception et vérification de vos colis.
+                {tr('Aucun paiement n\'est requis maintenant. Vous recevrez un devis estimatif sous 24h. La facture sera établie après réception et vérification de vos colis.')}
               </p>
             </div>
           </div>
@@ -563,8 +563,8 @@ function QuoteRequestSheet({
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
               {submitting
-                ? <><Loader2 className="h-4 w-4 animate-spin" />Envoi en cours…</>
-                : <><Package className="h-4 w-4" />Demander un devis</>
+                ? <><Loader2 className="h-4 w-4 animate-spin" />{tr('Envoi en cours…')}</>
+                : <><Package className="h-4 w-4" />{tr('Demander un devis')}</>
               }
             </button>
           </div>
@@ -587,12 +587,12 @@ function WarehousesSection({ warehouses }: { warehouses: Warehouse[] }) {
         className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-3 flex items-center gap-3 transition-colors hover:bg-muted/20"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-          <img src="/icon-warehouse.png" alt="Entrepôt" className="h-6 w-6 object-contain" />
+          <img src="/icon-warehouse.png" alt={tr('Entrepôt')} className="h-6 w-6 object-contain" />
         </div>
         <div className="flex-1 text-left min-w-0">
-          <p className="text-sm font-bold">Adresses de nos entrepôts</p>
+          <p className="text-sm font-bold">{tr('Adresses de nos entrepôts')}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Communiquez l'adresse à votre fournisseur
+            {tr('Communiquez l\'adresse à votre fournisseur')}
           </p>
         </div>
         {expanded
@@ -664,9 +664,9 @@ export function ShipmentsPage() {
       {/* Header */}
       <div className="px-5 pt-5 pb-4 flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Expéditions</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Expéditions')}</h1>
           <p className="text-sm text-muted-foreground">
-            {shippingRequests.length} cargaison{shippingRequests.length !== 1 ? 's' : ''}
+            {shippingRequests.length}{' '}{tr('cargaison')}{shippingRequests.length !== 1 ? 's' : ''}
           </p>
         </div>
         <button
@@ -675,7 +675,7 @@ export function ShipmentsPage() {
           style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
         >
           <Plus className="h-3.5 w-3.5" />
-          Demande
+          {tr('Demande')}
         </button>
       </div>
 
@@ -687,10 +687,10 @@ export function ShipmentsPage() {
               <Package className="h-4 w-4 text-primary" />
             </div>
             <p className="text-sm font-semibold text-primary flex-1">
-              Vous avez un devis en attente — vérifiez votre solde.
+              {tr('Vous avez un devis en attente — vérifiez votre solde.')}
             </p>
             <Link to="/wallet" className="text-xs font-bold text-primary underline shrink-0">
-              Portefeuille
+              {tr('Portefeuille')}
             </Link>
           </div>
         </div>
@@ -712,9 +712,9 @@ export function ShipmentsPage() {
               <Package className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 text-left">
-              <p className="text-sm font-bold">Créer une demande d'expédition</p>
+              <p className="text-sm font-bold">{tr('Créer une demande d\'expédition')}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Obtenez un devis estimatif — aucun paiement immédiat.
+                {tr('Obtenez un devis estimatif — aucun paiement immédiat.')}
               </p>
             </div>
             <Plus className="h-4 w-4 text-primary shrink-0" />
@@ -729,8 +729,8 @@ export function ShipmentsPage() {
         ) : shippingRequests.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
             <img src={IconNavire} alt="" className="h-12 w-12 mx-auto opacity-40 mb-3" />
-            <p className="font-semibold text-muted-foreground">Aucune demande</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Appuyez sur + pour créer une demande</p>
+            <p className="font-semibold text-muted-foreground">{tr('Aucune demande')}</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">{tr('Appuyez sur + pour créer une demande')}</p>
           </div>
         ) : (
           shippingRequests.map(r => (

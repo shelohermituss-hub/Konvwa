@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { ShipmentStatus } from '@/types'
 
+import { tr, DATE_LOCALE } from '@/lib/i18n'
 interface Shipment {
   id: string
   batch_code: string
@@ -33,13 +34,13 @@ interface Shipment {
 
 // Same vocabulary as order tracking (only the steps that apply to a batch)
 const SHIPMENT_STATUSES: { value: ShipmentStatus; label: string }[] = [
-  { value: 'in_china_warehouse', label: 'Entrepôt (Chine)' },
-  { value: 'shipped',            label: 'Expédié' },
-  { value: 'in_transit',         label: 'En transit' },
-  { value: 'arrived_haiti',      label: 'Arrivé en Haïti' },
-  { value: 'customs_processing', label: 'Dédouanement' },
-  { value: 'out_for_delivery',   label: 'En livraison' },
-  { value: 'delivered',          label: 'Livré' },
+  { value: 'in_china_warehouse', label: tr('Entrepôt (Chine)') },
+  { value: 'shipped',            label: tr('Expédié') },
+  { value: 'in_transit',         label: tr('En transit') },
+  { value: 'arrived_haiti',      label: tr('Arrivé en Haïti') },
+  { value: 'customs_processing', label: tr('Dédouanement') },
+  { value: 'out_for_delivery',   label: tr('En livraison') },
+  { value: 'delivered',          label: tr('Livré') },
 ]
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
@@ -114,7 +115,7 @@ export function AdminShipmentsPage() {
       setPendingOrders((data as unknown as PendingOrderRow[]).filter((o) => !assignedIds.has(o.id)).map((o) => ({
         id: o.id,
         tracking_code: o.tracking_code,
-        product_name: o.quotes?.product_requests?.product_name || 'Produit',
+        product_name: o.quotes?.product_requests?.product_name || tr('Produit'),
       })))
     }
   }
@@ -135,7 +136,7 @@ export function AdminShipmentsPage() {
     const names = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]))
     setPendingCargo(rows.map(r => ({
       id: r.id,
-      client: names[r.user_id] || 'Client',
+      client: names[r.user_id] || tr('Client'),
       origin: r.origin_country,
       paid: r.status === 'invoiced',
     })))
@@ -155,8 +156,8 @@ export function AdminShipmentsPage() {
       volume_m3: form.volume_m3 ? parseFloat(form.volume_m3) : null,
       notes: form.notes || null,
     })
-    if (error) toast.error('Erreur lors de la création.')
-    else { toast.success('Expédition créée.'); setCreateOpen(false); setForm(emptyForm); await loadShipments() }
+    if (error) toast.error(tr('Erreur lors de la création.'))
+    else { toast.success(tr('Expédition créée.')); setCreateOpen(false); setForm(emptyForm); await loadShipments() }
     setSaving(false)
   }
 
@@ -164,10 +165,10 @@ export function AdminShipmentsPage() {
     if (!editShipment) return
     setSaving(true)
     const { error } = await supabase.from('shipments').update({ status: editStatus, updated_at: new Date().toISOString() }).eq('id', editShipment.id)
-    if (error) toast.error('Erreur.')
+    if (error) toast.error(tr('Erreur.'))
     else {
       const n = (editShipment.order_count ?? 0) + (editShipment.cargo_count ?? 0)
-      toast.success(n > 0 ? `Statut mis à jour — ${editShipment.order_count ?? 0} commande(s) et ${editShipment.cargo_count ?? 0} cargaison(s) suivent automatiquement.` : 'Statut mis à jour.')
+      toast.success(n > 0 ? tr('Statut mis à jour — {0} commande(s) et {1} cargaison(s) suivent automatiquement.', editShipment.order_count ?? 0, editShipment.cargo_count ?? 0) : tr('Statut mis à jour.'))
       setShipments(prev => prev.map(s => s.id === editShipment.id ? { ...s, status: editStatus } : s))
       setEditShipment(null)
     }
@@ -179,9 +180,9 @@ export function AdminShipmentsPage() {
     setSaving(true)
     const rows = selectedOrders.map(orderId => ({ order_id: orderId, shipment_id: assignOpen.id }))
     const { error } = await supabase.from('order_shipments').upsert(rows, { onConflict: 'order_id,shipment_id' })
-    if (error) toast.error("Erreur lors de l'assignation.")
+    if (error) toast.error(tr('Erreur lors de l\'assignation.'))
     else {
-      toast.success(`${selectedOrders.length} commande(s) assignée(s).`)
+      toast.success(tr('{0} commande(s) assignée(s).', selectedOrders.length))
       setAssignOpen(null)
       setSelectedOrders([])
       await loadShipments()
@@ -196,9 +197,9 @@ export function AdminShipmentsPage() {
       .from('product_requests')
       .update({ shipment_id: assignCargoOpen.id, updated_at: new Date().toISOString() })
       .in('id', selectedCargo)
-    if (error) toast.error("Erreur lors de l'assignation.")
+    if (error) toast.error(tr('Erreur lors de l\'assignation.'))
     else {
-      toast.success(`${selectedCargo.length} cargaison(s) assignée(s).`)
+      toast.success(tr('{0} cargaison(s) assignée(s).', selectedCargo.length))
       setAssignCargoOpen(null)
       setSelectedCargo([])
       await loadShipments()
@@ -216,14 +217,14 @@ export function AdminShipmentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Gestion des expéditions</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Gestion des expéditions')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {loading ? '…' : `${filtered.length} expédition${filtered.length !== 1 ? 's' : ''}`}
+            {loading ? '…' : tr('{0} expédition{1}', filtered.length, filtered.length !== 1 ? 's' : '')}
           </p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="rounded-xl gap-2">
           <Plus className="h-4 w-4" />
-          Nouvelle expédition
+          {tr('Nouvelle expédition')}
         </Button>
       </div>
 
@@ -233,7 +234,7 @@ export function AdminShipmentsPage() {
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher par code ou bateau..."
+              placeholder={tr('Rechercher par code ou bateau...')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9 rounded-xl"
@@ -248,20 +249,20 @@ export function AdminShipmentsPage() {
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center">
             <Ship className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="font-semibold text-muted-foreground">Aucune expédition</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Créez votre première expédition maritime.</p>
+            <p className="font-semibold text-muted-foreground">{tr('Aucune expédition')}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Créez votre première expédition maritime.')}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Lot</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Bateau</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Statut</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Départ</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Arrivée est.</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Conteneur</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Contenu</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Lot')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{tr('Bateau')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Statut')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">{tr('Départ')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">{tr('Arrivée est.')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden lg:table-cell">{tr('Conteneur')}</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">{tr('Contenu')}</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
@@ -282,17 +283,17 @@ export function AdminShipmentsPage() {
                       </span>
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                      {s.departure_date ? new Date(s.departure_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '—'}
+                      {s.departure_date ? new Date(s.departure_date).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' }) : '—'}
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                      {s.estimated_arrival ? new Date(s.estimated_arrival).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '—'}
+                      {s.estimated_arrival ? new Date(s.estimated_arrival).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' }) : '—'}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell font-mono text-xs">{s.container_number || '—'}</TableCell>
                     <TableCell className="text-right">
                       <span className="text-sm font-semibold">{s.order_count}</span>
-                      <span className="text-xs text-muted-foreground ml-1">cmd</span>
+                      <span className="text-xs text-muted-foreground ml-1">{tr('cmd')}</span>
                       <span className="text-sm font-semibold ml-2">{s.cargo_count}</span>
-                      <span className="text-xs text-muted-foreground ml-1">cargo</span>
+                      <span className="text-xs text-muted-foreground ml-1">{tr('cargo')}</span>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -303,13 +304,13 @@ export function AdminShipmentsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-xl w-48">
                           <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => { setEditShipment(s); setEditStatus(s.status) }}>
-                            <Edit className="mr-2 h-4 w-4" />Modifier statut
+                            <Edit className="mr-2 h-4 w-4" />{tr('Modifier statut')}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={async () => { await loadPendingOrders(); setAssignOpen(s) }}>
-                            <Package className="mr-2 h-4 w-4" />Assigner commandes
+                            <Package className="mr-2 h-4 w-4" />{tr('Assigner commandes')}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={async () => { await loadPendingCargo(); setAssignCargoOpen(s) }}>
-                            <Ship className="mr-2 h-4 w-4" />Assigner cargaisons
+                            <Ship className="mr-2 h-4 w-4" />{tr('Assigner cargaisons')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -326,17 +327,17 @@ export function AdminShipmentsPage() {
       <Dialog open={createOpen} onOpenChange={o => { if (!o) { setCreateOpen(false); setForm(emptyForm) } }}>
         <DialogContent className="max-w-lg rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Nouvelle expédition</DialogTitle>
-            <DialogDescription>Créez un nouveau lot d'expédition maritime</DialogDescription>
+            <DialogTitle>{tr('Nouvelle expédition')}</DialogTitle>
+            <DialogDescription>{tr('Créez un nouveau lot d\'expédition maritime')}</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 py-3">
             {[
-              { label: 'Nom du bateau',    key: 'vessel_info' as const,       placeholder: 'MV Atlantic Star', type: 'text' },
-              { label: 'N° Conteneur',     key: 'container_number' as const,  placeholder: 'TCKU1234567',      type: 'text' },
-              { label: 'Date de départ',   key: 'departure_date' as const,    placeholder: '',                 type: 'date' },
-              { label: 'Arrivée estimée',  key: 'estimated_arrival' as const, placeholder: '',                 type: 'date' },
-              { label: 'Poids (kg)',       key: 'weight_kg' as const,         placeholder: '0',                type: 'number' },
-              { label: 'Volume (m³)',      key: 'volume_m3' as const,         placeholder: '0',                type: 'number' },
+              { label: tr('Nom du bateau'),    key: 'vessel_info' as const,       placeholder: 'MV Atlantic Star', type: 'text' },
+              { label: tr('N° Conteneur'),     key: 'container_number' as const,  placeholder: 'TCKU1234567',      type: 'text' },
+              { label: tr('Date de départ'),   key: 'departure_date' as const,    placeholder: '',                 type: 'date' },
+              { label: tr('Arrivée estimée'),  key: 'estimated_arrival' as const, placeholder: '',                 type: 'date' },
+              { label: tr('Poids (kg)'),       key: 'weight_kg' as const,         placeholder: '0',                type: 'number' },
+              { label: tr('Volume (m³)'),      key: 'volume_m3' as const,         placeholder: '0',                type: 'number' },
             ].map(f => (
               <div key={f.key} className="space-y-1">
                 <Label className="text-xs font-semibold">{f.label}</Label>
@@ -350,7 +351,7 @@ export function AdminShipmentsPage() {
               </div>
             ))}
             <div className="col-span-2 space-y-1">
-              <Label className="text-xs font-semibold">Notes</Label>
+              <Label className="text-xs font-semibold">{tr('Notes')}</Label>
               <Textarea
                 value={form.notes}
                 onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
@@ -360,9 +361,9 @@ export function AdminShipmentsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleCreate} disabled={saving} className="rounded-xl">
-              {saving ? 'Création...' : 'Créer'}
+              {saving ? tr('Création...') : tr('Créer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -372,11 +373,11 @@ export function AdminShipmentsPage() {
       <Dialog open={!!editShipment} onOpenChange={o => { if (!o) setEditShipment(null) }}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Modifier le statut</DialogTitle>
-            <DialogDescription>Lot <span className="font-mono font-semibold">{editShipment?.batch_code}</span></DialogDescription>
+            <DialogTitle>{tr('Modifier le statut')}</DialogTitle>
+            <DialogDescription>{tr('Lot')}{' '}<span className="font-mono font-semibold">{editShipment?.batch_code}</span></DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-2">
-            <Label className="font-semibold text-sm">Nouveau statut</Label>
+            <Label className="font-semibold text-sm">{tr('Nouveau statut')}</Label>
             <Select value={editStatus} onValueChange={v => setEditStatus(v as ShipmentStatus)}>
               <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -385,14 +386,14 @@ export function AdminShipmentsPage() {
             </Select>
             <p className="text-xs text-muted-foreground leading-relaxed pt-1">
               {editShipment && ((editShipment.order_count ?? 0) + (editShipment.cargo_count ?? 0)) > 0
-                ? <>Les <strong>{editShipment.order_count ?? 0} commande(s)</strong> et <strong>{editShipment.cargo_count ?? 0} cargaison(s)</strong> assignées prendront automatiquement ce statut, et leurs clients seront notifiés aux étapes clés.</>
-                : 'Aucune commande ni cargaison assignée pour le moment.'}
+                ? <>{tr('Les')}{' '}<strong>{editShipment.order_count ?? 0}{' '}{tr('commande(s)')}</strong>{' '}{tr('et')}{' '}<strong>{editShipment.cargo_count ?? 0}{' '}{tr('cargaison(s)')}</strong>{' '}{tr('assignées prendront automatiquement ce statut, et leurs clients seront notifiés aux étapes clés.')}</>
+                : tr('Aucune commande ni cargaison assignée pour le moment.')}
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditShipment(null)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setEditShipment(null)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleStatusUpdate} disabled={saving} className="rounded-xl">
-              {saving ? 'Enregistrement...' : 'Enregistrer'}
+              {saving ? tr('Enregistrement...') : tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -402,14 +403,14 @@ export function AdminShipmentsPage() {
       <Dialog open={!!assignOpen} onOpenChange={o => { if (!o) { setAssignOpen(null); setSelectedOrders([]) } }}>
         <DialogContent className="max-w-lg rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Assigner des commandes</DialogTitle>
+            <DialogTitle>{tr('Assigner des commandes')}</DialogTitle>
             <DialogDescription>
-              Commandes payées à inclure dans le lot <span className="font-mono font-semibold">{assignOpen?.batch_code}</span>
+              {tr('Commandes payées à inclure dans le lot')}{' '}<span className="font-mono font-semibold">{assignOpen?.batch_code}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-64 overflow-y-auto py-2 space-y-2">
             {pendingOrders.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Aucune commande payée disponible.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{tr('Aucune commande payée disponible.')}</p>
             ) : (
               pendingOrders.map(o => (
                 <label key={o.id} className={cn(
@@ -432,9 +433,9 @@ export function AdminShipmentsPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAssignOpen(null)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setAssignOpen(null)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleAssignOrders} disabled={saving || selectedOrders.length === 0} className="rounded-xl">
-              Assigner {selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
+              {tr('Assigner')}{' '}{selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -444,14 +445,14 @@ export function AdminShipmentsPage() {
       <Dialog open={!!assignCargoOpen} onOpenChange={o => { if (!o) { setAssignCargoOpen(null); setSelectedCargo([]) } }}>
         <DialogContent className="max-w-lg rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Assigner des cargaisons</DialogTitle>
+            <DialogTitle>{tr('Assigner des cargaisons')}</DialogTitle>
             <DialogDescription>
-              Cargaisons payées (totalement ou acompte) à inclure dans le lot <span className="font-mono font-semibold">{assignCargoOpen?.batch_code}</span>
+              {tr('Cargaisons payées (totalement ou acompte) à inclure dans le lot')}{' '}<span className="font-mono font-semibold">{assignCargoOpen?.batch_code}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-64 overflow-y-auto py-2 space-y-2">
             {pendingCargo.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Aucune cargaison payée en attente d'assignation.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{tr('Aucune cargaison payée en attente d\'assignation.')}</p>
             ) : (
               pendingCargo.map(c => (
                 <label key={c.id} className={cn(
@@ -474,7 +475,7 @@ export function AdminShipmentsPage() {
                     'text-[10px] font-semibold rounded-full px-2 py-0.5 shrink-0',
                     c.paid ? 'bg-emerald-50 text-emerald-700' : 'bg-teal-50 text-teal-700'
                   )}>
-                    {c.paid ? 'Payé' : 'Acompte'}
+                    {c.paid ? tr('Payé') : tr('Acompte')}
                   </span>
                   {selectedCargo.includes(c.id) && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
                 </label>
@@ -482,9 +483,9 @@ export function AdminShipmentsPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAssignCargoOpen(null)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setAssignCargoOpen(null)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleAssignCargo} disabled={saving || selectedCargo.length === 0} className="rounded-xl">
-              Assigner {selectedCargo.length > 0 ? `(${selectedCargo.length})` : ''}
+              {tr('Assigner')}{' '}{selectedCargo.length > 0 ? `(${selectedCargo.length})` : ''}
             </Button>
           </DialogFooter>
         </DialogContent>

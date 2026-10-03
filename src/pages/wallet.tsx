@@ -12,6 +12,7 @@ import { createPayment } from '@/lib/payment-api'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { DATE_LOCALE, LOCALE_TAG, tr, trServer } from '@/lib/i18n'
 interface WalletData {
   id: string
   available_balance: number
@@ -31,26 +32,26 @@ interface Transaction {
 }
 
 const TX_CONFIG: Record<string, { label: string; color: string; bg: string; sign: '+' | '-' }> = {
-  deposit:    { label: 'Dépôt',          color: 'text-emerald-600', bg: 'bg-emerald-50',    sign: '+' },
-  refund:     { label: 'Remboursement',  color: 'text-emerald-600', bg: 'bg-emerald-50',    sign: '+' },
-  unblock:    { label: 'Débloqué',       color: 'text-emerald-600', bg: 'bg-emerald-50',    sign: '+' },
-  withdrawal: { label: 'Retrait',        color: 'text-destructive', bg: 'bg-destructive/8', sign: '-' },
-  payment:    { label: 'Paiement',       color: 'text-destructive', bg: 'bg-destructive/8', sign: '-' },
-  block:      { label: 'Bloqué',         color: 'text-warning',     bg: 'bg-warning/10',    sign: '-' },
+  deposit:    { label: tr('Dépôt'),          color: 'text-emerald-600', bg: 'bg-emerald-50',    sign: '+' },
+  refund:     { label: tr('Remboursement'),  color: 'text-emerald-600', bg: 'bg-emerald-50',    sign: '+' },
+  unblock:    { label: tr('Débloqué'),       color: 'text-emerald-600', bg: 'bg-emerald-50',    sign: '+' },
+  withdrawal: { label: tr('Retrait'),        color: 'text-destructive', bg: 'bg-destructive/8', sign: '-' },
+  payment:    { label: tr('Paiement'),       color: 'text-destructive', bg: 'bg-destructive/8', sign: '-' },
+  block:      { label: tr('Bloqué'),         color: 'text-warning',     bg: 'bg-warning/10',    sign: '-' },
 }
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  completed: { label: 'Complété',  className: 'bg-emerald-50 text-emerald-700' },
-  pending:   { label: 'En attente', className: 'bg-amber-50 text-amber-700' },
-  failed:    { label: 'Échoué',    className: 'bg-red-50 text-red-700' },
-  cancelled: { label: 'Annulé',   className: 'bg-gray-100 text-gray-500' },
+  completed: { label: tr('Complété'),  className: 'bg-emerald-50 text-emerald-700' },
+  pending:   { label: tr('En attente'), className: 'bg-amber-50 text-amber-700' },
+  failed:    { label: tr('Échoué'),    className: 'bg-red-50 text-red-700' },
+  cancelled: { label: tr('Annulé'),   className: 'bg-gray-100 text-gray-500' },
 }
 
 const METHOD_LABEL: Record<string, string> = {
   moncash:  'MonCash',
   natcash:  'NatCash',
-  wallet:   'Portefeuille',
-  virement: 'Virement BUH',
+  wallet:   tr('Portefeuille'),
+  virement: tr('Virement BUH'),
   btc:      'Bitcoin (BTC)',
   usdt:     'USDT TRC20',
   eth:      'Ethereum (ETH)',
@@ -64,18 +65,18 @@ const CRYPTO_ADDRESS: Record<string, { address: string; network: string; coin: s
 
 const PROOF_CHECKLIST = {
   transfer: [
-    'Le montant exact envoyé',
-    'La date et l\'heure du virement',
-    'Le numéro de référence ou de transaction',
-    'Votre nom (expéditeur) et le compte bénéficiaire BUH DOLLAR',
-    'Le statut « Réussi », « Confirmé » ou « Effectué »',
+    tr('Le montant exact envoyé'),
+    tr('La date et l\'heure du virement'),
+    tr('Le numéro de référence ou de transaction'),
+    tr('Votre nom (expéditeur) et le compte bénéficiaire BUH DOLLAR'),
+    tr('Le statut « Réussi », « Confirmé » ou « Effectué »'),
   ],
   crypto: [
-    'Le montant et la crypto envoyés (BTC, USDT, ETH)',
-    'L\'adresse de destination, identique à celle affichée ci-dessus',
-    'Le TXID / hash de la transaction et le réseau utilisé',
-    'La date et l\'heure de l\'envoi',
-    'Le statut « Confirmé » ou « Terminé »',
+    tr('Le montant et la crypto envoyés (BTC, USDT, ETH)'),
+    tr('L\'adresse de destination, identique à celle affichée ci-dessus'),
+    tr('Le TXID / hash de la transaction et le réseau utilisé'),
+    tr('La date et l\'heure de l\'envoi'),
+    tr('Le statut « Confirmé » ou « Terminé »'),
   ],
 } as const
 
@@ -95,12 +96,12 @@ function ProofUpload({
   return (
     <div className="space-y-1.5">
       <Label className="text-xs">
-        Preuve de paiement{required && <span className="text-destructive ml-0.5">*</span>}
+        {tr('Preuve de paiement')}{required && <span className="text-destructive ml-0.5">*</span>}
       </Label>
       <div className="rounded-xl border border-sky-100 bg-sky-50/70 px-3 py-2.5">
         <p className="flex items-center gap-1.5 text-[11px] font-bold text-sky-800">
           <Info className="h-3.5 w-3.5 shrink-0" />
-          Ce qui doit être visible sur la photo
+          {tr('Ce qui doit être visible sur la photo')}
         </p>
         <ul className="mt-1.5 space-y-1">
           {PROOF_CHECKLIST[kind].map((item) => (
@@ -111,13 +112,12 @@ function ProofUpload({
           ))}
         </ul>
         <p className="mt-2 border-t border-sky-100 pt-2 text-[10px] leading-snug text-sky-900/60">
-          Envoyez la capture d'écran entière, sans la recadrer, nette et lisible. Une preuve floue,
-          coupée ou modifiée sera refusée.
+          {tr('Envoyez la capture d\'écran entière, sans la recadrer, nette et lisible. Une preuve floue, coupée ou modifiée sera refusée.')}
         </p>
       </div>
       {preview ? (
         <div className="relative rounded-xl overflow-hidden border border-emerald-200">
-          <img src={preview} alt="Preuve" className="w-full h-36 object-cover" />
+          <img src={preview} alt={tr('Preuve')} className="w-full h-36 object-cover" />
           <button
             type="button"
             onClick={onRemove}
@@ -127,7 +127,7 @@ function ProofUpload({
           </button>
           <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-emerald-600/90 rounded-full px-2 py-0.5">
             <CheckCheck className="h-3 w-3 text-white" />
-            <span className="text-[10px] text-white font-semibold">Preuve ajoutée</span>
+            <span className="text-[10px] text-white font-semibold">{tr('Preuve ajoutée')}</span>
           </div>
         </div>
       ) : (
@@ -136,8 +136,8 @@ function ProofUpload({
             <Upload className="h-5 w-5 text-muted-foreground/60" />
           </div>
           <div className="text-center">
-            <p className="text-xs font-semibold text-foreground">Appuyez pour ajouter une preuve</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Capture d'écran ou photo · PNG, JPG · max 5 Mo</p>
+            <p className="text-xs font-semibold text-foreground">{tr('Appuyez pour ajouter une preuve')}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{tr('Capture d\'écran ou photo · PNG, JPG · max 5 Mo')}</p>
           </div>
           <input
             type="file"
@@ -177,17 +177,17 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
   }
 
   const rows: { label: string; value: string; copyText?: string }[] = [
-    { label: 'Type', value: config.label },
-    ...(tx.payment_method ? [{ label: 'Méthode', value: METHOD_LABEL[tx.payment_method] ?? tx.payment_method }] : []),
-    ...(tx.description ? [{ label: 'Description', value: tx.description }] : []),
-    ...(tx.reference ? [{ label: 'Référence', value: tx.reference, copyText: tx.reference }] : []),
-    ...(tx.proof_url ? [{ label: 'Preuve de paiement', value: 'Soumise' }] : []),
-    { label: 'ID transaction', value: tx.id.slice(0, 8).toUpperCase(), copyText: tx.id },
-    { label: 'Date', value: new Date(tx.created_at).toLocaleString('fr-HT', { dateStyle: 'medium', timeStyle: 'short' }) },
+    { label: tr('Type'), value: config.label },
+    ...(tx.payment_method ? [{ label: tr('Méthode'), value: METHOD_LABEL[tx.payment_method] ?? tx.payment_method }] : []),
+    ...(tx.description ? [{ label: tr('Description'), value: trServer(tx.description) }] : []),
+    ...(tx.reference ? [{ label: tr('Référence'), value: tx.reference, copyText: tx.reference }] : []),
+    ...(tx.proof_url ? [{ label: tr('Preuve de paiement'), value: tr('Soumise') }] : []),
+    { label: tr('ID transaction'), value: tx.id.slice(0, 8).toUpperCase(), copyText: tx.id },
+    { label: tr('Date'), value: new Date(tx.created_at).toLocaleString(LOCALE_TAG, { dateStyle: 'medium', timeStyle: 'short' }) },
   ]
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Détails de la transaction">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label={tr('Détails de la transaction')}>
       <div
         className="absolute inset-0 bg-black/45 backdrop-blur-[2px] animate-in fade-in duration-200"
         onClick={onClose}
@@ -198,10 +198,10 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
         <div className="shrink-0 px-5 pt-2.5">
           <div className="mx-auto h-1 w-10 rounded-full bg-gray-200 sm:hidden" />
           <div className="mt-2 flex items-center justify-between">
-            <h2 className="text-base font-bold tracking-tight">Détails de la transaction</h2>
+            <h2 className="text-base font-bold tracking-tight">{tr('Détails de la transaction')}</h2>
             <button
               onClick={onClose}
-              aria-label="Fermer"
+              aria-label={tr('Fermer')}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 active:scale-95"
             >
               <X className="h-4 w-4" />
@@ -217,10 +217,10 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
               <AmountIcon className={cn('h-6 w-6', config.color)} strokeWidth={2.2} />
             </div>
             <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {isCredit ? 'Montant crédité' : 'Montant débité'}
+              {isCredit ? tr('Montant crédité') : tr('Montant débité')}
             </p>
             <p className={cn('mt-1 text-4xl font-extrabold tracking-tight tabular-nums', isCredit ? 'text-emerald-600' : 'text-foreground')}>
-              {isCredit ? '+' : '-'}{tx.amount.toLocaleString('fr-HT')}
+              {isCredit ? '+' : '-'}{tx.amount.toLocaleString(LOCALE_TAG)}
               <span className="ml-1.5 text-base font-bold text-muted-foreground">HTG</span>
             </p>
             <span className={cn('mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold', badge.className)}>
@@ -239,7 +239,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
                   {row.copyText && (
                     <button
                       onClick={() => copy(row.label, row.copyText!)}
-                      aria-label={`Copier ${row.label}`}
+                      aria-label={tr('Copier {0}', row.label)}
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-gray-100 active:scale-95"
                     >
                       {copiedKey === row.label
@@ -306,11 +306,11 @@ export function WalletPage() {
       const result = await createPayment({ amount, method: topupMethod as 'moncash' | 'natcash', wallet_id: wallet.id })
       sessionStorage.setItem('konvwa_pay_ref', result.reference_id)
       haptics.success()
-      toast.success('Redirection vers ' + (topupMethod === 'moncash' ? 'MonCash' : 'NatCash') + '…')
+      toast.success(tr('Redirection vers ') + (topupMethod === 'moncash' ? 'MonCash' : 'NatCash') + '…')
       setTopupOpen(false)
       window.location.href = result.url
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : (e as { message?: string })?.message || 'Erreur lors de l\'initialisation du paiement.'
+      const msg = e instanceof Error ? e.message : (e as { message?: string })?.message || tr('Erreur lors de l\'initialisation du paiement.')
       toast.error(msg)
     }
     setSubmitting(false)
@@ -337,7 +337,7 @@ export function WalletPage() {
           const msg = typeof uploadError.message === 'string'
             ? uploadError.message
             : JSON.stringify(uploadError)
-          throw new Error('Téléversement impossible : ' + msg)
+          throw new Error(tr('Téléversement impossible : ') + msg)
         }
         proofStoragePath = path
       }
@@ -358,10 +358,10 @@ export function WalletPage() {
         const msg = typeof error.message === 'string'
           ? error.message
           : JSON.stringify(error)
-        throw new Error('Enregistrement impossible : ' + msg)
+        throw new Error(tr('Enregistrement impossible : ') + msg)
       }
       haptics.success()
-      toast.success('Dépôt soumis — en attente de confirmation.')
+      toast.success(tr('Dépôt soumis — en attente de confirmation.'))
       setTopupOpen(false)
       setTopupAmount('')
       setTxHashInput('')
@@ -374,7 +374,7 @@ export function WalletPage() {
         : typeof e === 'string'
           ? e
           : JSON.stringify(e)
-      toast.error(msg || 'Erreur inconnue.')
+      toast.error(msg || tr('Erreur inconnue.'))
     }
     setSubmitting(false)
   }
@@ -403,7 +403,7 @@ export function WalletPage() {
       let key: string
       if (d.toDateString() === today.toDateString()) key = "Aujourd'hui"
       else if (d.toDateString() === yesterday.toDateString()) key = 'Hier'
-      else key = d.toLocaleDateString('fr-HT', { day: 'numeric', month: 'long' })
+      else key = d.toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'long' })
       if (map[key] === undefined) { map[key] = groups.length; groups.push({ label: key, total: 0, items: [] }) }
       groups[map[key]].items.push(tx)
       const isCredit = tx.type === 'deposit' || tx.type === 'refund' || tx.type === 'unblock'
@@ -433,8 +433,8 @@ export function WalletPage() {
       {/* Page header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4 animate-fade-in-up delay-1">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Portefeuille</h1>
-          <p className="text-sm text-muted-foreground">Gérez votre solde HTG</p>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Portefeuille')}</h1>
+          <p className="text-sm text-muted-foreground">{tr('Gérez votre solde HTG')}</p>
         </div>
         <Dialog open={topupOpen} onOpenChange={(open) => {
           setTopupOpen(open)
@@ -447,17 +447,17 @@ export function WalletPage() {
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
               <Plus className="h-4 w-4" />
-              Recharger
+              {tr('Recharger')}
             </button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Recharger le portefeuille</DialogTitle>
-              <DialogDescription>Choisissez le montant et la méthode</DialogDescription>
+              <DialogTitle>{tr('Recharger le portefeuille')}</DialogTitle>
+              <DialogDescription>{tr('Choisissez le montant et la méthode')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-5 py-4">
               <div className="space-y-2">
-                <Label>Montant (HTG)</Label>
+                <Label>{tr('Montant (HTG)')}</Label>
                 <div className="grid grid-cols-4 gap-2">
                   {[1000, 5000, 10000, 25000].map((a) => (
                     <button
@@ -477,14 +477,14 @@ export function WalletPage() {
                 </div>
                 <Input
                   type="number"
-                  placeholder="Montant personnalisé"
+                  placeholder={tr('Montant personnalisé')}
                   value={topupAmount}
                   onChange={(e) => setTopupAmount(e.target.value)}
                   className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium focus-visible:ring-1 focus-visible:ring-primary/40"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Méthode de paiement</Label>
+                <Label>{tr('Méthode de paiement')}</Label>
                 <RadioGroup
                   value={topupMethod}
                   onValueChange={(v) => { setTopupMethod(v as typeof topupMethod); setTxHashInput('') }}
@@ -513,7 +513,7 @@ export function WalletPage() {
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 mb-1">
                         <Wallet className="h-4 w-4 text-blue-600" />
                       </div>
-                      <span className="text-[10px] text-muted-foreground">Virement</span>
+                      <span className="text-[10px] text-muted-foreground">{tr('Virement')}</span>
                     </Label>
                   </div>
                   {/* Crypto */}
@@ -532,7 +532,7 @@ export function WalletPage() {
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 mb-1">
                         <Bitcoin className="h-4 w-4 text-orange-500" />
                       </div>
-                      <span className="text-[10px] text-muted-foreground">Crypto</span>
+                      <span className="text-[10px] text-muted-foreground">{tr('Crypto')}</span>
                     </Label>
                   </div>
                 </RadioGroup>
@@ -563,11 +563,11 @@ export function WalletPage() {
               {topupMethod === 'virement' && (
                 <div className="space-y-3">
                   <div className="rounded-xl bg-blue-50 border border-blue-100 p-4 space-y-2">
-                    <p className="text-xs font-bold text-blue-800 uppercase tracking-wide">Coordonnées bancaires</p>
+                    <p className="text-xs font-bold text-blue-800 uppercase tracking-wide">{tr('Coordonnées bancaires')}</p>
                     {[
-                      ['Banque', 'BUH DOLLAR'],
-                      ['N° Compte', '55000146737'],
-                      ['Titulaire', 'HERMITUS SHELO'],
+                      [tr('Banque'), 'BUH DOLLAR'],
+                      [tr('N° Compte'), '55000146737'],
+                      [tr('Titulaire'), 'HERMITUS SHELO'],
                     ].map(([label, val]) => (
                       <div key={label} className="flex justify-between text-sm">
                         <span className="text-muted-foreground text-xs">{label}</span>
@@ -576,7 +576,7 @@ export function WalletPage() {
                     ))}
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Numéro de référence du virement</Label>
+                    <Label className="text-xs">{tr('Numéro de référence du virement')}</Label>
                     <Input
                       placeholder="Ex: VIR-20260930-XXX"
                       value={txHashInput}
@@ -601,12 +601,12 @@ export function WalletPage() {
                     <div className="rounded-xl bg-orange-50 border border-orange-100 p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-orange-800 uppercase tracking-wide">
-                          {info.coin} — Réseau {info.network}
+                          {info.coin}{' '}{tr('— Réseau')}{' '}{info.network}
                         </p>
-                        <span className="text-[9px] font-bold bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full">DÉPÔT</span>
+                        <span className="text-[9px] font-bold bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full">{tr('DÉPÔT')}</span>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground mb-1">Adresse de dépôt</p>
+                        <p className="text-[10px] text-muted-foreground mb-1">{tr('Adresse de dépôt')}</p>
                         <div className="flex items-center gap-2 bg-white rounded-lg p-2 border border-orange-100">
                           <p className="text-[11px] font-mono text-foreground flex-1 break-all leading-relaxed">{info.address}</p>
                           <button
@@ -626,11 +626,11 @@ export function WalletPage() {
                         </div>
                       </div>
                       <p className="text-[10px] text-orange-700">
-                        Envoyez uniquement des {info.coin} sur le réseau {info.network}. Tout autre envoi sera perdu.
+                        {tr('Envoyez uniquement des')}{' '}{info.coin}{' '}{tr('sur le réseau')}{' '}{info.network}{tr('. Tout autre envoi sera perdu.')}
                       </p>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">Hash de la transaction (optionnel)</Label>
+                      <Label className="text-xs">{tr('Hash de la transaction (optionnel)')}</Label>
                       <Input
                         placeholder="0x... ou TXid..."
                         value={txHashInput}
@@ -651,14 +651,14 @@ export function WalletPage() {
               {topupAmount && parseFloat(topupAmount) >= 100 && (
                 <div className="rounded-xl bg-muted p-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">À créditer</span>
-                    <span className="font-semibold">{parseFloat(topupAmount).toLocaleString('fr-HT')} HTG</span>
+                    <span className="text-muted-foreground">{tr('À créditer')}</span>
+                    <span className="font-semibold">{parseFloat(topupAmount).toLocaleString(LOCALE_TAG)} HTG</span>
                   </div>
                 </div>
               )}
             </div>
             <DialogFooter>
-              <button onClick={() => setTopupOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">Annuler</button>
+              <button onClick={() => setTopupOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">{tr('Annuler')}</button>
               <button
                 onClick={() => { handleTap(); handleTopup() }}
                 disabled={
@@ -669,7 +669,7 @@ export function WalletPage() {
                 style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Confirmer
+                {tr('Confirmer')}
               </button>
             </DialogFooter>
           </DialogContent>
@@ -724,13 +724,13 @@ export function WalletPage() {
             {/* Center: balance */}
             <div>
               <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-1">
-                Solde disponible
+                {tr('Solde disponible')}
               </p>
               {loading ? (
                 <Skeleton className="h-8 w-40 rounded-lg" style={{ background: 'rgba(255,255,255,0.1)' }} />
               ) : (
                 <p className="text-[2rem] font-bold tracking-tight leading-none text-white">
-                  {balanceVisible ? `${balance.toLocaleString('fr-HT')} HTG` : '••••• HTG'}
+                  {balanceVisible ? `${balance.toLocaleString(LOCALE_TAG)} HTG` : '••••• HTG'}
                 </p>
               )}
             </div>
@@ -738,13 +738,13 @@ export function WalletPage() {
             {/* Bottom row: name + account number */}
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">Titulaire</p>
+                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">{tr('Titulaire')}</p>
                 <p className="text-[13px] font-semibold text-white/80 tracking-wider uppercase">
                   {profile?.full_name || user?.email?.split('@')[0] || '—'}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">N° Compte</p>
+                <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 font-semibold mb-0.5">{tr('N° Compte')}</p>
                 <p className="text-[11px] font-mono font-semibold text-white/60 tracking-widest">{cardNumber}</p>
               </div>
             </div>
@@ -761,11 +761,11 @@ export function WalletPage() {
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
             <ArrowDownLeft className="h-4 w-4" />
-            Recharger
+            {tr('Recharger')}
           </button>
           <button className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border bg-white text-foreground py-3.5 text-sm font-semibold hover:bg-muted/30 transition-colors pressable shadow-sm">
             <ArrowUpRight className="h-4 w-4" />
-            Retirer
+            {tr('Retirer')}
           </button>
         </div>
       </div>
@@ -776,10 +776,10 @@ export function WalletPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 mb-2">
             <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
           </div>
-          <p className="text-xs text-muted-foreground font-medium">Total rechargé</p>
+          <p className="text-xs text-muted-foreground font-medium">{tr('Total rechargé')}</p>
           {loading ? <Skeleton className="h-6 w-24 mt-1" /> : (
             <p className="text-lg font-bold text-emerald-600 mt-0.5">
-              +{totalDeposited.toLocaleString('fr-HT')}
+              +{totalDeposited.toLocaleString(LOCALE_TAG)}
             </p>
           )}
           <p className="text-[10px] text-muted-foreground mt-0.5">HTG</p>
@@ -788,10 +788,10 @@ export function WalletPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/8 mb-2">
             <ArrowUpRight className="h-5 w-5 text-destructive" />
           </div>
-          <p className="text-xs text-muted-foreground font-medium">Total dépensé</p>
+          <p className="text-xs text-muted-foreground font-medium">{tr('Total dépensé')}</p>
           {loading ? <Skeleton className="h-6 w-24 mt-1" /> : (
             <p className="text-lg font-bold text-destructive mt-0.5">
-              -{totalSpent.toLocaleString('fr-HT')}
+              -{totalSpent.toLocaleString(LOCALE_TAG)}
             </p>
           )}
           <p className="text-[10px] text-muted-foreground mt-0.5">HTG</p>
@@ -800,7 +800,7 @@ export function WalletPage() {
 
       {/* Transactions */}
       <div className="px-4 pb-8 animate-fade-in-up delay-5">
-        <h2 className="text-base font-bold mb-3 px-1">Dernières transactions</h2>
+        <h2 className="text-base font-bold mb-3 px-1">{tr('Dernières transactions')}</h2>
 
         {/* Search */}
         <div className="relative mb-3">
@@ -808,7 +808,7 @@ export function WalletPage() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher des transactions"
+            placeholder={tr('Rechercher des transactions')}
             className="w-full rounded-2xl bg-white border border-gray-100 shadow-sm pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/40"
           />
         </div>
@@ -816,8 +816,8 @@ export function WalletPage() {
         {/* Filter chips */}
         <div className="flex gap-2 overflow-x-auto pb-1 mb-4 no-scrollbar">
           {[
-            { key: 'type',   label: 'Type',    value: filterType,   options: [['deposit','Dépôt'],['payment','Paiement'],['withdrawal','Retrait']] as [string,string][], set: setFilterType },
-            { key: 'status', label: 'Statut',  value: filterStatus, options: [['completed','Complété'],['pending','En attente'],['failed','Échoué']] as [string,string][], set: setFilterStatus },
+            { key: 'type',   label: tr('Type'),    value: filterType,   options: [['deposit',tr('Dépôt')],['payment',tr('Paiement')],['withdrawal',tr('Retrait')]] as [string,string][], set: setFilterType },
+            { key: 'status', label: tr('Statut'),  value: filterStatus, options: [['completed',tr('Complété')],['pending',tr('En attente')],['failed',tr('Échoué')]] as [string,string][], set: setFilterStatus },
           ].map(({ key, label, value, options, set }) => (
             <div key={key} className="flex gap-1.5 shrink-0">
               {value ? (
@@ -850,7 +850,7 @@ export function WalletPage() {
         ) : groupedTx.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm">
             <CreditCard className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-sm font-semibold text-muted-foreground">Aucune transaction</p>
+            <p className="text-sm font-semibold text-muted-foreground">{tr('Aucune transaction')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -860,7 +860,7 @@ export function WalletPage() {
                 <div className="flex items-center justify-between mb-2 px-1">
                   <span className="text-xs font-semibold text-muted-foreground">{group.label}</span>
                   <span className={cn('text-xs font-semibold', group.total >= 0 ? 'text-emerald-600' : 'text-destructive')}>
-                    {group.total >= 0 ? '+' : ''}{group.total.toLocaleString('fr-HT')} HTG
+                    {group.total >= 0 ? '+' : ''}{group.total.toLocaleString(LOCALE_TAG)} HTG
                   </span>
                 </div>
                 {/* Rows */}
@@ -883,13 +883,13 @@ export function WalletPage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm text-foreground">{config.label}</p>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {new Date(tx.created_at).toLocaleTimeString('fr-HT', { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(tx.created_at).toLocaleTimeString(DATE_LOCALE, { hour: '2-digit', minute: '2-digit' })}
                             {tx.payment_method ? ` · ${METHOD_LABEL[tx.payment_method] ?? tx.payment_method}` : ''}
                           </p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className={cn('font-bold text-sm', isCredit ? 'text-emerald-600' : 'text-foreground')}>
-                            {isCredit ? '+' : '-'}{tx.amount.toLocaleString('fr-HT')} HTG
+                            {isCredit ? '+' : '-'}{tx.amount.toLocaleString(LOCALE_TAG)} HTG
                           </p>
                           <p className={cn('text-[11px] font-medium mt-0.5', badge.className.includes('emerald') ? 'text-emerald-600' : badge.className.includes('red') ? 'text-red-500' : badge.className.includes('amber') ? 'text-amber-500' : 'text-gray-400')}>
                             {badge.label}

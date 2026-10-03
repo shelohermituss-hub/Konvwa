@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { CheckCircle, XCircle, Loader2, Wallet } from 'lucide-react'
 import { verifyPayment } from '@/lib/payment-api'
 
+import { tr, LOCALE_TAG } from '@/lib/i18n'
 type State = 'loading' | 'success' | 'pending' | 'failed' | 'error'
 
 export function PaymentReturnPage() {
@@ -13,7 +14,7 @@ export function PaymentReturnPage() {
 
   useEffect(() => {
     const ref = params.get('ref') || params.get('refference_id') || params.get('reference_id')
-    if (!ref) { setState('error'); setErrMsg('Référence de paiement introuvable.'); return }
+    if (!ref) { setState('error'); setErrMsg(tr('Référence de paiement introuvable.')); return }
 
     let tries = 0
     const maxTries = 6
@@ -34,7 +35,7 @@ export function PaymentReturnPage() {
           setState('pending')
         }
       } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : (e as { message?: string })?.message || 'Erreur inconnue.'
+        const msg = e instanceof Error ? e.message : (e as { message?: string })?.message || tr('Erreur inconnue.')
         setErrMsg(msg)
         setState('error')
       }
@@ -52,8 +53,8 @@ export function PaymentReturnPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-5">
               <Loader2 className="h-8 w-8 text-primary animate-spin" />
             </div>
-            <h1 className="text-lg font-bold mb-2">Vérification en cours…</h1>
-            <p className="text-sm text-muted-foreground">Nous confirmons votre paiement auprès de la plateforme.</p>
+            <h1 className="text-lg font-bold mb-2">{tr('Vérification en cours…')}</h1>
+            <p className="text-sm text-muted-foreground">{tr('Nous confirmons votre paiement auprès de la plateforme.')}</p>
           </>
         )}
 
@@ -62,20 +63,20 @@ export function PaymentReturnPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 mx-auto mb-5">
               <CheckCircle className="h-8 w-8 text-emerald-500" />
             </div>
-            <h1 className="text-lg font-bold mb-2">Paiement confirmé !</h1>
+            <h1 className="text-lg font-bold mb-2">{tr('Paiement confirmé !')}</h1>
             {amount && (
               <p className="text-3xl font-black text-emerald-600 mb-1">
-                +{amount.toLocaleString('fr-HT')} HTG
+                +{amount.toLocaleString(LOCALE_TAG)} HTG
               </p>
             )}
-            <p className="text-sm text-muted-foreground mb-6">Votre portefeuille a été crédité avec succès.</p>
+            <p className="text-sm text-muted-foreground mb-6">{tr('Votre portefeuille a été crédité avec succès.')}</p>
             <Link
               to="/wallet"
               className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
               <Wallet className="h-4 w-4" />
-              Voir mon portefeuille
+              {tr('Voir mon portefeuille')}
             </Link>
           </>
         )}
@@ -85,9 +86,9 @@ export function PaymentReturnPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 mx-auto mb-5">
               <Loader2 className="h-8 w-8 text-amber-500" />
             </div>
-            <h1 className="text-lg font-bold mb-2">Paiement en attente</h1>
+            <h1 className="text-lg font-bold mb-2">{tr('Paiement en attente')}</h1>
             <p className="text-sm text-muted-foreground mb-6">
-              Votre paiement est en cours de traitement. Il sera crédité dans quelques minutes. Vérifiez votre portefeuille.
+              {tr('Votre paiement est en cours de traitement. Il sera crédité dans quelques minutes. Vérifiez votre portefeuille.')}
             </p>
             <Link
               to="/wallet"
@@ -95,7 +96,7 @@ export function PaymentReturnPage() {
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
               <Wallet className="h-4 w-4" />
-              Voir mon portefeuille
+              {tr('Voir mon portefeuille')}
             </Link>
           </>
         )}
@@ -105,16 +106,16 @@ export function PaymentReturnPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mx-auto mb-5">
               <XCircle className="h-8 w-8 text-destructive" />
             </div>
-            <h1 className="text-lg font-bold mb-2">Paiement échoué</h1>
+            <h1 className="text-lg font-bold mb-2">{tr('Paiement échoué')}</h1>
             <p className="text-sm text-muted-foreground mb-6">
-              Votre paiement n'a pas pu être traité. Aucun montant n'a été débité.
+              {tr('Votre paiement n\'a pas pu être traité. Aucun montant n\'a été débité.')}
             </p>
             <Link
               to="/wallet"
               className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
-              Réessayer
+              {tr('Réessayer')}
             </Link>
           </>
         )}
@@ -124,24 +125,24 @@ export function PaymentReturnPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mx-auto mb-5">
               <XCircle className="h-8 w-8 text-destructive" />
             </div>
-            <h1 className="text-lg font-bold mb-2">Erreur</h1>
+            <h1 className="text-lg font-bold mb-2">{tr('Erreur')}</h1>
             <p className="text-sm text-muted-foreground mb-2">{errMsg}</p>
             <p className="text-xs text-muted-foreground/70 mb-6">
-              Si vous avez effectué un paiement, contactez le support avec votre référence.
+              {tr('Si vous avez effectué un paiement, contactez le support avec votre référence.')}
             </p>
             <Link
               to="/dashboard"
               className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
-              Retour à l'accueil
+              {tr('Retour à l\'accueil')}
             </Link>
           </>
         )}
       </div>
 
       <p className="text-[11px] text-muted-foreground mt-6 text-center">
-        Propulsé par MonCash & NatCash
+        {tr('Propulsé par MonCash & NatCash')}
       </p>
     </div>
   )

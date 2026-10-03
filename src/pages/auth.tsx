@@ -18,6 +18,8 @@ import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 
+import { tr } from '@/lib/i18n'
+import { LanguageToggle } from '@/components/shared/language-toggle'
 type AuthView = 'login' | 'register' | 'forgot' | 'otp' | 'reset' | 'denied'
 
 const INPUT = 'h-11 rounded-xl bg-muted border-transparent focus-visible:border-primary/60 focus-visible:bg-background font-medium transition-colors'
@@ -25,31 +27,31 @@ const CARD  = 'bg-white rounded-2xl border border-gray-100 shadow-sm'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 const loginSchema = z.object({
-  email:    z.string().email('Adresse e-mail invalide'),
-  password: z.string().min(1, 'Mot de passe requis'),
+  email:    z.string().email(tr('Adresse e-mail invalide')),
+  password: z.string().min(1, tr('Mot de passe requis')),
 })
 
 const registerSchema = z.object({
-  fullName:        z.string().min(2, 'Nom complet requis (min. 2 caractères)'),
-  email:           z.string().email('Adresse e-mail invalide'),
+  fullName:        z.string().min(2, tr('Nom complet requis (min. 2 caractères)')),
+  email:           z.string().email(tr('Adresse e-mail invalide')),
   phone:           z.string().optional(),
-  password:        z.string().min(6, 'Minimum 6 caractères'),
+  password:        z.string().min(6, tr('Minimum 6 caractères')),
   confirmPassword: z.string(),
-  acceptTerms:     z.boolean().refine((v) => v === true, { message: 'Vous devez accepter les conditions' }),
+  acceptTerms:     z.boolean().refine((v) => v === true, { message: tr('Vous devez accepter les conditions') }),
 }).refine((d) => d.password === d.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
+  message: tr('Les mots de passe ne correspondent pas'),
   path: ['confirmPassword'],
 })
 
 const forgotSchema = z.object({
-  email: z.string().email('Adresse e-mail invalide'),
+  email: z.string().email(tr('Adresse e-mail invalide')),
 })
 
 const resetSchema = z.object({
-  password:        z.string().min(6, 'Minimum 6 caractères'),
+  password:        z.string().min(6, tr('Minimum 6 caractères')),
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, {
-  message: 'Les mots de passe ne correspondent pas',
+  message: tr('Les mots de passe ne correspondent pas'),
   path: ['confirmPassword'],
 })
 
@@ -73,7 +75,7 @@ function PasswordInput({ id, placeholder, className, ...props }: React.Component
       <button
         type="button"
         tabIndex={-1}
-        aria-label={show ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+        aria-label={show ? tr('Masquer le mot de passe') : tr('Afficher le mot de passe')}
         onClick={() => setShow((s) => !s)}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
       >
@@ -113,7 +115,7 @@ function BackBtn({ onClick }: { onClick: () => void }) {
       className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors group"
     >
       <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-      Retour
+      {tr('Retour')}
     </button>
   )
 }
@@ -136,7 +138,7 @@ function Divider() {
         <div className="w-full border-t border-border" />
       </div>
       <div className="relative flex justify-center">
-        <span className="bg-white px-3 text-xs text-muted-foreground">ou</span>
+        <span className="bg-white px-3 text-xs text-muted-foreground">{tr('ou')}</span>
       </div>
     </div>
   )
@@ -153,7 +155,7 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
           <div className="text-center leading-none mt-1">
             <p className="font-bold text-xl tracking-tight">KONVWA</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
-              Importation · Haïti
+              {tr('Importation · Haïti')}
             </p>
           </div>
         </div>
@@ -194,8 +196,8 @@ function SocialButtons() {
     })
     if (error) {
       setLoading(null)
-      toast.error('Connexion impossible', {
-        description: `Connexion ${provider === 'google' ? 'Google' : 'Facebook'} indisponible pour le moment.`,
+      toast.error(tr('Connexion impossible'), {
+        description: tr('Connexion {0} indisponible pour le moment.', provider === 'google' ? 'Google' : 'Facebook'),
       })
     }
   }
@@ -206,11 +208,11 @@ function SocialButtons() {
     <div className="space-y-2.5">
       <button type="button" onClick={() => signInWith('google')} disabled={loading !== null} className={base}>
         {loading === 'google' ? <Loader2 className="h-5 w-5 animate-spin" /> : <GoogleIcon />}
-        Continuer avec Google
+        {tr('Continuer avec Google')}
       </button>
       <button type="button" onClick={() => signInWith('facebook')} disabled={loading !== null} className={base}>
         {loading === 'facebook' ? <Loader2 className="h-5 w-5 animate-spin" /> : <FacebookIcon />}
-        Continuer avec Facebook
+        {tr('Continuer avec Facebook')}
       </button>
     </div>
   )
@@ -231,7 +233,7 @@ function AuthTabs({ view, onChange }: { view: 'login' | 'register'; onChange: (v
           )}
           style={view === t ? { background: 'linear-gradient(135deg, #F05A28, #D44E21)' } : {}}
         >
-          {t === 'login' ? 'Se connecter' : 'Créer un compte'}
+          {t === 'login' ? tr('Se connecter') : tr('Créer un compte')}
         </button>
       ))}
     </div>
@@ -249,29 +251,29 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
   async function onSubmit(values: LoginForm) {
     const { error } = await signIn(values.email, values.password)
     if (error) {
-      toast.error('Connexion échouée', { description: error.message })
+      toast.error(tr('Connexion échouée'), { description: error.message })
       return
     }
-    toast.success('Connexion réussie !')
+    toast.success(tr('Connexion réussie !'))
     navigate(isAdmin ? '/admin' : '/dashboard', { replace: true })
   }
 
   return (
     <div className={cn(CARD, 'p-7')}>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight">Bon retour !</h2>
-        <p className="text-sm text-muted-foreground mt-1">Connectez-vous à votre compte KONVWA</p>
+        <h2 className="text-2xl font-bold tracking-tight">{tr('Bon retour !')}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{tr('Connectez-vous à votre compte KONVWA')}</p>
       </div>
 
       <SocialButtons />
       <Divider />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Field id="l-email" label="Adresse e-mail" error={errors.email?.message}>
+        <Field id="l-email" label={tr('Adresse e-mail')} error={errors.email?.message}>
           <Input
             id="l-email"
             type="email"
-            placeholder="votre@email.com"
+            placeholder={tr('votre@email.com')}
             autoComplete="email"
             {...register('email')}
             className={cn(INPUT, errors.email && 'border-destructive')}
@@ -280,13 +282,13 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="l-password" className="text-sm font-semibold">Mot de passe</Label>
+            <Label htmlFor="l-password" className="text-sm font-semibold">{tr('Mot de passe')}</Label>
             <button
               type="button"
               onClick={onForgot}
               className="text-xs text-primary hover:underline font-semibold"
             >
-              Mot de passe oublié ?
+              {tr('Mot de passe oublié ?')}
             </button>
           </div>
           <PasswordInput
@@ -301,16 +303,16 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
 
         <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Se connecter
+          {tr('Se connecter')}
         </PrimaryBtn>
       </form>
 
       <Divider />
 
       <p className="text-center text-sm text-muted-foreground">
-        Pas encore de compte ?{' '}
+        {tr('Pas encore de compte ?')}{' '}
         <button type="button" onClick={onSwitch} className="text-primary font-bold hover:underline">
-          Créer un compte
+          {tr('Créer un compte')}
         </button>
       </p>
     </div>
@@ -330,12 +332,12 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
   async function onSubmit(values: RegisterForm) {
     const { error, needsConfirmation } = await signUp(values.email, values.password, values.fullName, values.phone)
     if (error) {
-      toast.error('Inscription échouée', { description: error.message })
+      toast.error(tr('Inscription échouée'), { description: error.message })
       return
     }
     if (needsConfirmation) {
-      toast.success('Compte créé !', {
-        description: `Un e-mail de confirmation a été envoyé à ${values.email}. Cliquez sur le lien pour activer votre compte.`,
+      toast.success(tr('Compte créé !'), {
+        description: tr('Un e-mail de confirmation a été envoyé à {0}. Cliquez sur le lien pour activer votre compte.', values.email),
         duration: 10000,
       })
       onSwitch()
@@ -357,26 +359,26 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
         }),
       ])
     }
-    toast.success('Compte créé avec succès !')
+    toast.success(tr('Compte créé avec succès !'))
     navigate('/dashboard', { replace: true })
   }
 
   return (
     <div className={cn(CARD, 'p-7')}>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight">Créer un compte</h2>
-        <p className="text-sm text-muted-foreground mt-1">Rejoignez KONVWA gratuitement aujourd'hui</p>
+        <h2 className="text-2xl font-bold tracking-tight">{tr('Créer un compte')}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{tr('Rejoignez KONVWA gratuitement aujourd\'hui')}</p>
       </div>
 
       <SocialButtons />
       <Divider />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Field id="r-name" label="Nom complet" error={errors.fullName?.message}>
+        <Field id="r-name" label={tr('Nom complet')} error={errors.fullName?.message}>
           <Input
             id="r-name"
             type="text"
-            placeholder="Jean Dupont"
+            placeholder={tr('Jean Dupont')}
             autoComplete="name"
             {...register('fullName')}
             className={cn(INPUT, errors.fullName && 'border-destructive')}
@@ -384,11 +386,11 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field id="r-email" label="E-mail" error={errors.email?.message}>
+          <Field id="r-email" label={tr('E-mail')} error={errors.email?.message}>
             <Input
               id="r-email"
               type="email"
-              placeholder="votre@email.com"
+              placeholder={tr('votre@email.com')}
               autoComplete="email"
               {...register('email')}
               className={cn(INPUT, errors.email && 'border-destructive')}
@@ -396,7 +398,7 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
           </Field>
           <div className="space-y-1.5">
             <Label htmlFor="r-phone" className="text-sm font-semibold">
-              Téléphone{' '}
+              {tr('Téléphone')}{' '}
               <span className="text-muted-foreground font-normal text-[10px]">(opt.)</span>
             </Label>
             <Input
@@ -412,7 +414,7 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="r-password" className="text-sm font-semibold">Mot de passe</Label>
+            <Label htmlFor="r-password" className="text-sm font-semibold">{tr('Mot de passe')}</Label>
             <PasswordInput
               id="r-password"
               placeholder="••••••••"
@@ -423,7 +425,7 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
             {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="r-confirm" className="text-sm font-semibold">Confirmer</Label>
+            <Label htmlFor="r-confirm" className="text-sm font-semibold">{tr('Confirmer')}</Label>
             <PasswordInput
               id="r-confirm"
               placeholder="••••••••"
@@ -445,10 +447,10 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
             className={cn(errors.acceptTerms && 'border-destructive')}
           />
           <Label htmlFor="terms" className="text-sm leading-normal cursor-pointer font-normal">
-            J'accepte les{' '}
-            <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">conditions d'utilisation</a>
-            {' '}et la{' '}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">politique de confidentialité</a>
+            {tr('J\'accepte les')}{' '}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">{tr('conditions d\'utilisation')}</a>
+            {' '}{tr('et la')}{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">{tr('politique de confidentialité')}</a>
           </Label>
         </div>
         {errors.acceptTerms && (
@@ -457,16 +459,16 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
 
         <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Créer mon compte
+          {tr('Créer mon compte')}
         </PrimaryBtn>
       </form>
 
       <Divider />
 
       <p className="text-center text-sm text-muted-foreground">
-        Déjà un compte ?{' '}
+        {tr('Déjà un compte ?')}{' '}
         <button type="button" onClick={onSwitch} className="text-primary font-bold hover:underline">
-          Se connecter
+          {tr('Se connecter')}
         </button>
       </p>
     </div>
@@ -485,7 +487,7 @@ function ForgotView({ onBack }: { onBack: () => void }) {
       redirectTo: `${window.location.origin}/auth?type=reset`,
     })
     if (error) {
-      toast.error('Erreur', { description: error.message })
+      toast.error(tr('Erreur'), { description: error.message })
       return
     }
     setSent(true)
@@ -497,12 +499,12 @@ function ForgotView({ onBack }: { onBack: () => void }) {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50 mx-auto mb-4">
           <CheckCircle2 className="h-8 w-8 text-green-500" />
         </div>
-        <h2 className="text-xl font-bold mb-2">E-mail envoyé !</h2>
+        <h2 className="text-xl font-bold mb-2">{tr('E-mail envoyé !')}</h2>
         <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-          Vérifiez votre boîte de réception et cliquez sur le lien pour réinitialiser votre mot de passe.
+          {tr('Vérifiez votre boîte de réception et cliquez sur le lien pour réinitialiser votre mot de passe.')}
         </p>
         <button type="button" onClick={onBack} className="text-sm text-primary font-bold hover:underline">
-          ← Retour à la connexion
+          {tr('← Retour à la connexion')}
         </button>
       </div>
     )
@@ -514,18 +516,18 @@ function ForgotView({ onBack }: { onBack: () => void }) {
 
       <div className="mb-6">
         <ViewIcon icon={Mail} />
-        <h2 className="text-2xl font-bold tracking-tight">Mot de passe oublié ?</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{tr('Mot de passe oublié ?')}</h2>
         <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-          Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.
+          {tr('Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.')}
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Field id="f-email" label="Adresse e-mail" error={errors.email?.message}>
+        <Field id="f-email" label={tr('Adresse e-mail')} error={errors.email?.message}>
           <Input
             id="f-email"
             type="email"
-            placeholder="votre@email.com"
+            placeholder={tr('votre@email.com')}
             autoComplete="email"
             {...register('email')}
             className={cn(INPUT, errors.email && 'border-destructive')}
@@ -534,7 +536,7 @@ function ForgotView({ onBack }: { onBack: () => void }) {
 
         <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Envoyer le lien
+          {tr('Envoyer le lien')}
         </PrimaryBtn>
       </form>
     </div>
@@ -553,16 +555,16 @@ function OtpView({ email, onBack }: { email: string; onBack: () => void }) {
     const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' })
     setLoading(false)
     if (error) {
-      toast.error('Code invalide', { description: error.message })
+      toast.error(tr('Code invalide'), { description: error.message })
       return
     }
-    toast.success('Vérification réussie !')
+    toast.success(tr('Vérification réussie !'))
     navigate('/dashboard', { replace: true })
   }
 
   async function resend() {
     await supabase.auth.signInWithOtp({ email })
-    toast.success('Code renvoyé !')
+    toast.success(tr('Code renvoyé !'))
   }
 
   return (
@@ -571,10 +573,10 @@ function OtpView({ email, onBack }: { email: string; onBack: () => void }) {
 
       <div className="mb-6">
         <ViewIcon icon={Lock} />
-        <h2 className="text-2xl font-bold tracking-tight">Vérification OTP</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{tr('Vérification OTP')}</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Entrez le code à 6 chiffres envoyé à{' '}
-          <span className="font-semibold text-foreground">{email || 'votre e-mail'}</span>
+          {tr('Entrez le code à 6 chiffres envoyé à')}{' '}
+          <span className="font-semibold text-foreground">{email || tr('votre e-mail')}</span>
         </p>
       </div>
 
@@ -595,13 +597,13 @@ function OtpView({ email, onBack }: { email: string; onBack: () => void }) {
 
         <PrimaryBtn onClick={onVerify} disabled={otp.length < 6 || loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Vérifier le code
+          {tr('Vérifier le code')}
         </PrimaryBtn>
 
         <p className="text-center text-sm text-muted-foreground">
-          Pas reçu le code ?{' '}
+          {tr('Pas reçu le code ?')}{' '}
           <button type="button" onClick={resend} className="text-primary font-bold hover:underline">
-            Renvoyer
+            {tr('Renvoyer')}
           </button>
         </p>
       </div>
@@ -619,10 +621,10 @@ function ResetView({ onBack }: { onBack: () => void }) {
   async function onSubmit(values: ResetForm) {
     const { error } = await supabase.auth.updateUser({ password: values.password })
     if (error) {
-      toast.error('Erreur', { description: error.message })
+      toast.error(tr('Erreur'), { description: error.message })
       return
     }
-    toast.success('Mot de passe mis à jour !')
+    toast.success(tr('Mot de passe mis à jour !'))
     navigate('/dashboard', { replace: true })
   }
 
@@ -632,13 +634,13 @@ function ResetView({ onBack }: { onBack: () => void }) {
 
       <div className="mb-6">
         <ViewIcon icon={Lock} />
-        <h2 className="text-2xl font-bold tracking-tight">Nouveau mot de passe</h2>
-        <p className="text-sm text-muted-foreground mt-1">Choisissez un nouveau mot de passe sécurisé.</p>
+        <h2 className="text-2xl font-bold tracking-tight">{tr('Nouveau mot de passe')}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{tr('Choisissez un nouveau mot de passe sécurisé.')}</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="rs-password" className="text-sm font-semibold">Nouveau mot de passe</Label>
+          <Label htmlFor="rs-password" className="text-sm font-semibold">{tr('Nouveau mot de passe')}</Label>
           <PasswordInput
             id="rs-password"
             placeholder="••••••••"
@@ -649,7 +651,7 @@ function ResetView({ onBack }: { onBack: () => void }) {
           {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="rs-confirm" className="text-sm font-semibold">Confirmer le mot de passe</Label>
+          <Label htmlFor="rs-confirm" className="text-sm font-semibold">{tr('Confirmer le mot de passe')}</Label>
           <PasswordInput
             id="rs-confirm"
             placeholder="••••••••"
@@ -664,7 +666,7 @@ function ResetView({ onBack }: { onBack: () => void }) {
 
         <PrimaryBtn type="submit" disabled={isSubmitting} className="mt-2">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Réinitialiser le mot de passe
+          {tr('Réinitialiser le mot de passe')}
         </PrimaryBtn>
       </form>
     </div>
@@ -680,12 +682,12 @@ function DeniedView() {
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mx-auto mb-4">
         <ShieldX className="h-8 w-8 text-destructive" />
       </div>
-      <h2 className="text-xl font-bold mb-2">Accès refusé</h2>
+      <h2 className="text-xl font-bold mb-2">{tr('Accès refusé')}</h2>
       <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-        Vous n'avez pas les permissions nécessaires pour accéder à cette page.
+        {tr('Vous n\'avez pas les permissions nécessaires pour accéder à cette page.')}
       </p>
       <PrimaryBtn onClick={() => navigate('/dashboard', { replace: true })}>
-        Retour à l'accueil
+        {tr('Retour à l\'accueil')}
       </PrimaryBtn>
     </div>
   )
@@ -708,6 +710,9 @@ export function AuthPage() {
 
   return (
     <AuthLayout>
+      <div className="mb-4 flex justify-end">
+        <LanguageToggle />
+      </div>
       {isTabView && (
         <AuthTabs
           view={view as 'login' | 'register'}

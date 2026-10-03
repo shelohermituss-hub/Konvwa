@@ -1,7 +1,9 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext } from 'react'
+import { LANG, setLanguage } from '@/lib/i18n'
 import type { ReactNode } from 'react'
 
-export type Lang = 'fr' | 'en'
+export type { Lang } from '@/lib/i18n'
+import type { Lang } from '@/lib/i18n'
 
 type Dict = Record<string, string>
 
@@ -232,21 +234,15 @@ const I18nContext = createContext<I18nCtx>({
 })
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    return (localStorage.getItem('konvwa-lang') as Lang) || 'fr'
-  })
-
-  function setLang(l: Lang) {
-    setLangState(l)
-    localStorage.setItem('konvwa-lang', l)
-  }
+  // The language is fixed per page load (see lib/i18n.ts): changing it persists the choice and reloads.
+  const lang = LANG
 
   function t(key: string): string {
     return DICTS[lang][key] ?? DICTS.fr[key] ?? key
   }
 
   return (
-    <I18nContext.Provider value={{ lang, setLang, t }}>
+    <I18nContext.Provider value={{ lang, setLang: setLanguage, t }}>
       {children}
     </I18nContext.Provider>
   )

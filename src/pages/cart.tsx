@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyCart } from '@/components/shared/illustrations'
 
+import { LOCALE_TAG } from '@/lib/i18n'
 export function CartPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
@@ -73,7 +74,7 @@ export function CartPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold leading-snug line-clamp-2">{product?.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {unitPrice.toLocaleString('fr-HT')} HTG / {product?.unit}
+                    {unitPrice.toLocaleString(LOCALE_TAG)} HTG / {product?.unit}
                   </p>
 
                   <div className="flex items-center justify-between mt-2.5">
@@ -102,7 +103,7 @@ export function CartPage() {
 
                     {/* Subtotal + remove */}
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-black text-primary">{subtotal.toLocaleString('fr-HT')} HTG</p>
+                      <p className="text-sm font-black text-primary">{subtotal.toLocaleString(LOCALE_TAG)} HTG</p>
                       <button
                         onClick={() => removeItem(item.id)}
                         className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-destructive/8 hover:text-destructive text-muted-foreground/50 transition-colors"
@@ -123,7 +124,7 @@ export function CartPage() {
         <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-4px_20px_rgba(10,22,40,0.08)] px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-muted-foreground font-medium">{t('cart.total')}</span>
-            <span className="text-xl font-black text-primary">{total.toLocaleString('fr-HT')} HTG</span>
+            <span className="text-xl font-black text-primary">{total.toLocaleString(LOCALE_TAG)} HTG</span>
           </div>
           <button
             onClick={() => navigate('/checkout')}

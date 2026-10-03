@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 
+import { tr, LOCALE_TAG, pickLocalized } from '@/lib/i18n'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Notification {
@@ -25,6 +26,8 @@ interface Notification {
   type: string
   title: string
   body: string
+  title_en?: string | null
+  body_en?: string | null
   data: Record<string, unknown> | null
   read: boolean
   created_at: string
@@ -38,13 +41,13 @@ interface UserOption {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Bell; color: string }> = {
-  order:   { label: 'Commande',  icon: Package,      color: 'text-blue-600 bg-blue-50' },
-  payment: { label: 'Paiement',  icon: CreditCard,   color: 'text-emerald-600 bg-emerald-50' },
-  quote:   { label: 'Devis',     icon: Mail,         color: 'text-violet-600 bg-violet-50' },
-  success: { label: 'Succès',    icon: CheckCheck,   color: 'text-emerald-600 bg-emerald-50' },
-  warning: { label: 'Alerte',    icon: AlertTriangle,color: 'text-amber-600 bg-amber-50' },
-  error:   { label: 'Erreur',    icon: AlertTriangle,color: 'text-red-600 bg-red-50' },
-  info:    { label: 'Info',      icon: Info,         color: 'text-sky-600 bg-sky-50' },
+  order:   { label: tr('Commande'),  icon: Package,      color: 'text-blue-600 bg-blue-50' },
+  payment: { label: tr('Paiement'),  icon: CreditCard,   color: 'text-emerald-600 bg-emerald-50' },
+  quote:   { label: tr('Devis'),     icon: Mail,         color: 'text-violet-600 bg-violet-50' },
+  success: { label: tr('Succès'),    icon: CheckCheck,   color: 'text-emerald-600 bg-emerald-50' },
+  warning: { label: tr('Alerte'),    icon: AlertTriangle,color: 'text-amber-600 bg-amber-50' },
+  error:   { label: tr('Erreur'),    icon: AlertTriangle,color: 'text-red-600 bg-red-50' },
+  info:    { label: tr('Info'),      icon: Info,         color: 'text-sky-600 bg-sky-50' },
 }
 
 const ALL_TYPES = Object.keys(TYPE_CONFIG)
@@ -91,9 +94,9 @@ function CreateDialog({
   }
 
   async function handleSend() {
-    if (!title.trim()) { toast.error('Le titre est requis'); return }
-    if (!body.trim())  { toast.error('Le message est requis'); return }
-    if (target === 'user' && !userId) { toast.error('Sélectionnez un utilisateur'); return }
+    if (!title.trim()) { toast.error(tr('Le titre est requis')); return }
+    if (!body.trim())  { toast.error(tr('Le message est requis')); return }
+    if (target === 'user' && !userId) { toast.error(tr('Sélectionnez un utilisateur')); return }
 
     setSending(true)
     try {
@@ -101,23 +104,23 @@ function CreateDialog({
         const rows = users.map(u => ({
           user_id: u.user_id, type, title: title.trim(), body: body.trim(), read: false,
         }))
-        if (rows.length === 0) { toast.error('Aucun utilisateur trouvé'); return }
+        if (rows.length === 0) { toast.error(tr('Aucun utilisateur trouvé')); return }
         const { error } = await supabase.from('notifications').insert(rows)
         if (error) throw error
-        toast.success(`Notification envoyée à ${rows.length} utilisateurs`)
+        toast.success(tr('Notification envoyée à {0} utilisateurs', rows.length))
       } else {
         const { error } = await supabase.from('notifications').insert({
           user_id: userId, type, title: title.trim(), body: body.trim(), read: false,
         })
         if (error) throw error
-        toast.success('Notification envoyée')
+        toast.success(tr('Notification envoyée'))
       }
       reset()
       onCreated()
       onClose()
     } catch (e) {
       console.error(e)
-      toast.error("Erreur lors de l'envoi")
+      toast.error(tr('Erreur lors de l\'envoi'))
     } finally {
       setSending(false)
     }
@@ -129,14 +132,14 @@ function CreateDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-primary" />
-            Créer une notification
+            {tr('Créer une notification')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           {/* Target */}
           <div className="space-y-1.5">
-            <Label className="text-sm font-bold">Destinataire</Label>
+            <Label className="text-sm font-bold">{tr('Destinataire')}</Label>
             <div className="grid grid-cols-2 gap-2">
               {(['user', 'all'] as const).map(t => (
                 <button
@@ -149,7 +152,7 @@ function CreateDialog({
                   )}
                 >
                   {t === 'user' ? <Mail className="h-4 w-4 shrink-0" /> : <Users className="h-4 w-4 shrink-0" />}
-                  {t === 'user' ? 'Un utilisateur' : 'Tous les utilisateurs'}
+                  {t === 'user' ? tr('Un utilisateur') : tr('Tous les utilisateurs')}
                 </button>
               ))}
             </div>
@@ -158,11 +161,11 @@ function CreateDialog({
           {/* User picker */}
           {target === 'user' && (
             <div className="space-y-1.5">
-              <Label className="text-sm font-bold">Utilisateur <span className="text-destructive">*</span></Label>
+              <Label className="text-sm font-bold">{tr('Utilisateur')}{' '}<span className="text-destructive">*</span></Label>
               <div className="relative mb-1.5">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
-                  placeholder="Rechercher par nom…"
+                  placeholder={tr('Rechercher par nom…')}
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   className="pl-8 h-9 rounded-xl text-sm bg-muted/40 border-0"
@@ -170,7 +173,7 @@ function CreateDialog({
               </div>
               <div className="max-h-36 overflow-y-auto rounded-xl border border-gray-100 bg-white divide-y divide-gray-50">
                 {filtered.length === 0 ? (
-                  <p className="py-4 text-center text-xs text-muted-foreground">Aucun résultat</p>
+                  <p className="py-4 text-center text-xs text-muted-foreground">{tr('Aucun résultat')}</p>
                 ) : filtered.map(u => (
                   <button
                     key={u.user_id}
@@ -190,7 +193,7 @@ function CreateDialog({
 
           {/* Type */}
           <div className="space-y-1.5">
-            <Label className="text-sm font-bold">Type</Label>
+            <Label className="text-sm font-bold">{tr('Type')}</Label>
             <Select value={type} onValueChange={setType}>
               <SelectTrigger className="h-10 rounded-xl bg-muted/40 border-0">
                 <SelectValue />
@@ -214,9 +217,9 @@ function CreateDialog({
 
           {/* Title */}
           <div className="space-y-1.5">
-            <Label className="text-sm font-bold">Titre <span className="text-destructive">*</span></Label>
+            <Label className="text-sm font-bold">{tr('Titre')}{' '}<span className="text-destructive">*</span></Label>
             <Input
-              placeholder="Ex: Votre commande est prête"
+              placeholder={tr('Ex: Votre commande est prête')}
               value={title}
               onChange={e => setTitle(e.target.value)}
               className="h-10 rounded-xl bg-muted/40 border-0 text-sm"
@@ -225,9 +228,9 @@ function CreateDialog({
 
           {/* Body */}
           <div className="space-y-1.5">
-            <Label className="text-sm font-bold">Message <span className="text-destructive">*</span></Label>
+            <Label className="text-sm font-bold">{tr('Message')}{' '}<span className="text-destructive">*</span></Label>
             <Textarea
-              placeholder="Contenu de la notification…"
+              placeholder={tr('Contenu de la notification…')}
               value={body}
               onChange={e => setBody(e.target.value)}
               rows={3}
@@ -238,11 +241,11 @@ function CreateDialog({
 
         <DialogFooter className="gap-2">
           <Button variant="ghost" onClick={() => { reset(); onClose() }} disabled={sending}>
-            Annuler
+            {tr('Annuler')}
           </Button>
           <Button onClick={handleSend} disabled={sending} className="gap-2" style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}>
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            {sending ? 'Envoi…' : target === 'all' ? `Envoyer à tous (${users.length})` : 'Envoyer'}
+            {sending ? tr('Envoi…') : target === 'all' ? tr('Envoyer à tous ({0})', users.length) : tr('Envoyer')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -268,20 +271,20 @@ function NotifRow({ n, usersMap, onMarkRead }: { n: Notification; usersMap: Map<
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold leading-tight">{n.title}</span>
+            <span className="text-sm font-semibold leading-tight">{pickLocalized(n.title, n.title_en)}</span>
             <TypeBadge type={n.type} />
             {!n.read && (
               <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">{n.body}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">{pickLocalized(n.body, n.body_en)}</p>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-[11px] text-muted-foreground/70">
               {usersMap.get(n.user_id) ?? n.user_id.slice(0, 8)}
             </span>
             <span className="text-[11px] text-muted-foreground/50">·</span>
             <span className="text-[11px] text-muted-foreground/70">
-              {new Date(n.created_at).toLocaleString('fr-HT', {
+              {new Date(n.created_at).toLocaleString(LOCALE_TAG, {
                 day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
               })}
             </span>
@@ -293,7 +296,7 @@ function NotifRow({ n, usersMap, onMarkRead }: { n: Notification; usersMap: Map<
               onClick={e => { e.stopPropagation(); onMarkRead(n.id) }}
               className="rounded-lg px-2 py-1 text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
             >
-              Lu
+              {tr('Lu')}
             </button>
           )}
           {expanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
@@ -302,7 +305,7 @@ function NotifRow({ n, usersMap, onMarkRead }: { n: Notification; usersMap: Map<
 
       {expanded && (
         <div className="px-4 pb-3.5 pt-0 border-t border-gray-100 bg-muted/20">
-          <p className="text-sm text-foreground mt-2 leading-relaxed">{n.body}</p>
+          <p className="text-sm text-foreground mt-2 leading-relaxed">{pickLocalized(n.body, n.body_en)}</p>
           {n.data && Object.keys(n.data).length > 0 && (
             <pre className="mt-2 text-[11px] bg-muted rounded-lg p-2 overflow-x-auto text-muted-foreground">
               {JSON.stringify(n.data, null, 2)}
@@ -331,7 +334,7 @@ export function AdminNotificationsPage() {
     const [notifsRes, usersRes] = await Promise.all([
       supabase
         .from('notifications')
-        .select('id, user_id, type, title, body, data, read, created_at')
+        .select('id, user_id, type, title, body, title_en, body_en, data, read, created_at')
         .order('created_at', { ascending: false })
         .limit(200),
       supabase.from('profiles').select('user_id, full_name').order('full_name'),
@@ -353,7 +356,7 @@ export function AdminNotificationsPage() {
     if (unread.length === 0) return
     await supabase.from('notifications').update({ read: true }).in('id', unread)
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-    toast.success(`${unread.length} notification${unread.length > 1 ? 's' : ''} marquée${unread.length > 1 ? 's' : ''} comme lue${unread.length > 1 ? 's' : ''}`)
+    toast.success(tr('{0} notification{1} marquée{2} comme lue{3}', unread.length, unread.length > 1 ? 's' : '', unread.length > 1 ? 's' : '', unread.length > 1 ? 's' : ''))
   }
 
   const usersMap = new Map(users.map(u => [u.user_id, u.full_name]))
@@ -379,20 +382,20 @@ export function AdminNotificationsPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Notifications')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Gérer et envoyer des notifications aux utilisateurs
+            {tr('Gérer et envoyer des notifications aux utilisateurs')}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={load} className="gap-1.5">
             <RefreshCw className="h-3.5 w-3.5" />
-            Actualiser
+            {tr('Actualiser')}
           </Button>
           {unread > 0 && (
             <Button variant="outline" size="sm" onClick={markAllRead} className="gap-1.5">
               <CheckCheck className="h-3.5 w-3.5" />
-              Tout marquer lu
+              {tr('Tout marquer lu')}
             </Button>
           )}
           <Button
@@ -401,7 +404,7 @@ export function AdminNotificationsPage() {
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)', color: '#fff' }}
           >
             <Plus className="h-4 w-4" />
-            Nouvelle notification
+            {tr('Nouvelle notification')}
           </Button>
         </div>
       </div>
@@ -409,7 +412,7 @@ export function AdminNotificationsPage() {
       {/* Admin push subscription */}
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">
-          Mes notifications push (cet appareil)
+          {tr('Mes notifications push (cet appareil)')}
         </p>
         <PushSettingsRow userId={user?.id} />
       </div>
@@ -417,9 +420,9 @@ export function AdminNotificationsPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total', value: total, icon: Bell, color: 'text-foreground' },
-          { label: 'Non lues', value: unread, icon: BellOff, color: 'text-primary' },
-          { label: 'Lues', value: read, icon: CheckCheck, color: 'text-emerald-600' },
+          { label: tr('Total'), value: total, icon: Bell, color: 'text-foreground' },
+          { label: tr('Non lues'), value: unread, icon: BellOff, color: 'text-primary' },
+          { label: tr('Lues'), value: read, icon: CheckCheck, color: 'text-emerald-600' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/60 shrink-0">
@@ -438,7 +441,7 @@ export function AdminNotificationsPage() {
         <div className="relative flex-1 min-w-52">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher par titre, message ou utilisateur…"
+            placeholder={tr('Rechercher par titre, message ou utilisateur…')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9 h-9 rounded-xl text-sm bg-white border-gray-200"
@@ -452,10 +455,10 @@ export function AdminNotificationsPage() {
 
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="h-9 w-36 rounded-xl text-sm bg-white border-gray-200">
-            <SelectValue placeholder="Type" />
+            <SelectValue placeholder={tr('Type')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les types</SelectItem>
+            <SelectItem value="all">{tr('Tous les types')}</SelectItem>
             {ALL_TYPES.map(t => <SelectItem key={t} value={t}>{TYPE_CONFIG[t].label}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -470,7 +473,7 @@ export function AdminNotificationsPage() {
                 filterRead === f ? 'bg-primary text-white' : 'text-muted-foreground hover:bg-muted/40'
               )}
             >
-              {f === 'all' ? 'Tous' : f === 'unread' ? 'Non lus' : 'Lus'}
+              {f === 'all' ? tr('Tous') : f === 'unread' ? tr('Non lus') : tr('Lus')}
             </button>
           ))}
         </div>
@@ -483,11 +486,11 @@ export function AdminNotificationsPage() {
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
             <Bell className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="font-semibold text-muted-foreground">Aucune notification</p>
+            <p className="font-semibold text-muted-foreground">{tr('Aucune notification')}</p>
             <p className="text-sm text-muted-foreground/60 mt-1">
               {search || filterType !== 'all' || filterRead !== 'all'
-                ? 'Aucun résultat pour ces filtres'
-                : 'Créez la première notification'}
+                ? tr('Aucun résultat pour ces filtres')
+                : tr('Créez la première notification')}
             </p>
           </div>
         ) : filtered.map(n => (
@@ -497,7 +500,7 @@ export function AdminNotificationsPage() {
 
       {filtered.length > 0 && (
         <p className="text-xs text-muted-foreground text-center">
-          {filtered.length} notification{filtered.length > 1 ? 's' : ''} affichée{filtered.length > 1 ? 's' : ''}
+          {filtered.length}{' '}{tr('notification')}{filtered.length > 1 ? 's' : ''}{' '}{tr('affichée')}{filtered.length > 1 ? 's' : ''}
         </p>
       )}
 

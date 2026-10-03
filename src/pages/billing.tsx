@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
+import { LOCALE_TAG } from '@/lib/i18n'
 interface PaidOrder {
   id: string
   tracking_code: string
@@ -129,7 +130,7 @@ export function BillingPage() {
                     {/* Amount */}
                     <div className="text-right">
                       <p className="text-sm font-bold text-foreground">
-                        {amount.toLocaleString('fr-HT')}
+                        {amount.toLocaleString(LOCALE_TAG)}
                       </p>
                       <p className="text-[9px] font-semibold text-muted-foreground">HTG</p>
                     </div>

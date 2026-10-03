@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { tr, DATE_LOCALE } from '@/lib/i18n'
 interface Ticket {
   id: string
   subject: string
@@ -20,10 +21,10 @@ interface Ticket {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; bg: string; text: string }> = {
-  open:        { label: 'Ouvert',   dot: 'bg-amber-400',        bg: 'bg-amber-50',   text: 'text-amber-700' },
-  in_progress: { label: 'En cours', dot: 'bg-primary',          bg: 'bg-primary/10', text: 'text-primary' },
-  resolved:    { label: 'Résolu',   dot: 'bg-emerald-500',      bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  closed:      { label: 'Fermé',    dot: 'bg-muted-foreground', bg: 'bg-muted',      text: 'text-muted-foreground' },
+  open:        { label: tr('Ouvert'),   dot: 'bg-amber-400',        bg: 'bg-amber-50',   text: 'text-amber-700' },
+  in_progress: { label: tr('En cours'), dot: 'bg-primary',          bg: 'bg-primary/10', text: 'text-primary' },
+  resolved:    { label: tr('Résolu'),   dot: 'bg-emerald-500',      bg: 'bg-emerald-50', text: 'text-emerald-700' },
+  closed:      { label: tr('Fermé'),    dot: 'bg-muted-foreground', bg: 'bg-muted',      text: 'text-muted-foreground' },
 }
 
 export function SupportPage() {
@@ -58,7 +59,7 @@ export function SupportPage() {
       .select('id')
       .maybeSingle()
     if (ticketError || !ticketData) {
-      toast.error('Erreur lors de la création du ticket. Veuillez réessayer.')
+      toast.error(tr('Erreur lors de la création du ticket. Veuillez réessayer.'))
       setSubmitting(false)
       return
     }
@@ -68,9 +69,9 @@ export function SupportPage() {
       message,
     })
     if (msgError) {
-      toast.error("Ticket créé mais le message n'a pas pu être envoyé.")
+      toast.error(tr('Ticket créé mais le message n\'a pas pu être envoyé.'))
     } else {
-      toast.success('Votre demande a bien été envoyée.')
+      toast.success(tr('Votre demande a bien été envoyée.'))
       setSubject('')
       setMessage('')
       setPriority('normal')
@@ -82,8 +83,8 @@ export function SupportPage() {
   return (
     <div className="min-h-full bg-[#F4F5F7]">
       <div className="px-5 pt-5 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Support</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Besoin d'aide ? Nous répondons rapidement.</p>
+        <h1 className="text-2xl font-bold tracking-tight">{tr('Support')}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{tr('Besoin d\'aide ? Nous répondons rapidement.')}</p>
       </div>
 
       <div className="px-4 pb-6 space-y-4">
@@ -94,40 +95,40 @@ export function SupportPage() {
               <Plus className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="font-semibold text-sm">Nouvelle demande</p>
-              <p className="text-xs text-muted-foreground">Décrivez votre problème</p>
+              <p className="font-semibold text-sm">{tr('Nouvelle demande')}</p>
+              <p className="text-xs text-muted-foreground">{tr('Décrivez votre problème')}</p>
             </div>
           </div>
           <div className="p-5 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="subject" className="text-sm font-semibold">Sujet *</Label>
+              <Label htmlFor="subject" className="text-sm font-semibold">{tr('Sujet *')}</Label>
               <Input
                 id="subject"
-                placeholder="Résumé de votre demande"
+                placeholder={tr('Résumé de votre demande')}
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium focus-visible:ring-1 focus-visible:ring-primary/40"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="priority" className="text-sm font-semibold">Priorité</Label>
+              <Label htmlFor="priority" className="text-sm font-semibold">{tr('Priorité')}</Label>
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium focus:ring-1 focus:ring-primary/40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Basse</SelectItem>
-                  <SelectItem value="normal">Normale</SelectItem>
-                  <SelectItem value="high">Haute</SelectItem>
-                  <SelectItem value="urgent">Urgente</SelectItem>
+                  <SelectItem value="low">{tr('Basse')}</SelectItem>
+                  <SelectItem value="normal">{tr('Normale')}</SelectItem>
+                  <SelectItem value="high">{tr('Haute')}</SelectItem>
+                  <SelectItem value="urgent">{tr('Urgente')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="message" className="text-sm font-semibold">Message *</Label>
+              <Label htmlFor="message" className="text-sm font-semibold">{tr('Message *')}</Label>
               <Textarea
                 id="message"
-                placeholder="Décrivez votre problème en détail..."
+                placeholder={tr('Décrivez votre problème en détail...')}
                 rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -141,7 +142,7 @@ export function SupportPage() {
               onClick={handleSubmit}
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Envoyer la demande
+              {tr('Envoyer la demande')}
             </button>
           </div>
         </div>
@@ -152,7 +153,7 @@ export function SupportPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted">
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </div>
-            <p className="font-semibold text-sm">Mes demandes ({tickets.length})</p>
+            <p className="font-semibold text-sm">{tr('Mes demandes (')}{tickets.length})</p>
           </div>
           {loading ? (
             <div className="p-5 space-y-3">
@@ -161,8 +162,8 @@ export function SupportPage() {
           ) : tickets.length === 0 ? (
             <div className="p-10 text-center">
               <HelpCircle className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="font-semibold text-sm text-muted-foreground">Aucune demande</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Vous n'avez pas encore ouvert de ticket de support.</p>
+              <p className="font-semibold text-sm text-muted-foreground">{tr('Aucune demande')}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">{tr('Vous n\'avez pas encore ouvert de ticket de support.')}</p>
             </div>
           ) : (
             <div className="divide-y divide-border/50">
@@ -185,7 +186,7 @@ export function SupportPage() {
                           {cfg.label}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(ticket.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          {new Date(ticket.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                         </span>
                       </div>
                     </div>

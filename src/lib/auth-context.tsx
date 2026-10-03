@@ -1,9 +1,11 @@
 import { detachPushFromThisDevice } from '@/hooks/use-push-notifications'
+import { LANG, hasStoredLang, setLanguage } from '@/lib/i18n'
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
+import { tr } from '@/lib/i18n'
 type UserRole = 'client' | 'agent' | 'manager' | 'admin'
 
 interface Profile {
@@ -13,6 +15,7 @@ interface Profile {
   phone: string | null
   role: UserRole
   avatar_url: string | null
+  language?: 'fr' | 'en'
 }
 
 interface AuthContextType {
@@ -92,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fullName =
       authUser?.user_metadata?.full_name ||
       authUser?.email?.split('@')[0] ||
-      'Utilisateur'
+      tr('Utilisateur')
 
     const { data: created } = await supabase
       .from('profiles')
@@ -176,6 +179,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function refreshProfile() {
     if (user) await fetchProfile(user.id)
   }
+
+  // The account remembers its language (used for server-side notifications and across devices)
+  useEffect(() => {
+    if (!profile?.user_id) return
+    if (profile.language && profile.language !== LANG) {
+      if (hasStoredLang()) {
+        void supabase.from('profiles').update({ language: LANG }).eq('user_id', profile.user_id)
+      } else {
+        setLanguage(profile.language) // first visit on this device: follow the account
+      }
+    }
+  }, [profile?.user_id, profile?.language])
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'manager'
 

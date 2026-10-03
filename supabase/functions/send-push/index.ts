@@ -43,6 +43,8 @@ serve(async (req) => {
       user_id: string
       title: string
       body: string
+      title_en?: string | null
+      body_en?: string | null
       icon?: string
       click_url?: string
       type?: string
@@ -79,9 +81,13 @@ serve(async (req) => {
 
     console.log(`[send-push] found ${subs.length} subscriptions for user=${body.user_id}`)
 
+    // The recipient reads the language saved on their profile (English text exists for the standard messages)
+    const { data: prof } = await admin.from('profiles').select('language').eq('user_id', body.user_id).maybeSingle()
+    const english = prof?.language === 'en'
+
     const payload = JSON.stringify({
-      title:    body.title,
-      body:     body.body,
+      title:    english && body.title_en ? body.title_en : body.title,
+      body:     english && body.body_en  ? body.body_en  : body.body,
       icon:     body.icon     ?? '/icon-192.png',
       badge:    '/badge-mono.png',
       clickUrl: body.click_url ?? '/',

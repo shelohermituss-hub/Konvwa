@@ -5,35 +5,37 @@ import { Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
+import { LanguageToggle } from '@/components/shared/language-toggle'
 
+import { tr } from '@/lib/i18n'
 const SEO: Record<string, { title: string; description: string }> = {
   '/': {
-    title: 'KONVWA — Importez depuis Alibaba, Shein et Temu en Haïti',
-    description: "KONVWA vous aide à importer des produits d'Alibaba, Shein et Temu vers Haïti. Devis clair, paiement par MonCash ou NatCash, suivi de commande et d'expédition en gourdes (HTG).",
+    title: tr('KONVWA — Importez depuis Alibaba, Shein et Temu en Haïti'),
+    description: tr('KONVWA vous aide à importer des produits d\'Alibaba, Shein et Temu vers Haïti. Devis clair, paiement par MonCash ou NatCash, suivi de commande et d\'expédition en gourdes (HTG).'),
   },
   '/how-it-works': {
-    title: 'Comment ça marche — KONVWA',
-    description: "Envoyez votre lien produit, recevez un devis en gourdes, payez par MonCash ou NatCash et suivez votre colis jusqu'en Haïti.",
+    title: tr('Comment ça marche — KONVWA'),
+    description: tr('Envoyez votre lien produit, recevez un devis en gourdes, payez par MonCash ou NatCash et suivez votre colis jusqu\'en Haïti.'),
   },
   '/prices': {
-    title: 'Tarifs — KONVWA',
-    description: "Tarifs d'importation et d'expédition vers Haïti : frais de service, transport maritime et aérien, calculés en gourdes (HTG).",
+    title: tr('Tarifs — KONVWA'),
+    description: tr('Tarifs d\'importation et d\'expédition vers Haïti : frais de service, transport maritime et aérien, calculés en gourdes (HTG).'),
   },
   '/faq': {
-    title: 'Questions fréquentes — KONVWA',
-    description: "Délais, paiements MonCash et NatCash, frais d'expédition, suivi de colis : les réponses aux questions sur l'importation avec KONVWA.",
+    title: tr('Questions fréquentes — KONVWA'),
+    description: tr('Délais, paiements MonCash et NatCash, frais d\'expédition, suivi de colis : les réponses aux questions sur l\'importation avec KONVWA.'),
   },
   '/contact': {
-    title: 'Contact — KONVWA',
-    description: "Contactez l'équipe KONVWA pour vos importations depuis Alibaba, Shein et Temu vers Haïti.",
+    title: tr('Contact — KONVWA'),
+    description: tr('Contactez l\'équipe KONVWA pour vos importations depuis Alibaba, Shein et Temu vers Haïti.'),
   },
   '/terms': {
-    title: "Conditions d'utilisation — KONVWA",
-    description: "Conditions d'utilisation du service d'importation KONVWA.",
+    title: tr('Conditions d\'utilisation — KONVWA'),
+    description: tr('Conditions d\'utilisation du service d\'importation KONVWA.'),
   },
   '/privacy': {
-    title: 'Confidentialité — KONVWA',
-    description: 'Comment KONVWA collecte, utilise et protège vos données personnelles.',
+    title: tr('Confidentialité — KONVWA'),
+    description: tr('Comment KONVWA collecte, utilise et protège vos données personnelles.'),
   },
 }
 
@@ -77,10 +79,10 @@ function Header() {
 
         <div className="hidden lg:flex items-center gap-8">
           {[
-            ['Comment ça marche', '/how-it-works'],
-            ['Tarifs', '/prices'],
+            [tr('Comment ça marche'), '/how-it-works'],
+            [tr('Tarifs'), '/prices'],
             ['FAQ', '/faq'],
-            ['Contact', '/contact'],
+            [tr('Contact'), '/contact'],
           ].map(([label, path]) => (
             <Link key={path} to={path} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               {label}
@@ -89,38 +91,43 @@ function Header() {
         </div>
 
         <div className="hidden lg:flex items-center gap-4">
+          <LanguageToggle />
           {user ? (
             <Button asChild className="rounded-full">
-              <Link to="/dashboard">Tableau de bord</Link>
+              <Link to="/dashboard">{tr('Tableau de bord')}</Link>
             </Button>
           ) : (
             <>
               <Button variant="ghost" asChild className="rounded-full">
-                <Link to="/auth">Connexion</Link>
+                <Link to="/auth">{tr('Connexion')}</Link>
               </Button>
               <Button asChild className="btn-gradient rounded-full px-6">
-                <Link to="/auth">S'inscrire</Link>
+                <Link to="/auth">{tr('S\'inscrire')}</Link>
               </Button>
             </>
           )}
         </div>
 
-        <button
-          className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <LanguageToggle />
+          <button
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={tr('Menu')}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </nav>
 
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-border bg-background/95 backdrop-blur-xl">
           <div className="container px-4 py-4 mx-auto space-y-3">
             {[
-              ['Comment ça marche', '/how-it-works'],
-              ['Tarifs', '/prices'],
+              [tr('Comment ça marche'), '/how-it-works'],
+              [tr('Tarifs'), '/prices'],
               ['FAQ', '/faq'],
-              ['Contact', '/contact'],
+              [tr('Contact'), '/contact'],
             ].map(([label, path]) => (
               <Link key={path} to={path} onClick={() => setMobileMenuOpen(false)}
                 className="block text-sm font-medium text-muted-foreground hover:text-foreground py-1 transition-colors">
@@ -130,15 +137,15 @@ function Header() {
             <div className="pt-3 border-t border-border flex gap-3">
               {user ? (
                 <Button asChild className="w-full rounded-xl">
-                  <Link to="/dashboard">Tableau de bord</Link>
+                  <Link to="/dashboard">{tr('Tableau de bord')}</Link>
                 </Button>
               ) : (
                 <>
                   <Button variant="outline" asChild className="flex-1 rounded-xl">
-                    <Link to="/auth">Connexion</Link>
+                    <Link to="/auth">{tr('Connexion')}</Link>
                   </Button>
                   <Button asChild className="flex-1 rounded-xl btn-gradient">
-                    <Link to="/auth">S'inscrire</Link>
+                    <Link to="/auth">{tr('S\'inscrire')}</Link>
                   </Button>
                 </>
               )}
@@ -160,40 +167,40 @@ function Footer() {
               <KonvwaLogo size={34} />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Importez des produits d'Alibaba, Shein et Temu en Haïti sans carte bancaire.
+              {tr('Importez des produits d\'Alibaba, Shein et Temu en Haïti sans carte bancaire.')}
             </p>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest text-muted-foreground">Services</h3>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest text-muted-foreground">{tr('Services')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/auth" className="text-muted-foreground hover:text-foreground transition-colors">Soumettre un lien</Link></li>
-              <li><Link to="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">Comment ça marche</Link></li>
-              <li><Link to="/prices" className="text-muted-foreground hover:text-foreground transition-colors">Tarifs</Link></li>
+              <li><Link to="/auth" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Soumettre un lien')}</Link></li>
+              <li><Link to="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Comment ça marche')}</Link></li>
+              <li><Link to="/prices" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Tarifs')}</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest text-muted-foreground">Aide</h3>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest text-muted-foreground">{tr('Aide')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</Link></li>
-              <li><Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">Contact</Link></li>
-              <li><Link to="/support" className="text-muted-foreground hover:text-foreground transition-colors">Support</Link></li>
+              <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">{tr('FAQ')}</Link></li>
+              <li><Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Contact')}</Link></li>
+              <li><Link to="/support" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Support')}</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest text-muted-foreground">Légal</h3>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest text-muted-foreground">{tr('Légal')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Conditions d'utilisation</Link></li>
-              <li><Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Confidentialité</Link></li>
+              <li><Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Conditions d\'utilisation')}</Link></li>
+              <li><Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Confidentialité')}</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} KONVWA. Tous droits réservés.</p>
-          <p>Fait avec soin pour Haïti 🇭🇹</p>
+          <p>&copy; {new Date().getFullYear()}{' '}{tr('KONVWA. Tous droits réservés.')}</p>
+          <p>{tr('Fait avec soin pour Haïti 🇭🇹')}</p>
         </div>
       </div>
     </footer>

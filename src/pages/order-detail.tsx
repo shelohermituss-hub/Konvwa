@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import type { OrderStatus } from '@/types'
 import { OrderStatusTracker } from '@/components/shared/order-status-tracker'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface ChosenShippingMethod {
   id: string
   name: string
@@ -173,9 +174,9 @@ export function OrderDetailPage() {
     setAccepting(true)
     const { data, error } = await supabase.rpc('accept_quote', { p_order_id: order.id })
     if (error || !data?.success) {
-      toast.error(data?.error || 'Erreur lors de l\'acceptation du devis.')
+      toast.error(data?.error || tr('Erreur lors de l\'acceptation du devis.'))
     } else {
-      toast.success('Devis accepté ! Procédez au paiement.')
+      toast.success(tr('Devis accepté ! Procédez au paiement.'))
       setOrder(prev => prev ? { ...prev, status: 'awaiting_payment' } : null)
     }
     setAccepting(false)
@@ -185,9 +186,9 @@ export function OrderDetailPage() {
     if (!order) return
     const { data, error } = await supabase.rpc('reject_quote', { p_order_id: order.id })
     if (error || !data?.success) {
-      toast.error(data?.error || 'Erreur lors du refus du devis.')
+      toast.error(data?.error || tr('Erreur lors du refus du devis.'))
     } else {
-      toast.info('Devis refusé.')
+      toast.info(tr('Devis refusé.'))
       setOrder(prev => prev ? { ...prev, status: 'cancelled' } : null)
     }
   }
@@ -196,7 +197,7 @@ export function OrderDetailPage() {
     if (!order?.quotes || !wallet) return
     const total = order.quotes.total
     if (wallet.available_balance < total) {
-      toast.error('Solde insuffisant. Veuillez recharger votre portefeuille.')
+      toast.error(tr('Solde insuffisant. Veuillez recharger votre portefeuille.'))
       return
     }
     setPaying(true)
@@ -204,14 +205,14 @@ export function OrderDetailPage() {
       const { data, error } = await supabase.rpc('pay_order', { p_order_id: order.id })
       if (error) throw error
       if (!data?.success) {
-        toast.error(data?.error || 'Erreur lors du paiement.')
+        toast.error(data?.error || tr('Erreur lors du paiement.'))
         return
       }
-      toast.success('Paiement effectué ! Votre commande est en cours de traitement.')
+      toast.success(tr('Paiement effectué ! Votre commande est en cours de traitement.'))
       setOrder(prev => prev ? { ...prev, status: 'paid', payment_status: 'paid', total_paid: total } : null)
       setWallet(prev => prev ? { ...prev, available_balance: prev.available_balance - total } : null)
     } catch {
-      toast.error('Erreur lors du paiement. Réessayez.')
+      toast.error(tr('Erreur lors du paiement. Réessayez.'))
     } finally {
       setPaying(false)
     }
@@ -233,16 +234,16 @@ export function OrderDetailPage() {
       <div className="min-h-full bg-[#F4F5F7] flex items-center justify-center px-4">
         <div className="text-center">
           <img src={IconBoite} alt="" className="h-14 w-14 mx-auto opacity-30 mb-3" />
-          <p className="text-muted-foreground mb-4 font-medium">Commande introuvable.</p>
+          <p className="text-muted-foreground mb-4 font-medium">{tr('Commande introuvable.')}</p>
           <Button asChild variant="outline" className="rounded-xl">
-            <Link to="/orders"><ArrowLeft className="mr-2 h-4 w-4" />Retour</Link>
+            <Link to="/orders"><ArrowLeft className="mr-2 h-4 w-4" />{tr('Retour')}</Link>
           </Button>
         </div>
       </div>
     )
   }
 
-  const productName = order.quotes?.product_requests?.product_name || 'Produit'
+  const productName = order.quotes?.product_requests?.product_name || tr('Produit')
   const delivery = estimatedDelivery()
   const total = order.quotes?.total ?? 0
   const canPay = wallet ? wallet.available_balance >= total : false
@@ -307,9 +308,9 @@ export function OrderDetailPage() {
                   <Package className="h-4 w-4 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">Cargaison en entrepôt Chine</p>
+                  <p className="text-sm font-bold text-foreground">{tr('Cargaison en entrepôt Chine')}</p>
                   <p className="text-xs text-muted-foreground">
-                    {hasPkgs ? `${pkgs.length} colis` : '1 colis'}
+                    {hasPkgs ? tr('{0} colis', pkgs.length) : tr('1 colis')}
                     {totalCBM != null ? ` · ${totalCBM.toFixed(4)} m³` : ''}
                     {totalKg != null ? ` · ${totalKg.toFixed(2)} kg (${(totalKg / 0.453592).toFixed(1)} lbs)` : ''}
                   </p>
@@ -320,14 +321,14 @@ export function OrderDetailPage() {
               <div className="px-4 py-3 grid grid-cols-2 gap-3">
                 {totalCBM != null && (
                   <div className="rounded-xl bg-white border border-amber-100 px-3 py-2.5">
-                    <p className="text-xs text-muted-foreground mb-0.5">Volume total</p>
+                    <p className="text-xs text-muted-foreground mb-0.5">{tr('Volume total')}</p>
                     <p className="text-base font-bold text-foreground">{totalCBM.toFixed(4)} m³</p>
                     <p className="text-[11px] text-muted-foreground">{(totalCBM * 35.3147).toFixed(2)} ft³</p>
                   </div>
                 )}
                 {totalKg != null && (
                   <div className="rounded-xl bg-white border border-amber-100 px-3 py-2.5">
-                    <p className="text-xs text-muted-foreground mb-0.5">Poids total</p>
+                    <p className="text-xs text-muted-foreground mb-0.5">{tr('Poids total')}</p>
                     <p className="text-base font-bold text-foreground">{totalKg.toFixed(2)} kg</p>
                     <p className="text-[11px] text-muted-foreground">{(totalKg / 0.453592).toFixed(1)} lbs</p>
                   </div>
@@ -337,7 +338,7 @@ export function OrderDetailPage() {
               {/* Détail par carton */}
               {hasPkgs && pkgs.length > 0 && (
                 <div className="px-4 pb-3">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">Détail par carton</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">{tr('Détail par carton')}</p>
                   <div className="space-y-1.5">
                     {pkgs.map(p => {
                       const cbm = p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : null)
@@ -351,10 +352,10 @@ export function OrderDetailPage() {
                             {p.length_cm && p.width_cm && p.height_cm ? (
                               <p className="text-xs font-mono font-semibold text-foreground">{p.length_cm}×{p.width_cm}×{p.height_cm} cm</p>
                             ) : (
-                              <p className="text-xs text-muted-foreground">Dimensions inconnues</p>
+                              <p className="text-xs text-muted-foreground">{tr('Dimensions inconnues')}</p>
                             )}
                             {kg != null && (
-                              <p className="text-xs text-muted-foreground">{kg.toFixed(2)} kg · {(kg / 0.453592).toFixed(1)} lbs</p>
+                              <p className="text-xs text-muted-foreground">{kg.toFixed(2)}{' '}{tr('kg ·')}{' '}{(kg / 0.453592).toFixed(1)} lbs</p>
                             )}
                           </div>
                           {cbm != null && (
@@ -378,10 +379,10 @@ export function OrderDetailPage() {
                 <FileText className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="font-bold text-sm text-foreground">Devis reçu — Action requise</p>
+                <p className="font-bold text-sm text-foreground">{tr('Devis reçu — Action requise')}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  Total : <span className="font-bold text-primary">{total.toLocaleString('fr-HT')} HTG</span>
-                  {order.quotes.estimated_delivery_days && ` · ${order.quotes.estimated_delivery_days} jours`}
+                  {tr('Total :')}{' '}<span className="font-bold text-primary">{total.toLocaleString(LOCALE_TAG)} HTG</span>
+                  {order.quotes.estimated_delivery_days && tr(' · {0} jours', order.quotes.estimated_delivery_days)}
                 </p>
               </div>
             </div>
@@ -389,25 +390,25 @@ export function OrderDetailPage() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" size="sm" className="flex-1 rounded-xl gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/5">
-                    <XCircle className="h-3.5 w-3.5" />Refuser
+                    <XCircle className="h-3.5 w-3.5" />{tr('Refuser')}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Refuser ce devis ?</AlertDialogTitle>
-                    <AlertDialogDescription>La commande sera annulée. Cette action est irréversible.</AlertDialogDescription>
+                    <AlertDialogTitle>{tr('Refuser ce devis ?')}</AlertDialogTitle>
+                    <AlertDialogDescription>{tr('La commande sera annulée. Cette action est irréversible.')}</AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+                    <AlertDialogCancel className="rounded-xl">{tr('Annuler')}</AlertDialogCancel>
                     <AlertDialogAction onClick={handleRejectQuote} className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                      Confirmer le refus
+                      {tr('Confirmer le refus')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
               <Button size="sm" onClick={handleAcceptQuote} disabled={accepting} className="flex-1 rounded-xl gap-1.5">
                 {accepting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                {accepting ? 'Acceptation…' : 'Accepter'}
+                {accepting ? tr('Acceptation…') : tr('Accepter')}
               </Button>
             </div>
           </div>
@@ -422,9 +423,9 @@ export function OrderDetailPage() {
                   <AlertCircle className="h-4 w-4 text-warning" />
                 </div>
                 <div>
-                  <p className="font-bold text-sm text-foreground">Paiement requis</p>
+                  <p className="font-bold text-sm text-foreground">{tr('Paiement requis')}</p>
                   <p className="text-sm text-muted-foreground mt-0.5">
-                    Réglez <span className="font-bold text-foreground">{total.toLocaleString('fr-HT')} HTG</span> depuis votre portefeuille pour lancer la commande.
+                    {tr('Réglez')}{' '}<span className="font-bold text-foreground">{total.toLocaleString(LOCALE_TAG)} HTG</span>{' '}{tr('depuis votre portefeuille pour lancer la commande.')}
                   </p>
                 </div>
               </div>
@@ -434,10 +435,10 @@ export function OrderDetailPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   <Wallet className="h-3.5 w-3.5" />
-                  Solde disponible
+                  {tr('Solde disponible')}
                 </span>
                 <span className={`font-bold ${canPay ? 'text-emerald-600' : 'text-destructive'}`}>
-                  {(wallet?.available_balance ?? 0).toLocaleString('fr-HT')} HTG
+                  {(wallet?.available_balance ?? 0).toLocaleString(LOCALE_TAG)} HTG
                 </span>
               </div>
               {canPay ? (
@@ -447,16 +448,16 @@ export function OrderDetailPage() {
                   className="w-full rounded-xl h-11 font-bold gap-2"
                 >
                   {paying ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" />Paiement en cours…</>
+                    <><Loader2 className="h-4 w-4 animate-spin" />{tr('Paiement en cours…')}</>
                   ) : (
-                    <><Wallet className="h-4 w-4" />Payer {total.toLocaleString('fr-HT')} HTG</>
+                    <><Wallet className="h-4 w-4" />{tr('Payer')}{' '}{total.toLocaleString(LOCALE_TAG)} HTG</>
                   )}
                 </Button>
               ) : (
                 <Button asChild className="w-full rounded-xl h-11 font-bold gap-2">
                   <Link to="/wallet">
                     <Wallet className="h-4 w-4" />
-                    Recharger mon portefeuille
+                    {tr('Recharger mon portefeuille')}
                   </Link>
                 </Button>
               )}
@@ -479,9 +480,9 @@ export function OrderDetailPage() {
                   <Truck className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-foreground">Votre colis est en entrepôt Chine</p>
+                  <p className="font-bold text-sm text-foreground">{tr('Votre colis est en entrepôt Chine')}</p>
                   <p className="text-sm text-muted-foreground mt-0.5">
-                    Choisissez un mode d'expédition dans la page Expéditions.
+                    {tr('Choisissez un mode d\'expédition dans la page Expéditions.')}
                   </p>
                 </div>
                 <ArrowLeft className="h-4 w-4 text-primary rotate-180 shrink-0 mt-0.5" />
@@ -489,7 +490,7 @@ export function OrderDetailPage() {
             </div>
             <div className="px-4 py-3 flex items-center gap-2 text-sm font-semibold text-primary">
               <Truck className="h-4 w-4" />
-              Aller à Expéditions
+              {tr('Aller à Expéditions')}
             </div>
           </Link>
         )}
@@ -499,7 +500,7 @@ export function OrderDetailPage() {
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
               <Package className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm font-bold text-foreground">Photo du produit</p>
+              <p className="text-sm font-bold text-foreground">{tr('Photo du produit')}</p>
             </div>
             <div className="p-3">
               <img
@@ -514,19 +515,19 @@ export function OrderDetailPage() {
         {/* Détails commande */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Détails commande</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">{tr('Détails commande')}</p>
           </div>
           <div className="px-4 divide-y divide-border/50">
-            <InfoRow label="Plateforme" value={(order.quotes?.product_requests?.source_platform || '—').toUpperCase()} />
+            <InfoRow label={tr('Plateforme')} value={(order.quotes?.product_requests?.source_platform || '—').toUpperCase()} />
             <InfoRow
-              label="Option expédition"
+              label={tr('Option expédition')}
               value={order.shipping_option === 'all_inclusive' ? 'Tout inclus' : 'Expédition séparée'}
               valueClass={order.shipping_option === 'separate' ? 'text-primary' : ''}
             />
-            <InfoRow label="Date" value={new Date(order.created_at).toLocaleDateString('fr-FR')} />
-            {delivery && <InfoRow label="Livraison estimée" value={delivery.toLocaleDateString('fr-FR')} />}
+            <InfoRow label={tr('Date')} value={new Date(order.created_at).toLocaleDateString(DATE_LOCALE)} />
+            {delivery && <InfoRow label={tr('Livraison estimée')} value={delivery.toLocaleDateString(DATE_LOCALE)} />}
             <InfoRow
-              label="Statut paiement"
+              label={tr('Statut paiement')}
               value={order.payment_status === 'paid' ? 'Payé' : order.payment_status === 'partial' ? 'Partiel' : 'Impayé'}
               valueClass={order.payment_status === 'paid' ? 'text-emerald-600' : 'text-warning'}
             />
@@ -536,7 +537,7 @@ export function OrderDetailPage() {
               <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                 <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <Globe className="h-3.5 w-3.5" />
-                  Expédié depuis
+                  {tr('Expédié depuis')}
                 </span>
                 <span className="text-sm font-semibold text-foreground">
                   {order.quotes.product_requests.shipping_origins.flag_emoji && (
@@ -550,10 +551,10 @@ export function OrderDetailPage() {
               <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                 <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5" />
-                  Destination
+                  {tr('Destination')}
                 </span>
                 <span className="text-sm font-semibold text-foreground">
-                  🇭🇹 Haïti — {order.quotes.product_requests.haiti_regions.name}
+                  {tr('🇭🇹 Haïti —')}{' '}{order.quotes.product_requests.haiti_regions.name}
                   {order.quotes.product_requests.haiti_cities && (
                     <span className="text-muted-foreground font-normal">
                       , {order.quotes.product_requests.haiti_cities.name}
@@ -568,7 +569,7 @@ export function OrderDetailPage() {
               <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                 <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <Truck className="h-3.5 w-3.5" />
-                  Type de colis
+                  {tr('Type de colis')}
                 </span>
                 <span className="text-sm font-semibold text-foreground">
                   {order.quotes.product_requests.product_types.name}
@@ -588,7 +589,7 @@ export function OrderDetailPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                         <Package className="h-3.5 w-3.5" />
-                        {pkgs.length > 1 ? `${pkgs.length} colis` : 'Colis'}
+                        {pkgs.length > 1 ? tr('{0} colis', pkgs.length) : tr('Colis')}
                       </span>
                       <span className="text-sm font-semibold text-primary">{totalCBM.toFixed(4)} m³</span>
                     </div>
@@ -596,7 +597,7 @@ export function OrderDetailPage() {
                       const cbm = p.cbm ?? (p.length_cm && p.width_cm && p.height_cm ? (p.length_cm * p.width_cm * p.height_cm) / 1_000_000 : null)
                       return (
                         <div key={p.number} className="flex items-center justify-between rounded-lg bg-[#F8F9FB] px-3 py-2 text-xs">
-                          <span className="font-semibold text-muted-foreground">Colis {p.number}</span>
+                          <span className="font-semibold text-muted-foreground">{tr('Colis')}{' '}{p.number}</span>
                           <span className="text-foreground font-mono">
                             {p.length_cm && p.width_cm && p.height_cm
                               ? `${p.length_cm}×${p.width_cm}×${p.height_cm} cm`
@@ -614,8 +615,8 @@ export function OrderDetailPage() {
               const cbm = (req.box_length_cm * req.box_width_cm * req.box_height_cm) / 1_000_000
               return (
                 <>
-                  <InfoRow label="Dimensions (L×W×H)" value={`${req.box_length_cm} × ${req.box_width_cm} × ${req.box_height_cm} cm`} />
-                  <InfoRow label="Volume CBM" value={`${cbm.toFixed(4)} m³`} />
+                  <InfoRow label={tr('Dimensions (L×W×H)')} value={`${req.box_length_cm} × ${req.box_width_cm} × ${req.box_height_cm} cm`} />
+                  <InfoRow label={tr('Volume CBM')} value={`${cbm.toFixed(4)} m³`} />
                 </>
               )
             })()}
@@ -625,7 +626,7 @@ export function OrderDetailPage() {
               <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                 <span className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <Weight className="h-3.5 w-3.5" />
-                  Poids
+                  {tr('Poids')}
                 </span>
                 <span className="text-sm font-semibold text-foreground">
                   {(() => {
@@ -642,7 +643,7 @@ export function OrderDetailPage() {
             {/* Valeur déclarée */}
             {order.quotes?.product_requests?.invoice_value_usd != null && (
               <InfoRow
-                label="Valeur déclarée"
+                label={tr('Valeur déclarée')}
                 value={`$${order.quotes.product_requests.invoice_value_usd.toFixed(2)} USD`}
               />
             )}
@@ -655,7 +656,7 @@ export function OrderDetailPage() {
                   rel="noopener noreferrer"
                   className="text-sm text-primary font-semibold flex items-center gap-1.5 hover:underline"
                 >
-                  Voir le produit <ExternalLink className="h-3.5 w-3.5" />
+                  {tr('Voir le produit')}{' '}<ExternalLink className="h-3.5 w-3.5" />
                 </a>
               </div>
             )}
@@ -666,72 +667,72 @@ export function OrderDetailPage() {
         {order.quotes && (
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Résumé paiement</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">{tr('Résumé paiement')}</p>
             </div>
             <div className="px-4 py-2">
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">Prix produit</span>
-                <span className="font-medium">{order.quotes.product_price.toLocaleString('fr-HT')} HTG</span>
+                <span className="text-muted-foreground">{tr('Prix produit')}</span>
+                <span className="font-medium">{order.quotes.product_price.toLocaleString(LOCALE_TAG)} HTG</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">Quantité</span>
+                <span className="text-muted-foreground">{tr('Quantité')}</span>
                 <span className="font-medium">× {order.quotes.quantity}</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">Frais de service</span>
-                <span className="font-medium">{order.quotes.service_fee.toLocaleString('fr-HT')} HTG</span>
+                <span className="text-muted-foreground">{tr('Frais de service')}</span>
+                <span className="font-medium">{order.quotes.service_fee.toLocaleString(LOCALE_TAG)} HTG</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">Frais d'achat</span>
-                <span className="font-medium">{order.quotes.purchase_fee.toLocaleString('fr-HT')} HTG</span>
+                <span className="text-muted-foreground">{tr('Frais d\'achat')}</span>
+                <span className="font-medium">{order.quotes.purchase_fee.toLocaleString(LOCALE_TAG)} HTG</span>
               </div>
               {order.shipping_option === 'separate' ? (
                 (order.chosen_shipping_method || order.chosen_shipping_rate) ? (
                   <div className="py-2.5 border-b border-gray-100">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
-                        Expédition ({order.chosen_shipping_rate?.name ?? order.chosen_shipping_method?.name})
+                        {tr('Expédition (')}{order.chosen_shipping_rate?.name ?? order.chosen_shipping_method?.name})
                       </span>
-                      <span className="font-medium text-warning">Voir facture</span>
+                      <span className="font-medium text-warning">{tr('Voir facture')}</span>
                     </div>
                   </div>
                 ) : (
                   <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                     <span className="text-muted-foreground flex items-center gap-1.5">
                       <Zap className="h-3.5 w-3.5 text-warning" />
-                      Expédition
+                      {tr('Expédition')}
                     </span>
-                    <span className="font-medium text-warning">À confirmer</span>
+                    <span className="font-medium text-warning">{tr('À confirmer')}</span>
                   </div>
                 )
               ) : (
                 <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                  <span className="text-muted-foreground">{order.quotes?.product_requests?.shipping_rates?.mode === 'air' ? 'Fret aérien' : 'Frais maritimes'}</span>
-                  <span className="font-medium">{order.quotes.shipping_fee.toLocaleString('fr-HT')} HTG</span>
+                  <span className="text-muted-foreground">{order.quotes?.product_requests?.shipping_rates?.mode === 'air' ? tr('Fret aérien') : tr('Frais maritimes')}</span>
+                  <span className="font-medium">{order.quotes.shipping_fee.toLocaleString(LOCALE_TAG)} HTG</span>
                 </div>
               )}
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">Douane estimée</span>
-                <span className="font-medium">{order.quotes.customs_fee.toLocaleString('fr-HT')} HTG</span>
+                <span className="text-muted-foreground">{tr('Douane estimée')}</span>
+                <span className="font-medium">{order.quotes.customs_fee.toLocaleString(LOCALE_TAG)} HTG</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">Livraison locale</span>
-                <span className="font-medium">{order.quotes.local_delivery_fee.toLocaleString('fr-HT')} HTG</span>
+                <span className="text-muted-foreground">{tr('Livraison locale')}</span>
+                <span className="font-medium">{order.quotes.local_delivery_fee.toLocaleString(LOCALE_TAG)} HTG</span>
               </div>
               <Separator className="my-0" />
               <div className="flex justify-between py-3">
-                <span className="font-bold text-base">Sous-total produit</span>
-                <span className="font-bold text-base text-primary">{order.quotes.total.toLocaleString('fr-HT')} HTG</span>
+                <span className="font-bold text-base">{tr('Sous-total produit')}</span>
+                <span className="font-bold text-base text-primary">{order.quotes.total.toLocaleString(LOCALE_TAG)} HTG</span>
               </div>
               {order.shipping_amount_paid != null && order.shipping_amount_paid > 0 && (
                 <div className="flex justify-between pb-2 text-sm">
-                  <span className="text-muted-foreground">+ Expédition payée</span>
-                  <span className="font-semibold">{order.shipping_amount_paid.toLocaleString('fr-HT')} HTG</span>
+                  <span className="text-muted-foreground">{tr('+ Expédition payée')}</span>
+                  <span className="font-semibold">{order.shipping_amount_paid.toLocaleString(LOCALE_TAG)} HTG</span>
                 </div>
               )}
               <div className="flex justify-between pb-3 text-sm">
-                <span className="text-emerald-600 font-medium">Déjà payé (total)</span>
-                <span className="text-emerald-600 font-semibold">{order.total_paid.toLocaleString('fr-HT')} HTG</span>
+                <span className="text-emerald-600 font-medium">{tr('Déjà payé (total)')}</span>
+                <span className="text-emerald-600 font-semibold">{order.total_paid.toLocaleString(LOCALE_TAG)} HTG</span>
               </div>
             </div>
           </div>
@@ -742,44 +743,44 @@ export function OrderDetailPage() {
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
               <FileText className="h-4 w-4 text-primary" />
-              <p className="text-sm font-bold text-foreground">Facture expédition</p>
-              <span className="ml-auto text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Payée</span>
+              <p className="text-sm font-bold text-foreground">{tr('Facture expédition')}</p>
+              <span className="ml-auto text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{tr('Payée')}</span>
             </div>
             <div className="px-4 py-2">
               {(order.chosen_shipping_method || order.chosen_shipping_rate) && (
                 <>
                   <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                    <span className="text-muted-foreground">Mode</span>
+                    <span className="text-muted-foreground">{tr('Mode')}</span>
                     <span className="font-medium">
                       {order.chosen_shipping_rate?.name ?? order.chosen_shipping_method?.name}
                     </span>
                   </div>
                   <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                    <span className="text-muted-foreground">Délai estimé</span>
+                    <span className="text-muted-foreground">{tr('Délai estimé')}</span>
                     <span className="font-medium">
                       {order.chosen_shipping_rate
-                        ? `${order.chosen_shipping_rate.transit_days_min}–${order.chosen_shipping_rate.transit_days_max} jours`
-                        : `${order.chosen_shipping_method!.duration_days_min}–${order.chosen_shipping_method!.duration_days_max} jours`}
+                        ? tr('{0}–{1} jours', order.chosen_shipping_rate.transit_days_min, order.chosen_shipping_rate.transit_days_max)
+                        : tr('{0}–{1} jours', order.chosen_shipping_method!.duration_days_min, order.chosen_shipping_method!.duration_days_max)}
                     </span>
                   </div>
                 </>
               )}
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                <span className="text-muted-foreground">Référence</span>
+                <span className="text-muted-foreground">{tr('Référence')}</span>
                 <span className="font-mono text-xs">{order.tracking_code}-SHIP</span>
               </div>
               {order.shipping_paid_at && (
                 <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
-                  <span className="text-muted-foreground">Payé le</span>
+                  <span className="text-muted-foreground">{tr('Payé le')}</span>
                   <span className="font-medium">
-                    {new Date(order.shipping_paid_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    {new Date(order.shipping_paid_at).toLocaleDateString(DATE_LOCALE, { day: '2-digit', month: 'long', year: 'numeric' })}
                   </span>
                 </div>
               )}
               <Separator className="my-0" />
               <div className="flex justify-between py-3">
-                <span className="font-bold text-base">Montant expédition</span>
-                <span className="font-bold text-base text-primary">{order.shipping_amount_paid.toLocaleString('fr-HT')} HTG</span>
+                <span className="font-bold text-base">{tr('Montant expédition')}</span>
+                <span className="font-bold text-base text-primary">{order.shipping_amount_paid.toLocaleString(LOCALE_TAG)} HTG</span>
               </div>
             </div>
           </div>
@@ -789,7 +790,7 @@ export function OrderDetailPage() {
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-bold text-foreground">Suivi de la commande</p>
+            <p className="text-sm font-bold text-foreground">{tr('Suivi de la commande')}</p>
           </div>
           <div className="px-4 py-4">
             <TimelineStep currentStatus={order.status as OrderStatus} />
@@ -803,8 +804,8 @@ export function OrderDetailPage() {
               <Calendar className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Arrivée estimée</p>
-              <p className="text-sm font-bold text-foreground">{delivery.toLocaleDateString('fr-FR')}</p>
+              <p className="text-xs text-muted-foreground font-medium">{tr('Arrivée estimée')}</p>
+              <p className="text-sm font-bold text-foreground">{delivery.toLocaleDateString(DATE_LOCALE)}</p>
             </div>
           </div>
         )}
@@ -812,11 +813,11 @@ export function OrderDetailPage() {
         {/* Support */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm px-4 py-4 flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold text-foreground">Besoin d'aide ?</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Notre équipe est disponible</p>
+            <p className="text-sm font-bold text-foreground">{tr('Besoin d\'aide ?')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{tr('Notre équipe est disponible')}</p>
           </div>
           <Button asChild size="sm" variant="outline" className="rounded-xl">
-            <Link to="/support">Contacter</Link>
+            <Link to="/support">{tr('Contacter')}</Link>
           </Button>
         </div>
 

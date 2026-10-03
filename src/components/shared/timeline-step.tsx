@@ -14,25 +14,26 @@ import IconArrivee     from 'flat-color-icons/svg/in_transit.svg'
 import IconLivraison   from 'flat-color-icons/svg/advance.svg'
 import IconLivre       from 'flat-color-icons/svg/ok.svg'
 
+import { tr } from '@/lib/i18n'
 const ORDER_TIMELINE: {
   status: OrderStatus
   label: string
   description: string
   icon: string
 }[] = [
-  { status: 'draft',              label: 'Création',   description: 'Demande créée',                icon: IconCreation    },
-  { status: 'quote_sent',         label: 'Devis',      description: 'Devis envoyé',                 icon: IconDevis       },
-  { status: 'quote_accepted',     label: 'Acceptation',description: 'Devis accepté',                icon: IconAcceptation },
-  { status: 'awaiting_payment',   label: 'Paiement',   description: 'En attente de paiement',       icon: IconPaiement    },
-  { status: 'paid',               label: 'Payé',       description: 'Paiement confirmé',            icon: IconPaye        },
-  { status: 'purchasing',         label: 'Achat',      description: 'Achat auprès du fournisseur',  icon: IconAchat       },
-  { status: 'in_china_warehouse', label: 'Entrepôt',   description: 'Produit en entrepôt Chine',    icon: IconEntrepot    },
-  { status: 'shipped',            label: 'Expédition', description: 'Expédié vers Haïti',           icon: IconNavire      },
-  { status: 'in_transit',         label: 'Transit',    description: 'En transit maritime',          icon: IconNavire      },
-  { status: 'arrived_haiti',      label: 'Arrivée',    description: 'Arrivé en Haïti',              icon: IconArrivee     },
-  { status: 'customs_processing', label: 'Douane',     description: 'Dédouanement en cours',        icon: IconDouane      },
-  { status: 'out_for_delivery',   label: 'Livraison',  description: 'En cours de livraison',        icon: IconLivraison   },
-  { status: 'delivered',          label: 'Terminé',    description: 'Commande livrée',              icon: IconLivre       },
+  { status: 'draft',              label: tr('Création'),   description: tr('Demande créée'),                icon: IconCreation    },
+  { status: 'quote_sent',         label: tr('Devis'),      description: tr('Devis envoyé'),                 icon: IconDevis       },
+  { status: 'quote_accepted',     label: tr('Acceptation'),description: tr('Devis accepté'),                icon: IconAcceptation },
+  { status: 'awaiting_payment',   label: tr('Paiement'),   description: tr('En attente de paiement'),       icon: IconPaiement    },
+  { status: 'paid',               label: tr('Payé'),       description: tr('Paiement confirmé'),            icon: IconPaye        },
+  { status: 'purchasing',         label: tr('Achat'),      description: tr('Achat auprès du fournisseur'),  icon: IconAchat       },
+  { status: 'in_china_warehouse', label: tr('Entrepôt'),   description: tr('Produit en entrepôt Chine'),    icon: IconEntrepot    },
+  { status: 'shipped',            label: tr('Expédition'), description: tr('Expédié vers Haïti'),           icon: IconNavire      },
+  { status: 'in_transit',         label: tr('Transit'),    description: tr('En transit maritime'),          icon: IconNavire      },
+  { status: 'arrived_haiti',      label: tr('Arrivée'),    description: tr('Arrivé en Haïti'),              icon: IconArrivee     },
+  { status: 'customs_processing', label: tr('Douane'),     description: tr('Dédouanement en cours'),        icon: IconDouane      },
+  { status: 'out_for_delivery',   label: tr('Livraison'),  description: tr('En cours de livraison'),        icon: IconLivraison   },
+  { status: 'delivered',          label: tr('Terminé'),    description: tr('Commande livrée'),              icon: IconLivre       },
 ]
 
 const STATUS_ORDER: OrderStatus[] = [
@@ -113,7 +114,7 @@ export function TimelineStep({ currentStatus, className }: TimelineStepProps) {
                 {step.label}
                 {isCurrent && (
                   <span className="ml-2 inline-flex items-center rounded-full bg-primary/12 text-primary text-[10px] font-bold px-2 py-0.5">
-                    En cours
+                    {tr('En cours')}
                   </span>
                 )}
               </p>
@@ -206,7 +207,7 @@ export function TimelineList({
                 {step.label}
                 {isCurrent && (
                   <span className="ml-2 inline-flex items-center rounded-full bg-primary/12 text-primary text-[10px] font-bold px-2 py-0.5">
-                    En cours
+                    {tr('En cours')}
                   </span>
                 )}
               </p>

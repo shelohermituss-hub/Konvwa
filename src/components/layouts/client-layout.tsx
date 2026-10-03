@@ -20,6 +20,7 @@ import { isStandalone, requestInstall } from '@/lib/pwa'
 import { formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
 
+import { tr, pickLocalized } from '@/lib/i18n'
 const NAV_ITEMS = [
   { labelKey: 'nav.home',      Icon: LayoutDashboard, path: '/dashboard' },
   { labelKey: 'nav.orders',    Icon: ShoppingBag,     path: '/orders' },
@@ -29,11 +30,11 @@ const NAV_ITEMS = [
 ]
 
 const SIDEBAR_EXTRAS = [
-  { label: 'Soumettre',      Icon: Send,          path: '/submit' },
-  { label: 'Panier',         Icon: ShoppingCart,  path: '/cart' },
-  { label: 'Portefeuille',   Icon: Wallet,        path: '/wallet' },
-  { label: 'Notifications',  Icon: Bell,          path: '/notifications' },
-  { label: 'Support',        Icon: HelpCircle,    path: '/support' },
+  { label: tr('Soumettre'),      Icon: Send,          path: '/submit' },
+  { label: tr('Panier'),         Icon: ShoppingCart,  path: '/cart' },
+  { label: tr('Portefeuille'),   Icon: Wallet,        path: '/wallet' },
+  { label: tr('Notifications'),  Icon: Bell,          path: '/notifications' },
+  { label: tr('Support'),        Icon: HelpCircle,    path: '/support' },
 ]
 
 const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
@@ -44,6 +45,8 @@ const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
 interface NotifItem {
   id: string
   title: string
+  title_en?: string | null
+  body_en?: string | null
   body: string
   type: string
   read: boolean
@@ -97,7 +100,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
     setLoading(true)
     const { data } = await supabase
       .from('notifications')
-      .select('id, title, body, type, read, created_at')
+      .select('id, title, body, title_en, body_en, type, read, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(5)
@@ -127,8 +130,8 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
             <Bell className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-bold text-sm">Notifications</p>
-            {unread > 0 && <p className="text-xs text-muted-foreground">{unread} non lue{unread > 1 ? 's' : ''}</p>}
+            <p className="font-bold text-sm">{tr('Notifications')}</p>
+            {unread > 0 && <p className="text-xs text-muted-foreground">{unread}{' '}{tr('non lue')}{unread > 1 ? 's' : ''}</p>}
           </div>
         </div>
 
@@ -140,7 +143,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
           ) : notifs.length === 0 ? (
             <div className="p-8 text-center">
               <Bell className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground font-medium">Aucune notification</p>
+              <p className="text-sm text-muted-foreground font-medium">{tr('Aucune notification')}</p>
             </div>
           ) : (
             notifs.map((n) => (
@@ -152,8 +155,8 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
                   <NotifIcon type={n.type} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold leading-tight truncate">{n.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.body}</p>
+                  <p className="text-sm font-semibold leading-tight truncate">{pickLocalized(n.title, n.title_en)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{pickLocalized(n.body, n.body_en)}</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-1 flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {formatDistanceToNow(new Date(n.created_at), {
@@ -177,7 +180,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
             className="block w-full text-center rounded-xl py-2.5 text-sm font-bold text-white"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
-            Voir toutes les notifications
+            {tr('Voir toutes les notifications')}
           </Link>
         </div>
       </PopoverContent>
@@ -212,7 +215,7 @@ function ProfileMenu() {
             <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">{initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="font-bold text-sm truncate">{profile?.full_name || 'Client'}</p>
+            <p className="font-bold text-sm truncate">{profile?.full_name || tr('Client')}</p>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
           </div>
         </div>
@@ -224,7 +227,7 @@ function ProfileMenu() {
           </DropdownMenuItem>
           <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/profile')}>
             <Settings className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium text-sm">Paramètres du compte</span>
+            <span className="font-medium text-sm">{tr('Paramètres du compte')}</span>
           </DropdownMenuItem>
           <DropdownMenuItem className="rounded-xl cursor-pointer px-3 py-2.5 gap-3" onClick={() => navigate('/activity-log')}>
             <Activity className="h-4 w-4 text-muted-foreground" />
@@ -240,7 +243,7 @@ function ProfileMenu() {
               onSelect={() => { void requestInstall() }}
             >
               <Download className="h-4 w-4 text-primary" />
-              <span className="font-medium text-sm">Installer l'application</span>
+              <span className="font-medium text-sm">{tr('Installer l\'application')}</span>
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator className="mx-2 my-1" />
@@ -249,7 +252,7 @@ function ProfileMenu() {
             onClick={() => signOut()}
           >
             <LogOut className="h-4 w-4" />
-            <span className="font-medium text-sm">Se déconnecter</span>
+            <span className="font-medium text-sm">{tr('Se déconnecter')}</span>
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>
@@ -303,13 +306,13 @@ function DesktopSidebar({ unread }: { unread: number }) {
           <KonvwaLogo size={32} />
           <div className="leading-none">
             <span className="font-bold text-base tracking-tight block">KONVWA</span>
-            <span className="text-[9px] text-muted-foreground uppercase tracking-widest">Importation Haïti</span>
+            <span className="text-[9px] text-muted-foreground uppercase tracking-widest">{tr('Importation Haïti')}</span>
           </div>
         </Link>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pt-4 pb-2 space-y-0.5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pb-2">Navigation</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pb-2">{tr('Navigation')}</p>
         {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
@@ -336,7 +339,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
         })}
 
         <div className="pt-4 pb-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pb-2">Actions</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pb-2">{tr('Actions')}</p>
           {SIDEBAR_EXTRAS.map((item) => {
             const isActive = location.pathname === item.path
             const isNotif = item.path === '/notifications'
@@ -372,13 +375,13 @@ function DesktopSidebar({ unread }: { unread: number }) {
             <AvatarFallback className="bg-slate-100 text-slate-700 text-xs font-bold">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate leading-none">{profile?.full_name || 'Client'}</p>
+            <p className="text-sm font-semibold truncate leading-none">{profile?.full_name || tr('Client')}</p>
             <p className="text-[10px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
           </div>
           <button
             onClick={() => signOut()}
             className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors text-muted-foreground"
-            title="Se déconnecter"
+            title={tr('Se déconnecter')}
           >
             <LogOut className="h-3.5 w-3.5" />
           </button>

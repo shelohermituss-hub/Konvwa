@@ -12,6 +12,7 @@ import {
   Package, ImagePlus, X, Truck, FileText, Zap,
 } from 'lucide-react'
 
+import { tr } from '@/lib/i18n'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ShippingOrigin {
@@ -35,21 +36,21 @@ interface HaitiCity {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { value: 'clothing',    label: 'Vêtements & accessoires' },
-  { value: 'electronics', label: 'Électronique / gadgets' },
-  { value: 'cosmetics',   label: 'Cosmétiques / beauté' },
-  { value: 'home',        label: 'Maison & cuisine' },
-  { value: 'toys',        label: 'Jouets' },
-  { value: 'auto',        label: 'Auto & moto' },
-  { value: 'sport',       label: 'Sport & loisirs' },
-  { value: 'other',       label: 'Autre' },
+  { value: 'clothing',    label: tr('Vêtements & accessoires') },
+  { value: 'electronics', label: tr('Électronique / gadgets') },
+  { value: 'cosmetics',   label: tr('Cosmétiques / beauté') },
+  { value: 'home',        label: tr('Maison & cuisine') },
+  { value: 'toys',        label: tr('Jouets') },
+  { value: 'auto',        label: tr('Auto & moto') },
+  { value: 'sport',       label: tr('Sport & loisirs') },
+  { value: 'other',       label: tr('Autre') },
 ]
 
 const STEPS = [
-  { label: 'Demande soumise',         sub: 'Votre produit est envoyé',         done: true  },
-  { label: 'Devis produit',           sub: 'Prix du produit sous 24h',         done: false },
-  { label: 'Mode d\'expédition',      sub: 'Frais de port & assurance',        done: false },
-  { label: 'Paiement & livraison',    sub: 'Paiement HTG via MonCash',         done: false },
+  { label: tr('Demande soumise'),         sub: tr('Votre produit est envoyé'),         done: true  },
+  { label: tr('Devis produit'),           sub: tr('Prix du produit sous 24h'),         done: false },
+  { label: tr('Mode d\'expédition'),      sub: tr('Frais de port & assurance'),        done: false },
+  { label: tr('Paiement & livraison'),    sub: tr('Paiement HTG via MonCash'),         done: false },
 ]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ export function SubmitPage() {
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image trop lourde (max 5 MB).'); return }
+    if (file.size > 5 * 1024 * 1024) { toast.error(tr('Image trop lourde (max 5 MB).')); return }
     setImageFile(file)
     const reader = new FileReader()
     reader.onload = (ev) => setImagePreview(ev.target?.result as string)
@@ -191,17 +192,17 @@ export function SubmitPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
-    if (!productName.trim()) { toast.error('Le nom du produit est requis.');         return }
-    if (!category)           { toast.error('La catégorie est requise.');              return }
-    if (!shipFromId)         { toast.error("Sélectionnez l'origine d'expédition.");  return }
-    if (!regionId)           { toast.error('Sélectionnez la région de destination.'); return }
+    if (!productName.trim()) { toast.error(tr('Le nom du produit est requis.'));         return }
+    if (!category)           { toast.error(tr('La catégorie est requise.'));              return }
+    if (!shipFromId)         { toast.error(tr('Sélectionnez l\'origine d\'expédition.'));  return }
+    if (!regionId)           { toast.error(tr('Sélectionnez la région de destination.')); return }
 
     setSubmitting(true)
 
     let imageUrl: string | null = null
     if (imageFile) {
       imageUrl = await uploadProductImage(imageFile, user.id)
-      if (!imageUrl) toast.warning('Image non uploadée, mais la demande sera soumise.')
+      if (!imageUrl) toast.warning(tr('Image non uploadée, mais la demande sera soumise.'))
     }
 
     const { error } = await supabase.from('product_requests').insert({
@@ -227,7 +228,7 @@ export function SubmitPage() {
     })
 
     if (error) {
-      toast.error('Erreur lors de la soumission.')
+      toast.error(tr('Erreur lors de la soumission.'))
     } else {
       setSuccess(true)
     }
@@ -242,10 +243,9 @@ export function SubmitPage() {
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 mx-auto mb-5">
             <CheckCircle2 className="h-10 w-10 text-emerald-500" />
           </div>
-          <h2 className="text-xl font-bold mb-2">Demande envoyée !</h2>
+          <h2 className="text-xl font-bold mb-2">{tr('Demande envoyée !')}</h2>
           <p className="text-sm text-muted-foreground mb-6">
-            Notre équipe analyse votre demande et vous enverra un devis sous 24h.
-            Vous pourrez ensuite choisir votre mode d'expédition.
+            {tr('Notre équipe analyse votre demande et vous enverra un devis sous 24h. Vous pourrez ensuite choisir votre mode d\'expédition.')}
           </p>
           <div className="flex flex-col gap-3">
             <button
@@ -253,13 +253,13 @@ export function SubmitPage() {
               className="w-full rounded-xl py-3 text-sm font-bold text-white hover:opacity-90 transition-opacity"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
-              Suivre ma demande
+              {tr('Suivre ma demande')}
             </button>
             <button
               onClick={() => { setSuccess(false); resetForm() }}
               className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold hover:bg-gray-50 transition-colors"
             >
-              Nouvelle demande
+              {tr('Nouvelle demande')}
             </button>
           </div>
         </div>
@@ -271,9 +271,9 @@ export function SubmitPage() {
   return (
     <div className="min-h-full bg-[#F4F5F7]">
       <div className="px-5 pt-5 pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Demande de devis</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tr('Demande de devis')}</h1>
         <p className="text-sm text-muted-foreground">
-          Renseignez le produit — notre équipe vous envoie le prix sous 24h
+          {tr('Renseignez le produit — notre équipe vous envoie le prix sous 24h')}
         </p>
       </div>
 
@@ -286,17 +286,17 @@ export function SubmitPage() {
             {/* ── Section: Le produit ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-4">
-                <SectionHeader icon={Package} label="Le produit" />
+                <SectionHeader icon={Package} label={tr('Le produit')} />
 
                 {/* URL */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <Label className="text-sm font-bold">Lien produit</Label>
+                    <Label className="text-sm font-bold">{tr('Lien produit')}</Label>
                     <span className="text-xs text-muted-foreground">(Alibaba · Shein · Temu)</span>
                   </div>
                   <Input
                     type="url"
-                    placeholder="Colle le lien ici"
+                    placeholder={tr('Colle le lien ici')}
                     value={productUrl}
                     onChange={e => setProductUrl(e.target.value)}
                     className="h-12 rounded-2xl bg-[#F0F1F5] border-0 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
@@ -308,7 +308,7 @@ export function SubmitPage() {
                       </span>
                       <a href={productUrl} target="_blank" rel="noopener noreferrer"
                         className="text-xs text-primary hover:underline flex items-center gap-1">
-                        Voir <ExternalLink className="h-3 w-3" />
+                        {tr('Voir')}{' '}<ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
                   )}
@@ -317,10 +317,10 @@ export function SubmitPage() {
                 {/* Nom */}
                 <div className="space-y-1">
                   <Label className="text-sm font-bold">
-                    Nom du produit <span className="text-destructive">*</span>
+                    {tr('Nom du produit')}{' '}<span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    placeholder="Ex : Robe d'été fleurie taille M"
+                    placeholder={tr('Ex : Robe d\'été fleurie taille M')}
                     value={productName}
                     onChange={e => setProductName(e.target.value)}
                     className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40"
@@ -331,11 +331,11 @@ export function SubmitPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-sm font-bold">
-                      Catégorie <span className="text-destructive">*</span>
+                      {tr('Catégorie')}{' '}<span className="text-destructive">*</span>
                     </Label>
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
-                        <SelectValue placeholder="Choisir" />
+                        <SelectValue placeholder={tr('Choisir')} />
                       </SelectTrigger>
                       <SelectContent>
                         {CATEGORIES.map(c => (
@@ -346,7 +346,7 @@ export function SubmitPage() {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-sm font-bold">
-                      Quantité <span className="text-destructive">*</span>
+                      {tr('Quantité')}{' '}<span className="text-destructive">*</span>
                     </Label>
                     <Input
                       type="number" inputMode="numeric" min="1" step="1"
@@ -359,7 +359,7 @@ export function SubmitPage() {
                 {/* Prix indicatif */}
                 <div className="space-y-1">
                   <Label className="text-sm font-bold">
-                    Prix affiché sur la plateforme{' '}
+                    {tr('Prix affiché sur la plateforme')}{' '}
                     <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
                   </Label>
                   <div className="relative">
@@ -373,7 +373,7 @@ export function SubmitPage() {
                     />
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Aide notre équipe à établir le devis plus vite. Non obligatoire.
+                    {tr('Aide notre équipe à établir le devis plus vite. Non obligatoire.')}
                   </p>
                 </div>
               </div>
@@ -382,21 +382,21 @@ export function SubmitPage() {
             {/* ── Section: Origine & destination ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-4">
-                <SectionHeader icon={Truck} label="Origine & destination" />
+                <SectionHeader icon={Truck} label={tr('Origine & destination')} />
 
                 {/* Expédier depuis */}
                 <div className="space-y-1">
                   <Label className="text-sm font-bold">
-                    Expédier depuis <span className="text-destructive">*</span>
+                    {tr('Expédier depuis')}{' '}<span className="text-destructive">*</span>
                   </Label>
                   <Select value={shipFromId} onValueChange={setShipFromId}>
                     <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
-                      <SelectValue placeholder="Sélectionner une origine" />
+                      <SelectValue placeholder={tr('Sélectionner une origine')} />
                     </SelectTrigger>
                     <SelectContent>
                       {origins.map(o => (
                         <SelectItem key={o.id} value={o.id}>
-                          {o.flag_emoji} {o.name}
+                          {o.flag_emoji} {tr(o.name)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -405,12 +405,12 @@ export function SubmitPage() {
 
                 {/* Destination fixe */}
                 <div className="space-y-1">
-                  <Label className="text-sm font-bold">Destination</Label>
+                  <Label className="text-sm font-bold">{tr('Destination')}</Label>
                   <div className="h-12 rounded-2xl bg-[#F0F1F5] flex items-center px-4 gap-2.5">
                     <span className="text-lg leading-none">🇭🇹</span>
-                    <span className="text-sm font-semibold text-foreground">Haïti</span>
+                    <span className="text-sm font-semibold text-foreground">{tr('Haïti')}</span>
                     <span className="ml-auto rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5">
-                      Disponible
+                      {tr('Disponible')}
                     </span>
                   </div>
                 </div>
@@ -418,15 +418,15 @@ export function SubmitPage() {
                 {/* Région */}
                 <div className="space-y-1">
                   <Label className="text-sm font-bold">
-                    Région <span className="text-destructive">*</span>
+                    {tr('Région')}{' '}<span className="text-destructive">*</span>
                   </Label>
                   <Select value={regionId} onValueChange={handleRegionChange}>
                     <SelectTrigger className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus:ring-1 focus:ring-primary/40">
-                      <SelectValue placeholder="Sélectionner une région" />
+                      <SelectValue placeholder={tr('Sélectionner une région')} />
                     </SelectTrigger>
                     <SelectContent>
                       {regions.map(r => (
-                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                        <SelectItem key={r.id} value={r.id}>{tr(r.name)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -435,7 +435,7 @@ export function SubmitPage() {
                 {/* Ville */}
                 <div className="space-y-1">
                   <Label className="text-sm font-bold">
-                    Ville{' '}
+                    {tr('Ville')}{' '}
                     <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
                   </Label>
                   <Select
@@ -447,16 +447,16 @@ export function SubmitPage() {
                       <SelectValue
                         placeholder={
                           !regionId
-                            ? "Sélectionner d'abord une région"
+                            ? tr('Sélectionner d\'abord une région')
                             : loadingCities
-                            ? 'Chargement…'
-                            : 'Toutes les villes'
+                            ? tr('Chargement…')
+                            : tr('Toutes les villes')
                         }
                       />
                     </SelectTrigger>
                     <SelectContent>
                       {cities.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        <SelectItem key={c.id} value={c.id}>{tr(c.name)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -467,9 +467,9 @@ export function SubmitPage() {
             {/* ── Section: Option d'expédition ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-3">
-                <SectionHeader icon={Truck} label="Option d'expédition" />
+                <SectionHeader icon={Truck} label={tr('Option d\'expédition')} />
                 <p className="text-xs text-muted-foreground">
-                  Choisissez comment vous souhaitez recevoir votre devis.
+                  {tr('Choisissez comment vous souhaitez recevoir votre devis.')}
                 </p>
                 <div className="grid grid-cols-1 gap-3">
                   {/* Tout inclus */}
@@ -495,9 +495,9 @@ export function SubmitPage() {
                         )}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-foreground">Tout inclus</p>
+                        <p className="text-sm font-bold text-foreground">{tr('Tout inclus')}</p>
                         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                          Un seul devis avec produit, expédition, douane et livraison. Vous payez une fois.
+                          {tr('Un seul devis avec produit, expédition, douane et livraison. Vous payez une fois.')}
                         </p>
                       </div>
                     </div>
@@ -526,9 +526,9 @@ export function SubmitPage() {
                         )}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-foreground">Expédition séparée</p>
+                        <p className="text-sm font-bold text-foreground">{tr('Expédition séparée')}</p>
                         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                          Devis produit uniquement. Quand votre colis arrive en entrepôt Chine, vous choisissez vous-même le mode d'expédition.
+                          {tr('Devis produit uniquement. Quand votre colis arrive en entrepôt Chine, vous choisissez vous-même le mode d\'expédition.')}
                         </p>
                       </div>
                     </div>
@@ -540,14 +540,14 @@ export function SubmitPage() {
             {/* ── Section: Photo & variantes ── */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5 space-y-4">
-                <SectionHeader icon={ImagePlus} label="Photo & variantes" />
+                <SectionHeader icon={ImagePlus} label={tr('Photo & variantes')} />
 
                 {/* Image upload */}
                 {imagePreview ? (
                   <div className="relative rounded-2xl overflow-hidden border border-gray-100">
                     <img
                       src={imagePreview}
-                      alt="Aperçu"
+                      alt={tr('Aperçu')}
                       className="w-full max-h-52 object-contain bg-gray-50"
                     />
                     <button
@@ -570,9 +570,9 @@ export function SubmitPage() {
                   >
                     <ImagePlus className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
                     <p className="text-sm font-semibold text-muted-foreground">
-                      Capture d'écran du produit
+                      {tr('Capture d\'écran du produit')}
                     </p>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">JPG, PNG, WEBP · max 5 MB</p>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">{tr('JPG, PNG, WEBP · max 5 MB')}</p>
                   </div>
                 )}
                 <input
@@ -587,7 +587,7 @@ export function SubmitPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-sm font-bold">
-                      Taille <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                      {tr('Taille')}{' '}<span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
                     </Label>
                     <Input
                       placeholder="M, L, XL…"
@@ -598,10 +598,10 @@ export function SubmitPage() {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-sm font-bold">
-                      Couleur <span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
+                      {tr('Couleur')}{' '}<span className="text-xs font-normal text-muted-foreground">(optionnel)</span>
                     </Label>
                     <Input
-                      placeholder="Noir, Blanc…"
+                      placeholder={tr('Noir, Blanc…')}
                       value={color}
                       onChange={e => setColor(e.target.value)}
                       className="h-12 rounded-2xl bg-[#F0F1F5] border-0 focus-visible:ring-1 focus-visible:ring-primary/40"
@@ -620,8 +620,8 @@ export function SubmitPage() {
                 style={{ height: '52px', background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
               >
                 {submitting
-                  ? <><Loader2 className="h-4 w-4 animate-spin" />Envoi en cours…</>
-                  : <><SendHorizonal className="h-4 w-4" />Demander le devis</>
+                  ? <><Loader2 className="h-4 w-4 animate-spin" />{tr('Envoi en cours…')}</>
+                  : <><SendHorizonal className="h-4 w-4" />{tr('Demander le devis')}</>
                 }
               </button>
             </div>
@@ -636,7 +636,7 @@ export function SubmitPage() {
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="h-4 w-4 text-primary" />
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
-                    Récapitulatif
+                    {tr('Récapitulatif')}
                   </p>
                 </div>
 
@@ -647,11 +647,11 @@ export function SubmitPage() {
                       <Package className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Produit</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">{tr('Produit')}</p>
                       {productName ? (
                         <p className="text-sm font-semibold text-foreground leading-tight truncate">{productName}</p>
                       ) : (
-                        <p className="text-sm text-muted-foreground/40 italic">Non renseigné</p>
+                        <p className="text-sm text-muted-foreground/40 italic">{tr('Non renseigné')}</p>
                       )}
                       {(category || qty > 1) && (
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -668,12 +668,12 @@ export function SubmitPage() {
                         <Truck className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Trajet</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">{tr('Trajet')}</p>
                         <p className="text-sm font-semibold text-foreground leading-tight">
                           {origins.find(o => o.id === shipFromId)?.flag_emoji}{' '}
                           {origins.find(o => o.id === shipFromId)?.name || '…'}
                           {' → 🇭🇹 '}
-                          {regions.find(r => r.id === regionId)?.name || 'Haïti'}
+                          {regions.find(r => r.id === regionId)?.name || tr('Haïti')}
                           {cities.find(c => c.id === cityId) ? ` · ${cities.find(c => c.id === cityId)!.name}` : ''}
                         </p>
                       </div>
@@ -686,14 +686,14 @@ export function SubmitPage() {
                       <Truck className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Expédition</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">{tr('Expédition')}</p>
                       <p className="text-sm font-semibold text-foreground">
-                        {shippingOption === 'all_inclusive' ? 'Tout inclus' : 'Séparée'}
+                        {shippingOption === 'all_inclusive' ? tr('Tout inclus') : tr('Séparée')}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {shippingOption === 'all_inclusive'
-                          ? 'Devis complet avec tous les frais'
-                          : 'Choix du mode à l\'entrepôt Chine'}
+                          ? tr('Devis complet avec tous les frais')
+                          : tr('Choix du mode à l\'entrepôt Chine')}
                       </p>
                     </div>
                   </div>
@@ -705,7 +705,7 @@ export function SubmitPage() {
                         <Zap className="h-4 w-4 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Prix affiché</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">{tr('Prix affiché')}</p>
                         <p className="text-sm font-bold text-foreground">
                           ${price.toFixed(2)}{qty > 1 ? <span className="font-normal text-muted-foreground"> × {qty}</span> : null}
                         </p>
@@ -716,9 +716,9 @@ export function SubmitPage() {
 
                 {/* Info box */}
                 <div className="rounded-xl bg-primary/5 border border-primary/10 px-4 py-3 mb-5">
-                  <p className="text-[11px] font-semibold text-primary mb-1">Devis sous 24h</p>
+                  <p className="text-[11px] font-semibold text-primary mb-1">{tr('Devis sous 24h')}</p>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Notre équipe vérifie la disponibilité du produit et vous envoie le prix définitif. Vous choisissez ensuite votre mode d'expédition.
+                    {tr('Notre équipe vérifie la disponibilité du produit et vous envoie le prix définitif. Vous choisissez ensuite votre mode d\'expédition.')}
                   </p>
                 </div>
               </div>
@@ -734,8 +734,8 @@ export function SubmitPage() {
                   style={{ background: canSubmit ? 'linear-gradient(135deg, #F05A28, #D44E21)' : '#d1d5db' }}
                 >
                   {submitting
-                    ? <><Loader2 className="h-4 w-4 animate-spin" />Envoi en cours…</>
-                    : <><SendHorizonal className="h-4 w-4" />Demander le devis</>
+                    ? <><Loader2 className="h-4 w-4 animate-spin" />{tr('Envoi en cours…')}</>
+                    : <><SendHorizonal className="h-4 w-4" />{tr('Demander le devis')}</>
                   }
                 </button>
               </div>
@@ -745,7 +745,7 @@ export function SubmitPage() {
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
               <div className="px-5 pt-5 pb-5">
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-4">
-                  Comment ça marche
+                  {tr('Comment ça marche')}
                 </p>
                 <div className="relative">
                   {/* Vertical line */}

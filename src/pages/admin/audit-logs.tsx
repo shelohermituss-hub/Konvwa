@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface AuditRow {
   id: string
   actor_id: string | null
@@ -22,40 +23,40 @@ type Change = { from: string | null; to: string | null }
 const PAGE_SIZE = 20
 
 const RESOURCES: { value: string; label: string }[] = [
-  { value: 'all', label: 'Tout' },
-  { value: 'wallet_transactions', label: 'Dépôts' },
-  { value: 'wallets', label: 'Portefeuilles' },
-  { value: 'orders', label: 'Commandes' },
-  { value: 'product_requests', label: 'Demandes' },
-  { value: 'shipments', label: 'Expéditions' },
-  { value: 'profiles', label: 'Rôles' },
+  { value: 'all', label: tr('Tout') },
+  { value: 'wallet_transactions', label: tr('Dépôts') },
+  { value: 'wallets', label: tr('Portefeuilles') },
+  { value: 'orders', label: tr('Commandes') },
+  { value: 'product_requests', label: tr('Demandes') },
+  { value: 'shipments', label: tr('Expéditions') },
+  { value: 'profiles', label: tr('Rôles') },
 ]
 
 const RESOURCE_LABEL: Record<string, string> = {
-  wallet_transactions: 'Transaction',
-  wallets: 'Portefeuille',
-  orders: 'Commande',
-  product_requests: 'Demande',
-  shipments: 'Expédition',
-  profiles: 'Utilisateur',
+  wallet_transactions: tr('Transaction'),
+  wallets: tr('Portefeuille'),
+  orders: tr('Commande'),
+  product_requests: tr('Demande'),
+  shipments: tr('Expédition'),
+  profiles: tr('Utilisateur'),
 }
 
 const FIELD_LABEL: Record<string, string> = {
-  role: 'Rôle',
-  status: 'Statut',
-  payment_status: 'Paiement',
-  available_balance: 'Solde disponible',
-  blocked_balance: 'Solde bloqué',
-  paid_amount_htg: 'Montant payé',
-  quoted_amount_htg: 'Montant du devis',
-  shipment_id: 'Expédition assignée',
+  role: tr('Rôle'),
+  status: tr('Statut'),
+  payment_status: tr('Paiement'),
+  available_balance: tr('Solde disponible'),
+  blocked_balance: tr('Solde bloqué'),
+  paid_amount_htg: tr('Montant payé'),
+  quoted_amount_htg: tr('Montant du devis'),
+  shipment_id: tr('Expédition assignée'),
 }
 
 const MONEY_FIELDS = new Set(['available_balance', 'blocked_balance', 'paid_amount_htg', 'quoted_amount_htg'])
 const BADGE_FIELDS = new Set(['status', 'payment_status'])
 const STAFF_ROLES = ['admin', 'manager', 'agent']
 
-const ROLE_LABEL: Record<string, string> = { admin: 'Admin', manager: 'Manager', agent: 'Agent', client: 'Client' }
+const ROLE_LABEL: Record<string, string> = { admin: 'Admin', manager: 'Manager', agent: 'Agent', client: tr('Client') }
 const ROLE_BADGE: Record<string, string> = {
   admin: 'bg-destructive/10 text-destructive',
   manager: 'bg-primary/10 text-primary',
@@ -79,14 +80,14 @@ function formatValue(field: string, value: string | null) {
   }
   if (MONEY_FIELDS.has(field)) {
     const n = Number(value)
-    return <span className="font-semibold tabular-nums">{Number.isFinite(n) ? n.toLocaleString('fr-HT') : value} HTG</span>
+    return <span className="font-semibold tabular-nums">{Number.isFinite(n) ? n.toLocaleString(LOCALE_TAG) : value} HTG</span>
   }
   if (field === 'shipment_id') return <span className="font-mono text-xs">{value.slice(0, 8)}</span>
   return <span>{value}</span>
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('fr-FR', {
+  return new Date(iso).toLocaleString(DATE_LOCALE, {
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 }
@@ -149,9 +150,9 @@ export function AdminAuditLogsPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Journal d'audit</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tr('Journal d\'audit')}</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Chaque changement de rôle, de solde ou de statut, avec son auteur. Ce journal ne peut ni être modifié ni être effacé.
+          {tr('Chaque changement de rôle, de solde ou de statut, avec son auteur. Ce journal ne peut ni être modifié ni être effacé.')}
         </p>
       </div>
 
@@ -180,15 +181,15 @@ export function AdminAuditLogsPage() {
             onChange={(e) => { setStaffOnly(e.target.checked); setPage(0) }}
             className="h-4 w-4 rounded border-gray-300 accent-[#F05A28]"
           />
-          Actions de l'équipe seulement (sans les clients)
+          {tr('Actions de l\'équipe seulement (sans les clients)')}
         </label>
       </div>
 
       {error ? (
         <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center text-sm text-destructive">
-          Impossible de charger le journal.
+          {tr('Impossible de charger le journal.')}
           <div className="mt-3">
-            <Button variant="outline" size="sm" onClick={() => void load()}>Réessayer</Button>
+            <Button variant="outline" size="sm" onClick={() => void load()}>{tr('Réessayer')}</Button>
           </div>
         </div>
       ) : loading ? (
@@ -198,15 +199,15 @@ export function AdminAuditLogsPage() {
       ) : rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-12 text-center">
           <ScrollText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
-          <p className="font-semibold text-muted-foreground">Aucune entrée</p>
-          <p className="mt-1 text-xs text-muted-foreground/70">Les prochaines actions apparaîtront ici.</p>
+          <p className="font-semibold text-muted-foreground">{tr('Aucune entrée')}</p>
+          <p className="mt-1 text-xs text-muted-foreground/70">{tr('Les prochaines actions apparaîtront ici.')}</p>
         </div>
       ) : (
         <ul className="space-y-3">
           {rows.map((r) => {
             const changes = Object.entries(r.details ?? {}).filter((entry): entry is [string, Change] => isChange(entry[1]))
             const owner = typeof r.details?.owner_user_id === 'string' ? names[r.details.owner_user_id] : null
-            const actor = r.actor_id ? names[r.actor_id] ?? 'Utilisateur inconnu' : 'Système'
+            const actor = r.actor_id ? names[r.actor_id] ?? tr('Utilisateur inconnu') : tr('Système')
             return (
               <li key={r.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -251,11 +252,11 @@ export function AdminAuditLogsPage() {
       {!error && total > PAGE_SIZE && (
         <div className="flex items-center justify-between">
           <Button variant="outline" size="sm" disabled={page === 0 || loading} onClick={() => setPage((p) => p - 1)} className="gap-1 rounded-xl">
-            <ChevronLeft className="h-4 w-4" /> Précédent
+            <ChevronLeft className="h-4 w-4" />{' '}{tr('Précédent')}
           </Button>
-          <span className="text-xs text-muted-foreground">Page {page + 1} / {pageCount} · {total} entrées</span>
+          <span className="text-xs text-muted-foreground">{tr('Page')}{' '}{page + 1} / {pageCount} · {total}{' '}{tr('entrées')}</span>
           <Button variant="outline" size="sm" disabled={page + 1 >= pageCount || loading} onClick={() => setPage((p) => p + 1)} className="gap-1 rounded-xl">
-            Suivant <ChevronRight className="h-4 w-4" />
+            {tr('Suivant')}{' '}<ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       )}

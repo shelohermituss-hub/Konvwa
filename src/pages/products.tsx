@@ -9,6 +9,7 @@ import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
 import { ProductCard } from '@/components/shared/product-card'
 import { CATALOG_LIST_SELECT, type CatalogProduct } from '@/lib/catalog'
 
+import { tr } from '@/lib/i18n'
 export function ProductsPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
@@ -105,7 +106,7 @@ export function ProductsPage() {
               )}
             >
               <Tag className="h-3 w-3" />
-              {cat}
+              {tr(cat)}
             </button>
           ))}
         </div>
@@ -116,7 +117,7 @@ export function ProductsPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 className="h-7 w-7 animate-spin text-primary/60" />
-            <p className="text-sm text-muted-foreground">Chargement…</p>
+            <p className="text-sm text-muted-foreground">{tr('Chargement…')}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2">

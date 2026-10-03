@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface AdminOrder {
   id: string
   tracking_code: string
@@ -28,32 +29,32 @@ interface AdminOrder {
 }
 
 const ORDER_STATUSES = [
-  { value: 'draft',              label: 'Brouillon' },
-  { value: 'quote_sent',        label: 'Devis envoyé' },
-  { value: 'quote_accepted',    label: 'Devis accepté' },
-  { value: 'awaiting_payment',  label: 'En attente de paiement' },
-  { value: 'paid',              label: 'Payé' },
-  { value: 'purchasing',        label: 'En achat' },
-  { value: 'in_china_warehouse',label: 'Entrepôt Chine' },
-  { value: 'shipped',           label: 'Expédié' },
-  { value: 'in_transit',        label: 'En transit' },
-  { value: 'arrived_haiti',     label: 'Arrivé en Haïti' },
-  { value: 'customs_processing',label: 'Dédouanement' },
-  { value: 'out_for_delivery',  label: 'En livraison' },
-  { value: 'delivered',         label: 'Livré' },
-  { value: 'closed',            label: 'Clôturé' },
-  { value: 'cancelled',         label: 'Annulé' },
+  { value: 'draft',              label: tr('Brouillon') },
+  { value: 'quote_sent',        label: tr('Devis envoyé') },
+  { value: 'quote_accepted',    label: tr('Devis accepté') },
+  { value: 'awaiting_payment',  label: tr('En attente de paiement') },
+  { value: 'paid',              label: tr('Payé') },
+  { value: 'purchasing',        label: tr('En achat') },
+  { value: 'in_china_warehouse',label: tr('Entrepôt Chine') },
+  { value: 'shipped',           label: tr('Expédié') },
+  { value: 'in_transit',        label: tr('En transit') },
+  { value: 'arrived_haiti',     label: tr('Arrivé en Haïti') },
+  { value: 'customs_processing',label: tr('Dédouanement') },
+  { value: 'out_for_delivery',  label: tr('En livraison') },
+  { value: 'delivered',         label: tr('Livré') },
+  { value: 'closed',            label: tr('Clôturé') },
+  { value: 'cancelled',         label: tr('Annulé') },
 ]
 
 const STATUS_FILTERS = [
-  { value: 'all',               label: 'Tous les statuts' },
-  { value: 'awaiting_payment',  label: 'En attente de paiement' },
-  { value: 'paid',              label: 'Payé' },
-  { value: 'purchasing',        label: 'En achat' },
-  { value: 'in_transit',        label: 'En transit' },
-  { value: 'arrived_haiti',     label: 'Arrivé' },
-  { value: 'delivered',         label: 'Livrées' },
-  { value: 'cancelled',         label: 'Annulées' },
+  { value: 'all',               label: tr('Tous les statuts') },
+  { value: 'awaiting_payment',  label: tr('En attente de paiement') },
+  { value: 'paid',              label: tr('Payé') },
+  { value: 'purchasing',        label: tr('En achat') },
+  { value: 'in_transit',        label: tr('En transit') },
+  { value: 'arrived_haiti',     label: tr('Arrivé') },
+  { value: 'delivered',         label: tr('Livrées') },
+  { value: 'cancelled',         label: tr('Annulées') },
 ]
 
 const PAGE_SIZE = 15
@@ -116,9 +117,9 @@ export function AdminOrdersPage() {
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', editOrder.id)
     if (error) {
-      toast.error('Erreur lors de la mise à jour du statut.')
+      toast.error(tr('Erreur lors de la mise à jour du statut.'))
     } else {
-      toast.success('Statut mis à jour.')
+      toast.success(tr('Statut mis à jour.'))
       setOrders(prev => prev.map(o => o.id === editOrder.id ? { ...o, status: newStatus } : o))
       setEditOrder(null)
     }
@@ -131,9 +132,9 @@ export function AdminOrdersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Gestion des commandes</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Gestion des commandes')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {loading ? '…' : `${filteredOrders.length} commande${filteredOrders.length !== 1 ? 's' : ''}`}
+            {loading ? '…' : tr('{0} commande{1}', filteredOrders.length, filteredOrders.length !== 1 ? 's' : '')}
           </p>
         </div>
       </div>
@@ -144,7 +145,7 @@ export function AdminOrdersPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher par client, code ou produit..."
+              placeholder={tr('Rechercher par client, code ou produit...')}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(0) }}
               className="pl-9 rounded-xl"
@@ -201,20 +202,20 @@ export function AdminOrdersPage() {
         ) : filteredOrders.length === 0 ? (
           <div className="p-12 text-center">
             <Package className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="font-semibold text-muted-foreground">Aucune commande trouvée</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Modifiez vos filtres de recherche</p>
+            <p className="font-semibold text-muted-foreground">{tr('Aucune commande trouvée')}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">{tr('Modifiez vos filtres de recherche')}</p>
           </div>
         ) : (
           <>
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground w-36">Code</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Client</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Produit</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Statut</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Montant</TableHead>
-                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Date</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground w-36">{tr('Code')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Client')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">{tr('Produit')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tr('Statut')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">{tr('Montant')}</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden sm:table-cell">{tr('Date')}</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -236,11 +237,11 @@ export function AdminOrdersPage() {
                       <StatusBadge status={order.status} />
                     </TableCell>
                     <TableCell className="text-right">
-                      <p className="font-semibold text-sm">{(order.quotes?.total ?? order.total_paid).toLocaleString()}</p>
+                      <p className="font-semibold text-sm">{(order.quotes?.total ?? order.total_paid).toLocaleString(LOCALE_TAG)}</p>
                       <p className="text-[10px] text-muted-foreground">HTG</p>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
-                      {new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {new Date(order.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -251,16 +252,16 @@ export function AdminOrdersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-xl w-48">
                           <DropdownMenuItem className="rounded-lg cursor-pointer">
-                            <Eye className="mr-2 h-4 w-4" />Voir les détails
+                            <Eye className="mr-2 h-4 w-4" />{tr('Voir les détails')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="rounded-lg cursor-pointer"
                             onClick={() => { setEditOrder(order); setNewStatus(order.status) }}
                           >
-                            <Edit className="mr-2 h-4 w-4" />Modifier le statut
+                            <Edit className="mr-2 h-4 w-4" />{tr('Modifier le statut')}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg cursor-pointer">
-                            <MessageSquare className="mr-2 h-4 w-4" />Envoyer un message
+                            <MessageSquare className="mr-2 h-4 w-4" />{tr('Envoyer un message')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -268,10 +269,10 @@ export function AdminOrdersPage() {
                             onClick={async () => {
                               await supabase.from('orders').update({ status: 'cancelled' }).eq('id', order.id)
                               setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'cancelled' } : o))
-                              toast.success('Commande annulée.')
+                              toast.success(tr('Commande annulée.'))
                             }}
                           >
-                            <Ban className="mr-2 h-4 w-4" />Annuler
+                            <Ban className="mr-2 h-4 w-4" />{tr('Annuler')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -285,7 +286,7 @@ export function AdminOrdersPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
                 <p className="text-xs text-muted-foreground">
-                  {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredOrders.length)} sur {filteredOrders.length}
+                  {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredOrders.length)}{' '}{tr('sur')}{' '}{filteredOrders.length}
                 </p>
                 <div className="flex items-center gap-1">
                   <Button
@@ -328,20 +329,20 @@ export function AdminOrdersPage() {
       <Dialog open={!!editOrder} onOpenChange={(open) => { if (!open) setEditOrder(null) }}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Modifier le statut</DialogTitle>
+            <DialogTitle>{tr('Modifier le statut')}</DialogTitle>
             <DialogDescription>
-              Commande <span className="font-mono font-semibold">{editOrder?.tracking_code}</span>
+              {tr('Commande')}{' '}<span className="font-mono font-semibold">{editOrder?.tracking_code}</span>
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-3">
             <div>
-              <Label className="text-sm font-semibold">Statut actuel</Label>
+              <Label className="text-sm font-semibold">{tr('Statut actuel')}</Label>
               <div className="mt-2">
                 {editOrder && <StatusBadge status={editOrder.status} />}
               </div>
             </div>
             <div>
-              <Label className="text-sm font-semibold">Nouveau statut</Label>
+              <Label className="text-sm font-semibold">{tr('Nouveau statut')}</Label>
               <Select value={newStatus} onValueChange={setNewStatus}>
                 <SelectTrigger className="mt-2 rounded-xl">
                   <SelectValue />
@@ -355,9 +356,9 @@ export function AdminOrdersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOrder(null)} className="rounded-xl">Annuler</Button>
+            <Button variant="outline" onClick={() => setEditOrder(null)} className="rounded-xl">{tr('Annuler')}</Button>
             <Button onClick={handleStatusUpdate} disabled={saving || newStatus === editOrder?.status} className="rounded-xl">
-              {saving ? 'Enregistrement…' : 'Enregistrer'}
+              {saving ? tr('Enregistrement…') : tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
