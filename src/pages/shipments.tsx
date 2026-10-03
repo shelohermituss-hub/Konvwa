@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Package, MapPin, ChevronUp, Plus, Loader2, Copy, Check,
-  Tag, Building2, AlertCircle, ChevronRight,
+  Tag, AlertCircle, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -471,38 +471,8 @@ function QuoteRequestSheet({
             </div>
             )}
 
-            {/* ── Suggested warehouse ── */}
-            {selectedWarehouse && (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 overflow-hidden">
-                <div className="px-4 py-3 flex items-center gap-2.5 border-b border-amber-200">
-                  <Building2 className="h-4 w-4 text-amber-700 shrink-0" />
-                  <div>
-                    <p className="text-sm font-bold text-foreground">Adresse de l'entrepôt</p>
-                    <p className="text-xs text-amber-700">{selectedWarehouse.code}</p>
-                  </div>
-                </div>
-                <div className="px-4 py-3 space-y-1">
-                  {selectedWarehouse.contact_info && (
-                    <p className="text-sm font-semibold">{selectedWarehouse.contact_info}</p>
-                  )}
-                  {[selectedWarehouse.address_line1, selectedWarehouse.address_line2, selectedWarehouse.address_line3].filter(Boolean).map((l, i) => (
-                    <p key={i} className="text-xs text-muted-foreground">{l}</p>
-                  ))}
-                  {[selectedWarehouse.city, selectedWarehouse.state, selectedWarehouse.postal_code].filter(Boolean).length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      {[selectedWarehouse.city, selectedWarehouse.state, selectedWarehouse.postal_code].filter(Boolean).join(', ')}
-                    </p>
-                  )}
-                  {selectedWarehouse.instructions && (
-                    <div className="mt-2 pt-2 border-t border-amber-200">
-                      <p className="text-[11px] text-amber-800 leading-relaxed whitespace-pre-line">
-                        {selectedWarehouse.instructions}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            {/* ── Suggested warehouse: same card as the "Adresses" list (full text + copy) ── */}
+            {selectedWarehouse && <WarehouseAddressCard wh={selectedWarehouse} />}
 
             {/* ── Optional estimates ── */}
             <div className="space-y-3">
