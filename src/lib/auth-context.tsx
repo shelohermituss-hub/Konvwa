@@ -155,15 +155,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signIn(email: string, password: string) {
+    // Temporary lockout after repeated failures (counted in the database, per e-mail)
+    const { data: locked } = await supabase.rpc('login_lock_seconds', { p_email: email })
+    if (typeof locked === 'number' && locked > 0) {
+      return { error: new Error(tr('Trop de tentatives. Réessayez dans {0} min.', Math.ceil(locked / 60))) }
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
 
     if (error) {
+      const { data: lockedNow } = await supabase.rpc('record_login_failure', { p_email: email })
+      if (typeof lockedNow === 'number' && lockedNow > 0) {
+        return { error: new Error(tr('Trop de tentatives. Réessayez dans {0} min.', Math.ceil(lockedNow / 60))) }
+      }
       return { error: new Error(error.message) }
     }
 
+    void supabase.rpc('clear_login_failures')
     return { error: null }
   }
 

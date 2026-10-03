@@ -26,6 +26,11 @@ const INPUT = 'h-11 rounded-xl bg-muted border-transparent focus-visible:border-
 const CARD  = 'bg-white rounded-2xl border border-gray-100 shadow-sm'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
+const newPassword = z.string()
+  .min(10, tr('Minimum 10 caractères'))
+  .regex(/[a-zA-Z]/, tr('Ajoutez au moins une lettre'))
+  .regex(/\d/, tr('Ajoutez au moins un chiffre'))
+
 const loginSchema = z.object({
   email:    z.string().email(tr('Adresse e-mail invalide')),
   password: z.string().min(1, tr('Mot de passe requis')),
@@ -35,7 +40,7 @@ const registerSchema = z.object({
   fullName:        z.string().min(2, tr('Nom complet requis (min. 2 caractères)')),
   email:           z.string().email(tr('Adresse e-mail invalide')),
   phone:           z.string().optional(),
-  password:        z.string().min(6, tr('Minimum 6 caractères')),
+  password:        newPassword,
   confirmPassword: z.string(),
   acceptTerms:     z.boolean().refine((v) => v === true, { message: tr('Vous devez accepter les conditions') }),
 }).refine((d) => d.password === d.confirmPassword, {
@@ -48,7 +53,7 @@ const forgotSchema = z.object({
 })
 
 const resetSchema = z.object({
-  password:        z.string().min(6, tr('Minimum 6 caractères')),
+  password:        newPassword,
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, {
   message: tr('Les mots de passe ne correspondent pas'),
@@ -423,6 +428,7 @@ function RegisterView({ onSwitch }: { onSwitch: () => void }) {
               className={errors.password ? 'border-destructive' : ''}
             />
             {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
+            <p className="mt-1 text-xs text-muted-foreground">{tr('10 caractères minimum, avec des lettres et des chiffres.')}</p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="r-confirm" className="text-sm font-semibold">{tr('Confirmer')}</Label>
@@ -649,6 +655,7 @@ function ResetView({ onBack }: { onBack: () => void }) {
             className={errors.password ? 'border-destructive' : ''}
           />
           {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
+          <p className="mt-1 text-xs text-muted-foreground">{tr('10 caractères minimum, avec des lettres et des chiffres.')}</p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="rs-confirm" className="text-sm font-semibold">{tr('Confirmer le mot de passe')}</Label>

@@ -5,6 +5,7 @@ import { ADMIN_EN } from './en/admin.ts'
 import { WALLET_EN } from './en/wallet.ts'
 import { SERVER_EN } from './en/server.ts'
 import { DATA_EN } from './en/data.ts'
+import { SECURITY_EN } from './en/security.ts'
 
 export const EN: Record<string, string> = {
   ...PUBLIC_EN,
@@ -13,4 +14,5 @@ export const EN: Record<string, string> = {
   ...WALLET_EN,
   ...SERVER_EN,
   ...DATA_EN,
+  ...SECURITY_EN,
 }

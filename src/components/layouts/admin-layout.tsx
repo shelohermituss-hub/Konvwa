@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, Bell, BarChart3, FileText, Truck, PackageSearch, ScrollText } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { MfaGate } from '@/components/shared/mfa-gate'
 
 import { tr } from '@/lib/i18n'
 function AdminSidebar() {
@@ -114,6 +115,7 @@ function AdminTopBar() {
 
 export function AdminLayout() {
   return (
+    <MfaGate>
     <SidebarProvider>
       <AdminSidebar />
       <SidebarInset>
@@ -123,5 +125,6 @@ export function AdminLayout() {
         </main>
       </SidebarInset>
     </SidebarProvider>
+    </MfaGate>
   )
 }

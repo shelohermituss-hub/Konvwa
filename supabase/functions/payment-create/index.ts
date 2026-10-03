@@ -24,10 +24,16 @@ Deno.serve(async (req) => {
     )
     if (authError || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: CORS })
 
-    const { amount, method, wallet_id } = await req.json()
+    // Rate limit per user (see check_rate_limit in the database)
+    const { data: allowed } = await supabaseAdmin.rpc('check_rate_limit', { p_key: `payment-create:${user.id}`, p_max: 10, p_window_seconds: 600 })
+    if (allowed === false) {
+      return new Response(JSON.stringify({ error: 'Trop de requêtes, réessayez dans quelques minutes.' }), { status: 429, headers: { ...CORS, 'Retry-After': '600' } })
+    }
+
+    const { amount, method } = await req.json()
 
     // Validate input
-    if (!amount || amount < 20) return new Response(JSON.stringify({ error: 'Montant minimum 20 HTG' }), { status: 400, headers: CORS })
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount < 20 || amount > 1_000_000) return new Response(JSON.stringify({ error: 'Montant minimum 20 HTG' }), { status: 400, headers: CORS })
     if (!method || !['moncash', 'natcash'].includes(method)) return new Response(JSON.stringify({ error: 'Méthode invalide' }), { status: 400, headers: CORS })
 
     // Read payment settings (service role bypasses RLS)
@@ -35,6 +41,11 @@ Deno.serve(async (req) => {
     const cfg = Object.fromEntries((settings ?? []).map((s: { key: string; value: string }) => [s.key, s.value]))
 
     if (!cfg.payment_client_id) return new Response(JSON.stringify({ error: 'API paiement non configurée' }), { status: 503, headers: CORS })
+
+    // The wallet is always the caller's own (never trust a wallet id sent by the browser)
+    const { data: wallet } = await supabaseAdmin.from('wallets').select('id').eq('user_id', user.id).maybeSingle()
+    if (!wallet) return new Response(JSON.stringify({ error: 'Portefeuille introuvable' }), { status: 404, headers: CORS })
+    const wallet_id = wallet.id
 
     // Generate unique reference
     const timestamp = Date.now()

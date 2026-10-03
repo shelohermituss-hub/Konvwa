@@ -1,0 +1,23 @@
+// English translations for the security screens (MFA, password policy, login lockout)
+export const SECURITY_EN: Record<string, string> = {
+  'Code invalide ou expiré. Réessayez.': 'Invalid or expired code. Try again.',
+  'Vérification en deux étapes': 'Two-step verification',
+  'Sécurisez votre compte': 'Secure your account',
+  'La double authentification n\'est pas disponible pour le moment. Activez le TOTP (MFA) dans Supabase → Authentication.': 'Two-factor authentication is not available right now. Enable TOTP (MFA) in Supabase → Authentication.',
+  'Continuer sans': 'Continue without it',
+  'Se déconnecter': 'Sign out',
+  'Entrez le code à 6 chiffres de votre application d\'authentification.': 'Enter the 6-digit code from your authenticator app.',
+  'Les comptes de l\'équipe doivent utiliser une application d\'authentification (Google Authenticator, Authy, 1Password…). Scannez ce code, puis entrez le code à 6 chiffres.': 'Team accounts must use an authenticator app (Google Authenticator, Authy, 1Password…). Scan this code, then enter the 6-digit code.',
+  'Code QR à scanner': 'QR code to scan',
+  'Ou saisissez cette clé :': 'Or enter this key:',
+  'Code à 6 chiffres': '6-digit code',
+  'Valider': 'Confirm',
+  'Trop de tentatives. Réessayez dans {0} min.': 'Too many attempts. Try again in {0} min.',
+  'Minimum 10 caractères': 'At least 10 characters',
+  'Ajoutez au moins une lettre': 'Add at least one letter',
+  'Ajoutez au moins un chiffre': 'Add at least one digit',
+  '10 caractères minimum, avec des lettres et des chiffres.': 'At least 10 characters, with letters and digits.',
+  'Trop de requêtes, réessayez dans quelques minutes.': 'Too many requests, try again in a few minutes.',
+  'Alerte sécurité : changement de rôle': 'Security alert: role changed',
+  'Alerte sécurité : gros dépôt approuvé': 'Security alert: large deposit approved',
+}

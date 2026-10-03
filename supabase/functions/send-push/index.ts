@@ -56,6 +56,10 @@ serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
+    // The endpoint is public: cap how often a given recipient can be pushed
+    const { data: allowed } = await admin.rpc('check_rate_limit', { p_key: `send-push:${body.user_id}`, p_max: 30, p_window_seconds: 60 })
+    if (allowed === false) return json({ error: 'Too many requests' }, 429)
+
     // Only push what was really written to the notifications table (the endpoint is public)
     const { data: real } = await admin
       .from('notifications')

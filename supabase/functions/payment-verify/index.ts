@@ -22,6 +22,12 @@ Deno.serve(async (req) => {
     )
     if (authError || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: CORS })
 
+    // Rate limit per user (see check_rate_limit in the database)
+    const { data: allowed } = await supabaseAdmin.rpc('check_rate_limit', { p_key: `payment-verify:${user.id}`, p_max: 60, p_window_seconds: 600 })
+    if (allowed === false) {
+      return new Response(JSON.stringify({ error: 'Trop de requêtes, réessayez dans quelques minutes.' }), { status: 429, headers: { ...CORS, 'Retry-After': '600' } })
+    }
+
     const { reference_id } = await req.json()
     if (!reference_id) return new Response(JSON.stringify({ error: 'reference_id manquant' }), { status: 400, headers: CORS })
 
