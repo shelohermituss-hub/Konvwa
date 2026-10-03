@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { haptics } from '@/lib/haptic'
 import { Link, useNavigate } from 'react-router-dom'
+import { SetupReminder } from '@/components/shared/setup-reminder'
 import { ProductCard } from '@/components/shared/product-card'
 import { CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -254,6 +255,7 @@ export function DashboardPage() {
           SCROLLABLE PRODUCTS GRID
       ═══════════════════════════════════════════════════════════════════════ */}
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-28">
+        <div className="mb-3 empty:hidden"><SetupReminder /></div>
 
         {/* Section header */}
         <div className="flex items-center justify-between mb-3">

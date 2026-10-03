@@ -7,7 +7,8 @@ import { MfaGate } from '@/components/shared/mfa-gate'
 import { AdminLayout } from '@/components/layouts/admin-layout'
 
 // Guards
-import { AuthGuard } from '@/components/shared/auth-guard'
+import { SetupPage } from '@/pages/setup'
+import { AuthGuard, SetupGate } from '@/components/shared/auth-guard'
 import { AdminGuard, SuperAdminGuard } from '@/components/shared/auth-guard'
 import { HomeGuard } from '@/components/shared/home-guard'
 
@@ -101,13 +102,24 @@ export const router = createBrowserRouter([
     ],
   },
 
+  // Account setup (authenticated clients, once)
+  {
+    path: '/setup',
+    errorElement: <RouteError />,
+    element: (
+      <AuthGuard>
+        <MfaGate enroll={false}><SetupPage /></MfaGate>
+      </AuthGuard>
+    ),
+  },
+
   // Client routes (authenticated)
   {
     path: '/',
     errorElement: <RouteError />,
     element: (
       <AuthGuard>
-        <MfaGate enroll={false}><ClientLayout /></MfaGate>
+        <MfaGate enroll={false}><SetupGate><ClientLayout /></SetupGate></MfaGate>
       </AuthGuard>
     ),
     children: [

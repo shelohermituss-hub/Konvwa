@@ -18,6 +18,8 @@ interface Profile {
   avatar_url: string | null
   language?: 'fr' | 'en'
   is_reseller?: boolean
+  onboarding_completed_at?: string | null
+  onboarding_skipped?: string[]
 }
 
 interface AuthContextType {

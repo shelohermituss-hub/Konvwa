@@ -55,3 +55,11 @@ export function SuperAdminGuard({ children }: AdminGuardProps) {
   if (profile?.role !== 'admin') return <Navigate to="/admin" replace />
   return <>{children}</>
 }
+
+/** New clients go through the account setup once (staff and finished accounts are never redirected). */
+export function SetupGate({ children }: AdminGuardProps) {
+  const { profile, loading } = useAuth()
+  if (loading) return <SplashScreen />
+  if (profile && profile.role === 'client' && !profile.onboarding_completed_at) return <Navigate to="/setup" replace />
+  return <>{children}</>
+}

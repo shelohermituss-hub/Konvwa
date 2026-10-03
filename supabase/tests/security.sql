@@ -198,5 +198,28 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); BEGIN
   RESET ROLE;
 END $$;
 
+-- 14. account setup: completion only through complete_onboarding(), which checks name, phone and notifications
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); r jsonb; BEGIN
+  UPDATE profiles SET onboarding_completed_at = NULL, full_name = 'Test User', phone = NULL WHERE user_id = a;
+  UPDATE push_subscriptions SET user_id = (SELECT admin_id FROM ctx) WHERE user_id = a;  -- the client has no push subscription
+  PERFORM pg_temp.as_user(a);
+  UPDATE profiles SET onboarding_completed_at = now() WHERE user_id = a;  -- guard trigger keeps the old value
+  RESET ROLE;
+  ASSERT (SELECT onboarding_completed_at FROM profiles WHERE user_id = a) IS NULL, 'client set onboarding_completed_at directly';
+  PERFORM pg_temp.as_user(a);
+  r := public.complete_onboarding('{}', true);
+  ASSERT (r ->> 'success')::boolean = false AND r ->> 'code' = 'phone', 'completed without a phone: ' || r::text;
+  RESET ROLE;
+  UPDATE profiles SET phone = '+509 5562 6676' WHERE user_id = a;
+  PERFORM pg_temp.as_user(a);
+  r := public.complete_onboarding('{}', false);
+  ASSERT (r ->> 'success')::boolean = false AND r ->> 'code' = 'notifications', 'completed without notifications: ' || r::text;
+  r := public.complete_onboarding(ARRAY['mfa', 'bogus'], true);
+  RESET ROLE;
+  ASSERT (r ->> 'success')::boolean, 'completion failed: ' || r::text;
+  ASSERT (SELECT onboarding_skipped FROM profiles WHERE user_id = a) = ARRAY['mfa'], 'unknown skipped items were stored';
+  ASSERT NOT has_function_privilege('anon', 'public.complete_onboarding(text[],boolean)', 'execute'), 'anon can complete onboarding';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

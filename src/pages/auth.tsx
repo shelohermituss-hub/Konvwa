@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
 import {
-  Loader2, Eye, EyeOff, Mail, Lock,
+  Loader2, Fingerprint, Eye, EyeOff, Mail, Lock,
   ArrowLeft, CheckCircle2, ShieldX,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 
 import { tr } from '@/lib/i18n'
+import { isCancelled, passkeysSupported } from '@/lib/passkeys'
 import { LanguageToggle } from '@/components/shared/language-toggle'
 type AuthView = 'login' | 'register' | 'forgot' | 'otp' | 'reset' | 'denied'
 
@@ -253,6 +254,19 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
     resolver: zodResolver(loginSchema),
   })
 
+  const [passkeyBusy, setPasskeyBusy] = useState(false)
+  async function signInWithPasskey() {
+    setPasskeyBusy(true)
+    const { error } = await supabase.auth.signInWithPasskey()
+    setPasskeyBusy(false)
+    if (error) {
+      if (!isCancelled(error)) toast.error(tr('Connexion par passkey impossible'), { description: tr('Aucune passkey reconnue sur cet appareil. Connectez-vous avec votre mot de passe, puis ajoutez-en une dans Profil > Confidentialité & sécurité.') })
+      return
+    }
+    toast.success(tr('Connexion réussie !'))
+    navigate('/dashboard', { replace: true })
+  }
+
   async function onSubmit(values: LoginForm) {
     const { error } = await signIn(values.email, values.password)
     if (error) {
@@ -269,6 +283,18 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
         <h2 className="text-2xl font-bold tracking-tight">{tr('Bon retour !')}</h2>
         <p className="text-sm text-muted-foreground mt-1">{tr('Connectez-vous à votre compte KONVWA')}</p>
       </div>
+
+      {passkeysSupported() && (
+        <button
+          type="button"
+          onClick={() => void signInWithPasskey()}
+          disabled={passkeyBusy}
+          className="mb-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary/30 bg-primary/5 text-sm font-bold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
+        >
+          {passkeyBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" aria-hidden="true" />}
+          {tr('Se connecter avec une passkey')}
+        </button>
+      )}
 
       <SocialButtons />
       <Divider />
