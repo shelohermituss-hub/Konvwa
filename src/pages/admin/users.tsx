@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types'
 
+import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface UserRow {
   user_id: string
@@ -123,6 +124,12 @@ export function AdminUsersPage() {
             {loading ? '…' : tr('{0} utilisateur{1}', filtered.length, filtered.length !== 1 ? 's' : '')}
           </p>
         </div>
+        <ExportCsvButton
+          filename="utilisateurs"
+          headers={['nom', 'telephone', 'role', 'commandes', 'solde_htg', 'inscription']}
+          rows={() => filtered.map(u => [u.full_name, u.phone ?? '', u.role, u.order_count ?? 0, u.wallet_balance ?? 0, u.created_at])}
+          disabled={filtered.length === 0}
+        />
       </div>
 
       {/* KPI mini cards */}

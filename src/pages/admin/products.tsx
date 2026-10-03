@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { normalizeTiers, type PriceTier } from '@/lib/product-pricing'
+import { ProductImportDialog } from '@/components/shared/product-import-dialog'
+import { ExportCsvButton } from '@/components/shared/export-csv-button'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 interface Product {
@@ -83,6 +85,7 @@ export function AdminProductsPage() {
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
   const [draft, setDraft] = useState<ProductDraft>(emptyDraft())
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -262,11 +265,23 @@ export function AdminProductsPage() {
           <h1 className="text-2xl font-bold">{tr('Produits')}</h1>
           <p className="text-sm text-muted-foreground">{tr('Catalogue de sourcing (')}{products.length}{' '}{tr('produits)')}</p>
         </div>
-        <Button onClick={openAdd} className="gap-2">
-          <Plus className="h-4 w-4" />
-          {tr('Ajouter un produit')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportCsvButton
+            filename="produits"
+            headers={['name', 'price_htg', 'moq', 'unit', 'category', 'supplier_name', 'active', 'stock_available']}
+            rows={() => products.map(p => [p.name, p.price_htg, p.moq, p.unit, p.category, p.supplier_name, p.active, p.stock_available])}
+            disabled={products.length === 0}
+          />
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2 rounded-xl">
+            {tr('Importer CSV')}
+          </Button>
+          <Button onClick={openAdd} className="gap-2">
+            <Plus className="h-4 w-4" />
+            {tr('Ajouter un produit')}
+          </Button>
+        </div>
       </div>
+      <ProductImportDialog open={importOpen} onClose={() => setImportOpen(false)} onDone={() => void load()} />
 
       {/* Search */}
       <div className="relative max-w-sm">

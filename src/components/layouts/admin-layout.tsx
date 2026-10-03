@@ -4,7 +4,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, Bell, BarChart3, FileText, Truck, PackageSearch, ScrollText, BadgeCheck, Scale, Ticket } from 'lucide-react'
+import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, Bell, BarChart3, FileText, Truck, PackageSearch, ScrollText, BadgeCheck, Scale, Ticket, Gauge } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { MfaGate } from '@/components/shared/mfa-gate'
 
@@ -13,8 +13,9 @@ function AdminSidebar() {
   const { profile, signOut } = useAuth()
   const location = useLocation()
 
-  const items = [
+  const allItems = [
     { title: tr('Tableau de bord'), url: '/admin', icon: LayoutDashboard },
+    { title: tr('Pilotage'), url: '/admin/insights', icon: Gauge },
     { title: tr('Commandes'), url: '/admin/orders', icon: Package },
     { title: tr('Devis'), url: '/admin/quotes', icon: FileText },
     { title: tr('Expéditions'), url: '/admin/shipments', icon: Ship },
@@ -32,6 +33,9 @@ function AdminSidebar() {
     { title: tr('Journal d\'audit'), url: '/admin/audit-logs', icon: ScrollText },
     { title: tr('Paramètres'), url: '/admin/settings', icon: Settings },
   ]
+  // managers run daily operations; money rules, audit and settings stay with full admins
+  const adminOnly = new Set(['/admin/promos', '/admin/reconciliation', '/admin/audit-logs', '/admin/settings'])
+  const items = allItems.filter((i) => profile?.role === 'admin' || !adminOnly.has(i.url))
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)

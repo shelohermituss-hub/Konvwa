@@ -47,3 +47,11 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
   return <>{children}</>
 }
+
+/** Pages reserved for full administrators (managers are sent back to the dashboard). */
+export function SuperAdminGuard({ children }: AdminGuardProps) {
+  const { profile, loading } = useAuth()
+  if (loading) return <SplashScreen />
+  if (profile?.role !== 'admin') return <Navigate to="/admin" replace />
+  return <>{children}</>
+}

@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Search, MoreHorizontal, CheckCircle2, XCircle, CreditCard, Smartphone, Clock, TrendingUp, ImageOff, ExternalLink, Undo2 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
+import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -157,6 +158,14 @@ export function AdminPaymentsPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{tr('Gestion des paiements')}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">{tr('Validez les recharges MonCash/NatCash et consultez les transactions')}</p>
+        <div className="mt-3">
+          <ExportCsvButton
+            filename="transactions"
+            headers={['date', 'client', 'type', 'methode', 'montant_htg', 'statut', 'reference', 'description']}
+            rows={() => filtered.map(t => [t.created_at, t.customer_name ?? '', t.type, t.payment_method ?? '', t.amount, t.status, t.reference ?? '', t.description ?? ''])}
+            disabled={filtered.length === 0}
+          />
+        </div>
       </div>
 
       {/* KPI cards */}

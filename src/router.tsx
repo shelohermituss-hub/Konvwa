@@ -8,7 +8,7 @@ import { AdminLayout } from '@/components/layouts/admin-layout'
 
 // Guards
 import { AuthGuard } from '@/components/shared/auth-guard'
-import { AdminGuard } from '@/components/shared/auth-guard'
+import { AdminGuard, SuperAdminGuard } from '@/components/shared/auth-guard'
 import { HomeGuard } from '@/components/shared/home-guard'
 
 // Auth
@@ -56,6 +56,7 @@ import { AdminNotificationsPage } from '@/pages/admin/notifications'
 import { AdminAuditLogsPage } from '@/pages/admin/audit-logs'
 import { AdminKycPage } from '@/pages/admin/kyc'
 import { AdminPromosPage } from '@/pages/admin/promos'
+import { AdminInsightsPage } from '@/pages/admin/insights'
 import { AdminReconciliationPage } from '@/pages/admin/reconciliation'
 
 export const router = createBrowserRouter([
@@ -145,11 +146,12 @@ export const router = createBrowserRouter([
       { path: 'shipping-config', element: <AdminShippingConfigPage /> },
       { path: 'shipping-requests', element: <AdminShippingRequestsPage /> },
       { path: 'notifications', element: <AdminNotificationsPage /> },
-      { path: 'audit-logs', element: <AdminAuditLogsPage /> },
+      { path: 'insights', element: <AdminInsightsPage /> },
+      { path: 'audit-logs', element: <SuperAdminGuard><AdminAuditLogsPage /></SuperAdminGuard> },
       { path: 'kyc', element: <AdminKycPage /> },
-      { path: 'promos', element: <AdminPromosPage /> },
-      { path: 'reconciliation', element: <AdminReconciliationPage /> },
-      { path: 'settings', element: <AdminSettingsPage /> },
+      { path: 'promos', element: <SuperAdminGuard><AdminPromosPage /></SuperAdminGuard> },
+      { path: 'reconciliation', element: <SuperAdminGuard><AdminReconciliationPage /></SuperAdminGuard> },
+      { path: 'settings', element: <SuperAdminGuard><AdminSettingsPage /></SuperAdminGuard> },
     ],
   },
 

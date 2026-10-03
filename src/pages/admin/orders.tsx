@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface AdminOrder {
   id: string
@@ -137,6 +138,12 @@ export function AdminOrdersPage() {
             {loading ? '…' : tr('{0} commande{1}', filteredOrders.length, filteredOrders.length !== 1 ? 's' : '')}
           </p>
         </div>
+        <ExportCsvButton
+          filename="commandes"
+          headers={['tracking_code', 'client', 'produit', 'statut', 'total_devis_htg', 'paye_htg', 'date']}
+          rows={() => filteredOrders.map(o => [o.tracking_code, o.customer_name ?? '', o.quotes?.product_requests?.product_name ?? '', o.status, o.quotes?.total ?? '', o.total_paid, o.created_at])}
+          disabled={filteredOrders.length === 0}
+        />
       </div>
 
       {/* Filters */}
