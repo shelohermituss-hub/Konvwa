@@ -1,10 +1,56 @@
-import { Outlet, Link } from 'react-router-dom'
+import { Outlet, Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
+
+const SEO: Record<string, { title: string; description: string }> = {
+  '/': {
+    title: 'KONVWA — Importez depuis Alibaba, Shein et Temu en Haïti',
+    description: "KONVWA vous aide à importer des produits d'Alibaba, Shein et Temu vers Haïti. Devis clair, paiement par MonCash ou NatCash, suivi de commande et d'expédition en gourdes (HTG).",
+  },
+  '/how-it-works': {
+    title: 'Comment ça marche — KONVWA',
+    description: "Envoyez votre lien produit, recevez un devis en gourdes, payez par MonCash ou NatCash et suivez votre colis jusqu'en Haïti.",
+  },
+  '/prices': {
+    title: 'Tarifs — KONVWA',
+    description: "Tarifs d'importation et d'expédition vers Haïti : frais de service, transport maritime et aérien, calculés en gourdes (HTG).",
+  },
+  '/faq': {
+    title: 'Questions fréquentes — KONVWA',
+    description: "Délais, paiements MonCash et NatCash, frais d'expédition, suivi de colis : les réponses aux questions sur l'importation avec KONVWA.",
+  },
+  '/contact': {
+    title: 'Contact — KONVWA',
+    description: "Contactez l'équipe KONVWA pour vos importations depuis Alibaba, Shein et Temu vers Haïti.",
+  },
+  '/terms': {
+    title: "Conditions d'utilisation — KONVWA",
+    description: "Conditions d'utilisation du service d'importation KONVWA.",
+  },
+  '/privacy': {
+    title: 'Confidentialité — KONVWA',
+    description: 'Comment KONVWA collecte, utilise et protège vos données personnelles.',
+  },
+}
+
+/** Per-page title, description and canonical URL for the public pages (the SPA ships one index.html). */
+function usePageSeo() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    const path = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname
+    const seo = SEO[path] ?? SEO['/']
+    document.title = seo.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', seo.description)
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', `https://konvwa.shop${path === '/' ? '/' : path}`)
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', seo.title)
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', seo.description)
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', `https://konvwa.shop${path === '/' ? '/' : path}`)
+  }, [pathname])
+}
 
 function Header() {
   const { user } = useAuth()
@@ -155,6 +201,7 @@ function Footer() {
 }
 
 export function PublicLayout() {
+  usePageSeo()
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
