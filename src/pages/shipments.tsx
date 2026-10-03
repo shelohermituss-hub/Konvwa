@@ -150,13 +150,13 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
               <p
                 key={i}
                 className={cn(
-                  'break-words select-all',
+                  'whitespace-pre-wrap break-words select-all',
                   /^[A-Z]{2}\d{4,}$/.test(line.trim()) || /^[A-Z]{2}$/.test(line.trim())
                     ? 'text-sky-700'
                     : 'text-foreground'
                 )}
               >
-                {line}
+                {line || '\u00A0'}
               </p>
             ))}
           </div>
