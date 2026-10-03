@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, Search } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, Eye, EyeOff, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, Search, Info } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { createPayment } from '@/lib/payment-api'
@@ -62,14 +62,33 @@ const CRYPTO_ADDRESS: Record<string, { address: string; network: string; coin: s
   eth:  { address: '0x0dff06e9fe0665e4379a80a9a033a78d9c8a860e', network: 'ERC20', coin: 'ETH' },
 }
 
+const PROOF_CHECKLIST = {
+  transfer: [
+    'Le montant exact envoyé',
+    'La date et l\'heure du virement',
+    'Le numéro de référence ou de transaction',
+    'Votre nom (expéditeur) et le compte bénéficiaire BUH DOLLAR',
+    'Le statut « Réussi », « Confirmé » ou « Effectué »',
+  ],
+  crypto: [
+    'Le montant et la crypto envoyés (BTC, USDT, ETH)',
+    'L\'adresse de destination, identique à celle affichée ci-dessus',
+    'Le TXID / hash de la transaction et le réseau utilisé',
+    'La date et l\'heure de l\'envoi',
+    'Le statut « Confirmé » ou « Terminé »',
+  ],
+} as const
+
 function ProofUpload({
   preview,
   required,
+  kind = 'transfer',
   onFile,
   onRemove,
 }: {
   preview: string | null
   required: boolean
+  kind?: keyof typeof PROOF_CHECKLIST
   onFile: (file: File, preview: string) => void
   onRemove: () => void
 }) {
@@ -78,6 +97,24 @@ function ProofUpload({
       <Label className="text-xs">
         Preuve de paiement{required && <span className="text-destructive ml-0.5">*</span>}
       </Label>
+      <div className="rounded-xl border border-sky-100 bg-sky-50/70 px-3 py-2.5">
+        <p className="flex items-center gap-1.5 text-[11px] font-bold text-sky-800">
+          <Info className="h-3.5 w-3.5 shrink-0" />
+          Ce qui doit être visible sur la photo
+        </p>
+        <ul className="mt-1.5 space-y-1">
+          {PROOF_CHECKLIST[kind].map((item) => (
+            <li key={item} className="flex items-start gap-1.5 text-[11px] leading-snug text-sky-900/80">
+              <CheckCheck className="mt-0.5 h-3 w-3 shrink-0 text-sky-600" />
+              {item}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 border-t border-sky-100 pt-2 text-[10px] leading-snug text-sky-900/60">
+          Envoyez la capture d'écran entière, sans la recadrer, nette et lisible. Une preuve floue,
+          coupée ou modifiée sera refusée.
+        </p>
+      </div>
       {preview ? (
         <div className="relative rounded-xl overflow-hidden border border-emerald-200">
           <img src={preview} alt="Preuve" className="w-full h-36 object-cover" />
@@ -604,6 +641,7 @@ export function WalletPage() {
                     <ProofUpload
                       preview={proofPreview}
                       required={true}
+                      kind="crypto"
                       onFile={(f, p) => { setProofFile(f); setProofPreview(p) }}
                       onRemove={() => { setProofFile(null); setProofPreview(null) }}
                     />

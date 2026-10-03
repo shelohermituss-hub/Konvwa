@@ -97,25 +97,26 @@ export function AdminPaymentsPage() {
     }
   }
 
-  async function handleApprove(tx: WalletTx) {
+  async function reviewDeposit(tx: WalletTx, approve: boolean) {
     setSaving(true)
-    await supabase.from('wallet_transactions').update({ status: 'completed' }).eq('id', tx.id)
-    const { data: wallet } = await supabase.from('wallets').select('available_balance').eq('id', tx.wallet_id).maybeSingle()
-    if (wallet) {
-      await supabase.from('wallets').update({ available_balance: wallet.available_balance + tx.amount, updated_at: new Date().toISOString() }).eq('id', tx.wallet_id)
-    }
-    toast.success('Paiement approuvé et wallet crédité.')
-    setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'completed' } : t))
-    setApproveDialog(null)
+    const { data, error } = await supabase.rpc('admin_review_deposit', { p_tx_id: tx.id, p_approve: approve })
     setSaving(false)
+    const result = data as { success?: boolean; error?: string; status?: string } | null
+    if (error || !result?.success) {
+      toast.error(result?.error ?? error?.message ?? 'Action impossible.')
+      return false
+    }
+    toast.success(approve ? 'Paiement approuvé et portefeuille crédité.' : 'Transaction refusée.')
+    setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: approve ? 'completed' : 'cancelled' } : t))
+    return true
+  }
+
+  async function handleApprove(tx: WalletTx) {
+    if (await reviewDeposit(tx, true)) setApproveDialog(null)
   }
 
   async function handleReject(tx: WalletTx) {
-    setSaving(true)
-    await supabase.from('wallet_transactions').update({ status: 'cancelled' }).eq('id', tx.id)
-    toast.success('Transaction refusée.')
-    setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'cancelled' } : t))
-    setSaving(false)
+    await reviewDeposit(tx, false)
   }
 
   const filtered = transactions.filter(t => {

@@ -1,3 +1,4 @@
+import { detachPushFromThisDevice } from '@/hooks/use-push-notifications'
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
@@ -164,6 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    // must run while the session is still valid (RLS only lets a user delete their own rows)
+    if (user) await detachPushFromThisDevice(user.id)
     await supabase.auth.signOut()
     setUser(null)
     setSession(null)

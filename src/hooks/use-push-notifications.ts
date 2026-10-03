@@ -29,7 +29,6 @@ async function getRegistration(): Promise<ServiceWorkerRegistration | null> {
 }
 
 async function saveSubscription(
-  userId: string,
   subscription: PushSubscription,
   types: NotificationTypes
 ) {
@@ -37,22 +36,12 @@ async function saveSubscription(
     .filter(([, v]) => v)
     .map(([k]) => k)
 
-  const endpoint = subscription.endpoint
-
-  // PostgREST can't target a functional unique index via onConflict,
-  // so we delete the existing row for this endpoint then insert fresh.
-  await supabase
-    .from('push_subscriptions')
-    .delete()
-    .eq('user_id', userId)
-    .eq('subscription->>endpoint', endpoint)
-
-  await supabase.from('push_subscriptions').insert({
-    user_id:            userId,
-    subscription:       subscription.toJSON(),
-    user_agent:         navigator.userAgent,
-    notification_types: activeTypes,
-    updated_at:         new Date().toISOString(),
+  // One browser = one account: the database hands this endpoint to the signed-in user
+  // and takes it away from any other account that used the same device before.
+  await supabase.rpc('register_push_subscription', {
+    p_subscription: subscription.toJSON(),
+    p_types:        activeTypes,
+    p_user_agent:   navigator.userAgent,
   })
 }
 
@@ -85,13 +74,20 @@ async function ensureSubscription(
     sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: wanted })
   }
 
+  // Idempotent: also re-binds the device to the current account after someone else signed in here
   const { data } = await supabase
     .from('push_subscriptions')
-    .select('id')
+    .select('id, notification_types')
     .eq('user_id', userId)
     .eq('subscription->>endpoint', sub.endpoint)
     .limit(1)
-  if (!data?.length) await saveSubscription(userId, sub, types)
+  if (!data?.length) {
+    await saveSubscription(sub, types)
+  } else {
+    // keep the user's saved preferences, only claim the endpoint
+    const saved = (data[0].notification_types as string[] | null) ?? []
+    await saveSubscription(sub, Object.fromEntries(saved.map((t) => [t, true])) as NotificationTypes)
+  }
 
   return sub
 }
@@ -144,18 +140,11 @@ export function usePushNotifications(userId?: string) {
       if (event.data?.type === 'PUSH_SUBSCRIPTION_CHANGED' && event.data.subscription) {
         const sub = event.data.subscription as PushSubscriptionJSON
         if (!sub.endpoint) return
-        supabase
-          .from('push_subscriptions')
-          .delete()
-          .eq('user_id', userId)
-          .eq('subscription->>endpoint', sub.endpoint)
-          .then(() =>
-            supabase.from('push_subscriptions').insert({
-              user_id:      userId,
-              subscription: sub,
-              updated_at:   new Date().toISOString(),
-            })
-          )
+        supabase.rpc('register_push_subscription', {
+          p_subscription: sub,
+          p_types:        Object.keys(DEFAULT_TYPES),
+          p_user_agent:   navigator.userAgent,
+        })
       }
     }
     navigator.serviceWorker.addEventListener('message', handler)
@@ -180,7 +169,7 @@ export function usePushNotifications(userId?: string) {
       const sub = await ensureSubscription(userId, vapidKey, preferredTypes)
       if (!sub) return false
 
-      await saveSubscription(userId, sub, preferredTypes)
+      await saveSubscription(sub, preferredTypes)
       setSubscribed(true)
       setTypes(preferredTypes)
       return true
@@ -213,7 +202,7 @@ export function usePushNotifications(userId?: string) {
     if (!subscribed || !userId) return
     const reg = await getRegistration()
     const sub = await reg?.pushManager.getSubscription()
-    if (sub) await saveSubscription(userId, sub, next)
+    if (sub) await saveSubscription(sub, next)
   }, [subscribed, userId])
 
   return {
@@ -225,5 +214,18 @@ export function usePushNotifications(userId?: string) {
     subscribe,
     unsubscribe,
     updateTypes,
+  }
+}
+
+/** Called on sign-out: this browser must stop receiving the signed-out account's notifications. */
+export async function detachPushFromThisDevice(userId: string) {
+  try {
+    const reg = await getRegistration()
+    const sub = await reg?.pushManager.getSubscription()
+    if (!sub) return
+    await removeSubscription(userId, sub.endpoint)
+    await sub.unsubscribe()
+  } catch {
+    /* sign-out must never fail because of push */
   }
 }
