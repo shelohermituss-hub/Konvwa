@@ -621,6 +621,9 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
       {/* Expanded details */}
       {expanded && (
         <div className="border-t border-gray-100 px-4 py-3.5 space-y-3">
+          <a href={`/admin/labels/${request.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold hover:bg-muted">
+            {tr('Imprimer les étiquettes (QR)')}
+          </a>
           <div className="grid grid-cols-2 gap-2 text-xs">
             {request.origin_country && (
               <div>

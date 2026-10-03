@@ -7,12 +7,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Search, MoreHorizontal, FileText, Eye, Calculator, ExternalLink, XCircle } from 'lucide-react'
+import { Search, MoreHorizontal, FileText, Eye, Calculator, ExternalLink, XCircle, Wand2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { DEFAULT_RATES, DEFAULT_WEIGHT_KG, suggestQuote, type QuoteSuggestion, type Rates } from '@/lib/cost-estimate'
 interface PackageEntry {
   number: number
   length_cm: number | null
@@ -40,6 +41,7 @@ interface ProductRequest {
   packages: PackageEntry[] | null
   weight_kg: number | null
   invoice_value_usd: number | null
+  variant_info?: { unit_price_usd?: number | null; unit_weight_kg?: number | null } | null
   shipping_origin_name?: string
   shipping_rate_mode?: string | null
   shipping_rate_name?: string | null
@@ -85,9 +87,34 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
   const totalFees = parseNum(serviceFee) + parseNum(purchaseFee) + parseNum(shippingFee) + parseNum(customsFee) + parseNum(localFee) + parseNum(margin) + parseNum(contingency)
   const total = subtotal + totalFees
 
+  const [rates, setRates] = useState<Rates>(DEFAULT_RATES)
+  const [suggested, setSuggested] = useState<QuoteSuggestion | null>(null)
+
+  useEffect(() => {
+    void supabase.from('app_settings').select('key,value').in('key', ['usd_to_htg_rate', 'freight_per_kg_usd', 'duty_rate_percent', 'service_margin_percent']).then(({ data }) => {
+      const v = Object.fromEntries((data ?? []).map(r => [r.key as string, Number(r.value)]))
+      const pick = (k: string, d: number) => (Number.isFinite(v[k]) && v[k] > 0 ? v[k] : d)
+      setRates({ ...DEFAULT_RATES, usdToHtg: pick('usd_to_htg_rate', DEFAULT_RATES.usdToHtg), freightPerKgUsd: pick('freight_per_kg_usd', DEFAULT_RATES.freightPerKgUsd), dutyPct: pick('duty_rate_percent', DEFAULT_RATES.dutyPct), servicePct: pick('service_margin_percent', DEFAULT_RATES.servicePct) })
+    })
+  }, [])
+
   const isAir = request.shipping_rate_mode === 'air'
   const totalCBM = (request.packages || []).reduce((s, p) => s + (p.cbm ?? 0), 0)
   const totalWeightKg = (request.packages || []).reduce((s, p) => s + (p.weight_kg ?? 0), 0) || request.weight_kg || 0
+
+  // First estimate from the customer's data (unit price, weight) and the current rates; the team adjusts before sending
+  function applySuggestion() {
+    const unitUsd = request.variant_info?.unit_price_usd ?? (request.invoice_value_usd ? request.invoice_value_usd / Math.max(1, request.quantity) : 0)
+    if (!unitUsd) { toast.error(tr('Pas de prix indiqué par le client : saisissez le prix produit.')); return }
+    const unitWeight = request.variant_info?.unit_weight_kg ?? (totalWeightKg > 0 ? totalWeightKg / Math.max(1, request.quantity) : DEFAULT_WEIGHT_KG[request.category ?? 'other'] ?? DEFAULT_WEIGHT_KG.other)
+    const s = suggestQuote({ unitPriceUsd: unitUsd, quantity: parseNum(quantity) || request.quantity, totalWeightKg: totalWeightKg > 0 ? totalWeightKg : unitWeight * (parseNum(quantity) || request.quantity) }, rates)
+    setProductPrice(String(s.unitPriceHtg))
+    setShippingFee(String(s.shippingHtg))
+    setCustomsFee(String(s.customsHtg))
+    setServiceFee(String(s.serviceHtg))
+    setSuggested(s)
+    toast.success(tr('Estimation appliquée : vérifiez chaque ligne.'))
+  }
 
   async function handleCreate() {
     if (!productPrice) return
@@ -147,6 +174,17 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
 
   return (
     <div className="space-y-4 py-2">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
+        <Button type="button" size="sm" variant="outline" onClick={applySuggestion} className="gap-1.5 rounded-lg">
+          <Wand2 className="h-3.5 w-3.5" />{tr('Estimation automatique')}
+        </Button>
+        <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+          {suggested
+            ? tr('Prix, fret, douane et service remplis (total estimé {0} HTG avec vos autres frais à ajouter).', suggested.totalHtg.toLocaleString(LOCALE_TAG))
+            : tr('Remplit le prix, le fret, la douane et le service d\'après les infos du client et vos taux.')}
+        </p>
+      </div>
+
       {/* Product info */}
       <div className="rounded-xl bg-muted/40 p-3 space-y-2">
         <p className="font-semibold text-sm">{request.product_name}</p>
@@ -255,7 +293,7 @@ export function AdminQuotesPage() {
       .select(`
         id, product_name, product_url, source_platform, category, quantity, urgency,
         budget_estimate, notes, status, created_at, user_id,
-        packages, weight_kg, invoice_value_usd,
+        packages, weight_kg, invoice_value_usd, variant_info,
         shipping_origins!ship_from_id(name),
         shipping_rates!shipping_rate_id(mode, name)
       `)

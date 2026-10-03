@@ -62,3 +62,26 @@ const CATEGORY_WORDS: Array<[string, RegExp]> = [
 export function guessCategory(name: string): string | null {
   return CATEGORY_WORDS.find(([, re]) => re.test(name))?.[0] ?? null
 }
+
+export interface QuoteSuggestion {
+  unitPriceHtg: number
+  shippingHtg: number
+  customsHtg: number
+  serviceHtg: number
+  totalHtg: number
+}
+
+/** First estimate for the team's quote form (everything in HTG, rounded to the gourde). The team adjusts it. */
+export function suggestQuote(input: { unitPriceUsd: number; quantity: number; totalWeightKg: number }, rates: Rates): QuoteSuggestion {
+  const quantity = Math.max(1, Math.floor(input.quantity))
+  const productUsd = input.unitPriceUsd * quantity
+  const freightUsd = input.totalWeightKg * rates.freightPerKgUsd
+  const dutyUsd = (productUsd + freightUsd) * (rates.dutyPct / 100)
+  const serviceUsd = (productUsd + freightUsd + dutyUsd) * (rates.servicePct / 100)
+  const htg = (usd: number) => Math.round(usd * rates.usdToHtg)
+  const unitPriceHtg = Math.round(input.unitPriceUsd * rates.usdToHtg)
+  const shippingHtg = htg(freightUsd)
+  const customsHtg = htg(dutyUsd)
+  const serviceHtg = htg(serviceUsd)
+  return { unitPriceHtg, shippingHtg, customsHtg, serviceHtg, totalHtg: unitPriceHtg * quantity + shippingHtg + customsHtg + serviceHtg }
+}

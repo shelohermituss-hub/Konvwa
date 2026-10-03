@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_RATES, estimateCost, guessCategory, toUsd } from './cost-estimate'
+import { DEFAULT_RATES, estimateCost, guessCategory, suggestQuote, toUsd } from './cost-estimate'
 
 describe('estimateCost', () => {
   it('matches the formula used in the admin settings preview (50 × $4.50, 0.25 kg)', () => {
@@ -35,4 +35,14 @@ describe('guessCategory', () => {
     expect(guessCategory('Kitchen storage box')).toBe('home')
   })
   it('returns null when unsure', () => expect(guessCategory('Mystery item 123')).toBeNull())
+})
+
+describe('suggestQuote', () => {
+  it('is consistent with the customer estimate (same total, in whole gourdes)', () => {
+    const rates = { ...DEFAULT_RATES, usdToHtg: 140 }
+    const s = suggestQuote({ unitPriceUsd: 4.5, quantity: 50, totalWeightKg: 25 }, rates)
+    const e = estimateCost({ priceUsd: 4.5, quantity: 50, weightKg: 0.5 }, rates)
+    expect(s.unitPriceHtg).toBe(630)
+    expect(Math.abs(s.totalHtg - e.totalHtg)).toBeLessThanOrEqual(3)
+  })
 })
