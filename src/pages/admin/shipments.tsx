@@ -57,6 +57,12 @@ const emptyForm = {
   estimated_arrival: '', weight_kg: '', volume_m3: '', notes: '',
 }
 
+interface PendingOrderRow {
+  id: string
+  tracking_code: string
+  quotes: { product_requests: { product_name: string | null } | null } | null
+}
+
 export function AdminShipmentsPage() {
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,7 +111,7 @@ export function AdminShipmentsPage() {
     ])
     const assignedIds = new Set((assigned || []).map(a => a.order_id))
     if (data) {
-      setPendingOrders(data.filter((o: any) => !assignedIds.has(o.id)).map((o: any) => ({
+      setPendingOrders((data as unknown as PendingOrderRow[]).filter((o) => !assignedIds.has(o.id)).map((o) => ({
         id: o.id,
         tracking_code: o.tracking_code,
         product_name: o.quotes?.product_requests?.product_name || 'Produit',

@@ -91,9 +91,13 @@ export function AdminUsersPage() {
   async function handleRoleUpdate() {
     if (!editUser) return
     setSaving(true)
-    const { error } = await supabase.from('profiles').update({ role: newRole }).eq('user_id', editUser.user_id)
+    const { data, error } = await supabase
+      .from('profiles').update({ role: newRole }).eq('user_id', editUser.user_id).select('role').maybeSingle()
     if (error) toast.error('Erreur lors de la mise à jour du rôle.')
-    else {
+    else if (data?.role !== newRole) {
+      // the database keeps the old role when the caller is not an administrator
+      toast.error('Seul un administrateur peut changer les rôles.')
+    } else {
       toast.success('Rôle mis à jour.')
       setUsers(prev => prev.map(u => u.user_id === editUser.user_id ? { ...u, role: newRole } : u))
       setEditUser(null)

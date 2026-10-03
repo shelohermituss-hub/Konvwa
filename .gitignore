@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .agents/skills/ui-ux-pro-max/scripts/__pycache__/
+
+# Secrets: never commit; copy .env.example to .env
+.env
+.env.*
+!.env.example

@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
+interface RecentOrderRow {
+  id: string
+  user_id: string
+  tracking_code: string
+  status: string
+  total_paid: number | null
+  created_at: string
+  quotes: { total: number | null; product_requests: { product_name: string | null } | null } | null
+}
+
 export interface AdminStats {
   totalOrders: number
   pendingOrders: number
@@ -108,7 +118,7 @@ export function useAdminStats(): AdminStats {
       const totalRevenuePaid = paidOrders.reduce((sum, o) => sum + (o.total_paid ?? 0), 0)
 
       // orders.user_id points at auth.users, so customer names come from a separate profiles query
-      const recentRows = (recentOrdersRes.data ?? []) as any[]
+      const recentRows = (recentOrdersRes.data ?? []) as unknown as RecentOrderRow[]
       const userIds = [...new Set(recentRows.map((o) => o.user_id).filter(Boolean))]
       const names = new Map<string, string>()
       if (userIds.length > 0) {
@@ -118,7 +128,7 @@ export function useAdminStats(): AdminStats {
       if (cancelled) return
 
       // Map recent orders
-      const recentOrders: RecentOrder[] = recentRows.map((o: any) => ({
+      const recentOrders: RecentOrder[] = recentRows.map((o) => ({
         id: o.id,
         tracking_code: o.tracking_code,
         status: o.status,
