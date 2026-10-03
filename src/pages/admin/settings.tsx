@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Loader2, Save, RefreshCw, DollarSign, Plane, Landmark, Percent, CreditCard, Eye, EyeOff, Link, Settings2, CheckCircle } from 'lucide-react'
 
+import { tr } from '@/lib/i18n'
 interface Setting {
   key: string
   value: string
@@ -96,12 +97,12 @@ export function AdminSettingsPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Paramètres</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Paramètres')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Configurez les taux et marges utilisés dans les estimations clients</p>
         </div>
         <Button onClick={handleSave} disabled={saving || !hasChanges} className="rounded-xl gap-2 shrink-0">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Enregistrer
+          {tr('Enregistrer')}
         </Button>
       </div>
 
@@ -137,7 +138,7 @@ export function AdminSettingsPage() {
                 <Input
                   value={values['payment_client_id'] ?? ''}
                   onChange={e => setValues(p => ({ ...p, payment_client_id: e.target.value }))}
-                  placeholder="pp_d6d7ffd9450cbc8da8fe622c13fb"
+                  placeholder="pp_xxxxxxxxxxxxxxxxxxxxxxxx"
                   className="font-mono text-sm rounded-xl"
                 />
               </div>
@@ -153,7 +154,7 @@ export function AdminSettingsPage() {
                     type={showSecret ? 'text' : 'password'}
                     value={values['payment_client_secret'] ?? ''}
                     onChange={e => setValues(p => ({ ...p, payment_client_secret: e.target.value }))}
-                    placeholder="c4e6b79760e3bb1d0134a4832f557c9e45944b7bb7edf37ef228a4b3faa42325"
+                    placeholder="••••••••••••••••••••••••••••••••"
                     className="font-mono text-sm rounded-xl pr-10"
                   />
                   <button
@@ -256,7 +257,7 @@ export function AdminSettingsPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground/70">
-                      Dernière mise à jour : {new Date(setting.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      {tr('Dernière mise à jour :')}{' '} {new Date(setting.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>
                 )
