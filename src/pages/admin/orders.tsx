@@ -20,6 +20,7 @@ interface AdminOrder {
   tracking_code: string
   status: string
   total_paid: number
+  payment_status?: string
   created_at: string
   user_id: string
   customer_name?: string
@@ -74,7 +75,8 @@ export function AdminOrdersPage() {
     setLoading(true)
     const { data } = await supabase
       .from('orders')
-      .select('id, tracking_code, status, total_paid, created_at, user_id, quotes(total, product_requests(product_name))')
+      
+      .select('id, tracking_code, status, total_paid, payment_status, created_at, user_id, quotes(total, product_requests(product_name))')
       .order('created_at', { ascending: false })
 
     if (!data) { setLoading(false); return }
@@ -242,6 +244,11 @@ export function AdminOrdersPage() {
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={order.status} />
+                      {order.payment_status === 'partial' && (
+                        <span className="ml-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700" title={tr('Paiement échelonné en cours : l\'expédition est bloquée jusqu\'au solde')}>
+                          {tr('Échelonné')} · {order.total_paid.toLocaleString(LOCALE_TAG)}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <p className="font-semibold text-sm">{(order.quotes?.total ?? order.total_paid).toLocaleString(LOCALE_TAG)}</p>

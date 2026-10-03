@@ -98,5 +98,21 @@ DO $$ BEGIN
   ASSERT NOT has_function_privilege('authenticated', 'public.mfa_ok(numeric)', 'execute'), 'clients can call mfa_ok';
 END $$;
 
+-- 9. installments: not callable anonymously; a shipped status is refused while installments are due
+DO $$ DECLARE oid_ uuid; BEGIN
+  ASSERT NOT has_function_privilege('anon', 'public.start_installments(uuid,integer)', 'execute'), 'anon can start installments';
+  ASSERT NOT has_function_privilege('anon', 'public.pay_next_installment(uuid)', 'execute'), 'anon can pay installments';
+  SELECT id INTO oid_ FROM orders LIMIT 1;
+  IF oid_ IS NOT NULL THEN
+    UPDATE orders SET payment_status = 'partial', status = 'paid' WHERE id = oid_;
+    BEGIN
+      UPDATE orders SET status = 'shipped' WHERE id = oid_;
+      RAISE EXCEPTION 'shipping allowed while installments are due';
+    EXCEPTION WHEN raise_exception THEN
+      IF SQLERRM LIKE 'shipping allowed%' THEN RAISE; END IF;
+    END;
+  END IF;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

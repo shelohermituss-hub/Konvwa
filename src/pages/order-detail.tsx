@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import type { OrderStatus } from '@/types'
 import { OrderStatusTracker } from '@/components/shared/order-status-tracker'
 import { OrderHistory } from '@/components/shared/order-history'
+import { InstallmentOptions, InstallmentSchedule } from '@/components/shared/order-installments'
 
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 import { useStepUp } from '@/lib/step-up'
@@ -116,6 +117,7 @@ export function OrderDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [accepting, setAccepting] = useState(false)
   const [paying, setPaying] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     if (!id || !user) return
@@ -163,7 +165,7 @@ export function OrderDetailPage() {
       if (walletRes.data) setWallet(walletRes.data)
       setLoading(false)
     })
-  }, [id, user])
+  }, [id, user, reloadKey])
 
   function estimatedDelivery() {
     if (!order?.quotes?.estimated_delivery_days) return null
@@ -467,9 +469,14 @@ export function OrderDetailPage() {
                   </Link>
                 </Button>
               )}
+              <InstallmentOptions orderId={order.id} total={total} balance={wallet?.available_balance ?? 0} onChanged={() => setReloadKey(k => k + 1)} />
             </div>
           </div>
         )}
+
+        {order.payment_status === 'partial' || order.payment_status === 'paid' ? (
+          <InstallmentSchedule orderId={order.id} balance={wallet?.available_balance ?? 0} refreshKey={reloadKey} onChanged={() => setReloadKey(k => k + 1)} />
+        ) : null}
 
         {/* ── EXPÉDITION SÉPARÉE — redirection vers la page Expéditions ── */}
         {order.status === 'in_china_warehouse' &&

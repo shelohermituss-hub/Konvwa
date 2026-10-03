@@ -17,6 +17,17 @@ describe('French (default language)', () => {
   })
 })
 
+describe('server rule order', () => {
+  it('matches the installment description before the generic order payment rule', () => {
+    const match = (text: string) => {
+      for (const [re, tpl] of SERVER_RULES) { const m = text.match(re); if (m) return tpl.replace(/\{(\d+)\}/g, (_, i: string) => m[Number(i) + 1] ?? '') }
+      return null
+    }
+    expect(match('Paiement commande KW-123 (échéance 2/3)')).toBe('Order payment KW-123 (installment 2/3)')
+    expect(match('Paiement commande KW-123')).toBe('Order payment KW-123')
+  })
+})
+
 describe('English dictionary', () => {
   it('has no empty translation', () => {
     const empty = Object.entries(EN).filter(([, v]) => !v.trim()).map(([k]) => k)

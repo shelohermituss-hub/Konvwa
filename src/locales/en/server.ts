@@ -55,6 +55,7 @@ export const SERVER_RULES: Array<[RegExp, string]> = [
   // wallet transaction descriptions written by the payment functions
   [/^Code promo (.+)$/, 'Promo code {0}'],
   [/^Remboursement : (.+) \(réf\. (.+)\)$/, 'Refund: {0} (ref. {1})'],
+  [/^Paiement commande (.+) \(échéance (\d+)\/(\d+)\)$/, 'Order payment {0} (installment {1}/{2})'],
   [/^Paiement commande produits #(.+)$/, 'Product order payment #{0}'],
   [/^Paiement commande (.+)$/, 'Order payment {0}'],
   [/^Frais d'expédition — acompte (.+) % — demande #(.+)$/, 'Shipping fees — deposit {0}% — request #{1}'],
