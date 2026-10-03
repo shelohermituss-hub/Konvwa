@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Also ensure wallet exists
     await supabase
       .from('wallets')
-      .upsert({ user_id: userId, available_balance: 0, blocked_balance: 0 }, { onConflict: 'user_id' })
+      .upsert({ user_id: userId, available_balance: 0, blocked_balance: 0 }, { onConflict: 'user_id', ignoreDuplicates: true })
 
     setLoading(false)
   }
@@ -138,13 +138,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         full_name: fullName,
         phone: phone || null,
         role: 'client',
-      }, { onConflict: 'user_id' })
+      }, { onConflict: 'user_id', ignoreDuplicates: true })
 
       await supabase.from('wallets').upsert({
         user_id: data.user.id,
         available_balance: 0,
         blocked_balance: 0,
-      }, { onConflict: 'user_id' })
+      }, { onConflict: 'user_id', ignoreDuplicates: true })
     }
 
     return { error: null }
