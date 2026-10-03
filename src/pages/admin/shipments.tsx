@@ -28,30 +28,28 @@ interface Shipment {
   notes: string | null
   created_at: string
   order_count?: number
+  cargo_count?: number
 }
 
+// Same vocabulary as order tracking (only the steps that apply to a batch)
 const SHIPMENT_STATUSES: { value: ShipmentStatus; label: string }[] = [
-  { value: 'pending',       label: 'En attente' },
-  { value: 'consolidating', label: 'Consolidation' },
-  { value: 'packed',        label: 'Emballé' },
-  { value: 'loaded',        label: 'Chargé' },
-  { value: 'sailing',       label: 'En mer' },
-  { value: 'arrived',       label: 'Arrivé' },
-  { value: 'cleared',       label: 'Dédouané' },
-  { value: 'distributing',  label: 'Distribution' },
-  { value: 'completed',     label: 'Terminé' },
+  { value: 'in_china_warehouse', label: 'Entrepôt (Chine)' },
+  { value: 'shipped',            label: 'Expédié' },
+  { value: 'in_transit',         label: 'En transit' },
+  { value: 'arrived_haiti',      label: 'Arrivé en Haïti' },
+  { value: 'customs_processing', label: 'Dédouanement' },
+  { value: 'out_for_delivery',   label: 'En livraison' },
+  { value: 'delivered',          label: 'Livré' },
 ]
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
-  pending:       { bg: 'bg-muted',       text: 'text-muted-foreground', dot: 'bg-muted-foreground' },
-  consolidating: { bg: 'bg-amber-50',    text: 'text-amber-700',        dot: 'bg-amber-400' },
-  packed:        { bg: 'bg-amber-50',    text: 'text-amber-700',        dot: 'bg-amber-400' },
-  loaded:        { bg: 'bg-blue-50',     text: 'text-blue-700',         dot: 'bg-blue-500' },
-  sailing:       { bg: 'bg-primary/10',  text: 'text-primary',          dot: 'bg-primary' },
-  arrived:       { bg: 'bg-emerald-50',  text: 'text-emerald-700',      dot: 'bg-emerald-500' },
-  cleared:       { bg: 'bg-emerald-50',  text: 'text-emerald-700',      dot: 'bg-emerald-500' },
-  distributing:  { bg: 'bg-emerald-50',  text: 'text-emerald-700',      dot: 'bg-emerald-500' },
-  completed:     { bg: 'bg-muted',       text: 'text-muted-foreground', dot: 'bg-muted-foreground' },
+  in_china_warehouse: { bg: 'bg-sky-50',      text: 'text-sky-700',          dot: 'bg-sky-500' },
+  shipped:            { bg: 'bg-blue-50',     text: 'text-blue-700',         dot: 'bg-blue-500' },
+  in_transit:         { bg: 'bg-primary/10',  text: 'text-primary',          dot: 'bg-primary' },
+  arrived_haiti:      { bg: 'bg-emerald-50',  text: 'text-emerald-700',      dot: 'bg-emerald-500' },
+  customs_processing: { bg: 'bg-amber-50',    text: 'text-amber-700',        dot: 'bg-amber-400' },
+  out_for_delivery:   { bg: 'bg-emerald-50',  text: 'text-emerald-700',      dot: 'bg-emerald-500' },
+  delivered:          { bg: 'bg-muted',       text: 'text-muted-foreground', dot: 'bg-muted-foreground' },
 }
 
 const emptyForm = {
@@ -66,11 +64,14 @@ export function AdminShipmentsPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [editShipment, setEditShipment] = useState<Shipment | null>(null)
   const [form, setForm] = useState(emptyForm)
-  const [editStatus, setEditStatus] = useState<ShipmentStatus>('pending')
+  const [editStatus, setEditStatus] = useState<ShipmentStatus>('in_china_warehouse')
   const [saving, setSaving] = useState(false)
   const [assignOpen, setAssignOpen] = useState<Shipment | null>(null)
   const [pendingOrders, setPendingOrders] = useState<{ id: string; tracking_code: string; product_name: string }[]>([])
   const [selectedOrders, setSelectedOrders] = useState<string[]>([])
+  const [assignCargoOpen, setAssignCargoOpen] = useState<Shipment | null>(null)
+  const [pendingCargo, setPendingCargo] = useState<{ id: string; client: string; origin: string | null; paid: boolean }[]>([])
+  const [selectedCargo, setSelectedCargo] = useState<string[]>([])
 
   async function loadShipments() {
     const { data: shipmentsData } = await supabase.from('shipments').select('*').order('created_at', { ascending: false })
@@ -81,17 +82,30 @@ export function AdminShipmentsPage() {
     const countMap: Record<string, number> = {}
     ;(junctions || []).forEach(j => { countMap[j.shipment_id] = (countMap[j.shipment_id] || 0) + 1 })
 
-    setShipments(shipmentsData.map(s => ({ ...(s as unknown as Shipment), order_count: countMap[s.id] || 0 })))
+    const { data: cargo } = await supabase
+      .from('product_requests').select('shipment_id').in('shipment_id', ids).eq('request_type', 'shipping')
+    const cargoMap: Record<string, number> = {}
+    ;(cargo || []).forEach(c => { if (c.shipment_id) cargoMap[c.shipment_id] = (cargoMap[c.shipment_id] || 0) + 1 })
+
+    setShipments(shipmentsData.map(s => ({
+      ...(s as unknown as Shipment),
+      order_count: countMap[s.id] || 0,
+      cargo_count: cargoMap[s.id] || 0,
+    })))
     setLoading(false)
   }
 
   async function loadPendingOrders() {
-    const { data } = await supabase
-      .from('orders')
-      .select('id, tracking_code, quotes(product_requests(product_name))')
-      .eq('status', 'paid')
+    const [{ data }, { data: assigned }] = await Promise.all([
+      supabase
+        .from('orders')
+        .select('id, tracking_code, quotes(product_requests(product_name))')
+        .in('status', ['paid', 'purchasing', 'in_china_warehouse']),
+      supabase.from('order_shipments').select('order_id'),
+    ])
+    const assignedIds = new Set((assigned || []).map(a => a.order_id))
     if (data) {
-      setPendingOrders(data.map((o: any) => ({
+      setPendingOrders(data.filter((o: any) => !assignedIds.has(o.id)).map((o: any) => ({
         id: o.id,
         tracking_code: o.tracking_code,
         product_name: o.quotes?.product_requests?.product_name || 'Produit',
@@ -99,12 +113,34 @@ export function AdminShipmentsPage() {
     }
   }
 
+  async function loadPendingCargo() {
+    const { data } = await supabase
+      .from('product_requests')
+      .select('id, user_id, origin_country, status')
+      .eq('request_type', 'shipping')
+      .in('status', ['invoiced', 'deposit_paid'])
+      .is('shipment_id', null)
+      .order('created_at', { ascending: false })
+    const rows = data || []
+    const userIds = [...new Set(rows.map(r => r.user_id))]
+    const { data: profiles } = userIds.length
+      ? await supabase.from('profiles').select('user_id, full_name').in('user_id', userIds)
+      : { data: [] as { user_id: string; full_name: string | null }[] }
+    const names = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]))
+    setPendingCargo(rows.map(r => ({
+      id: r.id,
+      client: names[r.user_id] || 'Client',
+      origin: r.origin_country,
+      paid: r.status === 'invoiced',
+    })))
+  }
+
   useEffect(() => { loadShipments() }, [])
 
   async function handleCreate() {
     setSaving(true)
     const { error } = await supabase.from('shipments').insert({
-      status: 'pending',
+      status: 'in_china_warehouse',
       vessel_info: form.vessel_info || null,
       container_number: form.container_number || null,
       departure_date: form.departure_date || null,
@@ -124,7 +160,8 @@ export function AdminShipmentsPage() {
     const { error } = await supabase.from('shipments').update({ status: editStatus, updated_at: new Date().toISOString() }).eq('id', editShipment.id)
     if (error) toast.error('Erreur.')
     else {
-      toast.success('Statut mis à jour.')
+      const n = (editShipment.order_count ?? 0) + (editShipment.cargo_count ?? 0)
+      toast.success(n > 0 ? `Statut mis à jour — ${editShipment.order_count ?? 0} commande(s) et ${editShipment.cargo_count ?? 0} cargaison(s) suivent automatiquement.` : 'Statut mis à jour.')
       setShipments(prev => prev.map(s => s.id === editShipment.id ? { ...s, status: editStatus } : s))
       setEditShipment(null)
     }
@@ -138,10 +175,26 @@ export function AdminShipmentsPage() {
     const { error } = await supabase.from('order_shipments').upsert(rows, { onConflict: 'order_id,shipment_id' })
     if (error) toast.error("Erreur lors de l'assignation.")
     else {
-      await supabase.from('orders').update({ status: 'shipped' }).in('id', selectedOrders)
       toast.success(`${selectedOrders.length} commande(s) assignée(s).`)
       setAssignOpen(null)
       setSelectedOrders([])
+      await loadShipments()
+    }
+    setSaving(false)
+  }
+
+  async function handleAssignCargo() {
+    if (!assignCargoOpen || selectedCargo.length === 0) return
+    setSaving(true)
+    const { error } = await supabase
+      .from('product_requests')
+      .update({ shipment_id: assignCargoOpen.id, updated_at: new Date().toISOString() })
+      .in('id', selectedCargo)
+    if (error) toast.error("Erreur lors de l'assignation.")
+    else {
+      toast.success(`${selectedCargo.length} cargaison(s) assignée(s).`)
+      setAssignCargoOpen(null)
+      setSelectedCargo([])
       await loadShipments()
     }
     setSaving(false)
@@ -202,13 +255,13 @@ export function AdminShipmentsPage() {
                 <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Départ</TableHead>
                 <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden md:table-cell">Arrivée est.</TableHead>
                 <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Conteneur</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Cmds</TableHead>
+                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Contenu</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map(s => {
-                const cfg = STATUS_CONFIG[s.status] || STATUS_CONFIG.pending
+                const cfg = STATUS_CONFIG[s.status] || STATUS_CONFIG.in_china_warehouse
                 const statusLabel = SHIPMENT_STATUSES.find(st => st.value === s.status)?.label || s.status
                 return (
                   <TableRow key={s.id} className="hover:bg-muted/20 transition-colors">
@@ -232,6 +285,8 @@ export function AdminShipmentsPage() {
                     <TableCell className="text-right">
                       <span className="text-sm font-semibold">{s.order_count}</span>
                       <span className="text-xs text-muted-foreground ml-1">cmd</span>
+                      <span className="text-sm font-semibold ml-2">{s.cargo_count}</span>
+                      <span className="text-xs text-muted-foreground ml-1">cargo</span>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -246,6 +301,9 @@ export function AdminShipmentsPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={async () => { await loadPendingOrders(); setAssignOpen(s) }}>
                             <Package className="mr-2 h-4 w-4" />Assigner commandes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={async () => { await loadPendingCargo(); setAssignCargoOpen(s) }}>
+                            <Ship className="mr-2 h-4 w-4" />Assigner cargaisons
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -319,6 +377,11 @@ export function AdminShipmentsPage() {
                 {SHIPMENT_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground leading-relaxed pt-1">
+              {editShipment && ((editShipment.order_count ?? 0) + (editShipment.cargo_count ?? 0)) > 0
+                ? <>Les <strong>{editShipment.order_count ?? 0} commande(s)</strong> et <strong>{editShipment.cargo_count ?? 0} cargaison(s)</strong> assignées prendront automatiquement ce statut, et leurs clients seront notifiés aux étapes clés.</>
+                : 'Aucune commande ni cargaison assignée pour le moment.'}
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditShipment(null)} className="rounded-xl">Annuler</Button>
@@ -366,6 +429,56 @@ export function AdminShipmentsPage() {
             <Button variant="outline" onClick={() => setAssignOpen(null)} className="rounded-xl">Annuler</Button>
             <Button onClick={handleAssignOrders} disabled={saving || selectedOrders.length === 0} className="rounded-xl">
               Assigner {selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign cargo dialog */}
+      <Dialog open={!!assignCargoOpen} onOpenChange={o => { if (!o) { setAssignCargoOpen(null); setSelectedCargo([]) } }}>
+        <DialogContent className="max-w-lg rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Assigner des cargaisons</DialogTitle>
+            <DialogDescription>
+              Cargaisons payées (totalement ou acompte) à inclure dans le lot <span className="font-mono font-semibold">{assignCargoOpen?.batch_code}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-64 overflow-y-auto py-2 space-y-2">
+            {pendingCargo.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Aucune cargaison payée en attente d'assignation.</p>
+            ) : (
+              pendingCargo.map(c => (
+                <label key={c.id} className={cn(
+                  'flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors',
+                  selectedCargo.includes(c.id) ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                )}>
+                  <input
+                    type="checkbox"
+                    checked={selectedCargo.includes(c.id)}
+                    onChange={e => setSelectedCargo(prev => e.target.checked ? [...prev, c.id] : prev.filter(id => id !== c.id))}
+                    className="rounded"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{c.client}</p>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      #{c.id.slice(0, 8).toUpperCase()}{c.origin ? ` · ${c.origin}` : ''}
+                    </p>
+                  </div>
+                  <span className={cn(
+                    'text-[10px] font-semibold rounded-full px-2 py-0.5 shrink-0',
+                    c.paid ? 'bg-emerald-50 text-emerald-700' : 'bg-teal-50 text-teal-700'
+                  )}>
+                    {c.paid ? 'Payé' : 'Acompte'}
+                  </span>
+                  {selectedCargo.includes(c.id) && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
+                </label>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignCargoOpen(null)} className="rounded-xl">Annuler</Button>
+            <Button onClick={handleAssignCargo} disabled={saving || selectedCargo.length === 0} className="rounded-xl">
+              Assigner {selectedCargo.length > 0 ? `(${selectedCargo.length})` : ''}
             </Button>
           </DialogFooter>
         </DialogContent>

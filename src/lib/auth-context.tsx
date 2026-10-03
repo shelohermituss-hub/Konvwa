@@ -19,7 +19,7 @@ interface AuthContextType {
   session: Session | null
   profile: Profile | null
   loading: boolean
-  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null }>
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: Error | null; needsConfirmation?: boolean }>
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Also ensure wallet exists
     await supabase
       .from('wallets')
-      .upsert({ user_id: userId, available_balance: 0, blocked_balance: 0 }, { onConflict: 'user_id' })
+      .upsert({ user_id: userId, available_balance: 0, blocked_balance: 0 }, { onConflict: 'user_id', ignoreDuplicates: true })
 
     setLoading(false)
   }
@@ -114,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           full_name: fullName,
           phone: phone || null,
@@ -125,6 +126,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error(error.message) }
     }
 
+    // No session means "Confirm email" is on: the profile/wallet are created by the DB trigger
+    if (!data.session) {
+      return { error: null, needsConfirmation: true }
+    }
+
     // Ensure profile + wallet exist (trigger may not have fired yet)
     if (data.user) {
       await supabase.from('profiles').upsert({
@@ -132,13 +138,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         full_name: fullName,
         phone: phone || null,
         role: 'client',
-      }, { onConflict: 'user_id' })
+      }, { onConflict: 'user_id', ignoreDuplicates: true })
 
       await supabase.from('wallets').upsert({
         user_id: data.user.id,
         available_balance: 0,
         blocked_balance: 0,
-      }, { onConflict: 'user_id' })
+      }, { onConflict: 'user_id', ignoreDuplicates: true })
     }
 
     return { error: null }

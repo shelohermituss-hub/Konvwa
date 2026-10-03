@@ -125,12 +125,6 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
 
     await supabase.from('product_requests').update({ status: 'quoted' }).eq('id', request.id)
     await supabase.from('orders').insert({ user_id: request.user_id, quote_id: quoteData.id, status: 'quote_sent' })
-    await supabase.from('notifications').insert({
-      user_id: request.user_id,
-      title: 'Devis prêt !',
-      message: `Votre devis pour "${request.product_name}" est prêt. Montant total: ${total.toLocaleString()} HTG.`,
-      type: 'success',
-    })
 
     toast.success('Devis créé et commande ouverte.')
     setSaving(false)
@@ -264,6 +258,7 @@ export function AdminQuotesPage() {
         shipping_origins!ship_from_id(name),
         shipping_rates!shipping_rate_id(mode, name)
       `)
+      .or('request_type.is.null,request_type.neq.shipping')
       .order('created_at', { ascending: false })
     if (!data) { setLoading(false); return }
 
@@ -420,7 +415,7 @@ export function AdminQuotesPage() {
                             await supabase.from('notifications').insert({
                               user_id: r.user_id,
                               title: 'Demande refusée',
-                              message: `Votre demande pour "${r.product_name}" n'a pas pu être traitée.`,
+                              body: `Votre demande pour "${r.product_name}" n'a pas pu être traitée.`,
                               type: 'warning',
                             })
                             setRequests(prev => prev.map(x => x.id === r.id ? { ...x, status: 'rejected' } : x))

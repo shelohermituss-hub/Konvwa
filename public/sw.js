@@ -1,5 +1,5 @@
-const CACHE_NAME = 'konvwa-v1'
-const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png']
+const CACHE_NAME = 'konvwa-v2'
+const STATIC_ASSETS = ['/manifest.json', '/icon-192.png', '/icon-512.png']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -22,17 +22,45 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
   if (url.hostname.includes('supabase') || url.hostname.includes('solutionip')) return
 
+  if (url.origin !== self.location.origin) return
+
+  // Pages: always network so a new deploy is picked up; never serve a stale index.html
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request))
+    return
+  }
+
+  // Hashed build assets: cache-first, but only keep real JS/CSS/font responses.
+  // The SPA rewrite answers missing files with index.html (200); caching that
+  // under a script URL leaves the app permanently blank.
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached
+        return fetch(event.request).then((res) => {
+          const type = res.headers.get('content-type') || ''
+          if (res.ok && !type.includes('text/html')) {
+            const clone = res.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          }
+          return res
+        })
+      })
+    )
+    return
+  }
+
+  // Everything else (icons, manifest): network first, cache as offline fallback
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request).then((res) => {
+    fetch(event.request)
+      .then((res) => {
         if (res.ok && res.type === 'basic') {
           const clone = res.clone()
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
         }
         return res
-      }).catch(() => cached)
-      return cached || network
-    })
+      })
+      .catch(() => caches.match(event.request))
   )
 })
 
@@ -56,8 +84,10 @@ self.addEventListener('push', (event) => {
     badge,
     vibrate:  [200, 100, 200],
     data:     { clickUrl },
-    tag:      type,
-    renotify: false,
+    // One tag per event: a shared tag per type made each notification silently replace the previous one
+    tag:      `${title}|${clickUrl}`,
+    renotify: true,
+    timestamp: Date.now(),
     requireInteraction: false,
     actions: [
       { action: 'open',    title: 'Ouvrir' },
@@ -75,7 +105,7 @@ self.addEventListener('notificationclick', (event) => {
 
   if (event.action === 'dismiss') return
 
-  const clickUrl = event.notification.data?.clickUrl ?? '/'
+  const clickUrl = new URL(event.notification.data?.clickUrl ?? '/', self.location.origin).href
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

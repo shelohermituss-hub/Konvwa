@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /orders
+Disallow: /shipments
+Disallow: /wallet
+Disallow: /notifications
+Disallow: /profile
+Disallow: /billing
+Disallow: /activity-log
+Disallow: /cart
+Disallow: /checkout
+Disallow: /submit
+Disallow: /support
+Disallow: /auth
+Disallow: /payment
+
+Sitemap: https://konvwa.shop/sitemap.xml

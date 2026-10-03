@@ -347,7 +347,7 @@ export interface Database {
         Row: {
           id: string
           batch_code: string
-          status: 'pending' | 'consolidating' | 'packed' | 'loaded' | 'sailing' | 'arrived' | 'cleared' | 'distributing' | 'completed'
+          status: 'in_china_warehouse' | 'shipped' | 'in_transit' | 'arrived_haiti' | 'customs_processing' | 'out_for_delivery' | 'delivered'
           vessel_info: string | null
           departure_date: string | null
           estimated_arrival: string | null
@@ -362,7 +362,7 @@ export interface Database {
         Insert: {
           id?: string
           batch_code?: string
-          status?: 'pending' | 'consolidating' | 'packed' | 'loaded' | 'sailing' | 'arrived' | 'cleared' | 'distributing' | 'completed'
+          status?: 'in_china_warehouse' | 'shipped' | 'in_transit' | 'arrived_haiti' | 'customs_processing' | 'out_for_delivery' | 'delivered'
           vessel_info?: string | null
           departure_date?: string | null
           estimated_arrival?: string | null
@@ -375,7 +375,7 @@ export interface Database {
           updated_at?: string
         }
         Update: {
-          status?: 'pending' | 'consolidating' | 'packed' | 'loaded' | 'sailing' | 'arrived' | 'cleared' | 'distributing' | 'completed'
+          status?: 'in_china_warehouse' | 'shipped' | 'in_transit' | 'arrived_haiti' | 'customs_processing' | 'out_for_delivery' | 'delivered'
           vessel_info?: string | null
           departure_date?: string | null
           estimated_arrival?: string | null
@@ -391,23 +391,27 @@ export interface Database {
         Row: {
           id: string
           user_id: string
+          type: string
           title: string
-          message: string
-          type: 'info' | 'success' | 'warning' | 'error' | null
-          read_at: string | null
+          body: string
+          data: Record<string, unknown> | null
+          read: boolean
           created_at: string
+          link: string | null
         }
         Insert: {
           id?: string
           user_id: string
+          type?: string
           title: string
-          message: string
-          type?: 'info' | 'success' | 'warning' | 'error' | null
-          read_at?: string | null
+          body: string
+          data?: Record<string, unknown> | null
+          read?: boolean
           created_at?: string
+          link?: string | null
         }
         Update: {
-          read_at?: string | null
+          read?: boolean
         }
       }
       support_tickets: {

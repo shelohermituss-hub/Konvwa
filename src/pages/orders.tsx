@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Search, Plus, ChevronRight, Clock, Package } from 'lucide-react'
+import { Search, Plus, ChevronRight, Clock } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
@@ -71,6 +71,7 @@ export function OrdersPage() {
         .from('product_requests')
         .select('id, product_name, category, status, created_at, urgency, product_url, notes, quantity, budget_estimate')
         .eq('user_id', user.id)
+        .or('request_type.is.null,request_type.neq.shipping')
         .in('status', ['submitted', 'reviewing'])
         .order('created_at', { ascending: false }),
     ]).then(([ordersRes, draftsRes]) => {
@@ -239,7 +240,7 @@ export function OrdersPage() {
                     <Link key={order.id} to={`/orders/${order.id}`}>
                       <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:border-primary/20 transition-colors">
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/8 shrink-0">
-                          <Package className="h-7 w-7 text-primary/60" strokeWidth={1.5} />
+                          <img src="/icon-box.jpg" alt="Commande" className="h-7 w-7 object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">

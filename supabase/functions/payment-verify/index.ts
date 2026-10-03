@@ -44,11 +44,20 @@ Deno.serve(async (req) => {
     // Find the pending transaction
     const { data: tx } = await supabaseAdmin
       .from('wallet_transactions')
-      .select('id, wallet_id, amount, status')
+      .select('id, wallet_id, amount, status, wallets!inner(user_id)')
       .eq('reference', reference_id)
       .maybeSingle()
 
     if (!tx) return new Response(JSON.stringify({ error: 'Transaction introuvable' }), { status: 404, headers: CORS })
+
+    // Only the owner of the deposit (or an admin) may trigger its verification
+    const owner = (tx as unknown as { wallets: { user_id: string } }).wallets?.user_id
+    if (owner !== user.id) {
+      const { data: me } = await supabaseAdmin.from('profiles').select('role').eq('user_id', user.id).maybeSingle()
+      if (!me || !['admin', 'manager'].includes(me.role)) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: CORS })
+      }
+    }
 
     // Already processed — idempotent
     if (tx.status === 'completed') {
@@ -58,11 +67,25 @@ Deno.serve(async (req) => {
     }
 
     if (plopData.trans_status === 'ok') {
-      // Credit wallet
-      await supabaseAdmin.rpc('increment_wallet_balance', { p_wallet_id: tx.wallet_id, p_amount: tx.amount })
+      // Claim the transaction atomically: of two concurrent verifications only one gets the row,
+      // so the wallet can never be credited twice for the same payment.
+      const { data: claimed } = await supabaseAdmin
+        .from('wallet_transactions')
+        .update({ status: 'completed' })
+        .eq('id', tx.id)
+        .in('status', ['pending', 'failed'])
+        .select('id')
+      if (!claimed?.length) {
+        return new Response(JSON.stringify({ verified: true, already_processed: true, amount: tx.amount }), {
+          headers: { ...CORS, 'Content-Type': 'application/json' },
+        })
+      }
 
-      // Mark transaction completed
-      await supabaseAdmin.from('wallet_transactions').update({ status: 'completed' }).eq('id', tx.id)
+      const { error: creditError } = await supabaseAdmin.rpc('increment_wallet_balance', { p_wallet_id: tx.wallet_id, p_amount: tx.amount })
+      if (creditError) {
+        await supabaseAdmin.from('wallet_transactions').update({ status: 'pending' }).eq('id', tx.id)
+        return new Response(JSON.stringify({ error: 'Crédit impossible, réessayez' }), { status: 500, headers: CORS })
+      }
 
       return new Response(
         JSON.stringify({ verified: true, amount: tx.amount, method: plopData.method }),

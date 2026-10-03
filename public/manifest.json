@@ -2,11 +2,13 @@
   "name": "KONVWA",
   "short_name": "KONVWA",
   "description": "Importez facilement depuis Alibaba, Shein et Temu vers Haïti",
+  "id": "/",
   "start_url": "/dashboard",
+  "launch_handler": { "client_mode": ["navigate-existing", "auto"] },
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0A1628",
-  "theme_color": "#F05A28",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
   "orientation": "portrait-primary",
   "lang": "fr-HT",
   "categories": ["shopping", "finance"],
@@ -21,7 +23,13 @@
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/logo.svg",

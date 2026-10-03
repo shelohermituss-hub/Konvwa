@@ -90,7 +90,7 @@ export function useAdminStats(): AdminStats {
         // Recent orders with customer + product
         supabase
           .from('orders')
-          .select('id, tracking_code, status, total_paid, created_at, quotes(total, product_requests(product_name)), profiles!orders_user_id_fkey(full_name)')
+          .select('id, user_id, tracking_code, status, total_paid, created_at, quotes(total, product_requests(product_name))')
           .order('created_at', { ascending: false })
           .limit(6),
         // Monthly orders for chart
@@ -107,14 +107,24 @@ export function useAdminStats(): AdminStats {
       const paidOrders = revenueRes.data ?? []
       const totalRevenuePaid = paidOrders.reduce((sum, o) => sum + (o.total_paid ?? 0), 0)
 
+      // orders.user_id points at auth.users, so customer names come from a separate profiles query
+      const recentRows = (recentOrdersRes.data ?? []) as any[]
+      const userIds = [...new Set(recentRows.map((o) => o.user_id).filter(Boolean))]
+      const names = new Map<string, string>()
+      if (userIds.length > 0) {
+        const { data: people } = await supabase.from('profiles').select('user_id, full_name').in('user_id', userIds)
+        for (const p of people ?? []) names.set(p.user_id, p.full_name)
+      }
+      if (cancelled) return
+
       // Map recent orders
-      const recentOrders: RecentOrder[] = (recentOrdersRes.data ?? []).map((o: any) => ({
+      const recentOrders: RecentOrder[] = recentRows.map((o: any) => ({
         id: o.id,
         tracking_code: o.tracking_code,
         status: o.status,
         total_paid: o.quotes?.total ?? o.total_paid ?? null,
         created_at: o.created_at,
-        customer_name: o.profiles?.full_name ?? null,
+        customer_name: names.get(o.user_id) ?? null,
         product_name: o.quotes?.product_requests?.product_name ?? null,
       }))
 

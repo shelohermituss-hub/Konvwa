@@ -366,7 +366,9 @@ html, body, #root {
 }
 
 .page-enter {
-  animation: pageEnter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* backwards (not both): keeping the final transform would turn this wrapper
+     into the containing block of every position:fixed descendant */
+  animation: pageEnter 280ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 /* ============================================================

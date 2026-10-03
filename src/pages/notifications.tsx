@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Bell, Check, Trash2, Info, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
@@ -14,7 +15,8 @@ interface Notification {
   title: string
   message: string
   type: 'info' | 'success' | 'warning' | 'error'
-  read_at: string | null
+  read: boolean
+  link: string | null
   created_at: string
 }
 
@@ -37,12 +39,13 @@ export function NotificationsPage() {
   const { user } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   async function load() {
     if (!user) return
     const { data } = await supabase
       .from('notifications')
-      .select('id, title, message, type, read_at, created_at')
+      .select('id, title, message:body, type, read, created_at, link')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     if (data) setNotifications(data as Notification[])
@@ -53,9 +56,17 @@ export function NotificationsPage() {
 
   async function markAllRead() {
     if (!user) return
-    await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('user_id', user.id).is('read_at', null)
-    setNotifications((prev) => prev.map((n) => ({ ...n, read_at: n.read_at || new Date().toISOString() })))
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false)
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
     toast.success('Toutes les notifications lues.')
+  }
+
+  async function open(n: Notification) {
+    if (!n.read) {
+      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)))
+      await supabase.from('notifications').update({ read: true }).eq('id', n.id)
+    }
+    if (n.link) navigate(n.link)
   }
 
   async function deleteOne(id: string) {
@@ -63,7 +74,7 @@ export function NotificationsPage() {
     setNotifications((prev) => prev.filter((n) => n.id !== id))
   }
 
-  const unread = notifications.filter((n) => !n.read_at)
+  const unread = notifications.filter((n) => !n.read)
 
   function timeAgo(dateStr: string) {
     const diff = Date.now() - new Date(dateStr).getTime()
@@ -116,9 +127,9 @@ export function NotificationsPage() {
             {notifications.map((n, i) => {
               const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.info
               const Icon = config.icon
-              const isUnread = !n.read_at
+              const isUnread = !n.read
               const imgSrc = config.imgSrc
-              const showReadHeader = i > 0 && !notifications[i - 1].read_at && !isUnread && notifications.some((x) => !x.read_at)
+              const showReadHeader = i > 0 && !notifications[i - 1].read && !isUnread && notifications.some((x) => !x.read)
               return (
                 <div key={n.id}>
                   {showReadHeader && (
@@ -126,8 +137,9 @@ export function NotificationsPage() {
                   )}
                   <div className={cn(
                     'relative flex gap-3 rounded-2xl p-4 transition-colors',
+                    n.link && 'cursor-pointer',
                     isUnread ? 'bg-white border border-gray-100 shadow-sm' : 'bg-white/60 border border-transparent'
-                  )}>
+                  )} onClick={() => open(n)}>
                     <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl shrink-0', config.iconBg)}>
                       {imgSrc
                         ? <img src={imgSrc} alt="" className="h-6 w-6 object-contain" />
@@ -142,7 +154,7 @@ export function NotificationsPage() {
                       <p className="text-[10px] text-muted-foreground/60 mt-1.5">{timeAgo(n.created_at)}</p>
                     </div>
                     <button
-                      onClick={() => deleteOne(n.id)}
+                      onClick={(e) => { e.stopPropagation(); deleteOne(n.id) }}
                       className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
                     >
                       <Trash2 className="h-3.5 w-3.5" />

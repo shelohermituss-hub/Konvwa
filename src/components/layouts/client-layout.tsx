@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import {
   LayoutDashboard, ShoppingBag, Ship, Bell, User, Wallet, HelpCircle, Send,
   Globe, ChevronDown, Check, LogOut, Settings, Activity, CreditCard,
-  ShoppingCart, Clock, Package, AlertCircle, Info,
+  ShoppingCart, Clock, Package, AlertCircle, Info, Download,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n, type Lang } from '@/lib/i18n-context'
@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { PwaExperience } from '@/components/shared/pwa-experience'
+import { isStandalone, requestInstall } from '@/lib/pwa'
 import { formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
 
@@ -43,9 +44,9 @@ const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
 interface NotifItem {
   id: string
   title: string
-  message: string
+  body: string
   type: string
-  read_at: string | null
+  read: boolean
   created_at: string
 }
 
@@ -59,7 +60,7 @@ function useUnread(userId: string | undefined) {
         .from('notifications')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .is('read_at', null)
+        .eq('read', false)
         .then(({ count }) => setUnread(count ?? 0))
 
     fetch()
@@ -96,7 +97,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
     setLoading(true)
     const { data } = await supabase
       .from('notifications')
-      .select('id, title, message, type, read_at, created_at')
+      .select('id, title, body, type, read, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(5)
@@ -146,13 +147,13 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
               <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer">
                 <div className={cn(
                   'flex h-9 w-9 items-center justify-center rounded-xl shrink-0 mt-0.5',
-                  n.read_at ? 'bg-muted' : 'bg-primary/8'
+                  n.read ? 'bg-muted' : 'bg-primary/8'
                 )}>
                   <NotifIcon type={n.type} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold leading-tight truncate">{n.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{n.body}</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-1 flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {formatDistanceToNow(new Date(n.created_at), {
@@ -161,7 +162,7 @@ function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
                     })}
                   </p>
                 </div>
-                {!n.read_at && (
+                {!n.read && (
                   <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-2" />
                 )}
               </div>
@@ -188,6 +189,7 @@ function ProfileMenu() {
   const { profile, user, signOut } = useAuth()
   const navigate = useNavigate()
   const { t } = useI18n()
+  const [canInstall] = useState(() => !isStandalone())
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -232,6 +234,15 @@ function ProfileMenu() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium text-sm">{t('billing.title')}</span>
           </DropdownMenuItem>
+          {canInstall && (
+            <DropdownMenuItem
+              className="rounded-xl cursor-pointer px-3 py-2.5 gap-3"
+              onSelect={() => { void requestInstall() }}
+            >
+              <Download className="h-4 w-4 text-primary" />
+              <span className="font-medium text-sm">Installer l'application</span>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator className="mx-2 my-1" />
           <DropdownMenuItem
             className="rounded-xl cursor-pointer px-3 py-2.5 gap-3 text-destructive focus:text-destructive focus:bg-destructive/8"
@@ -464,17 +475,17 @@ export function ClientLayout() {
   const unread = useUnread(user?.id)
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-dvh bg-background overflow-hidden">
       <DesktopSidebar unread={unread} />
 
-      <div className="flex-1 min-w-0 flex flex-col lg:ml-[240px] xl:ml-[260px] min-h-screen">
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-[240px] xl:ml-[260px] h-full min-h-0">
         <div className="lg:hidden">
           <TopHeader unread={unread} userId={user?.id} />
         </div>
 
-        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+        <main className="flex-1 min-h-0 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-8">
           <PwaExperience userId={user?.id} />
-          <div key={location.pathname} className="page-enter">
+          <div key={location.pathname} className="page-enter flex min-h-full flex-col [&>*]:flex-1">
             <Outlet />
           </div>
         </main>

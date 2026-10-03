@@ -56,6 +56,46 @@ async function saveSubscription(
   })
 }
 
+function sameKey(sub: PushSubscription, wanted: Uint8Array): boolean {
+  const current = sub.options?.applicationServerKey
+  if (!current) return false
+  const a = new Uint8Array(current)
+  return a.length === wanted.length && a.every((b, i) => b === wanted[i])
+}
+
+// Returns a subscription made with the current VAPID key, replacing any stale one
+// (a subscription created with another key is rejected by the push service with 403 forever).
+async function ensureSubscription(
+  userId: string,
+  vapidKey: string,
+  types: NotificationTypes,
+): Promise<PushSubscription | null> {
+  const reg = await getRegistration()
+  if (!reg) return null
+
+  const wanted = urlBase64ToUint8Array(vapidKey)
+  let sub = await reg.pushManager.getSubscription()
+
+  if (sub && !sameKey(sub, wanted)) {
+    await removeSubscription(userId, sub.endpoint)
+    await sub.unsubscribe()
+    sub = null
+  }
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: wanted })
+  }
+
+  const { data } = await supabase
+    .from('push_subscriptions')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('subscription->>endpoint', sub.endpoint)
+    .limit(1)
+  if (!data?.length) await saveSubscription(userId, sub, types)
+
+  return sub
+}
+
 async function removeSubscription(userId: string, endpoint: string) {
   await supabase
     .from('push_subscriptions')
@@ -87,6 +127,14 @@ export function usePushNotifications(userId?: string) {
       const sub = await reg.pushManager.getSubscription()
       setSubscribed(!!sub)
     })
+
+    // Permission already granted: silently repair a missing / outdated subscription
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+    if (Notification.permission === 'granted' && vapidKey) {
+      ensureSubscription(userId, vapidKey, DEFAULT_TYPES)
+        .then((sub) => setSubscribed(!!sub))
+        .catch((e) => console.error('[push] repair error:', e))
+    }
   }, [isSupported, userId])
 
   // Listen for SW-broadcasted subscription changes
@@ -129,16 +177,8 @@ export function usePushNotifications(userId?: string) {
       setPermission(perm as PushPermission)
       if (perm !== 'granted') return false
 
-      const reg = await getRegistration()
-      if (!reg) return false
-
-      let sub = await reg.pushManager.getSubscription()
-      if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly:      true,
-          applicationServerKey: urlBase64ToUint8Array(vapidKey),
-        })
-      }
+      const sub = await ensureSubscription(userId, vapidKey, preferredTypes)
+      if (!sub) return false
 
       await saveSubscription(userId, sub, preferredTypes)
       setSubscribed(true)
