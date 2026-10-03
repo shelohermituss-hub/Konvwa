@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { normalizeTiers, type PriceTier } from '@/lib/product-pricing'
 
 interface Product {
   id: string
@@ -26,6 +27,18 @@ interface Product {
   active: boolean
   featured: boolean
   stock_available: boolean
+  price_tiers: PriceTier[]
+  supplier_verified: boolean
+  supplier_years: number | null
+  supplier_country: string | null
+  sold_count: number
+  rating: number | null
+  review_count: number
+  repurchase_rate: number | null
+  processing_days: number | null
+  customization_options: string[]
+  tags: string[]
+  certifications: string[]
   created_at: string
 }
 
@@ -46,7 +59,22 @@ const emptyDraft = (): ProductDraft => ({
   active: true,
   featured: false,
   stock_available: true,
+  price_tiers: [],
+  supplier_verified: false,
+  supplier_years: null,
+  supplier_country: 'CN',
+  sold_count: 0,
+  rating: null,
+  review_count: 0,
+  repurchase_rate: null,
+  processing_days: null,
+  customization_options: [],
+  tags: [],
+  certifications: [],
 })
+
+const lines = (raw: string) => raw.split('\n').map(l => l.trim()).filter(Boolean)
+const numOrNull = (raw: string) => (raw === '' ? null : Number(raw))
 
 export function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -62,6 +90,10 @@ export function AdminProductsPage() {
   const [specVal, setSpecVal] = useState('')
   // Images as comma-separated URLs
   const [imagesRaw, setImagesRaw] = useState('')
+  // One entry per line
+  const [optionsRaw, setOptionsRaw] = useState('')
+  const [tagsRaw, setTagsRaw] = useState('')
+  const [certsRaw, setCertsRaw] = useState('')
 
   async function load() {
     setLoading(true)
@@ -80,6 +112,9 @@ export function AdminProductsPage() {
     const d = emptyDraft()
     setDraft(d)
     setImagesRaw('')
+    setOptionsRaw('')
+    setTagsRaw('')
+    setCertsRaw('')
     setSpecKey('')
     setSpecVal('')
     setDialogOpen(true)
@@ -102,7 +137,22 @@ export function AdminProductsPage() {
       active: p.active,
       featured: p.featured,
       stock_available: p.stock_available,
+      price_tiers: normalizeTiers(p.price_tiers),
+      supplier_verified: p.supplier_verified,
+      supplier_years: p.supplier_years,
+      supplier_country: p.supplier_country,
+      sold_count: p.sold_count,
+      rating: p.rating,
+      review_count: p.review_count,
+      repurchase_rate: p.repurchase_rate,
+      processing_days: p.processing_days,
+      customization_options: p.customization_options,
+      tags: p.tags,
+      certifications: p.certifications,
     })
+    setOptionsRaw(p.customization_options.join('\n'))
+    setTagsRaw(p.tags.join('\n'))
+    setCertsRaw(p.certifications.join('\n'))
     setImagesRaw(p.images.join(', '))
     setSpecKey('')
     setSpecVal('')
@@ -133,9 +183,18 @@ export function AdminProductsPage() {
     })
   }
 
+  function setTier(index: number, patch: Partial<PriceTier>) {
+    setDraft(prev => ({ ...prev, price_tiers: prev.price_tiers.map((t, i) => (i === index ? { ...t, ...patch } : t)) }))
+  }
+
   async function handleSave() {
     if (!draft.name.trim() || draft.price_htg <= 0) {
       toast.error('Veuillez renseigner le nom et un prix valide.')
+      return
+    }
+    const tiers = normalizeTiers(draft.price_tiers)
+    if (tiers.some(t => t.min_qty <= draft.moq)) {
+      toast.error('Chaque palier doit commencer au-dessus de la quantité minimum (MOQ).')
       return
     }
 
@@ -147,6 +206,11 @@ export function AdminProductsPage() {
       category: draft.category?.trim() || null,
       description: (draft.description ?? '').trim() || null,
       images: imagesRaw.split(',').map(s => s.trim()).filter(Boolean),
+      price_tiers: tiers,
+      supplier_country: draft.supplier_country?.trim().toUpperCase() || null,
+      customization_options: lines(optionsRaw),
+      tags: lines(tagsRaw),
+      certifications: lines(certsRaw),
     }
 
     if (editing) {
@@ -353,9 +417,80 @@ export function AdminProductsPage() {
               </div>
             </div>
 
+            {/* Price by quantity */}
+            <div className="space-y-2">
+              <Label>Prix par quantité (paliers)</Label>
+              <p className="text-xs text-muted-foreground">
+                Le prix de base s'applique dès le MOQ. Chaque palier donne un prix unitaire plus bas à partir d'une quantité.
+              </p>
+              {draft.price_tiers.map((tier, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input type="number" min={1} value={tier.min_qty || ''} onChange={e => setTier(i, { min_qty: parseInt(e.target.value) || 0 })} placeholder="À partir de (qté)" className="flex-1" />
+                  <Input type="number" min={0} value={tier.price_htg || ''} onChange={e => setTier(i, { price_htg: parseFloat(e.target.value) || 0 })} placeholder="Prix unitaire HTG" className="flex-1" />
+                  <button type="button" onClick={() => setDraft(prev => ({ ...prev, price_tiers: prev.price_tiers.filter((_, j) => j !== i) }))} className="text-destructive hover:text-destructive/80" aria-label="Retirer le palier">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => setDraft(prev => ({ ...prev, price_tiers: [...prev.price_tiers, { min_qty: 0, price_htg: 0 }] }))}>
+                + Ajouter un palier
+              </Button>
+            </div>
+
+            {/* Supplier + social proof */}
+            <div className="grid grid-cols-2 gap-4">
+              <label className="col-span-2 flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={draft.supplier_verified} onChange={e => setField('supplier_verified', e.target.checked)} className="h-4 w-4 rounded" />
+                <span className="text-sm font-medium">Fournisseur vérifié</span>
+              </label>
+              <div className="space-y-1.5">
+                <Label>Années d'activité du fournisseur</Label>
+                <Input type="number" min={0} value={draft.supplier_years ?? ''} onChange={e => setField('supplier_years', numOrNull(e.target.value))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Pays du fournisseur</Label>
+                <Input value={draft.supplier_country ?? ''} onChange={e => setField('supplier_country', e.target.value)} placeholder="CN" maxLength={2} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nombre de ventes</Label>
+                <Input type="number" min={0} value={draft.sold_count || ''} onChange={e => setField('sold_count', parseInt(e.target.value) || 0)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Note (0 à 5)</Label>
+                <Input type="number" min={0} max={5} step={0.1} value={draft.rating ?? ''} onChange={e => setField('rating', numOrNull(e.target.value))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nombre d'avis</Label>
+                <Input type="number" min={0} value={draft.review_count || ''} onChange={e => setField('review_count', parseInt(e.target.value) || 0)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Taux de réachat (%)</Label>
+                <Input type="number" min={0} max={100} value={draft.repurchase_rate ?? ''} onChange={e => setField('repurchase_rate', numOrNull(e.target.value))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Temps de traitement (jours)</Label>
+                <Input type="number" min={0} value={draft.processing_days ?? ''} onChange={e => setField('processing_days', numOrNull(e.target.value))} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Options de personnalisation (une par ligne)</Label>
+              <Textarea value={optionsRaw} onChange={e => setOptionsRaw(e.target.value)} rows={3} placeholder={'Design de logo/graphique\nEmballage\nÉtiquette à accrocher'} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Points forts (un par ligne)</Label>
+                <Textarea value={tagsRaw} onChange={e => setTagsRaw(e.target.value)} rows={3} placeholder={'Retour facile\nExpédition sous 14 jours'} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Certifications (une par ligne)</Label>
+                <Textarea value={certsRaw} onChange={e => setCertsRaw(e.target.value)} rows={3} placeholder="CE certifié" />
+              </div>
+            </div>
+
             {/* Specs */}
             <div className="space-y-2">
-              <Label>Spécifications</Label>
+              <Label>Caractéristiques (affichées en grille sur la fiche)</Label>
               {Object.entries(draft.specifications).map(([k, v]) => (
                 <div key={k} className="flex items-center gap-2 text-sm bg-gray-50 rounded-lg px-3 py-2">
                   <span className="font-medium flex-1">{k}</span>

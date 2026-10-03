@@ -1,26 +1,43 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ShoppingCart, Package, Truck, CheckCircle, Minus, Plus, Loader2 } from 'lucide-react'
+import {
+  BadgeCheck, CheckCircle2, ChevronDown, ChevronLeft, Headset, Loader2, Lock, MessageCircle, Minus, Package,
+  Plus, Search, Share2, ShieldCheck, ShoppingCart, Star, Store, Truck, Wallet,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
+import { CATALOG_DETAIL_SELECT, CATALOG_LIST_SELECT, type CatalogProduct } from '@/lib/catalog'
+import { formatHtg, tierRows, unitPriceFor } from '@/lib/product-pricing'
+import { ProductCard } from '@/components/shared/product-card'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-interface Product {
-  id: string
-  name: string
-  description: string | null
-  price_htg: number
-  moq: number
-  unit: string
-  supplier_name: string | null
-  category: string | null
-  delivery_days_min: number | null
-  delivery_days_max: number | null
-  images: string[]
-  specifications: Record<string, string>
-  stock_available: boolean
+type TabId = 'overview' | 'details' | 'related'
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'overview', label: 'Aperçu' },
+  { id: 'details', label: 'Détails' },
+  { id: 'related', label: 'Autres produits' },
+]
+
+const PROTECTIONS = [
+  { icon: ShieldCheck, label: 'Paiements sécurisés' },
+  { icon: Truck, label: 'Suivi de commande' },
+  { icon: Headset, label: 'Service client' },
+  { icon: Lock, label: 'Confidentialité des données' },
+]
+
+const SPEC_PREVIEW = 6
+const OPTION_PREVIEW = 3
+
+function Section({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
+  return (
+    <section id={id} className="scroll-mt-28 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <h2 className="mb-3 text-base font-bold tracking-tight">{title}</h2>
+      {children}
+    </section>
+  )
 }
 
 export function ProductDetailPage() {
@@ -28,28 +45,60 @@ export function ProductDetailPage() {
   const navigate = useNavigate()
   const { t } = useI18n()
   const { addItem, count } = useCart()
-  const [product, setProduct] = useState<Product | null>(null)
+  const [product, setProduct] = useState<CatalogProduct | null>(null)
+  const [related, setRelated] = useState<CatalogProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [adding, setAdding] = useState(false)
   const [activeImg, setActiveImg] = useState(0)
+  const [titleOpen, setTitleOpen] = useState(false)
+  const [allSpecs, setAllSpecs] = useState(false)
+  const [allOptions, setAllOptions] = useState(false)
+  const [tab, setTab] = useState<TabId>('overview')
+  const galleryRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!id) return
+    setLoading(true)
     supabase
       .from('products')
-      .select('id, name, description, price_htg, moq, unit, supplier_name, category, delivery_days_min, delivery_days_max, images, specifications, stock_available')
+      .select(CATALOG_DETAIL_SELECT)
       .eq('id', id)
       .eq('active', true)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) {
-          setProduct(data as Product)
-          setQuantity((data as Product).moq)
-        }
+        const p = data as unknown as CatalogProduct | null
+        setProduct(p)
+        if (p) setQuantity(p.moq)
+        setActiveImg(0)
         setLoading(false)
+        window.scrollTo?.({ top: 0 })
       })
   }, [id])
+
+  useEffect(() => {
+    if (!product?.category) { setRelated([]); return }
+    supabase
+      .from('products')
+      .select(CATALOG_LIST_SELECT)
+      .eq('active', true)
+      .eq('category', product.category)
+      .neq('id', product.id)
+      .limit(8)
+      .then(({ data }) => setRelated((data ?? []) as unknown as CatalogProduct[]))
+  }, [product?.id, product?.category])
+
+  const goToImage = useCallback((index: number) => {
+    const el = galleryRef.current
+    if (!el) return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    el.scrollTo({ left: index * el.clientWidth, behavior: reduce ? 'auto' : 'smooth' })
+  }, [])
+
+  function goToSection(target: TabId) {
+    setTab(target)
+    document.getElementById(`section-${target}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   async function handleAddToCart() {
     if (!product) return
@@ -62,9 +111,23 @@ export function ProductDetailPage() {
     })
   }
 
+  async function handleShare() {
+    if (!product) return
+    const url = window.location.href
+    try {
+      if (navigator.share) await navigator.share({ title: product.name, url })
+      else {
+        await navigator.clipboard.writeText(url)
+        toast.success('Lien copié')
+      }
+    } catch {
+      /* the user closed the share sheet */
+    }
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#F4F5F7]">
         <Loader2 className="h-7 w-7 animate-spin text-primary/60" />
       </div>
     )
@@ -72,186 +135,408 @@ export function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#F4F5F7] flex flex-col items-center justify-center gap-3 px-8 text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#F4F5F7] px-8 text-center">
         <Package className="h-12 w-12 text-muted-foreground/30" />
         <p className="font-semibold">Produit introuvable</p>
-        <button onClick={() => navigate('/products')} className="text-sm text-primary font-medium">
+        <button onClick={() => navigate('/products')} className="text-sm font-medium text-primary">
           Retour aux produits
         </button>
       </div>
     )
   }
 
-  const subtotal = product.price_htg * quantity
+  const rows = tierRows(product)
+  const unitPrice = unitPriceFor(product, quantity)
+  const subtotal = unitPrice * quantity
+  const specs = Object.entries(product.specifications ?? {})
+  const shownSpecs = allSpecs ? specs : specs.slice(0, SPEC_PREVIEW)
+  const shownOptions = allOptions ? product.customization_options : product.customization_options.slice(0, OPTION_PREVIEW)
+  const supplierMeta = [
+    product.supplier_years ? `${product.supplier_years} ${product.supplier_years > 1 ? 'ans' : 'an'}` : null,
+    product.supplier_country,
+  ].filter(Boolean).join(' · ')
+  const delivery = product.delivery_days_min
+    ? `${product.delivery_days_min}–${product.delivery_days_max ?? product.delivery_days_min} jours`
+    : null
 
   return (
-    <div className="min-h-full bg-[#F4F5F7] pb-32">
+    <div className="min-h-full bg-[#F4F5F7] pb-36">
       {/* Top bar */}
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between bg-white/95 backdrop-blur-md px-4 border-b border-gray-100 shadow-sm">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          onClick={() => navigate('/cart')}
-          className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors"
-        >
-          <ShoppingCart className="h-5 w-5" strokeWidth={1.8} />
-          {count > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white">
-              {count > 9 ? '9+' : count}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Images */}
-      <div className="bg-white">
-        <div className="w-full aspect-square bg-gray-50 overflow-hidden flex items-center justify-center">
-          {product.images.length > 0 ? (
-            <img src={product.images[activeImg]} alt={product.name} className="w-full h-full object-cover" />
-          ) : (
-            <Package className="h-20 w-20 text-muted-foreground/20" />
-          )}
+      <div className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur-md">
+        <div className="flex h-14 items-center gap-2 px-3">
+          <button
+            onClick={() => navigate(-1)}
+            aria-label="Retour"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => navigate('/products')}
+            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border-2 border-primary/60 bg-white px-3 text-left"
+          >
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="truncate text-sm text-muted-foreground">{product.category ?? 'Rechercher un produit'}</span>
+          </button>
+          <button
+            onClick={handleShare}
+            aria-label="Partager"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted"
+          >
+            <Share2 className="h-5 w-5" strokeWidth={1.8} />
+          </button>
+          <button
+            onClick={() => navigate('/cart')}
+            aria-label="Panier"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted"
+          >
+            <ShoppingCart className="h-5 w-5" strokeWidth={1.8} />
+            {count > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white">
+                {count > 9 ? '9+' : count}
+              </span>
+            )}
+          </button>
         </div>
-        {product.images.length > 1 && (
-          <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-none">
-            {product.images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveImg(i)}
-                className={cn(
-                  'shrink-0 h-14 w-14 rounded-xl overflow-hidden border-2 transition-colors',
-                  activeImg === i ? 'border-primary' : 'border-gray-100'
-                )}
-              >
-                <img src={img} alt="" className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex gap-6 px-4" role="tablist">
+          {TABS.filter((tb) => tb.id !== 'related' || related.length > 0).map((tb) => (
+            <button
+              key={tb.id}
+              role="tab"
+              aria-selected={tab === tb.id}
+              onClick={() => goToSection(tb.id)}
+              className={cn(
+                'relative h-11 text-sm transition-colors',
+                tab === tb.id ? 'font-bold text-foreground' : 'font-medium text-muted-foreground',
+              )}
+            >
+              {tb.label}
+              {tab === tb.id && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-foreground" />}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="px-4 pt-4 space-y-4">
-        {/* Title + price */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          {product.category && (
-            <span className="inline-block text-[10px] font-bold uppercase tracking-wide text-primary bg-primary/8 px-2.5 py-0.5 rounded-full mb-2">
-              {product.category}
-            </span>
-          )}
-          <h1 className="text-xl font-bold leading-snug">{product.name}</h1>
-          {product.supplier_name && (
-            <p className="text-sm text-muted-foreground mt-1">{product.supplier_name}</p>
-          )}
-          <div className="flex items-end gap-3 mt-3">
-            <div>
-              <p className="text-2xl font-black text-primary">
-                {product.price_htg.toLocaleString('fr-HT')}
-                <span className="text-sm font-semibold text-muted-foreground"> HTG / {product.unit}</span>
-              </p>
+      <div id="section-overview" className="scroll-mt-28">
+        {/* Gallery */}
+        <div className="bg-white">
+          <div className="relative">
+            <div
+              ref={galleryRef}
+              onScroll={(e) => {
+                const el = e.currentTarget
+                setActiveImg(Math.round(el.scrollLeft / el.clientWidth))
+              }}
+              className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto bg-gray-50 scrollbar-none"
+            >
+              {product.images.length > 0 ? (
+                product.images.map((img, i) => (
+                  <img
+                    key={img + i}
+                    src={img}
+                    alt={i === 0 ? product.name : ''}
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    className="h-full w-full shrink-0 snap-center object-cover"
+                  />
+                ))
+              ) : (
+                <div className="flex h-full w-full shrink-0 items-center justify-center">
+                  <Package className="h-20 w-20 text-muted-foreground/20" />
+                </div>
+              )}
             </div>
-            {!product.stock_available && (
-              <span className="text-xs font-bold text-destructive bg-destructive/8 px-2.5 py-1 rounded-full">
-                Rupture de stock
+            {product.images.length > 1 && (
+              <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
+                Photos {activeImg + 1}/{product.images.length}
               </span>
             )}
           </div>
+          {product.images.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none">
+              {product.images.map((img, i) => (
+                <button
+                  key={img + i}
+                  onClick={() => goToImage(i)}
+                  aria-label={`Photo ${i + 1}`}
+                  className={cn(
+                    'h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-colors',
+                    activeImg === i ? 'border-foreground' : 'border-gray-100',
+                  )}
+                >
+                  <img src={img} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Key info chips */}
-        <div className="grid grid-cols-3 gap-2.5">
-          <div className="bg-white rounded-2xl p-3 text-center border border-gray-100 shadow-sm">
-            <Package className="h-5 w-5 text-primary mx-auto mb-1" />
-            <p className="text-[10px] text-muted-foreground">{t('products.moq')}</p>
-            <p className="text-sm font-bold">{product.moq} {product.unit}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-3 text-center border border-gray-100 shadow-sm">
-            <Truck className="h-5 w-5 text-primary mx-auto mb-1" />
-            <p className="text-[10px] text-muted-foreground">{t('products.delivery')}</p>
-            <p className="text-sm font-bold">
-              {product.delivery_days_min
-                ? `${product.delivery_days_min}–${product.delivery_days_max ?? product.delivery_days_min}j`
-                : '—'}
+        <div className="space-y-3 px-3 pt-3">
+          {/* Title + social proof */}
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setTitleOpen((o) => !o)}
+              aria-expanded={titleOpen}
+              className="flex w-full items-start justify-between gap-3 text-left"
+            >
+              <h1 className={cn('text-[17px] font-bold leading-snug', !titleOpen && 'line-clamp-2')}>{product.name}</h1>
+              <ChevronDown className={cn('mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform', titleOpen && 'rotate-180')} />
+            </button>
+            <p className="mt-2 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+              {product.sold_count > 0 && <span>{product.sold_count.toLocaleString('fr-HT')} vendus</span>}
+              {product.rating != null && (
+                <span className="inline-flex items-center gap-1">
+                  {product.sold_count > 0 && <span aria-hidden>·</span>}
+                  Note : <strong className="text-foreground">{String(product.rating).replace('.', ',')}</strong>
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
+                  {product.review_count > 0 && <span className="underline">({product.review_count})</span>}
+                </span>
+              )}
+              {!product.stock_available && (
+                <span className="rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-bold text-destructive">Rupture de stock</span>
+              )}
             </p>
+
+            {/* Price by quantity */}
+            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-muted/50 p-3" aria-label="Prix selon la quantité">
+              {rows.map((r) => {
+                const active = quantity >= r.from && (r.to === null || quantity <= r.to)
+                return (
+                  <div key={r.from}>
+                    <p className={cn('text-xl font-extrabold tabular-nums tracking-tight', active ? 'text-primary' : 'text-foreground')}>
+                      {formatHtg(r.price)} <span className="text-xs font-semibold text-muted-foreground">HTG</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {rows.length > 1 && r === rows[0]
+                        ? `Commande minimale : ${r.from} ${product.unit}`
+                        : r.to === null ? `≥ ${r.from} ${product.unit}` : `${r.from}–${r.to} ${product.unit}`}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+            {rows.length === 1 && (
+              <p className="mt-2 text-sm text-muted-foreground">Commande minimale : {product.moq} {product.unit}</p>
+            )}
+
+            {/* Quantity */}
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quantité</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatHtg(unitPrice)} HTG / {product.unit}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">
+                <button
+                  onClick={() => setQuantity((q) => Math.max(product.moq, q - 1))}
+                  disabled={quantity <= product.moq}
+                  aria-label="Diminuer la quantité"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white disabled:opacity-30"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={product.moq}
+                  value={quantity}
+                  aria-label="Quantité"
+                  onChange={(e) => setQuantity(Math.max(product.moq, Math.floor(Number(e.target.value)) || product.moq))}
+                  className="h-10 w-16 bg-transparent text-center text-sm font-bold tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button
+                  onClick={() => setQuantity((q) => q + 1)}
+                  aria-label="Augmenter la quantité"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="bg-white rounded-2xl p-3 text-center border border-gray-100 shadow-sm">
-            <CheckCircle className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
-            <p className="text-[10px] text-muted-foreground">Statut</p>
-            <p className={cn('text-sm font-bold', product.stock_available ? 'text-emerald-600' : 'text-destructive')}>
-              {product.stock_available ? 'Disponible' : 'Indispo.'}
+
+          {/* Delivery + customization tiles */}
+          {(delivery || product.customization_options.length > 0) && (
+            <div className="grid grid-cols-2 gap-3">
+              {delivery ? (
+                <div className="rounded-xl bg-white p-3 shadow-sm">
+                  <p className="font-bold">Livraison</p>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">Estimée : {delivery}</p>
+                </div>
+              ) : <span />}
+              {product.customization_options.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('section-custom')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  className="rounded-xl bg-white p-3 text-left shadow-sm"
+                >
+                  <p className="font-bold">Personnalisation</p>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">{product.customization_options.slice(0, 2).join(', ')}</p>
+                </button>
+              )}
+            </div>
+          )}
+
+          {product.certifications.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {product.certifications.map((c) => (
+                <span key={c} className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-sm text-amber-800 shadow-sm">
+                  <ShieldCheck className="h-4 w-4" aria-hidden /> {c}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Protection */}
+          <Section title="Protection des commandes KONVWA">
+            <p className="-mt-1 mb-3 text-sm text-muted-foreground">
+              Payez avec votre portefeuille KONVWA, rechargé par MonCash, NatCash ou virement.
             </p>
-          </div>
-        </div>
-
-        {/* Description */}
-        {product.description && (
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <h2 className="text-sm font-bold mb-2">Description</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{product.description}</p>
-          </div>
-        )}
-
-        {/* Specifications */}
-        {Object.keys(product.specifications).length > 0 && (
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-            <h2 className="text-sm font-bold mb-3">{t('products.specifications')}</h2>
-            <div className="space-y-2">
-              {Object.entries(product.specifications).map(([key, val]) => (
-                <div key={key} className="flex items-start justify-between gap-3 py-1.5 border-b border-gray-100 last:border-0">
-                  <p className="text-xs text-muted-foreground">{key}</p>
-                  <p className="text-xs font-semibold text-right">{val}</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              {PROTECTIONS.map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-2.5 rounded-xl bg-muted/50 p-3">
+                  <Icon className="h-5 w-5 shrink-0 text-emerald-700" aria-hidden />
+                  <span className="text-sm leading-tight">{label}</span>
                 </div>
               ))}
             </div>
-          </div>
+            <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Wallet className="h-3.5 w-3.5" aria-hidden /> Paiements pris en charge : Portefeuille · MonCash · NatCash
+            </p>
+          </Section>
+        </div>
+      </div>
+
+      <div id="section-details" className="scroll-mt-28 space-y-3 px-3 pt-3">
+        {/* Characteristics */}
+        {specs.length > 0 && (
+          <Section title="Caractéristiques">
+            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-gray-100">
+              {shownSpecs.map(([key, val]) => (
+                <div key={key} className="bg-muted/40 p-3">
+                  <dd className="line-clamp-2 text-[15px] font-semibold leading-snug">{val}</dd>
+                  <dt className="mt-0.5 text-xs text-muted-foreground">{key}</dt>
+                </div>
+              ))}
+            </dl>
+            {specs.length > SPEC_PREVIEW && (
+              <button onClick={() => setAllSpecs((v) => !v)} className="mt-3 h-11 w-full text-sm font-semibold text-primary">
+                {allSpecs ? 'Réduire' : `Voir les ${specs.length} caractéristiques`}
+              </button>
+            )}
+          </Section>
+        )}
+
+        {/* Customization */}
+        {product.customization_options.length > 0 && (
+          <Section id="section-custom" title="Options de personnalisation">
+            <ul className="space-y-2.5">
+              {shownOptions.map((o) => (
+                <li key={o} className="flex items-center gap-2.5 text-[15px]">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-foreground/70" aria-hidden />
+                  {o}
+                </li>
+              ))}
+            </ul>
+            {product.customization_options.length > OPTION_PREVIEW && (
+              <button onClick={() => setAllOptions((v) => !v)} className="mt-2 h-11 text-sm text-muted-foreground">
+                {allOptions ? 'Réduire' : `+${product.customization_options.length - OPTION_PREVIEW} options supplémentaires`}
+              </button>
+            )}
+            <p className="mt-2 text-xs text-muted-foreground">
+              Pour une personnalisation, utilisez « Discuter ici » avant de commander.
+            </p>
+          </Section>
+        )}
+
+        {/* Processing time */}
+        {(product.processing_days || delivery) && (
+          <Section title="Délais">
+            <div className="space-y-2 rounded-xl bg-muted/50 p-3 text-sm">
+              {product.processing_days && (
+                <p className="flex justify-between gap-3"><span className="text-muted-foreground">Temps de traitement</span><strong>{product.processing_days} jours</strong></p>
+              )}
+              {delivery && (
+                <p className="flex justify-between gap-3"><span className="text-muted-foreground">Livraison estimée</span><strong>{delivery}</strong></p>
+              )}
+            </div>
+          </Section>
+        )}
+
+        {/* Supplier */}
+        {product.supplier_name && (
+          <Section title="Fournisseur">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted">
+                <Store className="h-6 w-6 text-muted-foreground" aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{product.supplier_name}</p>
+                <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                  {product.supplier_verified && (
+                    <span className="inline-flex items-center gap-0.5 font-bold text-sky-700">
+                      <BadgeCheck className="h-4 w-4" aria-hidden /> Vérifié
+                    </span>
+                  )}
+                  {supplierMeta && <span>{supplierMeta}</span>}
+                </p>
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {product.description && (
+          <Section title="Description">
+            <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{product.description}</p>
+          </Section>
         )}
       </div>
 
-      {/* Bottom action bar — z-[60] to sit above the bottom nav (z-50) */}
-      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-4px_20px_rgba(10,22,40,0.08)] px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
-        <div className="flex items-center gap-3">
-          {/* Quantity stepper */}
-          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-2 py-1 border border-gray-200">
-            <button
-              onClick={() => setQuantity(q => Math.max(product.moq, q - 1))}
-              className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white transition-colors text-muted-foreground"
-            >
-              <Minus className="h-3.5 w-3.5" />
-            </button>
-            <span className="w-10 text-center text-sm font-bold">{quantity}</span>
-            <button
-              onClick={() => setQuantity(q => q + 1)}
-              className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white transition-colors text-muted-foreground"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
+      {related.length > 0 && (
+        <div id="section-related" className="scroll-mt-28 px-3 pt-4">
+          <h2 className="mb-3 px-1 text-base font-bold tracking-tight">Autres produits</h2>
+          <div className="columns-2 gap-3">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} onPress={() => navigate(`/products/${p.id}`)} />
+            ))}
           </div>
+        </div>
+      )}
 
-          {/* Add to cart */}
+      {/* Bottom action bar — z-[60] to sit above the bottom nav (z-50) */}
+      <div className="fixed bottom-0 left-0 right-0 z-[60] border-t border-gray-100 bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-3 shadow-[0_-4px_20px_rgba(10,22,40,0.08)] backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => navigate(`/products?q=${encodeURIComponent(product.supplier_name ?? '')}`)}
+            className="flex h-12 w-14 shrink-0 flex-col items-center justify-center gap-0.5 text-foreground"
+            aria-label="Voir la boutique du fournisseur"
+          >
+            <Store className="h-5 w-5" strokeWidth={1.8} />
+            <span className="text-[11px]">Magasin</span>
+          </button>
+          <button
+            onClick={() => navigate('/support', { state: { subject: `Question sur : ${product.name}` } })}
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border-2 border-foreground bg-white text-sm font-bold"
+          >
+            <MessageCircle className="h-4 w-4" aria-hidden />
+            Discuter ici
+          </button>
           <button
             onClick={handleAddToCart}
             disabled={adding || !product.stock_available}
-            className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-bold text-white disabled:opacity-60 transition-opacity"
+            className="flex h-12 flex-[1.3] items-center justify-center gap-2 rounded-full text-sm font-bold text-white transition-opacity disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
             {adding ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <>
-                <ShoppingCart className="h-4 w-4" />
-                {t('products.add_to_cart')} · {subtotal.toLocaleString('fr-HT')} HTG
-              </>
+              <span className="truncate">{t('products.add_to_cart')} · {formatHtg(subtotal)}</span>
             )}
           </button>
         </div>
-        <p className="text-[10px] text-muted-foreground text-center mt-1.5">
-          Min. {product.moq} {product.unit} · Prix / {product.unit} : {product.price_htg.toLocaleString('fr-HT')} HTG
-        </p>
       </div>
     </div>
   )
 }
+

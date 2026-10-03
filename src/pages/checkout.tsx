@@ -1,3 +1,4 @@
+import { unitPriceFor } from '@/lib/product-pricing'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight } from 'lucide-react'
@@ -138,10 +139,10 @@ export function CheckoutPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{item.products?.name}</p>
-                  <p className="text-xs text-muted-foreground">{item.quantity} × {(item.products?.price_htg ?? 0).toLocaleString('fr-HT')} HTG</p>
+                  <p className="text-xs text-muted-foreground">{item.quantity} × {(item.products ? unitPriceFor(item.products, item.quantity) : 0).toLocaleString('fr-HT')} HTG</p>
                 </div>
                 <p className="text-sm font-bold text-primary shrink-0">
-                  {((item.products?.price_htg ?? 0) * item.quantity).toLocaleString('fr-HT')} HTG
+                  {((item.products ? unitPriceFor(item.products, item.quantity) : 0) * item.quantity).toLocaleString('fr-HT')} HTG
                 </p>
               </div>
             ))}

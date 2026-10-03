@@ -1,46 +1,33 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Search, ShoppingCart, Package, Loader2, Tag } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Search, ShoppingCart, Loader2, Tag } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
-
-interface Product {
-  id: string
-  name: string
-  description: string | null
-  price_htg: number
-  moq: number
-  unit: string
-  supplier_name: string | null
-  category: string | null
-  delivery_days_min: number | null
-  delivery_days_max: number | null
-  images: string[]
-  stock_available: boolean
-  featured: boolean
-}
+import { ProductCard } from '@/components/shared/product-card'
+import { CATALOG_LIST_SELECT, type CatalogProduct } from '@/lib/catalog'
 
 export function ProductsPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { count } = useCart()
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<CatalogProduct[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const [params] = useSearchParams()
+  const [search, setSearch] = useState(params.get('q') ?? '')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
       const { data } = await supabase
         .from('products')
-        .select('id, name, description, price_htg, moq, unit, supplier_name, category, delivery_days_min, delivery_days_max, images, stock_available, featured')
+        .select(CATALOG_LIST_SELECT)
         .eq('active', true)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
-      if (data) setProducts(data as Product[])
+      if (data) setProducts(data as unknown as CatalogProduct[])
       setLoading(false)
     }
     load()
@@ -138,7 +125,7 @@ export function ProductsPage() {
             <p className="text-xs text-muted-foreground text-center max-w-[200px] leading-relaxed">{t('products.empty_sub')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="columns-2 gap-3">
             {filtered.map(product => (
               <ProductCard key={product.id} product={product} onPress={() => navigate(`/products/${product.id}`)} />
             ))}
@@ -146,72 +133,5 @@ export function ProductsPage() {
         )}
       </div>
     </div>
-  )
-}
-
-function ProductCard({ product, onPress }: { product: Product; onPress: () => void }) {
-  const { t } = useI18n()
-  const hasImage = product.images.length > 0
-
-  return (
-    <button
-      onClick={onPress}
-      className="flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden text-left active:scale-[0.98] transition-transform duration-100"
-    >
-      {/* Image / placeholder */}
-      <div className="w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden relative">
-        {hasImage ? (
-          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="flex flex-col items-center justify-center gap-1.5 w-full h-full"
-            style={{ background: 'linear-gradient(140deg, #F4F5F7 0%, #EEF0F3 100%)' }}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 shadow-sm">
-              <Package className="h-5 w-5 text-primary/40" strokeWidth={1.5} />
-            </div>
-            {product.category && (
-              <span className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-wider px-2 text-center leading-tight">
-                {product.category}
-              </span>
-            )}
-          </div>
-        )}
-        {product.featured && (
-          <span className="absolute top-2 left-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-            Vedette
-          </span>
-        )}
-        {!product.stock_available && (
-          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-destructive bg-white/90 px-2 py-1 rounded-full border border-destructive/20">
-              {t('products.out_of_stock')}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="p-2.5 flex flex-col gap-1 flex-1">
-        <p className="text-xs font-bold text-foreground leading-snug line-clamp-2">{product.name}</p>
-        {product.supplier_name && (
-          <p className="text-[10px] text-muted-foreground truncate">{product.supplier_name}</p>
-        )}
-        <div className="mt-auto pt-1.5 flex items-end justify-between gap-1">
-          <div>
-            <p className="text-sm font-black text-primary leading-none">
-              {product.price_htg.toLocaleString('fr-HT')}
-              <span className="text-[10px] font-semibold text-muted-foreground"> HTG</span>
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              Min. {product.moq} {product.unit}
-            </p>
-          </div>
-          {product.delivery_days_min && (
-            <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-              {product.delivery_days_min}–{product.delivery_days_max ?? product.delivery_days_min}j
-            </p>
-          )}
-        </div>
-      </div>
-    </button>
   )
 }

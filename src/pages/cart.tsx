@@ -1,3 +1,4 @@
+import { unitPriceFor } from '@/lib/product-pricing'
 import { useNavigate } from 'react-router-dom'
 import { Trash2, Minus, Plus, Package, ArrowRight, ChevronLeft } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
@@ -53,7 +54,8 @@ export function CartPage() {
         <div className="px-4 pt-4 space-y-3">
           {items.map(item => {
             const product = item.products
-            const subtotal = (product?.price_htg ?? 0) * item.quantity
+            const unitPrice = product ? unitPriceFor(product, item.quantity) : 0
+            const subtotal = unitPrice * item.quantity
             const hasImage = product?.images?.length > 0
 
             return (
@@ -71,7 +73,7 @@ export function CartPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold leading-snug line-clamp-2">{product?.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {(product?.price_htg ?? 0).toLocaleString('fr-HT')} HTG / {product?.unit}
+                    {unitPrice.toLocaleString('fr-HT')} HTG / {product?.unit}
                   </p>
 
                   <div className="flex items-center justify-between mt-2.5">

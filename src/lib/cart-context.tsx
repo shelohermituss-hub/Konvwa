@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
+import { unitPriceFor } from '@/lib/product-pricing'
 
 export interface CartItem {
   id: string
@@ -11,6 +12,7 @@ export interface CartItem {
     id: string
     name: string
     price_htg: number
+    price_tiers: unknown
     images: string[]
     unit: string
     moq: number
@@ -42,7 +44,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     const { data } = await supabase
       .from('cart_items')
-      .select('id, product_id, quantity, products(id, name, price_htg, images, unit, moq, stock_available)')
+      .select('id, product_id, quantity, products(id, name, price_htg, price_tiers, images, unit, moq, stock_available)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
     if (data) setItems(data as unknown as CartItem[])
@@ -78,7 +80,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const count = items.reduce((sum, i) => sum + i.quantity, 0)
-  const total = items.reduce((sum, i) => sum + i.quantity * (i.products?.price_htg ?? 0), 0)
+  const total = items.reduce((sum, i) => sum + i.quantity * (i.products ? unitPriceFor(i.products, i.quantity) : 0), 0)
 
   return (
     <CartContext.Provider value={{ items, count, total, loading, addItem, updateQuantity, removeItem, clearCart, refresh }}>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -29,7 +30,8 @@ export function SupportPage() {
   const { user } = useAuth()
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
-  const [subject, setSubject] = useState('')
+  const location = useLocation()
+  const [subject, setSubject] = useState(() => (location.state as { subject?: string } | null)?.subject ?? '')
   const [priority, setPriority] = useState('normal')
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
