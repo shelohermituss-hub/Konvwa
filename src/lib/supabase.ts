@@ -391,23 +391,27 @@ export interface Database {
         Row: {
           id: string
           user_id: string
+          type: string
           title: string
-          message: string
-          type: 'info' | 'success' | 'warning' | 'error' | null
-          read_at: string | null
+          body: string
+          data: Record<string, unknown> | null
+          read: boolean
           created_at: string
+          link: string | null
         }
         Insert: {
           id?: string
           user_id: string
+          type?: string
           title: string
-          message: string
-          type?: 'info' | 'success' | 'warning' | 'error' | null
-          read_at?: string | null
+          body: string
+          data?: Record<string, unknown> | null
+          read?: boolean
           created_at?: string
+          link?: string | null
         }
         Update: {
-          read_at?: string | null
+          read?: boolean
         }
       }
       support_tickets: {
