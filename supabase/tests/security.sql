@@ -189,5 +189,14 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   ASSERT NOT has_function_privilege('authenticated', 'public.loyalty_for(uuid)', 'execute'), 'clients can call loyalty_for';
 END $$;
 
+-- 13. uploads: a client can insert into every bucket they may write to (no policy recursion on storage.objects)
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); BEGIN
+  PERFORM pg_temp.as_user(a);
+  INSERT INTO storage.objects (bucket_id, name, owner, metadata) VALUES ('avatars', a::text || '/avatar.jpg', a, '{}');
+  INSERT INTO storage.objects (bucket_id, name, owner, metadata) VALUES ('payment-proofs', a::text || '/p.jpg', a, '{}');
+  INSERT INTO storage.objects (bucket_id, name, owner, metadata) VALUES ('kyc-documents', a::text || '/k.jpg', a, '{}');
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;
