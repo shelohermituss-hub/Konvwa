@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 
 import { PackagePhotos } from '@/components/shared/package-photos'
+import { useSearchParams } from 'react-router-dom'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface ShippingRateOption {
   id: string
@@ -740,6 +741,7 @@ export function AdminShippingRequestsPage() {
   const [tab,      setTab]      = useState<FilterTab>('active')
   const [search,   setSearch]   = useState('')
   const [active,   setActive]   = useState<ShippingRequest | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   async function load() {
     setLoading(true)
@@ -778,6 +780,14 @@ export function AdminShippingRequestsPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  // /admin/shipping-requests?open=<id> (from a catalogue order): open that request straight away
+  const openId = searchParams.get('open')
+  useEffect(() => {
+    if (!openId || active) return
+    const target = requests.find(r => r.id === openId)
+    if (target) { setActive(target); setSearchParams({}, { replace: true }) }
+  }, [openId, requests, active, setSearchParams])
 
   function handleDone() {
     setActive(null)

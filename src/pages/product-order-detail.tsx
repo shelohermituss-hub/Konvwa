@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Check, Package, Truck } from 'lucide-react'
+import { ArrowLeft, Package, Truck } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { needsShippingPayment, productOrderStage, productOrderStageLabel, productOrderStep } from '@/lib/product-order'
+import { needsShippingPayment, productOrderLabel, productOrderStage, productOrderTimeline, type ShippingRequestState } from '@/lib/product-order'
+import { TimelineList } from '@/components/shared/timeline-step'
 import { cn } from '@/lib/utils'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 
@@ -13,16 +14,8 @@ interface Item { id: string; product_name: string; product_price_htg: number; qu
 interface Order {
   id: string; status: string; payment_status: string; total_htg: number; created_at: string
   received_at: string | null; shipping_request_id: string | null
-  shipping_request: { status: string; quoted_amount_htg: number | null; paid_amount_htg: number | null; payment_due_at: string | null } | null
+  shipping_request: ShippingRequestState | null
 }
-
-const STEPS = [
-  () => tr('Achat payé'),
-  () => tr('Colis arrivé'),
-  () => tr('Devis d\'expédition'),
-  () => tr('Expédition payée'),
-  () => tr('Livré'),
-]
 
 export function ProductOrderDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -36,7 +29,7 @@ export function ProductOrderDetailPage() {
     if (!user || !id) return
     const [o, i] = await Promise.all([
       supabase.from('product_orders')
-        .select('id, status, payment_status, total_htg, created_at, received_at, shipping_request_id, shipping_request:product_requests(status, quoted_amount_htg, paid_amount_htg, payment_due_at)')
+        .select('id, status, payment_status, total_htg, created_at, received_at, shipping_request_id, shipping_request:product_requests(status, quoted_amount_htg, paid_amount_htg, payment_due_at, payment_plan, shipment:shipments(status))')
         .eq('id', id).eq('user_id', user.id).maybeSingle(),
       supabase.from('product_order_items').select('id, product_name, product_price_htg, quantity, subtotal_htg').eq('order_id', id),
     ])
@@ -52,7 +45,7 @@ export function ProductOrderDetailPage() {
   }
 
   const stage = productOrderStage(order)
-  const step = productOrderStep(stage)
+  const timeline = productOrderTimeline(order)
   const due = needsShippingPayment(order)
   const reqId = order.shipping_request_id
   const quoted = order.shipping_request?.quoted_amount_htg ?? null
@@ -72,7 +65,7 @@ export function ProductOrderDetailPage() {
             : stage === 'cancelled' ? 'border-gray-200 bg-gray-100 text-gray-500'
             : stage === 'delivered' ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
             : 'border-sky-200 bg-sky-50 text-sky-700')}>
-          {productOrderStageLabel(stage)}
+          {productOrderLabel(order)}
         </span>
       </div>
 
@@ -116,28 +109,10 @@ export function ProductOrderDetailPage() {
           </Link>
         )}
 
-        {/* Tracker */}
+        {/* Tracking: same as a shipping request, preceded by the paid purchase */}
         {stage !== 'cancelled' && stage !== 'pending' && (
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <ol className="space-y-0">
-              {STEPS.map((label, i) => {
-                const done = i <= step
-                return (
-                  <li key={i} className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <span className={cn('flex h-7 w-7 items-center justify-center rounded-full border-2', done ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-300')}>
-                        {done ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
-                      </span>
-                      {i < STEPS.length - 1 && <span className={cn('h-6 w-0.5', i < step ? 'bg-primary' : 'bg-gray-200')} />}
-                    </div>
-                    <div className="pb-4">
-                      <p className={cn('text-sm font-semibold', done ? 'text-foreground' : 'text-muted-foreground')}>{label()}</p>
-                      {i === 1 && order.received_at && <p className="text-xs text-muted-foreground">{new Date(order.received_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })}</p>}
-                    </div>
-                  </li>
-                )
-              })}
-            </ol>
+            <TimelineList steps={timeline.steps} currentIndex={timeline.index} />
           </div>
         )}
 

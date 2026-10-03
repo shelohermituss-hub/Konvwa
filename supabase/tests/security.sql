@@ -272,5 +272,21 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   ASSERT NOT has_function_privilege('authenticated', 'public.pay_product_order_shipping(uuid)', 'execute'), 'legacy shipping payment is still callable';
 END $$;
 
+-- 17. catalogue orders follow their cargo: the order status follows the batch (transit, then delivered)
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); sid uuid; oid uuid; rid uuid; wh uuid; cat uuid; BEGIN
+  SELECT id INTO sid FROM shipments LIMIT 1;
+  IF sid IS NOT NULL THEN
+    SELECT id INTO wh FROM warehouses LIMIT 1;
+    SELECT id INTO cat FROM product_rate_categories LIMIT 1;
+    INSERT INTO product_requests (user_id, request_type, status, product_url, product_name, category, quantity, source_platform, warehouse_id, product_rate_category_id, shipment_id)
+      VALUES (a, 'shipping', 'invoiced', '', 'test', 'other', 1, 'other', wh, cat, sid) RETURNING id INTO rid;
+    INSERT INTO product_orders (user_id, total_htg, status, payment_status, shipping_request_id) VALUES (a, 100, 'processing', 'paid', rid) RETURNING id INTO oid;
+    UPDATE shipments SET status = 'in_transit' WHERE id = sid;
+    ASSERT (SELECT status FROM product_orders WHERE id = oid) = 'shipped', 'order did not follow the batch to transit';
+    UPDATE shipments SET status = 'delivered' WHERE id = sid;
+    ASSERT (SELECT status FROM product_orders WHERE id = oid) = 'delivered', 'order did not follow the batch to delivered';
+  END IF;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

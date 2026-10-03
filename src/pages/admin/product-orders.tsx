@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Loader2, PackageCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -7,14 +7,14 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { supabase } from '@/lib/supabase'
-import { productOrderStage, productOrderStageLabel, type ProductOrderStage } from '@/lib/product-order'
+import { productOrderLabel, productOrderStage, type ProductOrderStage, type ShippingRequestState } from '@/lib/product-order'
 import { cn } from '@/lib/utils'
 import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 
 interface Row {
   id: string; user_id: string; status: string; payment_status: string; total_htg: number; created_at: string
   shipping_request_id: string | null
-  shipping_request: { status: string; quoted_amount_htg: number | null } | null
+  shipping_request: ShippingRequestState | null
   customer: string | null
   product_order_items: Array<{ product_name: string; quantity: number }>
 }
@@ -40,11 +40,12 @@ export function AdminProductOrdersPage() {
   const [packages, setPackages] = useState('')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
+  const navigate = useNavigate()
 
   const load = useCallback(async () => {
     const [o, w, c] = await Promise.all([
       supabase.from('product_orders')
-        .select('id, user_id, status, payment_status, total_htg, created_at, shipping_request_id, shipping_request:product_requests(status, quoted_amount_htg), product_order_items(product_name, quantity)')
+        .select('id, user_id, status, payment_status, total_htg, created_at, shipping_request_id, shipping_request:product_requests(status, quoted_amount_htg, payment_plan, shipment:shipments(status)), product_order_items(product_name, quantity)')
         .neq('payment_status', 'unpaid').order('created_at', { ascending: false }).limit(200),
       supabase.from('warehouses').select('id, name, code').eq('active', true).order('sort_order'),
       supabase.from('product_rate_categories').select('slug, name').eq('active', true).order('sort_order'),
@@ -78,16 +79,9 @@ export function AdminProductOrdersPage() {
     })
     setBusy(false)
     if (error || !data?.success) { toast.error(trServer(data?.error ?? error?.message ?? 'Erreur')); return }
-    toast.success(tr('Colis marqué comme arrivé : une demande d\'expédition est ouverte, le client est prévenu.'))
+    toast.success(tr('Colis disponible à l\'entrepôt : rédigez maintenant la demande d\'expédition du client.'))
     setArriving(null)
-    void load()
-  }
-
-  async function markDelivered(row: Row) {
-    const { error } = await supabase.from('product_orders').update({ status: 'delivered', updated_at: new Date().toISOString() }).eq('id', row.id)
-    if (error) { toast.error(trServer(error.message)); return }
-    toast.success(tr('Commande marquée comme livrée.'))
-    void load()
+    navigate(`/admin/shipping-requests?open=${data.request_id as string}`)
   }
 
   return (
@@ -124,18 +118,15 @@ export function AdminProductOrdersPage() {
                     </p>
                   </div>
                   <span className={cn('shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold', stage === 'quote_ready' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-sky-200 bg-sky-50 text-sky-700')}>
-                    {productOrderStageLabel(stage)}
+                    {productOrderLabel(r)}
                   </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {stage === 'purchasing' && (
-                    <Button size="sm" className="gap-1.5 rounded-lg" onClick={() => openArrival(r)}><PackageCheck className="h-3.5 w-3.5" />{tr('Colis arrivé')}</Button>
+                    <Button size="sm" className="gap-1.5 rounded-lg" onClick={() => openArrival(r)}><PackageCheck className="h-3.5 w-3.5" />{tr('Disponible à l\'entrepôt')}</Button>
                   )}
                   {r.shipping_request_id && ['awaiting_quote', 'quote_ready', 'deposit_paid', 'shipping_paid', 'shipped'].includes(stage) && (
-                    <Button asChild size="sm" variant="outline" className="rounded-lg"><Link to="/admin/shipping-requests">{tr('Ouvrir la demande d\'expédition')}</Link></Button>
-                  )}
-                  {(stage === 'shipping_paid' || stage === 'shipped') && (
-                    <Button size="sm" variant="outline" className="rounded-lg" onClick={() => void markDelivered(r)}>{tr('Marquer livrée')}</Button>
+                    <Button asChild size="sm" variant="outline" className="rounded-lg"><Link to={`/admin/shipping-requests?open=${r.shipping_request_id}`}>{tr('Ouvrir la demande d\'expédition')}</Link></Button>
                   )}
                 </div>
               </li>
@@ -147,8 +138,8 @@ export function AdminProductOrdersPage() {
       <Dialog open={!!arriving} onOpenChange={(o) => { if (!o) setArriving(null) }}>
         <DialogContent className="rounded-2xl sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{tr('Colis arrivé à l\'entrepôt')}</DialogTitle>
-            <DialogDescription>{tr('Une demande d\'expédition est ouverte pour ce colis. Ensuite, saisissez les mesures réelles et envoyez le devis depuis « Dem. expédition ».')}</DialogDescription>
+            <DialogTitle>{tr('Produit disponible à l\'entrepôt')}</DialogTitle>
+            <DialogDescription>{tr('La demande d\'expédition du client s\'ouvre ensuite : vous saisissez les mesures réelles, choisissez le tarif et envoyez-la au client pour qu\'il la paie.')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -175,7 +166,7 @@ export function AdminProductOrdersPage() {
           <DialogFooter>
             <Button variant="outline" className="rounded-xl" onClick={() => setArriving(null)}>{tr('Annuler')}</Button>
             <Button className="rounded-xl" disabled={busy || !warehouseId || !category} onClick={() => void confirmArrival()}>
-              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{tr('Confirmer et prévenir le client')}
+              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{tr('Confirmer et rédiger la demande')}
             </Button>
           </DialogFooter>
         </DialogContent>

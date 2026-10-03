@@ -543,4 +543,11 @@ export const FEATURES_EN: Record<string, string> = {
   "Voir le devis et payer": "View the quote and pay",
   "Suivre l'expédition": "Track the shipping",
   "Devis envoyé à l'arrivée du colis": "Quote sent when the parcel arrives",
+  "Disponible à l'entrepôt : devis d'expédition en préparation": "Available at the warehouse: shipping quote being prepared",
+  "Achat des produits payé": "Product purchase paid",
+  "Colis disponible à l'entrepôt : rédigez maintenant la demande d'expédition du client.": "Parcel available at the warehouse: now write the customer's shipping request.",
+  "Disponible à l'entrepôt": "Available at the warehouse",
+  "Produit disponible à l'entrepôt": "Product available at the warehouse",
+  "La demande d'expédition du client s'ouvre ensuite : vous saisissez les mesures réelles, choisissez le tarif et envoyez-la au client pour qu'il la paie.": "The customer's shipping request opens next: enter the real measurements, pick the rate and send it to the customer to pay.",
+  "Confirmer et rédiger la demande": "Confirm and write the request",
 }

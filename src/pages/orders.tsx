@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 
 import { IllustrationEmptyOrders } from '@/components/shared/illustrations'
 
-import { needsShippingPayment, productOrderStage, productOrderStageLabel } from '@/lib/product-order'
+import { needsShippingPayment, productOrderLabel, type ShippingRequestState } from '@/lib/product-order'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface OrderRow {
   id: string
@@ -29,7 +29,7 @@ interface OrderRow {
 
 interface CatalogOrderRow {
   id: string; status: string; payment_status: string; total_htg: number; created_at: string
-  shipping_request: { status: string; quoted_amount_htg: number | null } | null
+  shipping_request: ShippingRequestState | null
 }
 
 interface DraftRow {
@@ -84,7 +84,7 @@ export function OrdersPage() {
         .order('created_at', { ascending: false }),
       supabase
         .from('product_orders')
-        .select('id, status, payment_status, total_htg, created_at, shipping_request:product_requests(status, quoted_amount_htg)')
+        .select('id, status, payment_status, total_htg, created_at, shipping_request:product_requests(status, quoted_amount_htg, payment_plan, shipment:shipments(status))')
         .eq('user_id', user.id)
         .neq('payment_status', 'unpaid')
         .order('created_at', { ascending: false }),
@@ -247,7 +247,6 @@ export function OrdersPage() {
               <div className="space-y-2.5">
                 <p className="px-1 pt-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">{tr('Achats du catalogue')}</p>
                 {catalogOrders.map((co) => {
-                  const stage = productOrderStage(co)
                   const due = needsShippingPayment(co)
                   return (
                     <Link key={co.id} to={`/product-orders/${co.id}`}>
@@ -257,7 +256,7 @@ export function OrdersPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold">{tr('Commande catalogue')} #{co.id.slice(0, 8).toUpperCase()}</p>
-                          <p className={cn('mt-1 text-xs font-semibold', due ? 'text-amber-700' : 'text-muted-foreground')}>{productOrderStageLabel(stage)}</p>
+                          <p className={cn('mt-1 text-xs font-semibold', due ? 'text-amber-700' : 'text-muted-foreground')}>{productOrderLabel(co)}</p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1 text-right">
                           <p className="text-sm font-bold">{co.total_htg.toLocaleString(LOCALE_TAG)}</p>
