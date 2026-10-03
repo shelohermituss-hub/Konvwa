@@ -29,10 +29,12 @@ const SETTING_SUFFIXES: Record<string, string> = {
   freight_per_kg_usd:    'USD/kg',
   duty_rate_percent:     '%',
   service_margin_percent: '%',
+  cny_to_usd_rate:       'USD/CNY',
+  eur_to_usd_rate:       'USD/EUR',
 }
 
 const PAYMENT_KEYS = ['payment_client_id', 'payment_client_secret', 'payment_return_url', 'payment_methods', 'payment_base_url']
-const CALC_KEYS = ['usd_to_htg_rate', 'freight_per_kg_usd', 'duty_rate_percent', 'service_margin_percent']
+const CALC_KEYS = ['usd_to_htg_rate', 'freight_per_kg_usd', 'duty_rate_percent', 'service_margin_percent', 'cny_to_usd_rate', 'eur_to_usd_rate']
 
 export function AdminSettingsPage() {
   const [settings, setSettings] = useState<Setting[]>([])

@@ -9,10 +9,11 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Loader2, ExternalLink, CheckCircle2, SendHorizonal,
-  Package, ImagePlus, X, Truck, FileText, Zap,
+  Package, ImagePlus, X, Truck, FileText, Zap, Wand2, Calculator,
 } from 'lucide-react'
+import { DEFAULT_RATES, DEFAULT_WEIGHT_KG, estimateCost, guessCategory, toUsd, type Rates } from '@/lib/cost-estimate'
 
-import { tr } from '@/lib/i18n'
+import { tr, LOCALE_TAG } from '@/lib/i18n'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ShippingOrigin {
@@ -116,6 +117,13 @@ export function SubmitPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Link import + cost estimate
+  const [importing,     setImporting]     = useState(false)
+  const [importedImage, setImportedImage] = useState<string | null>(null)
+  const [importNote,    setImportNote]    = useState('')
+  const [weightKg,      setWeightKg]      = useState('')
+  const [rates,         setRates]         = useState<Rates>(DEFAULT_RATES)
+
   // Shipping option
   const [shippingOption, setShippingOption] = useState<'all_inclusive' | 'separate'>('all_inclusive')
 
@@ -127,9 +135,20 @@ export function SubmitPage() {
     Promise.all([
       supabase.from('shipping_origins').select('id,name,flag_emoji,country_code').eq('active', true).order('sort_order'),
       supabase.from('haiti_regions').select('id,name').eq('active', true).order('sort_order'),
-    ]).then(([originsRes, regionsRes]) => {
+      supabase.from('app_settings').select('key,value').in('key', ['usd_to_htg_rate', 'freight_per_kg_usd', 'duty_rate_percent', 'service_margin_percent', 'cny_to_usd_rate', 'eur_to_usd_rate']),
+    ]).then(([originsRes, regionsRes, ratesRes]) => {
       setOrigins(originsRes.data as ShippingOrigin[] || [])
       setRegions(regionsRes.data as HaitiRegion[] || [])
+      const v = Object.fromEntries((ratesRes.data ?? []).map(r => [r.key as string, Number(r.value)]))
+      const pick = (k: string, fallback: number) => (Number.isFinite(v[k]) && v[k] > 0 ? v[k] : fallback)
+      setRates({
+        usdToHtg: pick('usd_to_htg_rate', DEFAULT_RATES.usdToHtg),
+        freightPerKgUsd: pick('freight_per_kg_usd', DEFAULT_RATES.freightPerKgUsd),
+        dutyPct: pick('duty_rate_percent', DEFAULT_RATES.dutyPct),
+        servicePct: pick('service_margin_percent', DEFAULT_RATES.servicePct),
+        cnyToUsd: pick('cny_to_usd_rate', DEFAULT_RATES.cnyToUsd),
+        eurToUsd: pick('eur_to_usd_rate', DEFAULT_RATES.eurToUsd),
+      })
     })
   }, [])
 
@@ -163,6 +182,7 @@ export function SubmitPage() {
   function clearImage() {
     setImageFile(null)
     setImagePreview(null)
+    setImportedImage(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -176,7 +196,7 @@ export function SubmitPage() {
 
   function resetForm() {
     setShipFromId(''); setRegionId(''); setCityId(''); setCities([])
-    setProductUrl(''); setProductName(''); setCategory('')
+    setProductUrl(''); setProductName(''); setCategory(''); setWeightKg(''); setImportNote('')
     setQuantity('1'); setPriceUSD('')
     setSize(''); setColor(''); setUrgency('normal'); setNotes('')
     setShippingOption('all_inclusive')
@@ -186,7 +206,40 @@ export function SubmitPage() {
   const detectedPlatform = productUrl ? detectPlatform(productUrl) : null
   const qty = Math.max(1, parseInt(quantity) || 1)
   const price = parseFloat(priceUSD) || 0
+  const unitWeight = parseFloat(weightKg) > 0 ? parseFloat(weightKg) : (DEFAULT_WEIGHT_KG[category] ?? DEFAULT_WEIGHT_KG.other)
+  const estimate = price > 0 ? estimateCost({ priceUsd: price, quantity: qty, weightKg: unitWeight }, rates) : null
+  const shownImage = imagePreview ?? importedImage
   const canSubmit = !submitting && !!productName.trim() && !!category && !!shipFromId && !!regionId
+
+  // Fill the form from a Shein / Temu / Alibaba link (read by the server; the customer can correct everything)
+  async function importFromLink() {
+    const link = productUrl.trim()
+    if (!link || importing) return
+    if (detectPlatform(link) === 'other') { toast.error(tr('Lien non pris en charge (Alibaba, Shein ou Temu).')); return }
+    setImporting(true)
+    setImportNote('')
+    const { data, error } = await supabase.functions.invoke('link-preview', { body: { url: link } })
+    setImporting(false)
+    if (error || !data || data.error) {
+      toast.error(typeof data?.error === 'string' ? data.error : tr('Impossible de lire ce lien. Remplissez les champs à la main.'))
+      return
+    }
+    const found: string[] = []
+    if (data.name && !productName.trim()) {
+      setProductName(String(data.name))
+      found.push(tr('nom'))
+      const guess = guessCategory(String(data.name))
+      if (guess && !category) setCategory(guess)
+    }
+    if (data.image_url && !imageFile) { setImportedImage(String(data.image_url)); found.push(tr('photo')) }
+    if (typeof data.price === 'number' && !priceUSD) {
+      const usd = toUsd(data.price, (data.currency as string | null) ?? null, rates)
+      if (usd != null) { setPriceUSD(usd.toFixed(2)); found.push(tr('prix')) }
+    }
+    setImportNote(found.length > 0
+      ? tr('Trouvé : {0}. Vérifiez et corrigez si besoin.', found.join(', '))
+      : tr('Le site n\'a pas livré d\'informations : remplissez les champs à la main.'))
+  }
 
   // Submit
   async function handleSubmit(e: React.FormEvent) {
@@ -219,11 +272,12 @@ export function SubmitPage() {
       ship_from_id:           shipFromId || null,
       destination_region_id:  regionId   || null,
       destination_city_id:    cityId     || null,
-      product_image_url:      imageUrl,
+      product_image_url:      imageUrl ?? importedImage,
       variant_info: {
         size:           size  || null,
         color:          color || null,
         unit_price_usd: price || null,
+        unit_weight_kg: parseFloat(weightKg) > 0 ? parseFloat(weightKg) : null,
       },
     })
 
@@ -299,8 +353,24 @@ export function SubmitPage() {
                     placeholder={tr('Colle le lien ici')}
                     value={productUrl}
                     onChange={e => setProductUrl(e.target.value)}
+                    onPaste={e => {
+                      const text = e.clipboardData.getData('text').trim()
+                      if (/^https:\/\//i.test(text) && detectPlatform(text) !== 'other') setTimeout(() => void importFromLink(), 0)
+                    }}
                     className="h-12 rounded-2xl bg-[#F0F1F5] border-0 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
                   />
+                  {detectedPlatform && detectedPlatform !== 'other' && (
+                    <button
+                      type="button"
+                      onClick={() => void importFromLink()}
+                      disabled={importing}
+                      className="mt-1.5 inline-flex h-10 items-center gap-2 rounded-xl bg-primary/10 px-4 text-sm font-bold text-primary transition-colors hover:bg-primary/15 disabled:opacity-60"
+                    >
+                      {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                      {importing ? tr('Lecture du lien…') : tr('Remplir automatiquement')}
+                    </button>
+                  )}
+                  {importNote && <p className="mt-1 text-xs text-muted-foreground" role="status">{importNote}</p>}
                   {detectedPlatform && detectedPlatform !== 'other' && (
                     <div className="flex items-center gap-2 mt-1">
                       <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary capitalize">
@@ -543,10 +613,10 @@ export function SubmitPage() {
                 <SectionHeader icon={ImagePlus} label={tr('Photo & variantes')} />
 
                 {/* Image upload */}
-                {imagePreview ? (
+                {shownImage ? (
                   <div className="relative rounded-2xl overflow-hidden border border-gray-100">
                     <img
-                      src={imagePreview}
+                      src={shownImage}
                       alt={tr('Aperçu')}
                       className="w-full max-h-52 object-contain bg-gray-50"
                     />
@@ -558,7 +628,7 @@ export function SubmitPage() {
                       <X className="h-3.5 w-3.5 text-white" />
                     </button>
                     <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
-                      <p className="text-xs text-muted-foreground truncate">{imageFile?.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{imageFile?.name ?? tr('Photo importée du lien')}</p>
                     </div>
                   </div>
                 ) : (
@@ -711,6 +781,47 @@ export function SubmitPage() {
                         </p>
                       </div>
                     </div>
+                  )}
+                </div>
+
+                {/* Estimated total */}
+                <div className="mb-5 rounded-xl border border-gray-100 bg-[#F4F5F7] p-4">
+                  <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <Calculator className="h-3.5 w-3.5" aria-hidden />{tr('Coût total estimé')}
+                  </p>
+                  {estimate ? (
+                    <>
+                      <p className="text-2xl font-extrabold tabular-nums text-foreground">
+                        {Math.round(estimate.totalHtg).toLocaleString(LOCALE_TAG)} <span className="text-sm font-semibold text-muted-foreground">HTG</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {tr('soit environ {0} HTG par unité · {1} $', Math.round(estimate.perUnitHtg).toLocaleString(LOCALE_TAG), estimate.totalUsd.toFixed(2))}
+                      </p>
+                      <dl className="mt-3 space-y-1 text-xs">
+                        {[
+                          [tr('Produits'), estimate.productUsd],
+                          [tr('Fret ({0} kg/unité)', unitWeight), estimate.freightUsd],
+                          [tr('Douane ({0} %)', rates.dutyPct), estimate.dutyUsd],
+                          [tr('Service ({0} %)', rates.servicePct), estimate.serviceUsd],
+                        ].map(([label, usd]) => (
+                          <div key={String(label)} className="flex justify-between"><dt className="text-muted-foreground">{label}</dt><dd className="font-mono">{Number(usd).toFixed(2)} $</dd></div>
+                        ))}
+                      </dl>
+                      <div className="mt-3 space-y-1">
+                        <Label htmlFor="unit-weight" className="text-[11px] font-semibold">{tr('Poids d\'une unité (kg)')}</Label>
+                        <Input
+                          id="unit-weight" type="number" inputMode="decimal" min="0" step="0.01"
+                          placeholder={String(DEFAULT_WEIGHT_KG[category] ?? DEFAULT_WEIGHT_KG.other)}
+                          value={weightKg} onChange={e => setWeightKg(e.target.value)}
+                          className="h-10 rounded-xl bg-white border-gray-200 font-mono"
+                        />
+                      </div>
+                      <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                        {tr('Estimation à titre indicatif (taux : 1 $ = {0} HTG). Le devis officiel peut différer.', rates.usdToHtg)}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">{tr('Indiquez le prix affiché pour voir le coût total estimé en gourdes.')}</p>
                   )}
                 </div>
 
