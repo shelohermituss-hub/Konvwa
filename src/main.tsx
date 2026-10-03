@@ -11,6 +11,7 @@ import { CartProvider } from "@/lib/cart-context"
 import { Toaster } from "sonner"
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt"
 import { AuthErrorToast } from "@/components/shared/auth-error-toast"
+import { UpdateBanner } from "@/components/shared/update-banner"
 
 // Chrome fires this once, possibly before React mounts: keep it for the install popup.
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -35,6 +36,7 @@ createRoot(document.getElementById("root")!).render(
             <Toaster richColors position="top-center" />
             <PwaInstallPrompt />
             <AuthErrorToast />
+            <UpdateBanner />
           </CartProvider>
         </AuthProvider>
       </I18nProvider>
