@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { discountedFee } from '@/lib/loyalty'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 import { DEFAULT_RATES, DEFAULT_WEIGHT_KG, suggestQuote, type QuoteSuggestion, type Rates } from '@/lib/cost-estimate'
 interface PackageEntry {
@@ -90,7 +91,15 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
 
   const [rates, setRates] = useState<Rates>(DEFAULT_RATES)
   const [suggested, setSuggested] = useState<QuoteSuggestion | null>(null)
+  const [loyaltyPct, setLoyaltyPct] = useState(0)
   const [deliveryChoice, setDeliveryChoice] = useState<{ label: string; price: number } | null>(null)
+
+  useEffect(() => {
+    void supabase.rpc('admin_customer_loyalty', { p_user_id: request.user_id }).then(({ data }) => {
+      const pct = Number((data as { discount_pct?: number } | null)?.discount_pct ?? 0)
+      if (pct > 0) { setLoyaltyPct(pct); setServiceFee((v) => String(discountedFee(parseFloat(v) || 0, pct))) }
+    })
+  }, [request.user_id])
 
   // The customer saw this price when they chose how to receive the goods: start from it
   useEffect(() => {
@@ -123,7 +132,7 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
     setProductPrice(String(s.unitPriceHtg))
     setShippingFee(String(s.shippingHtg))
     setCustomsFee(String(s.customsHtg))
-    setServiceFee(String(s.serviceHtg))
+    setServiceFee(String(discountedFee(s.serviceHtg, loyaltyPct)))
     setSuggested(s)
     toast.success(tr('Estimation appliquée : vérifiez chaque ligne.'))
   }
@@ -206,6 +215,9 @@ function QuoteBuilder({ request, onCreated, onCancel }: { request: ProductReques
           <span>{URGENCY_LABELS[request.urgency]}</span>
           {request.budget_estimate && <><span>·</span><span>{tr('Budget:')}{' '}{request.budget_estimate.toLocaleString(LOCALE_TAG)} HTG</span></>}
         </div>
+        {loyaltyPct > 0 && (
+          <p className="text-xs font-medium text-primary">{tr('Remise fidélité de {0} % déjà appliquée aux frais de service.', loyaltyPct)}</p>
+        )}
         {deliveryChoice && (
           <p className="text-xs font-medium text-primary">
             {tr('Livraison choisie par le client : {0} — {1} HTG (reprise dans « Livraison locale »)', deliveryChoice.label, deliveryChoice.price.toLocaleString(LOCALE_TAG))}

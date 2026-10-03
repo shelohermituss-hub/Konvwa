@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
 import { toast } from 'sonner'
 
+import { inviteInstall } from '@/lib/pwa'
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { useStepUp } from '@/lib/step-up'
 interface WalletData {
@@ -71,6 +72,7 @@ export function CheckoutPage() {
 
       await clearCart()
       setSuccess(true)
+      inviteInstall()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : tr('Erreur inconnue')
       toast.error(tr('Paiement échoué'), { description: msg })

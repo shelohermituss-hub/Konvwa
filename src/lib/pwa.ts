@@ -11,6 +11,18 @@ declare global {
 
 export const INSTALLED_KEY = 'konvwa_pwa_installed'
 export const OPEN_INSTALL_EVENT = 'konvwa:open-install'
+export const DISMISSED_KEY = 'konvwa_pwa_dismissed_at'
+export const SNOOZE_MS = 3 * 24 * 60 * 60 * 1000
+
+/** Suggest installing the app right after a good moment (order placed, payment done), unless installed or recently dismissed. */
+export function inviteInstall(delayMs = 1200) {
+  try {
+    if (isStandalone() || localStorage.getItem(INSTALLED_KEY)) return
+    const at = Number(localStorage.getItem(DISMISSED_KEY))
+    if (at && Date.now() - at < SNOOZE_MS) return
+  } catch { return }
+  setTimeout(() => window.dispatchEvent(new Event(OPEN_INSTALL_EVENT)), delayMs)
+}
 
 export function isStandalone() {
   return (

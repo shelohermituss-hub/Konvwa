@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Check, Copy, Loader2, MessageCircle, Ticket, Users } from 'lucide-react'
+import { Award, Check, Copy, Loader2, MessageCircle, Ticket, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { tierProgress, type Loyalty } from '@/lib/loyalty'
 
 interface Stats { invited: number; rewarded: number; hasReferrer: boolean }
 
@@ -17,6 +18,7 @@ export function RewardsSection() {
   const [promo, setPromo] = useState('')
   const [busy, setBusy] = useState<'friend' | 'promo' | null>(null)
   const [copied, setCopied] = useState(false)
+  const [loyalty, setLoyalty] = useState<Loyalty | null>(null)
 
   const load = useCallback(async () => {
     if (!user) return
@@ -31,6 +33,7 @@ export function RewardsSection() {
   }, [user])
 
   useEffect(() => { void load() }, [load])
+  useEffect(() => { void supabase.rpc('my_loyalty').then(({ data }) => setLoyalty((data as Loyalty | null) ?? null)) }, [])
 
   const link = code ? `${window.location.origin}/auth?ref=${code}` : ''
 
@@ -67,8 +70,31 @@ export function RewardsSection() {
     setPromo('')
   }
 
+  const tierName = (t: Loyalty['tier']) => (t === 'gold' ? tr('Or') : t === 'silver' ? tr('Argent') : tr('Bronze'))
+
   return (
     <div className="space-y-5 p-5">
+      {loyalty && (
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+          <p className="flex items-center gap-1.5 text-sm font-semibold">
+            <Award className="h-4 w-4 text-primary" aria-hidden="true" />{tr('Niveau fidélité : {0}', tierName(loyalty.tier))}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {loyalty.discount_pct > 0
+              ? tr('{0} % de remise sur nos frais de service, appliquée à vos devis.', loyalty.discount_pct)
+              : tr('Dès {0} commandes payées : {1} % de remise sur nos frais de service (puis {2} % dès {3}).', loyalty.silver_at, loyalty.silver_pct, loyalty.gold_pct, loyalty.gold_at)}
+          </p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white" role="progressbar" aria-valuenow={tierProgress(loyalty)} aria-valuemin={0} aria-valuemax={100} aria-label={tr('Progression vers le niveau suivant')}>
+            <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${tierProgress(loyalty)}%` }} />
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {loyalty.next_at
+              ? tr('{0} commande(s) payée(s) · encore {1} pour le niveau suivant', loyalty.orders, Math.max(0, loyalty.next_at - loyalty.orders))
+              : tr('{0} commande(s) payée(s) · niveau maximum atteint', loyalty.orders)}
+          </p>
+        </div>
+      )}
+
       <div>
         <p className="flex items-center gap-1.5 text-sm font-semibold"><Users className="h-4 w-4 text-primary" />{tr('Parrainez vos amis')}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { DEFAULT_RATES, DEFAULT_WEIGHT_KG, estimateCost, guessCategory, toUsd, type Rates } from '@/lib/cost-estimate'
 
+import { inviteInstall } from '@/lib/pwa'
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -91,6 +92,7 @@ function SectionHeader({ icon: Icon, label }: { icon: React.ElementType; label: 
 export function SubmitPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   // Reference data
   const [origins,       setOrigins]       = useState<ShippingOrigin[]>([])
@@ -155,6 +157,39 @@ export function SubmitPage() {
       })
     })
   }, [])
+
+  // "Recommander" : start again from a past request (same product, route and options), the customer can edit before sending
+  const reorderId = searchParams.get('from')
+  useEffect(() => {
+    if (!reorderId || !user) return
+    void supabase.from('product_requests')
+      .select('product_url, product_name, category, quantity, urgency, notes, shipping_option, ship_from_id, destination_region_id, destination_city_id, delivery_option_id, product_image_url, variant_info')
+      .eq('id', reorderId).eq('user_id', user.id).maybeSingle()
+      .then(({ data: r }) => {
+        if (!r) return
+        setProductUrl(r.product_url ?? '')
+        setProductName(r.product_name ?? '')
+        setCategory(r.category ?? '')
+        setQuantity(String(r.quantity ?? 1))
+        if (r.urgency === 'urgent' || r.urgency === 'express' || r.urgency === 'normal') setUrgency(r.urgency)
+        setNotes(r.notes ?? '')
+        if (r.shipping_option === 'all_inclusive' || r.shipping_option === 'separate') setShippingOption(r.shipping_option)
+        setShipFromId(r.ship_from_id ?? '')
+        setImportedImage(r.product_image_url ?? null)
+        const v = (r.variant_info ?? {}) as { size?: string | null; color?: string | null; unit_price_usd?: number | null; unit_weight_kg?: number | null }
+        setSize(v.size ?? ''); setColor(v.color ?? '')
+        setPriceUSD(v.unit_price_usd ? String(v.unit_price_usd) : '')
+        setWeightKg(v.unit_weight_kg ? String(v.unit_weight_kg) : '')
+        if (r.destination_region_id) {
+          void handleRegionChange(r.destination_region_id).then(() => {
+            setCityId(r.destination_city_id ?? '')
+            setDeliveryOptionId(r.delivery_option_id ?? '')
+          })
+        }
+        toast.success(tr('Demande pré-remplie : vérifiez les informations avant d\'envoyer.'))
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reorderId, user])
 
   async function handleRegionChange(id: string) {
     setRegionId(id)
@@ -294,6 +329,7 @@ export function SubmitPage() {
       toast.error(tr('Erreur lors de la soumission.'))
     } else {
       setSuccess(true)
+      inviteInstall()
     }
     setSubmitting(false)
   }

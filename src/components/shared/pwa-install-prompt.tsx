@@ -3,13 +3,11 @@ import { Download, MoreVertical, Share, SquarePlus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 import {
-  INSTALLED_KEY, OPEN_INSTALL_EVENT, isIos, isStandalone,
+  INSTALLED_KEY, OPEN_INSTALL_EVENT, DISMISSED_KEY, SNOOZE_MS, isIos, isStandalone,
   type BeforeInstallPromptEvent,
 } from '@/lib/pwa'
 
 import { tr } from '@/lib/i18n'
-const DISMISSED_KEY = 'konvwa_pwa_dismissed_at'
-const SNOOZE_MS = 3 * 24 * 60 * 60 * 1000
 const SHOW_DELAY_MS = 1500
 
 function isSnoozed() {

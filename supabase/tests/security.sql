@@ -175,5 +175,19 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   ASSERT NOT has_function_privilege('anon', 'public.buy_shipping_insurance(uuid,numeric)', 'execute'), 'anon can buy insurance';
 END $$;
 
+-- 12. loyalty: a client sees only their own tier, the internal function is not callable
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b FROM ctx); adm uuid := (SELECT admin_id FROM ctx); r jsonb; BEGIN
+  PERFORM pg_temp.as_user(a);
+  r := public.my_loyalty();
+  ASSERT public.admin_customer_loyalty(b) IS NULL, 'client read another customer loyalty';
+  RESET ROLE;
+  ASSERT r ->> 'tier' IN ('bronze', 'silver', 'gold'), 'my_loyalty: ' || r::text;
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT public.admin_customer_loyalty(b) IS NOT NULL, 'admin cannot read loyalty';
+  RESET ROLE;
+  ASSERT NOT has_function_privilege('anon', 'public.my_loyalty()', 'execute'), 'anon can call my_loyalty';
+  ASSERT NOT has_function_privilege('authenticated', 'public.loyalty_for(uuid)', 'execute'), 'clients can call loyalty_for';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

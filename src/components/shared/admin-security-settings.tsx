@@ -22,6 +22,10 @@ const KEYS = [
   'insurance_rate_percent',
   'insurance_min_value_usd',
   'insurance_max_value_usd',
+  'loyalty_silver_orders',
+  'loyalty_gold_orders',
+  'loyalty_silver_discount_pct',
+  'loyalty_gold_discount_pct',
 ]
 
 /** Security, rewards and support settings. The database only lets full admins change the critical ones. */

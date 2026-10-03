@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { TimelineStep } from '@/components/shared/timeline-step'
-import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight, MapPin, Globe, Truck, Download, Zap } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, Calendar, CheckCircle2, XCircle, Wallet, AlertCircle, Loader2, ExternalLink, Package, Weight, MapPin, Globe, Truck, Download, Zap, RotateCcw } from 'lucide-react'
 import { downloadOrderPDF, type OrderForPDF } from '@/lib/pdf'
 import IconBoite from 'flat-color-icons/svg/package.svg'
 import { supabase } from '@/lib/supabase'
@@ -18,6 +18,7 @@ import { OrderHistory } from '@/components/shared/order-history'
 import { InstallmentOptions, InstallmentSchedule } from '@/components/shared/order-installments'
 
 import { PackagePhotos } from '@/components/shared/package-photos'
+import { inviteInstall } from '@/lib/pwa'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 import { useStepUp } from '@/lib/step-up'
 interface ChosenShippingMethod {
@@ -218,6 +219,7 @@ export function OrderDetailPage() {
         return
       }
       toast.success(tr('Paiement effectué ! Votre commande est en cours de traitement.'))
+      inviteInstall()
       setOrder(prev => prev ? { ...prev, status: 'paid', payment_status: 'paid', total_paid: total } : null)
       setWallet(prev => prev ? { ...prev, available_balance: prev.available_balance - total } : null)
     } catch {
@@ -519,6 +521,14 @@ export function OrderDetailPage() {
         {/* Product image */}
         {order.quotes?.product_requests?.id && (
           <PackagePhotos requestId={order.quotes.product_requests.id} hideWhenEmpty />
+        )}
+
+        {order.quotes?.product_requests?.id && !['quote_sent', 'pending'].includes(order.status) && (
+          <Button asChild variant="outline" className="h-11 w-full gap-2 rounded-2xl">
+            <Link to={`/submit?from=${order.quotes.product_requests.id}`}>
+              <RotateCcw className="h-4 w-4" aria-hidden="true" />{tr('Recommander cet article')}
+            </Link>
+          </Button>
         )}
 
         {order.quotes?.product_requests?.product_image_url && (
