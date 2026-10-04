@@ -239,53 +239,131 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); w uuid; BEGIN
   ASSERT NOT has_function_privilege('anon', 'public.check_mfa(numeric)', 'execute'), 'anon can call check_mfa';
 END $$;
 
--- 16. catalogue orders: the arrival opens a normal shipping request (received); only the team can do it, once
+-- 16. orders from the catalogue / with separate shipping: the team enters the real measures at the warehouse, the customer picks
+--     a method (fees computed by the database), pays, a PAID shipping request linked to the order is created, then the team
+--     moves the cargo status (even after payment) and the order follows. Nothing leaves before the shipping is paid.
 DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b FROM ctx); adm uuid := (SELECT admin_id FROM ctx);
-  oid uuid; wh uuid; slug text; r jsonb; rid uuid; n integer; BEGIN
-  SELECT id INTO wh FROM warehouses WHERE active LIMIT 1;
-  SELECT pc.slug INTO slug FROM product_rate_categories pc WHERE active LIMIT 1;
-  INSERT INTO product_orders (user_id, total_htg, status, payment_status) VALUES (a, 1000, 'processing', 'paid') RETURNING id INTO oid;
+  oid uuid; r jsonb; rid uuid; rate uuid; amt numeric; bal0 numeric; bal1 numeric; n integer; qid uuid; ord uuid; BEGIN
+  UPDATE wallets SET available_balance = 1000000 WHERE user_id = a;
+  INSERT INTO product_orders (user_id, total_htg, status, payment_status, tracking_status) VALUES (a, 1000, 'processing', 'paid', 'paid') RETURNING id INTO oid;
 
+  -- before the arrival: nothing to pay, a client cannot declare the arrival
   PERFORM pg_temp.as_user(a);
-  ASSERT (public.admin_product_order_received(oid, wh, slug) ->> 'success')::boolean = false, 'client marked a parcel as arrived';
+  ASSERT (public.admin_order_arrived('product_order', oid, 5, 0.05) ->> 'success')::boolean = false, 'client declared an arrival';
+  ASSERT (public.pay_order_shipping('product_order', oid, gen_random_uuid()) ->> 'success')::boolean = false, 'paid shipping before the arrival';
   RESET ROLE;
 
   PERFORM pg_temp.as_user(adm, 'aal2');
-  r := public.admin_product_order_received(oid, wh, slug, 2, 'test');
+  ASSERT (public.admin_order_arrived('product_order', oid, 0, 0) ->> 'success')::boolean = false, 'arrival without measures accepted';
+  r := public.admin_order_arrived('product_order', oid, 10, 0.1);
   ASSERT (r ->> 'success')::boolean, 'arrival failed: ' || r::text;
-  rid := (r ->> 'request_id')::uuid;
-  ASSERT (public.admin_product_order_received(oid, wh, slug) ->> 'success')::boolean = false, 'arrival accepted twice';
   RESET ROLE;
+  ASSERT (SELECT tracking_status FROM product_orders WHERE id = oid) = 'in_china_warehouse', 'order not at the warehouse';
+  ASSERT (SELECT count(*) FROM notifications WHERE user_id = a AND link = '/product-orders/' || oid) >= 1, 'client not notified';
 
-  ASSERT (SELECT status FROM product_requests WHERE id = rid) = 'received', 'shipping request is not in received status';
-  ASSERT (SELECT request_type FROM product_requests WHERE id = rid) = 'shipping', 'not a shipping request';
-  ASSERT (SELECT shipping_request_id FROM product_orders WHERE id = oid) = rid, 'order not linked to its shipping request';
-
+  -- options: owner and team only, computed by the database
+  PERFORM pg_temp.as_user(b);
+  ASSERT (public.order_shipping_options('product_order', oid) ->> 'success')::boolean = false, 'another client reads the options';
+  ASSERT (public.pay_order_shipping('product_order', oid, gen_random_uuid()) ->> 'success')::boolean = false, 'another client paid the shipping';
+  RESET ROLE;
   PERFORM pg_temp.as_user(a);
-  SELECT count(*) INTO n FROM product_requests WHERE id = rid;
-  ASSERT n = 1, 'the owner cannot see the shipping request';
+  r := public.order_shipping_options('product_order', oid);
+  ASSERT (r ->> 'ready')::boolean AND jsonb_array_length(r -> 'options') > 0, 'no shipping option: ' || r::text;
+  SELECT (o ->> 'rate_id')::uuid, (o ->> 'amount_htg')::numeric INTO rate, amt
+    FROM jsonb_array_elements(r -> 'options') o ORDER BY (o ->> 'amount_htg')::numeric LIMIT 1;
+  ASSERT amt > 0, 'zero fee';
+  ASSERT (public.pay_order_shipping('product_order', oid, gen_random_uuid()) ->> 'success')::boolean = false, 'unknown rate accepted';
+  SELECT available_balance INTO bal0 FROM wallets WHERE user_id = a;
+  r := public.pay_order_shipping('product_order', oid, rate);
+  ASSERT (r ->> 'success')::boolean, 'payment failed: ' || r::text;
+  ASSERT (r ->> 'amount')::numeric = amt, 'charged amount differs from the computed fee';
+  ASSERT (public.pay_order_shipping('product_order', oid, rate) ->> 'success')::boolean = false, 'shipping paid twice';
+  SELECT available_balance INTO bal1 FROM wallets WHERE user_id = a;
+  ASSERT bal0 - bal1 = amt, 'wallet debited ' || (bal0 - bal1) || ' instead of ' || amt;
   RESET ROLE;
+
+  -- the paid shipping request is linked to the order and visible to the owner only
+  SELECT shipping_request_id INTO rid FROM product_orders WHERE id = oid;
+  ASSERT rid IS NOT NULL, 'order not linked to a shipping request';
+  ASSERT (SELECT status = 'invoiced' AND source_order_kind = 'product_order' AND source_order_id = oid AND paid_amount_htg = amt
+            FROM product_requests WHERE id = rid), 'shipping request is not the paid, linked cargo';
   PERFORM pg_temp.as_user(b);
   SELECT count(*) INTO n FROM product_requests WHERE id = rid;
-  ASSERT n = 0, 'another client sees the shipping request';
+  ASSERT n = 0, 'another client sees the cargo';
   RESET ROLE;
-  ASSERT NOT has_function_privilege('authenticated', 'public.pay_product_order_shipping(uuid)', 'execute'), 'legacy shipping payment is still callable';
+
+  -- the team changes the cargo status AFTER the payment, the order follows; a client cannot
+  PERFORM pg_temp.as_user(a);
+  ASSERT (public.admin_set_cargo_status(rid, 'in_transit') ->> 'success')::boolean = false, 'client moved a cargo';
+  UPDATE product_requests SET tracking_status = 'delivered' WHERE id = rid;  -- guard keeps the old value
+  RESET ROLE;
+  ASSERT (SELECT tracking_status FROM product_requests WHERE id = rid) = 'in_china_warehouse', 'client wrote tracking_status';
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_set_cargo_status(rid, 'in_transit') ->> 'success')::boolean, 'team could not move a paid cargo';
+  RESET ROLE;
+  ASSERT (SELECT tracking_status FROM product_orders WHERE id = oid) = 'in_transit', 'order did not follow the cargo';
+  ASSERT (SELECT status FROM product_orders WHERE id = oid) = 'shipped', 'order status did not mirror the tracking';
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  PERFORM public.admin_set_cargo_status(rid, 'delivered');
+  RESET ROLE;
+  ASSERT (SELECT status FROM product_orders WHERE id = oid) = 'delivered', 'order not delivered with its cargo';
+
+  -- nothing leaves before the shipping is paid
+  INSERT INTO product_orders (user_id, total_htg, status, payment_status, tracking_status) VALUES (a, 10, 'processing', 'paid', 'in_china_warehouse') RETURNING id INTO ord;
+  BEGIN
+    UPDATE product_orders SET tracking_status = 'shipped' WHERE id = ord;
+    ASSERT false, 'catalogue order shipped before the shipping was paid';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+
+  -- separate-shipping order: same rules
+  SELECT id INTO qid FROM quotes LIMIT 1;
+  IF qid IS NOT NULL THEN
+    INSERT INTO orders (user_id, quote_id, status, payment_status, shipping_option) VALUES (a, qid, 'purchasing', 'paid', 'separate') RETURNING id INTO ord;
+    BEGIN
+      UPDATE orders SET status = 'shipped' WHERE id = ord;
+      ASSERT false, 'separate order shipped before the shipping was paid';
+    EXCEPTION WHEN raise_exception THEN NULL; END;
+    PERFORM pg_temp.as_user(adm, 'aal2');
+    ASSERT (public.admin_order_arrived('order', ord, 3, 0.02) ->> 'success')::boolean, 'order arrival failed';
+    RESET ROLE;
+    PERFORM pg_temp.as_user(a);
+    r := public.order_shipping_options('order', ord);
+    SELECT (o ->> 'rate_id')::uuid INTO rate FROM jsonb_array_elements(r -> 'options') o LIMIT 1;
+    r := public.pay_order_shipping('order', ord, rate);
+    ASSERT (r ->> 'success')::boolean, 'separate order payment failed: ' || r::text;
+    RESET ROLE;
+    SELECT shipping_request_id INTO rid FROM orders WHERE id = ord;
+    ASSERT (SELECT source_order_id FROM product_requests WHERE id = rid) = ord, 'order cargo not linked back to the order';
+    PERFORM pg_temp.as_user(adm, 'aal2');
+    PERFORM public.admin_set_cargo_status(rid, 'customs_processing');
+    RESET ROLE;
+    ASSERT (SELECT status FROM orders WHERE id = ord) = 'customs_processing', 'separate order did not follow its cargo';
+  END IF;
+
+  ASSERT NOT has_function_privilege('authenticated', 'public.choose_shipping_method(uuid,uuid,numeric)', 'execute'), 'fee typed by the browser still accepted';
+  ASSERT NOT has_function_privilege('authenticated', 'public.admin_product_order_received(uuid,uuid,text,integer,text)', 'execute'), 'legacy arrival still callable';
+  ASSERT NOT has_function_privilege('authenticated', 'public.shipping_options_for(numeric,numeric,uuid)', 'execute'), 'internal fee grid callable';
 END $$;
 
--- 17. catalogue orders follow their cargo: the order status follows the batch (transit, then delivered)
-DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); sid uuid; oid uuid; rid uuid; wh uuid; cat uuid; BEGIN
-  SELECT id INTO sid FROM shipments LIMIT 1;
-  IF sid IS NOT NULL THEN
-    SELECT id INTO wh FROM warehouses LIMIT 1;
-    SELECT id INTO cat FROM product_rate_categories LIMIT 1;
-    INSERT INTO product_requests (user_id, request_type, status, product_url, product_name, category, quantity, source_platform, warehouse_id, product_rate_category_id, shipment_id)
-      VALUES (a, 'shipping', 'invoiced', '', 'test', 'other', 1, 'other', wh, cat, sid) RETURNING id INTO rid;
-    INSERT INTO product_orders (user_id, total_htg, status, payment_status, shipping_request_id) VALUES (a, 100, 'processing', 'paid', rid) RETURNING id INTO oid;
-    UPDATE shipments SET status = 'in_transit' WHERE id = sid;
-    ASSERT (SELECT status FROM product_orders WHERE id = oid) = 'shipped', 'order did not follow the batch to transit';
-    UPDATE shipments SET status = 'delivered' WHERE id = sid;
-    ASSERT (SELECT status FROM product_orders WHERE id = oid) = 'delivered', 'order did not follow the batch to delivered';
-  END IF;
+-- 17. a batch drives its paid cargos, which drive their orders; a cargo assigned to a batch takes the batch status
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); sid uuid; oid uuid; rid uuid; BEGIN
+  INSERT INTO shipments (batch_code, status) VALUES ('TEST-' || substr(md5(random()::text), 1, 6), 'in_china_warehouse') RETURNING id INTO sid;
+  INSERT INTO product_orders (user_id, total_htg, status, payment_status, tracking_status, shipping_paid_at) VALUES (a, 100, 'processing', 'paid', 'in_china_warehouse', now()) RETURNING id INTO oid;
+  INSERT INTO product_requests (user_id, request_type, status, product_url, product_name, category, quantity, source_platform, tracking_status)
+    VALUES (a, 'shipping', 'invoiced', '', 'test', 'other', 1, 'other', 'in_china_warehouse') RETURNING id INTO rid;
+  UPDATE product_orders SET shipping_request_id = rid WHERE id = oid;
+  UPDATE product_requests SET shipment_id = sid WHERE id = rid;
+  UPDATE shipments SET status = 'in_transit' WHERE id = sid;
+  ASSERT (SELECT tracking_status FROM product_requests WHERE id = rid) = 'in_transit', 'cargo did not follow the batch';
+  ASSERT (SELECT tracking_status FROM product_orders WHERE id = oid) = 'in_transit', 'order did not follow the batch';
+  UPDATE shipments SET status = 'delivered' WHERE id = sid;
+  ASSERT (SELECT status FROM product_orders WHERE id = oid) = 'delivered', 'order not delivered with the batch';
+  -- an unpaid cargo cannot leave
+  BEGIN
+    INSERT INTO product_requests (user_id, request_type, status, product_url, product_name, category, quantity, source_platform, tracking_status)
+      VALUES (a, 'shipping', 'received', '', 'test', 'other', 1, 'other', 'shipped');
+    ASSERT false, 'unpaid cargo could be shipped';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
 END $$;
 
 SELECT 'all security tests passed' AS result;

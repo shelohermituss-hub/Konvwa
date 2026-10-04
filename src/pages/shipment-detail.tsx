@@ -42,6 +42,7 @@ interface ShippingRequest {
   insured: boolean
   insured_value_usd: number | null
   insurance_fee_htg: number | null
+  tracking_status: string | null
   shipment: { id: string; status: string } | null
   warehouse: {
     id: string; code: string; name: string
@@ -94,7 +95,7 @@ export function ShipmentDetailPage() {
           quoted_amount_htg, actual_amount_htg,
           quoted_at, received_at, invoiced_at, package_count,
           origin_country, destination_address, shipment_id, payment_plan,
-          insured, insured_value_usd, insurance_fee_htg,
+          insured, insured_value_usd, insurance_fee_htg, tracking_status,
           warehouse:warehouses(
             id, code, name, flag_emoji, country_code,
             address_line1, address_line2, address_line3,
@@ -167,7 +168,7 @@ export function ShipmentDetailPage() {
               <h1 className="text-base font-bold text-foreground">{tr('Demande d\'expédition')}</h1>
               <span className={cn(
                 'rounded-full px-3 py-0.5 text-xs font-semibold border shrink-0',
-                (req.shipment && (req.status === 'invoiced' || req.status === 'deposit_paid') && cargoStatusLabel(req) !== (req.status === 'invoiced' ? 'Payé' : 'Acompte payé'))
+                ((req.shipment || req.tracking_status) && (req.status === 'invoiced' || req.status === 'deposit_paid') && cargoStatusLabel(req) !== (req.status === 'invoiced' ? 'Payé' : 'Acompte payé'))
                   ? 'bg-sky-50 text-sky-700 border-sky-200'
                   : STATUS_BADGE[req.status] ?? 'bg-gray-100 text-gray-500 border-gray-200'
               )}>

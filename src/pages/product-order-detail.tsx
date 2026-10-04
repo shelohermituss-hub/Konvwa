@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Package, Truck } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { needsShippingPayment, productOrderLabel, productOrderStage, productOrderTimeline, type ShippingRequestState } from '@/lib/product-order'
-import { TimelineList } from '@/components/shared/timeline-step'
+import { isCancelledOrder, needsShippingPayment, productOrderLabel, trackingStatusOf } from '@/lib/product-order'
+import { TimelineStep } from '@/components/shared/timeline-step'
+import { ShippingMethodPicker } from '@/components/shared/shipping-method-picker'
 import { cn } from '@/lib/utils'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, LOCALE_TAG } from '@/lib/i18n'
+import type { OrderStatus } from '@/types'
 
 interface Item { id: string; product_name: string; product_price_htg: number; quantity: number; subtotal_htg: number }
 interface Order {
-  id: string; status: string; payment_status: string; total_htg: number; created_at: string
-  received_at: string | null; shipping_request_id: string | null
-  shipping_request: ShippingRequestState | null
+  id: string; tracking_code: string; status: string; payment_status: string; tracking_status: string | null
+  total_htg: number; created_at: string; shipping_paid_at: string | null; shipping_amount_htg: number | null
+  chosen_shipping_rate: { name: string } | null
 }
 
 export function ProductOrderDetailPage() {
@@ -23,19 +25,22 @@ export function ProductOrderDetailPage() {
   const navigate = useNavigate()
   const [order, setOrder] = useState<Order | null>(null)
   const [items, setItems] = useState<Item[]>([])
+  const [balance, setBalance] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     if (!user || !id) return
-    const [o, i] = await Promise.all([
+    const [o, i, w] = await Promise.all([
       supabase.from('product_orders')
-        .select('id, status, payment_status, total_htg, created_at, received_at, shipping_request_id, shipping_request:product_requests(status, quoted_amount_htg, paid_amount_htg, payment_due_at, payment_plan, shipment:shipments(status))')
+        .select('id, tracking_code, status, payment_status, tracking_status, total_htg, created_at, shipping_paid_at, shipping_amount_htg, chosen_shipping_rate:shipping_rates(name)')
         .eq('id', id).eq('user_id', user.id).maybeSingle(),
       supabase.from('product_order_items').select('id, product_name, product_price_htg, quantity, subtotal_htg').eq('order_id', id),
+      supabase.from('wallets').select('available_balance').eq('user_id', user.id).maybeSingle(),
     ])
     if (!o.data) { toast.error(tr('Commande introuvable')); navigate('/orders', { replace: true }); return }
     setOrder(o.data as unknown as Order)
     setItems((i.data ?? []) as Item[])
+    setBalance(w.data?.available_balance ?? null)
     setLoading(false)
   }, [user, id, navigate])
   useEffect(() => { void load() }, [load])
@@ -44,11 +49,10 @@ export function ProductOrderDetailPage() {
     return <div className="space-y-3 px-4 py-6"><Skeleton className="h-14 rounded-2xl" /><Skeleton className="h-32 rounded-2xl" /><Skeleton className="h-40 rounded-2xl" /></div>
   }
 
-  const stage = productOrderStage(order)
-  const timeline = productOrderTimeline(order)
+  const cancelled = isCancelledOrder(order)
   const due = needsShippingPayment(order)
-  const reqId = order.shipping_request_id
-  const quoted = order.shipping_request?.quoted_amount_htg ?? null
+  const delivered = order.tracking_status === 'delivered'
+  const shippingPaid = order.shipping_amount_htg
 
   return (
     <div className="min-h-full bg-[#F4F5F7] pb-10">
@@ -58,61 +62,35 @@ export function ProductOrderDetailPage() {
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="text-base font-bold">{tr('Commande catalogue')}</h1>
-          <p className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8).toUpperCase()}</p>
+          <p className="font-mono text-xs text-muted-foreground">#{order.tracking_code}</p>
         </div>
         <span className={cn('shrink-0 rounded-full border px-3 py-0.5 text-xs font-semibold',
-          stage === 'quote_ready' ? 'border-amber-200 bg-amber-50 text-amber-700'
-            : stage === 'cancelled' ? 'border-gray-200 bg-gray-100 text-gray-500'
-            : stage === 'delivered' ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+          due ? 'border-amber-200 bg-amber-50 text-amber-700'
+            : cancelled ? 'border-gray-200 bg-gray-100 text-gray-500'
+            : delivered ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
             : 'border-sky-200 bg-sky-50 text-sky-700')}>
           {productOrderLabel(order)}
         </span>
       </div>
 
       <div className="space-y-3 px-4 pt-4">
-        {/* Shipping: same flow as any shipping request */}
-        {reqId && stage === 'awaiting_quote' && (
-          <Link to={`/shipments/${reqId}`} className="flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4">
+        {/* The parcel is at the warehouse: choose the shipping method (fees computed by the database) and pay */}
+        {due && <ShippingMethodPicker kind="product_order" orderId={order.id} balance={balance} onPaid={() => void load()} />}
+
+        {order.shipping_paid_at && !delivered && order.tracking_status === 'in_china_warehouse' && (
+          <div className="flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-100"><Truck className="h-4 w-4 text-sky-700" aria-hidden="true" /></span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-sky-900">{tr('Votre colis est arrivé à l\'entrepôt')}</p>
-              <p className="mt-0.5 text-sm text-sky-800">{tr('Nous mesurons le colis et préparons votre devis d\'expédition. Vous serez prévenu pour le payer.')}</p>
+              <p className="text-sm font-bold text-sky-900">{tr('Expédition payée')}</p>
+              <p className="mt-0.5 text-sm text-sky-800">{tr('Votre colis est prêt à partir : il sera mis dans la prochaine cargaison.')}</p>
             </div>
-          </Link>
-        )}
-        {reqId && due && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <div className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100"><Truck className="h-4 w-4 text-amber-700" aria-hidden="true" /></span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-amber-900">{tr('Votre devis d\'expédition est prêt')}</p>
-                <p className="mt-0.5 text-sm text-amber-800">{tr('Payez l\'expédition pour que votre colis parte vers Haïti.')}</p>
-                {order.shipping_request?.payment_due_at && (
-                  <p className="mt-1 text-xs text-amber-800">{tr('À régler avant le {0}', new Date(order.shipping_request.payment_due_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }))}</p>
-                )}
-              </div>
-            </div>
-            {quoted != null && (
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs font-semibold text-amber-900">{tr('Frais d\'expédition')}</span>
-                <span className="text-xl font-black text-amber-900">{quoted.toLocaleString(LOCALE_TAG)} HTG</span>
-              </div>
-            )}
-            <Link to={`/shipments/${reqId}`} className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white">
-              {tr('Voir le devis et payer')}
-            </Link>
           </div>
         )}
-        {reqId && !due && stage !== 'awaiting_quote' && stage !== 'cancelled' && stage !== 'pending' && stage !== 'purchasing' && (
-          <Link to={`/shipments/${reqId}`} className="block rounded-2xl border border-gray-100 bg-white p-4 text-sm font-semibold text-primary shadow-sm">
-            {tr('Suivre l\'expédition')}
-          </Link>
-        )}
 
-        {/* Tracking: same as a shipping request, preceded by the paid purchase */}
-        {stage !== 'cancelled' && stage !== 'pending' && (
+        {/* Tracking: the normal order tracking, starting at "Payé" */}
+        {!cancelled && order.payment_status === 'paid' && (
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <TimelineList steps={timeline.steps} currentIndex={timeline.index} />
+            <TimelineStep currentStatus={trackingStatusOf(order) as OrderStatus} startAt="paid" />
           </div>
         )}
 
@@ -135,7 +113,9 @@ export function ProductOrderDetailPage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">{tr('Expédition')}</span>
               <span className="font-semibold">
-                {quoted != null ? `${quoted.toLocaleString(LOCALE_TAG)} HTG` : tr('Devis envoyé à l\'arrivée du colis')}
+                {shippingPaid != null
+                  ? `${shippingPaid.toLocaleString(LOCALE_TAG)} HTG${order.chosen_shipping_rate ? ` · ${order.chosen_shipping_rate.name}` : ''}`
+                  : tr('Calculée à l\'arrivée du colis, selon le mode choisi')}
               </span>
             </div>
           </div>

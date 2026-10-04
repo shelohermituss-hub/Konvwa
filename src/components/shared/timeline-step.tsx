@@ -44,20 +44,23 @@ const STATUS_ORDER: OrderStatus[] = [
 
 interface TimelineStepProps {
   currentStatus: OrderStatus
+  /** First step shown: a catalogue order is already paid, so its tracking starts at "paid". */
+  startAt?: OrderStatus
   className?: string
 }
 
-export function TimelineStep({ currentStatus, className }: TimelineStepProps) {
+export function TimelineStep({ currentStatus, startAt, className }: TimelineStepProps) {
   const currentIndex = STATUS_ORDER.indexOf(currentStatus)
   const isCancelled = currentStatus === 'cancelled' || currentStatus === 'closed'
+  const steps = startAt ? ORDER_TIMELINE.slice(STATUS_ORDER.indexOf(startAt)) : ORDER_TIMELINE
 
   return (
     <div className={cn('space-y-0', className)}>
-      {ORDER_TIMELINE.map((step, index) => {
+      {steps.map((step, index) => {
         const stepIndex = STATUS_ORDER.indexOf(step.status)
         const isCompleted = !isCancelled && stepIndex <= currentIndex && currentIndex !== -1
         const isCurrent = step.status === currentStatus
-        const isLast = index === ORDER_TIMELINE.length - 1
+        const isLast = index === steps.length - 1
 
         return (
           <div key={step.status} className="relative flex gap-4 group">

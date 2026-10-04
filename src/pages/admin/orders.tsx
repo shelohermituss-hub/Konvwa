@@ -13,8 +13,9 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { ArrivalDialog, type ArrivalTarget } from '@/components/shared/arrival-dialog'
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface AdminOrder {
   id: string
   tracking_code: string
@@ -24,6 +25,9 @@ interface AdminOrder {
   created_at: string
   user_id: string
   customer_name?: string
+  shipping_option?: string
+  weight_kg?: number | null
+  cbm?: number | null
   quotes: {
     total: number
     product_requests: { product_name: string } | null
@@ -70,13 +74,14 @@ export function AdminOrdersPage() {
   const [newStatus, setNewStatus] = useState('')
   const [saving, setSaving] = useState(false)
   const [page, setPage] = useState(0)
+  const [arriving, setArriving] = useState<ArrivalTarget | null>(null)
 
   async function loadOrders() {
     setLoading(true)
     const { data } = await supabase
       .from('orders')
       
-      .select('id, tracking_code, status, total_paid, payment_status, created_at, user_id, quotes(total, product_requests(product_name))')
+      .select('id, tracking_code, status, total_paid, payment_status, created_at, user_id, shipping_option, weight_kg, cbm, quotes(total, product_requests(product_name))')
       .order('created_at', { ascending: false })
 
     if (!data) { setLoading(false); return }
@@ -114,13 +119,19 @@ export function AdminOrdersPage() {
 
   async function handleStatusUpdate() {
     if (!editOrder || !newStatus) return
+    // Separate shipping: the warehouse step needs the real measures (the customer's fees are computed from them)
+    if (newStatus === 'in_china_warehouse' && editOrder.shipping_option === 'separate') {
+      setArriving({ kind: 'order', id: editOrder.id, label: `#${editOrder.tracking_code}`, weight_kg: editOrder.weight_kg, cbm: editOrder.cbm })
+      setEditOrder(null)
+      return
+    }
     setSaving(true)
     const { error } = await supabase
       .from('orders')
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', editOrder.id)
     if (error) {
-      toast.error(tr('Erreur lors de la mise à jour du statut.'))
+      toast.error(error.message.includes('avant le paiement') ? trServer(error.message) : tr('Erreur lors de la mise à jour du statut.'))
     } else {
       toast.success(tr('Statut mis à jour.'))
       setOrders(prev => prev.map(o => o.id === editOrder.id ? { ...o, status: newStatus } : o))
@@ -371,12 +382,13 @@ export function AdminOrdersPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOrder(null)} className="rounded-xl">{tr('Annuler')}</Button>
-            <Button onClick={handleStatusUpdate} disabled={saving || newStatus === editOrder?.status} className="rounded-xl">
+            <Button onClick={handleStatusUpdate} disabled={saving || (newStatus === editOrder?.status && !(newStatus === 'in_china_warehouse' && editOrder?.shipping_option === 'separate'))} className="rounded-xl">
               {saving ? tr('Enregistrement…') : tr('Enregistrer')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ArrivalDialog target={arriving} onClose={() => setArriving(null)} onDone={() => void loadOrders()} />
     </div>
   )
 }

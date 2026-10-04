@@ -21,8 +21,12 @@ const POST_PAYMENT: TimelineItem[] = [
 export interface CargoForTracking {
   status: string
   payment_plan?: string | null
+  /** Cargo status set by the team once paid (also driven by the batch); wins over the batch status. */
+  tracking_status?: string | null
   shipment?: { status: string } | null
 }
+
+const trackOf = (req: CargoForTracking) => req.tracking_status ?? req.shipment?.status
 
 function paymentStep(req: CargoForTracking): TimelineItem {
   const half = req.status === 'deposit_paid' || req.payment_plan === 'half'
@@ -41,7 +45,7 @@ export function cargoActiveIndex(req: CargoForTracking): number {
   if (req.status !== 'invoiced' && req.status !== 'deposit_paid') return -1
 
   const paidIdx = PRE_PAYMENT.length
-  const track = POST_PAYMENT.findIndex(s => s.key === req.shipment?.status)
+  const track = POST_PAYMENT.findIndex(s => s.key === trackOf(req))
   return track === -1 ? paidIdx : paidIdx + 1 + track
 }
 
@@ -66,8 +70,9 @@ const TRACK_LABEL: Record<string, string> = {
 
 // Label shown on badges: the batch status once the cargo is paid and on its way
 export function cargoStatusLabel(req: CargoForTracking): string {
-  if ((req.status === 'invoiced' || req.status === 'deposit_paid') && req.shipment) {
-    const tracked = TRACK_LABEL[req.shipment.status]
+  const track = trackOf(req)
+  if ((req.status === 'invoiced' || req.status === 'deposit_paid') && track) {
+    const tracked = TRACK_LABEL[track]
     if (tracked) return tracked
   }
   return EARLY_LABEL[req.status] ?? req.status

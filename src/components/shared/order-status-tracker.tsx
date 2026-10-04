@@ -9,29 +9,12 @@ const FULL_STEPS = [
   { key: 'warehouse',  label: tr('Entrepôt'),  statuses: ['in_china_warehouse'] },
   { key: 'shipped',    label: tr('Expédié'),   statuses: ['shipped'] },
   { key: 'transit',    label: tr('Transit'),   statuses: ['in_transit'] },
-  { key: 'arrived',    label: tr('Arrivée'),   statuses: ['arrived', 'customs', 'customs_clearance'] },
-  { key: 'delivering', label: tr('Livraison'), statuses: ['delivery', 'delivering'] },
+  { key: 'arrived',    label: tr('Arrivée'),   statuses: ['arrived', 'arrived_haiti', 'customs', 'customs_clearance', 'customs_processing'] },
+  { key: 'delivering', label: tr('Livraison'), statuses: ['delivery', 'delivering', 'out_for_delivery'] },
   { key: 'delivered',  label: tr('Livré'),     statuses: ['delivered', 'completed'] },
 ] as const
 
-// For separate (achat seulement) orders, the tracker ends at Entrepôt.
-// Any status beyond in_china_warehouse also maps to the last step so it shows complete.
-const SEPARATE_STEPS = [
-  { key: 'submitted', label: tr('Soumis'),   statuses: ['draft', 'submitted', 'reviewing', 'quote_sent'] },
-  { key: 'quoted',    label: tr('Devis'),    statuses: ['quoted'] },
-  { key: 'paid',      label: tr('Payé'),     statuses: ['awaiting_payment', 'paid', 'purchasing'] },
-  {
-    key: 'warehouse',
-    label: tr('Entrepôt'),
-    statuses: [
-      'in_china_warehouse',
-      'shipped', 'in_transit', 'arrived', 'customs', 'customs_clearance',
-      'delivery', 'delivering', 'delivered', 'completed',
-    ],
-  },
-] as const
-
-type StepList = typeof FULL_STEPS | typeof SEPARATE_STEPS
+type StepList = typeof FULL_STEPS
 
 function getStepIndex(status: string, steps: StepList): number {
   for (let i = 0; i < steps.length; i++) {
@@ -46,9 +29,9 @@ interface OrderStatusTrackerProps {
   className?: string
 }
 
-export function OrderStatusTracker({ status, shippingOption, className }: OrderStatusTrackerProps) {
+export function OrderStatusTracker({ status, className }: OrderStatusTrackerProps) {
   const isCancelled = status === 'cancelled'
-  const steps: StepList = shippingOption === 'separate' ? SEPARATE_STEPS : FULL_STEPS
+  const steps: StepList = FULL_STEPS  // separate-shipping orders now go all the way too: the cargo drives their status
   const activeIndex = getStepIndex(status, steps)
 
   if (isCancelled) {

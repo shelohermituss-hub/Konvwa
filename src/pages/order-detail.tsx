@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth-context'
 import { toast } from 'sonner'
 import type { OrderStatus } from '@/types'
 import { OrderStatusTracker } from '@/components/shared/order-status-tracker'
+import { ShippingMethodPicker } from '@/components/shared/shipping-method-picker'
 import { OrderHistory } from '@/components/shared/order-history'
 import { InstallmentOptions, InstallmentSchedule } from '@/components/shared/order-installments'
 
@@ -488,34 +489,9 @@ export function OrderDetailPage() {
           <InstallmentSchedule orderId={order.id} balance={wallet?.available_balance ?? 0} refreshKey={reloadKey} onChanged={() => setReloadKey(k => k + 1)} />
         ) : null}
 
-        {/* ── EXPÉDITION SÉPARÉE — redirection vers la page Expéditions ── */}
-        {order.status === 'in_china_warehouse' &&
-          order.shipping_option === 'separate' &&
-          !order.chosen_shipping_method_id &&
-          !order.chosen_shipping_rate_id && (
-          <Link
-            to="/expeditions"
-            className="block rounded-2xl border border-primary/30 bg-white shadow-sm overflow-hidden active:scale-[0.99] transition-transform"
-          >
-            <div className="bg-primary/8 px-4 pt-4 pb-3">
-              <div className="flex items-start gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 shrink-0">
-                  <Truck className="h-4 w-4 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-foreground">{tr('Votre colis est en entrepôt Chine')}</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    {tr('Choisissez un mode d\'expédition dans la page Expéditions.')}
-                  </p>
-                </div>
-                <ArrowLeft className="h-4 w-4 text-primary rotate-180 shrink-0 mt-0.5" />
-              </div>
-            </div>
-            <div className="px-4 py-3 flex items-center gap-2 text-sm font-semibold text-primary">
-              <Truck className="h-4 w-4" />
-              {tr('Aller à Expéditions')}
-            </div>
-          </Link>
+        {/* ── EXPÉDITION SÉPARÉE — the parcel is at the warehouse: choose the method (fees computed by the database) and pay ── */}
+        {order.status === 'in_china_warehouse' && order.shipping_option === 'separate' && !order.shipping_paid_at && (
+          <ShippingMethodPicker kind="order" orderId={order.id} balance={wallet?.available_balance ?? null} onPaid={() => setReloadKey(k => k + 1)} />
         )}
 
         {/* Product image */}

@@ -67,6 +67,7 @@ interface ShippingRequest {
   destination_address: string | null
   shipment_id: string | null
   payment_plan: string | null
+  tracking_status: string | null
   shipment: { id: string; status: string } | null
   warehouse: Warehouse | null
   product_rate_category: ProductRateCategory | null
@@ -200,7 +201,7 @@ function WarehouseAddressCard({ wh }: { wh: Warehouse }) {
 
 function ShippingRequestCard({ req }: { req: ShippingRequest }) {
   const base = REQ_STATUS[req.status] ?? { label: req.status, color: 'bg-muted text-muted-foreground' }
-  const tracked = !!req.shipment && (req.status === 'invoiced' || req.status === 'deposit_paid') && cargoStatusLabel(req) !== base.label
+  const tracked = !!(req.shipment || req.tracking_status) && (req.status === 'invoiced' || req.status === 'deposit_paid') && cargoStatusLabel(req) !== base.label
   const s = tracked ? { label: cargoStatusLabel(req), color: 'bg-sky-50 text-sky-700' } : base
   const displayAmount = req.actual_amount_htg ?? req.quoted_amount_htg
   const isQuoted      = req.status === 'quoted'
@@ -632,13 +633,14 @@ export function ShipmentsPage() {
           estimated_cbm, estimated_kg, actual_cbm, actual_kg,
           quoted_amount_htg, actual_amount_htg, quoted_at, received_at, invoiced_at,
           payment_due_at, paid_amount_htg,
-          package_count, origin_country, destination_address, shipment_id, payment_plan,
+          package_count, origin_country, destination_address, shipment_id, payment_plan, tracking_status,
           warehouse:warehouses(id, code, name, country_code, flag_emoji, address_line1, address_line2, address_line3, city, state, postal_code, contact_info, instructions, for_category),
           product_rate_category:product_rate_categories(id, name, slug, rate_multiplier, description),
           shipment:shipments(id, status)
         `)
         .eq('user_id', user.id)
         .eq('request_type', 'shipping')
+        .is('source_order_kind', null)  // cargos opened by an order live in that order, not here
         .not('status', 'in', '(cancelled)')
         .order('created_at', { ascending: false }),
       supabase.from('warehouses').select('*').eq('active', true).order('sort_order'),

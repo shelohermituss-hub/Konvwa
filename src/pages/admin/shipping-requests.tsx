@@ -17,7 +17,7 @@ import {
 
 import { PackagePhotos } from '@/components/shared/package-photos'
 import { useSearchParams } from 'react-router-dom'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface ShippingRateOption {
   id: string
   mode: 'ocean' | 'air'
@@ -25,6 +25,7 @@ interface ShippingRateOption {
   base_fee_usd: number
   per_cbm_usd: number | null
   per_kg_usd: number | null
+  min_amount_usd: number | null
 }
 
 
@@ -60,6 +61,10 @@ interface ShippingRequest {
   origin_country: string | null
   destination_address: string | null
   shipment_id: string | null
+  tracking_status: string | null
+  source_order_kind: string | null
+  source_order_id: string | null
+  source_order_label: string | null
   admin_notes: string | null
   user_id: string
   shipment: { batch_code: string; status: string } | null
@@ -133,7 +138,7 @@ function AdminActionSheet({
   useEffect(() => {
     Promise.all([
       supabase.from('shipping_rates')
-        .select('id, mode, name, base_fee_usd, per_cbm_usd, per_kg_usd')
+        .select('id, mode, name, base_fee_usd, per_cbm_usd, per_kg_usd, min_amount_usd')
         .eq('active', true)
         .order('mode').order('sort_order'),
       supabase.from('app_settings').select('value').eq('key', 'usd_to_htg_rate').single(),
@@ -154,13 +159,27 @@ function AdminActionSheet({
     const cbm = parseFloat(form.actual_cbm) || 0
     const kg  = parseFloat(form.actual_kg)  || 0
     const mult = request.product_rate_category?.rate_multiplier ?? 1
-    const usd  = rate.base_fee_usd + (rate.per_cbm_usd ?? 0) * cbm + (rate.per_kg_usd ?? 0) * kg
+    // same rule as the customer's shipping options (database): ocean = greater of volume / weight price, air = weight price, minimum charge
+    const freight = rate.mode === 'ocean' ? Math.max((rate.per_cbm_usd ?? 0) * cbm, (rate.per_kg_usd ?? 0) * kg) : (rate.per_kg_usd ?? 0) * kg
+    const usd  = Math.max(rate.min_amount_usd ?? 0, rate.base_fee_usd + freight)
     return { usd, htg: Math.round(usd * mult * usdToHtg) }
   }, [form.selected_rate_id, form.actual_cbm, form.actual_kg, rates, usdToHtg, request.product_rate_category])
 
   const finalAmount = form.override_amount
     ? parseFloat(form.override_amount)
     : calcResult?.htg ?? null
+
+  const [cargoStatus, setCargoStatus] = useState<string>(request.tracking_status ?? request.shipment?.status ?? 'in_china_warehouse')
+  const [cargoSaving, setCargoSaving] = useState(false)
+
+  async function handleCargoStatus() {
+    setCargoSaving(true)
+    const { data, error } = await supabase.rpc('admin_set_cargo_status', { p_request_id: request.id, p_status: cargoStatus })
+    setCargoSaving(false)
+    if (error || !data?.success) { toast.error(trServer((data?.error as string | undefined) ?? error?.message ?? 'Erreur')); return }
+    toast.success(tr('Statut de la cargaison mis à jour'))
+    onDone()
+  }
 
   async function handleAssignBatch() {
     setAssigningSaving(true)
@@ -327,6 +346,9 @@ function AdminActionSheet({
               </p>
             )}
             <p className="text-muted-foreground">{tr('Créé le')}{' '}{fmtDate(request.created_at)}</p>
+            {request.source_order_label && (
+              <p className="font-semibold text-indigo-700">{tr('Commande liée :')}{' '}{request.source_order_label}</p>
+            )}
             {request.notes && <p className="text-muted-foreground italic">"{request.notes}"</p>}
           </div>
 
@@ -480,6 +502,33 @@ function AdminActionSheet({
             />
           </div>
 
+          {/* Cargo status: editable after the customer has paid; a linked order follows it */}
+          {(s === 'invoiced' || s === 'deposit_paid') && (
+            <div className="rounded-xl border border-sky-100 bg-sky-50 p-3.5 space-y-2.5">
+              <div className="flex items-center gap-2">
+                <Ship className="h-4 w-4 text-sky-600 shrink-0" />
+                <p className="text-sm font-semibold text-sky-800">{tr('Statut de la cargaison')}</p>
+              </div>
+              {request.source_order_label && (
+                <p className="text-[11px] text-sky-700">{tr('La commande liée suit ce statut :')}{' '}<span className="font-bold">{request.source_order_label}</span></p>
+              )}
+              <Select value={cargoStatus} onValueChange={setCargoStatus}>
+                <SelectTrigger className="rounded-xl bg-white border-sky-200 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {['in_china_warehouse', 'shipped', 'in_transit', 'arrived_haiti', 'customs_processing', 'out_for_delivery', 'delivered'].map(st => (
+                    <SelectItem key={st} value={st}>{shipmentStatusLabel(st)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button size="sm" className="w-full rounded-xl gap-2" onClick={handleCargoStatus}
+                disabled={cargoSaving || cargoStatus === (request.tracking_status ?? request.shipment?.status ?? 'in_china_warehouse')}
+                style={{ background: '#0284C7', color: '#fff' }}>
+                {cargoSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCheck className="h-3.5 w-3.5" />}
+                {tr('Mettre à jour le statut')}
+              </Button>
+            </div>
+          )}
+
           {/* Assign to shipment batch (shown once paid or deposit received) */}
           {(s === 'invoiced' || s === 'deposit_paid') && (
             <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3.5 space-y-2.5">
@@ -611,6 +660,9 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
             {request.warehouse?.code ?? '—'}
             {request.package_count != null && tr(' · {0} colis', request.package_count)}
           </p>
+          {request.source_order_label && (
+            <p className="text-[11px] font-semibold text-indigo-700 truncate">{request.source_order_label}</p>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-full border', STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-500 border-gray-200')}>
@@ -703,7 +755,7 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
             <p className="text-xs text-orange-700 bg-orange-50 rounded-lg px-2.5 py-1.5">{tr('Admin :')}{' '}{request.admin_notes}</p>
           )}
 
-          {s !== 'invoiced' && s !== 'cancelled' && (
+          {s !== 'cancelled' && (
             <Button
               size="sm"
               className="w-full rounded-xl mt-1 gap-2"
@@ -753,7 +805,7 @@ export function AdminShippingRequestsPage() {
         quoted_amount_htg, actual_amount_htg,
         quoted_at, received_at, invoiced_at, package_count, admin_notes,
         payment_due_at, paid_amount_htg, late_fee_htg,
-        user_id,
+        user_id, tracking_status, source_order_kind, source_order_id, source_order_label,
         warehouse:warehouses(id, code, name, flag_emoji, country_code),
         product_rate_category:product_rate_categories(id, name, slug, rate_multiplier),
         shipment:shipments(batch_code, status)

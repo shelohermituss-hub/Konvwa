@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 
 import { IllustrationEmptyOrders } from '@/components/shared/illustrations'
 
-import { needsShippingPayment, productOrderLabel, type ShippingRequestState } from '@/lib/product-order'
+import { needsShippingPayment, productOrderLabel } from '@/lib/product-order'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface OrderRow {
   id: string
@@ -28,8 +28,8 @@ interface OrderRow {
 }
 
 interface CatalogOrderRow {
-  id: string; status: string; payment_status: string; total_htg: number; created_at: string
-  shipping_request: ShippingRequestState | null
+  id: string; tracking_code: string; status: string; payment_status: string; tracking_status: string | null
+  total_htg: number; created_at: string; shipping_paid_at: string | null
 }
 
 interface DraftRow {
@@ -84,7 +84,7 @@ export function OrdersPage() {
         .order('created_at', { ascending: false }),
       supabase
         .from('product_orders')
-        .select('id, status, payment_status, total_htg, created_at, shipping_request:product_requests(status, quoted_amount_htg, payment_plan, shipment:shipments(status))')
+        .select('id, tracking_code, status, payment_status, tracking_status, total_htg, created_at, shipping_paid_at')
         .eq('user_id', user.id)
         .neq('payment_status', 'unpaid')
         .order('created_at', { ascending: false }),
@@ -255,7 +255,7 @@ export function OrdersPage() {
                           <img src="/icon-box.jpg" alt="" className="h-7 w-7 object-contain" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold">{tr('Commande catalogue')} #{co.id.slice(0, 8).toUpperCase()}</p>
+                          <p className="truncate text-sm font-semibold">{tr('Commande catalogue')} #{co.tracking_code}</p>
                           <p className={cn('mt-1 text-xs font-semibold', due ? 'text-amber-700' : 'text-muted-foreground')}>{productOrderLabel(co)}</p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1 text-right">

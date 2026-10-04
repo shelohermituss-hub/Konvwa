@@ -1,42 +1,29 @@
 import { describe, expect, it } from 'vitest'
-import { needsShippingPayment, productOrderStage, productOrderTimeline } from './product-order'
+import { isCancelledOrder, needsShippingPayment, productOrderLabel, trackingStatusOf } from './product-order'
 
-const base = { status: 'processing', payment_status: 'paid', shipping_request: null }
-const withReq = (status: string, shipment: string | null = null) => ({ ...base, shipping_request: { status, shipment: shipment ? { status: shipment } : null } })
+const base = { status: 'processing', payment_status: 'paid', tracking_status: 'paid', shipping_paid_at: null }
 
-describe('productOrderStage', () => {
-  it('follows the same flow as a shipping request', () => {
-    expect(productOrderStage({ ...base, payment_status: 'unpaid', status: 'pending' })).toBe('pending')
-    expect(productOrderStage(base)).toBe('purchasing')
-    expect(productOrderStage(withReq('received'))).toBe('awaiting_quote')
-    expect(productOrderStage(withReq('quoted'))).toBe('quote_ready')
-    expect(productOrderStage(withReq('deposit_paid'))).toBe('deposit_paid')
-    expect(productOrderStage(withReq('invoiced'))).toBe('shipping_paid')
-    expect(productOrderStage(withReq('invoiced', 'in_transit'))).toBe('shipped')
-    expect(productOrderStage(withReq('invoiced', 'delivered'))).toBe('delivered')
-    expect(productOrderStage({ ...withReq('invoiced'), status: 'delivered' })).toBe('delivered')
-    expect(productOrderStage({ ...base, status: 'cancelled' })).toBe('cancelled')
-    expect(productOrderStage({ ...base, payment_status: 'refunded' })).toBe('cancelled')
+describe('catalogue order tracking', () => {
+  it('starts at "paid"', () => {
+    expect(trackingStatusOf(base)).toBe('paid')
+    expect(trackingStatusOf({ ...base, tracking_status: null })).toBe('paid')
+    expect(productOrderLabel(base)).toBe('Payé')
   })
-  it('asks the customer to pay only when a quote is ready', () => {
-    expect(needsShippingPayment(withReq('quoted'))).toBe(true)
-    expect(needsShippingPayment(withReq('received'))).toBe(false)
-    expect(needsShippingPayment(withReq('invoiced'))).toBe(false)
+  it('asks the customer to choose a shipping method only once the parcel is at the warehouse and the shipping is not paid', () => {
+    expect(needsShippingPayment(base)).toBe(false)
+    expect(needsShippingPayment({ ...base, tracking_status: 'in_china_warehouse' })).toBe(true)
+    expect(needsShippingPayment({ ...base, tracking_status: 'in_china_warehouse', shipping_paid_at: '2026-10-04T00:00:00Z' })).toBe(false)
+    expect(needsShippingPayment({ ...base, tracking_status: 'in_transit' })).toBe(false)
+    expect(needsShippingPayment({ ...base, status: 'cancelled', tracking_status: 'in_china_warehouse' })).toBe(false)
   })
-})
-
-describe('productOrderTimeline', () => {
-  it('starts with the paid purchase and then follows the cargo steps', () => {
-    const t = productOrderTimeline(base)
-    expect(t.steps[0].key).toBe('purchased')
-    expect(t.steps.map((s) => s.key)).toEqual(['purchased', 'received', 'quoted', 'paid', 'shipped', 'in_transit', 'arrived_haiti', 'customs_processing', 'out_for_delivery', 'delivered'])
-    expect(t.index).toBe(0)
+  it('follows the cargo labels', () => {
+    expect(productOrderLabel({ ...base, tracking_status: 'in_transit', shipping_paid_at: 'x' })).toBe('En transit')
+    expect(productOrderLabel({ ...base, tracking_status: 'delivered', shipping_paid_at: 'x' })).toBe('Livré')
+    expect(productOrderLabel({ ...base, tracking_status: 'in_china_warehouse', shipping_paid_at: 'x' })).toContain('payée')
   })
-  it('moves along with the request and the batch', () => {
-    expect(productOrderTimeline(withReq('received')).index).toBe(1)
-    expect(productOrderTimeline(withReq('quoted')).index).toBe(2)
-    expect(productOrderTimeline(withReq('invoiced')).index).toBe(3)
-    expect(productOrderTimeline(withReq('invoiced', 'in_transit')).index).toBe(5)
-    expect(productOrderTimeline({ ...withReq('invoiced'), status: 'delivered' }).index).toBe(9)
+  it('handles unpaid and cancelled orders', () => {
+    expect(productOrderLabel({ ...base, payment_status: 'unpaid', status: 'pending', tracking_status: null })).toBe('En attente de paiement')
+    expect(isCancelledOrder({ ...base, payment_status: 'refunded' })).toBe(true)
+    expect(productOrderLabel({ ...base, status: 'cancelled' })).toBe('Annulée')
   })
 })
