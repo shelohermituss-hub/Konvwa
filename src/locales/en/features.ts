@@ -753,4 +753,5 @@ export const FEATURES_EN: Record<string, string> = {
   "Aperçu": "Preview",
   "Pour modifier vos passkeys, entrez le code à 6 chiffres de votre application d'authentification.": "To change your passkeys, enter the 6-digit code from your authenticator app.",
   "Connectez-vous avec votre mot de passe, puis ajoutez-en une dans Profil > Confidentialité & sécurité.": "Sign in with your password, then add one in Profile > Privacy & security.",
+  "Cochez d'abord « Je suis un humain », puis touchez de nouveau « Se connecter avec une passkey ».": "First tick \"I am human\", then tap \"Sign in with a passkey\" again.",
 }

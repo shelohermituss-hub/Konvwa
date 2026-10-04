@@ -258,8 +258,13 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
   const captcha = useCaptcha()
   const [passkeyBusy, setPasskeyBusy] = useState(false)
   async function signInWithPasskey() {
-    // the passkey itself proves the user is present: no captcha is required (a solved one is still sent)
+    // Supabase Auth applies the captcha protection to passkey sign-in too (no exemption possible): ask for the tick first
     const usedToken = captcha.token
+    if (!usedToken) {
+      toast.info(tr('Cochez d\'abord « Je suis un humain », puis touchez de nouveau « Se connecter avec une passkey ».'))
+      document.getElementById('login-captcha')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
     setPasskeyBusy(true)
     const { error } = await supabase.auth.signInWithPasskey({ options: { captchaToken: usedToken } })
     setPasskeyBusy(false)
@@ -338,7 +343,7 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
           {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
         </div>
 
-        {captcha.widget}
+        <div id="login-captcha">{captcha.widget}</div>
 
         <PrimaryBtn type="submit" disabled={isSubmitting || !captcha.ready} className="mt-2">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
