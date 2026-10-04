@@ -104,7 +104,7 @@ export function AdminAdsPage() {
       const ext = (file.name.split('.').pop() ?? 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'bin'
       const path = `${crypto.randomUUID()}.${ext}`
       const { error: upErr } = await supabase.storage.from('ads').upload(path, file, { contentType: file.type, cacheControl: '31536000' })
-      if (upErr) { setSaving(false); toast.error(tr('Envoi du fichier impossible.')); return }
+      if (upErr) { console.error('ads upload', upErr); setSaving(false); toast.error(tr('Envoi du fichier impossible.'), { description: upErr.message }); return }
       media_path = path; media_type = file.type.startsWith('video/') ? 'video' : 'image'
     } else if (removeMedia) { media_path = null; media_type = 'image' }
 
@@ -119,7 +119,7 @@ export function AdminAdsPage() {
       : await supabase.from('ad_banners').insert(row)
     if (error) {
       if (file && media_path) await supabase.storage.from('ads').remove([media_path])
-      setSaving(false); toast.error(tr('Enregistrement impossible.')); return
+      console.error('ads save', error); setSaving(false); toast.error(tr('Enregistrement impossible.'), { description: error.message }); return
     }
     if (oldPath && oldPath !== media_path) await supabase.storage.from('ads').remove([oldPath])
     setSaving(false); setOpen(false)
