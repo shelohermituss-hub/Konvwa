@@ -1080,7 +1080,16 @@ function ShippingRatesSection() {
   async function handleDelete(item: ShippingRate) {
     if (!confirm(tr('Supprimer le tarif "{0}" ?', item.name))) return
     const { error } = await supabase.from('shipping_rates').delete().eq('id', item.id)
-    if (error) { toast.error(tr('Impossible de supprimer.')); return }
+    if (error) {
+      // Already used by orders or quotes (history must stay readable): switch it off instead, it disappears for customers
+      if (error.code === '23503') {
+        const { error: offError } = await supabase.from('shipping_rates').update({ active: false }).eq('id', item.id)
+        if (offError) { toast.error(tr('Impossible de supprimer.')); return }
+        toast.success(tr('Ce tarif est utilisé par des commandes : il a été désactivé (l\'historique est conservé).')); load()
+        return
+      }
+      toast.error(tr('Impossible de supprimer.')); return
+    }
     toast.success(tr('Tarif supprimé.')); load()
   }
 
