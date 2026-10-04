@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AlertCircle, Bell, Check, Clock, CreditCard, Info, Package } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
@@ -16,6 +16,8 @@ const CHANGED = 'konvwa:notifications-changed'
 /** Number of UNREAD notifications of the signed-in user (live; refreshed when something marks one as read). */
 export function useUnreadCount(userId: string | undefined): number {
   const [unread, setUnread] = useState(0)
+  // several components read the count: every hook instance needs its own realtime channel (a channel cannot get listeners after subscribe)
+  const instance = useId()
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -27,7 +29,7 @@ export function useUnreadCount(userId: string | undefined): number {
     if (!userId) return
     void load()
     const channel = supabase
-      .channel('notif-badge-' + userId)
+      .channel(`notif-badge-${userId}-${instance}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, () => void load())
       .subscribe()
     const onChanged = () => void load()
@@ -39,7 +41,7 @@ export function useUnreadCount(userId: string | undefined): number {
       window.removeEventListener(CHANGED, onChanged)
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [userId, load])
+  }, [userId, load, instance])
 
   return unread
 }
