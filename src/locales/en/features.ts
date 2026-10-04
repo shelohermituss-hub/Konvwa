@@ -595,4 +595,6 @@ export const FEATURES_EN: Record<string, string> = {
   "Statut de la commande": "Order status",
   "Clients qui envoient leur marchandise à nos entrepôts : devis, réception et facturation du fret": "Customers sending their goods to our warehouses: quote, reception and freight billing",
   "Ce tarif est utilisé par des commandes : il a été désactivé (l'historique est conservé).": "This rate is used by orders: it has been deactivated (history is kept).",
+  "Type de commande": "Order type",
+  "Aucun achat du catalogue": "No catalogue purchase yet",
 }

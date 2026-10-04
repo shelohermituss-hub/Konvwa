@@ -65,6 +65,7 @@ export function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [kind, setKind] = useState<'normal' | 'catalog'>('normal')
   const [selectedDraft, setSelectedDraft] = useState<DraftRow | null>(null)
 
   useEffect(() => {
@@ -96,8 +97,9 @@ export function OrdersPage() {
     })
   }, [user])
 
-  const showDrafts = statusFilter === 'all' || statusFilter === 'drafts'
-  const showOrders = statusFilter !== 'drafts'
+  const normalTab = kind === 'normal'
+  const showDrafts = normalTab && (statusFilter === 'all' || statusFilter === 'drafts')
+  const showOrders = normalTab && statusFilter !== 'drafts'
 
   const filteredOrders = showOrders ? orders.filter((o) => {
     const name = o.quotes?.product_requests?.product_name ?? ''
@@ -117,9 +119,11 @@ export function OrdersPage() {
     return d
   }
 
-  const showCatalog = statusFilter === 'all' && !search && catalogOrders.length > 0
-  const isEmpty = filteredOrders.length === 0 && filteredDrafts.length === 0 && !showCatalog
-  const totalCount = orders.length + drafts.length + catalogOrders.length
+  const filteredCatalog = !normalTab
+    ? catalogOrders.filter((c) => c.tracking_code.toLowerCase().includes(search.toLowerCase()))
+    : []
+  const isEmpty = normalTab ? filteredOrders.length === 0 && filteredDrafts.length === 0 : filteredCatalog.length === 0
+  const totalCount = normalTab ? orders.length + drafts.length : catalogOrders.length
 
   return (
     <div className="min-h-full bg-[#F4F5F7] w-full">
@@ -142,6 +146,25 @@ export function OrdersPage() {
         </Link>
       </div>
 
+      {/* Two kinds of orders, kept apart: normal orders (link + quote) and catalogue purchases */}
+      <div className="px-4 pb-3">
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-[#E9EBF0] p-1" role="tablist" aria-label={tr('Type de commande')}>
+          {([['normal', tr('Commandes'), orders.length + drafts.length], ['catalog', tr('Catalogue'), catalogOrders.length]] as const).map(([k, label, n]) => (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={kind === k}
+              onClick={() => setKind(k)}
+              className={cn('rounded-lg py-2 text-sm font-semibold transition-colors',
+                kind === k ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground')}
+            >
+              {label}<span className="ml-1.5 text-xs opacity-60">{n}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Search */}
       <div className="px-4 pb-3">
         <div className="relative">
@@ -155,8 +178,8 @@ export function OrdersPage() {
         </div>
       </div>
 
-      {/* Status filters */}
-      <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-hide">
+      {/* Status filters (normal orders) */}
+      {normalTab && <div className="px-4 pb-4 flex gap-2 overflow-x-auto scrollbar-hide">
         {STATUS_FILTER_KEYS.map((f) => (
           <button
             key={f.value}
@@ -176,7 +199,7 @@ export function OrdersPage() {
             )}
           </button>
         ))}
-      </div>
+      </div>}
 
       {/* List */}
       <div className="px-4 pb-6 space-y-3">
@@ -186,12 +209,21 @@ export function OrdersPage() {
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white pt-8 pb-10 px-6 text-center shadow-sm">
             <IllustrationEmptyOrders className="w-44 h-auto mx-auto mb-2" />
             <p className="font-bold text-foreground/70">
-              {search || (statusFilter !== 'all' && statusFilter !== 'drafts') ? t('common.no_result') : t('orders.no_orders')}
+              {!normalTab && !search ? tr('Aucun achat du catalogue') : search || (statusFilter !== 'all' && statusFilter !== 'drafts') ? t('common.no_result') : t('orders.no_orders')}
             </p>
             <p className="text-xs text-muted-foreground mt-1 mb-4 leading-relaxed">
               {search ? t('orders.try_other') : t('orders.submit_first')}
             </p>
-            {!search && (
+            {!search && !normalTab && (
+              <Link
+                to="/products"
+                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
+                style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+              >
+                {tr('Voir les produits')}
+              </Link>
+            )}
+            {!search && normalTab && (
               <Link
                 to="/submit"
                 className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
@@ -243,10 +275,10 @@ export function OrdersPage() {
             )}
 
             {/* ── Achats du catalogue ── */}
-            {statusFilter === 'all' && !search && catalogOrders.length > 0 && (
+            {filteredCatalog.length > 0 && (
               <div className="space-y-2.5">
                 <p className="px-1 pt-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">{tr('Achats du catalogue')}</p>
-                {catalogOrders.map((co) => {
+                {filteredCatalog.map((co) => {
                   const due = needsShippingPayment(co)
                   return (
                     <Link key={co.id} to={`/product-orders/${co.id}`}>
