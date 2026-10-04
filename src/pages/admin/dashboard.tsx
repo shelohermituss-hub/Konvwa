@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { Package, Users, Ship, AlertTriangle, CreditCard, TrendingUp, Clock, ChevronRight } from 'lucide-react'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line } from 'recharts'
+import { AdminCargoSection } from '@/components/shared/admin-cargo-section'
 import { useAdminStats } from '@/hooks/use-admin-stats'
 import { cn } from '@/lib/utils'
 
@@ -229,6 +230,9 @@ export function AdminDashboard() {
           href="/admin/users"
         />
       </div>
+
+      {/* ── Cargaisons (simple shipping requests) ── */}
+      <AdminCargoSection />
 
       {/* ── Recent orders ── */}
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">

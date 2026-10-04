@@ -584,4 +584,11 @@ export const FEATURES_EN: Record<string, string> = {
   "— Aucune —": "— None —",
   "Exp. payée": "Ship. paid",
   "Frais d'expédition payés": "Shipping fees paid",
+  "À traiter": "To process",
+  "Devis envoyés": "Quotes sent",
+  "Payées, à expédier": "Paid, to ship",
+  "Cargaisons": "Cargos",
+  "Clients qui envoient leur propre marchandise à nos entrepôts": "Customers sending their own goods to our warehouses",
+  "Tout voir": "See all",
+  "Aucune cargaison pour le moment.": "No cargo yet.",
 }
