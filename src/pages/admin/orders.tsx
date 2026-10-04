@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from '@/components/shared/status-badge'
-import { Search, Filter, MoreHorizontal, Eye, Edit, MessageSquare, Ban, Package, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Filter, MoreHorizontal, Eye, Edit, MessageSquare, Ban, Package, Ship, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { AssignBatchDialog, type AssignTarget } from '@/components/shared/assign-batch-dialog'
 import { ArrivalDialog, type ArrivalTarget } from '@/components/shared/arrival-dialog'
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
@@ -26,6 +27,7 @@ interface AdminOrder {
   user_id: string
   customer_name?: string
   shipping_option?: string
+  shipping_request_id?: string | null
   weight_kg?: number | null
   cbm?: number | null
   quotes: {
@@ -42,6 +44,7 @@ const ORDER_STATUSES = [
   { value: 'paid',              label: tr('Payé') },
   { value: 'purchasing',        label: tr('En achat') },
   { value: 'in_china_warehouse',label: tr('Entrepôt Chine') },
+  { value: 'shipping_paid',    label: tr('Expédition payée') },
   { value: 'shipped',           label: tr('Expédié') },
   { value: 'in_transit',        label: tr('En transit') },
   { value: 'arrived_haiti',     label: tr('Arrivé en Haïti') },
@@ -75,13 +78,14 @@ export function AdminOrdersPage() {
   const [saving, setSaving] = useState(false)
   const [page, setPage] = useState(0)
   const [arriving, setArriving] = useState<ArrivalTarget | null>(null)
+  const [assigning, setAssigning] = useState<AssignTarget | null>(null)
 
   async function loadOrders() {
     setLoading(true)
     const { data } = await supabase
       .from('orders')
       
-      .select('id, tracking_code, status, total_paid, payment_status, created_at, user_id, shipping_option, weight_kg, cbm, quotes(total, product_requests(product_name))')
+      .select('id, tracking_code, status, total_paid, payment_status, created_at, user_id, shipping_option, shipping_request_id, weight_kg, cbm, quotes(total, product_requests(product_name))')
       .order('created_at', { ascending: false })
 
     if (!data) { setLoading(false); return }
@@ -285,6 +289,14 @@ export function AdminOrdersPage() {
                           >
                             <Edit className="mr-2 h-4 w-4" />{tr('Modifier le statut')}
                           </DropdownMenuItem>
+                          {order.shipping_request_id && (
+                            <DropdownMenuItem
+                              className="rounded-lg cursor-pointer"
+                              onClick={() => setAssigning({ kind: 'order', id: order.id, label: `#${order.tracking_code}`, shipping_request_id: order.shipping_request_id as string })}
+                            >
+                              <Ship className="mr-2 h-4 w-4" />{tr('Assigner à une expédition')}
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem className="rounded-lg cursor-pointer">
                             <MessageSquare className="mr-2 h-4 w-4" />{tr('Envoyer un message')}
                           </DropdownMenuItem>
@@ -388,6 +400,7 @@ export function AdminOrdersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <AssignBatchDialog target={assigning} onClose={() => setAssigning(null)} onDone={() => void loadOrders()} />
       <ArrivalDialog target={arriving} onClose={() => setArriving(null)} onDone={() => void loadOrders()} />
     </div>
   )

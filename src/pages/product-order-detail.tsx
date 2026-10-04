@@ -77,7 +77,7 @@ export function ProductOrderDetailPage() {
         {/* The parcel is at the warehouse: choose the shipping method (fees computed by the database) and pay */}
         {due && <ShippingMethodPicker kind="product_order" orderId={order.id} balance={balance} onPaid={() => void load()} />}
 
-        {order.shipping_paid_at && !delivered && order.tracking_status === 'in_china_warehouse' && (
+        {order.tracking_status === 'shipping_paid' && (
           <div className="flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-100"><Truck className="h-4 w-4 text-sky-700" aria-hidden="true" /></span>
             <div className="min-w-0 flex-1">
@@ -90,7 +90,7 @@ export function ProductOrderDetailPage() {
         {/* Tracking: the normal order tracking, starting at "Payé" */}
         {!cancelled && order.payment_status === 'paid' && (
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <TimelineStep currentStatus={trackingStatusOf(order) as OrderStatus} startAt="paid" />
+            <TimelineStep currentStatus={trackingStatusOf(order) as OrderStatus} startAt="paid" withShippingPaid />
           </div>
         )}
 

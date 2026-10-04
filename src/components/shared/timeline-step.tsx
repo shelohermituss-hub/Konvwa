@@ -28,6 +28,7 @@ const ORDER_TIMELINE: {
   { status: 'paid',               label: tr('Payé'),       description: tr('Paiement confirmé'),            icon: IconPaye        },
   { status: 'purchasing',         label: tr('Achat'),      description: tr('Achat auprès du fournisseur'),  icon: IconAchat       },
   { status: 'in_china_warehouse', label: tr('Entrepôt'),   description: tr('Produit en entrepôt Chine'),    icon: IconEntrepot    },
+  { status: 'shipping_paid',      label: tr('Expédition payée'), description: tr('Frais d\'expédition payés'), icon: IconPaye },
   { status: 'shipped',            label: tr('Expédition'), description: tr('Expédié vers Haïti'),           icon: IconNavire      },
   { status: 'in_transit',         label: tr('Transit'),    description: tr('En transit maritime'),          icon: IconNavire      },
   { status: 'arrived_haiti',      label: tr('Arrivée'),    description: tr('Arrivé en Haïti'),              icon: IconArrivee     },
@@ -38,7 +39,7 @@ const ORDER_TIMELINE: {
 
 const STATUS_ORDER: OrderStatus[] = [
   'draft', 'quote_sent', 'quote_accepted', 'awaiting_payment', 'paid',
-  'purchasing', 'in_china_warehouse', 'shipped', 'in_transit',
+  'purchasing', 'in_china_warehouse', 'shipping_paid', 'shipped', 'in_transit',
   'arrived_haiti', 'customs_processing', 'out_for_delivery', 'delivered',
 ]
 
@@ -46,13 +47,16 @@ interface TimelineStepProps {
   currentStatus: OrderStatus
   /** First step shown: a catalogue order is already paid, so its tracking starts at "paid". */
   startAt?: OrderStatus
+  /** Shows the "Expédition payée" step (separate-shipping and catalogue orders only). */
+  withShippingPaid?: boolean
   className?: string
 }
 
-export function TimelineStep({ currentStatus, startAt, className }: TimelineStepProps) {
+export function TimelineStep({ currentStatus, startAt, withShippingPaid = false, className }: TimelineStepProps) {
   const currentIndex = STATUS_ORDER.indexOf(currentStatus)
   const isCancelled = currentStatus === 'cancelled' || currentStatus === 'closed'
-  const steps = startAt ? ORDER_TIMELINE.slice(STATUS_ORDER.indexOf(startAt)) : ORDER_TIMELINE
+  const from = startAt ? ORDER_TIMELINE.slice(STATUS_ORDER.indexOf(startAt)) : ORDER_TIMELINE
+  const steps = withShippingPaid ? from : from.filter((st) => st.status !== 'shipping_paid')
 
   return (
     <div className={cn('space-y-0', className)}>

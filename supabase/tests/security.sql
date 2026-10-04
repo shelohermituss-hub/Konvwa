@@ -297,7 +297,8 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   ASSERT (public.admin_set_cargo_status(rid, 'in_transit') ->> 'success')::boolean = false, 'client moved a cargo';
   UPDATE product_requests SET tracking_status = 'delivered' WHERE id = rid;  -- guard keeps the old value
   RESET ROLE;
-  ASSERT (SELECT tracking_status FROM product_requests WHERE id = rid) = 'in_china_warehouse', 'client wrote tracking_status';
+  ASSERT (SELECT tracking_status FROM product_requests WHERE id = rid) = 'shipping_paid', 'client wrote tracking_status';
+  ASSERT (SELECT tracking_status FROM product_orders WHERE id = oid) = 'shipping_paid', 'paying the shipping did not put the order at shipping_paid';
   PERFORM pg_temp.as_user(adm, 'aal2');
   ASSERT (public.admin_set_cargo_status(rid, 'in_transit') ->> 'success')::boolean, 'team could not move a paid cargo';
   RESET ROLE;
@@ -363,6 +364,40 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); sid uuid; oid uuid; rid uuid
     INSERT INTO product_requests (user_id, request_type, status, product_url, product_name, category, quantity, source_platform, tracking_status)
       VALUES (a, 'shipping', 'received', '', 'test', 'other', 1, 'other', 'shipped');
     ASSERT false, 'unpaid cargo could be shipped';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+END $$;
+
+-- 18. step "Expédition payée": paying puts order + cargo there; the team assigns the order to an expedition directly; only the team can
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id FROM ctx);
+  oid uuid; r jsonb; rate uuid; rid uuid; sid uuid; BEGIN
+  UPDATE wallets SET available_balance = 1000000 WHERE user_id = a;
+  INSERT INTO product_orders (user_id, total_htg, status, payment_status, tracking_status) VALUES (a, 1000, 'processing', 'paid', 'paid') RETURNING id INTO oid;
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_assign_order_to_batch('product_order', oid, NULL) ->> 'success')::boolean = false, 'assigned an unpaid-shipping order';
+  PERFORM public.admin_order_arrived('product_order', oid, 4, 0.04);
+  RESET ROLE;
+  PERFORM pg_temp.as_user(a);
+  SELECT (o ->> 'rate_id')::uuid INTO rate FROM jsonb_array_elements(public.order_shipping_options('product_order', oid) -> 'options') o LIMIT 1;
+  r := public.pay_order_shipping('product_order', oid, rate);
+  ASSERT (r ->> 'success')::boolean, 'payment failed: ' || r::text;
+  SELECT id INTO sid FROM shipments LIMIT 1;
+  IF sid IS NULL THEN RESET ROLE; INSERT INTO shipments (batch_code, status) VALUES ('TEST-' || substr(md5(random()::text), 1, 6), 'in_china_warehouse') RETURNING id INTO sid; PERFORM pg_temp.as_user(a); END IF;
+  ASSERT (public.admin_assign_order_to_batch('product_order', oid, sid) ->> 'success')::boolean = false, 'client assigned an order to a batch';
+  RESET ROLE;
+  ASSERT (SELECT tracking_status FROM product_orders WHERE id = oid) = 'shipping_paid', 'order not at shipping_paid';
+  SELECT shipping_request_id INTO rid FROM product_orders WHERE id = oid;
+  ASSERT (SELECT tracking_status FROM product_requests WHERE id = rid) = 'shipping_paid', 'cargo not at shipping_paid';
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_assign_order_to_batch('product_order', oid, sid) ->> 'success')::boolean, 'team could not assign the order to a batch';
+  RESET ROLE;
+  ASSERT (SELECT shipment_id FROM product_requests WHERE id = rid) = sid, 'cargo not in the batch';
+  UPDATE shipments SET status = 'shipped' WHERE id = sid;
+  ASSERT (SELECT tracking_status FROM product_orders WHERE id = oid) = 'shipped', 'order did not follow the batch';
+  -- an order whose shipping is not paid cannot be put at shipping_paid by hand
+  INSERT INTO product_orders (user_id, total_htg, status, payment_status, tracking_status) VALUES (a, 10, 'processing', 'paid', 'in_china_warehouse') RETURNING id INTO oid;
+  BEGIN
+    UPDATE product_orders SET tracking_status = 'shipping_paid' WHERE id = oid;
+    ASSERT false, 'shipping_paid set without payment';
   EXCEPTION WHEN raise_exception THEN NULL; END;
 END $$;
 

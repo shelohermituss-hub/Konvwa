@@ -515,7 +515,7 @@ function AdminActionSheet({
               <Select value={cargoStatus} onValueChange={setCargoStatus}>
                 <SelectTrigger className="rounded-xl bg-white border-sky-200 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {['in_china_warehouse', 'shipped', 'in_transit', 'arrived_haiti', 'customs_processing', 'out_for_delivery', 'delivered'].map(st => (
+                  {['in_china_warehouse', 'shipping_paid', 'shipped', 'in_transit', 'arrived_haiti', 'customs_processing', 'out_for_delivery', 'delivered'].map(st => (
                     <SelectItem key={st} value={st}>{shipmentStatusLabel(st)}</SelectItem>
                   ))}
                 </SelectContent>

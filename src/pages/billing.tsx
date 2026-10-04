@@ -23,7 +23,7 @@ interface PaidOrder {
 
 // Orders where payment has been made (all statuses after awaiting_payment, excluding cancelled/draft)
 const PAID_STATUSES = [
-  'paid', 'purchasing', 'in_china_warehouse', 'shipped',
+  'paid', 'purchasing', 'in_china_warehouse', 'shipping_paid', 'shipped',
   'in_transit', 'arrived_haiti', 'customs_processing',
   'out_for_delivery', 'delivered', 'closed',
 ]

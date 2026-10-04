@@ -8,6 +8,7 @@ export type OrderStatus =
   | 'paid'
   | 'purchasing'
   | 'in_china_warehouse'
+  | 'shipping_paid'
   | 'shipped'
   | 'in_transit'
   | 'arrived_haiti'

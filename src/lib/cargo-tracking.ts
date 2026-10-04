@@ -60,6 +60,7 @@ const EARLY_LABEL: Record<string, string> = {
 }
 
 const TRACK_LABEL: Record<string, string> = {
+  shipping_paid: tr('Expédition payée'),
   shipped: tr('Expédié'),
   in_transit: tr('En transit'),
   arrived_haiti: tr('Arrivé en Haïti'),

@@ -577,4 +577,11 @@ export const FEATURES_EN: Record<string, string> = {
   "Mettre à jour le statut": "Update status",
   "Votre colis est prêt à partir : il sera mis dans la prochaine cargaison.": "Your parcel is ready to leave: it will go in the next cargo.",
   "Calculée à l'arrivée du colis, selon le mode choisi": "Calculated when the parcel arrives, depending on the chosen method",
+  "Commande assignée à l'expédition": "Order assigned to the expedition",
+  "Assigner à une expédition": "Assign to an expedition",
+  "La commande suivra le statut de l'expédition choisie.": "The order will follow the status of the chosen expedition.",
+  "Expédition (lot)": "Expedition (batch)",
+  "— Aucune —": "— None —",
+  "Exp. payée": "Ship. paid",
+  "Frais d'expédition payés": "Shipping fees paid",
 }

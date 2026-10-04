@@ -19,7 +19,7 @@ describe('catalogue order tracking', () => {
   it('follows the cargo labels', () => {
     expect(productOrderLabel({ ...base, tracking_status: 'in_transit', shipping_paid_at: 'x' })).toBe('En transit')
     expect(productOrderLabel({ ...base, tracking_status: 'delivered', shipping_paid_at: 'x' })).toBe('Livré')
-    expect(productOrderLabel({ ...base, tracking_status: 'in_china_warehouse', shipping_paid_at: 'x' })).toContain('payée')
+    expect(productOrderLabel({ ...base, tracking_status: 'shipping_paid', shipping_paid_at: 'x' })).toBe('Expédition payée')
   })
   it('handles unpaid and cancelled orders', () => {
     expect(productOrderLabel({ ...base, payment_status: 'unpaid', status: 'pending', tracking_status: null })).toBe('En attente de paiement')

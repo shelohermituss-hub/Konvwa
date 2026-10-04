@@ -7,6 +7,7 @@ const FULL_STEPS = [
   { key: 'quoted',     label: tr('Devis'),     statuses: ['quoted'] },
   { key: 'paid',       label: tr('Payé'),      statuses: ['awaiting_payment', 'paid', 'purchasing'] },
   { key: 'warehouse',  label: tr('Entrepôt'),  statuses: ['in_china_warehouse'] },
+  { key: 'shipping_paid', label: tr('Exp. payée'), statuses: ['shipping_paid'] },
   { key: 'shipped',    label: tr('Expédié'),   statuses: ['shipped'] },
   { key: 'transit',    label: tr('Transit'),   statuses: ['in_transit'] },
   { key: 'arrived',    label: tr('Arrivée'),   statuses: ['arrived', 'arrived_haiti', 'customs', 'customs_clearance', 'customs_processing'] },
@@ -29,9 +30,10 @@ interface OrderStatusTrackerProps {
   className?: string
 }
 
-export function OrderStatusTracker({ status, className }: OrderStatusTrackerProps) {
+export function OrderStatusTracker({ status, shippingOption, className }: OrderStatusTrackerProps) {
   const isCancelled = status === 'cancelled'
-  const steps: StepList = FULL_STEPS  // separate-shipping orders now go all the way too: the cargo drives their status
+  // the "shipping paid" step only exists when the shipping is paid separately
+  const steps: StepList = FULL_STEPS.filter((st) => st.key !== 'shipping_paid' || shippingOption === 'separate') as unknown as StepList
   const activeIndex = getStepIndex(status, steps)
 
   if (isCancelled) {

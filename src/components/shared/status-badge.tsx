@@ -17,6 +17,7 @@ const statusVariants = cva('', {
       paid: 'bg-success/10 text-success border-success/20',
       purchasing: 'bg-sky-50 text-sky-700 border-sky-100',
       in_china_warehouse: 'bg-sky-50 text-sky-700 border-sky-100',
+      shipping_paid: 'bg-success/10 text-success border-success/20',
       shipped: 'bg-sky-50 text-sky-700 border-sky-100',
       in_transit: 'bg-sky-50 text-sky-700 border-sky-100',
       arrived_haiti: 'bg-sky-50 text-sky-700 border-sky-100',
@@ -64,6 +65,7 @@ const statusLabels: Record<string, string> = {
   paid: tr('Payé'),
   purchasing: tr('Achat en cours'),
   in_china_warehouse: tr('En entrepôt (Chine)'),
+  shipping_paid: tr('Expédition payée'),
   shipped: tr('Expédié'),
   in_transit: tr('En transit'),
   arrived_haiti: tr('Arrivé en Haïti'),
@@ -98,7 +100,7 @@ interface StatusBadgeProps {
 
 const validVariants: StatusVariant[] = [
   'default', 'draft', 'pending', 'submitted', 'reviewing', 'quote_sent', 'quote_accepted',
-  'awaiting_payment', 'paid', 'purchasing', 'in_china_warehouse', 'shipped', 'in_transit',
+  'awaiting_payment', 'paid', 'purchasing', 'in_china_warehouse', 'shipping_paid', 'shipped', 'in_transit',
   'arrived_haiti', 'customs_processing', 'out_for_delivery', 'delivered', 'closed', 'cancelled',
   'rejected', 'expired', 'accepted', 'unpaid', 'partial', 'refunded', 'open', 'in_progress',
   'resolved', 'quoted', 'consolidating', 'packed', 'loaded', 'sailing', 'arrived', 'cleared',

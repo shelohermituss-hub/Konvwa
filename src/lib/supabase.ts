@@ -256,7 +256,7 @@ export interface Database {
           user_id: string
           quote_id: string
           tracking_code: string
-          status: 'draft' | 'quote_sent' | 'quote_accepted' | 'awaiting_payment' | 'paid' | 'purchasing' | 'in_china_warehouse' | 'shipped' | 'in_transit' | 'arrived_haiti' | 'customs_processing' | 'out_for_delivery' | 'delivered' | 'closed' | 'cancelled'
+          status: 'draft' | 'quote_sent' | 'quote_accepted' | 'awaiting_payment' | 'paid' | 'purchasing' | 'in_china_warehouse' | 'shipping_paid' | 'shipped' | 'in_transit' | 'arrived_haiti' | 'customs_processing' | 'out_for_delivery' | 'delivered' | 'closed' | 'cancelled'
           total_paid: number
           payment_status: 'unpaid' | 'partial' | 'paid' | 'refunded'
           notes: string | null
@@ -268,7 +268,7 @@ export interface Database {
           user_id?: string
           quote_id: string
           tracking_code?: string
-          status?: 'draft' | 'quote_sent' | 'quote_accepted' | 'awaiting_payment' | 'paid' | 'purchasing' | 'in_china_warehouse' | 'shipped' | 'in_transit' | 'arrived_haiti' | 'customs_processing' | 'out_for_delivery' | 'delivered' | 'closed' | 'cancelled'
+          status?: 'draft' | 'quote_sent' | 'quote_accepted' | 'awaiting_payment' | 'paid' | 'purchasing' | 'in_china_warehouse' | 'shipping_paid' | 'shipped' | 'in_transit' | 'arrived_haiti' | 'customs_processing' | 'out_for_delivery' | 'delivered' | 'closed' | 'cancelled'
           total_paid?: number
           payment_status?: 'unpaid' | 'partial' | 'paid' | 'refunded'
           notes?: string | null
@@ -276,7 +276,7 @@ export interface Database {
           updated_at?: string
         }
         Update: {
-          status?: 'draft' | 'quote_sent' | 'quote_accepted' | 'awaiting_payment' | 'paid' | 'purchasing' | 'in_china_warehouse' | 'shipped' | 'in_transit' | 'arrived_haiti' | 'customs_processing' | 'out_for_delivery' | 'delivered' | 'closed' | 'cancelled'
+          status?: 'draft' | 'quote_sent' | 'quote_accepted' | 'awaiting_payment' | 'paid' | 'purchasing' | 'in_china_warehouse' | 'shipping_paid' | 'shipped' | 'in_transit' | 'arrived_haiti' | 'customs_processing' | 'out_for_delivery' | 'delivered' | 'closed' | 'cancelled'
           total_paid?: number
           payment_status?: 'unpaid' | 'partial' | 'paid' | 'refunded'
           notes?: string | null

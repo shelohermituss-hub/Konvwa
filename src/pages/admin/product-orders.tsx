@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PackageCheck } from 'lucide-react'
+import { PackageCheck, Ship } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrivalDialog, type ArrivalTarget } from '@/components/shared/arrival-dialog'
+import { AssignBatchDialog, type AssignTarget } from '@/components/shared/assign-batch-dialog'
 import { supabase } from '@/lib/supabase'
 import { IN_TRANSIT, productOrderLabel, trackingStatusOf } from '@/lib/product-order'
 import { cn } from '@/lib/utils'
@@ -21,6 +22,7 @@ interface Row {
 const FILTERS: Array<{ key: string; label: () => string; value: (t: string) => boolean }> = [
   { key: 'buy', label: () => tr('Payé / achat'), value: (t) => t === 'paid' || t === 'purchasing' },
   { key: 'warehouse', label: () => tr('À l\'entrepôt'), value: (t) => t === 'in_china_warehouse' },
+  { key: 'paidship', label: () => tr('Expédition payée'), value: (t) => t === 'shipping_paid' },
   { key: 'route', label: () => tr('En route'), value: (t) => IN_TRANSIT.includes(t) },
   { key: 'done', label: () => tr('Livrées'), value: (t) => t === 'delivered' },
   { key: 'all', label: () => tr('Toutes'), value: () => true },
@@ -36,6 +38,7 @@ export function AdminProductOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('buy')
   const [arriving, setArriving] = useState<ArrivalTarget | null>(null)
+  const [assigning, setAssigning] = useState<AssignTarget | null>(null)
 
   const load = useCallback(async () => {
     const o = await supabase.from('product_orders')
@@ -103,6 +106,11 @@ export function AdminProductOrdersPage() {
                       <PackageCheck className="h-3.5 w-3.5" />{t === 'in_china_warehouse' ? tr('Corriger les mesures') : tr('Disponible à l\'entrepôt')}
                     </Button>
                   )}
+                  {r.shipping_request_id && !['delivered'].includes(t) && (
+                    <Button size="sm" className="gap-1.5 rounded-lg" onClick={() => setAssigning({ kind: 'product_order', id: r.id, label: `${tr('Commande catalogue')} #${r.tracking_code}`, shipping_request_id: r.shipping_request_id as string })}>
+                      <Ship className="h-3.5 w-3.5" />{tr('Assigner à une expédition')}
+                    </Button>
+                  )}
                   {r.shipping_request_id && (
                     <Button asChild size="sm" variant="outline" className="rounded-lg"><Link to={`/admin/shipping-requests?open=${r.shipping_request_id}`}>{tr('Cargaison liée')}</Link></Button>
                   )}
@@ -113,6 +121,7 @@ export function AdminProductOrdersPage() {
         </ul>
       )}
 
+      <AssignBatchDialog target={assigning} onClose={() => setAssigning(null)} onDone={() => void load()} />
       <ArrivalDialog target={arriving} onClose={() => setArriving(null)} onDone={() => void load()} />
     </div>
   )

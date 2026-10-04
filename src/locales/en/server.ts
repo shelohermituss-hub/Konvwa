@@ -39,6 +39,8 @@ export const SERVER_EN: Record<string, string> = {
   'Statut de cargaison invalide.': 'Invalid cargo status.',
   'Le client doit d\'abord payer cette expédition.': 'The customer must pay this shipping first.',
   'Le colis ne peut pas partir avant le paiement de l\'expédition.': 'The parcel cannot leave before the shipping is paid.',
+  'Expédition introuvable.': 'Expedition not found.',
+  'Le client doit d\'abord payer l\'expédition de cette commande.': 'The customer must pay the shipping of this order first.',
   'Réservé à l\'équipe.': 'Staff only.',
   'Autorisez les notifications pour continuer.': 'Allow notifications to continue.',
   'Renseignez un numéro de téléphone valide.': 'Enter a valid phone number.',

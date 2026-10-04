@@ -804,7 +804,7 @@ export function OrderDetailPage() {
             <p className="text-sm font-bold text-foreground">{tr('Suivi de la commande')}</p>
           </div>
           <div className="px-4 py-4">
-            <TimelineStep currentStatus={order.status as OrderStatus} />
+            <TimelineStep currentStatus={order.status as OrderStatus} withShippingPaid={order.shipping_option === 'separate'} />
           </div>
         </div>
 

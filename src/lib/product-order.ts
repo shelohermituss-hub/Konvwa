@@ -34,6 +34,7 @@ const TRACKING_LABEL: Record<string, () => string> = {
   paid: () => tr('Payé'),
   purchasing: () => tr('Achat en cours'),
   in_china_warehouse: () => tr('Disponible à l\'entrepôt'),
+  shipping_paid: () => tr('Expédition payée'),
   shipped: () => tr('Expédié vers Haïti'),
   in_transit: () => tr('En transit'),
   arrived_haiti: () => tr('Arrivé en Haïti'),
@@ -48,6 +49,5 @@ export function productOrderLabel(o: ProductOrderState): string {
   if (o.payment_status !== 'paid') return tr('En attente de paiement')
   if (needsShippingPayment(o)) return tr('Choisissez l\'expédition et payez')
   const t = trackingStatusOf(o)
-  if (t === 'in_china_warehouse') return tr('Expédition payée — départ en préparation')
   return (TRACKING_LABEL[t] ?? (() => t))()
 }
