@@ -322,6 +322,7 @@ export function WalletPage() {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadData() }, [user])
 
   // /wallet#transactions (Historique on the home page) lands on the list

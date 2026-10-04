@@ -188,7 +188,6 @@ export function SubmitPage() {
         }
         toast.success(tr('Demande pré-remplie : vérifiez les informations avant d\'envoyer.'))
       })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reorderId, user])
 
   async function handleRegionChange(id: string) {

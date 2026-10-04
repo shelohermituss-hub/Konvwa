@@ -86,6 +86,7 @@ export function ActivityLogPage() {
     setLoadingMore(false)
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(0) }, [user])
 
   async function loadMore() {

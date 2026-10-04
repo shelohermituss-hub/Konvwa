@@ -129,6 +129,7 @@ export function ShipmentDetailPage() {
     if (walletRes.data) setWalletBalance(walletRes.data.available_balance ?? 0)
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [user, id])
 
   async function handleDownloadPDF() {

@@ -57,6 +57,7 @@ export function NotificationsPage() {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [user])
 
   async function markAllRead() {

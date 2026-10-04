@@ -50,6 +50,7 @@ export function SupportPage() {
     setLoading(false)
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadTickets() }, [user])
 
   useEffect(() => {
