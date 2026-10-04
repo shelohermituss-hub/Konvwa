@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Package, Loader2, ToggleLeft, ToggleRight, Search, Star } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, Pencil, Trash2, Package, Loader2, ToggleLeft, ToggleRight, Search, Star, Sparkles } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,9 @@ import { cn } from '@/lib/utils'
 import { normalizeTiers, type PriceTier } from '@/lib/product-pricing'
 import { ProductImportDialog } from '@/components/shared/product-import-dialog'
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
+import { ProductLinkImport } from '@/components/shared/product-link-import'
+import { estimateShipping, type ImportedProduct, type ShippingEstimate } from '@/lib/product-import-api'
+import { priceHtgFromUsd } from '@/lib/import-pricing'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 interface Product {
@@ -49,6 +52,14 @@ interface Product {
   tags_en?: string[]
   customization_options_en?: string[]
   certifications_en?: string[]
+  weight_kg?: number | null
+  length_cm?: number | null
+  width_cm?: number | null
+  height_cm?: number | null
+  package_estimated?: boolean
+  brand?: string | null
+  source_url?: string | null
+  source_asin?: string | null
   created_at: string
 }
 
@@ -83,6 +94,14 @@ const emptyDraft = (): ProductDraft => ({
   certifications: [],
   reseller_discount_pct: 0,
   wholesale_only: false,
+  weight_kg: null,
+  length_cm: null,
+  width_cm: null,
+  height_cm: null,
+  package_estimated: false,
+  brand: null,
+  source_url: null,
+  source_asin: null,
 })
 
 const lines = (raw: string) => raw.split('\n').map(l => l.trim()).filter(Boolean)
@@ -95,6 +114,13 @@ export function AdminProductsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
   const [importOpen, setImportOpen] = useState(false)
+  const [linkOpen, setLinkOpen] = useState(false)
+  // what the last link import found (kept only to show where the price and the package come from)
+  const [importInfo, setImportInfo] = useState<{ priceUsd: number | null; rate: number; margin: number; packageSource: ImportedProduct['package_source']; warnings: string[] } | null>(null)
+  const [estimate, setEstimate] = useState<ShippingEstimate | null>(null)
+  const [estQty, setEstQty] = useState(1)
+  const [estCat, setEstCat] = useState<'generic' | 'branded'>('generic')
+  const [estBusy, setEstBusy] = useState(false)
   const [draft, setDraft] = useState<ProductDraft>(emptyDraft())
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -137,8 +163,59 @@ export function AdminProductsPage() {
     setNameEn(''); setDescEn(''); setOptionsEnRaw(''); setTagsEnRaw(''); setCertsEnRaw('')
     setSpecKey('')
     setSpecVal('')
+    setImportInfo(null)
     setDialogOpen(true)
   }
+
+  async function applyImport(d: ImportedProduct) {
+    const { data: rows } = await supabase.from('app_settings').select('key, value').in('key', ['usd_to_htg_rate', 'service_margin_percent'])
+    const get = (k: string, fallback: number) => { const v = Number(rows?.find((r: { key: string; value: string }) => r.key === k)?.value); return Number.isFinite(v) && v > 0 ? v : fallback }
+    const rate = get('usd_to_htg_rate', 140)
+    const margin = get('service_margin_percent', 15)
+    const country = ({ com: 'US', ca: 'CA', 'co.uk': 'GB', de: 'DE', fr: 'FR', es: 'ES', it: 'IT' } as Record<string, string>)[new URL(d.source_url).hostname.replace(/^www\./, '').replace(/^amazon\./, '')] ?? 'US'
+    setEditing(null)
+    setDraft({
+      ...emptyDraft(),
+      name: d.name,
+      description: d.description,
+      price_htg: d.price_usd ? priceHtgFromUsd(d.price_usd, rate, margin) : 0,
+      category: d.category ?? '',
+      supplier_name: 'Amazon',
+      supplier_country: country,
+      images: d.images,
+      specifications: d.specifications,
+      rating: d.rating,
+      review_count: d.review_count ?? 0,
+      weight_kg: d.weight_kg, length_cm: d.length_cm, width_cm: d.width_cm, height_cm: d.height_cm,
+      package_estimated: d.package_estimated,
+      brand: d.brand, source_url: d.source_url, source_asin: d.source_asin,
+    })
+    setImagesRaw(d.images.join(', '))
+    setOptionsRaw(''); setCertsRaw(''); setOptionsEnRaw(''); setCertsEnRaw('')
+    setTagsRaw(d.tags.join('\n')); setTagsEnRaw(d.tags_en.join('\n'))
+    setNameEn(d.name_en); setDescEn(d.description_en)
+    setSpecKey(''); setSpecVal('')
+    setEstQty(1); setEstCat(d.brand ? 'branded' : 'generic')
+    setImportInfo({ priceUsd: d.price_usd, rate, margin, packageSource: d.package_source, warnings: d.warnings })
+    setLinkOpen(false)
+    setDialogOpen(true)
+    if (d.warnings.includes('ai_not_configured')) toast.info(tr('Traduction et estimation IA désactivées : ajoutez le secret OPENROUTER_API_KEY.'))
+  }
+
+  // shipping cost estimate for the package in the form (computed by the database with the shipping rates)
+  const estimateTimer = useRef<number | null>(null)
+  useEffect(() => {
+    if (!dialogOpen) return
+    const { weight_kg: kg, length_cm: l, width_cm: w, height_cm: h } = draft
+    if (!kg && !(l && w && h)) { setEstimate(null); return }
+    if (estimateTimer.current) window.clearTimeout(estimateTimer.current)
+    setEstBusy(true)
+    estimateTimer.current = window.setTimeout(() => {
+      void estimateShipping({ kg: kg ?? null, length: l ?? null, width: w ?? null, height: h ?? null, qty: Math.max(1, estQty), category: estCat })
+        .then((r) => setEstimate(r)).finally(() => setEstBusy(false))
+    }, 400)
+    return () => { if (estimateTimer.current) window.clearTimeout(estimateTimer.current) }
+  }, [dialogOpen, draft, estQty, estCat])
 
   function openEdit(p: Product) {
     setEditing(p)
@@ -171,7 +248,16 @@ export function AdminProductsPage() {
       certifications: p.certifications,
       reseller_discount_pct: p.reseller_discount_pct ?? 0,
       wholesale_only: p.wholesale_only ?? false,
+      weight_kg: p.weight_kg ?? null,
+      length_cm: p.length_cm ?? null,
+      width_cm: p.width_cm ?? null,
+      height_cm: p.height_cm ?? null,
+      package_estimated: p.package_estimated ?? false,
+      brand: p.brand ?? null,
+      source_url: p.source_url ?? null,
+      source_asin: p.source_asin ?? null,
     })
+    setImportInfo(null)
     setOptionsRaw(p.customization_options.join('\n'))
     setTagsRaw(p.tags.join('\n'))
     setCertsRaw(p.certifications.join('\n'))
@@ -299,6 +385,9 @@ export function AdminProductsPage() {
             rows={() => products.map(p => [p.name, p.price_htg, p.moq, p.unit, p.category, p.supplier_name, p.active, p.stock_available])}
             disabled={products.length === 0}
           />
+          <Button variant="outline" onClick={() => setLinkOpen(true)} className="gap-2 rounded-xl">
+            <Sparkles className="h-4 w-4" />{tr('Importer depuis un lien')}
+          </Button>
           <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2 rounded-xl">
             {tr('Importer CSV')}
           </Button>
@@ -308,6 +397,7 @@ export function AdminProductsPage() {
           </Button>
         </div>
       </div>
+      <ProductLinkImport open={linkOpen} onClose={() => setLinkOpen(false)} onImported={(d) => void applyImport(d)} />
       <ProductImportDialog open={importOpen} onClose={() => setImportOpen(false)} onDone={() => void load()} />
 
       {/* Search */}
@@ -425,6 +515,11 @@ export function AdminProductsPage() {
               <div className="space-y-1.5">
                 <Label>{tr('Prix (HTG) *')}</Label>
                 <Input type="number" min={0} value={draft.price_htg || ''} onChange={e => setField('price_htg', parseFloat(e.target.value) || 0)} placeholder="0" />
+                {importInfo?.priceUsd ? (
+                  <p className="text-xs text-muted-foreground">{tr('Prix Amazon {0} USD × {1} + marge {2} %', importInfo.priceUsd.toLocaleString(LOCALE_TAG), importInfo.rate.toLocaleString(LOCALE_TAG), importInfo.margin.toLocaleString(LOCALE_TAG))}</p>
+                ) : importInfo ? (
+                  <p className="text-xs text-amber-700">{tr('Prix Amazon non converti : saisissez le prix en HTG.')}</p>
+                ) : null}
               </div>
               <div className="space-y-1.5">
                 <Label>{tr('Unité')}</Label>
@@ -457,6 +552,81 @@ export function AdminProductsPage() {
               <div className="col-span-2 space-y-1.5">
                 <Label>{tr('Images (URLs séparées par des virgules)')}</Label>
                 <Input value={imagesRaw} onChange={e => setImagesRaw(e.target.value)} placeholder="https://…, https://…" />
+              </div>
+
+              <div className="col-span-2 space-y-1.5">
+                <Label>{tr('Marque')}</Label>
+                <Input value={draft.brand ?? ''} onChange={e => setField('brand', e.target.value || null)} maxLength={120} />
+                {draft.source_url && (
+                  <p className="text-xs text-muted-foreground">
+                    {tr('Importé depuis')}{' '}
+                    <a href={draft.source_url} target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline">{draft.source_url}</a>
+                  </p>
+                )}
+              </div>
+
+              {/* Package + shipping estimate */}
+              <div className="col-span-2 space-y-3 rounded-2xl border border-gray-100 bg-gray-50/60 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label className="text-sm font-semibold">{tr('Colis et expédition')}</Label>
+                  {draft.package_estimated && (draft.weight_kg || draft.length_cm) && (
+                    <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
+                      {importInfo?.packageSource === 'ai' ? tr('Estimé par l\'IA : à vérifier') : tr('Valeurs de l\'article, pas du colis : à vérifier')}
+                    </Badge>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {([['weight_kg', tr('Poids (kg)')], ['length_cm', tr('Longueur (cm)')], ['width_cm', tr('Largeur (cm)')], ['height_cm', tr('Hauteur (cm)')]] as const).map(([k, label]) => (
+                    <div key={k} className="space-y-1">
+                      <Label className="text-xs">{label}</Label>
+                      <Input type="number" min={0} step="0.1" value={draft[k] ?? ''}
+                        onChange={e => { const v = e.target.value === '' ? null : Math.max(0, parseFloat(e.target.value) || 0) || null; setDraft(prev => ({ ...prev, [k]: v, package_estimated: false })) }} />
+                    </div>
+                  ))}
+                </div>
+                {(draft.weight_kg || (draft.length_cm && draft.width_cm && draft.height_cm)) ? (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-end gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">{tr('Quantité')}</Label>
+                        <Input type="number" min={1} value={estQty} onChange={e => setEstQty(Math.max(1, parseInt(e.target.value) || 1))} className="w-24" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">{tr('Type de produit')}</Label>
+                        <select value={estCat} onChange={e => setEstCat(e.target.value as 'generic' | 'branded')} className="h-9 rounded-md border border-input bg-background px-2 text-sm">
+                          <option value="generic">{tr('Standard')}</option>
+                          <option value="branded">{tr('De marque')}</option>
+                        </select>
+                      </div>
+                      {estBusy && <Loader2 className="mb-2 h-4 w-4 animate-spin text-muted-foreground" />}
+                    </div>
+                    {estimate && estimate.options.length > 0 ? (
+                      <>
+                        <p className="text-xs text-muted-foreground">
+                          {tr('Poids facturable : {0} kg · Volume : {1} m³', estimate.chargeable_kg.toLocaleString(LOCALE_TAG), estimate.cbm.toLocaleString(LOCALE_TAG))}
+                        </p>
+                        <ul className="space-y-1.5">
+                          {estimate.options.map(o => (
+                            <li key={o.rate_id} className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 text-sm shadow-sm">
+                              <span>
+                                <span className="font-semibold">{o.name}</span>
+                                {o.transit_days_min && o.transit_days_max ? <span className="text-xs text-muted-foreground"> · {o.transit_days_min}-{o.transit_days_max} {tr('jours')}</span> : null}
+                              </span>
+                              <span className="text-right">
+                                <span className="font-bold">{o.amount_htg.toLocaleString(LOCALE_TAG)} HTG</span>
+                                {estQty > 1 && <span className="block text-xs text-muted-foreground">{o.per_unit_htg.toLocaleString(LOCALE_TAG)} HTG / {tr('unité')}</span>}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : !estBusy ? (
+                      <p className="text-xs text-muted-foreground">{tr('Aucun mode d\'expédition ne correspond à ce colis (voir Config. expédition).')}</p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">{tr('Renseignez le poids ou les dimensions du colis pour voir le coût d\'expédition.')}</p>
+                )}
               </div>
             </div>
 

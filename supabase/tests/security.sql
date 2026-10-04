@@ -487,5 +487,24 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id
   ASSERT NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ad_banners' AND 'anon' = ANY (roles)), 'anon can read ads';
 END $$;
 
+-- 22. product package data: the shipping estimate is staff-only and validated; products keep sane package/source values
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id FROM ctx); r jsonb; BEGIN
+  PERFORM pg_temp.as_user(a);
+  ASSERT (public.admin_product_shipping_estimate(1, 20, 15, 10, 1, 'generic') ->> 'success')::boolean = false, 'client got a shipping estimate';
+  RESET ROLE;
+  ASSERT NOT has_function_privilege('anon', 'public.admin_product_shipping_estimate(numeric,numeric,numeric,numeric,integer,text)', 'execute'), 'anon can call the estimate';
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  r := public.admin_product_shipping_estimate(1.2, 30, 20, 15, 1, 'generic');
+  ASSERT (r ->> 'success')::boolean AND jsonb_array_length(r -> 'options') > 0, 'admin estimate failed: ' || r::text;
+  ASSERT (public.admin_product_shipping_estimate(-1, 1, 1, 1, 1, 'generic') ->> 'success')::boolean = false, 'negative weight accepted';
+  ASSERT (public.admin_product_shipping_estimate(1, 1, 1, 1, 0, 'generic') ->> 'success')::boolean = false, 'zero quantity accepted';
+  ASSERT (public.admin_product_shipping_estimate(NULL, NULL, NULL, NULL, 1, 'generic') -> 'options') = '[]'::jsonb, 'empty package gave options';
+  RESET ROLE;
+  BEGIN UPDATE products SET weight_kg = -2 WHERE id = (SELECT id FROM products LIMIT 1); RAISE EXCEPTION 'negative weight stored';
+  EXCEPTION WHEN check_violation THEN NULL; END;
+  BEGIN UPDATE products SET source_url = 'javascript:alert(1)' WHERE id = (SELECT id FROM products LIMIT 1); RAISE EXCEPTION 'unsafe source url stored';
+  EXCEPTION WHEN check_violation THEN NULL; END;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;
