@@ -22,7 +22,7 @@ export function AdminReconciliationPage() {
   const load = useCallback(async () => {
     setError(false)
     const { data, error: rpcError } = await supabase.rpc('admin_ledger_report')
-    if (rpcError || !data) { setError(true); return }
+    if (rpcError || !Array.isArray((data as Report | null)?.wallets)) { setError(true); return }
     setReport(data as Report)
   }, [])
 

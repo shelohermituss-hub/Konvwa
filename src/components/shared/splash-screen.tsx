@@ -1,5 +1,23 @@
 
-import { tr } from '@/lib/i18n'// Styles live in index.html (<style id="kv-splash-css">) so the splash also paints before JS loads.
+import { useEffect, useState } from 'react'
+import { tr } from '@/lib/i18n'
+
+const SPLASH_MS = 2000
+
+/** True while the app is loading OR the 2 s opening animation (started when the page opened) is not over yet. */
+export function useSplashHold(loading: boolean): boolean {
+  const left = () => Math.max(0, SPLASH_MS - performance.now())
+  const [waiting, setWaiting] = useState(() => left() > 0)
+  useEffect(() => {
+    const ms = left()
+    if (ms <= 0) { setWaiting(false); return }
+    const t = window.setTimeout(() => setWaiting(false), ms)
+    return () => window.clearTimeout(t)
+  }, [])
+  return loading || waiting
+}
+
+// Styles live in index.html (<style id="kv-splash-css">) so the splash also paints before JS loads.
 // `resume` skips the intro so the React splash continues the static one without restarting it.
 export function SplashScreen({ resume = true }: { resume?: boolean }) {
   return (

@@ -41,7 +41,7 @@ export function AdminInsightsPage() {
   const load = useCallback(async () => {
     setError(false)
     const { data: res, error: rpcError } = await supabase.rpc('admin_insights')
-    if (rpcError || !res) { setError(true); return }
+    if (rpcError || !(res as Insights | null)?.quote_conversion) { setError(true); return }
     setData(res as Insights)
   }, [])
 

@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
 import type { ReactNode } from 'react'
-import { SplashScreen } from '@/components/shared/splash-screen'
+import { SplashScreen, useSplashHold } from '@/components/shared/splash-screen'
 import { AccountBlocked } from '@/components/shared/account-blocked'
 import { accountBlock } from '@/lib/account-access'
 
@@ -14,8 +14,9 @@ interface AuthGuardProps {
 export function AuthGuard({ children, requireAuth = true, redirectTo = '/auth' }: AuthGuardProps) {
   const { user, profile, loading } = useAuth()
   const location = useLocation()
+  const hold = useSplashHold(loading)
 
-  if (loading) {
+  if (hold) {
     return <SplashScreen />
   }
 
@@ -44,8 +45,9 @@ interface AdminGuardProps {
 export function AdminGuard({ children }: AdminGuardProps) {
   const { profile, loading } = useAuth()
   const location = useLocation()
+  const hold = useSplashHold(loading)
 
-  if (loading) {
+  if (hold) {
     return <SplashScreen />
   }
 
@@ -59,7 +61,8 @@ export function AdminGuard({ children }: AdminGuardProps) {
 /** Pages reserved for full administrators (managers are sent back to the dashboard). */
 export function SuperAdminGuard({ children }: AdminGuardProps) {
   const { profile, loading } = useAuth()
-  if (loading) return <SplashScreen />
+  const hold = useSplashHold(loading)
+  if (hold) return <SplashScreen />
   if (profile?.role !== 'admin') return <Navigate to="/admin" replace />
   return <>{children}</>
 }
@@ -67,7 +70,8 @@ export function SuperAdminGuard({ children }: AdminGuardProps) {
 /** New clients go through the account setup once (staff and finished accounts are never redirected). */
 export function SetupGate({ children }: AdminGuardProps) {
   const { profile, loading } = useAuth()
-  if (loading) return <SplashScreen />
+  const hold = useSplashHold(loading)
+  if (hold) return <SplashScreen />
   if (profile && profile.role === 'client' && !profile.onboarding_completed_at) return <Navigate to="/setup" replace />
   return <>{children}</>
 }
