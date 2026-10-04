@@ -438,5 +438,30 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   RESET ROLE;
 END $$;
 
+-- 20. payment management: history / stats / manual wallet adjustment are staff-only; adjustments are checked and logged
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id FROM ctx); r jsonb; n integer; tot bigint; BEGIN
+  UPDATE wallets SET available_balance = 1000 WHERE user_id = a;
+  PERFORM pg_temp.as_user(a);
+  ASSERT NOT EXISTS (SELECT 1 FROM public.admin_list_transactions()), 'client lists transactions';
+  ASSERT public.admin_payment_stats() = '{}'::jsonb, 'client reads stats';
+  ASSERT (public.admin_adjust_wallet(a, 500, 'test') ->> 'success')::boolean = false, 'client adjusted a wallet';
+  RESET ROLE;
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  SELECT count(*), max(total_count) INTO n, tot FROM public.admin_list_transactions('all', 'all', 'all', NULL, NULL, NULL, 5, 0);
+  ASSERT n >= 1 AND tot >= n, 'no transactions';
+  ASSERT jsonb_typeof(public.admin_payment_stats(NULL, NULL) -> 'by_method') = 'array', 'stats';
+  ASSERT (public.admin_adjust_wallet(adm, 100, 'self') ->> 'success')::boolean = false, 'self adjustment';
+  ASSERT (public.admin_adjust_wallet(a, 0, 'zero') ->> 'success')::boolean = false, 'zero amount';
+  ASSERT (public.admin_adjust_wallet(a, 100, '') ->> 'success')::boolean = false, 'no reason';
+  ASSERT (public.admin_adjust_wallet(a, -5000, 'too much') ->> 'success')::boolean = false, 'overdraft';
+  r := public.admin_adjust_wallet(a, 700, 'Dépôt en espèces');
+  ASSERT (r ->> 'success')::boolean AND (r ->> 'balance')::numeric = 1700, 'credit failed: ' || r::text;
+  r := public.admin_adjust_wallet(a, -200, 'Correction');
+  ASSERT (r ->> 'balance')::numeric = 1500, 'debit failed';
+  RESET ROLE;
+  ASSERT (SELECT available_balance FROM wallets WHERE user_id = a) = 1500, 'balance mismatch';
+  ASSERT (SELECT count(*) FROM audit_logs WHERE action = 'wallet_adjustment') >= 2, 'adjustment not logged';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;
