@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
+import { useStepUp } from '@/lib/step-up'
 import { hasPlatformAuthenticator, isCancelled, passkeysSupported } from '@/lib/passkeys'
 import { tr, DATE_LOCALE } from '@/lib/i18n'
 
@@ -18,6 +19,7 @@ export function PasskeysSection({ onChange, compact = false }: { onChange?: (cou
   const [name, setName] = useState('')
   const [platform, setPlatform] = useState(true)
   const supported = passkeysSupported()
+  const { ensureAal2 } = useStepUp()
 
   const load = useCallback(async () => {
     const { data } = await supabase.auth.passkey.list()
@@ -31,6 +33,7 @@ export function PasskeysSection({ onChange, compact = false }: { onChange?: (cou
   useEffect(() => { void hasPlatformAuthenticator().then(setPlatform) }, [])
 
   async function add() {
+    if (!(await ensureAal2())) return
     setBusy(true)
     const { error } = await supabase.auth.registerPasskey()
     setBusy(false)
@@ -45,6 +48,7 @@ export function PasskeysSection({ onChange, compact = false }: { onChange?: (cou
   async function rename(id: string) {
     const friendlyName = name.trim().slice(0, 120)
     if (!friendlyName) { setEditing(null); return }
+    if (!(await ensureAal2())) return
     const { error } = await supabase.auth.passkey.update({ passkeyId: id, friendlyName })
     if (error) toast.error(error.message)
     setEditing(null)
@@ -53,6 +57,7 @@ export function PasskeysSection({ onChange, compact = false }: { onChange?: (cou
 
   async function remove(id: string) {
     if (!window.confirm(tr('Supprimer cette passkey ?'))) return
+    if (!(await ensureAal2())) return
     const { error } = await supabase.auth.passkey.delete({ passkeyId: id })
     if (error) toast.error(error.message)
     else toast.success(tr('Passkey supprimée.'))

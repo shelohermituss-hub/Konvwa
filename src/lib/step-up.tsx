@@ -13,9 +13,11 @@ const FRESH_SECONDS = 600
 type StepUp = {
   /** Resolves true when the payment may go ahead (no code needed, or the code was just verified). */
   confirmPayment: (amountHtg: number) => Promise<boolean>
+  /** Resolves true when the session is aal2 (or MFA is off): needed to manage passkeys once a TOTP factor exists. */
+  ensureAal2: () => Promise<boolean>
 }
 
-const StepUpContext = createContext<StepUp>({ confirmPayment: async () => true })
+const StepUpContext = createContext<StepUp>({ confirmPayment: async () => true, ensureAal2: async () => true })
 export const useStepUp = () => useContext(StepUpContext)
 
 function lastTotpAt(accessToken: string | undefined): number {
@@ -32,6 +34,7 @@ function lastTotpAt(accessToken: string | undefined): number {
 export function StepUpProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState(0)
+  const [purpose, setPurpose] = useState<'payment' | 'security'>('payment')
   const [factorId, setFactorId] = useState('')
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
@@ -55,7 +58,20 @@ export function StepUpProvider({ children }: { children: ReactNode }) {
     const { data: sess } = await supabase.auth.getSession()
     if (Date.now() / 1000 - lastTotpAt(sess.session?.access_token) < FRESH_SECONDS - 30) return true
 
+    setPurpose('payment')
     setAmount(amountHtg)
+    setFactorId(verified.id)
+    setOpen(true)
+    return new Promise<boolean>((resolve) => { resolver.current = resolve })
+  }, [])
+
+  const ensureAal2 = useCallback(async () => {
+    const { data: factors } = await supabase.auth.mfa.listFactors()
+    const verified = factors?.totp?.find((f) => f.status === 'verified')
+    if (!verified) return true
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    if (aal?.currentLevel === 'aal2') return true
+    setPurpose('security')
     setFactorId(verified.id)
     setOpen(true)
     return new Promise<boolean>((resolve) => { resolver.current = resolve })
@@ -77,14 +93,16 @@ export function StepUpProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <StepUpContext.Provider value={{ confirmPayment }}>
+    <StepUpContext.Provider value={{ confirmPayment, ensureAal2 }}>
       {children}
       <Dialog open={open} onOpenChange={(o) => { if (!o) finish(false) }}>
         <DialogContent className="rounded-2xl sm:max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" />{tr('Confirmez l\'opération')}</DialogTitle>
             <DialogDescription>
-              {tr('Pour une opération de {0} HTG (paiement ou recharge), entrez le code à 6 chiffres de votre application d\'authentification.', amount.toLocaleString(LOCALE_TAG))}
+              {purpose === 'security'
+                ? tr('Pour modifier vos passkeys, entrez le code à 6 chiffres de votre application d\'authentification.')
+                : tr('Pour une opération de {0} HTG (paiement ou recharge), entrez le code à 6 chiffres de votre application d\'authentification.', amount.toLocaleString(LOCALE_TAG))}
             </DialogDescription>
           </DialogHeader>
           <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void verify() }}>

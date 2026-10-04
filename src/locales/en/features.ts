@@ -751,4 +751,6 @@ export const FEATURES_EN: Record<string, string> = {
   "Fin de diffusion": "End of run",
   "Publicité active": "Ad enabled",
   "Aperçu": "Preview",
+  "Pour modifier vos passkeys, entrez le code à 6 chiffres de votre application d'authentification.": "To change your passkeys, enter the 6-digit code from your authenticator app.",
+  "Connectez-vous avec votre mot de passe, puis ajoutez-en une dans Profil > Confidentialité & sécurité.": "Sign in with your password, then add one in Profile > Privacy & security.",
 }

@@ -265,7 +265,7 @@ function LoginView({ onSwitch, onForgot }: { onSwitch: () => void; onForgot: () 
     setPasskeyBusy(false)
     if (usedToken) captcha.reset()
     if (error) {
-      if (!isCancelled(error)) toast.error(tr('Connexion par passkey impossible'), { description: tr('Aucune passkey reconnue sur cet appareil. Connectez-vous avec votre mot de passe, puis ajoutez-en une dans Profil > Confidentialité & sécurité.') })
+      if (!isCancelled(error)) { console.error('passkey sign-in', error); toast.error(tr('Connexion par passkey impossible'), { description: `${error.message} — ${tr('Connectez-vous avec votre mot de passe, puis ajoutez-en une dans Profil > Confidentialité & sécurité.')}` }) }
       return
     }
     toast.success(tr('Connexion réussie !'))
