@@ -750,3 +750,7 @@ html, body, #root {
 }
 .wallet-shine { animation: walletShine 7s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .wallet-shine { animation: none; opacity: 0; } }
+
+/* hides the scrollbar of horizontal chip rows (they stay scrollable by swipe) */
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }

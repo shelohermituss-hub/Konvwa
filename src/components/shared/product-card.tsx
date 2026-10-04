@@ -3,6 +3,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { formatPriceRange } from '@/lib/product-pricing'
 import type { CatalogProduct } from '@/lib/catalog'
 import { WishlistButton } from '@/components/shared/wishlist-button'
+import { flagFor, supplierLogo } from '@/lib/supplier-badges'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 /** The single most persuasive fact we have about the product, shown under the supplier line. */
@@ -17,6 +18,8 @@ function highlight(p: CatalogProduct): string | null {
 export function ProductCard({ product, onPress }: { product: CatalogProduct; onPress: () => void }) {
   const { t } = useI18n()
   const extra = highlight(product)
+  const logo = supplierLogo(product.supplier_name)
+  const flag = flagFor(product.supplier_country)
   const supplierMeta = [
     product.supplier_years ? `${product.supplier_years} ${product.supplier_years > 1 ? 'ans' : 'an'}` : null,
     product.supplier_country,
@@ -49,6 +52,20 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
         )}
         {product.reseller_price && (
           <span className="absolute bottom-2 left-2 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold text-white">{tr('Prix revendeur')}</span>
+        )}
+        {(logo || flag) && (
+          <div className="absolute bottom-2 right-2 flex items-center gap-1">
+            {logo && (
+              <span className="flex h-6 items-center rounded-full border border-black/5 bg-white px-1.5 shadow-sm" style={{ backgroundColor: '#ffffff' }}>
+                <img src={logo.src} alt={logo.name} loading="lazy" className="h-4 w-auto max-w-[44px] object-contain" />
+              </span>
+            )}
+            {flag && (
+              <span className="flex h-6 w-6 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm" style={{ backgroundColor: '#ffffff' }}>
+                <img src={flag.src} alt={flag.code} loading="lazy" className="h-4 w-4 rounded-full object-cover" />
+              </span>
+            )}
+          </div>
         )}
         {!product.stock_available && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70">
