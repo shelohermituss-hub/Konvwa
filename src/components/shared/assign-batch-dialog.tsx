@@ -11,12 +11,11 @@ export interface AssignTarget {
   kind: 'order' | 'product_order'
   id: string
   label: string
-  shipping_request_id: string
 }
 
 interface Batch { id: string; batch_code: string; status: string; vessel_info: string | null }
 
-/** The team puts an order (through its paid cargo) in an expedition / batch directly; the order then follows the batch. */
+/** The team puts an order in an expedition / batch directly; the order then follows the batch. */
 export function AssignBatchDialog({ target, onClose, onDone }: { target: AssignTarget | null; onClose: () => void; onDone: () => void }) {
   const [batches, setBatches] = useState<Batch[]>([])
   const [batchId, setBatchId] = useState('')
@@ -27,10 +26,10 @@ export function AssignBatchDialog({ target, onClose, onDone }: { target: AssignT
     void (async () => {
       const [b, r] = await Promise.all([
         supabase.from('shipments').select('id, batch_code, status, vessel_info').order('created_at', { ascending: false }),
-        supabase.from('product_requests').select('shipment_id').eq('id', target.shipping_request_id).maybeSingle(),
+        supabase.from(target.kind === 'order' ? 'orders' : 'product_orders').select('shipment_id').eq('id', target.id).maybeSingle(),
       ])
       setBatches((b.data ?? []) as Batch[])
-      setBatchId((r.data?.shipment_id as string | null) ?? '')
+      setBatchId(((r.data as { shipment_id: string | null } | null)?.shipment_id) ?? '')
     })()
   }, [target])
 

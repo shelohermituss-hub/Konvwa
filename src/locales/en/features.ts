@@ -591,4 +591,7 @@ export const FEATURES_EN: Record<string, string> = {
   "Clients qui envoient leur propre marchandise à nos entrepôts": "Customers sending their own goods to our warehouses",
   "Tout voir": "See all",
   "Aucune cargaison pour le moment.": "No cargo yet.",
+  "Même parcours que les autres commandes, à partir de « Payé ». Quand le colis est à l'entrepôt, saisissez les mesures réelles : le client choisit son expédition (frais calculés) et paie. Après le paiement de l'expédition, assignez la commande à une expédition (lot) : elle en suit le statut.": "Same journey as other orders, starting at \"Paid\". When the parcel is at the warehouse, enter the real measurements: the customer chooses their shipping (fees calculated) and pays. After the shipping is paid, assign the order to an expedition (batch): it follows its status.",
+  "Statut de la commande": "Order status",
+  "Clients qui envoient leur marchandise à nos entrepôts : devis, réception et facturation du fret": "Customers sending their goods to our warehouses: quote, reception and freight billing",
 }

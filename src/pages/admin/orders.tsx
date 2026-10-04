@@ -27,7 +27,7 @@ interface AdminOrder {
   user_id: string
   customer_name?: string
   shipping_option?: string
-  shipping_request_id?: string | null
+  shipping_paid_at?: string | null
   weight_kg?: number | null
   cbm?: number | null
   quotes: {
@@ -85,7 +85,7 @@ export function AdminOrdersPage() {
     const { data } = await supabase
       .from('orders')
       
-      .select('id, tracking_code, status, total_paid, payment_status, created_at, user_id, shipping_option, shipping_request_id, weight_kg, cbm, quotes(total, product_requests(product_name))')
+      .select('id, tracking_code, status, total_paid, payment_status, created_at, user_id, shipping_option, shipping_paid_at, weight_kg, cbm, quotes(total, product_requests(product_name))')
       .order('created_at', { ascending: false })
 
     if (!data) { setLoading(false); return }
@@ -289,10 +289,10 @@ export function AdminOrdersPage() {
                           >
                             <Edit className="mr-2 h-4 w-4" />{tr('Modifier le statut')}
                           </DropdownMenuItem>
-                          {order.shipping_request_id && (
+                          {order.shipping_paid_at && (
                             <DropdownMenuItem
                               className="rounded-lg cursor-pointer"
-                              onClick={() => setAssigning({ kind: 'order', id: order.id, label: `#${order.tracking_code}`, shipping_request_id: order.shipping_request_id as string })}
+                              onClick={() => setAssigning({ kind: 'order', id: order.id, label: `#${order.tracking_code}` })}
                             >
                               <Ship className="mr-2 h-4 w-4" />{tr('Assigner à une expédition')}
                             </DropdownMenuItem>

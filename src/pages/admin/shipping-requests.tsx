@@ -541,12 +541,12 @@ function AdminActionSheet({
                   {tr('Actuellement dans :')}{' '}<span className="font-bold">{batches.find(b => b.id === request.shipment_id)?.batch_code ?? request.shipment_id.slice(0,8)}</span>
                 </p>
               )}
-              <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
+              <Select value={selectedBatchId || 'none'} onValueChange={(v) => setSelectedBatchId(v === 'none' ? '' : v)}>
                 <SelectTrigger className="rounded-xl bg-white border-indigo-200 text-sm">
                   <SelectValue placeholder={tr('Choisir un batch…')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{tr('— Aucun batch —')}</SelectItem>
+                  <SelectItem value="none">{tr('— Aucun batch —')}</SelectItem>
                   {batches.map(b => (
                     <SelectItem key={b.id} value={b.id}>
                       {b.batch_code} · {shipmentStatusLabel(b.status)}
@@ -811,6 +811,7 @@ export function AdminShippingRequestsPage() {
         shipment:shipments(batch_code, status)
       `)
       .eq('request_type', 'shipping')
+      .is('source_order_kind', null)  // simple shipping requests only: orders are assigned to an expedition from their own page
       .order('created_at', { ascending: false })
     if (error) { setLoading(false); toast.error(tr('Erreur chargement : ') + error.message); return }
 
@@ -877,9 +878,9 @@ export function AdminShippingRequestsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{tr('Demandes d\'expédition')}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tr('Cargaisons')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {tr('Gérez les devis, réceptions et facturations de fret')}
+            {tr('Clients qui envoient leur marchandise à nos entrepôts : devis, réception et facturation du fret')}
           </p>
         </div>
         <Button variant="outline" size="sm" className="rounded-xl gap-1.5" onClick={load}>

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { PackageCheck, Ship } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -7,13 +6,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ArrivalDialog, type ArrivalTarget } from '@/components/shared/arrival-dialog'
 import { AssignBatchDialog, type AssignTarget } from '@/components/shared/assign-batch-dialog'
 import { supabase } from '@/lib/supabase'
+import { shipmentStatusLabel } from '@/lib/cargo-tracking'
 import { IN_TRANSIT, productOrderLabel, trackingStatusOf } from '@/lib/product-order'
 import { cn } from '@/lib/utils'
 import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 
 interface Row {
   id: string; tracking_code: string; user_id: string; status: string; payment_status: string; tracking_status: string | null
-  total_htg: number; created_at: string; shipping_request_id: string | null; shipping_paid_at: string | null
+  total_htg: number; created_at: string; shipping_paid_at: string | null
   shipping_amount_htg: number | null; weight_kg: number | null; cbm: number | null
   customer: string | null
   product_order_items: Array<{ product_name: string; quantity: number }>
@@ -42,7 +42,7 @@ export function AdminProductOrdersPage() {
 
   const load = useCallback(async () => {
     const o = await supabase.from('product_orders')
-      .select('id, tracking_code, user_id, status, payment_status, tracking_status, total_htg, created_at, shipping_request_id, shipping_paid_at, shipping_amount_htg, weight_kg, cbm, product_order_items(product_name, quantity)')
+      .select('id, tracking_code, user_id, status, payment_status, tracking_status, total_htg, created_at, shipping_paid_at, shipping_amount_htg, weight_kg, cbm, product_order_items(product_name, quantity)')
       .eq('payment_status', 'paid').order('created_at', { ascending: false }).limit(200)
     const list = (o.data ?? []) as unknown as Array<Omit<Row, 'customer'>>
     const ids = Array.from(new Set(list.map((r) => r.user_id)))
@@ -56,7 +56,7 @@ export function AdminProductOrdersPage() {
   const active = FILTERS.find((f) => f.key === filter) ?? FILTERS[0]
   const shown = useMemo(() => rows.filter((r) => active.value(trackingStatusOf(r))), [rows, active])
 
-  async function setStatus(r: Row, status: 'paid' | 'purchasing') {
+  async function setStatus(r: Row, status: string) {
     const { data, error } = await supabase.rpc('admin_set_product_order_status', { p_id: r.id, p_status: status })
     if (error || !data?.success) { toast.error(trServer((data?.error as string | undefined) ?? error?.message ?? 'Erreur')); return }
     void load()
@@ -66,7 +66,7 @@ export function AdminProductOrdersPage() {
     <div className="mx-auto max-w-4xl space-y-4">
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight"><PackageCheck className="h-6 w-6" />{tr('Commandes catalogue')}</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">{tr('Même parcours que les autres commandes, à partir de « Payé ». Quand le colis est à l\'entrepôt, saisissez les mesures réelles : le client choisit son expédition (frais calculés) et paie. Le statut de la cargaison se gère ensuite depuis la demande d\'expédition liée.')}</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{tr('Même parcours que les autres commandes, à partir de « Payé ». Quand le colis est à l\'entrepôt, saisissez les mesures réelles : le client choisit son expédition (frais calculés) et paie. Après le paiement de l\'expédition, assignez la commande à une expédition (lot) : elle en suit le statut.')}</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -106,13 +106,22 @@ export function AdminProductOrdersPage() {
                       <PackageCheck className="h-3.5 w-3.5" />{t === 'in_china_warehouse' ? tr('Corriger les mesures') : tr('Disponible à l\'entrepôt')}
                     </Button>
                   )}
-                  {r.shipping_request_id && !['delivered'].includes(t) && (
-                    <Button size="sm" className="gap-1.5 rounded-lg" onClick={() => setAssigning({ kind: 'product_order', id: r.id, label: `${tr('Commande catalogue')} #${r.tracking_code}`, shipping_request_id: r.shipping_request_id as string })}>
+                  {r.shipping_paid_at && t !== 'delivered' && (
+                    <Button size="sm" className="gap-1.5 rounded-lg" onClick={() => setAssigning({ kind: 'product_order', id: r.id, label: `${tr('Commande catalogue')} #${r.tracking_code}` })}>
                       <Ship className="h-3.5 w-3.5" />{tr('Assigner à une expédition')}
                     </Button>
                   )}
-                  {r.shipping_request_id && (
-                    <Button asChild size="sm" variant="outline" className="rounded-lg"><Link to={`/admin/shipping-requests?open=${r.shipping_request_id}`}>{tr('Cargaison liée')}</Link></Button>
+                  {r.shipping_paid_at && (
+                    <select
+                      aria-label={tr('Statut de la commande')}
+                      value={t}
+                      onChange={(e) => void setStatus(r, e.target.value)}
+                      className="h-8 rounded-lg border border-input bg-background px-2 text-xs"
+                    >
+                      {['shipping_paid', 'shipped', 'in_transit', 'arrived_haiti', 'customs_processing', 'out_for_delivery', 'delivered'].map((st) => (
+                        <option key={st} value={st}>{shipmentStatusLabel(st)}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </li>
