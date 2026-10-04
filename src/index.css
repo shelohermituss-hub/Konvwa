@@ -741,8 +741,6 @@ html, body, #root {
 .dark .card-flat, .dark .card-elevated, .dark .card-glass { background-color: var(--card); border-color: var(--border); }
 /* hero photos are cut out on white and rely on multiply: on dark they would vanish, so they are inverted and screened onto the dark page */
 .dark img[style*="mix-blend-mode"] { mix-blend-mode: screen !important; filter: invert(1) hue-rotate(180deg) brightness(1.2) contrast(1.1); }
-/* the forklift photo has a baked-in checkerboard that only disappears with multiply on white */
-.dark img[src$="forklift.jpg"] { display: none; }
 
 /* wallet card: slow light sweep across the glass */
 @keyframes walletShine {

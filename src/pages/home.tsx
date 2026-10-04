@@ -297,12 +297,11 @@ export function HomePage() {
             style={{ mixBlendMode: 'multiply' }}
           />
 
-          {/* Forklift — negative margin overlap, DOM order paints it on top, no z-index stacking context */}
+          {/* Forklift — transparent cut-out (webp), negative margin overlap on the plane */}
           <img
-            src="/hero/forklift.jpg"
+            src="/hero/forklift.webp"
             alt={tr('Conteneur logistique')}
-            className="relative -mt-[22%] ml-auto block w-[65%]"
-            style={{ mixBlendMode: 'multiply' }}
+            className="relative -mt-[18%] mr-[6%] ml-auto block w-[40%]"
           />
 
           {/* Payment badge */}
@@ -311,7 +310,7 @@ export function HomePage() {
           </div>
 
           {/* Brand logos */}
-          <div className="absolute bottom-4 left-0 z-10 flex flex-wrap gap-1.5">
+          <div className="absolute bottom-4 left-0 z-10 flex flex-col items-start gap-1.5">
             {BRANDS.map((brand) => (
               <div
                 key={brand.name}
@@ -341,7 +340,7 @@ export function HomePage() {
                 key={brand.name}
                 src={brand.logo}
                 alt={brand.name}
-                className="h-8 w-auto max-w-[100px] object-contain opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0"
+                className="h-8 w-auto max-w-[100px] rounded-md object-contain opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0 dark:bg-white dark:p-1 dark:opacity-90"
               />
             ))}
           </div>
