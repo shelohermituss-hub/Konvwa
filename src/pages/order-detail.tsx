@@ -114,7 +114,7 @@ function InfoRow({ label, value, valueClass }: { label: string; value: string; v
 
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { confirmPayment } = useStepUp()
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [wallet, setWallet] = useState<WalletData | null>(null)
@@ -138,8 +138,8 @@ export function OrderDetailPage() {
           chosen_shipping_rate:shipping_rates(id, name, mode, transit_days_min, transit_days_max),
           quotes(
             id, total, product_price, quantity,
-            service_fee, purchase_fee, shipping_fee, customs_fee, local_delivery_fee,
-            estimated_delivery_days, usd_to_htg_rate,
+            service_fee, purchase_fee, shipping_fee, customs_fee, local_delivery_fee, margin, contingency,
+            estimated_delivery_days, usd_to_htg_rate, created_at, valid_until, notes,
             product_requests(
               id, product_name, product_url, source_platform, product_image_url,
               box_length_cm, box_width_cm, box_height_cm,
@@ -262,7 +262,7 @@ export function OrderDetailPage() {
   const needsPayment = order.status === 'awaiting_payment' && order.payment_status !== 'paid'
 
   async function handleDownloadPDF() {
-    await downloadOrderPDF(order as unknown as OrderForPDF)
+    await downloadOrderPDF(order as unknown as OrderForPDF, { name: profile?.full_name ?? '', phone: profile?.phone, email: user?.email })
   }
 
   return (

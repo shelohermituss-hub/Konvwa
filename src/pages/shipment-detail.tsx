@@ -43,6 +43,9 @@ interface ShippingRequest {
   insured_value_usd: number | null
   insurance_fee_htg: number | null
   tracking_status: string | null
+  payment_due_at: string | null
+  paid_amount_htg: number | null
+  late_fee_htg: number | null
   shipment: { id: string; status: string } | null
   warehouse: {
     id: string; code: string; name: string
@@ -77,7 +80,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 export function ShipmentDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
 
   const [req,           setReq]           = useState<ShippingRequest | null>(null)
@@ -96,6 +99,7 @@ export function ShipmentDetailPage() {
           quoted_at, received_at, invoiced_at, package_count,
           origin_country, destination_address, shipment_id, payment_plan,
           insured, insured_value_usd, insurance_fee_htg, tracking_status,
+          payment_due_at, paid_amount_htg, late_fee_htg,
           warehouse:warehouses(
             id, code, name, flag_emoji, country_code,
             address_line1, address_line2, address_line3,
@@ -129,7 +133,7 @@ export function ShipmentDetailPage() {
 
   async function handleDownloadPDF() {
     if (!req) return
-    await downloadShippingPDF(req as unknown as ShippingRequestForPDF)
+    await downloadShippingPDF(req as unknown as ShippingRequestForPDF, { name: profile?.full_name ?? '', phone: profile?.phone, email: user?.email })
   }
 
   if (loading) {
