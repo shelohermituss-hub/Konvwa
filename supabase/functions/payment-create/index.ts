@@ -41,6 +41,11 @@ Deno.serve(async (req) => {
     const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authHeader } },
     })
+    // Account restrictions set by the team (suspended / banned / top-ups restricted) are enforced by the database
+    const { data: allowed2 } = await userClient.rpc('user_can', { p_action: 'deposits' })
+    if (allowed2 === false) {
+      return new Response(JSON.stringify({ error: 'Cette action est restreinte sur votre compte. Contactez le support.' }), { status: 403, headers: CORS })
+    }
     const { data: mfaOk } = await userClient.rpc('check_mfa', { p_amount: amount })
     if (mfaOk === false) {
       return new Response(JSON.stringify({ error: 'Confirmation par code requise pour cette recharge.', code: 'mfa_required' }), { status: 403, headers: CORS })

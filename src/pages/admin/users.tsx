@@ -3,15 +3,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Search, MoreHorizontal, Users, Shield, UserCircle2, Edit, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, MoreHorizontal, Users, Shield, UserCircle2, SlidersHorizontal, ChevronLeft, ChevronRight, Ban } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types'
+import { AdminUserSheet } from '@/components/shared/admin-user-sheet'
+import { accountBlock, type AccountStatus } from '@/lib/account-access'
 
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
@@ -19,8 +18,13 @@ interface UserRow {
   user_id: string
   full_name: string
   phone: string | null
+  email: string | null
   role: UserRole
   created_at: string
+  last_sign_in_at: string | null
+  account_status: AccountStatus
+  status_until: string | null
+  restrictions: string[]
   order_count?: number
   wallet_balance?: number
 }
@@ -38,6 +42,8 @@ const ROLE_FILTERS = [
   { value: 'agent',   label: tr('Agents') },
   { value: 'manager', label: tr('Managers') },
   { value: 'admin',   label: tr('Admins') },
+  { value: 'blocked',    label: tr('Suspendus') },
+  { value: 'restricted', label: tr('Restreints') },
 ]
 
 const PAGE_SIZE = 15
@@ -47,65 +53,30 @@ export function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
-  const [editUser, setEditUser] = useState<UserRow | null>(null)
-  const [newRole, setNewRole] = useState<UserRole>('client')
-  const [saving, setSaving] = useState(false)
+  const [openId, setOpenId] = useState<string | null>(null)
   const [page, setPage] = useState(0)
 
   async function loadUsers() {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, full_name, phone, role, created_at')
-      .order('created_at', { ascending: false })
-
-    if (!profiles) { setLoading(false); return }
-
-    const userIds = profiles.map(p => p.user_id)
-    const [{ data: orders }, { data: wallets }] = await Promise.all([
-      supabase.from('orders').select('user_id').in('user_id', userIds),
-      supabase.from('wallets').select('user_id, available_balance').in('user_id', userIds),
-    ])
-
-    const orderCountMap: Record<string, number> = {}
-    ;(orders || []).forEach(o => { orderCountMap[o.user_id] = (orderCountMap[o.user_id] || 0) + 1 })
-    const walletMap = Object.fromEntries((wallets || []).map(w => [w.user_id, w.available_balance]))
-
-    setUsers(profiles.map(p => ({
-      ...(p as unknown as UserRow),
-      order_count: orderCountMap[p.user_id] || 0,
-      wallet_balance: walletMap[p.user_id] || 0,
-    })))
+    const { data } = await supabase.rpc('admin_list_users')
+    setUsers(((data ?? []) as UserRow[]).map(u => ({ ...u, order_count: Number(u.order_count) || 0, wallet_balance: Number(u.wallet_balance) || 0 })))
     setLoading(false)
   }
 
   useEffect(() => { loadUsers() }, [])
 
+  const isBlocked = (u: UserRow) => accountBlock(u) !== null
   const filtered = users.filter(u => {
-    const matchSearch = u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      (u.phone || '').includes(search)
-    const matchRole = roleFilter === 'all' || u.role === roleFilter
+    const q = search.toLowerCase()
+    const matchSearch = u.full_name.toLowerCase().includes(q) || (u.phone || '').includes(search) || (u.email ?? '').toLowerCase().includes(q)
+    const matchRole = roleFilter === 'all' ? true
+      : roleFilter === 'blocked' ? isBlocked(u)
+      : roleFilter === 'restricted' ? (u.restrictions?.length ?? 0) > 0 && !isBlocked(u)
+      : u.role === roleFilter
     return matchSearch && matchRole
   })
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const pageUsers = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-
-  async function handleRoleUpdate() {
-    if (!editUser) return
-    setSaving(true)
-    const { data, error } = await supabase
-      .from('profiles').update({ role: newRole }).eq('user_id', editUser.user_id).select('role').maybeSingle()
-    if (error) toast.error(tr('Erreur lors de la mise à jour du rôle.'))
-    else if (data?.role !== newRole) {
-      // the database keeps the old role when the caller is not an administrator
-      toast.error(tr('Seul un administrateur peut changer les rôles.'))
-    } else {
-      toast.success(tr('Rôle mis à jour.'))
-      setUsers(prev => prev.map(u => u.user_id === editUser.user_id ? { ...u, role: newRole } : u))
-      setEditUser(null)
-    }
-    setSaving(false)
-  }
 
   const stats = {
     total: users.length,
@@ -126,8 +97,8 @@ export function AdminUsersPage() {
         </div>
         <ExportCsvButton
           filename="utilisateurs"
-          headers={['nom', 'telephone', 'role', 'commandes', 'solde_htg', 'inscription']}
-          rows={() => filtered.map(u => [u.full_name, u.phone ?? '', u.role, u.order_count ?? 0, u.wallet_balance ?? 0, u.created_at])}
+          headers={['nom', 'email', 'telephone', 'role', 'statut', 'restrictions', 'commandes', 'solde_htg', 'inscription']}
+          rows={() => filtered.map(u => [u.full_name, u.email ?? '', u.phone ?? '', u.role, u.account_status, (u.restrictions ?? []).join('|'), u.order_count ?? 0, u.wallet_balance ?? 0, u.created_at])}
           disabled={filtered.length === 0}
         />
       </div>
@@ -163,7 +134,7 @@ export function AdminUsersPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={tr('Rechercher par nom ou téléphone...')}
+              placeholder={tr('Rechercher par nom, e-mail ou téléphone...')}
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(0) }}
               className="pl-9 rounded-xl"
@@ -184,7 +155,9 @@ export function AdminUsersPage() {
                     'ml-1.5 text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-0.5',
                     roleFilter === f.value ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
                   )}>
-                    {users.filter(u => u.role === f.value).length}
+                    {f.value === 'blocked' ? users.filter(isBlocked).length
+                      : f.value === 'restricted' ? users.filter(u => (u.restrictions?.length ?? 0) > 0 && !isBlocked(u)).length
+                      : users.filter(u => u.role === f.value).length}
                   </span>
                 )}
               </Button>
@@ -224,7 +197,7 @@ export function AdminUsersPage() {
                   const roleCfg = ROLE_CONFIG[user.role] || ROLE_CONFIG.client
                   const initials = user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
                   return (
-                    <TableRow key={user.user_id} className="hover:bg-muted/20 transition-colors">
+                    <TableRow key={user.user_id} className="hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => setOpenId(user.user_id)}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8 shrink-0">
@@ -232,8 +205,9 @@ export function AdminUsersPage() {
                               {initials}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
+                          <div className="min-w-0">
                             <p className="font-medium text-sm">{user.full_name}</p>
+                            {user.email && <p className="max-w-[200px] truncate text-[11px] text-muted-foreground">{user.email}</p>}
                           </div>
                         </div>
                       </TableCell>
@@ -245,6 +219,16 @@ export function AdminUsersPage() {
                           <span className={cn('h-1.5 w-1.5 rounded-full', roleCfg.dot)} />
                           {roleCfg.label}
                         </span>
+                        {isBlocked(user) && (
+                          <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive">
+                            <Ban className="h-3 w-3" aria-hidden="true" />{user.account_status === 'banned' ? tr('Désactivé') : tr('Suspendu')}
+                          </span>
+                        )}
+                        {!isBlocked(user) && (user.restrictions?.length ?? 0) > 0 && (
+                          <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                            <SlidersHorizontal className="h-3 w-3" aria-hidden="true" />{tr('Restreint')}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-right">
                         <span className="text-sm font-semibold">{user.order_count}</span>
@@ -257,19 +241,16 @@ export function AdminUsersPage() {
                       <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                         {new Date(user.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })}
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" aria-label={tr('Actions')}>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-xl w-44">
-                            <DropdownMenuItem
-                              className="rounded-lg cursor-pointer"
-                              onClick={() => { setEditUser(user); setNewRole(user.role) }}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />{tr('Changer le rôle')}
+                          <DropdownMenuContent align="end" className="rounded-xl w-48">
+                            <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => setOpenId(user.user_id)}>
+                              <SlidersHorizontal className="mr-2 h-4 w-4" />{tr('Gérer le compte')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -304,48 +285,7 @@ export function AdminUsersPage() {
         )}
       </div>
 
-      {/* Edit role dialog */}
-      <Dialog open={!!editUser} onOpenChange={o => { if (!o) setEditUser(null) }}>
-        <DialogContent className="rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>{tr('Modifier le rôle')}</DialogTitle>
-            <DialogDescription>
-              {tr('Utilisateur :')}{' '}<span className="font-semibold">{editUser?.full_name}</span>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-3">
-            <div>
-              <p className="text-sm font-semibold mb-2">{tr('Rôle actuel')}</p>
-              {editUser && (
-                <span className={cn('inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-2.5 py-1', ROLE_CONFIG[editUser.role]?.badge)}>
-                  <span className={cn('h-1.5 w-1.5 rounded-full', ROLE_CONFIG[editUser.role]?.dot)} />
-                  {ROLE_CONFIG[editUser.role]?.label}
-                </span>
-              )}
-            </div>
-            <div>
-              <p className="text-sm font-semibold mb-2">{tr('Nouveau rôle')}</p>
-              <Select value={newRole} onValueChange={v => setNewRole(v as UserRole)}>
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="client">{tr('Client')}</SelectItem>
-                  <SelectItem value="agent">Agent</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditUser(null)} className="rounded-xl">{tr('Annuler')}</Button>
-            <Button onClick={handleRoleUpdate} disabled={saving || newRole === editUser?.role} className="rounded-xl">
-              {saving ? tr('Enregistrement…') : tr('Enregistrer')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AdminUserSheet userId={openId} onClose={() => setOpenId(null)} onChanged={() => void loadUsers()} />
     </div>
   )
 }

@@ -370,5 +370,73 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id
   RESET ROLE;
 END $$;
 
+-- 19. user management: only staff set status / restrictions; restrictions and suspensions are enforced by the database
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b FROM ctx); adm uuid := (SELECT admin_id FROM ctx);
+  r jsonb; n integer; wid uuid; BEGIN
+  UPDATE wallets SET available_balance = 500000 WHERE user_id = a;
+  SELECT id INTO wid FROM wallets WHERE user_id = a;
+
+  PERFORM pg_temp.as_user(a);
+  UPDATE profiles SET account_status = 'banned', restrictions = '{}' WHERE user_id = a;
+  ASSERT (SELECT account_status FROM profiles WHERE user_id = a) = 'active', 'client changed their status';
+  SELECT count(*) INTO n FROM user_admin_notes; ASSERT n = 0, 'client reads notes';
+  ASSERT (public.admin_set_user_access(b, 'banned', 'x') ->> 'success')::boolean = false, 'client banned someone';
+  ASSERT public.admin_user_overview(b) = '{}'::jsonb, 'client reads overview';
+  ASSERT NOT EXISTS (SELECT 1 FROM public.admin_list_users()), 'client lists users';
+  ASSERT public.user_can('payments'), 'active client blocked';
+  RESET ROLE;
+
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_set_user_access(adm, 'suspended', 'x') ->> 'success')::boolean = false, 'admin suspended themselves';
+  ASSERT (public.admin_set_user_access(a, 'suspended', '') ->> 'success')::boolean = false, 'suspension without reason';
+  ASSERT (public.admin_set_user_access(a, 'weird', 'x') ->> 'success')::boolean = false, 'invalid status';
+  ASSERT (public.admin_set_user_access(a, 'active', NULL, NULL, ARRAY['hack']) ->> 'success')::boolean = false, 'invalid restriction';
+  ASSERT jsonb_typeof(public.admin_user_overview(a) -> 'profile') = 'object', 'no overview';
+  ASSERT EXISTS (SELECT 1 FROM public.admin_list_users() WHERE user_id = a), 'user list empty';
+  ASSERT (public.admin_set_user_access(a, 'active', NULL, NULL, ARRAY['payments']) ->> 'success')::boolean, 'restrict failed';
+  RESET ROLE;
+
+  PERFORM pg_temp.as_user(a);
+  ASSERT NOT public.user_can('payments') AND public.user_can('requests'), 'restriction scope wrong';
+  r := public.pay_product_order(gen_random_uuid());
+  ASSERT (r ->> 'error') LIKE 'Cette action est restreinte%', 'payment not blocked: ' || r::text;
+  RESET ROLE;
+
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_set_user_access(a, 'suspended', 'Fraude suspectée', now() + interval '1 day', '{}') ->> 'success')::boolean, 'suspend failed';
+  RESET ROLE;
+  PERFORM pg_temp.as_user(a);
+  ASSERT NOT public.user_can('orders') AND NOT public.user_can('deposits') AND public.user_can('support'), 'suspended scope wrong';
+  BEGIN
+    INSERT INTO product_requests (user_id, product_url, product_name, category, quantity, source_platform) VALUES (a, 'https://x', 'x', 'other', 1, 'other');
+    ASSERT false, 'suspended client created a request';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN
+    INSERT INTO wallet_transactions (wallet_id, type, amount, status) VALUES (wid, 'deposit', 100, 'pending');
+    ASSERT false, 'suspended client created a deposit';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  RESET ROLE;
+
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  PERFORM public.admin_set_user_access(a, 'banned', 'Abus', NULL, '{}');
+  RESET ROLE;
+  PERFORM pg_temp.as_user(a);
+  ASSERT NOT public.user_can('support'), 'banned can write to support';
+  RESET ROLE;
+  UPDATE profiles SET account_status = 'suspended', status_until = now() - interval '1 minute' WHERE user_id = a;
+  PERFORM pg_temp.as_user(a);
+  ASSERT public.user_can('orders'), 'expired suspension still blocks';
+  RESET ROLE;
+
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_set_user_access(a, 'active', NULL, NULL, '{}') ->> 'success')::boolean, 'reactivation failed';
+  INSERT INTO user_admin_notes (user_id, note, updated_by) VALUES (a, 'client fiable', adm);
+  ASSERT public.admin_user_overview(a) ->> 'note' = 'client fiable', 'note missing';
+  RESET ROLE;
+  PERFORM pg_temp.as_user(a);
+  ASSERT public.user_can('payments') AND public.user_can('orders'), 'not reactivated';
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

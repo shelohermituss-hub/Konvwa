@@ -20,6 +20,10 @@ interface Profile {
   is_reseller?: boolean
   onboarding_completed_at?: string | null
   onboarding_skipped?: string[]
+  account_status?: 'active' | 'suspended' | 'banned'
+  status_reason?: string | null
+  status_until?: string | null
+  restrictions?: string[]
 }
 
 interface AuthContextType {

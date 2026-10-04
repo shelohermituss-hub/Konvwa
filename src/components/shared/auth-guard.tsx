@@ -2,6 +2,8 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
 import type { ReactNode } from 'react'
 import { SplashScreen } from '@/components/shared/splash-screen'
+import { AccountBlocked } from '@/components/shared/account-blocked'
+import { accountBlock } from '@/lib/account-access'
 
 interface AuthGuardProps {
   children: ReactNode
@@ -10,7 +12,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requireAuth = true, redirectTo = '/auth' }: AuthGuardProps) {
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -19,6 +21,12 @@ export function AuthGuard({ children, requireAuth = true, redirectTo = '/auth' }
 
   if (requireAuth && !user) {
     return <Navigate to={redirectTo} state={{ from: location }} replace />
+  }
+
+  // Suspended / banned customers only see the explanation (a suspended one may still write to support)
+  const blocked = requireAuth ? accountBlock(profile) : null
+  if (blocked && !(blocked === 'suspended' && location.pathname.startsWith('/support'))) {
+    return <AccountBlocked kind={blocked} reason={profile?.status_reason ?? null} until={profile?.status_until ?? null} />
   }
 
   if (!requireAuth && user) {
