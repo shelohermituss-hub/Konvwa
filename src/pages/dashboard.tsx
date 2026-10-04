@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { haptics } from '@/lib/haptic'
 import { Link, useNavigate } from 'react-router-dom'
+import { AdBanners } from '@/components/shared/ad-banners'
 import { SetupReminder } from '@/components/shared/setup-reminder'
 import { ProductCard } from '@/components/shared/product-card'
 import { CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
@@ -268,7 +269,7 @@ export function DashboardPage() {
         {/* Shops we import from: tap a logo to open the shop, then paste the product link in "Soumettre" */}
         {!query && (
           <section className="mb-5" aria-label={tr('Boutiques prises en charge')}>
-            <h2 className="mb-2.5 text-balance text-sm font-bold text-foreground">{tr('Achetez sur ces plateformes, nous vous livrons en Haïti')}</h2>
+            <h2 className="mb-2.5 text-balance text-sm font-bold text-foreground">{tr('Vos boutiques internationales, livrées en Haïti')}</h2>
             <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-pl-4 px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {SHOPS.map((shop) => (
                 <li key={shop.name} className="snap-start shrink-0">
@@ -279,7 +280,7 @@ export function DashboardPage() {
                     aria-label={tr('Ouvrir {0}', shop.name)}
                     onClick={() => haptics.tap()}
                     style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}
-                    className="pressable flex h-[76px] w-[132px] items-center justify-center rounded-2xl border p-3 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="pressable flex h-[56px] w-[120px] items-center justify-center rounded-2xl border px-3 py-2 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   >
                     <img src={shop.logo} alt={shop.name} loading="lazy" className="h-full w-full object-contain" />
                   </a>
@@ -288,6 +289,9 @@ export function DashboardPage() {
             </ul>
           </section>
         )}
+
+        {/* Advertising cards configured in the admin */}
+        {!query && <AdBanners />}
 
         {/* Section header */}
         <div className="flex items-center justify-between mb-3">

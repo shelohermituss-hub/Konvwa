@@ -463,5 +463,29 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id
   ASSERT (SELECT count(*) FROM audit_logs WHERE action = 'wallet_adjustment') >= 2, 'adjustment not logged';
 END $$;
 
+-- 21. ad banners: clients only read live ads and never write; the team manages them; the media bucket is staff-write only
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id FROM ctx); n integer; live uuid; BEGIN
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  INSERT INTO ad_banners (title, link_url, active) VALUES ('live', 'https://example.com', true) RETURNING id INTO live;
+  INSERT INTO ad_banners (title, active) VALUES ('off', false);
+  INSERT INTO ad_banners (title, starts_at) VALUES ('future', now() + interval '1 day');
+  INSERT INTO ad_banners (title, ends_at) VALUES ('expired', now() - interval '1 day');
+  INSERT INTO storage.objects (bucket_id, name, owner, metadata) VALUES ('ads', 'test-ad.jpg', adm, '{}');
+  BEGIN INSERT INTO ad_banners (title, link_url) VALUES ('bad', 'javascript:alert(1)'); RAISE EXCEPTION 'unsafe link accepted';
+  EXCEPTION WHEN check_violation THEN NULL; END;
+  SELECT count(*) INTO n FROM ad_banners WHERE title IN ('live', 'off', 'future', 'expired'); ASSERT n = 4, 'staff does not see every ad';
+  RESET ROLE;
+  PERFORM pg_temp.as_user(a);
+  SELECT count(*) INTO n FROM ad_banners WHERE title IN ('live', 'off', 'future', 'expired'); ASSERT n = 1, 'client sees ' || n || ' ads instead of only the live one';
+  UPDATE ad_banners SET title = 'hacked' WHERE id = live; GET DIAGNOSTICS n = ROW_COUNT; ASSERT n = 0, 'client updated an ad';
+  BEGIN INSERT INTO ad_banners (title) VALUES ('client ad'); RAISE EXCEPTION 'client created an ad';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN INSERT INTO storage.objects (bucket_id, name, owner, metadata) VALUES ('ads', 'client.jpg', a, '{}'); RAISE EXCEPTION 'client uploaded to the ads bucket';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+  ASSERT NOT has_function_privilege('anon', 'public.ad_banners_touch()', 'execute'), 'trigger function callable';
+  ASSERT NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ad_banners' AND 'anon' = ANY (roles)), 'anon can read ads';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

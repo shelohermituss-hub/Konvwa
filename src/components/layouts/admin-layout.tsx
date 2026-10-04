@@ -10,7 +10,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, ChevronRight, Bell, BarChart3, FileText, Truck, PackageSearch, ScrollText, BadgeCheck, Scale, Ticket, Gauge, Bug, Store, ScanLine, MapPin } from 'lucide-react'
+import { LayoutDashboard, Package, Ship, Users, CreditCard, AlertTriangle, Settings, LogOut, ChevronDown, ChevronRight, Bell, BarChart3, FileText, Truck, PackageSearch, ScrollText, BadgeCheck, Scale, Ticket, Gauge, Bug, Store, ScanLine, MapPin, Megaphone } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { MfaGate } from '@/components/shared/mfa-gate'
 
@@ -69,6 +69,7 @@ function AdminSidebar() {
     ] },
     { key: 'catalog', title: tr('Catalogue et messages'), icon: Store, items: [
       { title: tr('Produits'), url: '/admin/products', icon: Package },
+      { title: tr('Publicités'), url: '/admin/ads', icon: Megaphone },
       { title: tr('Notifications'), url: '/admin/notifications', icon: Bell },
     ] },
     { key: 'system', title: tr('Technique et paramètres'), icon: Settings, items: [

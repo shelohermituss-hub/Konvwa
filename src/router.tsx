@@ -64,6 +64,7 @@ import { AdminNotificationsPage } from '@/pages/admin/notifications'
 import { AdminAuditLogsPage } from '@/pages/admin/audit-logs'
 import { AdminKycPage } from '@/pages/admin/kyc'
 import { AdminPromosPage } from '@/pages/admin/promos'
+import { AdminAdsPage } from '@/pages/admin/ads'
 import { AdminInsightsPage } from '@/pages/admin/insights'
 import { RouteError } from '@/pages/route-error'
 import { AdminErrorsPage } from '@/pages/admin/errors'
@@ -170,6 +171,7 @@ export const router = createBrowserRouter([
       { path: 'disputes', element: <AdminDisputesPage /> },
       { path: 'analytics', element: <AdminDashboard /> },
       { path: 'products', element: <AdminProductsPage /> },
+      { path: 'ads', element: <AdminAdsPage /> },
       { path: 'product-orders', element: <AdminProductOrdersPage /> },
       { path: 'delivery-options', element: <AdminDeliveryOptionsPage /> },
       { path: 'shipping-config', element: <AdminShippingConfigPage /> },
