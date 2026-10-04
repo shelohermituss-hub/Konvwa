@@ -1,27 +1,24 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { haptics } from '@/lib/haptic'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import {
   LayoutDashboard, ShoppingBag, Ship, Bell, User, Wallet, HelpCircle, Send,
   Globe, ChevronDown, Check, LogOut, Settings, Activity, CreditCard,
-  ShoppingCart, Clock, Package, AlertCircle, Info, Download,
+  ShoppingCart, Package, Download,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n, type Lang } from '@/lib/i18n-context'
 import { useCart } from '@/lib/cart-context'
-import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { PwaExperience } from '@/components/shared/pwa-experience'
 import { isStandalone, requestInstall } from '@/lib/pwa'
-import { formatDistanceToNow } from 'date-fns'
-import { fr as frLocale } from 'date-fns/locale'
+import { NotificationBell, useUnreadCount } from '@/components/shared/notification-bell'
 
 import { ThemeQuickToggle } from '@/components/shared/theme-switch'
-import { tr, pickLocalized } from '@/lib/i18n'
+import { tr } from '@/lib/i18n'
 const NAV_ITEMS = [
   { labelKey: 'nav.home',      Icon: LayoutDashboard, path: '/dashboard' },
   { labelKey: 'nav.orders',    Icon: ShoppingBag,     path: '/orders' },
@@ -42,152 +39,6 @@ const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
   { code: 'en', label: 'English',  flag: '🇺🇸' },
 ]
-
-interface NotifItem {
-  id: string
-  title: string
-  title_en?: string | null
-  body_en?: string | null
-  body: string
-  type: string
-  read: boolean
-  created_at: string
-}
-
-function useUnread(userId: string | undefined) {
-  const [unread, setUnread] = useState(0)
-
-  useEffect(() => {
-    if (!userId) return
-    const fetch = () =>
-      supabase
-        .from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('read', false)
-        .then(({ count }) => setUnread(count ?? 0))
-
-    fetch()
-
-    const channel = supabase
-      .channel('notif-badge-' + userId)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'notifications',
-        filter: `user_id=eq.${userId}`,
-      }, fetch)
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [userId])
-
-  return unread
-}
-
-function NotifIcon({ type }: { type: string }) {
-  if (type === 'order') return <Package className="h-4 w-4 text-primary" />
-  if (type === 'payment') return <CreditCard className="h-4 w-4 text-emerald-500" />
-  if (type === 'alert') return <AlertCircle className="h-4 w-4 text-amber-500" />
-  return <Info className="h-4 w-4 text-blue-500" />
-}
-
-function NotifPopover({ userId, unread }: { userId?: string; unread: number }) {
-  const { lang } = useI18n()
-  const [open, setOpen] = useState(false)
-  const [notifs, setNotifs] = useState<NotifItem[]>([])
-  const [loading, setLoading] = useState(false)
-
-  async function loadNotifs() {
-    if (!userId) return
-    setLoading(true)
-    const { data } = await supabase
-      .from('notifications')
-      .select('id, title, body, title_en, body_en, type, read, created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(5)
-    if (data) setNotifs(data as NotifItem[])
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    if (open) loadNotifs()
-  }, [open])
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button aria-label={tr('Notifications')} className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted transition-colors">
-          <Bell className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
-          {unread > 0 && (
-            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white leading-none">
-              {unread > 9 ? '9+' : unread}
-            </span>
-          )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0 rounded-2xl shadow-xl border-gray-100" sideOffset={8}>
-        <div className="px-4 py-3.5 border-b border-border/50 flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-            <Bell className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <p className="font-bold text-sm">{tr('Notifications')}</p>
-            {unread > 0 && <p className="text-xs text-muted-foreground">{unread}{' '}{tr('non lue')}{unread > 1 ? 's' : ''}</p>}
-          </div>
-        </div>
-
-        <div className="divide-y divide-border/40">
-          {loading ? (
-            <div className="p-6 text-center">
-              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-            </div>
-          ) : notifs.length === 0 ? (
-            <div className="p-8 text-center">
-              <Bell className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground font-medium">{tr('Aucune notification')}</p>
-            </div>
-          ) : (
-            notifs.map((n) => (
-              <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer">
-                <div className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-xl shrink-0 mt-0.5',
-                  n.read ? 'bg-muted' : 'bg-primary/8'
-                )}>
-                  <NotifIcon type={n.type} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold leading-tight truncate">{pickLocalized(n.title, n.title_en)}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{pickLocalized(n.body, n.body_en)}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatDistanceToNow(new Date(n.created_at), {
-                      addSuffix: true,
-                      locale: lang === 'fr' ? frLocale : undefined,
-                    })}
-                  </p>
-                </div>
-                {!n.read && (
-                  <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-2" />
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="p-3 border-t border-border/50">
-          <Link
-            to="/notifications"
-            onClick={() => setOpen(false)}
-            className="block w-full text-center rounded-xl py-2.5 text-sm font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
-          >
-            {tr('Voir toutes les notifications')}
-          </Link>
-        </div>
-      </PopoverContent>
-    </Popover>
-  )
-}
 
 function ProfileMenu() {
   const { profile, user, signOut } = useAuth()
@@ -360,7 +211,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
                 <span className="text-sm">{item.label}</span>
                 {isNotif && unread > 0 && (
                   <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white px-1">
-                    {unread > 9 ? '9+' : unread}
+                    {unread > 99 ? '99+' : unread}
                   </span>
                 )}
               </Link>
@@ -411,7 +262,7 @@ function CartBadge() {
   )
 }
 
-function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
+function TopHeader() {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-white/95 backdrop-blur-md px-4 border-b border-gray-100 shadow-sm">
       <Link to="/dashboard">
@@ -421,7 +272,7 @@ function TopHeader({ unread, userId }: { unread: number; userId?: string }) {
         <LanguageSwitcher />
         <ThemeQuickToggle />
         <CartBadge />
-        <NotifPopover userId={userId} unread={unread} />
+        <NotificationBell />
         <ProfileMenu />
       </div>
     </header>
@@ -478,7 +329,7 @@ function BottomNav({ unread: _unread }: { unread: number }) {
 export function ClientLayout() {
   const { user } = useAuth()
   const location = useLocation()
-  const unread = useUnread(user?.id)
+  const unread = useUnreadCount(user?.id)
 
   return (
     <div className="flex h-dvh bg-background overflow-hidden">
@@ -486,7 +337,7 @@ export function ClientLayout() {
 
       <div className="flex-1 min-w-0 flex flex-col lg:ml-[240px] xl:ml-[260px] h-full min-h-0">
         <div className="lg:hidden">
-          <TopHeader unread={unread} userId={user?.id} />
+          <TopHeader />
         </div>
 
         <main className="flex-1 min-h-0 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-8">

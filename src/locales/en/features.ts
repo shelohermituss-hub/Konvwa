@@ -703,4 +703,7 @@ export const FEATURES_EN: Record<string, string> = {
   "Correction manuelle (espèces, erreur…). Un motif est obligatoire ; l'opération apparaît dans l'historique du client et dans le journal d'audit.": "Manual correction (cash, error…). A reason is required; the operation appears in the customer's history and in the audit log.",
   "Sens de l'ajustement": "Adjustment direction",
   "Appliquer l'ajustement": "Apply adjustment",
+  "Notifications ({0} non lues)": "Notifications ({0} unread)",
+  "Tout est lu": "All read",
+  "Boutiques prises en charge": "Supported stores",
 }

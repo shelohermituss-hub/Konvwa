@@ -242,6 +242,16 @@ export function HomePage() {
             <span className="text-primary">{tr('Alibaba, Shein')}</span>
             {' '}{tr('et Temu en Haïti')}
           </h1>
+          <ul className="-mt-2 flex flex-wrap items-center gap-2.5" aria-label={tr('Boutiques prises en charge')}>
+            {['Alibaba', 'Temu', 'Shein'].map((name) => {
+              const brand = BRANDS.find((b) => b.name === name)
+              return brand ? (
+                <li key={brand.name} className="flex h-11 items-center rounded-full border border-border bg-white px-4 shadow-sm">
+                  <img src={brand.logo} alt={brand.name} className="h-6 w-auto max-w-[84px] object-contain" loading="eager" />
+                </li>
+              ) : null
+            })}
+          </ul>
           <p className="max-w-md text-lg text-muted-foreground">
             {tr('Commandez depuis n\'importe quelle boutique internationale et payez via MonCash ou NatCash. Sans carte bancaire étrangère.')}
           </p>

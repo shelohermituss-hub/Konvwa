@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useAdminBadges, type AdminBadges } from '@/hooks/use-admin-badges'
 import { cn } from '@/lib/utils'
+import { NotificationBell } from '@/components/shared/notification-bell'
 import { ThemeQuickToggle } from '@/components/shared/theme-switch'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger, SidebarRail } from '@/components/ui/sidebar'
@@ -185,9 +186,7 @@ function AdminTopBar() {
       <SidebarTrigger className="-ml-2" />
       <div className="flex items-center gap-2">
         <ThemeQuickToggle />
-        <Button variant="ghost" size="icon">
-          <Bell className="h-4 w-4" />
-        </Button>
+        <NotificationBell />
       </div>
     </header>
   )

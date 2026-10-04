@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { PushSettingsRow } from '@/components/shared/pwa-experience'
+import { notifyNotificationsChanged } from '@/components/shared/notification-bell'
+import { resolveNotificationLink } from '@/lib/notification-link'
 
 import IconValide from 'flat-color-icons/svg/ok.svg'
 
@@ -39,7 +41,7 @@ const TYPE_CONFIG: Record<string, IconConfig> = {
 }
 
 export function NotificationsPage() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
@@ -61,6 +63,7 @@ export function NotificationsPage() {
     if (!user) return
     await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false)
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+    notifyNotificationsChanged()
     toast.success(tr('Toutes les notifications lues.'))
   }
 
@@ -68,8 +71,10 @@ export function NotificationsPage() {
     if (!n.read) {
       setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)))
       await supabase.from('notifications').update({ read: true }).eq('id', n.id)
+      notifyNotificationsChanged()
     }
-    if (n.link) navigate(n.link)
+    navigate(resolveNotificationLink({ link: n.link, type: n.type, title: n.title }, profile?.role))
+    notifyNotificationsChanged()
   }
 
   async function deleteOne(id: string) {
@@ -140,7 +145,7 @@ export function NotificationsPage() {
                   )}
                   <div className={cn(
                     'relative flex gap-3 rounded-2xl p-4 transition-colors',
-                    n.link && 'cursor-pointer',
+                    'cursor-pointer',
                     isUnread ? 'bg-white border border-gray-100 shadow-sm' : 'bg-white/60 border border-transparent'
                   )} onClick={() => open(n)}>
                     <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl shrink-0', config.iconBg)}>
