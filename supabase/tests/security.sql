@@ -360,5 +360,15 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); sid uuid; rid uuid; BEGIN
   EXCEPTION WHEN raise_exception THEN NULL; END;
 END $$;
 
+-- 18. admin sidebar badges: counts only for staff
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id FROM ctx); BEGIN
+  PERFORM pg_temp.as_user(a);
+  ASSERT public.admin_badge_counts() = '{}'::jsonb, 'a client reads the admin counts';
+  RESET ROLE;
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT public.admin_badge_counts() ? 'quotes', 'staff gets no counts';
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

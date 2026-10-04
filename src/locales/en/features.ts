@@ -597,4 +597,9 @@ export const FEATURES_EN: Record<string, string> = {
   "Ce tarif est utilisé par des commandes : il a été désactivé (l'historique est conservé).": "This rate is used by orders: it has been deactivated (history is kept).",
   "Type de commande": "Order type",
   "Aucun achat du catalogue": "No catalogue purchase yet",
+  "{0} nouveaux": "{0} new",
+  "Logistique": "Logistics",
+  "Clients et argent": "Customers and money",
+  "Catalogue et messages": "Catalogue and messages",
+  "Technique et paramètres": "Technical and settings",
 }
