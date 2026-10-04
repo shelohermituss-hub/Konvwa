@@ -15,7 +15,7 @@ import type { OrderStatus } from '@/types'
 interface Item { id: string; product_name: string; product_price_htg: number; quantity: number; subtotal_htg: number }
 interface Order {
   id: string; tracking_code: string; status: string; payment_status: string; tracking_status: string | null
-  total_htg: number; created_at: string; shipping_paid_at: string | null; shipping_amount_htg: number | null
+  total_htg: number; created_at: string; shipping_paid_at: string | null; shipping_amount_htg: number | null; shipping_prepaid?: boolean
   chosen_shipping_rate: { name: string } | null
 }
 
@@ -32,7 +32,7 @@ export function ProductOrderDetailPage() {
     if (!user || !id) return
     const [o, i, w] = await Promise.all([
       supabase.from('product_orders')
-        .select('id, tracking_code, status, payment_status, tracking_status, total_htg, created_at, shipping_paid_at, shipping_amount_htg, chosen_shipping_rate:shipping_rates(name)')
+        .select('id, tracking_code, status, payment_status, tracking_status, total_htg, created_at, shipping_paid_at, shipping_amount_htg, shipping_prepaid, chosen_shipping_rate:shipping_rates(name)')
         .eq('id', id).eq('user_id', user.id).maybeSingle(),
       supabase.from('product_order_items').select('id, product_name, product_price_htg, quantity, subtotal_htg').eq('order_id', id),
       supabase.from('wallets').select('available_balance').eq('user_id', user.id).maybeSingle(),
@@ -109,7 +109,7 @@ export function ProductOrderDetailPage() {
             ))}
           </ul>
           <div className="space-y-1.5 border-t border-gray-100 px-4 py-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">{tr('Achat des produits')}</span><span className="font-semibold">{order.total_htg.toLocaleString(LOCALE_TAG)} HTG</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{tr('Achat des produits')}</span><span className="font-semibold">{(order.shipping_prepaid ? order.total_htg - (shippingPaid ?? 0) : order.total_htg).toLocaleString(LOCALE_TAG)} HTG</span></div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{tr('Expédition')}</span>
               <span className="font-semibold">

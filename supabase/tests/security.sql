@@ -506,5 +506,70 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id
   EXCEPTION WHEN check_violation THEN NULL; END;
 END $$;
 
+-- 23. US catalogue products are sold all inclusive: shipping is computed by the database, added to the total, paid at once;
+--     a mixed cart is split in two orders; the prepaid order skips the shipping payment and can then be assigned to a batch
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b FROM ctx); adm uuid := (SELECT admin_id FROM ctx);
+  us uuid; us_nopkg uuid; cn uuid; r jsonb; opt jsonb; rate uuid; ship numeric; oid uuid; cn_oid uuid; bal0 numeric; sid uuid; ords jsonb; n integer; BEGIN
+  INSERT INTO products (name, price_htg, moq, unit, supplier_country, supplier_name, active, stock_available, weight_kg, length_cm, width_cm, height_cm, brand)
+    VALUES ('US test', 1000, 1, 'u', 'US', 'Amazon', true, true, 1.2, 30, 20, 15, 'Acme') RETURNING id INTO us;
+  INSERT INTO products (name, price_htg, moq, unit, supplier_country, supplier_name, active, stock_available)
+    VALUES ('US no package', 500, 1, 'u', 'US', 'Amazon', true, true) RETURNING id INTO us_nopkg;
+  INSERT INTO products (name, price_htg, moq, unit, supplier_country, supplier_name, active, stock_available)
+    VALUES ('CN test', 200, 1, 'u', 'CN', 'Alibaba', true, true) RETURNING id INTO cn;
+  UPDATE wallets SET available_balance = 1000000 WHERE user_id = a;
+  INSERT INTO shipments (batch_code, status) VALUES ('TEST-' || substr(md5(random()::text), 1, 6), 'in_china_warehouse') RETURNING id INTO sid;
+
+  PERFORM pg_temp.as_user(a);
+  r := public.checkout_shipping_options(jsonb_build_array(jsonb_build_object('product_id', us, 'quantity', 2)));
+  ASSERT (r ->> 'success')::boolean AND (r ->> 'us_count')::int = 1 AND jsonb_array_length(r -> 'options') > 0, 'no checkout options: ' || r::text;
+  ASSERT (r ->> 'kg')::numeric = 2.4, 'weight not summed: ' || r::text;
+  rate := (r -> 'options' -> 0 ->> 'rate_id')::uuid; ship := (r -> 'options' -> 0 ->> 'amount_htg')::numeric;
+  ASSERT ship > 0, 'zero shipping';
+  r := public.checkout_shipping_options(jsonb_build_array(jsonb_build_object('product_id', us_nopkg, 'quantity', 1)));
+  ASSERT jsonb_array_length(r -> 'missing') = 1 AND jsonb_array_length(r -> 'options') = 0, 'product without package not flagged';
+  ASSERT (public.create_product_checkout(jsonb_build_array(jsonb_build_object('product_id', us_nopkg, 'quantity', 1)), rate) ->> 'success')::boolean = false, 'ordered a US product without package';
+  ASSERT (public.create_product_checkout(jsonb_build_array(jsonb_build_object('product_id', us, 'quantity', 2)), NULL) ->> 'success')::boolean = false, 'US order without a shipping method';
+  ASSERT (public.create_product_checkout(jsonb_build_array(jsonb_build_object('product_id', us, 'quantity', 2)), gen_random_uuid()) ->> 'success')::boolean = false, 'unknown shipping method accepted';
+
+  -- mixed cart: two orders, US one includes the shipping computed by the database
+  r := public.create_product_checkout(jsonb_build_array(jsonb_build_object('product_id', us, 'quantity', 2), jsonb_build_object('product_id', cn, 'quantity', 3)), rate);
+  ASSERT (r ->> 'success')::boolean, 'checkout failed: ' || r::text;
+  ords := r -> 'orders'; ASSERT jsonb_array_length(ords) = 2, 'cart not split in two orders';
+  oid := (SELECT (o ->> 'order_id')::uuid FROM jsonb_array_elements(ords) o WHERE (o ->> 'prepaid')::boolean);
+  cn_oid := (SELECT (o ->> 'order_id')::uuid FROM jsonb_array_elements(ords) o WHERE NOT (o ->> 'prepaid')::boolean);
+  ASSERT (SELECT total_htg FROM product_orders WHERE id = oid) = 2000 + ship, 'US order total is not products + shipping';
+  ASSERT (SELECT total_htg FROM product_orders WHERE id = cn_oid) = 600, 'CN order must stay purchase only';
+  ASSERT (SELECT shipping_prepaid FROM product_orders WHERE id = cn_oid) = false, 'CN order marked prepaid';
+  BEGIN UPDATE product_orders SET shipping_prepaid = false, shipping_amount_htg = 1 WHERE id = oid; GET DIAGNOSTICS n = ROW_COUNT; ASSERT n = 0, 'client edited the order';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+
+  SELECT available_balance INTO bal0 FROM wallets WHERE user_id = a;
+  ASSERT (public.pay_product_order(oid) ->> 'success')::boolean, 'payment failed';
+  ASSERT (SELECT available_balance FROM wallets WHERE user_id = a) = bal0 - (2000 + ship), 'wallet not debited products + shipping';
+  RESET ROLE;
+  ASSERT (SELECT shipping_paid_at FROM product_orders WHERE id = oid) IS NOT NULL, 'shipping not marked paid';
+  ASSERT (SELECT tracking_status FROM product_orders WHERE id = oid) = 'paid', 'tracking should start at paid';
+
+  -- another client cannot pay it, and the shipping cannot be paid a second time
+  PERFORM pg_temp.as_user(b);
+  ASSERT (public.pay_product_order(oid) ->> 'success')::boolean = false, 'another client paid the order';
+  RESET ROLE;
+  PERFORM pg_temp.as_user(a);
+  ASSERT (public.pay_order_shipping('product_order', oid, rate) ->> 'success')::boolean = false, 'shipping paid twice';
+  RESET ROLE;
+
+  -- warehouse arrival goes straight to "shipping paid", then the team assigns the batch
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_order_arrived('product_order', oid, 2.6, 0.0201) ->> 'success')::boolean, 'arrival of a prepaid order failed';
+  ASSERT (public.admin_assign_order_to_batch('product_order', oid, sid) ->> 'success')::boolean, 'prepaid order not assignable';
+  RESET ROLE;
+  ASSERT (SELECT tracking_status FROM product_orders WHERE id = oid) = 'shipping_paid', 'prepaid order not at shipping_paid after arrival';
+  ASSERT (SELECT shipment_id FROM product_orders WHERE id = oid) = sid, 'prepaid order not in the batch';
+  ASSERT (SELECT count(*) FROM notifications WHERE user_id = a AND link = '/product-orders/' || oid AND title LIKE 'Votre colis est arrivé%') >= 1, 'no arrival notification';
+  ASSERT NOT has_function_privilege('anon', 'public.create_product_checkout(jsonb,uuid,text)', 'execute'), 'anon can create a checkout';
+  ASSERT NOT has_function_privilege('anon', 'public.checkout_shipping_options(jsonb)', 'execute'), 'anon can read checkout options';
+  ASSERT NOT has_function_privilege('authenticated', 'public.package_shipping_options(numeric,numeric,uuid)', 'execute'), 'internal fee helper callable';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

@@ -1,7 +1,7 @@
 import { unitPriceFor } from '@/lib/product-pricing'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight } from 'lucide-react'
+import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useAuth } from '@/lib/auth-context'
@@ -11,6 +11,8 @@ import { toast } from 'sonner'
 import { inviteInstall } from '@/lib/pwa'
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { useStepUp } from '@/lib/step-up'
+import { createCheckout, fetchCheckoutShipping, type CheckoutShipping, type CreatedOrder } from '@/lib/checkout-api'
+import { cn } from '@/lib/utils'
 interface WalletData {
   id: string
   available_balance: number
@@ -27,6 +29,12 @@ export function CheckoutPage() {
   const [paying, setPaying] = useState(false)
   const [success, setSuccess] = useState(false)
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [paidOrders, setPaidOrders] = useState<CreatedOrder[]>([])
+  // US products are sold all inclusive: the customer picks the shipping method here and pays everything at once
+  const [shipping, setShipping] = useState<CheckoutShipping | null>(null)
+  const [shippingLoading, setShippingLoading] = useState(true)
+  const [shippingError, setShippingError] = useState('')
+  const [rateId, setRateId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -41,6 +49,31 @@ export function CheckoutPage() {
       })
   }, [user])
 
+  const cartKey = items.map(i => `${i.product_id}:${i.quantity}`).join(',')
+  useEffect(() => {
+    if (items.length === 0) { setShippingLoading(false); return }
+    let cancelled = false
+    setShippingLoading(true); setShippingError('')
+    fetchCheckoutShipping(items.map(i => ({ product_id: i.product_id, quantity: i.quantity })))
+      .then((r) => {
+        if (cancelled) return
+        setShipping(r)
+        setRateId((prev) => (r.options.some(o => o.rate_id === prev) ? prev : r.options[0]?.rate_id ?? null))
+      })
+      .catch((e: unknown) => { if (!cancelled) setShippingError(e instanceof Error ? e.message : tr('Erreur inconnue')) })
+      .finally(() => { if (!cancelled) setShippingLoading(false) })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartKey])
+
+  const hasUs = (shipping?.us_count ?? 0) > 0
+  const chosen = shipping?.options.find(o => o.rate_id === rateId) ?? null
+  const shippingFee = hasUs && chosen ? chosen.amount_htg : 0
+  const grandTotal = total + shippingFee
+  const blocked = (shipping?.missing.length ?? 0) > 0
+  const noMethod = hasUs && !blocked && !chosen
+  const canPay = !shippingLoading && !shippingError && !blocked && !noMethod
+
   // Redirect if cart is empty (and not just paid)
   useEffect(() => {
     if (!success && items.length === 0 && !paying) {
@@ -50,29 +83,30 @@ export function CheckoutPage() {
 
   async function handlePay() {
     if (!wallet || !user) return
-    if (wallet.available_balance < total) {
+    if (!canPay) return
+    if (wallet.available_balance < grandTotal) {
       toast.error(tr('Solde insuffisant'), { description: tr('Rechargez votre portefeuille pour continuer.') })
       return
     }
-    if (!(await confirmPayment(total))) return
+    if (!(await confirmPayment(grandTotal))) return
 
     setPaying(true)
     try {
-      // The order, its prices and its total are computed by the database from the product ids
-      const { data: created, error: createErr } = await supabase.rpc('create_product_order', {
-        p_items: items.map(item => ({ product_id: item.product_id, quantity: item.quantity })),
-      })
-      if (createErr) throw new Error(createErr.message)
-      if (!created?.success) throw new Error(created?.error ?? tr('Erreur création commande'))
-      const order = { id: created.order_id as string }
-
-      // Deduct wallet via RPC
-      const { data: rpcResult, error: rpcErr } = await supabase.rpc('pay_product_order', { p_order_id: order.id })
-      if (rpcErr) throw new Error(rpcErr.message)
-      if (rpcResult && rpcResult.success === false) throw new Error(rpcResult.error ?? tr('Paiement refusé'))
-
+      // The orders, their prices and the shipping fee are computed by the database from the product ids and the chosen method
+      const created = await createCheckout(items.map(item => ({ product_id: item.product_id, quantity: item.quantity })), hasUs ? rateId : null)
+      const done: CreatedOrder[] = []
+      for (const order of created.orders) {
+        const { data: rpcResult, error: rpcErr } = await supabase.rpc('pay_product_order', { p_order_id: order.order_id })
+        const failure = rpcErr ? rpcErr.message : rpcResult && rpcResult.success === false ? (rpcResult.error ?? tr('Paiement refusé')) : null
+        if (failure) {
+          if (done.length > 0) { await clearCart(); setPaidOrders(done); setOrderId(done[0].order_id) }
+          throw new Error(done.length > 0 ? `${failure} — ${tr('une commande est restée à payer : retrouvez-la dans Commandes.')}` : failure)
+        }
+        done.push(order)
+      }
       await clearCart()
-      setOrderId(order.id)
+      setPaidOrders(done)
+      setOrderId(done[0]?.order_id ?? null)
       setSuccess(true)
       inviteInstall()
     } catch (e: unknown) {
@@ -93,13 +127,17 @@ export function CheckoutPage() {
           <h1 className="text-lg font-bold mb-2">{t('checkout.success')}</h1>
           <p className="text-sm text-muted-foreground mb-2">{t('checkout.success_sub')}</p>
           <p className="text-2xl font-black text-emerald-700 mb-3">
-            {total.toLocaleString(LOCALE_TAG)} HTG
+            {paidOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString(LOCALE_TAG)} HTG
           </p>
           <p className="mb-6 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            {tr('Vous avez payé l\'achat des produits. À l\'arrivée du colis à l\'entrepôt, nous vous préviendrons pour payer l\'expédition.')}
+            {paidOrders.some(o => o.prepaid) && paidOrders.some(o => !o.prepaid)
+              ? tr('Produits des États-Unis : achat et expédition payés. Autres produits : achat payé, l\'expédition se paiera à l\'arrivée du colis à l\'entrepôt (nous vous préviendrons).')
+              : paidOrders.some(o => o.prepaid)
+                ? tr('Achat et expédition sont payés : il n\'y a plus rien à payer. Nous vous suivons votre colis jusqu\'à la livraison.')
+                : tr('Vous avez payé l\'achat des produits. À l\'arrivée du colis à l\'entrepôt, nous vous préviendrons pour payer l\'expédition.')}
           </p>
           <button
-            onClick={() => navigate(orderId ? `/product-orders/${orderId}` : '/orders')}
+            onClick={() => navigate(paidOrders.length === 1 && orderId ? `/product-orders/${orderId}` : '/orders')}
             className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white mb-3"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
@@ -117,7 +155,7 @@ export function CheckoutPage() {
     )
   }
 
-  const insufficient = wallet ? wallet.available_balance < total : false
+  const insufficient = wallet ? wallet.available_balance < grandTotal : false
 
   return (
     <div className="min-h-full bg-[#F4F5F7] pb-36">
@@ -133,10 +171,21 @@ export function CheckoutPage() {
       </div>
 
       <div className="px-4 pt-4 space-y-4">
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-foreground">
-          <p className="font-bold">{tr('Achat seul')}</p>
-          <p className="mt-0.5 text-muted-foreground">{tr('Vous payez ici l\'achat des produits. L\'expédition se paie plus tard, quand votre colis est arrivé à l\'entrepôt et que nous vous prévenons.')}</p>
-        </div>
+        {hasUs ? (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-foreground">
+            <p className="font-bold">{shipping && shipping.other_count > 0 ? tr('Votre panier sera séparé en 2 commandes') : tr('Expédition incluse')}</p>
+            <p className="mt-0.5 text-muted-foreground">
+              {shipping && shipping.other_count > 0
+                ? tr('Produits des États-Unis : achat et expédition payés maintenant (tout inclus). Autres produits : achat seul, l\'expédition se paie plus tard, à l\'arrivée du colis à l\'entrepôt.')
+                : tr('Ces produits viennent des États-Unis : choisissez le mode d\'expédition ci-dessous et payez tout maintenant, achat et livraison.')}
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-foreground">
+            <p className="font-bold">{tr('Achat seul')}</p>
+            <p className="mt-0.5 text-muted-foreground">{tr('Vous payez ici l\'achat des produits. L\'expédition se paie plus tard, quand votre colis est arrivé à l\'entrepôt et que nous vous prévenons.')}</p>
+          </div>
+        )}
 
         {/* Order summary */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -155,6 +204,11 @@ export function CheckoutPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{item.products?.name}</p>
+                  {hasUs && (
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {(item.products?.supplier_country ?? '').toUpperCase() === 'US' ? tr('Expédition incluse') : tr('Achat seul')}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">{item.quantity} × {(item.products ? unitPriceFor(item.products, item.quantity) : 0).toLocaleString(LOCALE_TAG)} HTG</p>
                 </div>
                 <p className="text-sm font-bold text-primary shrink-0">
@@ -163,11 +217,65 @@ export function CheckoutPage() {
               </div>
             ))}
           </div>
+          {hasUs && chosen && (
+            <div className="space-y-1 border-t border-gray-100 px-4 py-3 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">{tr('Produits')}</span><span className="font-semibold">{total.toLocaleString(LOCALE_TAG)} HTG</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">{tr('Expédition')} · {chosen.name}</span><span className="font-semibold">{shippingFee.toLocaleString(LOCALE_TAG)} HTG</span></div>
+            </div>
+          )}
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/50">
             <span className="text-sm font-bold">{t('cart.total')}</span>
-            <span className="text-lg font-black text-primary">{total.toLocaleString(LOCALE_TAG)} HTG</span>
+            <span className="text-lg font-black text-primary">{grandTotal.toLocaleString(LOCALE_TAG)} HTG</span>
           </div>
         </div>
+
+        {/* Shipping method (US products, all inclusive) */}
+        {shippingLoading && items.length > 0 && (
+          <div className="flex items-center gap-2 rounded-2xl bg-white p-4 text-sm text-muted-foreground border border-gray-100">
+            <Loader2 className="h-4 w-4 animate-spin" />{tr('Calcul de l\'expédition…')}
+          </div>
+        )}
+        {shippingError && (
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive" role="alert">{shippingError}</div>
+        )}
+        {blocked && shipping && (
+          <div className="flex gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p className="font-bold">{tr('Commande impossible pour le moment')}</p>
+              <p className="mt-0.5 text-xs">{tr('Le colis de ces produits n\'est pas encore renseigné (poids, dimensions) : retirez-les du panier ou réessayez plus tard.')}</p>
+              <ul className="mt-1 list-disc pl-4 text-xs">{shipping.missing.map(m => <li key={m.product_id}>{m.name}</li>)}</ul>
+            </div>
+          </div>
+        )}
+        {hasUs && !blocked && !shippingLoading && (
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <p className="text-sm font-bold">{tr('Mode d\'expédition')}</p>
+            <p className="mb-3 text-xs text-muted-foreground">{tr('Colis estimé : {0} kg. Le prix est calculé selon le poids et le volume.', (shipping?.kg ?? 0).toLocaleString(LOCALE_TAG))}</p>
+            {shipping && shipping.options.length > 0 ? (
+              <div className="space-y-2" role="radiogroup" aria-label={tr('Mode d\'expédition')}>
+                {shipping.options.map(o => {
+                  const active = o.rate_id === rateId
+                  return (
+                    <button key={o.rate_id} type="button" role="radio" aria-checked={active} onClick={() => setRateId(o.rate_id)}
+                      className={cn('flex w-full items-center gap-3 rounded-xl border-2 px-3 py-3 text-left transition-colors', active ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white')}>
+                      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', active ? 'bg-primary text-white' : 'bg-gray-100 text-muted-foreground')}>
+                        {o.mode === 'ocean' ? <Ship className="h-4 w-4" /> : <Plane className="h-4 w-4" />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold">{o.name}</span>
+                        {o.transit_days_min && o.transit_days_max ? <span className="text-xs text-muted-foreground">{o.transit_days_min}-{o.transit_days_max} {tr('jours')}</span> : null}
+                      </span>
+                      <span className="shrink-0 text-sm font-bold">{o.amount_htg.toLocaleString(LOCALE_TAG)} HTG</span>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-destructive">{tr('Aucun mode d\'expédition disponible pour ce colis. Contactez le support.')}</p>
+            )}
+          </div>
+        )}
 
         {/* Wallet balance */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
@@ -199,7 +307,7 @@ export function CheckoutPage() {
             <div className="mt-3 p-3 rounded-xl bg-destructive/8 border border-destructive/20">
               <p className="text-xs font-semibold text-destructive mb-1">{t('checkout.insufficient')}</p>
               <p className="text-xs text-muted-foreground">
-                {tr('Il vous manque')}{' '}{(total - (wallet?.available_balance ?? 0)).toLocaleString(LOCALE_TAG)}{' '}{tr('HTG.')}
+                {tr('Il vous manque')}{' '}{(grandTotal - (wallet?.available_balance ?? 0)).toLocaleString(LOCALE_TAG)}{' '}{tr('HTG.')}
               </p>
             </div>
           )}
@@ -220,7 +328,7 @@ export function CheckoutPage() {
         ) : (
           <button
             onClick={handlePay}
-            disabled={paying || loadingWallet || items.length === 0}
+            disabled={paying || loadingWallet || items.length === 0 || !canPay}
             className="w-full flex items-center justify-center gap-2 h-13 rounded-xl text-sm font-bold text-white disabled:opacity-60 transition-opacity"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
@@ -231,7 +339,7 @@ export function CheckoutPage() {
               </>
             ) : (
               <>
-                {t('checkout.confirm')} · {total.toLocaleString(LOCALE_TAG)} HTG
+                {t('checkout.confirm')} · {grandTotal.toLocaleString(LOCALE_TAG)} HTG
               </>
             )}
           </button>

@@ -27,7 +27,7 @@ const ORDER_TIMELINE: {
   { status: 'awaiting_payment',   label: tr('Paiement'),   description: tr('En attente de paiement'),       icon: IconPaiement    },
   { status: 'paid',               label: tr('Payé'),       description: tr('Paiement confirmé'),            icon: IconPaye        },
   { status: 'purchasing',         label: tr('Achat'),      description: tr('Achat auprès du fournisseur'),  icon: IconAchat       },
-  { status: 'in_china_warehouse', label: tr('Entrepôt'),   description: tr('Produit en entrepôt Chine'),    icon: IconEntrepot    },
+  { status: 'in_china_warehouse', label: tr('Entrepôt'),   description: tr('Produit arrivé à l\'entrepôt'),    icon: IconEntrepot    },
   { status: 'shipping_paid',      label: tr('Expédition payée'), description: tr('Frais d\'expédition payés'), icon: IconPaye },
   { status: 'shipped',            label: tr('Expédition'), description: tr('Expédié vers Haïti'),           icon: IconNavire      },
   { status: 'in_transit',         label: tr('Transit'),    description: tr('En transit maritime'),          icon: IconNavire      },

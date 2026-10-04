@@ -19,6 +19,7 @@ export interface CartItem {
     unit: string
     moq: number
     stock_available: boolean
+    supplier_country?: string | null
   }
 }
 
@@ -47,7 +48,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     const { data } = await supabase
       .from('cart_items')
-      .select('id, product_id, quantity, products(id, name, name_en, reseller_discount_pct, price_htg, price_tiers, images, unit, moq, stock_available)')
+      .select('id, product_id, quantity, products(id, name, name_en, reseller_discount_pct, price_htg, price_tiers, images, unit, moq, stock_available, supplier_country)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
     if (data) {
