@@ -706,4 +706,6 @@ export const FEATURES_EN: Record<string, string> = {
   "Notifications ({0} non lues)": "Notifications ({0} unread)",
   "Tout est lu": "All read",
   "Boutiques prises en charge": "Supported stores",
+  "Achetez sur ces plateformes, nous vous livrons en Haïti": "Shop on these platforms, we deliver to Haiti",
+  "Ouvrir {0}": "Open {0}",
 }

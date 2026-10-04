@@ -15,6 +15,14 @@ import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
+
+// Partner shops: the https links open the shop's app when it is installed (universal links), the website otherwise
+const SHOPS = [
+  { name: 'Alibaba', logo: '/brands/alibaba.png', href: 'https://www.alibaba.com' },
+  { name: 'Shein', logo: '/brands/shein.png', href: 'https://www.shein.com' },
+  { name: 'Amazon', logo: '/brands/amazon.png', href: 'https://www.amazon.com' },
+  { name: 'Temu', logo: '/brands/temu.jpg', href: 'https://www.temu.com' },
+]
 interface WalletData {
   available_balance: number
   blocked_balance: number
@@ -256,6 +264,30 @@ export function DashboardPage() {
       ═══════════════════════════════════════════════════════════════════════ */}
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-28">
         <div className="mb-3 empty:hidden"><SetupReminder /></div>
+
+        {/* Shops we import from: tap a logo to open the shop, then paste the product link in "Soumettre" */}
+        {!query && (
+          <section className="mb-5" aria-label={tr('Boutiques prises en charge')}>
+            <h2 className="mb-2.5 text-balance text-sm font-bold text-foreground">{tr('Achetez sur ces plateformes, nous vous livrons en Haïti')}</h2>
+            <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-pl-4 px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {SHOPS.map((shop) => (
+                <li key={shop.name} className="snap-start shrink-0">
+                  <a
+                    href={shop.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={tr('Ouvrir {0}', shop.name)}
+                    onClick={() => haptics.tap()}
+                    style={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb' }}
+                    className="pressable flex h-[76px] w-[132px] items-center justify-center rounded-2xl border p-3 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
+                    <img src={shop.logo} alt={shop.name} loading="lazy" className="h-full w-full object-contain" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Section header */}
         <div className="flex items-center justify-between mb-3">
