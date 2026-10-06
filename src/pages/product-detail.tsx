@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { currencyLabel } from '@/lib/currency'
+import { Flag } from '@/components/shared/flag'
 type TabId = 'overview' | 'details' | 'related'
 
 const TABS: { id: TabId; label: string }[] = [
@@ -469,9 +470,9 @@ export function ProductDetailPage() {
           {(delivery || product.customization_options.length > 0) && (
             <div className="grid grid-cols-2 gap-3">
               {delivery ? (
-                <div className="rounded-xl bg-white p-3 shadow-sm">
-                  <p className="font-bold">{tr('Livraison')}</p>
-                  <p className="mt-0.5 truncate text-sm text-muted-foreground">{tr('Estimée :')}{' '}{delivery}</p>
+                <div className={cn('rounded-xl bg-white p-3 shadow-sm', product.customization_options.length === 0 && 'col-span-2')}>
+                  <p className="flex items-center gap-1.5 font-bold"><Flag code="HT" className="text-base" />{tr('Livraison en Haïti')}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{tr('Estimée :')}{' '}{delivery}</p>
                 </div>
               ) : <span />}
               {product.customization_options.length > 0 && (
