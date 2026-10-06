@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { Loader2, Trash2, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -163,7 +164,7 @@ export function AdminUserSheet({ userId, onClose, onChanged }: { userId: string 
     <Sheet open={!!userId} onOpenChange={(o) => { if (!o) onClose() }}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>{target?.full_name ?? tr('Utilisateur')}</SheetTitle>
+          <SheetTitle className="inline-flex items-center gap-1.5">{target?.full_name ?? tr('Utilisateur')}{data?.kyc_status === 'approved' && <VerifiedBadge className="h-5 w-5" label={tr('Identité vérifiée')} />}</SheetTitle>
           <SheetDescription>{data?.email ?? ''}</SheetDescription>
         </SheetHeader>
 

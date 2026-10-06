@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { Flag } from '@/components/shared/flag'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -9,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
   Eye, EyeOff, Loader2, LayoutDashboard, ChevronRight,
-  LogOut, Upload, User, Lock, Bell, Activity, CreditCard, Heart, Gift, Store, ArrowLeft, Palette, Check, FileText, HelpCircle,
+  LogOut, Upload, User, Lock, Bell, Activity, CreditCard, Heart, Gift, Store, ArrowLeft, Palette, FileText, HelpCircle,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -156,12 +157,10 @@ export function ProfilePage() {
                 <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">{initials}</AvatarFallback>
               </Avatar>
             </button>
-            <h1 className="mt-3 text-lg font-bold tracking-tight">{profile?.full_name || user?.email}</h1>
-            {verified && (
-              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700">
-                <Check className="h-3.5 w-3.5" aria-hidden="true" />{tr('Vérifié')}
-              </span>
-            )}
+            <h1 className="mt-3 inline-flex items-center justify-center gap-1.5 text-lg font-bold tracking-tight">
+              {profile?.full_name || user?.email}
+              {verified && <VerifiedBadge className="h-5 w-5" label={tr('Identité vérifiée')} />}
+            </h1>
           </div>
 
           {isAdmin && (
