@@ -1,4 +1,4 @@
-const CACHE_NAME = 'konvwa-v3'
+const CACHE_NAME = 'konvwa-v4'
 const STATIC_ASSETS = ['/manifest.json', '/icon-192.png', '/icon-512.png', '/offline.html']
 
 self.addEventListener('install', (event) => {
@@ -78,12 +78,13 @@ self.addEventListener('push', (event) => {
     data = { title: 'KONVWA', body: event.data.text() }
   }
 
-  const { title = 'KONVWA', body = '', icon = '/icon-192.png', badge = '/badge-mono.png', clickUrl = '/', type = 'info' } = data
+  const { title = 'KONVWA', body = '', icon = '/icon-192.png', badge = '/badge-mono.png', image, clickUrl = '/', type = 'info' } = data
 
   const options = {
     body,
     icon,
     badge,
+    ...(image ? { image } : {}),
     vibrate:  [200, 100, 200],
     data:     { clickUrl },
     // One tag per event: a shared tag per type made each notification silently replace the previous one

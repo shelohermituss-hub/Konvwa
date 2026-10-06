@@ -46,6 +46,7 @@ serve(async (req) => {
       title_en?: string | null
       body_en?: string | null
       icon?: string
+      image?: string
       click_url?: string
       type?: string
     } = await req.json()
@@ -93,6 +94,8 @@ serve(async (req) => {
       title:    english && body.title_en ? body.title_en : body.title,
       body:     english && body.body_en  ? body.body_en  : body.body,
       icon:     body.icon     ?? '/icon-192.png',
+      // big picture under the text (shown by Android and desktop browsers; iOS does not show it for web push)
+      image:    typeof body.image === 'string' && /^https:\/\//.test(body.image) ? body.image : undefined,
       badge:    '/badge-mono.png',
       clickUrl: body.click_url ?? '/',
       type:     body.type     ?? 'info',
@@ -115,7 +118,7 @@ serve(async (req) => {
       eligible.map(async (s) => {
         const sub = s.subscription as PushSub
         try {
-          const res = await webpush.sendNotification(sub, payload)
+          const res = await webpush.sendNotification(sub, payload, { urgency: 'high', TTL: 24 * 3600 })
           return { ok: true, status: res.statusCode, endpoint: sub.endpoint }
         } catch (e: unknown) {
           const err = e as { statusCode?: number; body?: string }
