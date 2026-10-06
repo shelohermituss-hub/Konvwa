@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Flag } from '@/components/shared/flag'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { Menu, X } from 'lucide-react'
@@ -200,7 +201,7 @@ function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()}{' '}{tr('KONVWA. Tous droits réservés.')}</p>
-          <p>{tr('Fait avec soin pour Haïti 🇭🇹')}</p>
+          <p className="inline-flex items-center gap-1.5">{tr('Fait avec soin pour Haïti')} <Flag code="HT" /></p>
         </div>
       </div>
     </footer>

@@ -1,4 +1,5 @@
-import { BadgeCheck, Check, Package } from 'lucide-react'
+import { Check, Package } from 'lucide-react'
+import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useI18n } from '@/lib/i18n-context'
 import { formatPriceRange } from '@/lib/product-pricing'
 import type { CatalogProduct } from '@/lib/catalog'
@@ -91,7 +92,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
           <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
             {product.supplier_verified && (
               <span className="inline-flex items-center gap-0.5 font-bold text-sky-700">
-                <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+                <VerifiedBadge className="h-3.5 w-3.5" />
                 {tr('Vérifié')}
               </span>
             )}

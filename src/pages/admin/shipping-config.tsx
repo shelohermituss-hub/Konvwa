@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Flag, emojiFromCode } from '@/components/shared/flag'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -146,7 +147,7 @@ function WarehousesSection() {
       code: form.code.trim().toUpperCase(),
       name: form.name.trim(),
       country_code: form.country_code.trim().toUpperCase() || 'CN',
-      flag_emoji: form.flag_emoji || null,
+      flag_emoji: emojiFromCode(form.country_code) || null,
       address_line1: form.address_line1.trim() || null,
       address_line2: form.address_line2.trim() || null,
       address_line3: form.address_line3.trim() || null,
@@ -197,7 +198,7 @@ function WarehousesSection() {
           <div className="divide-y divide-gray-100">
             {items.map(w => (
               <div key={w.id} className="flex items-start gap-3 px-4 py-3.5">
-                <span className="text-2xl leading-none shrink-0 mt-0.5">{w.flag_emoji || '🏭'}</span>
+                <span className="text-2xl leading-none shrink-0 mt-0.5"><Flag code={w.country_code} emoji={w.flag_emoji} /></span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold">{w.name}</p>
@@ -256,8 +257,7 @@ function WarehousesSection() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-sm font-semibold">{tr('Drapeau')}</Label>
-                <Input placeholder="🇺🇸" value={form.flag_emoji} className="rounded-xl text-xl"
-                  onChange={e => setForm(p => ({ ...p, flag_emoji: e.target.value }))} />
+                <div className="flex h-10 items-center rounded-xl border border-input bg-muted/30 px-3 text-xl"><Flag code={form.country_code} /></div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-sm font-semibold">{tr('Code postal')}</Label>
@@ -490,7 +490,7 @@ function OriginsSection() {
     setSaving(true)
     if (editing) {
       const { error } = await supabase.from('shipping_origins').update({
-        name: form.name.trim(), country_code: form.country_code.toUpperCase(), city: form.city.trim(), flag_emoji: form.flag_emoji,
+        name: form.name.trim(), country_code: form.country_code.toUpperCase(), city: form.city.trim(), flag_emoji: emojiFromCode(form.country_code),
       }).eq('id', editing.id)
       if (error) { toast.error(tr('Erreur lors de la mise à jour.')); setSaving(false); return }
       toast.success(tr('Origine mise à jour.'))
@@ -498,7 +498,7 @@ function OriginsSection() {
       const maxOrder = items.reduce((m, i) => Math.max(m, i.sort_order), 0)
       const { error } = await supabase.from('shipping_origins').insert({
         name: form.name.trim(), country_code: form.country_code.toUpperCase(), city: form.city.trim(),
-        flag_emoji: form.flag_emoji, sort_order: maxOrder + 1,
+        flag_emoji: emojiFromCode(form.country_code), sort_order: maxOrder + 1,
       })
       if (error) { toast.error(tr('Erreur lors de la création.')); setSaving(false); return }
       toast.success(tr('Origine ajoutée.'))
@@ -540,7 +540,7 @@ function OriginsSection() {
           <div className="divide-y divide-gray-100">
             {items.map(item => (
               <div key={item.id} className="flex items-center gap-3 px-4 py-3.5">
-                <span className="text-2xl leading-none shrink-0">{item.flag_emoji || '🏳️'}</span>
+                <span className="text-2xl leading-none shrink-0"><Flag code={item.country_code} emoji={item.flag_emoji} /></span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground">{item.city} · {item.country_code}</p>
@@ -582,9 +582,8 @@ function OriginsSection() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">{tr('Emoji drapeau')}</Label>
-              <Input placeholder="🇨🇳" value={form.flag_emoji}
-                onChange={e => setForm(p => ({ ...p, flag_emoji: e.target.value }))} className="rounded-xl text-xl" />
+              <Label className="text-sm font-semibold">{tr('Drapeau')}</Label>
+              <div className="flex h-10 items-center rounded-xl border border-input bg-muted/30 px-3 text-xl"><Flag code={form.country_code} /></div>
             </div>
           </div>
           <DialogFooter>
@@ -1120,7 +1119,7 @@ function ShippingRatesSection() {
                     <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full shrink-0">{item.type_label}</span>
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                    {org && <span>{org.flag_emoji ?? ''} {org.name}</span>}
+                    {org && <span><Flag emoji={org.flag_emoji} /> {org.name}</span>}
                     {transit && <span>{transit}</span>}
                     <span className="font-semibold text-foreground">{rate}</span>
                     {item.min_amount_usd > 0 && <span>min ${item.min_amount_usd}</span>}
@@ -1206,7 +1205,7 @@ function ShippingRatesSection() {
                 <SelectTrigger className="rounded-xl"><SelectValue placeholder={tr('Toutes origines')} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none">{tr('Toutes origines')}</SelectItem>
-                  {origins.map(o => <SelectItem key={o.id} value={o.id}>{o.flag_emoji} {o.name}</SelectItem>)}
+                  {origins.map(o => <SelectItem key={o.id} value={o.id}><Flag emoji={o.flag_emoji} /> {o.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

@@ -24,8 +24,9 @@ interface Form {
   sort_order: string
   starts_at: string; ends_at: string
   active: boolean
+  placement: 'banner' | 'feed' | 'both'
 }
-const EMPTY: Form = { eyebrow: '', eyebrow_en: '', title: '', title_en: '', subtitle: '', subtitle_en: '', link_url: '', sort_order: '0', starts_at: '', ends_at: '', active: true }
+const EMPTY: Form = { placement: 'banner', eyebrow: '', eyebrow_en: '', title: '', title_en: '', subtitle: '', subtitle_en: '', link_url: '', sort_order: '0', starts_at: '', ends_at: '', active: true }
 
 // <input type="datetime-local"> works in local time, the database stores UTC
 const toLocalInput = (iso: string | null) => {
@@ -74,7 +75,7 @@ export function AdminAdsPage() {
     setForm({
       eyebrow: ad.eyebrow ?? '', eyebrow_en: ad.eyebrow_en ?? '', title: ad.title, title_en: ad.title_en ?? '',
       subtitle: ad.subtitle ?? '', subtitle_en: ad.subtitle_en ?? '', link_url: ad.link_url ?? '',
-      sort_order: String(ad.sort_order), starts_at: toLocalInput(ad.starts_at), ends_at: toLocalInput(ad.ends_at), active: ad.active,
+      sort_order: String(ad.sort_order), starts_at: toLocalInput(ad.starts_at), ends_at: toLocalInput(ad.ends_at), active: ad.active, placement: ad.placement,
     })
     setFile(null); setRemoveMedia(false); setOpen(true)
   }
@@ -112,7 +113,7 @@ export function AdminAdsPage() {
       eyebrow: nz(form.eyebrow), eyebrow_en: nz(form.eyebrow_en), title: form.title.trim(), title_en: nz(form.title_en),
       subtitle: nz(form.subtitle), subtitle_en: nz(form.subtitle_en), link_url: nz(link),
       sort_order: Number.isFinite(Number(form.sort_order)) ? Math.trunc(Number(form.sort_order)) : 0,
-      starts_at: starts, ends_at: ends, active: form.active, media_path, media_type,
+      starts_at: starts, ends_at: ends, active: form.active, media_path, media_type, placement: form.placement,
     }
     const { error } = editing
       ? await supabase.from('ad_banners').update(row).eq('id', editing.id)
@@ -146,7 +147,7 @@ export function AdminAdsPage() {
     id: 'preview', eyebrow: nz(form.eyebrow), eyebrow_en: null, title: form.title || tr('Titre de la publicité'), title_en: null,
     subtitle: nz(form.subtitle), subtitle_en: null,
     media_type: file ? (file.type.startsWith('video/') ? 'video' : 'image') : (editing?.media_type ?? 'image'),
-    media_path: removeMedia ? null : editing?.media_path ?? null, link_url: null, active: true, sort_order: 0, starts_at: null, ends_at: null,
+    media_path: removeMedia ? null : editing?.media_path ?? null, link_url: null, active: true, sort_order: 0, starts_at: null, ends_at: null, placement: form.placement,
   }
   const previewSrc = file ? filePreview : removeMedia ? null : undefined
   const hasMedia = !!file || (!!editing?.media_path && !removeMedia)
@@ -234,6 +235,16 @@ export function AdminAdsPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5"><Label>{tr('Début de diffusion')}</Label><Input type="datetime-local" value={form.starts_at} onChange={set('starts_at')} className="rounded-xl" /></div>
                 <div className="space-y-1.5"><Label>{tr('Fin de diffusion')}</Label><Input type="datetime-local" value={form.ends_at} onChange={set('ends_at')} className="rounded-xl" /></div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>{tr('Où l\'afficher')}</Label>
+                <div role="radiogroup" aria-label={tr('Où l\'afficher')} className="grid grid-cols-3 gap-1.5">
+                  {([['banner', tr('Bannière')], ['feed', tr('Flux produits')], ['both', tr('Les deux')]] as const).map(([k, label]) => (
+                    <button key={k} type="button" role="radio" aria-checked={form.placement === k} onClick={() => setForm((f) => ({ ...f, placement: k }))}
+                      className={cn('rounded-lg border py-2 text-xs font-semibold', form.placement === k ? 'border-primary bg-primary/5 text-primary' : 'border-gray-200 text-muted-foreground')}>{label}</button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-muted-foreground">{tr('Dans le flux produits, la publicité prend la forme d\'une carte produit marquée « Sponsorisé » : image, titre, texte et annonceur (petit titre).')}</p>
               </div>
               <label className="flex items-center gap-2 text-sm font-medium"><Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} />{tr('Publicité active')}</label>
             </div>

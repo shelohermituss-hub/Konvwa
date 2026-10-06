@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Flag } from '@/components/shared/flag'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import {
@@ -235,7 +236,7 @@ export function HomePage() {
       <section className="mx-auto grid w-full max-w-6xl gap-12 px-4 pt-6 pb-16 sm:px-6 md:grid-cols-2 md:items-center md:pt-10 md:pb-28">
         <div className="flex flex-col gap-6">
           <span className="inline-flex w-fit items-center rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            {tr('🇭🇹 Service d\'importation haïtien')}
+            <Flag code="HT" className="mr-1.5" />{tr('Service d\'importation haïtien')}
           </span>
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             {tr('Importez depuis')}{' '}

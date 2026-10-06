@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { BadgeCheck, EyeOff, ImagePlus, Loader2, Star, X } from 'lucide-react'
+import { VerifiedBadge } from '@/components/shared/verified-badge'
+import { EyeOff, ImagePlus, Loader2, Star, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -167,7 +168,7 @@ export function ProductReviews({ productId }: { productId: string }) {
               <div className="flex items-center justify-between gap-2">
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-sm font-semibold">{r.author_name}</span>
-                  <span className="inline-flex shrink-0 items-center gap-0.5 text-[10px] font-bold text-sky-700"><BadgeCheck className="h-3 w-3" aria-hidden />{tr('Achat vérifié')}</span>
+                  <span className="inline-flex shrink-0 items-center gap-0.5 text-[10px] font-bold text-sky-700"><VerifiedBadge className="h-3 w-3" label={tr('Achat vérifié')} />{tr('Achat vérifié')}</span>
                 </span>
                 <time className="shrink-0 text-xs text-muted-foreground" dateTime={r.created_at}>
                   {new Date(r.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })}

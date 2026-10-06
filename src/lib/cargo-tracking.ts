@@ -18,6 +18,43 @@ const POST_PAYMENT: TimelineItem[] = [
   { key: 'delivered',          label: tr('Terminé'),    description: tr('Cargaison livrée'),            icon: TIMELINE_ICONS.livre },
 ]
 
+export interface CargoForEstimate {
+  status: string
+  tracking_status?: string | null
+  shipment?: { status: string; departure_date?: string | null; estimated_arrival?: string | null } | null
+  quoted_rate?: { transit_days_min: number | null; transit_days_max: number | null } | null
+}
+
+export type CargoEstimate =
+  | { kind: 'date'; date: Date }
+  | { kind: 'days'; min: number; max: number }
+  | null
+
+const DAY = 86_400_000
+const DONE = new Set(['arrived_haiti', 'customs_processing', 'out_for_delivery', 'delivered'])
+
+/**
+ * When the cargo should reach Haiti: the batch's estimated arrival when known; otherwise the transit time of the shipping method
+ * (counted from the batch departure when there is one). Nothing once it has arrived, or before a method / batch is known.
+ */
+export function cargoEstimate(req: CargoForEstimate): CargoEstimate {
+  if (!['quoted', 'deposit_paid', 'invoiced'].includes(req.status)) return null
+  const track = req.tracking_status ?? req.shipment?.status
+  if (track && DONE.has(track)) return null
+  const eta = req.shipment?.estimated_arrival ? new Date(req.shipment.estimated_arrival) : null
+  if (eta && !Number.isNaN(eta.getTime())) return { kind: 'date', date: eta }
+  const min = req.quoted_rate?.transit_days_min ?? null
+  const max = req.quoted_rate?.transit_days_max ?? min
+  if (min == null || max == null) return null
+  const dep = req.shipment?.departure_date ? new Date(req.shipment.departure_date) : null
+  if (dep && !Number.isNaN(dep.getTime())) {
+    const from = new Date(dep.getTime() + min * DAY)
+    const to = new Date(dep.getTime() + max * DAY)
+    return { kind: 'date', date: to.getTime() === from.getTime() ? from : to }
+  }
+  return { kind: 'days', min, max }
+}
+
 export interface CargoForTracking {
   status: string
   payment_plan?: string | null

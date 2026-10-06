@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Flag } from '@/components/shared/flag'
 import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -7,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Package, MapPin, ChevronUp, Plus, Loader2, Copy, Check,
-  Tag, AlertCircle, ChevronRight,
+  Tag, AlertCircle, ChevronRight, Clock,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
 import IconNavire from 'flat-color-icons/svg/in_transit.svg'
-import { cargoStatusLabel } from '@/lib/cargo-tracking'
+import { cargoEstimate, cargoStatusLabel } from '@/lib/cargo-tracking'
 
 import { tr, LOCALE_TAG, DATE_LOCALE } from '@/lib/i18n'
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -68,7 +69,8 @@ interface ShippingRequest {
   shipment_id: string | null
   payment_plan: string | null
   tracking_status: string | null
-  shipment: { id: string; status: string } | null
+  shipment: { id: string; status: string; departure_date: string | null; estimated_arrival: string | null } | null
+  quoted_rate: { transit_days_min: number | null; transit_days_max: number | null } | null
   warehouse: Warehouse | null
   product_rate_category: ProductRateCategory | null
 }
@@ -207,6 +209,7 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
   const isQuoted      = req.status === 'quoted'
   const isInvoiced    = req.status === 'invoiced'
   const isDeposit     = req.status === 'deposit_paid'
+  const estimate      = cargoEstimate(req)
   const dueAt         = req.payment_due_at ? new Date(req.payment_due_at) : null
   const lateDays      = isQuoted && dueAt && dueAt.getTime() < Date.now()
     ? Math.ceil((Date.now() - dueAt.getTime()) / 86_400_000) : 0
@@ -260,6 +263,14 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
         <p className="text-[10px] text-muted-foreground mt-0.5">
           {new Date(req.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
+        {estimate && (
+          <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700">
+            <Clock className="h-3 w-3" aria-hidden />
+            {estimate.kind === 'date'
+              ? tr('Arrivée estimée : {0}', estimate.date.toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' }))
+              : tr('Délai estimé : {0}', estimate.min === estimate.max ? tr('{0} jours', estimate.min) : tr('{0}–{1} jours', estimate.min, estimate.max))}
+          </p>
+        )}
       </div>
 
       <div className="shrink-0 flex flex-col items-end gap-1">
@@ -405,8 +416,8 @@ function QuoteRequestSheet({
               </p>
               <div className="grid grid-cols-2 gap-2.5">
                 {([
-                  { code: 'CN', flag: '🇨🇳', label: tr('Chine'), sub: 'Shenzhen / Foshan' },
-                  { code: 'US', flag: '🇺🇸', label: tr('États-Unis'), sub: 'Orlando, FL' },
+                  { code: 'CN', label: tr('Chine'), sub: 'Shenzhen / Foshan' },
+                  { code: 'US', label: tr('États-Unis'), sub: 'Orlando, FL' },
                 ] as const).map(o => (
                   <button
                     key={o.code}
@@ -419,7 +430,7 @@ function QuoteRequestSheet({
                         : 'border-gray-200 bg-[#F8F9FB]'
                     )}
                   >
-                    <span className="text-2xl">{o.flag}</span>
+                    <Flag code={o.code} className="text-2xl" />
                     <p className={cn(
                       'text-sm font-bold leading-tight mt-1.5',
                       originCountry === o.code ? 'text-primary' : 'text-foreground'
@@ -636,7 +647,8 @@ export function ShipmentsPage() {
           package_count, origin_country, destination_address, shipment_id, payment_plan, tracking_status,
           warehouse:warehouses(id, code, name, country_code, flag_emoji, address_line1, address_line2, address_line3, city, state, postal_code, contact_info, instructions, for_category),
           product_rate_category:product_rate_categories(id, name, slug, rate_multiplier, description),
-          shipment:shipments(id, status)
+          shipment:shipments(id, status, departure_date, estimated_arrival),
+          quoted_rate:shipping_rates!quoted_rate_id(transit_days_min, transit_days_max)
         `)
         .eq('user_id', user.id)
         .eq('request_type', 'shipping')

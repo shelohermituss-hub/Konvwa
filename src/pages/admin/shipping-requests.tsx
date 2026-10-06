@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Flag } from '@/components/shared/flag'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -338,11 +339,11 @@ function AdminActionSheet({
             {request.profiles?.phone && <p className="text-muted-foreground">{request.profiles.phone}</p>}
             <p className="text-muted-foreground">
               {request.product_rate_category?.name ?? '—'} · {' '}
-              {request.warehouse?.flag_emoji} {request.warehouse?.name ?? '—'}
+              <Flag emoji={request.warehouse?.flag_emoji} /> {request.warehouse?.name ?? '—'}
             </p>
             {request.origin_country && (
               <p className="text-muted-foreground">
-                {tr('Origine :')}{' '}{request.origin_country === 'CN' ? tr('🇨🇳 Chine') : request.origin_country === 'US' ? tr('🇺🇸 États-Unis') : request.origin_country}
+                {tr('Origine :')}{' '}<Flag code={request.origin_country} /> {request.origin_country === 'CN' ? tr('Chine') : request.origin_country === 'US' ? tr('États-Unis') : request.origin_country}
               </p>
             )}
             <p className="text-muted-foreground">{tr('Créé le')}{' '}{fmtDate(request.created_at)}</p>
@@ -655,7 +656,7 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
             {request.profiles?.full_name ?? tr('Client inconnu')}
           </p>
           <p className="text-[11px] text-muted-foreground truncate">
-            {request.origin_country === 'CN' ? '🇨🇳' : request.origin_country === 'US' ? '🇺🇸' : ''}{' '}
+            <Flag code={request.origin_country} />{' '}
             {request.product_rate_category?.name ?? '—'} ·{' '}
             {request.warehouse?.code ?? '—'}
             {request.package_count != null && tr(' · {0} colis', request.package_count)}
@@ -684,7 +685,7 @@ function RequestCard({ request, onAction }: { request: ShippingRequest; onAction
               <div>
                 <p className="text-muted-foreground">{tr('Origine')}</p>
                 <p className="font-medium">
-                  {request.origin_country === 'CN' ? tr('🇨🇳 Chine') : request.origin_country === 'US' ? tr('🇺🇸 États-Unis') : request.origin_country}
+                  <Flag code={request.origin_country} /> {request.origin_country === 'CN' ? tr('Chine') : request.origin_country === 'US' ? tr('États-Unis') : request.origin_country}
                 </p>
               </div>
             )}

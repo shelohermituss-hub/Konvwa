@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Flag } from '@/components/shared/flag'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -521,7 +522,7 @@ export function SubmitPage() {
                 <div className="space-y-1">
                   <Label className="text-sm font-bold">{tr('Destination')}</Label>
                   <div className="h-12 rounded-2xl bg-[#F0F1F5] flex items-center px-4 gap-2.5">
-                    <span className="text-lg leading-none">🇭🇹</span>
+                    <Flag code="HT" className="text-lg" />
                     <span className="text-sm font-semibold text-foreground">{tr('Haïti')}</span>
                     <span className="ml-auto rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-0.5">
                       {tr('Disponible')}
@@ -808,9 +809,9 @@ export function SubmitPage() {
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{tr('Trajet')}</p>
                         <p className="text-sm font-semibold text-foreground leading-tight">
-                          {origins.find(o => o.id === shipFromId)?.flag_emoji}{' '}
+                          <Flag emoji={origins.find(o => o.id === shipFromId)?.flag_emoji} />{' '}
                           {origins.find(o => o.id === shipFromId)?.name || '…'}
-                          {' → 🇭🇹 '}
+                          {' → '}<Flag code="HT" />{' '}
                           {regions.find(r => r.id === regionId)?.name || tr('Haïti')}
                           {cities.find(c => c.id === cityId) ? ` · ${cities.find(c => c.id === cityId)!.name}` : ''}
                         </p>

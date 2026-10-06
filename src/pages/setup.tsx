@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Flag } from '@/components/shared/flag'
 import { Navigate, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, BadgeCheck, Bell, Camera, Check, CheckCircle2, Download, Loader2, MapPin, ShieldCheck, User,
@@ -224,7 +225,7 @@ export function SetupPage() {
               <div className="space-y-1.5">
                 <Label htmlFor="s-phone" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tr('Téléphone')}</Label>
                 <div className="flex gap-2">
-                  <div className="flex h-11 shrink-0 select-none items-center rounded-xl bg-[#F0F1F5] px-3 text-sm font-semibold text-muted-foreground">🇭🇹 +509</div>
+                  <div className="flex h-11 shrink-0 select-none items-center gap-1.5 rounded-xl bg-[#F0F1F5] px-3 text-sm font-semibold text-muted-foreground"><Flag code="HT" /> +509</div>
                   <Input id="s-phone" type="tel" inputMode="tel" autoComplete="tel-national" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="XXXX-XXXX" className="h-11 flex-1 rounded-xl bg-[#F0F1F5] border-0" />
                 </div>
                 <p className="text-xs text-muted-foreground">{tr('Idéalement le numéro de votre compte MonCash ou NatCash.')}</p>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { MasonryGrid } from '@/components/shared/masonry-grid'
+import { ProductFeed } from '@/components/shared/product-feed'
 import { haptics } from '@/lib/haptic'
 import { Link, useNavigate } from 'react-router-dom'
 import { AdBanners } from '@/components/shared/ad-banners'
@@ -333,7 +333,7 @@ export function DashboardPage() {
           </div>
         ) : (
           /* ── Staggered 2-column grid ── */
-          <MasonryGrid items={products} getKey={(p) => p.id} render={(p) => (
+          <ProductFeed products={products} render={(p) => (
             <ProductCard product={resellerPriced(p, isReseller)} onPress={() => navigate(`/products/${p.id}`)} />
           )} />
         )}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Flag } from '@/components/shared/flag'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -328,7 +329,7 @@ function PersonalInfoForm({
         <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{tr('Téléphone')}</Label>
         <div className="flex gap-2">
           <div className="flex h-11 items-center px-3 rounded-xl bg-[#F0F1F5] text-sm font-semibold text-muted-foreground shrink-0 select-none">
-            🇭🇹 +509
+            <Flag code="HT" className="mr-1.5" /> +509
           </div>
           <Input
             type="tel"

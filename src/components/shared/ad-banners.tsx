@@ -19,9 +19,10 @@ export interface Ad {
   sort_order: number
   starts_at: string | null
   ends_at: string | null
+  placement: 'banner' | 'feed' | 'both'
 }
 
-export const AD_COLUMNS = 'id, eyebrow, eyebrow_en, title, title_en, subtitle, subtitle_en, media_type, media_path, link_url, active, sort_order, starts_at, ends_at'
+export const AD_COLUMNS = 'id, eyebrow, eyebrow_en, title, title_en, subtitle, subtitle_en, media_type, media_path, link_url, active, sort_order, starts_at, ends_at, placement'
 
 export function adMediaUrl(path: string | null): string | null {
   return path ? supabase.storage.from('ads').getPublicUrl(path).data.publicUrl : null
@@ -76,7 +77,7 @@ export function AdBanners() {
 
   useEffect(() => {
     let cancelled = false
-    void supabase.from('ad_banners').select(AD_COLUMNS).eq('active', true)
+    void supabase.from('ad_banners').select(AD_COLUMNS).eq('active', true).in('placement', ['banner', 'both'])
       .order('sort_order', { ascending: true }).order('created_at', { ascending: false }).limit(6)
       .then(({ data }) => { if (!cancelled && data) setAds(data as Ad[]) })
     return () => { cancelled = true }

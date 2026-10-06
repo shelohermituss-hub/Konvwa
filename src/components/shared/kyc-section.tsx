@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BadgeCheck, Clock, Loader2, ShieldAlert, Upload } from 'lucide-react'
+import { VerifiedBadge } from '@/components/shared/verified-badge'
+import { Clock, Loader2, ShieldAlert, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
@@ -90,7 +91,7 @@ export function KycSection() {
   return (
     <div className="mt-5 border-t border-border/50 pt-5">
       <p className="flex items-center gap-1.5 text-sm font-semibold">
-        {kyc?.status === 'approved' ? <BadgeCheck className="h-4 w-4 text-emerald-700" />
+        {kyc?.status === 'approved' ? <VerifiedBadge className="h-4 w-4" label={tr('Vérifiée')} />
           : kyc?.status === 'pending' ? <Clock className="h-4 w-4 text-amber-500" />
           : <ShieldAlert className="h-4 w-4 text-muted-foreground" />}
         {tr('Vérification d\'identité')}

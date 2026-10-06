@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { MasonryGrid } from '@/components/shared/masonry-grid'
+import { ProductFeed } from '@/components/shared/product-feed'
+import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  BadgeCheck, CheckCircle2, ChevronDown, ChevronLeft, Headset, Loader2, Lock, MessageCircle, Minus, Package,
+  CheckCircle2, ChevronDown, ChevronLeft, Headset, Loader2, Lock, MessageCircle, Minus, Package,
   Plus, Search, Share2, ShieldCheck, ShoppingCart, Star, Store, Truck, Wallet, Zap,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -583,7 +584,7 @@ export function ProductDetailPage() {
                 <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
                   {product.supplier_verified && (
                     <span className="inline-flex items-center gap-0.5 font-bold text-sky-700">
-                      <BadgeCheck className="h-4 w-4" aria-hidden />{' '}{tr('Vérifié')}
+                      <VerifiedBadge className="h-4 w-4" />{' '}{tr('Vérifié')}
                     </span>
                   )}
                   {supplierMeta && <span>{supplierMeta}</span>}
@@ -605,7 +606,7 @@ export function ProductDetailPage() {
       {related.length > 0 && (
         <div id="section-related" className="scroll-mt-28 px-3 pt-4">
           <h2 className="mb-3 px-1 text-base font-bold tracking-tight">{tr('Autres produits')}</h2>
-          <MasonryGrid items={related} getKey={(p) => p.id} render={(p) => (
+          <ProductFeed products={related} render={(p) => (
             <ProductCard product={p} onPress={() => navigate(`/products/${p.id}`)} />
           )} />
         </div>

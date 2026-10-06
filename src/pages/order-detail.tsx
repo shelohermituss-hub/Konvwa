@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Flag } from '@/components/shared/flag'
 import { Link, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -565,7 +566,7 @@ export function OrderDetailPage() {
                   {tr('Destination')}
                 </span>
                 <span className="text-sm font-semibold text-foreground">
-                  {tr('🇭🇹 Haïti —')}{' '}{order.quotes.product_requests.haiti_regions.name}
+                  <Flag code="HT" />{' '}{tr('Haïti —')}{' '}{order.quotes.product_requests.haiti_regions.name}
                   {order.quotes.product_requests.haiti_cities && (
                     <span className="text-muted-foreground font-normal">
                       , {order.quotes.product_requests.haiti_cities.name}

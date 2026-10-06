@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Flag } from '@/components/shared/flag'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft, Package, Clock, CheckCircle2,
@@ -15,7 +16,7 @@ import { ShippingQuotePanel, ShippingBalancePanel } from '@/components/shared/sh
 import { PackagePhotos } from '@/components/shared/package-photos'
 import { ShippingInsurance } from '@/components/shared/shipping-insurance'
 import { TimelineList } from '@/components/shared/timeline-step'
-import { cargoSteps, cargoActiveIndex, cargoStatusLabel } from '@/lib/cargo-tracking'
+import { cargoSteps, cargoActiveIndex, cargoStatusLabel, cargoEstimate } from '@/lib/cargo-tracking'
 
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -46,7 +47,8 @@ interface ShippingRequest {
   payment_due_at: string | null
   paid_amount_htg: number | null
   late_fee_htg: number | null
-  shipment: { id: string; status: string } | null
+  shipment: { id: string; status: string; departure_date: string | null; estimated_arrival: string | null } | null
+  quoted_rate: { transit_days_min: number | null; transit_days_max: number | null } | null
   warehouse: {
     id: string; code: string; name: string
     flag_emoji: string | null; country_code: string
@@ -106,7 +108,8 @@ export function ShipmentDetailPage() {
             city, state, postal_code, contact_info, instructions
           ),
           product_rate_category:product_rate_categories(id, name, slug, rate_multiplier),
-          shipment:shipments(id, status)
+          shipment:shipments(id, status, departure_date, estimated_arrival),
+          quoted_rate:shipping_rates!quoted_rate_id(transit_days_min, transit_days_max)
         `)
         .eq('id', id)
         .eq('user_id', user.id)
@@ -154,6 +157,7 @@ export function ShipmentDetailPage() {
   const isQuoted      = req.status === 'quoted'
   const isInvoiced    = req.status === 'invoiced'
   const isDeposit     = req.status === 'deposit_paid'
+  const estimate      = cargoEstimate(req)
 
   return (
     <div className="min-h-full bg-[#F4F5F7] pb-10">
@@ -223,6 +227,17 @@ export function ShipmentDetailPage() {
               {req.shipment
                 ? <>{tr('Statut actuel de votre cargaison :')}{' '}<strong>{cargoStatusLabel(req)}</strong>.</>
                 : tr('Votre cargaison sera assignée à une prochaine expédition.')}
+            </p>
+          </div>
+        )}
+
+        {estimate && (
+          <div className="flex items-center gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+            <Clock className="h-4 w-4 shrink-0 text-sky-700" aria-hidden />
+            <p className="text-sm font-medium text-sky-900">
+              {estimate.kind === 'date'
+                ? <>{tr('Arrivée estimée en Haïti :')} <strong>{estimate.date.toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })}</strong></>
+                : <>{tr('Délai estimé :')} <strong>{estimate.min === estimate.max ? tr('{0} jours', estimate.min) : tr('{0}–{1} jours', estimate.min, estimate.max)}</strong> {tr('après le départ de la cargaison.')}</>}
             </p>
           </div>
         )}
@@ -375,8 +390,9 @@ export function ShipmentDetailPage() {
                   <MapPin className="h-3.5 w-3.5" />{tr('Origine')}
                 </span>
                 <span className="text-sm font-semibold">
-                  {req.origin_country === 'CN' ? tr('🇨🇳 Chine') :
-                   req.origin_country === 'US' ? tr('🇺🇸 États-Unis') : req.origin_country}
+                  <Flag code={req.origin_country} />{' '}
+                  {req.origin_country === 'CN' ? tr('Chine') :
+                   req.origin_country === 'US' ? tr('États-Unis') : req.origin_country}
                 </span>
               </div>
             )}

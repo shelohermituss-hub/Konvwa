@@ -36,9 +36,9 @@ const SIDEBAR_EXTRAS = [
   { label: tr('Support'),        Icon: HelpCircle,    path: '/support' },
 ]
 
-const LANGUAGES: { code: Lang; label: string; flag: string }[] = [
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
-  { code: 'en', label: 'English',  flag: '🇺🇸' },
+const LANGUAGES: { code: Lang; label: string }[] = [
+  { code: 'fr', label: 'Français' },
+  { code: 'en', label: 'English' },
 ]
 
 function ProfileMenu() {
@@ -133,7 +133,7 @@ function LanguageSwitcher() {
             className="rounded-lg cursor-pointer px-3 py-2 gap-3"
             onClick={() => setLang(l.code)}
           >
-            <span className="text-base">{l.flag}</span>
+            <span className="flex h-6 w-8 items-center justify-center rounded-md bg-muted text-[10px] font-bold uppercase text-muted-foreground">{l.code}</span>
             <span className="flex-1 text-sm font-medium">{t(`lang.${l.code}`)}</span>
             {lang === l.code && <Check className="h-3.5 w-3.5 text-primary" />}
           </DropdownMenuItem>

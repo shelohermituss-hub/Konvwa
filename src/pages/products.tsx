@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { MasonryGrid } from '@/components/shared/masonry-grid'
+import { ProductFeed } from '@/components/shared/product-feed'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, ShoppingCart, Loader2, Tag, SlidersHorizontal } from 'lucide-react'
 import { priceRange } from '@/lib/product-pricing'
@@ -215,7 +215,7 @@ export function ProductsPage() {
             <p className="text-xs text-muted-foreground text-center max-w-[200px] leading-relaxed">{t('products.empty_sub')}</p>
           </div>
         ) : (
-          <MasonryGrid items={filtered} getKey={(p) => p.id} render={(product) => (
+          <ProductFeed products={filtered} render={(product) => (
             <ProductCard product={product} onPress={() => navigate(`/products/${product.id}`)} />
           )} />
         )}
