@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { MasonryGrid } from '@/components/shared/masonry-grid'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Heart } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -50,9 +51,7 @@ export function WishlistPage() {
             <button onClick={() => navigate('/products')} className="mt-2 rounded-full bg-primary px-5 py-2 text-xs font-bold text-white">{tr('Voir les produits')}</button>
           </div>
         ) : (
-          <div className="columns-2 gap-3">
-            {products.map((p) => <ProductCard key={p.id} product={p} onPress={() => navigate(`/products/${p.id}`)} />)}
-          </div>
+          <MasonryGrid items={products} getKey={(p) => p.id} render={(p) => <ProductCard product={p} onPress={() => navigate(`/products/${p.id}`)} />} />
         )}
       </div>
     </div>

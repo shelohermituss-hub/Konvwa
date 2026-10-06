@@ -524,6 +524,8 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   ASSERT (r ->> 'success')::boolean AND (r ->> 'us_count')::int = 1 AND jsonb_array_length(r -> 'options') > 0, 'no checkout options: ' || r::text;
   ASSERT (r ->> 'kg')::numeric = 2.4, 'weight not summed: ' || r::text;
   rate := (r -> 'options' -> 0 ->> 'rate_id')::uuid; ship := (r -> 'options' -> 0 ->> 'amount_htg')::numeric;
+  ASSERT NOT EXISTS (SELECT 1 FROM jsonb_array_elements(r -> 'options') o WHERE NOT public.rate_ships_from((o ->> 'rate_id')::uuid, 'US')), 'a non-US shipping method is offered for a US product';
+  ASSERT (public.create_product_checkout(jsonb_build_array(jsonb_build_object('product_id', us, 'quantity', 1)), (SELECT sr.id FROM shipping_rates sr JOIN shipping_origins so ON so.id = sr.origin_id WHERE upper(so.country_code) <> 'US' LIMIT 1)) ->> 'success')::boolean = false, 'US product ordered with a non-US shipping method';
   ASSERT ship > 0, 'zero shipping';
   r := public.checkout_shipping_options(jsonb_build_array(jsonb_build_object('product_id', us_nopkg, 'quantity', 1)));
   ASSERT jsonb_array_length(r -> 'missing') = 1 AND jsonb_array_length(r -> 'options') = 0, 'product without package not flagged';

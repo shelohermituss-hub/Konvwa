@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { MasonryGrid } from '@/components/shared/masonry-grid'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   BadgeCheck, CheckCircle2, ChevronDown, ChevronLeft, Headset, Loader2, Lock, MessageCircle, Minus, Package,
-  Plus, Search, Share2, ShieldCheck, ShoppingCart, Star, Store, Truck, Wallet,
+  Plus, Search, Share2, ShieldCheck, ShoppingCart, Star, Store, Truck, Wallet, Zap,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
@@ -13,6 +14,7 @@ import { formatHtg, tierRows, unitPriceFor, variantUnitPrice } from '@/lib/produ
 import { ProductCard } from '@/components/shared/product-card'
 import { ProductReviews } from '@/components/shared/product-reviews'
 import { WishlistButton } from '@/components/shared/wishlist-button'
+import { ImageViewer } from '@/components/shared/image-viewer'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -58,6 +60,7 @@ export function ProductDetailPage() {
   const [adding, setAdding] = useState(false)
   const [activeImg, setActiveImg] = useState(0)
   const [variantId, setVariantId] = useState<string | null>(null)
+  const [viewer, setViewer] = useState<number | null>(null)
   const [titleOpen, setTitleOpen] = useState(false)
   const [allSpecs, setAllSpecs] = useState(false)
   const [allOptions, setAllOptions] = useState(false)
@@ -130,6 +133,17 @@ export function ProductDetailPage() {
       description: `${quantity} × ${product.name}${chosen ? ` (${variantLabel(chosen)})` : ''}`,
       action: { label: tr('Voir panier'), onClick: () => navigate('/cart') },
     })
+  }
+
+  // "Buy": straight to the checkout with this product only (the cart is left untouched)
+  function handleBuyNow() {
+    if (!product) return
+    if (variants.length > 0 && !chosen) {
+      toast.error(tr('Choisissez une option avant d\'acheter.'))
+      document.getElementById('section-variants')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+    navigate('/checkout', { state: { buyNow: { product_id: product.id, variant_id: chosen?.id ?? null, quantity } } })
   }
 
   async function handleShare() {
@@ -285,7 +299,8 @@ export function ProductDetailPage() {
                     src={img}
                     alt={i === 0 ? product.name : ''}
                     loading={i === 0 ? 'eager' : 'lazy'}
-                    className="h-full w-full shrink-0 snap-center object-cover"
+                    onClick={() => setViewer(i)}
+                    className="h-full w-full shrink-0 cursor-zoom-in snap-center object-cover"
                   />
                 ))
               ) : (
@@ -590,12 +605,18 @@ export function ProductDetailPage() {
       {related.length > 0 && (
         <div id="section-related" className="scroll-mt-28 px-3 pt-4">
           <h2 className="mb-3 px-1 text-base font-bold tracking-tight">{tr('Autres produits')}</h2>
-          <div className="columns-2 gap-3">
-            {related.map((p) => (
-              <ProductCard key={p.id} product={p} onPress={() => navigate(`/products/${p.id}`)} />
-            ))}
-          </div>
+          <MasonryGrid items={related} getKey={(p) => p.id} render={(p) => (
+            <ProductCard product={p} onPress={() => navigate(`/products/${p.id}`)} />
+          )} />
         </div>
+      )}
+
+      {viewer !== null && (
+        <ImageViewer
+          images={gallery} index={viewer} alt={product.name}
+          onIndexChange={setViewer}
+          onClose={() => { goToImage(viewer); setViewer(null) }}
+        />
       )}
 
       {/* Bottom action bar — z-[60] to sit above the bottom nav (z-50) */}
@@ -610,11 +631,12 @@ export function ProductDetailPage() {
             <span className="text-[11px]">{tr('Magasin')}</span>
           </button>
           <button
-            onClick={() => navigate('/support', { state: { subject: `Question sur : ${product.name}` } })}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border-2 border-foreground bg-white text-sm font-bold"
+            onClick={handleBuyNow}
+            disabled={!product.stock_available}
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border-2 border-foreground bg-white text-sm font-bold transition-opacity active:scale-[0.98] disabled:opacity-50"
           >
-            <MessageCircle className="h-4 w-4" aria-hidden />
-            {tr('Discuter ici')}
+            <Zap className="h-4 w-4" aria-hidden />
+            {tr('Acheter')}
           </button>
           <button
             onClick={handleAddToCart}

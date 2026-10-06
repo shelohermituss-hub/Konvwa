@@ -45,6 +45,13 @@ export function cartLineUnitPrice(item: CartItem): number {
   return item.product_variants ? variantUnitPrice(item.products, item.product_variants, item.quantity) : unitPriceFor(item.products, item.quantity)
 }
 
+export const CART_PRODUCT_SELECT = 'id, name, name_en, reseller_discount_pct, price_htg, price_tiers, images, unit, moq, stock_available, supplier_country'
+
+/** A product row as read for the cart/checkout: localized name and reseller prices applied (display only). */
+export function toCartProduct(p: CartItem['products'] & { name_en?: string | null }, isReseller: boolean): CartItem['products'] {
+  return resellerPriced({ ...p, name: LANG === 'en' && p.name_en?.trim() ? p.name_en : p.name }, isReseller)
+}
+
 /** Name of the chosen variant, in the current language (empty when the line has none). */
 export function cartLineVariantName(item: CartItem): string {
   const v = item.product_variants
@@ -70,7 +77,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .order('created_at', { ascending: true })
     if (data) {
       setItems((data as unknown as Array<CartItem & { products: (CartItem['products'] & { name_en?: string | null }) | null }>).map((i) => (
-        i.products ? { ...i, products: resellerPriced({ ...i.products, name: LANG === 'en' && i.products.name_en?.trim() ? i.products.name_en : i.products.name }, isReseller) } : i
+        i.products ? { ...i, products: toCartProduct(i.products, isReseller) } : i
       )) as CartItem[])
     }
     setLoading(false)

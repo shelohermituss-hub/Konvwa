@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { cartLineUnitPrice, cartLineVariantName, useCart } from '@/lib/cart-context'
+import { CART_PRODUCT_SELECT, cartLineUnitPrice, cartLineVariantName, toCartProduct, useCart, type CartItem } from '@/lib/cart-context'
+import { VARIANT_SELECT, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
 import { toast } from 'sonner'
@@ -20,8 +21,16 @@ interface WalletData {
 export function CheckoutPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const { items, total, clearCart } = useCart()
+  const { user, profile } = useAuth()
+  const { items: cartItems, total: cartTotal, clearCart: clearCartItems } = useCart()
+  // "Buy" from a product page: only that product is bought, the cart is left as it is
+  const location = useLocation()
+  const buyNow = (location.state as { buyNow?: { product_id: string; variant_id: string | null; quantity: number } } | null)?.buyNow ?? null
+  const [buyItem, setBuyItem] = useState<CartItem | null>(null)
+  const [buyLoading, setBuyLoading] = useState(!!buyNow)
+  const items = useMemo(() => (buyNow ? (buyItem ? [buyItem] : []) : cartItems), [buyNow, buyItem, cartItems])
+  const total = buyNow ? (buyItem ? cartLineUnitPrice(buyItem) * buyItem.quantity : 0) : cartTotal
+  const clearCart = async () => { if (!buyNow) await clearCartItems() }
   const { confirmPayment } = useStepUp()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [loadingWallet, setLoadingWallet] = useState(true)
@@ -34,6 +43,28 @@ export function CheckoutPage() {
   const [shippingLoading, setShippingLoading] = useState(true)
   const [shippingError, setShippingError] = useState('')
   const [rateId, setRateId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!buyNow || !user) return
+    let cancelled = false
+    void (async () => {
+      const [{ data: p }, { data: v }] = await Promise.all([
+        supabase.from('products').select(CART_PRODUCT_SELECT).eq('id', buyNow.product_id).eq('active', true).maybeSingle(),
+        buyNow.variant_id ? supabase.from('product_variants').select(VARIANT_SELECT).eq('id', buyNow.variant_id).maybeSingle() : Promise.resolve({ data: null }),
+      ])
+      if (cancelled) return
+      if (p && (!buyNow.variant_id || v)) {
+        setBuyItem({
+          id: 'buy-now', product_id: buyNow.product_id, variant_id: buyNow.variant_id, quantity: Math.max(1, Math.floor(buyNow.quantity)),
+          product_variants: v ? { ...(v as ProductVariant), price_htg: Number((v as ProductVariant).price_htg) } : null,
+          products: toCartProduct(p as unknown as CartItem['products'], !!profile?.is_reseller),
+        })
+      }
+      setBuyLoading(false)
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buyNow?.product_id, buyNow?.variant_id, user])
 
   useEffect(() => {
     if (!user) return
@@ -75,10 +106,10 @@ export function CheckoutPage() {
 
   // Redirect if cart is empty (and not just paid)
   useEffect(() => {
-    if (!success && items.length === 0 && !paying) {
+    if (!success && items.length === 0 && !paying && !buyLoading) {
       navigate('/products', { replace: true })
     }
-  }, [items, success, paying, navigate])
+  }, [items, success, paying, navigate, buyLoading])
 
   async function handlePay() {
     if (!wallet || !user) return

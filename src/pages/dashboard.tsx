@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { MasonryGrid } from '@/components/shared/masonry-grid'
 import { haptics } from '@/lib/haptic'
 import { Link, useNavigate } from 'react-router-dom'
 import { AdBanners } from '@/components/shared/ad-banners'
@@ -332,11 +333,9 @@ export function DashboardPage() {
           </div>
         ) : (
           /* ── Staggered 2-column grid ── */
-          <div className="columns-2 gap-3">
-            {products.map(p => (
-              <ProductCard key={p.id} product={resellerPriced(p, isReseller)} onPress={() => navigate(`/products/${p.id}`)} />
-            ))}
-          </div>
+          <MasonryGrid items={products} getKey={(p) => p.id} render={(p) => (
+            <ProductCard product={resellerPriced(p, isReseller)} onPress={() => navigate(`/products/${p.id}`)} />
+          )} />
         )}
 
         {/* Infinite scroll sentinel */}

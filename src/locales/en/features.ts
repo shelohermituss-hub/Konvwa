@@ -826,4 +826,11 @@ export const FEATURES_EN: Record<string, string> = {
   "Plus de 100 variantes : seules les 100 premières sont gardées.": "More than 100 variants: only the first 100 are kept.",
   "Prix {0} : {1} USD × {2} + marge {3} %": "{0} price: {1} USD × {2} + margin {3} %",
   "Prix non converti : saisissez le prix en HTG.": "Price not converted: enter the price in HTG.",
+  "Dézoomer": "Zoom out",
+  "Zoomer": "Zoom in",
+  "Photo précédente": "Previous photo",
+  "Photo suivante": "Next photo",
+  "Pincez ou touchez deux fois pour zoomer": "Pinch or double-tap to zoom",
+  "Choisissez une option avant d'acheter.": "Choose an option before buying.",
+  "Acheter": "Buy",
 }
