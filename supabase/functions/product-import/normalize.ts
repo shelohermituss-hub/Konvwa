@@ -175,3 +175,13 @@ export function extractJson(text: string): unknown {
   if (start < 0 || end <= start) return null
   try { return JSON.parse(body.slice(start, end + 1)) } catch { return null }
 }
+
+const tokens = (s: string) => new Set(s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9]+/).filter((t) => t.length >= 3))
+
+/** Do two titles talk about the same product? True when they share at least one significant word (or one of them is empty). */
+export function titlesAgree(a: string, b: string): boolean {
+  const ta = tokens(a); const tb = tokens(b)
+  if (ta.size === 0 || tb.size === 0) return true
+  for (const t of ta) if (tb.has(t)) return true
+  return false
+}

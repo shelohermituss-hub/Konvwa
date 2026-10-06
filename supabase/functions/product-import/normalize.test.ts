@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom } from './normalize'
+import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom, titlesAgree } from './normalize'
 
 describe('units', () => {
   it('converts weights to kg', () => {
@@ -95,5 +95,14 @@ describe('validateAi labels', () => {
   it('keeps translated variant labels, bounded and keyed by the original', () => {
     const r = validateAi({ name_fr: 'A', labels: [{ src: 'Black', fr: 'Noir', en: 'Black' }, { src: '', fr: 'x' }, 7] }, [])
     expect(r?.labels).toEqual({ Black: { fr: 'Noir', en: 'Black' } })
+  })
+})
+
+describe('titlesAgree', () => {
+  it('tells the same product from another one', () => {
+    expect(titlesAgree('Robe fleurie manches longues femme | SHEIN', 'Robe Fleurie Femme Manches Longues')).toBe(true)
+    expect(titlesAgree('Wireless earbuds Bluetooth 5.3', 'Casque Bluetooth sans fil')).toBe(true)
+    expect(titlesAgree('Robe fleurie manches longues', 'Cuiseur à riz électrique 5L')).toBe(false)
+    expect(titlesAgree('', 'Anything')).toBe(true)
   })
 })

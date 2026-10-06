@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { parseProductUrl, platformImages, platformImageUrl, type Platform, type ProductTarget } from './platforms.ts'
 import { normalizeVariants } from './variants.ts'
 import {
-  cleanSpecs, cleanText, dimsFrom, extractJson, priceToUsd, validateAi, weightFrom,
+  cleanSpecs, cleanText, dimsFrom, extractJson, priceToUsd, titlesAgree, validateAi, weightFrom,
   type AiResult, type Dims,
 } from './normalize.ts'
 
@@ -77,7 +77,10 @@ async function resolveShort(start: string): Promise<ProductTarget | null> {
 }
 
 /** The page data, and the address Firecrawl ended on (after redirects, JavaScript ones included). */
-async function scrape(url: string, apiKey: string, platform: Platform): Promise<{ data: Scraped | null; finalUrl: string | null }> {
+interface PageMeta { title: string; description: string; image: string | null }
+
+async function scrape(url: string, apiKey: string, platform: Platform): Promise<{ data: Scraped | null; finalUrl: string | null; meta: PageMeta }> {
+  const noMeta: PageMeta = { title: '', description: '', image: null }
   const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -94,12 +97,14 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
   })
   if (!res.ok) {
     console.error('[product-import] firecrawl', res.status, (await res.text().catch(() => '')).slice(0, 300))
-    return { data: null, finalUrl: null }
+    return { data: null, finalUrl: null, meta: noMeta }
   }
-  const body = await res.json().catch(() => null) as { success?: boolean; data?: { json?: Scraped; metadata?: { url?: unknown; sourceURL?: unknown } } } | null
+  const body = await res.json().catch(() => null) as { success?: boolean; data?: { json?: Scraped; metadata?: Record<string, unknown> } } | null
   const meta = body?.data?.metadata
-  const final = typeof meta?.url === 'string' ? meta.url : typeof meta?.sourceURL === 'string' ? meta.sourceURL : null
-  return { data: body?.success && body.data?.json && typeof body.data.json === 'object' ? body.data.json : null, finalUrl: final }
+  const str = (v: unknown) => (typeof v === 'string' ? v : '')
+  const final = str(meta?.url) || str(meta?.sourceURL) || null
+  const pageMeta: PageMeta = { title: cleanText(str(meta?.ogTitle) || str(meta?.title), 300), description: cleanText(str(meta?.ogDescription) || str(meta?.description), 1500, true), image: str(meta?.ogImage) || null }
+  return { data: body?.success && body.data?.json && typeof body.data.json === 'object' ? body.data.json : null, finalUrl: final, meta: pageMeta }
 }
 
 async function askAi(input: {
@@ -232,18 +237,33 @@ Deno.serve(async (req) => {
     if (!target.short && !target.id) return json({ error: 'Lien incomplet : collez le lien d\'une page produit, pas celui d\'une boutique ou d\'une recherche.' }, 400)
 
     let platform = target.platform
-    const read = await scrape(target.url, firecrawlKey, platform).catch((e) => { console.error('[product-import] scrape', e); return { data: null, finalUrl: null } })
+    const read = await scrape(target.url, firecrawlKey, platform).catch((e) => { console.error('[product-import] scrape', e); return { data: null, finalUrl: null, meta: { title: '', description: '', image: null } } })
     if (target.short) {
       const real = read.finalUrl ? parseProductUrl(read.finalUrl) : null
       if (!real || real.short || !real.id) return json(shareError, 400)
       target = real; platform = real.platform
     }
-    const scraped = read.data
     const productId = target.id as string
     const sourceUrl = target.url
-    if (!scraped || !cleanText(scraped.title, 300)) return json({ error: `Impossible de lire la page ${platform.name} (bloqu\u00e9e, prot\u00e9g\u00e9e par un captcha ou produit introuvable). R\u00e9essayez dans un instant, ou remplissez la fiche \u00e0 la main.`, code: 'unreadable' }, 502)
-
+    // Shein and Temu send robots to a login / home / other page: then the extraction would describe whatever product is featured there.
+    // The page Firecrawl ended on must be the product that was asked for.
+    if (read.finalUrl && (platform.id === 'shein' || platform.id === 'temu')) {
+      const landed = parseProductUrl(read.finalUrl)
+      if (!landed || landed.short || landed.id !== productId) {
+        return json({ error: `${platform.name} a renvoy\u00e9 une autre page que ce produit (connexion, accueil ou autre article). R\u00e9essayez dans un instant, ou remplissez la fiche \u00e0 la main.`, code: 'wrong_page' }, 502)
+      }
+    }
     const warnings: string[] = []
+    let scraped = read.data
+    // the page's own title is the reference: when the extraction talks about something else, only the page's own data is kept
+    if (read.meta.title && scraped && cleanText(scraped.title, 300) && !titlesAgree(read.meta.title, cleanText(scraped.title, 300))) {
+      scraped = { title: read.meta.title, description: read.meta.description, images: read.meta.image ? [read.meta.image] : [] }
+      warnings.push('page_mismatch')
+    } else if (!scraped && read.meta.title) {
+      scraped = { title: read.meta.title, description: read.meta.description, images: read.meta.image ? [read.meta.image] : [] }
+      warnings.push('page_mismatch')
+    }
+    if (!scraped || !cleanText(scraped.title, 300)) return json({ error: `Impossible de lire la page ${platform.name} (bloqu\u00e9e, prot\u00e9g\u00e9e par un captcha ou produit introuvable). R\u00e9essayez dans un instant, ou remplissez la fiche \u00e0 la main.`, code: 'unreadable' }, 502)
 
     // package: Amazon package data first, then the item's own values (both flagged), then the AI estimate
     const pkgWeight = weightFrom(scraped.package_weight)
