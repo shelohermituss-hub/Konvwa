@@ -14,6 +14,15 @@ describe('parseProductUrl', () => {
     expect(parseProductUrl('https://www.temu.com/goods.html?goods_id=601099512345678&utm=1')).toMatchObject({ id: '601099512345678', url: 'https://www.temu.com/goods.html?goods_id=601099512345678' })
     expect(parseProductUrl('https://www.muscleandstrength.com/store/optimum-nutrition-gold-standard-whey.html?utm=a')).toMatchObject({ platform: { id: 'muscle_strength', country: 'US' }, id: 'optimum-nutrition-gold-standard-whey', url: 'https://www.muscleandstrength.com/store/optimum-nutrition-gold-standard-whey.html' })
   })
+  it('recognises app share links and the other Shein / Temu address shapes', () => {
+    for (const link of ['https://shein.top/abc123', 'https://api-shein.shein.com/h5/sharejump/appjump?link=x', 'https://temu.to/k/abc', 'https://share.temu.com/xyz', 'https://app.temu.com/m/abc']) {
+      expect(parseProductUrl(link)).toMatchObject({ short: true, id: null })
+    }
+    expect(parseProductUrl('https://www.temu.com/fr/some-product-g-601099512345678.html?x=1')).toMatchObject({ platform: { id: 'temu' }, id: '601099512345678' })
+    expect(parseProductUrl('https://fr.shein.com/Robe-p-12345678.html')).toMatchObject({ platform: { id: 'shein' }, id: '12345678' })
+    expect(parseProductUrl('https://temu.to.evil.test/k/abc')).toBeNull()
+    expect(parseProductUrl('https://www.shein.top.evil.test/x')).toBeNull()
+  })
   it('refuses look-alike hosts, http, credentials, ports and unknown sites', () => {
     for (const bad of [
       'https://shein.com.evil.test/x-p-1234567.html', 'https://evilshein.com/x-p-1234567.html', 'http://www.temu.com/x-g-601099512345678.html',

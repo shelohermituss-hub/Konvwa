@@ -1,8 +1,7 @@
 // Admin tool: paste a product link (Amazon, Shein, Alibaba/1688, Temu, Muscle & Strength) -> product sheet data, variants and package.
 // Page reading: Firecrawl (REST). Text work: OpenRouter. Secrets (Edge Function secrets): FIRECRAWL_API_KEY, OPENROUTER_API_KEY, OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { parseAmazonUrl, type AmazonTarget } from './amazon.ts'
-import { parseProductUrl, platformImages, platformImageUrl, type Platform } from './platforms.ts'
+import { parseProductUrl, platformImages, platformImageUrl, type Platform, type ProductTarget } from './platforms.ts'
 import { normalizeVariants } from './variants.ts'
 import {
   cleanSpecs, cleanText, dimsFrom, extractJson, priceToUsd, validateAi, weightFrom,
@@ -64,19 +63,17 @@ interface Scraped {
   variants?: unknown; colors?: unknown; sizes?: unknown
 }
 
-/** Short links (a.co, amzn.to) are resolved by hand; every hop must stay on Amazon. */
-async function resolveShort(start: AmazonTarget): Promise<AmazonTarget | null> {
-  let cur = start
-  for (let hop = 0; hop <= MAX_HOPS && cur.short; hop++) {
-    const res = await fetch(cur.url, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'Mozilla/5.0' } })
+/** Share / short links (a.co, amzn.to, shein.top, temu.to, share.temu.com…) are resolved by hand; every hop must stay on a supported platform. */
+async function resolveShort(start: string): Promise<ProductTarget | null> {
+  let cur = parseProductUrl(start)
+  for (let hop = 0; hop <= MAX_HOPS + 1 && cur?.short; hop++) {
+    const res = await fetch(cur.url, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148' } })
     await res.body?.cancel().catch(() => {})
     const loc = res.headers.get('location')
     if (res.status < 300 || res.status >= 400 || !loc) return null
-    const next = parseAmazonUrl(new URL(loc, cur.url).toString())
-    if (!next) return null
-    cur = next
+    cur = parseProductUrl(new URL(loc, cur.url).toString())
   }
-  return cur.short ? null : cur
+  return cur && !cur.short ? cur : null
 }
 
 async function scrape(url: string, apiKey: string, platform: Platform): Promise<Scraped | null> {
@@ -87,8 +84,9 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
       url,
       formats: [{ type: 'json', schema: SCHEMA, prompt: scrapePrompt(platform) }],
       onlyMainContent: false,
-      ...(platform.id === 'amazon' ? {} : { waitFor: 3000 }),
-      proxy: 'auto',
+      ...(platform.id === 'amazon' ? {} : { waitFor: platform.id === 'shein' || platform.id === 'temu' ? 5000 : 3000 }),
+      // Shein and Temu block ordinary crawlers: their pages are read through the stealth proxy
+      proxy: platform.id === 'shein' || platform.id === 'temu' ? 'stealth' : 'auto',
       timeout: 60000,
     }),
     signal: AbortSignal.timeout(90000),
@@ -221,11 +219,8 @@ Deno.serve(async (req) => {
 
     let target = typeof body.url === 'string' && body.url.length <= 2000 ? parseProductUrl(body.url.trim()) : null
     if (!target) return json({ error: 'Lien non pris en charge : collez un lien de produit Amazon, Shein, Alibaba, Temu ou Muscle & Strength.' }, 400)
-    if (target.amazon?.short) {
-      const resolved = await resolveShort(target.amazon).catch(() => null)
-      target = resolved ? parseProductUrl(resolved.url.toString()) : null
-    }
-    if (!target) return json({ error: 'Ce lien court Amazon n\'a pas pu être ouvert.' }, 400)
+    if (target.short) target = await resolveShort(target.url).catch(() => null)
+    if (!target) return json({ error: 'Ce lien de partage n\'a pas pu être ouvert : ouvrez le produit dans le navigateur et copiez l\'adresse complète de la page.' }, 400)
     if (!target.id) return json({ error: 'Lien incomplet : collez le lien d\'une page produit, pas celui d\'une boutique ou d\'une recherche.' }, 400)
     const platform = target.platform
     const productId = target.id
