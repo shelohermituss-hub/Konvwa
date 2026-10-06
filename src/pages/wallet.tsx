@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, Search, Info, Download } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
-import { createPayment } from '@/lib/payment-api'
+import { createPayment, verifyPayment } from '@/lib/payment-api'
 import { useStepUp } from '@/lib/step-up'
 import { WalletGlassCard } from '@/components/shared/wallet-glass-card'
 import { toast } from 'sonner'
@@ -317,7 +317,18 @@ export function WalletPage() {
         .eq('wallet_id', walletRes.data.id)
         .order('created_at', { ascending: false })
         .limit(30)
-      if (txRes.data) setTransactions(txRes.data as Transaction[])
+      if (txRes.data) {
+        setTransactions(txRes.data as Transaction[])
+        // A MonCash / NatCash top-up waiting for the gateway is checked again (the customer may have paid then closed the page):
+        // only the gateway's confirmation credits it, and only then does it exist for the team
+        const waiting = (txRes.data as Transaction[]).filter(t => t.type === 'deposit' && t.status === 'pending' && (t.payment_method === 'moncash' || t.payment_method === 'natcash') && t.reference
+          && Date.now() - new Date(t.created_at).getTime() < 24 * 3600 * 1000).slice(0, 3)
+        if (waiting.length > 0) {
+          void Promise.all(waiting.map(t => verifyPayment(t.reference as string).catch(() => null))).then(rs => {
+            if (rs.some(r => r?.verified || r?.failed)) void loadData()
+          })
+        }
+      }
     }
     setLoading(false)
   }
@@ -359,6 +370,7 @@ export function WalletPage() {
     if (!topupAmount || parseFloat(topupAmount) < 100 || !wallet || !user) return
     const isCrypto = topupMethod !== 'virement'
     if (isCrypto && !proofFile) return
+    if (txHashInput.trim().length < 4) { toast.error(tr('Saisissez l\'identifiant de la preuve de paiement (numéro de référence ou hash).')); return }
     if (!(await confirmPayment(parseFloat(topupAmount)))) return
     setSubmitting(true)
     try {
@@ -395,6 +407,8 @@ export function WalletPage() {
         proof_url: proofStoragePath,
       })
       if (error) {
+        // the same proof / reference cannot be used for two deposits
+        if (error.code === '23505') throw new Error(tr('Cet identifiant de preuve a déjà été utilisé. Une preuve ne peut servir qu\'une fois.'))
         const msg = typeof error.message === 'string'
           ? error.message
           : JSON.stringify(error)
@@ -490,12 +504,13 @@ export function WalletPage() {
               {tr('Recharger')}
             </button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
+          <DialogContent className="flex max-h-[92dvh] flex-col gap-0 overflow-hidden p-0">
+            <DialogHeader className="shrink-0 px-6 pb-2 pt-6">
               <DialogTitle>{tr('Recharger le portefeuille')}</DialogTitle>
               <DialogDescription>{tr('Choisissez le montant et la méthode')}</DialogDescription>
             </DialogHeader>
-            <div className="space-y-5 py-4">
+            {/* the form scrolls, the buttons stay visible below it */}
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-6 py-4">
               <div className="space-y-2">
                 <Label>{tr('Montant (HTG)')}</Label>
                 <div className="grid grid-cols-4 gap-2">
@@ -616,7 +631,7 @@ export function WalletPage() {
                     ))}
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs">{tr('Numéro de référence du virement')}</Label>
+                    <Label className="text-xs">{tr('Identifiant de la preuve (numéro de référence du virement) *')}</Label>
                     <Input
                       placeholder="Ex: VIR-20260930-XXX"
                       value={txHashInput}
@@ -670,7 +685,7 @@ export function WalletPage() {
                       </p>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">{tr('Hash de la transaction (optionnel)')}</Label>
+                      <Label className="text-xs">{tr('Identifiant de la preuve (hash de la transaction) *')}</Label>
                       <Input
                         placeholder="0x... ou TXid..."
                         value={txHashInput}
@@ -697,13 +712,14 @@ export function WalletPage() {
                 </div>
               )}
             </div>
-            <DialogFooter>
+            <DialogFooter className="shrink-0 border-t border-gray-100 bg-white px-6 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-4">
               <button onClick={() => setTopupOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">{tr('Annuler')}</button>
               <button
                 onClick={() => { handleTap(); handleTopup() }}
                 disabled={
                   !topupAmount || parseFloat(topupAmount) < 100 || submitting ||
-                  ((topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') && !proofFile)
+                  ((topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') && !proofFile) ||
+                  (topupMethod !== 'moncash' && topupMethod !== 'natcash' && txHashInput.trim().length < 4)
                 }
                 className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity pressable"
                 style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}

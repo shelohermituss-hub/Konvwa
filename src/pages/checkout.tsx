@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { inviteInstall } from '@/lib/pwa'
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { useStepUp } from '@/lib/step-up'
+import { createCheckoutPayment } from '@/lib/payment-api'
 import { createCheckout, fetchCheckoutShipping, type CheckoutShipping, type CreatedOrder } from '@/lib/checkout-api'
 import { cn } from '@/lib/utils'
 interface WalletData {
@@ -43,6 +44,8 @@ export function CheckoutPage() {
   const [shippingLoading, setShippingLoading] = useState(true)
   const [shippingError, setShippingError] = useState('')
   const [rateId, setRateId] = useState<string | null>(null)
+  // How the customer pays: the wallet, or MonCash / NatCash directly (redirected to the gateway; nothing is ordered until it confirms)
+  const [payWith, setPayWith] = useState<'wallet' | 'moncash' | 'natcash'>('wallet')
 
   useEffect(() => {
     if (!buyNow || !user) return
@@ -111,7 +114,29 @@ export function CheckoutPage() {
     }
   }, [items, success, paying, navigate, buyLoading])
 
+  async function handleGatewayPay() {
+    if (!user || !canPay || (payWith !== 'moncash' && payWith !== 'natcash')) return
+    if (!(await confirmPayment(grandTotal))) return
+    setPaying(true)
+    try {
+      // The amount is recomputed by the database; the orders are only placed when the gateway confirms the payment
+      const r = await createCheckoutPayment({
+        method: payWith,
+        items: items.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity })),
+        shipping_rate_id: hasUs ? rateId : null,
+        source: buyNow ? 'buy_now' : 'cart',
+      })
+      sessionStorage.setItem('konvwa_pay_ref', r.reference_id)
+      toast.success(tr('Redirection vers ') + (payWith === 'moncash' ? 'MonCash' : 'NatCash') + '…')
+      window.location.href = r.url
+    } catch (e: unknown) {
+      toast.error(tr('Paiement échoué'), { description: e instanceof Error ? e.message : tr('Erreur inconnue') })
+      setPaying(false)
+    }
+  }
+
   async function handlePay() {
+    if (viaGateway) { await handleGatewayPay(); return }
     if (!wallet || !user) return
     if (!canPay) return
     if (wallet.available_balance < grandTotal) {
@@ -185,7 +210,8 @@ export function CheckoutPage() {
     )
   }
 
-  const insufficient = wallet ? wallet.available_balance < grandTotal : false
+  const viaGateway = payWith !== 'wallet'
+  const insufficient = !viaGateway && (wallet ? wallet.available_balance < grandTotal : false)
 
   return (
     <div className="min-h-full bg-[#F4F5F7] pb-36">
@@ -308,7 +334,34 @@ export function CheckoutPage() {
           </div>
         )}
 
+        {/* Payment method */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <p className="mb-3 text-sm font-bold">{tr('Moyen de paiement')}</p>
+          <div role="radiogroup" aria-label={tr('Moyen de paiement')} className="grid grid-cols-3 gap-2">
+            {([
+              { id: 'wallet', label: tr('Portefeuille'), icon: <Wallet className="h-6 w-6 text-primary" aria-hidden /> },
+              { id: 'moncash', label: 'MonCash', icon: <img src="/moncash-logo.jpg" alt="" className="h-6 object-contain" /> },
+              { id: 'natcash', label: 'NatCash', icon: <img src="/natcash-logo.png" alt="" className="h-6 object-contain" /> },
+            ] as const).map((m) => (
+              <button
+                key={m.id} type="button" role="radio" aria-checked={payWith === m.id} onClick={() => setPayWith(m.id)}
+                className={cn('flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-2 text-xs font-semibold transition-colors active:scale-[0.98]',
+                  payWith === m.id ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white hover:border-gray-300')}
+              >
+                {m.icon}
+                {m.label}
+              </button>
+            ))}
+          </div>
+          {viaGateway && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              {tr('Vous serez redirigé vers la plateforme de paiement. La commande n\'est passée qu\'une fois le paiement validé ; sans validation, rien n\'est commandé.')}
+            </p>
+          )}
+        </div>
+
         {/* Wallet balance */}
+        {!viaGateway && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -343,6 +396,7 @@ export function CheckoutPage() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* Bottom pay button */}
@@ -359,7 +413,7 @@ export function CheckoutPage() {
         ) : (
           <button
             onClick={handlePay}
-            disabled={paying || loadingWallet || items.length === 0 || !canPay}
+            disabled={paying || (!viaGateway && loadingWallet) || items.length === 0 || !canPay}
             className="w-full flex items-center justify-center gap-2 h-13 rounded-xl text-sm font-bold text-white disabled:opacity-60 transition-opacity"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
@@ -370,7 +424,7 @@ export function CheckoutPage() {
               </>
             ) : (
               <>
-                {t('checkout.confirm')} · {grandTotal.toLocaleString(LOCALE_TAG)} HTG
+                {viaGateway ? tr('Payer avec {0}', payWith === 'moncash' ? 'MonCash' : 'NatCash') : t('checkout.confirm')} · {grandTotal.toLocaleString(LOCALE_TAG)} HTG
               </>
             )}
           </button>

@@ -58,6 +58,9 @@ function fmt(n: number) { return Number(n).toLocaleString(LOCALE_TAG) }
 function dateTime(iso: string) { return new Date(iso).toLocaleString(DATE_LOCALE, { dateStyle: 'medium', timeStyle: 'short' }) }
 const isCredit = (t: Pick<Tx, 'type'>) => t.type === 'deposit' || t.type === 'refund' || t.type === 'unblock'
 
+/** MonCash / NatCash payments are settled by the gateway alone: the team never validates them by hand. */
+const isGateway = (tx: { payment_method: string | null }) => tx.payment_method === 'moncash' || tx.payment_method === 'natcash'
+
 export function AdminPaymentsPage() {
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
@@ -76,6 +79,9 @@ export function AdminPaymentsPage() {
   const [openUser, setOpenUser] = useState<string | null>(null)
   const [proofUrl, setProofUrl] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // Proof identifier typed by the team when it checks the proof (kept for good, a proof can be used only once)
+  const [proofIdInput, setProofIdInput] = useState('')
+  const [savedProofId, setSavedProofId] = useState<string | null>(null)
   const [refundOf, setRefundOf] = useState<Tx | null>(null)
   const [refundReason, setRefundReason] = useState('')
   const [adjSign, setAdjSign] = useState<'credit' | 'debit'>('credit')
@@ -106,7 +112,11 @@ export function AdminPaymentsPage() {
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   async function openTx(tx: Tx) {
-    setOpen(tx); setProofUrl(null); setAdjAmount(''); setAdjReason(''); setAdjSign('credit')
+    setOpen(tx); setProofUrl(null); setProofIdInput(tx.reference ?? ''); setSavedProofId(null); setAdjAmount(''); setAdjReason(''); setAdjSign('credit')
+    if (tx.type === 'deposit') {
+      const { data: p } = await supabase.from('wallet_transactions').select('proof_id').eq('id', tx.id).maybeSingle()
+      setSavedProofId((p as { proof_id: string | null } | null)?.proof_id ?? null)
+    }
     if (tx.proof_url) {
       const { data } = await supabase.storage.from('payment-proofs').createSignedUrl(tx.proof_url, 3600)
       setProofUrl(data?.signedUrl ?? null)
@@ -116,7 +126,9 @@ export function AdminPaymentsPage() {
   async function review(tx: Tx, approve: boolean) {
     if (!approve && !confirm(tr('Refuser cette transaction de {0} HTG ?', fmt(tx.amount)))) return
     setBusy(true)
-    const { data, error } = await supabase.rpc('admin_review_deposit', { p_tx_id: tx.id, p_approve: approve })
+    const { data, error } = approve
+      ? await supabase.rpc('admin_approve_manual_deposit', { p_tx_id: tx.id, p_proof_id: proofIdInput })
+      : await supabase.rpc('admin_review_deposit', { p_tx_id: tx.id, p_approve: false })
     setBusy(false)
     const res = data as { success?: boolean; error?: string } | null
     if (error || !res?.success) { toast.error(res?.error ? trServer(res.error) : error?.message ?? tr('Action impossible.')); return }
@@ -280,7 +292,7 @@ export function AdminPaymentsPage() {
               <TableBody>
                 {rows.map((tx) => {
                   const st = TX_STATUS[tx.status] ?? TX_STATUS.pending
-                  const needsAction = tx.status === 'pending' && tx.type === 'deposit'
+                  const needsAction = tx.status === 'pending' && tx.type === 'deposit' && !isGateway(tx)
                   return (
                     <TableRow key={tx.id} className="cursor-pointer transition-colors hover:bg-muted/20" onClick={() => void openTx(tx)}>
                       <TableCell>
@@ -349,6 +361,7 @@ export function AdminPaymentsPage() {
                     [tr('Description'), open.description ? trServer(open.description) : null],
                     [tr('Référence'), open.reference],
                     [tr('ID fournisseur'), open.plop_transaction_id],
+                    [tr('Identifiant de la preuve'), savedProofId],
                     [tr('ID transaction'), open.id],
                   ] as Array<[string, string | null]>).filter(([, v]) => v).map(([k, v]) => (
                     <div key={k} className="flex gap-3"><dt className="w-28 shrink-0 text-xs text-muted-foreground">{k}</dt><dd className="min-w-0 break-all text-xs font-medium">{v}</dd></div>
@@ -379,9 +392,21 @@ export function AdminPaymentsPage() {
                 )}
 
                 <div className="space-y-2">
-                  {open.status === 'pending' && open.type === 'deposit' && (
+                  {open.status === 'pending' && open.type === 'deposit' && isGateway(open) && (
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-xs leading-relaxed text-amber-900">
+                      {tr('En attente de la plateforme de paiement. Ce paiement sera crédité automatiquement dès que MonCash / NatCash le validera ; s\'il est annulé ou jamais validé, rien n\'est crédité.')}
+                    </p>
+                  )}
+                  {open.status === 'pending' && open.type === 'deposit' && !isGateway(open) && (
+                    <div className="space-y-2">
+                      <Label htmlFor="proof-id" className="text-xs">{tr('Identifiant de la preuve (lu sur le reçu) *')}</Label>
+                      <Input id="proof-id" value={proofIdInput} onChange={(e) => setProofIdInput(e.target.value)} maxLength={120} placeholder={tr('N° de transaction, de reçu ou hash')} className="h-10 rounded-xl" />
+                      <p className="text-[11px] text-muted-foreground">{tr('Vérifiez la preuve ci-dessus puis recopiez son identifiant : il est conservé et ne pourra plus jamais être réutilisé pour un autre dépôt.')}</p>
+                    </div>
+                  )}
+                  {open.status === 'pending' && open.type === 'deposit' && !isGateway(open) && (
                     <div className="grid grid-cols-2 gap-2">
-                      <Button disabled={busy} onClick={() => void review(open, true)} className="h-11 rounded-xl bg-emerald-600 font-semibold text-white hover:bg-emerald-700"><CheckCircle2 className="mr-2 h-4 w-4" />{tr('Approuver et créditer')}</Button>
+                      <Button disabled={busy || proofIdInput.trim().length < 4} onClick={() => void review(open, true)} className="h-11 rounded-xl bg-emerald-600 font-semibold text-white hover:bg-emerald-700"><CheckCircle2 className="mr-2 h-4 w-4" />{tr('Approuver et créditer')}</Button>
                       <Button disabled={busy} variant="outline" onClick={() => void review(open, false)} className="h-11 rounded-xl font-semibold text-destructive"><XCircle className="mr-2 h-4 w-4" />{tr('Refuser')}</Button>
                     </div>
                   )}

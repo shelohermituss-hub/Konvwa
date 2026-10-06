@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { CheckCircle, XCircle, Loader2, Wallet } from 'lucide-react'
-import { verifyPayment } from '@/lib/payment-api'
+import { verifyPayment, type VerifyPaymentResult } from '@/lib/payment-api'
+import { supabase } from '@/lib/supabase'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
-type State = 'loading' | 'success' | 'pending' | 'failed' | 'error'
+type State = 'loading' | 'success' | 'ordered' | 'not_ordered' | 'pending' | 'failed' | 'error'
 
 export function PaymentReturnPage() {
   const [params] = useSearchParams()
   const [state, setState] = useState<State>('loading')
   const [amount, setAmount] = useState<number | null>(null)
   const [errMsg, setErrMsg] = useState('')
+  const [checkout, setCheckout] = useState(false)
+  const [notOrderedReason, setNotOrderedReason] = useState('')
 
   useEffect(() => {
     const ref = params.get('ref') || params.get('refference_id') || params.get('reference_id')
@@ -21,10 +24,25 @@ export function PaymentReturnPage() {
 
     async function poll() {
       try {
-        const result = await verifyPayment(ref!)
+        const result: VerifyPaymentResult = await verifyPayment(ref!)
+        if (result.kind === 'checkout') setCheckout(true)
         if (result.verified) {
           if (result.amount) setAmount(result.amount)
-          setState('success')
+          if (result.kind === 'checkout') {
+            if (result.ok) {
+              // the orders are placed and paid: a cart payment empties the cart (the server never touches it)
+              if (result.source === 'cart') {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) await supabase.from('cart_items').delete().eq('user_id', user.id)
+              }
+              setState('ordered')
+            } else {
+              setNotOrderedReason(result.error ?? '')
+              setState('not_ordered')
+            }
+          } else {
+            setState('success')
+          }
         } else if (result.failed) {
           setState('failed')
         } else if (tries < maxTries) {
@@ -81,6 +99,45 @@ export function PaymentReturnPage() {
           </>
         )}
 
+        {state === 'ordered' && (
+          <>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 mx-auto mb-5">
+              <CheckCircle className="h-8 w-8 text-emerald-500" />
+            </div>
+            <h1 className="text-lg font-bold mb-2">{tr('Paiement confirmé, commande passée !')}</h1>
+            {amount && <p className="text-3xl font-black text-emerald-700 mb-1">{amount.toLocaleString(LOCALE_TAG)} HTG</p>}
+            <p className="text-sm text-muted-foreground mb-6">{tr('Votre commande est en cours de traitement. Suivez-la dans Commandes.')}</p>
+            <Link
+              to="/orders"
+              className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
+              {tr('Voir mes commandes')}
+            </Link>
+          </>
+        )}
+
+        {state === 'not_ordered' && (
+          <>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 mx-auto mb-5">
+              <XCircle className="h-8 w-8 text-amber-500" />
+            </div>
+            <h1 className="text-lg font-bold mb-2">{tr('Paiement reçu, commande non passée')}</h1>
+            <p className="text-sm text-muted-foreground mb-2">
+              {tr('Votre paiement est bien arrivé et a été crédité sur votre portefeuille, mais la commande n\'a pas pu être passée.')}
+            </p>
+            {notOrderedReason && <p className="text-sm font-medium mb-6">{notOrderedReason}</p>}
+            <Link
+              to="/wallet"
+              className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
+              <Wallet className="h-4 w-4" />
+              {tr('Voir mon portefeuille')}
+            </Link>
+          </>
+        )}
+
         {state === 'pending' && (
           <>
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-50 mx-auto mb-5">
@@ -88,7 +145,9 @@ export function PaymentReturnPage() {
             </div>
             <h1 className="text-lg font-bold mb-2">{tr('Paiement en attente')}</h1>
             <p className="text-sm text-muted-foreground mb-6">
-              {tr('Votre paiement est en cours de traitement. Il sera crédité dans quelques minutes. Vérifiez votre portefeuille.')}
+              {checkout
+                ? tr('Votre paiement n\'est pas encore validé par la plateforme. La commande sera passée automatiquement dès qu\'il le sera ; sans validation, elle ne sera pas passée.')
+                : tr('Votre paiement est en cours de traitement. Il sera crédité dans quelques minutes. Vérifiez votre portefeuille.')}
             </p>
             <Link
               to="/wallet"
@@ -109,9 +168,10 @@ export function PaymentReturnPage() {
             <h1 className="text-lg font-bold mb-2">{tr('Paiement échoué')}</h1>
             <p className="text-sm text-muted-foreground mb-6">
               {tr('Votre paiement n\'a pas pu être traité. Aucun montant n\'a été débité.')}
+              {checkout && <> {tr('Aucune commande n\'a été passée.')}</>}
             </p>
             <Link
-              to="/wallet"
+              to={checkout ? '/cart' : '/wallet'}
               className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white"
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >

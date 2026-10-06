@@ -645,5 +645,78 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id
   ASSERT NOT has_function_privilege('public', 'public.admin_save_product_variants(uuid,jsonb)', 'execute'), 'PUBLIC can save variants';
 END $$;
 
+-- 25. gateway payments and proofs: a client cannot plant a MonCash deposit nor a proof id; a manual deposit is approved only with a proof
+--     id that can be used once; gateway rows stay out of the admin queue; a checkout is ordered only when the gateway confirmed it
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b FROM ctx); adm uuid := (SELECT admin_id FROM ctx);
+  cn uuid; r jsonb; w uuid; bal0 numeric; t1 uuid; t2 uuid; t3 uuid; ref text; v_orders int; bal1 numeric; BEGIN
+  INSERT INTO products (name, price_htg, moq, unit, supplier_country, active, stock_available) VALUES ('CN pay', 600, 1, 'u', 'CN', true, true) RETURNING id INTO cn;
+  SELECT id INTO w FROM wallets WHERE user_id = a;
+  SELECT available_balance INTO bal0 FROM wallets WHERE id = w;
+
+  PERFORM pg_temp.as_user(a);
+  BEGIN INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method) VALUES (w, 'deposit', 500, 'pending', 'moncash'); ASSERT false, 'client planted a moncash deposit';
+  EXCEPTION WHEN insufficient_privilege OR check_violation THEN NULL; END;
+  BEGIN INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, proof_id) VALUES (w, 'deposit', 500, 'pending', 'virement', 'FAKE-PROOF-1'); ASSERT false, 'client set a proof id';
+  EXCEPTION WHEN insufficient_privilege OR check_violation THEN NULL; END;
+  INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, reference) VALUES (w, 'deposit', 500, 'pending', 'virement', 'VIR-1001') RETURNING id INTO t1;
+  BEGIN INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, reference) VALUES (w, 'deposit', 700, 'pending', 'virement', ' vir-1001 '); ASSERT false, 'same reference twice';
+  EXCEPTION WHEN unique_violation THEN NULL; END;
+  INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, reference) VALUES (w, 'deposit', 800, 'pending', 'virement', 'VIR-1002') RETURNING id INTO t2;
+  BEGIN PERFORM public.admin_approve_manual_deposit(t1, 'ABCD1234'); ASSERT false, 'client approved a deposit'; EXCEPTION WHEN raise_exception THEN NULL; END;
+  RESET ROLE;
+
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_approve_manual_deposit(t1, '  ') ->> 'success')::boolean = false, 'approved without proof id';
+  ASSERT (public.admin_review_deposit(t1, true) ->> 'success')::boolean = false, 'old approve path still works';
+  ASSERT (public.admin_approve_manual_deposit(t1, 'RECU-778899') ->> 'success')::boolean, 'approve failed';
+  ASSERT (public.admin_approve_manual_deposit(t2, 'recu-778899') ->> 'code') = 'proof_reused', 'proof reused';
+  ASSERT (public.admin_approve_manual_deposit(t1, 'RECU-778899') ->> 'success')::boolean = false, 'double approval';
+  ASSERT (public.admin_review_deposit(t2, false) ->> 'success')::boolean, 'reject failed';
+  RESET ROLE;
+  ASSERT (SELECT available_balance FROM wallets WHERE id = w) = bal0 + 500, 'wallet not credited once';
+
+  INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, reference, plop_transaction_id) VALUES (w, 'deposit', 900, 'pending', 'moncash', 'KW-TEST-1', 'p1') RETURNING id INTO t3;
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_review_deposit(t3, false) ->> 'success')::boolean = false, 'admin rejected a gateway deposit';
+  ASSERT (public.admin_approve_manual_deposit(t3, 'GATEWAY-PROOF') ->> 'success')::boolean = false, 'admin approved a gateway deposit';
+  ASSERT NOT EXISTS (SELECT 1 FROM public.admin_list_transactions('pending') x WHERE x.id = t3), 'gateway pending deposit in admin queue';
+  ASSERT EXISTS (SELECT 1 FROM public.admin_list_transactions('all') x WHERE x.id = t3), 'gateway deposit missing from history';
+  RESET ROLE;
+
+  SELECT count(*) INTO v_orders FROM product_orders WHERE user_id = a;
+  PERFORM pg_temp.as_user(a);
+  r := public.quote_checkout(jsonb_build_array(jsonb_build_object('product_id', cn, 'quantity', 2)), NULL);
+  ASSERT (r ->> 'success')::boolean AND (r ->> 'total')::numeric = 1200, 'quote wrong: ' || r::text;
+  r := public.quote_checkout(jsonb_build_array(jsonb_build_object('product_id', gen_random_uuid(), 'quantity', 2)), NULL);
+  ASSERT (r ->> 'success')::boolean = false, 'quote of an unknown product ok';
+  BEGIN PERFORM public.fulfill_checkout_intent('x'); ASSERT false, 'client called fulfill'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+  ASSERT (SELECT count(*) FROM product_orders WHERE user_id = a) = v_orders, 'quote left orders behind';
+
+  ref := 'KW-TESTINT-1';
+  INSERT INTO checkout_intents (user_id, reference, method, amount, items, source) VALUES (a, ref, 'moncash', 1200, jsonb_build_array(jsonb_build_object('product_id', cn, 'quantity', 2)), 'cart');
+  SELECT available_balance INTO bal1 FROM wallets WHERE id = w;
+  r := public.fulfill_checkout_intent(ref);
+  ASSERT (r ->> 'success')::boolean, 'fulfil failed: ' || r::text;
+  ASSERT (SELECT available_balance FROM wallets WHERE id = w) = bal1, 'wallet should end unchanged (credited then paid)';
+  ASSERT (SELECT count(*) FROM product_orders WHERE user_id = a AND payment_status = 'paid') >= 1, 'order not paid';
+  ASSERT (SELECT status FROM checkout_intents WHERE reference = ref) = 'completed', 'intent not completed';
+  r := public.fulfill_checkout_intent(ref);
+  ASSERT (r ->> 'already')::boolean, 'second fulfil not idempotent';
+  ASSERT (SELECT count(*) FROM wallet_transactions WHERE reference = ref) = 1, 'credited twice';
+
+  UPDATE products SET active = false WHERE id = cn;
+  INSERT INTO checkout_intents (user_id, reference, method, amount, items) VALUES (a, 'KW-TESTINT-2', 'natcash', 1200, jsonb_build_array(jsonb_build_object('product_id', cn, 'quantity', 2)));
+  SELECT available_balance INTO bal1 FROM wallets WHERE id = w;
+  r := public.fulfill_checkout_intent('KW-TESTINT-2');
+  ASSERT (r ->> 'success')::boolean = false AND (r ->> 'credited')::numeric = 1200, 'failed fulfil not reported: ' || r::text;
+  ASSERT (SELECT available_balance FROM wallets WHERE id = w) = bal1 + 1200, 'money lost on failed order';
+  ASSERT (SELECT status FROM checkout_intents WHERE reference = 'KW-TESTINT-2') = 'order_failed', 'intent status';
+
+  PERFORM pg_temp.as_user(b);
+  ASSERT (SELECT count(*) FROM checkout_intents) = 0, 'client b reads intents';
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

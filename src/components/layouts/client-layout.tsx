@@ -11,6 +11,7 @@ import {
 import { useAuth } from '@/lib/auth-context'
 import { useI18n, type Lang } from '@/lib/i18n-context'
 import { useCart } from '@/lib/cart-context'
+import { usePendingPayments } from '@/hooks/use-pending-payments'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { PwaExperience } from '@/components/shared/pwa-experience'
@@ -330,6 +331,8 @@ export function ClientLayout() {
   const { user } = useAuth()
   const location = useLocation()
   const unread = useUnreadCount(user?.id)
+  const { refresh: refreshCart } = useCart()
+  usePendingPayments(user?.id, () => { void refreshCart() })
 
   return (
     <div className="flex h-dvh bg-background overflow-hidden">
