@@ -5,6 +5,7 @@ const LOGOS: Array<{ test: RegExp; src: string; name: string }> = [
   { test: /amazon/i, src: '/brands/amazon.png', name: 'Amazon' },
   { test: /shein/i, src: '/brands/shein.png', name: 'Shein' },
   { test: /temu/i, src: '/brands/temu.jpg', name: 'Temu' },
+  { test: /muscle\s*(&|and)\s*strength/i, src: '/brands/muscle-strength.png', name: 'Muscle & Strength' },
 ]
 
 export function supplierLogo(supplierName: string | null | undefined): { src: string; name: string } | null {

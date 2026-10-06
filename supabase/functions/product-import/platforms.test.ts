@@ -1,0 +1,49 @@
+import { describe, expect, it } from 'vitest'
+import { parseProductUrl, platformImageUrl, platformImages } from './platforms'
+
+describe('parseProductUrl', () => {
+  it('keeps Amazon working', () => {
+    const t = parseProductUrl('https://www.amazon.com/Some-Name/dp/B08N5WRWNW?ref=x')
+    expect(t?.platform.id).toBe('amazon'); expect(t?.id).toBe('B08N5WRWNW'); expect(t?.url).toBe('https://www.amazon.com/dp/B08N5WRWNW')
+  })
+  it('reads Shein, Alibaba, 1688, Temu and Muscle & Strength links', () => {
+    expect(parseProductUrl('https://us.shein.com/Women-Dress-p-12345678-cat-1727.html?src=1')).toMatchObject({ platform: { id: 'shein', country: 'CN' }, id: '12345678', url: 'https://us.shein.com/Women-Dress-p-12345678-cat-1727.html' })
+    expect(parseProductUrl('https://www.alibaba.com/product-detail/Bottle_1600123456789.html?spm=a2700')).toMatchObject({ platform: { id: 'alibaba' }, id: '1600123456789' })
+    expect(parseProductUrl('https://detail.1688.com/offer/712345678901.html')).toMatchObject({ platform: { id: 'alibaba' }, id: '712345678901' })
+    expect(parseProductUrl('https://www.temu.com/some-product-g-601099512345678.html?x=1')).toMatchObject({ platform: { id: 'temu' }, id: '601099512345678', url: 'https://www.temu.com/some-product-g-601099512345678.html' })
+    expect(parseProductUrl('https://www.temu.com/goods.html?goods_id=601099512345678&utm=1')).toMatchObject({ id: '601099512345678', url: 'https://www.temu.com/goods.html?goods_id=601099512345678' })
+    expect(parseProductUrl('https://www.muscleandstrength.com/store/optimum-nutrition-gold-standard-whey.html?utm=a')).toMatchObject({ platform: { id: 'muscle_strength', country: 'US' }, id: 'optimum-nutrition-gold-standard-whey', url: 'https://www.muscleandstrength.com/store/optimum-nutrition-gold-standard-whey.html' })
+  })
+  it('refuses look-alike hosts, http, credentials, ports and unknown sites', () => {
+    for (const bad of [
+      'https://shein.com.evil.test/x-p-1234567.html', 'https://evilshein.com/x-p-1234567.html', 'http://www.temu.com/x-g-601099512345678.html',
+      'https://user:pw@www.temu.com/x-g-601099512345678.html', 'https://www.temu.com:8443/x-g-601099512345678.html',
+      'https://alibaba.com.evil.test/product-detail/x_1600123456789.html', 'https://muscleandstrength.com.evil.test/store/x.html',
+      'https://example.com/', 'not a url', 'https://169.254.169.254/latest',
+    ]) expect(parseProductUrl(bad)).toBeNull()
+  })
+  it('flags a link that is not a product page with no id', () => {
+    expect(parseProductUrl('https://www.shein.com/')?.id).toBeNull()
+    expect(parseProductUrl('https://www.muscleandstrength.com/store/')?.id).toBeNull()
+  })
+})
+
+describe('platformImageUrl', () => {
+  it('accepts only the platform image hosts and strips thumbnail sizes', () => {
+    expect(platformImageUrl('shein', '//img.ltwebstatic.com/images3_pi/2023/a_thumbnail_220x293.jpg')).toBe('https://img.ltwebstatic.com/images3_pi/2023/a.jpg')
+    expect(platformImageUrl('alibaba', 'https://sc04.alicdn.com/kf/H1.jpg_220x220q90.jpg')).toBe('https://sc04.alicdn.com/kf/H1.jpg')
+    expect(platformImageUrl('temu', 'https://img.kwcdn.com/product/open/abc.jpg?imageView2=2')).toBe('https://img.kwcdn.com/product/open/abc.jpg')
+    expect(platformImageUrl('muscle_strength', 'https://www.muscleandstrength.com/sites/default/files/x.png')).toBe('https://www.muscleandstrength.com/sites/default/files/x.png')
+  })
+  it('refuses other hosts, other platforms, http and non images', () => {
+    expect(platformImageUrl('shein', 'https://evil.test/a.jpg')).toBeNull()
+    expect(platformImageUrl('shein', 'https://img.kwcdn.com/a.jpg')).toBeNull()
+    expect(platformImageUrl('temu', 'http://img.kwcdn.com/a.jpg')).toBeNull()
+    expect(platformImageUrl('temu', 'https://img.kwcdn.com.evil.test/a.jpg')).toBeNull()
+    expect(platformImageUrl('temu', 'https://img.kwcdn.com/a.svg')).toBeNull()
+    expect(platformImageUrl('alibaba', 42)).toBeNull()
+  })
+  it('lists distinct valid pictures up to the limit', () => {
+    expect(platformImages('temu', ['https://img.kwcdn.com/a.jpg', 'https://img.kwcdn.com/a.jpg', 'https://evil.test/b.jpg', 'https://img.kwcdn.com/c.jpg'], 2)).toEqual(['https://img.kwcdn.com/a.jpg', 'https://img.kwcdn.com/c.jpg'])
+  })
+})

@@ -818,4 +818,12 @@ export const FEATURES_EN: Record<string, string> = {
   "Choisissez une option pour continuer.": "Choose an option to continue.",
   "dès": "from",
   "Choisir une option": "Choose an option",
+  "Lecture de la page du produit…": "Reading the product page…",
+  "Collez le lien d'un produit Amazon, Shein, Alibaba, Temu ou Muscle & Strength : la fiche (nom, description, images, prix normal, caractéristiques), les variantes (tailles, couleurs avec leur photo et leur prix) et le colis sont remplis. Vous vérifiez avant d'enregistrer.": "Paste the link of an Amazon, Shein, Alibaba, Temu or Muscle & Strength product: the sheet (name, description, images, regular price, characteristics), the variants (sizes, colours with their photo and price) and the parcel are filled in. You check before saving.",
+  "Lien du produit": "Product link",
+  "{0} variantes importées : vérifiez leurs prix avant d'enregistrer.": "{0} variants imported: check their prices before saving.",
+  "La page ne donne pas de prix par variante : toutes ont le prix de base, à corriger si besoin.": "The page gives no price per variant: all have the base price, fix them if needed.",
+  "Plus de 100 variantes : seules les 100 premières sont gardées.": "More than 100 variants: only the first 100 are kept.",
+  "Prix {0} : {1} USD × {2} + marge {3} %": "{0} price: {1} USD × {2} + margin {3} %",
+  "Prix non converti : saisissez le prix en HTG.": "Price not converted: enter the price in HTG.",
 }

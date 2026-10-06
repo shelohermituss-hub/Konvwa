@@ -117,7 +117,7 @@ export function AdminProductsPage() {
   const [importOpen, setImportOpen] = useState(false)
   const [linkOpen, setLinkOpen] = useState(false)
   // what the last link import found (kept only to show where the price and the package come from)
-  const [importInfo, setImportInfo] = useState<{ priceUsd: number | null; rate: number; margin: number; packageSource: ImportedProduct['package_source']; warnings: string[] } | null>(null)
+  const [importInfo, setImportInfo] = useState<{ supplier: string; priceUsd: number | null; rate: number; margin: number; packageSource: ImportedProduct['package_source']; warnings: string[] } | null>(null)
   const [estimate, setEstimate] = useState<ShippingEstimate | null>(null)
   const [estQty, setEstQty] = useState(1)
   const [estCat, setEstCat] = useState<'generic' | 'branded'>('generic')
@@ -176,7 +176,6 @@ export function AdminProductsPage() {
     const get = (k: string, fallback: number) => { const v = Number(rows?.find((r: { key: string; value: string }) => r.key === k)?.value); return Number.isFinite(v) && v > 0 ? v : fallback }
     const rate = get('usd_to_htg_rate', 140)
     const margin = get('service_margin_percent', 15)
-    const country = ({ com: 'US', ca: 'CA', 'co.uk': 'GB', de: 'DE', fr: 'FR', es: 'ES', it: 'IT' } as Record<string, string>)[new URL(d.source_url).hostname.replace(/^www\./, '').replace(/^amazon\./, '')] ?? 'US'
     setEditing(null)
     setDraft({
       ...emptyDraft(),
@@ -184,8 +183,8 @@ export function AdminProductsPage() {
       description: d.description,
       price_htg: d.price_usd ? priceHtgFromUsd(d.price_usd, rate, margin) : 0,
       category: d.category ?? '',
-      supplier_name: 'Amazon',
-      supplier_country: country,
+      supplier_name: d.supplier_name,
+      supplier_country: d.supplier_country,
       images: d.images,
       specifications: d.specifications,
       rating: d.rating,
@@ -195,14 +194,22 @@ export function AdminProductsPage() {
       brand: d.brand, source_url: d.source_url, source_asin: d.source_asin,
     })
     setImagesRaw(d.images.join(', '))
+    // Variants arrive priced in USD: same exchange rate and margin as the base price (the regular price, never a promotion)
+    setVariantRows(d.variants.map((v) => ({
+      group_name: v.group_name ?? '', label: v.label, label_en: v.label_en ?? '', image: v.image ?? '', stock_available: v.stock_available,
+      price_htg: v.price_usd ? priceHtgFromUsd(v.price_usd, rate, margin) : 0,
+    })))
     setOptionsRaw(''); setCertsRaw(''); setOptionsEnRaw(''); setCertsEnRaw('')
     setTagsRaw(d.tags.join('\n')); setTagsEnRaw(d.tags_en.join('\n'))
     setNameEn(d.name_en); setDescEn(d.description_en)
     setSpecKey(''); setSpecVal('')
     setEstQty(1); setEstCat(d.brand ? 'branded' : 'generic')
-    setImportInfo({ priceUsd: d.price_usd, rate, margin, packageSource: d.package_source, warnings: d.warnings })
+    setImportInfo({ supplier: d.supplier_name, priceUsd: d.price_usd, rate, margin, packageSource: d.package_source, warnings: d.warnings })
     setLinkOpen(false)
     setDialogOpen(true)
+    if (d.variants.length > 0) toast.success(tr('{0} variantes importées : vérifiez leurs prix avant d\'enregistrer.', d.variants.length))
+    if (d.warnings.includes('variant_prices_missing')) toast.warning(tr('La page ne donne pas de prix par variante : toutes ont le prix de base, à corriger si besoin.'))
+    if (d.warnings.includes('variants_truncated')) toast.warning(tr('Plus de 100 variantes : seules les 100 premières sont gardées.'))
     if (d.warnings.includes('ai_not_configured')) toast.info(tr('Traduction et estimation IA désactivées : ajoutez le secret OPENROUTER_API_KEY.'))
   }
 
@@ -537,9 +544,9 @@ export function AdminProductsPage() {
                 <Label>{tr('Prix (HTG) *')}</Label>
                 <Input type="number" min={0} value={draft.price_htg || ''} onChange={e => setField('price_htg', parseFloat(e.target.value) || 0)} placeholder="0" />
                 {importInfo?.priceUsd ? (
-                  <p className="text-xs text-muted-foreground">{tr('Prix Amazon {0} USD × {1} + marge {2} %', importInfo.priceUsd.toLocaleString(LOCALE_TAG), importInfo.rate.toLocaleString(LOCALE_TAG), importInfo.margin.toLocaleString(LOCALE_TAG))}</p>
+                  <p className="text-xs text-muted-foreground">{tr('Prix {0} : {1} USD × {2} + marge {3} %', importInfo.supplier, importInfo.priceUsd.toLocaleString(LOCALE_TAG), importInfo.rate.toLocaleString(LOCALE_TAG), importInfo.margin.toLocaleString(LOCALE_TAG))}</p>
                 ) : importInfo ? (
-                  <p className="text-xs text-amber-700">{tr('Prix Amazon non converti : saisissez le prix en HTG.')}</p>
+                  <p className="text-xs text-amber-700">{tr('Prix non converti : saisissez le prix en HTG.')}</p>
                 ) : null}
               </div>
               <div className="space-y-1.5">

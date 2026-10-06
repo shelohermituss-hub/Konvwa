@@ -23,7 +23,13 @@ export interface ImportedProduct {
   package_source: 'package' | 'item' | 'ai' | 'none'
   package_estimated: boolean
   source_url: string
-  source_asin: string
+  /** Amazon ASIN only; other platforms are identified by `source_url`. */
+  source_asin: string | null
+  platform: 'amazon' | 'shein' | 'alibaba' | 'temu' | 'muscle_strength'
+  supplier_name: string
+  supplier_country: string
+  /** Variants (size, colour…) with their regular price in USD (the product's own price when the page gave none) and their picture. */
+  variants: Array<{ group_name: string | null; label: string; label_en: string | null; price_usd: number | null; image: string | null; stock_available: boolean }>
   warnings: string[]
 }
 
@@ -44,7 +50,7 @@ export interface ShippingEstimate {
   options: ShippingOption[]
 }
 
-/** Calls the admin-only `product-import` Edge Function (Amazon link -> product sheet data). */
+/** Calls the admin-only `product-import` Edge Function (link from Amazon, Shein, Alibaba, Temu or Muscle & Strength -> product sheet data and variants). */
 export async function importProductFromLink(url: string): Promise<ImportedProduct> {
   const { data, error } = await supabase.functions.invoke('product-import', { body: { url } })
   if (error) {

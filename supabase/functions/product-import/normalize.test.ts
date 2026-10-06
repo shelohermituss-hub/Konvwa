@@ -82,3 +82,18 @@ describe('AI output', () => {
     expect(extractJson('no json')).toBeNull()
   })
 })
+
+describe('priceToUsd with several currencies', () => {
+  it('converts yuan with the setting rate and refuses unknown rates', () => {
+    expect(priceToUsd(100, 'CNY', { EUR: 1.08, CNY: 0.14 }).usd).toBe(14)
+    expect(priceToUsd(100, '¥', { CNY: 0.14 }).usd).toBe(14)
+    expect(priceToUsd(100, 'CNY', 1.08)).toEqual({ usd: null, warning: 'currency_CNY' })
+  })
+})
+
+describe('validateAi labels', () => {
+  it('keeps translated variant labels, bounded and keyed by the original', () => {
+    const r = validateAi({ name_fr: 'A', labels: [{ src: 'Black', fr: 'Noir', en: 'Black' }, { src: '', fr: 'x' }, 7] }, [])
+    expect(r?.labels).toEqual({ Black: { fr: 'Noir', en: 'Black' } })
+  })
+})

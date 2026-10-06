@@ -78,13 +78,18 @@ export function dimsFrom(v: unknown): Dims | null {
   return null
 }
 
-/** Price in USD from a price and its currency (only USD and EUR are converted, with the rate from the settings). */
-export function priceToUsd(price: unknown, currency: unknown, eurToUsd: number): { usd: number | null; warning?: string } {
+/** Exchange rates to USD from the settings (USD itself is 1). A plain number is read as the EUR rate. */
+export type Rates = number | { EUR?: number; CNY?: number }
+
+/** Price in USD from a price and its currency (USD, EUR and CNY are converted, with the rates from the settings). */
+export function priceToUsd(price: unknown, currency: unknown, rates: Rates): { usd: number | null; warning?: string } {
   const n = num(price)
   if (n === null || n <= 0 || n > 1_000_000) return { usd: null, warning: 'price_missing' }
   const c = String(currency ?? 'USD').trim().toUpperCase()
-  if (c === 'USD' || c === '$') return { usd: round(n, 2) }
-  if (c === 'EUR' || c === '€') return { usd: round(n * eurToUsd, 2) }
+  const r = typeof rates === 'number' ? { EUR: rates } : rates
+  if (c === 'USD' || c === '$' || c === 'US$') return { usd: round(n, 2) }
+  if ((c === 'EUR' || c === '€') && r.EUR) return { usd: round(n * r.EUR, 2) }
+  if ((c === 'CNY' || c === 'RMB' || c === '¥' || c === '￥' || c === 'CN¥') && r.CNY) return { usd: round(n * r.CNY, 2) }
   return { usd: null, warning: `currency_${c || 'unknown'}` }
 }
 
@@ -120,10 +125,26 @@ export interface AiResult {
   category: string | null
   tags_fr: string[]; tags_en: string[]
   estimated_package: { weight_kg: number; length_cm: number; width_cm: number; height_cm: number } | null
+  /** Variant labels translated, keyed by the original label. */
+  labels: Record<string, { fr: string; en: string }>
 }
 
 const strList = (v: unknown, n: number, len: number) =>
   (Array.isArray(v) ? v : []).map((x) => cleanText(x, len)).filter(Boolean).slice(0, n)
+
+/** [{src, fr, en}] -> {src: {fr, en}}, bounded (the model output is untrusted). */
+function cleanLabels(v: unknown): Record<string, { fr: string; en: string }> {
+  const out: Record<string, { fr: string; en: string }> = {}
+  if (!Array.isArray(v)) return out
+  for (const item of v.slice(0, 120)) {
+    if (!item || typeof item !== 'object') continue
+    const o = item as Record<string, unknown>
+    const src = cleanText(o.src, 120)
+    const fr = cleanText(o.fr, 120); const en = cleanText(o.en, 120)
+    if (src && (fr || en) && !(src in out)) out[src] = { fr: fr || en, en: en || fr }
+  }
+  return out
+}
 
 /** The model output is untrusted: keep only well-formed, bounded values. */
 export function validateAi(raw: unknown, allowedCategories: string[]): AiResult | null {
@@ -142,6 +163,7 @@ export function validateAi(raw: unknown, allowedCategories: string[]): AiResult 
     category,
     tags_fr: strList(o.tags_fr, 10, 40), tags_en: strList(o.tags_en, 10, 40),
     estimated_package: w && l && wi && h ? { weight_kg: w, length_cm: l, width_cm: wi, height_cm: h } : null,
+    labels: cleanLabels(o.labels),
   }
 }
 
