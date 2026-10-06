@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Loader2, Wallet } from 'lucide-react'
+import { Loader2, Trash2, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -68,7 +68,10 @@ export function AdminUserSheet({ userId, onClose, onChanged }: { userId: string 
   const [restrictions, setRestrictions] = useState<Restriction[]>([])
   const [note, setNote] = useState('')
   const [role, setRole] = useState<UserRole>('client')
-  const [busy, setBusy] = useState<'access' | 'note' | 'role' | null>(null)
+  const [busy, setBusy] = useState<'access' | 'note' | 'role' | 'delete' | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [confirmEmail, setConfirmEmail] = useState('')
+  const [acceptLoss, setAcceptLoss] = useState(false)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -90,6 +93,27 @@ export function AdminUserSheet({ userId, onClose, onChanged }: { userId: string 
   const isSelf = !!target && target.user_id === user?.id
   const iAmAdmin = me?.role === 'admin'
   const locked = !target || isSelf || target.role === 'admin' || (target.role !== 'client' && !iAmAdmin)
+
+  /** Permanently deletes the client account and everything attached to it (administrators only, done by the server). */
+  async function deleteAccount() {
+    if (!target) return
+    setBusy('delete')
+    const { data: res, error } = await supabase.functions.invoke('admin-delete-user', {
+      body: { user_id: target.user_id, confirm_email: confirmEmail, accept_balance_loss: acceptLoss },
+    })
+    setBusy(null)
+    if (error) {
+      const ctx = (error as { context?: Response }).context
+      const detail = ctx && typeof ctx.json === 'function' ? await ctx.json().catch(() => null) as { error?: string } | null : null
+      toast.error(detail?.error ? trServer(detail.error) : tr('Suppression impossible.'))
+      return
+    }
+    if (!res?.success) { toast.error(res?.error ? trServer(String(res.error)) : tr('Suppression impossible.')); return }
+    toast.success(tr('Compte supprimé.'))
+    setDeleteOpen(false)
+    onChanged()
+    onClose()
+  }
 
   async function saveAccess() {
     if (!target) return
@@ -245,6 +269,47 @@ export function AdminUserSheet({ userId, onClose, onChanged }: { userId: string 
               </div>
               {!iAmAdmin && <p className="text-[11px] text-muted-foreground">{tr('Seul un administrateur peut changer les rôles.')}</p>}
             </section>
+
+            {/* Danger zone: permanent deletion of the account */}
+            {iAmAdmin && !isSelf && target.role === 'client' && (
+              <section className="space-y-2.5 rounded-xl border border-destructive/30 bg-destructive/5 p-3.5">
+                <h3 className="text-sm font-bold text-destructive">{tr('Supprimer le compte')}</h3>
+                <p className="text-[11px] text-muted-foreground">
+                  {tr('Supprime définitivement le compte et toutes ses données : profil, portefeuille et historique, commandes, demandes, adresses, documents. Impossible à annuler.')}
+                </p>
+                {!deleteOpen ? (
+                  <Button variant="outline" className="h-10 w-full gap-2 rounded-xl border-destructive/40 font-semibold text-destructive hover:bg-destructive/10" onClick={() => { setDeleteOpen(true); setConfirmEmail(''); setAcceptLoss(false) }}>
+                    <Trash2 className="h-4 w-4" />{tr('Supprimer ce compte…')}
+                  </Button>
+                ) : (
+                  <div className="space-y-2.5">
+                    <p className="text-xs">
+                      {tr('Ce compte a {0} commande(s), {1} demande(s) et un solde de {2} HTG.', data.counts.orders + data.counts.catalog_orders, data.counts.requests, fmt(data.wallet_balance))}
+                    </p>
+                    {data.wallet_balance > 0 && (
+                      <label className="flex items-start gap-2 text-xs font-medium">
+                        <input type="checkbox" checked={acceptLoss} onChange={(e) => setAcceptLoss(e.target.checked)} className="mt-0.5 h-4 w-4 rounded" />
+                        {tr('Je comprends que le solde de ce portefeuille sera perdu.')}
+                      </label>
+                    )}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="del-email" className="text-xs">{tr('Pour confirmer, saisissez l\'e-mail du compte :')} <span className="font-mono">{data.email}</span></Label>
+                      <Input id="del-email" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} autoComplete="off" className="h-10 rounded-xl" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" className="rounded-xl" onClick={() => setDeleteOpen(false)} disabled={busy === 'delete'}>{tr('Annuler')}</Button>
+                      <Button
+                        className="gap-2 rounded-xl bg-destructive font-semibold text-white hover:bg-destructive/90"
+                        disabled={busy === 'delete' || confirmEmail.trim().toLowerCase() !== (data.email ?? '').toLowerCase() || !data.email || (data.wallet_balance > 0 && !acceptLoss)}
+                        onClick={() => void deleteAccount()}
+                      >
+                        {busy === 'delete' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}{tr('Supprimer définitivement')}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* Internal note */}
             <section className="space-y-2 rounded-xl border border-gray-100 p-3.5">
