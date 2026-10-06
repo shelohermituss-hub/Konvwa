@@ -884,4 +884,8 @@ export const FEATURES_EN: Record<string, string> = {
   "Saisissez l'e-mail du compte pour confirmer.": "Type the account e-mail to confirm.",
   "Seuls les comptes clients peuvent être supprimés : retirez d'abord le rôle de l'équipe.": "Only client accounts can be deleted: remove the staff role first.",
   "Suppression impossible : des données liées à ce compte la bloquent.": "Deletion impossible: data linked to this account blocks it.",
+  "Carte (Stripe)": "Card (Stripe)",
+  "la page de paiement par carte": "the card payment page",
+  "Carte bancaire": "Bank card",
+  "Carte": "Card",
 }

@@ -44,7 +44,7 @@ const TYPE_LABEL: Record<string, () => string> = {
   block: () => tr('Bloqué'), unblock: () => tr('Débloqué'),
 }
 const METHOD_LABEL: Record<string, string> = {
-  moncash: 'MonCash', natcash: 'NatCash', wallet: tr('Portefeuille'), virement: tr('Virement'), btc: 'Bitcoin', usdt: 'USDT', eth: 'Ethereum',
+  moncash: 'MonCash', natcash: 'NatCash', stripe: tr('Carte (Stripe)'), wallet: tr('Portefeuille'), virement: tr('Virement'), btc: 'Bitcoin', usdt: 'USDT', eth: 'Ethereum',
 }
 const STATUS_CHIPS = [
   { value: 'pending', label: () => tr('En attente') },
@@ -59,7 +59,7 @@ function dateTime(iso: string) { return new Date(iso).toLocaleString(DATE_LOCALE
 const isCredit = (t: Pick<Tx, 'type'>) => t.type === 'deposit' || t.type === 'refund' || t.type === 'unblock'
 
 /** MonCash / NatCash payments are settled by the gateway alone: the team never validates them by hand. */
-const isGateway = (tx: { payment_method: string | null }) => tx.payment_method === 'moncash' || tx.payment_method === 'natcash'
+const isGateway = (tx: { payment_method: string | null }) => tx.payment_method === 'moncash' || tx.payment_method === 'natcash' || tx.payment_method === 'stripe'
 
 export function AdminPaymentsPage() {
   const { profile } = useAuth()

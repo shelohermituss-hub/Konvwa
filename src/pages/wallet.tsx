@@ -52,6 +52,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
 const METHOD_LABEL: Record<string, string> = {
   moncash:  'MonCash',
   natcash:  'NatCash',
+  stripe:   tr('Carte (Stripe)'),
   wallet:   tr('Portefeuille'),
   virement: tr('Virement BUH'),
   btc:      'Bitcoin (BTC)',
@@ -294,7 +295,7 @@ export function WalletPage() {
   const [loading, setLoading] = useState(true)
   const [balanceVisible, setBalanceVisible] = useState(true)
   const [topupAmount, setTopupAmount] = useState('')
-  const [topupMethod, setTopupMethod] = useState<'moncash' | 'natcash' | 'virement' | 'btc' | 'usdt' | 'eth'>('moncash')
+  const [topupMethod, setTopupMethod] = useState<'moncash' | 'natcash' | 'stripe' | 'virement' | 'btc' | 'usdt' | 'eth'>('moncash')
   const [topupOpen, setTopupOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [receiptTx, setReceiptTx] = useState<Transaction | null>(null)
@@ -321,7 +322,7 @@ export function WalletPage() {
         setTransactions(txRes.data as Transaction[])
         // A MonCash / NatCash top-up waiting for the gateway is checked again (the customer may have paid then closed the page):
         // only the gateway's confirmation credits it, and only then does it exist for the team
-        const waiting = (txRes.data as Transaction[]).filter(t => t.type === 'deposit' && t.status === 'pending' && (t.payment_method === 'moncash' || t.payment_method === 'natcash') && t.reference
+        const waiting = (txRes.data as Transaction[]).filter(t => t.type === 'deposit' && t.status === 'pending' && (t.payment_method === 'moncash' || t.payment_method === 'natcash' || t.payment_method === 'stripe') && t.reference
           && Date.now() - new Date(t.created_at).getTime() < 24 * 3600 * 1000).slice(0, 3)
         if (waiting.length > 0) {
           void Promise.all(waiting.map(t => verifyPayment(t.reference as string).catch(() => null))).then(rs => {
@@ -353,10 +354,10 @@ export function WalletPage() {
     if (!(await confirmPayment(amount))) return
     setSubmitting(true)
     try {
-      const result = await createPayment({ amount, method: topupMethod as 'moncash' | 'natcash', wallet_id: wallet.id })
+      const result = await createPayment({ amount, method: topupMethod as 'moncash' | 'natcash' | 'stripe', wallet_id: wallet.id })
       sessionStorage.setItem('konvwa_pay_ref', result.reference_id)
       haptics.success()
-      toast.success(tr('Redirection vers ') + (topupMethod === 'moncash' ? 'MonCash' : 'NatCash') + '…')
+      toast.success(tr('Redirection vers ') + (topupMethod === 'moncash' ? 'MonCash' : topupMethod === 'stripe' ? tr('la page de paiement par carte') : 'NatCash') + '…')
       setTopupOpen(false)
       window.location.href = result.url
     } catch (e: unknown) {
@@ -561,6 +562,16 @@ export function WalletPage() {
                       <span className="text-[10px] text-muted-foreground">Natcom</span>
                     </Label>
                   </div>
+                  {/* Carte bancaire (Stripe) */}
+                  <div className="relative">
+                    <RadioGroupItem value="stripe" id="stripe" className="peer sr-only" />
+                    <Label htmlFor="stripe" className="flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 mb-1">
+                        <CreditCard className="h-4 w-4 text-indigo-600" aria-hidden />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">{tr('Carte bancaire')}</span>
+                    </Label>
+                  </div>
                   {/* Virement */}
                   <div className="relative">
                     <RadioGroupItem value="virement" id="virement" className="peer sr-only" />
@@ -719,7 +730,7 @@ export function WalletPage() {
                 disabled={
                   !topupAmount || parseFloat(topupAmount) < 100 || submitting ||
                   ((topupMethod === 'btc' || topupMethod === 'usdt' || topupMethod === 'eth') && !proofFile) ||
-                  (topupMethod !== 'moncash' && topupMethod !== 'natcash' && txHashInput.trim().length < 4)
+                  (topupMethod !== 'moncash' && topupMethod !== 'natcash' && topupMethod !== 'stripe' && txHashInput.trim().length < 4)
                 }
                 className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity pressable"
                 style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}

@@ -716,6 +716,19 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   PERFORM pg_temp.as_user(b);
   ASSERT (SELECT count(*) FROM checkout_intents) = 0, 'client b reads intents';
   RESET ROLE;
+
+  -- 26. card payments (Stripe): accepted method, labelled in the wallet history, nothing else is
+  INSERT INTO checkout_intents (user_id, reference, method, amount, items) VALUES (a, 'KWS-TESTINT-3', 'stripe', 500, jsonb_build_array(jsonb_build_object('product_id', cn, 'quantity', 1)));
+  r := public.fulfill_checkout_intent('KWS-TESTINT-3');
+  ASSERT (SELECT description FROM wallet_transactions WHERE reference = 'KWS-TESTINT-3') LIKE '%Stripe%', 'stripe label missing';
+  BEGIN INSERT INTO checkout_intents (user_id, reference, method, amount, items) VALUES (a, 'KWS-TESTINT-4', 'paypal', 500, '[]'::jsonb); ASSERT false, 'unknown method accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+  PERFORM pg_temp.as_user(a);
+  BEGIN PERFORM public.fulfill_checkout_intent('KWS-TESTINT-3'); ASSERT false, 'client called fulfill (stripe)'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+  ASSERT (SELECT value FROM app_settings WHERE key = 'stripe_secret_key') IS NOT NULL, 'stripe key missing';
+  PERFORM pg_temp.as_user(b);
+  ASSERT (SELECT count(*) FROM app_settings WHERE key IN ('stripe_secret_key', 'stripe_webhook_secret')) = 0, 'client reads stripe secrets';
+  RESET ROLE;
 END $$;
 
 SELECT 'all security tests passed' AS result;

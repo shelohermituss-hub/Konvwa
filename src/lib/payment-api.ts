@@ -41,23 +41,29 @@ async function invoke<T>(fn: string, body: Record<string, unknown>): Promise<T> 
 
 export async function createPayment(args: {
   amount: number
-  method: 'moncash' | 'natcash'
+  method: 'moncash' | 'natcash' | 'stripe'
   wallet_id: string
 }): Promise<CreatePaymentResult> {
+  // card payments go through Stripe Checkout (its own Edge Function), mobile money through the PLOP PLOP gateway
+  if (args.method === 'stripe') return invoke('stripe-checkout', { kind: 'topup', amount: args.amount })
   return invoke('payment-create', args)
 }
 
+/** References of card payments start with KWS- (MonCash / NatCash ones with KW-). */
+const isCardRef = (ref: string) => ref.startsWith('KWS-')
+
 /** Pay a cart (or one product) with MonCash / NatCash: nothing is ordered until the gateway confirms the payment. */
 export async function createCheckoutPayment(args: {
-  method: 'moncash' | 'natcash'
+  method: 'moncash' | 'natcash' | 'stripe'
   items: Array<{ product_id: string; variant_id: string | null; quantity: number }>
   shipping_rate_id: string | null
   source: 'cart' | 'buy_now'
 }): Promise<CreatePaymentResult> {
-  return invoke('payment-create', { kind: 'checkout', ...args })
+  return invoke(args.method === 'stripe' ? 'stripe-checkout' : 'payment-create', { kind: 'checkout', ...args })
 }
 
 export async function verifyPayment(reference_id: string): Promise<VerifyPaymentResult> {
+  if (isCardRef(reference_id)) return invoke('stripe-checkout', { action: 'verify', reference: reference_id })
   return invoke('payment-verify', { reference_id })
 }
 

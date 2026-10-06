@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, CreditCard, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { CART_PRODUCT_SELECT, cartLineUnitPrice, cartLineVariantName, toCartProduct, useCart, type CartItem } from '@/lib/cart-context'
 import { VARIANT_SELECT, type ProductVariant } from '@/lib/catalog'
@@ -45,7 +45,7 @@ export function CheckoutPage() {
   const [shippingError, setShippingError] = useState('')
   const [rateId, setRateId] = useState<string | null>(null)
   // How the customer pays: the wallet, or MonCash / NatCash directly (redirected to the gateway; nothing is ordered until it confirms)
-  const [payWith, setPayWith] = useState<'wallet' | 'moncash' | 'natcash'>('wallet')
+  const [payWith, setPayWith] = useState<'wallet' | 'moncash' | 'natcash' | 'stripe'>('wallet')
 
   useEffect(() => {
     if (!buyNow || !user) return
@@ -115,7 +115,7 @@ export function CheckoutPage() {
   }, [items, success, paying, navigate, buyLoading])
 
   async function handleGatewayPay() {
-    if (!user || !canPay || (payWith !== 'moncash' && payWith !== 'natcash')) return
+    if (!user || !canPay || (payWith !== 'moncash' && payWith !== 'natcash' && payWith !== 'stripe')) return
     if (!(await confirmPayment(grandTotal))) return
     setPaying(true)
     try {
@@ -127,7 +127,7 @@ export function CheckoutPage() {
         source: buyNow ? 'buy_now' : 'cart',
       })
       sessionStorage.setItem('konvwa_pay_ref', r.reference_id)
-      toast.success(tr('Redirection vers ') + (payWith === 'moncash' ? 'MonCash' : 'NatCash') + '…')
+      toast.success(tr('Redirection vers ') + (payWith === 'moncash' ? 'MonCash' : payWith === 'stripe' ? tr('la page de paiement par carte') : 'NatCash') + '…')
       window.location.href = r.url
     } catch (e: unknown) {
       toast.error(tr('Paiement échoué'), { description: e instanceof Error ? e.message : tr('Erreur inconnue') })
@@ -337,11 +337,12 @@ export function CheckoutPage() {
         {/* Payment method */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
           <p className="mb-3 text-sm font-bold">{tr('Moyen de paiement')}</p>
-          <div role="radiogroup" aria-label={tr('Moyen de paiement')} className="grid grid-cols-3 gap-2">
+          <div role="radiogroup" aria-label={tr('Moyen de paiement')} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {([
               { id: 'wallet', label: tr('Portefeuille'), icon: <Wallet className="h-6 w-6 text-primary" aria-hidden /> },
               { id: 'moncash', label: 'MonCash', icon: <img src="/moncash-logo.jpg" alt="" className="h-6 object-contain" /> },
               { id: 'natcash', label: 'NatCash', icon: <img src="/natcash-logo.png" alt="" className="h-6 object-contain" /> },
+              { id: 'stripe', label: tr('Carte'), icon: <CreditCard className="h-6 w-6 text-indigo-600" aria-hidden /> },
             ] as const).map((m) => (
               <button
                 key={m.id} type="button" role="radio" aria-checked={payWith === m.id} onClick={() => setPayWith(m.id)}
@@ -424,7 +425,7 @@ export function CheckoutPage() {
               </>
             ) : (
               <>
-                {viaGateway ? tr('Payer avec {0}', payWith === 'moncash' ? 'MonCash' : 'NatCash') : t('checkout.confirm')} · {grandTotal.toLocaleString(LOCALE_TAG)} HTG
+                {viaGateway ? tr('Payer avec {0}', payWith === 'moncash' ? 'MonCash' : payWith === 'stripe' ? tr('Carte') : 'NatCash') : t('checkout.confirm')} · {grandTotal.toLocaleString(LOCALE_TAG)} HTG
               </>
             )}
           </button>
