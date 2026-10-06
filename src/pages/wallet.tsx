@@ -288,7 +288,7 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
 }
 
 export function WalletPage() {
-  const { user, profile } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const { confirmPayment } = useStepUp()
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -562,8 +562,8 @@ export function WalletPage() {
                       <span className="text-[10px] text-muted-foreground">Natcom</span>
                     </Label>
                   </div>
-                  {/* Carte bancaire (Stripe) */}
-                  <div className="relative">
+                  {/* Carte bancaire (Stripe): réservée à l'équipe tant que la clé Stripe est en mode test */}
+                  {isAdmin && <div className="relative">
                     <RadioGroupItem value="stripe" id="stripe" className="peer sr-only" />
                     <Label htmlFor="stripe" className="flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 mb-1">
@@ -571,7 +571,7 @@ export function WalletPage() {
                       </div>
                       <span className="text-[10px] text-muted-foreground">{tr('Carte bancaire')}</span>
                     </Label>
-                  </div>
+                  </div>}
                   {/* Virement */}
                   <div className="relative">
                     <RadioGroupItem value="virement" id="virement" className="peer sr-only" />

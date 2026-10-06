@@ -22,7 +22,7 @@ interface WalletData {
 export function CheckoutPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const { items: cartItems, total: cartTotal, clearCart: clearCartItems } = useCart()
   // "Buy" from a product page: only that product is bought, the cart is left as it is
   const location = useLocation()
@@ -343,7 +343,7 @@ export function CheckoutPage() {
               { id: 'moncash', label: 'MonCash', icon: <img src="/moncash-logo.jpg" alt="" className="h-6 object-contain" /> },
               { id: 'natcash', label: 'NatCash', icon: <img src="/natcash-logo.png" alt="" className="h-6 object-contain" /> },
               { id: 'stripe', label: tr('Carte'), icon: <CreditCard className="h-6 w-6 text-indigo-600" aria-hidden /> },
-            ] as const).map((m) => (
+            ] as const).filter((m) => m.id !== 'stripe' || isAdmin).map((m) => (
               <button
                 key={m.id} type="button" role="radio" aria-checked={payWith === m.id} onClick={() => setPayWith(m.id)}
                 className={cn('flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-2 text-xs font-semibold transition-colors active:scale-[0.98]',
