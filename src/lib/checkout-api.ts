@@ -23,7 +23,7 @@ export interface CheckoutShipping {
 
 export interface CreatedOrder { order_id: string; total: number; shipping: number; prepaid: boolean }
 
-interface CartLine { product_id: string; quantity: number }
+interface CartLine { product_id: string; variant_id?: string | null; quantity: number }
 
 /** Shipping methods (and prices, computed by the database) for the US part of the cart. */
 export async function fetchCheckoutShipping(items: CartLine[]): Promise<CheckoutShipping> {

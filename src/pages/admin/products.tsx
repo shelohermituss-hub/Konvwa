@@ -13,6 +13,7 @@ import { normalizeTiers, type PriceTier } from '@/lib/product-pricing'
 import { ProductImportDialog } from '@/components/shared/product-import-dialog'
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { ProductLinkImport } from '@/components/shared/product-link-import'
+import { VariantsEditor, variantsError, variantsPayload, type VariantRow } from '@/components/shared/variants-editor'
 import { estimateShipping, type ImportedProduct, type ShippingEstimate } from '@/lib/product-import-api'
 import { priceHtgFromUsd } from '@/lib/import-pricing'
 
@@ -129,6 +130,8 @@ export function AdminProductsPage() {
   const [specVal, setSpecVal] = useState('')
   // Images as comma-separated URLs
   const [imagesRaw, setImagesRaw] = useState('')
+  // Variants (size, colour…) are saved apart from the product, through admin_save_product_variants
+  const [variantRows, setVariantRows] = useState<VariantRow[]>([])
   // One entry per line
   const [optionsRaw, setOptionsRaw] = useState('')
   const [tagsRaw, setTagsRaw] = useState('')
@@ -157,6 +160,7 @@ export function AdminProductsPage() {
     const d = emptyDraft()
     setDraft(d)
     setImagesRaw('')
+    setVariantRows([])
     setOptionsRaw('')
     setTagsRaw('')
     setCertsRaw('')
@@ -258,6 +262,12 @@ export function AdminProductsPage() {
       source_asin: p.source_asin ?? null,
     })
     setImportInfo(null)
+    setVariantRows([])
+    void supabase.from('product_variants').select('id, group_name, label, label_en, price_htg, image, stock_available').eq('product_id', p.id).eq('active', true).order('sort_order')
+      .then(({ data }) => setVariantRows((data ?? []).map((v) => ({
+        id: v.id as string, group_name: (v.group_name as string | null) ?? '', label: v.label as string, label_en: (v.label_en as string | null) ?? '',
+        price_htg: Number(v.price_htg), image: (v.image as string | null) ?? '', stock_available: v.stock_available as boolean,
+      }))))
     setOptionsRaw(p.customization_options.join('\n'))
     setTagsRaw(p.tags.join('\n'))
     setCertsRaw(p.certifications.join('\n'))
@@ -310,6 +320,9 @@ export function AdminProductsPage() {
       return
     }
 
+    const variantProblem = variantsError(variantRows)
+    if (variantProblem) { toast.error(variantProblem); return }
+
     setSaving(true)
     const payload = {
       ...draft,
@@ -330,15 +343,23 @@ export function AdminProductsPage() {
       certifications_en: lines(certsEnRaw),
     }
 
+    let productId = editing?.id ?? ''
     if (editing) {
       const { error } = await supabase.from('products').update(payload).eq('id', editing.id)
       if (error) { toast.error(error.message); setSaving(false); return }
-      toast.success(tr('Produit mis à jour'))
     } else {
-      const { error } = await supabase.from('products').insert(payload)
-      if (error) { toast.error(error.message); setSaving(false); return }
-      toast.success(tr('Produit ajouté'))
+      const { data, error } = await supabase.from('products').insert(payload).select('id').single()
+      if (error || !data) { toast.error(error?.message ?? tr('Erreur inconnue')); setSaving(false); return }
+      productId = data.id as string
     }
+    if (editing || variantRows.length > 0) {
+      const { data: res, error: varError } = await supabase.rpc('admin_save_product_variants', { p_product: productId, p_variants: variantsPayload(variantRows) })
+      if (varError || !res?.success) {
+        toast.error(tr('Produit enregistré, mais pas ses variantes : {0}', varError?.message ?? res?.error ?? ''))
+        setSaving(false); load(); return
+      }
+    }
+    toast.success(editing ? tr('Produit mis à jour') : tr('Produit ajouté'))
 
     setSaving(false)
     closeDialog()
@@ -649,6 +670,8 @@ export function AdminProductsPage() {
                 {tr('+ Ajouter un palier')}
               </Button>
             </div>
+
+            <VariantsEditor rows={variantRows} onChange={setVariantRows} />
 
             {/* Supplier + social proof */}
             <div className="grid grid-cols-2 gap-4">

@@ -30,6 +30,27 @@ export function unitPriceFor(product: PricedProduct, quantity: number): number {
   return tier ? tier.price_htg : product.price_htg
 }
 
+export interface PricedVariant {
+  price_htg: number
+}
+
+/**
+ * Unit price of a variant for a quantity: its own regular price, with the same % discount as the quantity tier of the
+ * product, then the reseller discount. Mirrors `create_product_order` (display only, the database prices the order).
+ * `product` may already carry the reseller prices (see `resellerPriced`): the tier ratio is the same, so only the
+ * variant price needs the reseller discount.
+ */
+export function variantUnitPrice(
+  product: PricedProduct & { reseller_price?: boolean; reseller_discount_pct?: number },
+  variant: PricedVariant,
+  quantity: number,
+): number {
+  const ratio = product.price_htg > 0 ? unitPriceFor(product, quantity) / product.price_htg : 1
+  const tiered = Math.round(variant.price_htg * ratio * 100) / 100
+  const pct = product.reseller_price ? (product.reseller_discount_pct ?? 0) : 0
+  return pct > 0 ? Math.round(tiered * (1 - pct / 100) * 100) / 100 : tiered
+}
+
 export function priceRange(product: PricedProduct): { min: number; max: number } {
   const prices = [product.price_htg, ...normalizeTiers(product.price_tiers).map((t) => t.price_htg)]
   return { min: Math.min(...prices), max: Math.max(...prices) }

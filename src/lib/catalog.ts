@@ -35,6 +35,32 @@ export interface CatalogProduct {
   reseller_discount_pct?: number
   wholesale_only?: boolean
   reseller_price?: boolean
+  product_variants?: ProductVariant[]
+}
+
+export interface ProductVariant {
+  id: string
+  label: string
+  label_en: string | null
+  group_name: string | null
+  price_htg: number
+  image: string | null
+  stock_available: boolean
+  sort_order: number
+}
+
+export const VARIANT_SELECT = 'id, label, label_en, group_name, price_htg, image, stock_available, sort_order'
+
+/** Label shown to the customer, in the current language. */
+export function variantLabel(v: Pick<ProductVariant, 'label' | 'label_en'>): string {
+  return LANG === 'en' && v.label_en?.trim() ? v.label_en : v.label
+}
+
+/** The variants of a product as returned by the catalogue embed: ordered, with numeric prices. */
+export function sortVariants(list: ProductVariant[] | null | undefined): ProductVariant[] {
+  return (list ?? [])
+    .map((v) => ({ ...v, price_htg: Number(v.price_htg) }))
+    .sort((a, b) => a.sort_order - b.sort_order)
 }
 
 export const CATALOG_LIST_SELECT =
@@ -65,4 +91,4 @@ export function resellerPriced<T extends { price_htg: number; price_tiers?: unkn
   return { ...p, price_htg: Math.round(p.price_htg * factor * 100) / 100, price_tiers: tiers, reseller_price: true }
 }
 
-export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications`
+export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications, product_variants(${VARIANT_SELECT})`

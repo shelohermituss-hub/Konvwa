@@ -7,9 +7,9 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
-import { CATALOG_DETAIL_SELECT, CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_DETAIL_SELECT, CATALOG_LIST_SELECT, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
-import { formatHtg, tierRows, unitPriceFor } from '@/lib/product-pricing'
+import { formatHtg, tierRows, unitPriceFor, variantUnitPrice } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
 import { ProductReviews } from '@/components/shared/product-reviews'
 import { WishlistButton } from '@/components/shared/wishlist-button'
@@ -57,6 +57,7 @@ export function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const [adding, setAdding] = useState(false)
   const [activeImg, setActiveImg] = useState(0)
+  const [variantId, setVariantId] = useState<string | null>(null)
   const [titleOpen, setTitleOpen] = useState(false)
   const [allSpecs, setAllSpecs] = useState(false)
   const [allOptions, setAllOptions] = useState(false)
@@ -71,6 +72,7 @@ export function ProductDetailPage() {
       .select(CATALOG_DETAIL_SELECT)
       .eq('id', id)
       .eq('active', true)
+      .eq('product_variants.active', true)
       .maybeSingle()
       .then(({ data }) => {
         const raw = data as unknown as CatalogProduct | null
@@ -78,6 +80,7 @@ export function ProductDetailPage() {
         setProduct(p)
         if (p) setQuantity(p.moq)
         setActiveImg(0)
+        setVariantId(null)
         setLoading(false)
         window.scrollTo?.({ top: 0 })
       })
@@ -107,13 +110,24 @@ export function ProductDetailPage() {
     document.getElementById(`section-${target}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
+  function pickVariant(v: ProductVariant, gallery: string[]) {
+    setVariantId(v.id)
+    const at = v.image ? gallery.indexOf(v.image) : -1
+    if (at >= 0) goToImage(at)
+  }
+
   async function handleAddToCart() {
     if (!product) return
+    if (variants.length > 0 && !chosen) {
+      toast.error(tr('Choisissez une option avant d\'ajouter au panier.'))
+      document.getElementById('section-variants')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
     setAdding(true)
-    await addItem(product.id, quantity)
+    await addItem(product.id, quantity, chosen?.id)
     setAdding(false)
     toast.success(t('products.added'), {
-      description: `${quantity} × ${product.name}`,
+      description: `${quantity} × ${product.name}${chosen ? ` (${variantLabel(chosen)})` : ''}`,
       action: { label: tr('Voir panier'), onClick: () => navigate('/cart') },
     })
   }
@@ -158,8 +172,22 @@ export function ProductDetailPage() {
     )
   }
 
-  const rows = tierRows(product)
-  const unitPrice = unitPriceFor(product, quantity)
+  const variants = sortVariants(product.product_variants)
+  const chosen = variants.find((v) => v.id === variantId) ?? null
+  const cheapest = variants.reduce<ProductVariant | null>((m, v) => (!m || v.price_htg < m.price_htg ? v : m), null)
+  const priced = chosen ?? cheapest
+  // The gallery also holds the variant photos, so choosing a variant can show its own picture.
+  const gallery = [...product.images, ...variants.map((v) => v.image).filter((u): u is string => !!u && !product.images.includes(u))]
+    .filter((u, i, all) => all.indexOf(u) === i)
+  const groups = variants.reduce<Array<{ name: string; items: ProductVariant[] }>>((acc, v) => {
+    const name = v.group_name?.trim() ?? ''
+    const g = acc.find((x) => x.name === name)
+    if (g) g.items.push(v)
+    else acc.push({ name, items: [v] })
+    return acc
+  }, [])
+  const rows = tierRows(product).map((r) => (priced ? { ...r, price: variantUnitPrice(product, priced, r.from) } : r))
+  const unitPrice = priced ? variantUnitPrice(product, priced, quantity) : unitPriceFor(product, quantity)
   const subtotal = unitPrice * quantity
   const specs = Object.entries(product.specifications ?? {})
   const shownSpecs = allSpecs ? specs : specs.slice(0, SPEC_PREVIEW)
@@ -250,8 +278,8 @@ export function ProductDetailPage() {
               }}
               className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto bg-gray-50 scrollbar-none"
             >
-              {product.images.length > 0 ? (
-                product.images.map((img, i) => (
+              {gallery.length > 0 ? (
+                gallery.map((img, i) => (
                   <img
                     key={img + i}
                     src={img}
@@ -266,15 +294,15 @@ export function ProductDetailPage() {
                 </div>
               )}
             </div>
-            {product.images.length > 1 && (
+            {gallery.length > 1 && (
               <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
-                {tr('Photos')}{' '}{activeImg + 1}/{product.images.length}
+                {tr('Photos')}{' '}{activeImg + 1}/{gallery.length}
               </span>
             )}
           </div>
-          {product.images.length > 1 && (
+          {gallery.length > 1 && (
             <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none">
-              {product.images.map((img, i) => (
+              {gallery.map((img, i) => (
                 <button
                   key={img + i}
                   onClick={() => goToImage(i)}
@@ -318,6 +346,49 @@ export function ProductDetailPage() {
               )}
             </p>
 
+            {/* Variants: size, colour… each with its own regular price and photo */}
+            {variants.length > 0 && (
+              <div id="section-variants" className="mt-3 space-y-3 scroll-mt-28">
+                {groups.map((g) => (
+                  <div key={g.name || 'options'}>
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {g.name || tr('Options')}
+                      {chosen && g.items.some((v) => v.id === chosen.id) && <span className="ml-1.5 normal-case text-foreground">· {variantLabel(chosen)}</span>}
+                    </p>
+                    <div role="radiogroup" aria-label={g.name || tr('Options')} className="flex flex-wrap gap-2">
+                      {g.items.map((v) => {
+                        const on = v.id === variantId
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={on}
+                            disabled={!v.stock_available}
+                            onClick={() => pickVariant(v, gallery)}
+                            className={cn(
+                              'flex min-h-11 items-center gap-2 rounded-xl border-2 px-2.5 py-1.5 text-left text-sm transition-colors active:scale-[0.98]',
+                              on ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white hover:border-gray-300',
+                              !v.stock_available && 'cursor-not-allowed opacity-50',
+                            )}
+                          >
+                            {v.image && <img src={v.image} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-lg object-cover" />}
+                            <span className="min-w-0">
+                              <span className={cn('block max-w-[11rem] truncate font-semibold', !v.stock_available && 'line-through')}>{variantLabel(v)}</span>
+                              <span className="block text-xs tabular-nums text-muted-foreground">
+                                {v.stock_available ? `${formatHtg(variantUnitPrice(product, v, quantity))} HTG` : tr('Rupture de stock')}
+                              </span>
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {!chosen && <p className="text-sm text-muted-foreground">{tr('Choisissez une option pour continuer.')}</p>}
+              </div>
+            )}
+
             {/* Price by quantity */}
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-muted/50 p-3" aria-label={tr('Prix selon la quantité')}>
               {rows.map((r) => {
@@ -325,7 +396,7 @@ export function ProductDetailPage() {
                 return (
                   <div key={r.from}>
                     <p className={cn('text-xl font-extrabold tabular-nums tracking-tight', active ? 'text-primary' : 'text-foreground')}>
-                      {formatHtg(r.price)} <span className="text-xs font-semibold text-muted-foreground">HTG</span>
+                      {variants.length > 0 && !chosen && <span className="mr-1 text-xs font-semibold text-muted-foreground">{tr('dès')}</span>}{formatHtg(r.price)} <span className="text-xs font-semibold text-muted-foreground">HTG</span>
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {rows.length > 1 && r === rows[0]
@@ -548,13 +619,14 @@ export function ProductDetailPage() {
           <button
             onClick={handleAddToCart}
             disabled={adding || !product.stock_available}
+            aria-disabled={variants.length > 0 && !chosen}
             className="flex h-12 flex-[1.3] items-center justify-center gap-2 rounded-full text-sm font-bold text-white transition-opacity disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
             {adding ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <span className="truncate">{t('products.add_to_cart')} · {formatHtg(subtotal)}</span>
+              <span className="truncate">{variants.length > 0 && !chosen ? tr('Choisir une option') : `${t('products.add_to_cart')} · ${formatHtg(subtotal)}`}</span>
             )}
           </button>
         </div>

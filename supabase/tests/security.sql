@@ -571,5 +571,77 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   ASSERT NOT has_function_privilege('authenticated', 'public.package_shipping_options(numeric,numeric,uuid)', 'execute'), 'internal fee helper callable';
 END $$;
 
+-- 24. product variants: only staff write them; a product with variants cannot be ordered without a valid one;
+--     the price comes from the variant (+ the same % as the quantity tier); the name is snapshotted; carts keep one line per variant
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); adm uuid := (SELECT admin_id FROM ctx);
+  p uuid; p2 uuid; v1 uuid; v2 uuid; vx uuid; vo uuid; r jsonb; oid uuid; n integer; BEGIN
+  INSERT INTO products (name, price_htg, moq, unit, supplier_country, active, stock_available, price_tiers)
+    VALUES ('Variant test', 1000, 1, 'u', 'CN', true, true, '[{"min_qty":10,"price_htg":800}]'::jsonb) RETURNING id INTO p;
+  INSERT INTO products (name, price_htg, moq, unit, supplier_country, active, stock_available)
+    VALUES ('Other product', 300, 1, 'u', 'CN', true, true) RETURNING id INTO p2;
+
+  -- a client cannot write variants, directly or through the staff function
+  PERFORM pg_temp.as_user(a);
+  BEGIN INSERT INTO product_variants (product_id, label, price_htg) VALUES (p, 'Hack', 1); ASSERT false, 'client inserted a variant';
+  EXCEPTION WHEN insufficient_privilege OR check_violation THEN NULL; END;
+  ASSERT (public.admin_save_product_variants(p, '[{"label":"Hack","price_htg":1}]'::jsonb) ->> 'success')::boolean = false, 'client saved variants';
+  RESET ROLE;
+
+  -- staff saves two variants (invalid ones are refused)
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_save_product_variants(p, '[{"label":"Bad","price_htg":0}]'::jsonb) ->> 'success')::boolean = false, 'zero price accepted';
+  ASSERT (public.admin_save_product_variants(p, '[{"label":"Bad","price_htg":5,"image":"http://x.test/a.jpg"}]'::jsonb) ->> 'success')::boolean = false, 'non https image accepted';
+  r := public.admin_save_product_variants(p, '[{"group_name":"Taille","label":"M","price_htg":1500,"image":"https://x.test/m.jpg"},{"group_name":"Taille","label":"L","price_htg":2000},{"label":"Rouge","price_htg":900,"stock_available":false}]'::jsonb);
+  ASSERT (r ->> 'success')::boolean AND (r ->> 'count')::int = 3, 'staff could not save variants: ' || r::text;
+  RESET ROLE;
+  SELECT id INTO v1 FROM product_variants WHERE product_id = p AND label = 'M';
+  SELECT id INTO v2 FROM product_variants WHERE product_id = p AND label = 'L';
+  SELECT id INTO vx FROM product_variants WHERE product_id = p AND label = 'Rouge';
+  INSERT INTO product_variants (product_id, label, price_htg) VALUES (p2, 'Foreign', 10) RETURNING id INTO vo;
+
+  PERFORM pg_temp.as_user(a);
+  ASSERT (SELECT count(*) FROM product_variants WHERE product_id = p) = 3, 'client cannot read the variants';
+  BEGIN PERFORM public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', p, 'quantity', 1))); ASSERT false, 'ordered a product with variants without choosing one';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN PERFORM public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', p, 'quantity', 1, 'variant_id', vo))); ASSERT false, 'variant of another product accepted';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN PERFORM public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', p, 'quantity', 1, 'variant_id', vx))); ASSERT false, 'out-of-stock variant accepted';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN PERFORM public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', p2, 'quantity', 1, 'variant_id', v1))); ASSERT false, 'variant given to a product without variants';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+
+  -- price from the variant; quantity 10 hits the 800/1000 tier = 80 %
+  r := public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', p, 'quantity', 2, 'variant_id', v1), jsonb_build_object('product_id', p, 'quantity', 10, 'variant_id', v2)));
+  ASSERT (r ->> 'success')::boolean, 'variant order failed: ' || r::text;
+  oid := (r ->> 'order_id')::uuid;
+  ASSERT (r ->> 'total')::numeric = 1500 * 2 + 2000 * 0.8 * 10, 'variant total wrong: ' || r::text;
+  RESET ROLE;
+  ASSERT (SELECT product_price_htg FROM product_order_items WHERE order_id = oid AND variant_id = v1) = 1500, 'variant price not used';
+  ASSERT (SELECT product_price_htg FROM product_order_items WHERE order_id = oid AND variant_id = v2) = 1600, 'tier % not applied to the variant';
+  ASSERT (SELECT variant_name FROM product_order_items WHERE order_id = oid AND variant_id = v1) = 'Taille : M', 'variant name not snapshotted';
+
+  -- the snapshot survives a rename; removing a variant in the editor only switches it off
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT (public.admin_save_product_variants(p, jsonb_build_array(jsonb_build_object('id', v1, 'group_name', 'Taille', 'label', 'Medium', 'price_htg', 1500))) ->> 'success')::boolean, 'staff update failed';
+  RESET ROLE;
+  ASSERT (SELECT variant_name FROM product_order_items WHERE order_id = oid AND variant_id = v1) = 'Taille : M', 'snapshot changed with the variant';
+  ASSERT (SELECT active FROM product_variants WHERE id = v2) = false, 'removed variant still active';
+  PERFORM pg_temp.as_user(a);
+  BEGIN PERFORM public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', p, 'quantity', 1, 'variant_id', v2))); ASSERT false, 'inactive variant accepted';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+
+  -- the cart holds one line per variant of the same product, but not twice the same one
+  INSERT INTO cart_items (user_id, product_id, variant_id, quantity) VALUES (a, p, v1, 1);
+  INSERT INTO cart_items (user_id, product_id, variant_id, quantity) VALUES (a, p, vx, 1);
+  BEGIN INSERT INTO cart_items (user_id, product_id, variant_id, quantity) VALUES (a, p, v1, 1); ASSERT false, 'same variant twice in the cart';
+  EXCEPTION WHEN unique_violation THEN NULL; END;
+  INSERT INTO cart_items (user_id, product_id, quantity) VALUES (a, p2, 1);
+  BEGIN INSERT INTO cart_items (user_id, product_id, quantity) VALUES (a, p2, 1); ASSERT false, 'same product without variant twice in the cart';
+  EXCEPTION WHEN unique_violation THEN NULL; END;
+  RESET ROLE;
+  ASSERT NOT has_function_privilege('anon', 'public.admin_save_product_variants(uuid,jsonb)', 'execute'), 'anon can save variants';
+  ASSERT NOT has_function_privilege('public', 'public.admin_save_product_variants(uuid,jsonb)', 'execute'), 'PUBLIC can save variants';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

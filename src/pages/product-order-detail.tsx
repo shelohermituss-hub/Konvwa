@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import type { OrderStatus } from '@/types'
 
-interface Item { id: string; product_name: string; product_price_htg: number; quantity: number; subtotal_htg: number }
+interface Item { id: string; product_name: string; variant_name: string | null; product_price_htg: number; quantity: number; subtotal_htg: number }
 interface Order {
   id: string; tracking_code: string; status: string; payment_status: string; tracking_status: string | null
   total_htg: number; created_at: string; shipping_paid_at: string | null; shipping_amount_htg: number | null; shipping_prepaid?: boolean
@@ -34,7 +34,7 @@ export function ProductOrderDetailPage() {
       supabase.from('product_orders')
         .select('id, tracking_code, status, payment_status, tracking_status, total_htg, created_at, shipping_paid_at, shipping_amount_htg, shipping_prepaid, chosen_shipping_rate:shipping_rates(name)')
         .eq('id', id).eq('user_id', user.id).maybeSingle(),
-      supabase.from('product_order_items').select('id, product_name, product_price_htg, quantity, subtotal_htg').eq('order_id', id),
+      supabase.from('product_order_items').select('id, product_name, variant_name, product_price_htg, quantity, subtotal_htg').eq('order_id', id),
       supabase.from('wallets').select('available_balance').eq('user_id', user.id).maybeSingle(),
     ])
     if (!o.data) { toast.error(tr('Commande introuvable')); navigate('/orders', { replace: true }); return }
@@ -102,6 +102,7 @@ export function ProductOrderDetailPage() {
               <li key={it.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{it.product_name}</p>
+                  {it.variant_name && <p className="truncate text-xs text-foreground/80">{it.variant_name}</p>}
                   <p className="text-xs text-muted-foreground">{it.quantity} × {it.product_price_htg.toLocaleString(LOCALE_TAG)} HTG</p>
                 </div>
                 <p className="shrink-0 text-sm font-bold">{it.subtotal_htg.toLocaleString(LOCALE_TAG)} HTG</p>

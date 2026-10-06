@@ -1,9 +1,8 @@
-import { unitPriceFor } from '@/lib/product-pricing'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useCart } from '@/lib/cart-context'
+import { cartLineUnitPrice, cartLineVariantName, useCart } from '@/lib/cart-context'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
 import { toast } from 'sonner'
@@ -49,12 +48,12 @@ export function CheckoutPage() {
       })
   }, [user])
 
-  const cartKey = items.map(i => `${i.product_id}:${i.quantity}`).join(',')
+  const cartKey = items.map(i => `${i.product_id}:${i.variant_id ?? ''}:${i.quantity}`).join(',')
   useEffect(() => {
     if (items.length === 0) { setShippingLoading(false); return }
     let cancelled = false
     setShippingLoading(true); setShippingError('')
-    fetchCheckoutShipping(items.map(i => ({ product_id: i.product_id, quantity: i.quantity })))
+    fetchCheckoutShipping(items.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity })))
       .then((r) => {
         if (cancelled) return
         setShipping(r)
@@ -93,7 +92,7 @@ export function CheckoutPage() {
     setPaying(true)
     try {
       // The orders, their prices and the shipping fee are computed by the database from the product ids and the chosen method
-      const created = await createCheckout(items.map(item => ({ product_id: item.product_id, quantity: item.quantity })), hasUs ? rateId : null)
+      const created = await createCheckout(items.map(item => ({ product_id: item.product_id, variant_id: item.variant_id, quantity: item.quantity })), hasUs ? rateId : null)
       const done: CreatedOrder[] = []
       for (const order of created.orders) {
         const { data: rpcResult, error: rpcErr } = await supabase.rpc('pay_product_order', { p_order_id: order.order_id })
@@ -196,23 +195,24 @@ export function CheckoutPage() {
             {items.map(item => (
               <div key={item.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="h-10 w-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden">
-                  {item.products?.images?.length > 0 ? (
-                    <img src={item.products.images[0]} alt="" className="w-full h-full object-cover" />
+                  {(item.product_variants?.image ?? item.products?.images?.[0]) ? (
+                    <img src={item.product_variants?.image ?? item.products?.images?.[0]} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <Package className="h-5 w-5 text-muted-foreground/25" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{item.products?.name}</p>
+                  {cartLineVariantName(item) && <p className="truncate text-xs text-foreground/80">{cartLineVariantName(item)}</p>}
                   {hasUs && (
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                       {(item.products?.supplier_country ?? '').toUpperCase() === 'US' ? tr('Expédition incluse') : tr('Achat seul')}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">{item.quantity} × {(item.products ? unitPriceFor(item.products, item.quantity) : 0).toLocaleString(LOCALE_TAG)} HTG</p>
+                  <p className="text-xs text-muted-foreground">{item.quantity} × {cartLineUnitPrice(item).toLocaleString(LOCALE_TAG)} HTG</p>
                 </div>
                 <p className="text-sm font-bold text-primary shrink-0">
-                  {((item.products ? unitPriceFor(item.products, item.quantity) : 0) * item.quantity).toLocaleString(LOCALE_TAG)} HTG
+                  {(cartLineUnitPrice(item) * item.quantity).toLocaleString(LOCALE_TAG)} HTG
                 </p>
               </div>
             ))}

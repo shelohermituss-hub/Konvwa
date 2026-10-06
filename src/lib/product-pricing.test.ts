@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeTiers, priceRange, tierRows, unitPriceFor } from './product-pricing'
+import { normalizeTiers, priceRange, tierRows, unitPriceFor, variantUnitPrice } from './product-pricing'
 
 const product = { price_htg: 155, moq: 100, price_tiers: [{ min_qty: 1000, price_htg: 130 }, { min_qty: 500, price_htg: 142 }] }
 
@@ -32,5 +32,15 @@ describe('priceRange and tierRows', () => {
       { from: 500, to: 999, price: 142 },
       { from: 1000, to: null, price: 130 },
     ])
+  })
+})
+
+describe('variantUnitPrice', () => {
+  const p = { price_htg: 1000, moq: 1, price_tiers: [{ min_qty: 10, price_htg: 800 }] }
+  it('uses the variant price below the first tier', () => expect(variantUnitPrice(p, { price_htg: 1500 }, 2)).toBe(1500))
+  it('applies the same % as the quantity tier to the variant price', () => expect(variantUnitPrice(p, { price_htg: 2000 }, 10)).toBe(1600))
+  it('applies the reseller discount on top (product already reseller-priced)', () => {
+    const rp = { price_htg: 900, moq: 1, price_tiers: [{ min_qty: 10, price_htg: 720 }], reseller_price: true, reseller_discount_pct: 10 }
+    expect(variantUnitPrice(rp, { price_htg: 2000 }, 10)).toBe(1440)
   })
 })

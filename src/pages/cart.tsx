@@ -1,7 +1,6 @@
-import { unitPriceFor } from '@/lib/product-pricing'
 import { useNavigate } from 'react-router-dom'
 import { Trash2, Minus, Plus, Package, ArrowRight, ChevronLeft } from 'lucide-react'
-import { useCart } from '@/lib/cart-context'
+import { cartLineUnitPrice, cartLineVariantName, useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyCart } from '@/components/shared/illustrations'
@@ -56,16 +55,17 @@ export function CartPage() {
         <div className="px-4 pt-4 space-y-3">
           {items.map(item => {
             const product = item.products
-            const unitPrice = product ? unitPriceFor(product, item.quantity) : 0
+            const unitPrice = cartLineUnitPrice(item)
+            const variantName = cartLineVariantName(item)
+            const thumb = item.product_variants?.image ?? product?.images?.[0]
             const subtotal = unitPrice * item.quantity
-            const hasImage = product?.images?.length > 0
 
             return (
               <div key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3.5 flex gap-3">
                 {/* Thumbnail */}
                 <div className="h-16 w-16 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center shrink-0">
-                  {hasImage ? (
-                    <img src={product.images[0]} alt={product?.name} className="w-full h-full object-cover" />
+                  {thumb ? (
+                    <img src={thumb} alt={product?.name} className="w-full h-full object-cover" />
                   ) : (
                     <Package className="h-7 w-7 text-muted-foreground/25" />
                   )}
@@ -74,6 +74,10 @@ export function CartPage() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold leading-snug line-clamp-2">{product?.name}</p>
+                  {variantName && <p className="mt-0.5 truncate text-xs font-medium text-foreground/80">{variantName}</p>}
+                  {item.variant_id && !item.product_variants && (
+                    <p className="mt-0.5 text-xs font-medium text-destructive">{tr('Option indisponible : retirez cet article.')}</p>
+                  )}
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {unitPrice.toLocaleString(LOCALE_TAG)} HTG / {product?.unit}
                   </p>

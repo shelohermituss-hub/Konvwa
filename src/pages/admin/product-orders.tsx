@@ -16,7 +16,7 @@ interface Row {
   total_htg: number; created_at: string; shipping_paid_at: string | null
   shipping_amount_htg: number | null; weight_kg: number | null; cbm: number | null
   customer: string | null
-  product_order_items: Array<{ product_name: string; quantity: number }>
+  product_order_items: Array<{ product_name: string; variant_name: string | null; quantity: number }>
 }
 
 const FILTERS: Array<{ key: string; label: () => string; value: (t: string) => boolean }> = [
@@ -42,7 +42,7 @@ export function AdminProductOrdersPage() {
 
   const load = useCallback(async () => {
     const o = await supabase.from('product_orders')
-      .select('id, tracking_code, user_id, status, payment_status, tracking_status, total_htg, created_at, shipping_paid_at, shipping_amount_htg, weight_kg, cbm, product_order_items(product_name, quantity)')
+      .select('id, tracking_code, user_id, status, payment_status, tracking_status, total_htg, created_at, shipping_paid_at, shipping_amount_htg, weight_kg, cbm, product_order_items(product_name, variant_name, quantity)')
       .eq('payment_status', 'paid').order('created_at', { ascending: false }).limit(200)
     const list = (o.data ?? []) as unknown as Array<Omit<Row, 'customer'>>
     const ids = Array.from(new Set(list.map((r) => r.user_id)))
@@ -89,7 +89,7 @@ export function AdminProductOrdersPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold">{r.customer ?? '—'} <span className="font-mono text-xs text-muted-foreground">#{r.tracking_code}</span></p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.product_order_items.map((i) => `${i.product_name} ×${i.quantity}`).join(', ') || '—'}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.product_order_items.map((i) => `${i.product_name}${i.variant_name ? ` (${i.variant_name})` : ''} ×${i.quantity}`).join(', ') || '—'}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {new Date(r.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })} · {r.total_htg.toLocaleString(LOCALE_TAG)} HTG
                       {(r.weight_kg || r.cbm) && ` · ${[r.weight_kg ? `${r.weight_kg} kg` : '', r.cbm ? `${r.cbm} CBM` : ''].filter(Boolean).join(' / ')}`}
