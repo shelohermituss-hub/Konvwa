@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ChevronLeft, CreditCard, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { CART_PRODUCT_SELECT, cartLineUnitPrice, cartLineVariantName, toCartProduct, useCart, type CartItem } from '@/lib/cart-context'
 import { VARIANT_SELECT, type ProductVariant } from '@/lib/catalog'
@@ -342,7 +342,7 @@ export function CheckoutPage() {
               { id: 'wallet', label: tr('Portefeuille'), icon: <Wallet className="h-6 w-6 text-primary" aria-hidden /> },
               { id: 'moncash', label: 'MonCash', icon: <img src="/moncash-logo.jpg" alt="" className="h-6 object-contain" /> },
               { id: 'natcash', label: 'NatCash', icon: <img src="/natcash-logo.png" alt="" className="h-6 object-contain" /> },
-              { id: 'stripe', label: tr('Carte'), icon: <CreditCard className="h-6 w-6 text-indigo-600" aria-hidden /> },
+              { id: 'stripe', label: tr('Carte'), icon: <img src="/pay-stripe.png" alt="" className="h-6 object-contain" /> },
             ] as const).filter((m) => m.id !== 'stripe' || isAdmin).map((m) => (
               <button
                 key={m.id} type="button" role="radio" aria-checked={payWith === m.id} onClick={() => setPayWith(m.id)}

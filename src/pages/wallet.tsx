@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, X, Copy, CheckCheck, Bitcoin, Wallet, Upload, Search, Info, Download } from 'lucide-react'
+import { Plus, ArrowDownLeft, ArrowUpRight, CreditCard, Loader2, X, Copy, CheckCheck, Upload, Search, Info, Download } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { createPayment, verifyPayment } from '@/lib/payment-api'
@@ -566,9 +566,7 @@ export function WalletPage() {
                   {isAdmin && <div className="relative">
                     <RadioGroupItem value="stripe" id="stripe" className="peer sr-only" />
                     <Label htmlFor="stripe" className="flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 mb-1">
-                        <CreditCard className="h-4 w-4 text-indigo-600" aria-hidden />
-                      </div>
+                      <img src="/pay-stripe.png" alt="Stripe" className="h-7 object-contain mb-1" />
                       <span className="text-[10px] text-muted-foreground">{tr('Carte bancaire')}</span>
                     </Label>
                   </div>}
@@ -576,9 +574,7 @@ export function WalletPage() {
                   <div className="relative">
                     <RadioGroupItem value="virement" id="virement" className="peer sr-only" />
                     <Label htmlFor="virement" className="flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer hover:border-primary peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-colors">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 mb-1">
-                        <Wallet className="h-4 w-4 text-blue-600" />
-                      </div>
+                      <img src="/pay-bank.png" alt={tr('Virement')} className="h-7 object-contain mb-1" />
                       <span className="text-[10px] text-muted-foreground">{tr('Virement')}</span>
                     </Label>
                   </div>
@@ -595,9 +591,7 @@ export function WalletPage() {
                           : ''
                       )}
                     >
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 mb-1">
-                        <Bitcoin className="h-4 w-4 text-orange-500" />
-                      </div>
+                      <img src="/pay-crypto.png" alt="Crypto" className="h-7 object-contain mb-1" />
                       <span className="text-[10px] text-muted-foreground">{tr('Crypto')}</span>
                     </Label>
                   </div>
