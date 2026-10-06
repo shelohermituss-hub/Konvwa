@@ -63,6 +63,18 @@ export async function importProductFromLink(url: string): Promise<ImportedProduc
   return data as ImportedProduct
 }
 
+/** Variants of a product imported earlier without them (same Edge Function, "variants only" mode: nothing else is read or stored). */
+export async function importVariantsOnly(url: string): Promise<{ variants: ImportedProduct['variants']; price_usd: number | null; warnings: string[] }> {
+  const { data, error } = await supabase.functions.invoke('product-import', { body: { url, variants_only: true } })
+  if (error) {
+    const ctx = (error as { context?: Response }).context
+    const body = ctx && typeof ctx.json === 'function' ? await ctx.json().catch(() => null) as { error?: string } | null : null
+    throw new Error(body?.error || tr('Erreur réseau'))
+  }
+  if (data?.error) throw new Error(String(data.error))
+  return data as { variants: ImportedProduct['variants']; price_usd: number | null; warnings: string[] }
+}
+
 /** Shipping cost per mode for a package (staff only, computed by the database with the shipping rates). */
 export async function estimateShipping(args: {
   kg: number | null; length: number | null; width: number | null; height: number | null; qty: number; category: string

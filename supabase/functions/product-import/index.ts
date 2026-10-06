@@ -207,14 +207,18 @@ Deno.serve(async (req) => {
     const { data: isStaff } = await asUser.rpc('is_admin')
     if (isStaff !== true) return json({ error: 'Accès réservé à l\'équipe.' }, 403)
 
-    const { data: allowed } = await admin.rpc('check_rate_limit', { p_key: `product-import:${user.id}`, p_max: 30, p_window_seconds: 3600 })
+    const body = await req.json().catch(() => ({})) as { url?: unknown; variants_only?: unknown }
+    // "variants only": adds the variants of a product that was imported without them (no product pictures, no sheet): its own, larger quota
+    const variantsOnly = body.variants_only === true
+    const { data: allowed } = await admin.rpc('check_rate_limit', variantsOnly
+      ? { p_key: `product-import-variants:${user.id}`, p_max: 200, p_window_seconds: 3600 }
+      : { p_key: `product-import:${user.id}`, p_max: 30, p_window_seconds: 3600 })
     if (allowed === false) return json({ error: 'Trop d\'imports, réessayez dans quelques minutes.' }, 429)
 
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')
     const routerKey = Deno.env.get('OPENROUTER_API_KEY')
     if (!firecrawlKey) return json({ error: 'Outil non configuré : ajoutez le secret FIRECRAWL_API_KEY dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
 
-    const body = await req.json().catch(() => ({})) as { url?: unknown }
     let target = typeof body.url === 'string' && body.url.length <= 2000 ? parseProductUrl(body.url.trim()) : null
     if (!target) return json({ error: 'Lien non pris en charge : collez un lien de produit Amazon, Shein, Alibaba, Temu ou Muscle & Strength.' }, 400)
     if (target.amazon?.short) {
@@ -276,7 +280,7 @@ Deno.serve(async (req) => {
     if (!weight_kg || !dims) warnings.push('package_incomplete')
 
     // pictures: the product's own, then the variants' (each distinct picture is copied once into our bucket)
-    const wanted = platformImages(platform.id, scraped.images, 5)
+    const wanted = variantsOnly ? [] : platformImages(platform.id, scraped.images, 5)
     const variantImages = [...new Set(normalized.rows.map((v) => v.image).filter((u): u is string => !!u))].filter((u) => !wanted.includes(u)).slice(0, 30)
     const all = [...wanted, ...variantImages]
     const copied = new Map<string, string>()
@@ -296,6 +300,8 @@ Deno.serve(async (req) => {
         price_usd: v.price_usd ?? price.usd, image: v.image ? copied.get(v.image) ?? null : null, stock_available: v.in_stock,
       }
     })
+
+    if (variantsOnly) return json({ variants, price_usd: price.usd, warnings })
 
     const name = ai?.name_fr || cleanText(scraped.title, 200)
     const description = ai?.description_fr || cleanText(scraped.description || (scraped.features ?? []).join('\n'), 4000, true)

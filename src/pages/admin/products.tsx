@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import { normalizeTiers, type PriceTier } from '@/lib/product-pricing'
 import { ProductImportDialog } from '@/components/shared/product-import-dialog'
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
+import { VariantsBackfill } from '@/components/shared/variants-backfill'
 import { ProductLinkImport } from '@/components/shared/product-link-import'
 import { VariantsEditor, variantsError, variantsPayload, type VariantRow } from '@/components/shared/variants-editor'
 import { estimateShipping, type ImportedProduct, type ShippingEstimate } from '@/lib/product-import-api'
@@ -116,6 +117,7 @@ export function AdminProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null)
   const [importOpen, setImportOpen] = useState(false)
   const [linkOpen, setLinkOpen] = useState(false)
+  const [backfillOpen, setBackfillOpen] = useState(false)
   // what the last link import found (kept only to show where the price and the package come from)
   const [importInfo, setImportInfo] = useState<{ supplier: string; priceUsd: number | null; rate: number; margin: number; packageSource: ImportedProduct['package_source']; warnings: string[] } | null>(null)
   const [estimate, setEstimate] = useState<ShippingEstimate | null>(null)
@@ -416,6 +418,9 @@ export function AdminProductsPage() {
           <Button variant="outline" onClick={() => setLinkOpen(true)} className="gap-2 rounded-xl">
             <Sparkles className="h-4 w-4" />{tr('Importer depuis un lien')}
           </Button>
+          <Button variant="outline" onClick={() => setBackfillOpen(true)} className="gap-2 rounded-xl">
+            {tr('Récupérer les variantes')}
+          </Button>
           <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2 rounded-xl">
             {tr('Importer CSV')}
           </Button>
@@ -426,6 +431,7 @@ export function AdminProductsPage() {
         </div>
       </div>
       <ProductLinkImport open={linkOpen} onClose={() => setLinkOpen(false)} onImported={(d) => void applyImport(d)} />
+      <VariantsBackfill open={backfillOpen} onClose={() => setBackfillOpen(false)} onDone={() => void load()} />
       <ProductImportDialog open={importOpen} onClose={() => setImportOpen(false)} onDone={() => void load()} />
 
       {/* Search */}
