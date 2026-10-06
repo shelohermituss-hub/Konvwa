@@ -145,6 +145,12 @@ Deno.serve(async (req) => {
       return typeof r.code === 'number' ? json({ error: r.error }, r.code) : json(r)
     }
 
+    // With a test key (sk_test_) a "payment" costs nothing: only the team may start one, so no customer can credit a wallet for free.
+    if (secret.startsWith('sk_test_')) {
+      const { data: me } = await db.from('profiles').select('role').eq('user_id', user.id).maybeSingle()
+      if (!me || !['admin', 'manager'].includes(me.role)) return json({ error: 'Paiement par carte indisponible pour le moment.' }, 403)
+    }
+
     const checkout = body.kind === 'checkout'
     const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } })
     const { data: can } = await userClient.rpc('user_can', { p_action: checkout ? 'orders' : 'deposits' })
