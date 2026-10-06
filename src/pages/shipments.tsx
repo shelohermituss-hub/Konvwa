@@ -18,7 +18,8 @@ import { toast } from 'sonner'
 import IconNavire from 'flat-color-icons/svg/in_transit.svg'
 import { cargoEstimate, cargoStatusLabel } from '@/lib/cargo-tracking'
 
-import { tr, LOCALE_TAG, DATE_LOCALE } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface Warehouse {
@@ -277,11 +278,11 @@ function ShippingRequestCard({ req }: { req: ShippingRequest }) {
         {displayAmount != null ? (
           <>
             <p className={cn('text-sm font-bold', isInvoiced ? 'text-emerald-700' : lateDays > 0 ? 'text-red-600' : 'text-primary')}>
-              {displayAmount.toLocaleString(LOCALE_TAG)} HTG
+              {money(displayAmount)}
             </p>
             <p className="text-[10px] text-muted-foreground">
               {isInvoiced ? tr('Payé')
-                : isDeposit ? tr('Reste {0}', Math.max((req.quoted_amount_htg ?? 0) - (req.paid_amount_htg ?? 0), 0).toLocaleString(LOCALE_TAG))
+                : isDeposit ? tr('Reste {0}', money(Math.max((req.quoted_amount_htg ?? 0) - (req.paid_amount_htg ?? 0), 0)))
                 : isQuoted ? tr('Officiel') : tr('Estimation')}
             </p>
           </>

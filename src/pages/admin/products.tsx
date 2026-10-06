@@ -19,6 +19,7 @@ import { estimateShipping, type ImportedProduct, type ShippingEstimate } from '@
 import { priceHtgFromUsd } from '@/lib/import-pricing'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { money, moneyAmount } from '@/lib/currency'
 interface Product {
   id: string
   name: string
@@ -490,7 +491,7 @@ export function AdminProductsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-bold text-primary">{p.price_htg.toLocaleString(LOCALE_TAG)}</td>
+                    <td className="px-4 py-3 font-bold text-primary">{moneyAmount(p.price_htg)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{p.moq} {p.unit}</td>
                     <td className="px-4 py-3">
                       {p.category ? <Badge variant="secondary">{p.category}</Badge> : <span className="text-muted-foreground/40">—</span>}
@@ -647,8 +648,8 @@ export function AdminProductsPage() {
                                 {o.transit_days_min && o.transit_days_max ? <span className="text-xs text-muted-foreground"> · {o.transit_days_min}-{o.transit_days_max} {tr('jours')}</span> : null}
                               </span>
                               <span className="text-right">
-                                <span className="font-bold">{o.amount_htg.toLocaleString(LOCALE_TAG)} HTG</span>
-                                {estQty > 1 && <span className="block text-xs text-muted-foreground">{o.per_unit_htg.toLocaleString(LOCALE_TAG)} HTG / {tr('unité')}</span>}
+                                <span className="font-bold">{money(o.amount_htg)}</span>
+                                {estQty > 1 && <span className="block text-xs text-muted-foreground">{money(o.per_unit_htg)} / {tr('unité')}</span>}
                               </span>
                             </li>
                           ))}

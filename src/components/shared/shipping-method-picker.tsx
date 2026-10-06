@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useStepUp } from '@/lib/step-up'
 import { cn } from '@/lib/utils'
 import { tr, trServer, LOCALE_TAG } from '@/lib/i18n'
+import { currencyLabel, money, moneyAmount } from '@/lib/currency'
 
 export type ShippableOrderKind = 'order' | 'product_order'
 
@@ -116,8 +117,8 @@ export function ShippingMethodPicker({ kind, orderId, balance, onPaid }: {
                   </span>
                 </span>
                 <span className="shrink-0 text-right">
-                  <span className="block text-base font-black tabular-nums">{o.amount_htg.toLocaleString(LOCALE_TAG)}</span>
-                  <span className="block text-[10px] text-muted-foreground">HTG</span>
+                  <span className="block text-base font-black tabular-nums">{moneyAmount(o.amount_htg)}</span>
+                  <span className="block text-[10px] text-muted-foreground">{currencyLabel()}</span>
                 </span>
               </button>
             )
@@ -129,11 +130,11 @@ export function ShippingMethodPicker({ kind, orderId, balance, onPaid }: {
         <div className="space-y-2 border-t border-gray-100 px-4 py-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{tr('Total à payer')}</span>
-            <span className="text-lg font-black tabular-nums">{chosen.amount_htg.toLocaleString(LOCALE_TAG)} HTG</span>
+            <span className="text-lg font-black tabular-nums">{money(chosen.amount_htg)}</span>
           </div>
           {balance != null && (
             <p className={cn('text-xs', short ? 'font-semibold text-destructive' : 'text-muted-foreground')}>
-              {tr('Solde du portefeuille : {0} HTG', balance.toLocaleString(LOCALE_TAG))}
+              {tr('Solde du portefeuille : {0}', money(balance))}
             </p>
           )}
           {short ? (

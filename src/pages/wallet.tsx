@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 import { DATE_LOCALE, LOCALE_TAG, tr, trServer } from '@/lib/i18n'
+import { CURRENCY, currencyLabel, money, moneyAmount } from '@/lib/currency'
 interface WalletData {
   id: string
   available_balance: number
@@ -239,8 +240,8 @@ function ReceiptModal({ tx, onClose }: { tx: Transaction; onClose: () => void })
               {isCredit ? tr('Montant crédité') : tr('Montant débité')}
             </p>
             <p className={cn('mt-1 text-4xl font-extrabold tracking-tight tabular-nums', isCredit ? 'text-emerald-700' : 'text-foreground')}>
-              {isCredit ? '+' : '-'}{tx.amount.toLocaleString(LOCALE_TAG)}
-              <span className="ml-1.5 text-base font-bold text-muted-foreground">HTG</span>
+              {isCredit ? '+' : '-'}{moneyAmount(tx.amount)}
+              <span className="ml-1.5 text-base font-bold text-muted-foreground">{currencyLabel()}</span>
             </p>
             <span className={cn('mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold', badge.className)}>
               <span className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -538,6 +539,9 @@ export function WalletPage() {
                   onChange={(e) => setTopupAmount(e.target.value)}
                   className="h-11 rounded-xl bg-[#F0F1F5] border-0 font-medium focus-visible:ring-1 focus-visible:ring-primary/40"
                 />
+                {CURRENCY === 'USD' && parseFloat(topupAmount) > 0 && (
+                  <p className="text-xs text-muted-foreground">{tr('Soit environ {0} (le portefeuille est tenu en HTG).', money(parseFloat(topupAmount)))}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>{tr('Méthode de paiement')}</Label>
@@ -712,7 +716,7 @@ export function WalletPage() {
                 <div className="rounded-xl bg-muted p-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{tr('À créditer')}</span>
-                    <span className="font-semibold">{parseFloat(topupAmount).toLocaleString(LOCALE_TAG)} HTG</span>
+                    <span className="font-semibold">{money(parseFloat(topupAmount))}</span>
                   </div>
                 </div>
               )}
@@ -776,10 +780,10 @@ export function WalletPage() {
           <p className="text-xs text-muted-foreground font-medium">{tr('Total rechargé')}</p>
           {loading ? <Skeleton className="h-6 w-24 mt-1" /> : (
             <p className="text-lg font-bold text-emerald-700 mt-0.5">
-              +{totalDeposited.toLocaleString(LOCALE_TAG)}
+              +{moneyAmount(totalDeposited)}
             </p>
           )}
-          <p className="text-[10px] text-muted-foreground mt-0.5">HTG</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{currencyLabel()}</p>
         </div>
         <div className="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/8 mb-2">
@@ -788,10 +792,10 @@ export function WalletPage() {
           <p className="text-xs text-muted-foreground font-medium">{tr('Total dépensé')}</p>
           {loading ? <Skeleton className="h-6 w-24 mt-1" /> : (
             <p className="text-lg font-bold text-destructive mt-0.5">
-              -{totalSpent.toLocaleString(LOCALE_TAG)}
+              -{moneyAmount(totalSpent)}
             </p>
           )}
-          <p className="text-[10px] text-muted-foreground mt-0.5">HTG</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{currencyLabel()}</p>
         </div>
       </div>
 
@@ -857,7 +861,7 @@ export function WalletPage() {
                 <div className="flex items-center justify-between mb-2 px-1">
                   <span className="text-xs font-semibold text-muted-foreground">{group.label}</span>
                   <span className={cn('text-xs font-semibold', group.total >= 0 ? 'text-emerald-700' : 'text-destructive')}>
-                    {group.total >= 0 ? '+' : ''}{group.total.toLocaleString(LOCALE_TAG)} HTG
+                    {group.total >= 0 ? '+' : ''}{money(group.total)}
                   </span>
                 </div>
                 {/* Rows */}
@@ -886,7 +890,7 @@ export function WalletPage() {
                         </div>
                         <div className="text-right shrink-0">
                           <p className={cn('font-bold text-sm', isCredit ? 'text-emerald-700' : 'text-foreground')}>
-                            {isCredit ? '+' : '-'}{tx.amount.toLocaleString(LOCALE_TAG)} HTG
+                            {isCredit ? '+' : '-'}{money(tx.amount)}
                           </p>
                           <p className={cn('text-[11px] font-medium mt-0.5', badge.className.includes('emerald') ? 'text-emerald-700' : badge.className.includes('red') ? 'text-red-500' : badge.className.includes('amber') ? 'text-amber-500' : 'text-gray-400')}>
                             {badge.label}

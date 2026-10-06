@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
 interface Promo {
   code: string
@@ -95,7 +96,7 @@ export function AdminPromosPage() {
                 <div>
                   <p className="font-mono text-sm font-bold tracking-wider">{p.code}</p>
                   <p className="text-xs text-muted-foreground">
-                    {p.credit_htg.toLocaleString(LOCALE_TAG)} HTG · {tr('{0} / {1} utilisations', p.used_count, p.max_uses)}
+                    {money(p.credit_htg)} · {tr('{0} / {1} utilisations', p.used_count, p.max_uses)}
                     {p.expires_at ? ` · ${tr('expire le')} ${new Date(p.expires_at).toLocaleDateString(DATE_LOCALE)}` : ''}
                   </p>
                 </div>

@@ -1,6 +1,7 @@
 import { Eye, EyeOff } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { tr } from '@/lib/i18n'
+import { moneyAmount, currencyLabel } from '@/lib/currency'
 
 /**
  * Wallet card: a black metal payment card. Light grey glow in the bottom-left fading to pure black on the right, a silver
@@ -80,8 +81,8 @@ export function WalletGlassCard({ balance, visible, loading, onToggle, holder, c
           <Skeleton className="ml-auto h-7 w-32 rounded-lg bg-[#ffffff]/15" />
         ) : (
           <p className="text-[1.45rem] font-bold leading-none tracking-wide tabular-nums">
-            {visible ? balance.toLocaleString(LOCALE_TAG) : '•••••'}
-            <span className="ml-1 text-[11px] font-semibold text-[#ffffff]/65">HTG</span>
+            {visible ? moneyAmount(balance) : '•••••'}
+            <span className="ml-1 text-[11px] font-semibold text-[#ffffff]/65">{currencyLabel()}</span>
           </p>
         )}
       </div>

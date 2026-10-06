@@ -15,7 +15,8 @@ import {
 import { DEFAULT_RATES, DEFAULT_WEIGHT_KG, estimateCost, guessCategory, toUsd, type Rates } from '@/lib/cost-estimate'
 
 import { inviteInstall } from '@/lib/pwa'
-import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { tr } from '@/lib/i18n'
+import { currencyLabel, money, moneyAmount } from '@/lib/currency'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ShippingOrigin {
@@ -595,7 +596,7 @@ export function SubmitPage() {
                           <span className="block font-semibold">{o.kind === 'pickup' ? tr('Retrait') : tr('Livraison à domicile')} — {o.label}</span>
                           {o.details && <span className="block text-xs text-muted-foreground">{o.details}</span>}
                         </span>
-                        <span className="shrink-0 font-bold">{o.price_htg > 0 ? `${o.price_htg.toLocaleString(LOCALE_TAG)} HTG` : tr('Gratuit')}</span>
+                        <span className="shrink-0 font-bold">{o.price_htg > 0 ? `${money(o.price_htg)}` : tr('Gratuit')}</span>
                       </label>
                     ))}
                   </fieldset>
@@ -861,10 +862,10 @@ export function SubmitPage() {
                   {estimate ? (
                     <>
                       <p className="text-2xl font-extrabold tabular-nums text-foreground">
-                        {Math.round(estimate.totalHtg).toLocaleString(LOCALE_TAG)} <span className="text-sm font-semibold text-muted-foreground">HTG</span>
+                        {moneyAmount(Math.round(estimate.totalHtg))} <span className="text-sm font-semibold text-muted-foreground">{currencyLabel()}</span>
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {tr('soit environ {0} HTG par unité · {1} $', Math.round(estimate.perUnitHtg).toLocaleString(LOCALE_TAG), estimate.totalUsd.toFixed(2))}
+                        {tr('soit environ {0} par unité · {1} $', money(Math.round(estimate.perUnitHtg)), estimate.totalUsd.toFixed(2))}
                       </p>
                       <dl className="mt-3 space-y-1 text-xs">
                         {[

@@ -13,7 +13,8 @@ import { cn } from '@/lib/utils'
 import { IllustrationEmptyOrders } from '@/components/shared/illustrations'
 
 import { needsShippingPayment, productOrderLabel } from '@/lib/product-order'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { currencyLabel, money, moneyAmount } from '@/lib/currency'
 interface OrderRow {
   id: string
   tracking_code: string
@@ -291,8 +292,8 @@ export function OrdersPage() {
                           <p className={cn('mt-1 text-xs font-semibold', due ? 'text-amber-700' : 'text-muted-foreground')}>{productOrderLabel(co)}</p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-                          <p className="text-sm font-bold">{co.total_htg.toLocaleString(LOCALE_TAG)}</p>
-                          <p className="text-[10px] text-muted-foreground">HTG</p>
+                          <p className="text-sm font-bold">{moneyAmount(co.total_htg)}</p>
+                          <p className="text-[10px] text-muted-foreground">{currencyLabel()}</p>
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
                       </div>
@@ -333,8 +334,8 @@ export function OrdersPage() {
                           </div>
                         </div>
                         <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                          <p className="font-bold text-sm">{(order.quotes?.total ?? order.total_paid).toLocaleString(LOCALE_TAG)}</p>
-                          <p className="text-[10px] text-muted-foreground">HTG</p>
+                          <p className="font-bold text-sm">{moneyAmount(order.quotes?.total ?? order.total_paid)}</p>
+                          <p className="text-[10px] text-muted-foreground">{currencyLabel()}</p>
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
                       </div>
@@ -385,7 +386,7 @@ export function OrdersPage() {
                 {selectedDraft.budget_estimate && (
                   <div className="flex justify-between py-1.5 border-b border-border/50">
                     <span className="text-muted-foreground">{tr('Budget estimé')}</span>
-                    <span className="font-semibold">{selectedDraft.budget_estimate.toLocaleString(LOCALE_TAG)} HTG</span>
+                    <span className="font-semibold">{money(selectedDraft.budget_estimate)}</span>
                   </div>
                 )}
                 <div className="flex justify-between py-1.5">

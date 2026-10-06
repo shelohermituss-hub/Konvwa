@@ -14,8 +14,9 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { RESTRICTIONS, type AccountStatus, type Restriction } from '@/lib/account-access'
 import { cn } from '@/lib/utils'
-import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, trServer, DATE_LOCALE } from '@/lib/i18n'
 import type { UserRole } from '@/types'
+import { money, moneyAmount } from '@/lib/currency'
 
 interface RecentOrder { id: string; code: string; status: string; amount: number; created_at: string; kind: 'order' | 'catalog' }
 interface RecentTx { id: string; type: string; amount: number; status: string; description: string | null; created_at: string }
@@ -48,7 +49,7 @@ const RESTRICTION_LABEL: Record<Restriction, () => { title: string; hint: string
 
 const ROLE_LABEL: Record<UserRole, string> = { client: tr('Client'), agent: 'Agent', manager: 'Manager', admin: 'Admin' }
 
-function fmt(n: number) { return n.toLocaleString(LOCALE_TAG) }
+function fmt(n: number) { return moneyAmount(n) }
 function day(iso: string | null) {
   return iso ? new Date(iso).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
 }
@@ -186,8 +187,8 @@ export function AdminUserSheet({ userId, onClose, onChanged }: { userId: string 
             {/* Figures */}
             <div className="grid grid-cols-3 gap-2 text-center">
               {[
-                [tr('Solde'), `${fmt(data.wallet_balance)} HTG`],
-                [tr('Dépensé'), `${fmt(data.total_spent)} HTG`],
+                [tr('Solde'), `${money(data.wallet_balance)}`],
+                [tr('Dépensé'), `${money(data.total_spent)}`],
                 [tr('Commandes'), String(data.counts.orders + data.counts.catalog_orders)],
                 [tr('Demandes'), String(data.counts.requests)],
                 [tr('Tickets ouverts'), String(data.counts.open_tickets)],
@@ -285,7 +286,7 @@ export function AdminUserSheet({ userId, onClose, onChanged }: { userId: string 
                 ) : (
                   <div className="space-y-2.5">
                     <p className="text-xs">
-                      {tr('Ce compte a {0} commande(s), {1} demande(s) et un solde de {2} HTG.', data.counts.orders + data.counts.catalog_orders, data.counts.requests, fmt(data.wallet_balance))}
+                      {tr('Ce compte a {0} commande(s), {1} demande(s) et un solde de {2}.', data.counts.orders + data.counts.catalog_orders, data.counts.requests, money(data.wallet_balance))}
                     </p>
                     {data.wallet_balance > 0 && (
                       <label className="flex items-start gap-2 text-xs font-medium">

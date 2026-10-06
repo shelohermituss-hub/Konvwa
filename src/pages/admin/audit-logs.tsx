@@ -6,7 +6,8 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 interface AuditRow {
   id: string
   actor_id: string | null
@@ -80,7 +81,7 @@ function formatValue(field: string, value: string | null) {
   }
   if (MONEY_FIELDS.has(field)) {
     const n = Number(value)
-    return <span className="font-semibold tabular-nums">{Number.isFinite(n) ? n.toLocaleString(LOCALE_TAG) : value} HTG</span>
+    return <span className="font-semibold tabular-nums">{Number.isFinite(n) ? money(n) : `${value} HTG`}</span>
   }
   if (field === 'shipment_id') return <span className="font-mono text-xs">{value.slice(0, 8)}</span>
   return <span>{value}</span>

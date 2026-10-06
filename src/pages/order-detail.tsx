@@ -23,6 +23,7 @@ import { PackagePhotos } from '@/components/shared/package-photos'
 import { inviteInstall } from '@/lib/pwa'
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 import { useStepUp } from '@/lib/step-up'
+import { money } from '@/lib/currency'
 interface ChosenShippingMethod {
   id: string
   name: string
@@ -396,7 +397,7 @@ export function OrderDetailPage() {
               <div>
                 <p className="font-bold text-sm text-foreground">{tr('Devis reçu — Action requise')}</p>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  {tr('Total :')}{' '}<span className="font-bold text-primary">{total.toLocaleString(LOCALE_TAG)} HTG</span>
+                  {tr('Total :')}{' '}<span className="font-bold text-primary">{money(total)}</span>
                   {order.quotes.estimated_delivery_days && tr(' · {0} jours', order.quotes.estimated_delivery_days)}
                 </p>
                 {order.quotes.usd_to_htg_rate && (
@@ -445,7 +446,7 @@ export function OrderDetailPage() {
                 <div>
                   <p className="font-bold text-sm text-foreground">{tr('Paiement requis')}</p>
                   <p className="text-sm text-muted-foreground mt-0.5">
-                    {tr('Réglez')}{' '}<span className="font-bold text-foreground">{total.toLocaleString(LOCALE_TAG)} HTG</span>{' '}{tr('depuis votre portefeuille pour lancer la commande.')}
+                    {tr('Réglez')}{' '}<span className="font-bold text-foreground">{money(total)}</span>{' '}{tr('depuis votre portefeuille pour lancer la commande.')}
                   </p>
                 </div>
               </div>
@@ -458,7 +459,7 @@ export function OrderDetailPage() {
                   {tr('Solde disponible')}
                 </span>
                 <span className={`font-bold ${canPay ? 'text-emerald-700' : 'text-destructive'}`}>
-                  {(wallet?.available_balance ?? 0).toLocaleString(LOCALE_TAG)} HTG
+                  {money((wallet?.available_balance ?? 0))}
                 </span>
               </div>
               {canPay ? (
@@ -470,7 +471,7 @@ export function OrderDetailPage() {
                   {paying ? (
                     <><Loader2 className="h-4 w-4 animate-spin" />{tr('Paiement en cours…')}</>
                   ) : (
-                    <><Wallet className="h-4 w-4" />{tr('Payer')}{' '}{total.toLocaleString(LOCALE_TAG)} HTG</>
+                    <><Wallet className="h-4 w-4" />{tr('Payer')}{' '}{money(total)}</>
                   )}
                 </Button>
               ) : (
@@ -684,7 +685,7 @@ export function OrderDetailPage() {
             <div className="px-4 py-2">
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">{tr('Prix produit')}</span>
-                <span className="font-medium">{order.quotes.product_price.toLocaleString(LOCALE_TAG)} HTG</span>
+                <span className="font-medium">{money(order.quotes.product_price)}</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">{tr('Quantité')}</span>
@@ -692,11 +693,11 @@ export function OrderDetailPage() {
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">{tr('Frais de service')}</span>
-                <span className="font-medium">{order.quotes.service_fee.toLocaleString(LOCALE_TAG)} HTG</span>
+                <span className="font-medium">{money(order.quotes.service_fee)}</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">{tr('Frais d\'achat')}</span>
-                <span className="font-medium">{order.quotes.purchase_fee.toLocaleString(LOCALE_TAG)} HTG</span>
+                <span className="font-medium">{money(order.quotes.purchase_fee)}</span>
               </div>
               {order.shipping_option === 'separate' ? (
                 (order.chosen_shipping_method || order.chosen_shipping_rate) ? (
@@ -720,31 +721,31 @@ export function OrderDetailPage() {
               ) : (
                 <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                   <span className="text-muted-foreground">{order.quotes?.product_requests?.shipping_rates?.mode === 'air' ? tr('Fret aérien') : tr('Frais maritimes')}</span>
-                  <span className="font-medium">{order.quotes.shipping_fee.toLocaleString(LOCALE_TAG)} HTG</span>
+                  <span className="font-medium">{money(order.quotes.shipping_fee)}</span>
                 </div>
               )}
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">{tr('Douane estimée')}</span>
-                <span className="font-medium">{order.quotes.customs_fee.toLocaleString(LOCALE_TAG)} HTG</span>
+                <span className="font-medium">{money(order.quotes.customs_fee)}</span>
               </div>
               <div className="flex justify-between py-2.5 text-sm border-b border-gray-100">
                 <span className="text-muted-foreground">{tr('Livraison locale')}</span>
-                <span className="font-medium">{order.quotes.local_delivery_fee.toLocaleString(LOCALE_TAG)} HTG</span>
+                <span className="font-medium">{money(order.quotes.local_delivery_fee)}</span>
               </div>
               <Separator className="my-0" />
               <div className="flex justify-between py-3">
                 <span className="font-bold text-base">{tr('Sous-total produit')}</span>
-                <span className="font-bold text-base text-primary">{order.quotes.total.toLocaleString(LOCALE_TAG)} HTG</span>
+                <span className="font-bold text-base text-primary">{money(order.quotes.total)}</span>
               </div>
               {order.shipping_amount_paid != null && order.shipping_amount_paid > 0 && (
                 <div className="flex justify-between pb-2 text-sm">
                   <span className="text-muted-foreground">{tr('+ Expédition payée')}</span>
-                  <span className="font-semibold">{order.shipping_amount_paid.toLocaleString(LOCALE_TAG)} HTG</span>
+                  <span className="font-semibold">{money(order.shipping_amount_paid)}</span>
                 </div>
               )}
               <div className="flex justify-between pb-3 text-sm">
                 <span className="text-emerald-700 font-medium">{tr('Déjà payé (total)')}</span>
-                <span className="text-emerald-700 font-semibold">{order.total_paid.toLocaleString(LOCALE_TAG)} HTG</span>
+                <span className="text-emerald-700 font-semibold">{money(order.total_paid)}</span>
               </div>
             </div>
           </div>
@@ -792,7 +793,7 @@ export function OrderDetailPage() {
               <Separator className="my-0" />
               <div className="flex justify-between py-3">
                 <span className="font-bold text-base">{tr('Montant expédition')}</span>
-                <span className="font-bold text-base text-primary">{order.shipping_amount_paid.toLocaleString(LOCALE_TAG)} HTG</span>
+                <span className="font-bold text-base text-primary">{money(order.shipping_amount_paid)}</span>
               </div>
             </div>
           </div>

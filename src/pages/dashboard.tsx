@@ -16,7 +16,8 @@ import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
 
-import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { tr } from '@/lib/i18n'
+import { currencyLabel, moneyAmount } from '@/lib/currency'
 
 // Partner shops: the https links open the shop's app when it is installed (universal links), the website otherwise
 const SHOPS = [
@@ -184,12 +185,12 @@ export function DashboardPage() {
             ) : (
               <div className="text-right">
                 <p className="text-xl font-extrabold tracking-tight text-foreground leading-none">
-                  {balanceVisible ? Math.floor(balance).toLocaleString(LOCALE_TAG) : '•••••'}
-                  <span className="text-[10px] font-semibold text-muted-foreground ml-0.5">HTG</span>
+                  {balanceVisible ? moneyAmount(Math.floor(balance)) : '•••••'}
+                  <span className="text-[10px] font-semibold text-muted-foreground ml-0.5">{currencyLabel()}</span>
                 </p>
                 {wallet && wallet.blocked_balance > 0 && balanceVisible && (
                   <p className="text-[10px] text-amber-500 font-semibold leading-none mt-0.5">
-                    {wallet.blocked_balance.toLocaleString(LOCALE_TAG)}{' '}{tr('en attente')}
+                    {moneyAmount(wallet.blocked_balance)}{' '}{tr('en attente')}
                   </p>
                 )}
               </div>

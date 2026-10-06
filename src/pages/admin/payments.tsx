@@ -19,6 +19,7 @@ import { downloadCsv } from '@/lib/csv'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { currencyLabel, money, moneyAmount } from '@/lib/currency'
 
 interface Tx {
   id: string; type: string; amount: number; status: string; payment_method: string | null; description: string | null
@@ -124,7 +125,7 @@ export function AdminPaymentsPage() {
   }
 
   async function review(tx: Tx, approve: boolean) {
-    if (!approve && !confirm(tr('Refuser cette transaction de {0} HTG ?', fmt(tx.amount)))) return
+    if (!approve && !confirm(tr('Refuser cette transaction de {0} ?', money(tx.amount)))) return
     setBusy(true)
     const { data, error } = approve
       ? await supabase.rpc('admin_approve_manual_deposit', { p_tx_id: tx.id, p_proof_id: proofIdInput })
@@ -159,7 +160,7 @@ export function AdminPaymentsPage() {
     setBusy(false)
     const res = data as { success?: boolean; error?: string; balance?: number } | null
     if (error || !res?.success) { toast.error(res?.error ? trServer(res.error) : error?.message ?? tr('Action impossible.')); return }
-    toast.success(tr('Portefeuille ajusté. Nouveau solde : {0} HTG', fmt(res.balance ?? 0)))
+    toast.success(tr('Portefeuille ajusté. Nouveau solde : {0}', money(res.balance ?? 0)))
     setAdjAmount(''); setAdjReason('')
     void load()
   }
@@ -186,11 +187,11 @@ export function AdminPaymentsPage() {
   function resetFilters() { setType('all'); setMethod('all'); setFrom(''); setTo(''); setSearch(''); setPage(0) }
 
   const kpis = stats ? [
-    { label: tr('En attente'), value: String(stats.pending_count), sub: `${fmt(stats.pending_amount)} HTG`, icon: Clock, bg: 'bg-amber-50', color: 'text-amber-700' },
-    { label: tr('Recharges validées'), value: `${fmt(stats.deposits)} HTG`, sub: tr('{0} opérations', stats.deposits_count), icon: ArrowDownLeft, bg: 'bg-emerald-50', color: 'text-emerald-700' },
-    { label: tr('Paiements clients'), value: `${fmt(stats.payments)} HTG`, sub: tr('{0} opérations', stats.payments_count), icon: TrendingUp, bg: 'bg-primary/10', color: 'text-primary' },
-    { label: tr('Remboursé'), value: `${fmt(stats.refunds)} HTG`, sub: tr('{0} refusées / échouées', stats.rejected_count), icon: Undo2, bg: 'bg-sky-50', color: 'text-sky-700' },
-    { label: tr('Soldes clients'), value: `${fmt(stats.wallets_total)} HTG`, sub: tr('Total dans les portefeuilles'), icon: Wallet, bg: 'bg-indigo-50', color: 'text-indigo-700' },
+    { label: tr('En attente'), value: String(stats.pending_count), sub: `${money(stats.pending_amount)}`, icon: Clock, bg: 'bg-amber-50', color: 'text-amber-700' },
+    { label: tr('Recharges validées'), value: `${money(stats.deposits)}`, sub: tr('{0} opérations', stats.deposits_count), icon: ArrowDownLeft, bg: 'bg-emerald-50', color: 'text-emerald-700' },
+    { label: tr('Paiements clients'), value: `${money(stats.payments)}`, sub: tr('{0} opérations', stats.payments_count), icon: TrendingUp, bg: 'bg-primary/10', color: 'text-primary' },
+    { label: tr('Remboursé'), value: `${money(stats.refunds)}`, sub: tr('{0} refusées / échouées', stats.rejected_count), icon: Undo2, bg: 'bg-sky-50', color: 'text-sky-700' },
+    { label: tr('Soldes clients'), value: `${money(stats.wallets_total)}`, sub: tr('Total dans les portefeuilles'), icon: Wallet, bg: 'bg-indigo-50', color: 'text-indigo-700' },
   ] : []
 
   return (
@@ -220,7 +221,7 @@ export function AdminPaymentsPage() {
         <div className="flex flex-wrap gap-2 text-xs">
           {stats.by_method.map((m) => (
             <span key={m.method} className="rounded-full border border-gray-100 bg-white px-3 py-1 shadow-sm">
-              <span className="font-semibold">{METHOD_LABEL[m.method] ?? m.method}</span> · {fmt(m.amount)} HTG · {m.count}
+              <span className="font-semibold">{METHOD_LABEL[m.method] ?? m.method}</span> · {money(m.amount)} · {m.count}
             </span>
           ))}
         </div>
@@ -315,8 +316,8 @@ export function AdminPaymentsPage() {
                         ) : '—'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <p className="text-sm font-semibold tabular-nums">{fmt(tx.amount)}</p>
-                        <p className="text-[10px] text-muted-foreground">HTG</p>
+                        <p className="text-sm font-semibold tabular-nums">{moneyAmount(tx.amount)}</p>
+                        <p className="text-[10px] text-muted-foreground">{currencyLabel()}</p>
                       </TableCell>
                       <TableCell>
                         <span className={cn('rounded-full px-2.5 py-1 text-xs font-semibold', st.cls)}>{st.label()}</span>
@@ -346,7 +347,7 @@ export function AdminPaymentsPage() {
           {open && (
             <>
               <SheetHeader>
-                <SheetTitle>{(TYPE_LABEL[open.type] ?? (() => open.type))()} · {fmt(open.amount)} HTG</SheetTitle>
+                <SheetTitle>{(TYPE_LABEL[open.type] ?? (() => open.type))()} · {money(open.amount)}</SheetTitle>
                 <SheetDescription>{dateTime(open.created_at)}</SheetDescription>
               </SheetHeader>
               <div className="space-y-4 px-4 pb-8">
@@ -456,7 +457,7 @@ export function AdminPaymentsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-xl border border-amber-100 bg-amber-50 py-3 text-center">
-            <p className="text-2xl font-bold text-amber-700">{refundOf ? fmt(refundOf.amount) : ''} HTG</p>
+            <p className="text-2xl font-bold text-amber-700">{refundOf ? money(refundOf.amount) : ''}</p>
             <p className="mt-1 px-3 text-xs text-amber-700/80">{refundOf?.description ? trServer(refundOf.description) : ''}</p>
           </div>
           <Textarea value={refundReason} onChange={(e) => setRefundReason(e.target.value)} maxLength={200} placeholder={tr('Motif du remboursement (obligatoire)')} className="rounded-xl" />

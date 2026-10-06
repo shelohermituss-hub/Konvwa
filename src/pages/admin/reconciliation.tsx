@@ -6,13 +6,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { verifyPayment } from '@/lib/payment-api'
 import { cn } from '@/lib/utils'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
 interface WalletLine { user_id: string; full_name: string | null; balance: number; computed: number; diff: number }
 interface StaleDeposit { id: string; amount: number; method: string | null; reference: string | null; created_at: string }
 interface Report { wallets: WalletLine[]; stale_deposits: StaleDeposit[] }
 
-const htg = (n: number) => `${n.toLocaleString(LOCALE_TAG)} HTG`
+const htg = (n: number) => `${money(n)}`
 
 export function AdminReconciliationPage() {
   const [report, setReport] = useState<Report | null>(null)

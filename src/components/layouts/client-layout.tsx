@@ -20,6 +20,7 @@ import { NotificationBell, useUnreadCount } from '@/components/shared/notificati
 
 import { ThemeQuickToggle } from '@/components/shared/theme-switch'
 import { tr } from '@/lib/i18n'
+import { CurrencyToggle } from '@/components/shared/currency-toggle'
 const NAV_ITEMS = [
   { labelKey: 'nav.home',      Icon: LayoutDashboard, path: '/dashboard' },
   { labelKey: 'nav.orders',    Icon: ShoppingBag,     path: '/orders' },
@@ -270,6 +271,7 @@ function TopHeader() {
         <KonvwaLogo size={30} />
       </Link>
       <div className="flex items-center gap-1">
+        <CurrencyToggle compact className="mr-1" />
         <LanguageSwitcher />
         <ThemeQuickToggle />
         <CartBadge />

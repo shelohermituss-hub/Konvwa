@@ -6,7 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
 interface Row {
   user_id: string
@@ -83,7 +84,7 @@ export function AdminResellersPage() {
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <p className="text-sm font-bold">{r.business_name}</p>
-                  <p className="text-xs text-muted-foreground">{r.full_name} · {r.phone ?? '—'} · {tr('~{0} HTG / mois', Number(r.monthly_volume_htg).toLocaleString(LOCALE_TAG))}</p>
+                  <p className="text-xs text-muted-foreground">{r.full_name} · {r.phone ?? '—'} · {tr('~{0} / mois', money(Number(r.monthly_volume_htg)))}</p>
                 </div>
                 <time className="text-xs text-muted-foreground" dateTime={r.submitted_at}>{new Date(r.submitted_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}</time>
               </div>

@@ -4,7 +4,8 @@ import { CheckCircle, XCircle, Loader2, Wallet } from 'lucide-react'
 import { verifyPayment, type VerifyPaymentResult } from '@/lib/payment-api'
 import { supabase } from '@/lib/supabase'
 
-import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { tr } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 type State = 'loading' | 'success' | 'ordered' | 'not_ordered' | 'pending' | 'failed' | 'error'
 
 export function PaymentReturnPage() {
@@ -84,7 +85,7 @@ export function PaymentReturnPage() {
             <h1 className="text-lg font-bold mb-2">{tr('Paiement confirmé !')}</h1>
             {amount && (
               <p className="text-3xl font-black text-emerald-700 mb-1">
-                +{amount.toLocaleString(LOCALE_TAG)} HTG
+                +{money(amount)}
               </p>
             )}
             <p className="text-sm text-muted-foreground mb-6">{tr('Votre portefeuille a été crédité avec succès.')}</p>
@@ -105,7 +106,7 @@ export function PaymentReturnPage() {
               <CheckCircle className="h-8 w-8 text-emerald-500" />
             </div>
             <h1 className="text-lg font-bold mb-2">{tr('Paiement confirmé, commande passée !')}</h1>
-            {amount && <p className="text-3xl font-black text-emerald-700 mb-1">{amount.toLocaleString(LOCALE_TAG)} HTG</p>}
+            {amount && <p className="text-3xl font-black text-emerald-700 mb-1">{money(amount)}</p>}
             <p className="text-sm text-muted-foreground mb-6">{tr('Votre commande est en cours de traitement. Suivez-la dans Commandes.')}</p>
             <Link
               to="/orders"

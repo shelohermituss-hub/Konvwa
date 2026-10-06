@@ -16,7 +16,8 @@ import { cn } from '@/lib/utils'
 import { AssignBatchDialog, type AssignTarget } from '@/components/shared/assign-batch-dialog'
 import { ArrivalDialog, type ArrivalTarget } from '@/components/shared/arrival-dialog'
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
-import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, trServer, DATE_LOCALE } from '@/lib/i18n'
+import { currencyLabel, moneyAmount } from '@/lib/currency'
 interface AdminOrder {
   id: string
   tracking_code: string
@@ -261,13 +262,13 @@ export function AdminOrdersPage() {
                       <StatusBadge status={order.status} />
                       {order.payment_status === 'partial' && (
                         <span className="ml-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700" title={tr('Paiement échelonné en cours : l\'expédition est bloquée jusqu\'au solde')}>
-                          {tr('Échelonné')} · {order.total_paid.toLocaleString(LOCALE_TAG)}
+                          {tr('Échelonné')} · {moneyAmount(order.total_paid)}
                         </span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <p className="font-semibold text-sm">{(order.quotes?.total ?? order.total_paid).toLocaleString(LOCALE_TAG)}</p>
-                      <p className="text-[10px] text-muted-foreground">HTG</p>
+                      <p className="font-semibold text-sm">{moneyAmount(order.quotes?.total ?? order.total_paid)}</p>
+                      <p className="text-[10px] text-muted-foreground">{currencyLabel()}</p>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
                       {new Date(order.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}

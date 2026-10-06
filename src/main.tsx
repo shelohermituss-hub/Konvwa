@@ -15,8 +15,13 @@ import { AuthErrorToast } from "@/components/shared/auth-error-toast"
 import { StepUpProvider } from '@/lib/step-up'
 import { WishlistProvider } from '@/lib/wishlist-context'
 import { installErrorReporting } from '@/lib/error-reporter'
+import { supabase } from '@/lib/supabase'
+import { saveUsdRate } from '@/lib/currency'
 import { UpdateBanner } from "@/components/shared/update-banner"
 import { OfflineBanner } from "@/components/shared/offline-banner"
+
+// The USD display rate follows the site setting; it is kept for the next page load so prices never change while the page is open
+void supabase.from('app_settings').select('value').eq('key', 'usd_to_htg_rate').maybeSingle().then(({ data }) => saveUsdRate(data?.value), () => {})
 
 // Server errors (RPC) are written in French: show them in the user's language
 const originalToastError = toast.error.bind(toast)

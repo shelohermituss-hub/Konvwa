@@ -9,6 +9,7 @@ import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { LanguageToggle } from '@/components/shared/language-toggle'
 
 import { tr } from '@/lib/i18n'
+import { CurrencyToggle } from '@/components/shared/currency-toggle'
 const SEO: Record<string, { title: string; description: string }> = {
   '/': {
     title: tr('KONVWA — Importez depuis Alibaba, Shein et Temu en Haïti'),
@@ -92,6 +93,7 @@ function Header() {
         </div>
 
         <div className="hidden lg:flex items-center gap-4">
+          <CurrencyToggle />
           <LanguageToggle />
           {user ? (
             <Button asChild className="rounded-full">
@@ -110,6 +112,7 @@ function Header() {
         </div>
 
         <div className="flex items-center gap-2 lg:hidden">
+          <CurrencyToggle />
           <LanguageToggle />
           <button
             className="p-2 rounded-lg hover:bg-muted transition-colors"

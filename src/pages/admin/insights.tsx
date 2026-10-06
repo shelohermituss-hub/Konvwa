@@ -6,7 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
 interface Insights {
   revenue_30d: number
@@ -21,7 +22,7 @@ interface Insights {
   stuck_orders: Array<{ id: string; tracking_code: string; status: string; updated_at: string }>
 }
 
-const htg = (n: number) => `${Math.round(n).toLocaleString(LOCALE_TAG)} HTG`
+const htg = (n: number) => `${money(Math.round(n))}`
 
 function Kpi({ label, value, hint, to, tone }: { label: string; value: string; hint?: React.ReactNode; to?: string; tone?: 'warn' }) {
   const body = (

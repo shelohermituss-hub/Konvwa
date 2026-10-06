@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
-import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { tr } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
 interface Option { id: string; region_id: string; kind: 'pickup' | 'home'; label: string; details: string | null; price_htg: number; active: boolean }
 interface Region { id: string; name: string }
@@ -90,7 +91,7 @@ export function AdminDeliveryOptionsPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{o.label}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {tr(regionName(o.region_id))} · {o.kind === 'pickup' ? tr('Retrait') : tr('Livraison à domicile')} · {o.price_htg.toLocaleString(LOCALE_TAG)} HTG
+                  {tr(regionName(o.region_id))} · {o.kind === 'pickup' ? tr('Retrait') : tr('Livraison à domicile')} · {money(o.price_htg)}
                 </p>
               </div>
               <Button type="button" variant="outline" size="sm" className="rounded-lg" onClick={() => void toggle(o)}>{o.active ? tr('Désactiver') : tr('Activer')}</Button>

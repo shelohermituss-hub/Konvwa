@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { currencyLabel } from '@/lib/currency'
 type TabId = 'overview' | 'details' | 'related'
 
 const TABS: { id: TabId; label: string }[] = [
@@ -392,7 +393,7 @@ export function ProductDetailPage() {
                             <span className="min-w-0">
                               <span className={cn('block max-w-[11rem] truncate font-semibold', !v.stock_available && 'line-through')}>{variantLabel(v)}</span>
                               <span className="block text-xs tabular-nums text-muted-foreground">
-                                {v.stock_available ? `${formatHtg(variantUnitPrice(product, v, quantity))} HTG` : tr('Rupture de stock')}
+                                {v.stock_available ? `${formatHtg(variantUnitPrice(product, v, quantity))} ${currencyLabel()}` : tr('Rupture de stock')}
                               </span>
                             </span>
                           </button>
@@ -412,7 +413,7 @@ export function ProductDetailPage() {
                 return (
                   <div key={r.from}>
                     <p className={cn('text-xl font-extrabold tabular-nums tracking-tight', active ? 'text-primary' : 'text-foreground')}>
-                      {variants.length > 0 && !chosen && <span className="mr-1 text-xs font-semibold text-muted-foreground">{tr('dès')}</span>}{formatHtg(r.price)} <span className="text-xs font-semibold text-muted-foreground">HTG</span>
+                      {variants.length > 0 && !chosen && <span className="mr-1 text-xs font-semibold text-muted-foreground">{tr('dès')}</span>}{formatHtg(r.price)} <span className="text-xs font-semibold text-muted-foreground">{currencyLabel()}</span>
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {rows.length > 1 && r === rows[0]
@@ -432,7 +433,7 @@ export function ProductDetailPage() {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tr('Quantité')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {formatHtg(unitPrice)} HTG / {product.unit}
+                  {formatHtg(unitPrice)} {currencyLabel()} / {product.unit}
                 </p>
               </div>
               <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">

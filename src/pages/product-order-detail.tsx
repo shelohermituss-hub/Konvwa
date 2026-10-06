@@ -9,8 +9,9 @@ import { isCancelledOrder, needsShippingPayment, productOrderLabel, trackingStat
 import { TimelineStep } from '@/components/shared/timeline-step'
 import { ShippingMethodPicker } from '@/components/shared/shipping-method-picker'
 import { cn } from '@/lib/utils'
-import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { tr } from '@/lib/i18n'
 import type { OrderStatus } from '@/types'
+import { money } from '@/lib/currency'
 
 interface Item { id: string; product_name: string; variant_name: string | null; product_price_htg: number; quantity: number; subtotal_htg: number }
 interface Order {
@@ -103,19 +104,19 @@ export function ProductOrderDetailPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{it.product_name}</p>
                   {it.variant_name && <p className="truncate text-xs text-foreground/80">{it.variant_name}</p>}
-                  <p className="text-xs text-muted-foreground">{it.quantity} × {it.product_price_htg.toLocaleString(LOCALE_TAG)} HTG</p>
+                  <p className="text-xs text-muted-foreground">{it.quantity} × {money(it.product_price_htg)}</p>
                 </div>
-                <p className="shrink-0 text-sm font-bold">{it.subtotal_htg.toLocaleString(LOCALE_TAG)} HTG</p>
+                <p className="shrink-0 text-sm font-bold">{money(it.subtotal_htg)}</p>
               </li>
             ))}
           </ul>
           <div className="space-y-1.5 border-t border-gray-100 px-4 py-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">{tr('Achat des produits')}</span><span className="font-semibold">{(order.shipping_prepaid ? order.total_htg - (shippingPaid ?? 0) : order.total_htg).toLocaleString(LOCALE_TAG)} HTG</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{tr('Achat des produits')}</span><span className="font-semibold">{money((order.shipping_prepaid ? order.total_htg - (shippingPaid ?? 0) : order.total_htg))}</span></div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{tr('Expédition')}</span>
               <span className="font-semibold">
                 {shippingPaid != null
-                  ? `${shippingPaid.toLocaleString(LOCALE_TAG)} HTG${order.chosen_shipping_rate ? ` · ${order.chosen_shipping_rate.name}` : ''}`
+                  ? `${money(shippingPaid)}${order.chosen_shipping_rate ? ` · ${order.chosen_shipping_rate.name}` : ''}`
                   : tr('Calculée à l\'arrivée du colis, selon le mode choisi')}
               </span>
             </div>

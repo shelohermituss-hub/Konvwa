@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { tr } from '@/lib/i18n'
 import { tierProgress, type Loyalty } from '@/lib/loyalty'
+import { money } from '@/lib/currency'
 
 interface Stats { invited: number; rewarded: number; hasReferrer: boolean }
 
@@ -66,7 +67,7 @@ export function RewardsSection() {
     setBusy(null)
     const r = data as { success?: boolean; error?: string; credited?: number } | null
     if (error || !r?.success) { toast.error(r?.error ?? error?.message ?? tr('Action impossible.')); return }
-    toast.success(tr('{0} HTG ajoutés à votre portefeuille.', (r.credited ?? 0).toLocaleString(LOCALE_TAG)))
+    toast.success(tr('{0} ajoutés à votre portefeuille.', money(r.credited ?? 0)))
     setPromo('')
   }
 

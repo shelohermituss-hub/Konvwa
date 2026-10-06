@@ -9,12 +9,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money, moneyAmount } from '@/lib/currency'
 
 interface Application { status: 'pending' | 'approved' | 'rejected'; business_name: string; reject_reason: string | null }
 interface Sale { id: string; product_label: string; customer: string | null; quantity: number; unit_cost_htg: number; unit_price_htg: number; sold_on: string }
 
-const htg = (n: number) => `${Math.round(n).toLocaleString(LOCALE_TAG)} HTG`
+const htg = (n: number) => `${money(Math.round(n))}`
 
 function ApplyForm({ onDone }: { onDone: () => void }) {
   const [business, setBusiness] = useState('')
@@ -155,7 +156,7 @@ function Dashboard() {
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{x.product_label}</span>
                   <span className="block text-xs text-muted-foreground">
-                    {x.quantity} × {Math.round(x.unit_price_htg).toLocaleString(LOCALE_TAG)} · {new Date(x.sold_on).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}{x.customer ? ` · ${x.customer}` : ''}
+                    {x.quantity} × {moneyAmount(Math.round(x.unit_price_htg))} · {new Date(x.sold_on).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}{x.customer ? ` · ${x.customer}` : ''}
                   </span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">

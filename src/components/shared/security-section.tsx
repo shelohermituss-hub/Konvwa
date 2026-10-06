@@ -8,7 +8,8 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { getDeviceId } from '@/lib/device'
 import { STEP_UP_THRESHOLD_HTG } from '@/lib/step-up'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
 interface DeviceRow { device_id: string; label: string; last_seen: string; first_seen: string }
 type Enrollment = { factorId: string; qr: string; secret: string }
@@ -147,7 +148,7 @@ export function SecuritySection() {
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {factorId
-                ? tr('Activée : un code de votre application est demandé pour les paiements et les recharges de {0} HTG ou plus. Rien n\'est demandé à la connexion.', STEP_UP_THRESHOLD_HTG.toLocaleString(LOCALE_TAG))
+                ? tr('Activée : un code de votre application est demandé pour les paiements et les recharges de {0} ou plus. Rien n\'est demandé à la connexion.', money(STEP_UP_THRESHOLD_HTG))
                 : tr('Ajoutez une protection : même avec votre mot de passe, personne ne pourra payer ou recharger votre portefeuille sans votre téléphone.')}
             </p>
           </div>

@@ -9,7 +9,8 @@ import { AdminCargoSection } from '@/components/shared/admin-cargo-section'
 import { useAdminStats } from '@/hooks/use-admin-stats'
 import { cn } from '@/lib/utils'
 
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { currencyLabel, moneyAmount, moneyCompact } from '@/lib/currency'
 const chartConfig = {
   orders: { label: tr('Commandes'), color: 'var(--chart-1)' },
   revenue: { label: tr('Revenu (HTG)'), color: 'var(--chart-2)' },
@@ -120,7 +121,7 @@ export function AdminDashboard() {
         />
         <KpiCard
           title={tr('Revenus encaissés')}
-          value={stats.loading ? '—' : `${(stats.totalRevenuePaid / 1000).toFixed(0)}k HTG`}
+          value={stats.loading ? '—' : moneyCompact(stats.totalRevenuePaid)}
           icon={CreditCard}
           iconClass="text-emerald-700"
           bgClass="bg-emerald-50"
@@ -273,8 +274,8 @@ export function AdminDashboard() {
                 <div className="flex items-center gap-4 shrink-0">
                   <StatusBadge status={order.status} />
                   <div className="text-right hidden sm:block">
-                    <p className="font-semibold text-sm">{order.total_paid != null ? `${order.total_paid.toLocaleString(LOCALE_TAG)}` : '—'}</p>
-                    <p className="text-[10px] text-muted-foreground">HTG</p>
+                    <p className="font-semibold text-sm">{order.total_paid != null ? moneyAmount(order.total_paid) : '—'}</p>
+                    <p className="text-[10px] text-muted-foreground">{currencyLabel()}</p>
                   </div>
                   <p className="text-xs text-muted-foreground hidden md:block">
                     {new Date(order.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short' })}

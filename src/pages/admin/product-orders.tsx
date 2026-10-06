@@ -9,7 +9,8 @@ import { supabase } from '@/lib/supabase'
 import { shipmentStatusLabel } from '@/lib/cargo-tracking'
 import { IN_TRANSIT, productOrderLabel, trackingStatusOf } from '@/lib/product-order'
 import { cn } from '@/lib/utils'
-import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, trServer, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
 interface Row {
   id: string; tracking_code: string; user_id: string; status: string; payment_status: string; tracking_status: string | null
@@ -91,9 +92,9 @@ export function AdminProductOrdersPage() {
                     <p className="text-sm font-semibold">{r.customer ?? '—'} <span className="font-mono text-xs text-muted-foreground">#{r.tracking_code}</span></p>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.product_order_items.map((i) => `${i.product_name}${i.variant_name ? ` (${i.variant_name})` : ''} ×${i.quantity}`).join(', ') || '—'}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {new Date(r.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })} · {r.total_htg.toLocaleString(LOCALE_TAG)} HTG
+                      {new Date(r.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })} · {money(r.total_htg)}
                       {(r.weight_kg || r.cbm) && ` · ${[r.weight_kg ? `${r.weight_kg} kg` : '', r.cbm ? `${r.cbm} CBM` : ''].filter(Boolean).join(' / ')}`}
-                      {r.shipping_amount_htg != null && ` · ${tr('expédition')} ${r.shipping_amount_htg.toLocaleString(LOCALE_TAG)} HTG`}
+                      {r.shipping_amount_htg != null && ` · ${tr('expédition')} ${money(r.shipping_amount_htg)}`}
                     </p>
                   </div>
                   <span className="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[11px] font-semibold text-sky-700">{productOrderLabel(r)}</span>

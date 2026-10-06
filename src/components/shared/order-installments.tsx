@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { installmentAmounts, INSTALLMENT_GAP_DAYS } from '@/lib/installments'
 import { useStepUp } from '@/lib/step-up'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
-const htg = (n: number) => `${n.toLocaleString(LOCALE_TAG)} HTG`
+const htg = (n: number) => `${money(n)}`
 
 /** "Pay in 2 or 3 times" choice shown next to the pay button. */
 export function InstallmentOptions({ orderId, total, balance, onChanged }: {

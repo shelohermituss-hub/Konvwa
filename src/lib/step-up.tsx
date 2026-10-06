@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
-import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { tr } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
 /** Same value as the `mfa_payment_threshold_htg` setting; the database is the one that enforces it. */
 export const STEP_UP_THRESHOLD_HTG = 20_000
@@ -102,7 +103,7 @@ export function StepUpProvider({ children }: { children: ReactNode }) {
             <DialogDescription>
               {purpose === 'security'
                 ? tr('Pour modifier vos passkeys, entrez le code à 6 chiffres de votre application d\'authentification.')
-                : tr('Pour une opération de {0} HTG (paiement ou recharge), entrez le code à 6 chiffres de votre application d\'authentification.', amount.toLocaleString(LOCALE_TAG))}
+                : tr('Pour une opération de {0} (paiement ou recharge), entrez le code à 6 chiffres de votre application d\'authentification.', money(amount))}
             </DialogDescription>
           </DialogHeader>
           <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void verify() }}>

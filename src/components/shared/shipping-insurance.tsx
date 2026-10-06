@@ -6,6 +6,7 @@ import { insuranceFeeHtg } from '@/lib/insurance'
 import { useStepUp } from '@/lib/step-up'
 import { Input } from '@/components/ui/input'
 import { tr, trServer, LOCALE_TAG } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 
 type Settings = { rate: number; min: number; max: number; usd: number }
 
@@ -36,7 +37,7 @@ export function ShippingInsurance({ requestId, insured, insuredValueUsd, feeHtg,
       <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
         <p className="text-sm text-emerald-800">
-          {tr('Colis assuré — valeur déclarée {0} USD, prime {1} HTG.', (insuredValueUsd ?? 0).toLocaleString(LOCALE_TAG), (feeHtg ?? 0).toLocaleString(LOCALE_TAG))}
+          {tr('Colis assuré — valeur déclarée {0} USD, prime {1}.', (insuredValueUsd ?? 0).toLocaleString(LOCALE_TAG), money(feeHtg ?? 0))}
         </p>
       </div>
     )
@@ -74,7 +75,7 @@ export function ShippingInsurance({ requestId, insured, insuredValueUsd, feeHtg,
         <button type="button" disabled={!valid || busy} onClick={() => void buy()}
           className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-          {valid ? tr('Assurer — {0} HTG', fee.toLocaleString(LOCALE_TAG)) : tr('Assurer')}
+          {valid ? tr('Assurer — {0}', money(fee)) : tr('Assurer')}
         </button>
       </div>
     </div>

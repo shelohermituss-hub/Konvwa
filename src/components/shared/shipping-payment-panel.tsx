@@ -5,8 +5,9 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
 import { useStepUp } from '@/lib/step-up'
+import { money } from '@/lib/currency'
 interface PaymentSummary {
   success: boolean
   status: string
@@ -25,7 +26,7 @@ interface PaymentSummary {
 }
 
 const BTN = { background: 'linear-gradient(135deg, #F05A28, #D44E21)' }
-const htg = (n: number) => `${Math.round(n).toLocaleString(LOCALE_TAG)} HTG`
+const htg = (n: number) => `${money(Math.round(n))}`
 
 function useSummary(requestId: string, refreshKey: string) {
   const [summary, setSummary] = useState<PaymentSummary | null>(null)

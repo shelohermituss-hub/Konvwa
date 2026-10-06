@@ -18,7 +18,8 @@ import { ShippingInsurance } from '@/components/shared/shipping-insurance'
 import { TimelineList } from '@/components/shared/timeline-step'
 import { cargoSteps, cargoActiveIndex, cargoStatusLabel, cargoEstimate } from '@/lib/cargo-tracking'
 
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { money } from '@/lib/currency'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ShippingRequest {
@@ -223,7 +224,7 @@ export function ShipmentDetailPage() {
             <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
             <p className="text-sm text-emerald-800 font-medium">
               {tr('Paiement confirmé —')}{' '}
-              {(req.actual_amount_htg ?? req.quoted_amount_htg ?? 0).toLocaleString(LOCALE_TAG)}{' '}{tr('HTG.')}{' '}
+              {money(req.actual_amount_htg ?? req.quoted_amount_htg ?? 0)}{' '}
               {req.shipment
                 ? <>{tr('Statut actuel de votre cargaison :')}{' '}<strong>{cargoStatusLabel(req)}</strong>.</>
                 : tr('Votre cargaison sera assignée à une prochaine expédition.')}
@@ -327,7 +328,7 @@ export function ShipmentDetailPage() {
             <div className="flex items-center justify-between gap-3">
               <p className="text-2xl font-bold text-foreground">
                 {displayAmount != null
-                  ? `${displayAmount.toLocaleString(LOCALE_TAG)} HTG`
+                  ? `${money(displayAmount)}`
                   : '—'
                 }
               </p>
@@ -359,7 +360,7 @@ export function ShipmentDetailPage() {
           <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm p-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{tr('Montant payé')}</p>
             <p className="text-xl font-bold text-emerald-700">
-              {displayAmount.toLocaleString(LOCALE_TAG)} HTG
+              {money(displayAmount)}
             </p>
           </div>
         )}

@@ -13,7 +13,8 @@ import { AdminUserSheet } from '@/components/shared/admin-user-sheet'
 import { accountBlock, type AccountStatus } from '@/lib/account-access'
 
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
-import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
+import { tr, DATE_LOCALE } from '@/lib/i18n'
+import { moneyAmount, currencyLabel } from '@/lib/currency'
 interface UserRow {
   user_id: string
   full_name: string
@@ -235,8 +236,8 @@ export function AdminUsersPage() {
                         <span className="text-xs text-muted-foreground ml-1">{tr('cmd')}</span>
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-right">
-                        <p className="text-sm font-semibold">{(user.wallet_balance || 0).toLocaleString(LOCALE_TAG)}</p>
-                        <p className="text-[10px] text-muted-foreground">HTG</p>
+                        <p className="text-sm font-semibold">{moneyAmount(user.wallet_balance || 0)}</p>
+                        <p className="text-[10px] text-muted-foreground">{currencyLabel()}</p>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                         {new Date(user.created_at).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })}

@@ -1,5 +1,6 @@
 
-import { LOCALE_TAG } from '@/lib/i18n'
+
+import { moneyAmount } from '@/lib/currency'
 
 export interface PriceTier {
   min_qty: number
@@ -72,8 +73,9 @@ export function tierRows(product: PricedProduct): TierRow[] {
   }))
 }
 
+/** A price in the display currency (HTG, or USD converted with the site's rate): the number only, the unit is shown apart. */
 export function formatHtg(value: number): string {
-  return value.toLocaleString(LOCALE_TAG, { maximumFractionDigits: 2 })
+  return moneyAmount(value)
 }
 
 export function formatPriceRange(product: PricedProduct): string {

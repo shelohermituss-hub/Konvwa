@@ -7,6 +7,7 @@ import { WishlistButton } from '@/components/shared/wishlist-button'
 import { flagFor, supplierLogo } from '@/lib/supplier-badges'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
+import { currencyLabel } from '@/lib/currency'
 /** The single most persuasive fact we have about the product, shown under the supplier line. */
 function highlight(p: CatalogProduct): string | null {
   if (p.repurchase_rate != null) return tr('Taux de réachat de {0} %', p.repurchase_rate)
@@ -83,7 +84,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
         <p className="flex flex-wrap items-baseline gap-x-1.5 text-base font-extrabold leading-tight tracking-tight text-foreground">
           <span className="whitespace-nowrap">
             {formatPriceRange(product)}
-            <span className="ml-1 text-[11px] font-semibold text-muted-foreground">HTG</span>
+            <span className="ml-1 text-[11px] font-semibold text-muted-foreground">{currencyLabel()}</span>
           </span>
           <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">{tr('MOQ :')}{' '}{product.moq}</span>
         </p>

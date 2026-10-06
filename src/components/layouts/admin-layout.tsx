@@ -15,6 +15,7 @@ import { useAuth } from '@/lib/auth-context'
 import { MfaGate } from '@/components/shared/mfa-gate'
 
 import { tr } from '@/lib/i18n'
+import { CurrencyToggle } from '@/components/shared/currency-toggle'
 interface NavItem { title: string; url: string; icon: React.ElementType; badge?: keyof AdminBadges; adminOnly?: boolean }
 interface NavGroup { key: string; title: string; icon: React.ElementType; items: NavItem[] }
 
@@ -186,6 +187,7 @@ function AdminTopBar() {
     <header className="flex h-14 items-center justify-between border-b border-gray-100 bg-white px-6">
       <SidebarTrigger className="-ml-2" />
       <div className="flex items-center gap-2">
+        <CurrencyToggle />
         <ThemeQuickToggle />
         <NotificationBell />
       </div>

@@ -14,6 +14,7 @@ import { useStepUp } from '@/lib/step-up'
 import { createCheckoutPayment } from '@/lib/payment-api'
 import { createCheckout, fetchCheckoutShipping, type CheckoutShipping, type CreatedOrder } from '@/lib/checkout-api'
 import { cn } from '@/lib/utils'
+import { money } from '@/lib/currency'
 interface WalletData {
   id: string
   available_balance: number
@@ -182,7 +183,7 @@ export function CheckoutPage() {
           <h1 className="text-lg font-bold mb-2">{t('checkout.success')}</h1>
           <p className="text-sm text-muted-foreground mb-2">{t('checkout.success_sub')}</p>
           <p className="text-2xl font-black text-emerald-700 mb-3">
-            {paidOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString(LOCALE_TAG)} HTG
+            {money(paidOrders.reduce((sum, o) => sum + o.total, 0))}
           </p>
           <p className="mb-6 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
             {paidOrders.some(o => o.prepaid) && paidOrders.some(o => !o.prepaid)
@@ -266,23 +267,23 @@ export function CheckoutPage() {
                       {(item.products?.supplier_country ?? '').toUpperCase() === 'US' ? tr('Expédition incluse') : tr('Achat seul')}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">{item.quantity} × {cartLineUnitPrice(item).toLocaleString(LOCALE_TAG)} HTG</p>
+                  <p className="text-xs text-muted-foreground">{item.quantity} × {money(cartLineUnitPrice(item))}</p>
                 </div>
                 <p className="text-sm font-bold text-primary shrink-0">
-                  {(cartLineUnitPrice(item) * item.quantity).toLocaleString(LOCALE_TAG)} HTG
+                  {money((cartLineUnitPrice(item) * item.quantity))}
                 </p>
               </div>
             ))}
           </div>
           {hasUs && chosen && (
             <div className="space-y-1 border-t border-gray-100 px-4 py-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">{tr('Produits')}</span><span className="font-semibold">{total.toLocaleString(LOCALE_TAG)} HTG</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">{tr('Expédition')} · {chosen.name}</span><span className="font-semibold">{shippingFee.toLocaleString(LOCALE_TAG)} HTG</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">{tr('Produits')}</span><span className="font-semibold">{money(total)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">{tr('Expédition')} · {chosen.name}</span><span className="font-semibold">{money(shippingFee)}</span></div>
             </div>
           )}
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/50">
             <span className="text-sm font-bold">{t('cart.total')}</span>
-            <span className="text-lg font-black text-primary">{grandTotal.toLocaleString(LOCALE_TAG)} HTG</span>
+            <span className="text-lg font-black text-primary">{money(grandTotal)}</span>
           </div>
         </div>
 
@@ -323,7 +324,7 @@ export function CheckoutPage() {
                         <span className="block text-sm font-semibold">{o.name}</span>
                         {o.transit_days_min && o.transit_days_max ? <span className="text-xs text-muted-foreground">{o.transit_days_min}-{o.transit_days_max} {tr('jours')}</span> : null}
                       </span>
-                      <span className="shrink-0 text-sm font-bold">{o.amount_htg.toLocaleString(LOCALE_TAG)} HTG</span>
+                      <span className="shrink-0 text-sm font-bold">{money(o.amount_htg)}</span>
                     </button>
                   )
                 })}
@@ -383,7 +384,7 @@ export function CheckoutPage() {
             <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
               <p className="text-sm text-muted-foreground">{t('checkout.balance')}</p>
               <p className={`text-base font-black ${insufficient ? 'text-destructive' : 'text-emerald-700'}`}>
-                {(wallet?.available_balance ?? 0).toLocaleString(LOCALE_TAG)} HTG
+                {money((wallet?.available_balance ?? 0))}
               </p>
             </div>
           )}
@@ -392,7 +393,7 @@ export function CheckoutPage() {
             <div className="mt-3 p-3 rounded-xl bg-destructive/8 border border-destructive/20">
               <p className="text-xs font-semibold text-destructive mb-1">{t('checkout.insufficient')}</p>
               <p className="text-xs text-muted-foreground">
-                {tr('Il vous manque')}{' '}{(grandTotal - (wallet?.available_balance ?? 0)).toLocaleString(LOCALE_TAG)}{' '}{tr('HTG.')}
+                {tr('Il vous manque')}{' '}{money(grandTotal - (wallet?.available_balance ?? 0))}
               </p>
             </div>
           )}
@@ -425,7 +426,7 @@ export function CheckoutPage() {
               </>
             ) : (
               <>
-                {viaGateway ? tr('Payer avec {0}', payWith === 'moncash' ? 'MonCash' : payWith === 'stripe' ? tr('Carte') : 'NatCash') : t('checkout.confirm')} · {grandTotal.toLocaleString(LOCALE_TAG)} HTG
+                {viaGateway ? tr('Payer avec {0}', payWith === 'moncash' ? 'MonCash' : payWith === 'stripe' ? tr('Carte') : 'NatCash') : t('checkout.confirm')} · {money(grandTotal)}
               </>
             )}
           </button>
