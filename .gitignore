@@ -28,3 +28,10 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Graphify: cache et artefacts lourds régénérables (GRAPH_REPORT.md reste versionné)
+graphify-out/cache/
+graphify-out/graph.json
+graphify-out/graph.html
+graphify-out/manifest.json
+graphify-out/cost.json

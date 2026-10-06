@@ -31,6 +31,48 @@ KONVWA est une application d'importation haïtienne (React + TypeScript + Vite +
 - **Pour tout nouveau composant** → applique `/shadcn` + `/design-system`
 - **Pour tout travail de polish final** → applique `/emil-design-eng`
 
+## Skills de workflow (ponytail, graphify, agent-skills)
+
+Installés au niveau projet dans `.claude/skills/` (versionnés, donc disponibles dans chaque session). Les checklists partagées sont dans `.claude/references/`, les personas (code-reviewer, security-auditor, test-engineer, web-performance-auditor) dans `.claude/agents/`.
+
+### graphify — carte du code (à consulter AVANT de grepper)
+
+- `graphify-out/GRAPH_REPORT.md` (versionné) résume les modules, « god nodes » et communautés du code : le lire pour se repérer dans une zone inconnue avant de lancer des recherches en vrac.
+- Questions de structure : `graphify query "<question>"`, `graphify path "A" "B"`, `graphify explain "<symbole>"` (si le CLI est installé).
+- Après un gros changement de structure (nouveaux modules, refactor) : `graphify update .` (AST uniquement, sans LLM, sans coût) puis committer `GRAPH_REPORT.md`. `cache/`, `graph.json`, `graph.html` sont ignorés par git et se régénèrent.
+- Installation du CLI (poste local) : `uv tool install "graphifyy[sql]"` ou `pip install "graphifyy[sql]"` (l'extra `sql` indexe aussi les migrations). Skill : `/graphify`.
+
+### ponytail — anti sur-ingénierie (logique, backend, scripts)
+
+- Principe : la solution la plus simple qui marche (YAGNI, stdlib/plateforme avant dépendance, une ligne avant cinquante). Skill `/ponytail` (niveaux lite / full / ultra).
+- Avant de livrer un diff non trivial (hors UI) : `/ponytail-review` ; de temps en temps sur un dossier : `/ponytail-audit` ; dette : `/ponytail-debt` ; aide : `/ponytail-help`.
+- **Limites** : ponytail ne prime jamais sur la sécurité (RLS, RPC `SECURITY DEFINER`, contraintes SQL, validation serveur), ni sur les règles UI/UX ci-dessus (états de chargement, accessibilité, polish demandé). Il s'applique à la logique, pas à l'obligation de simplifier une interface voulue riche.
+
+### agent-skills (addyosmani) — cycle d'ingénierie
+
+Pour une tâche non triviale, suivre le cycle et charger le skill de la phase :
+
+| Phase | Skill |
+|---|---|
+| Idée floue / besoin à cadrer | `/idea-refine`, `/interview-me`, `/spec-driven-development` |
+| Découpage | `/planning-and-task-breakdown` |
+| Implémentation | `/incremental-implementation`, `/test-driven-development`, `/api-and-interface-design`, `/frontend-ui-engineering` (en complément de `/shadcn` + `/ui-ux-pro-max`) |
+| Bug | `/debugging-and-error-recovery` |
+| Qualité | `/code-review-and-quality`, `/code-simplification`, `/performance-optimization`, `/browser-testing-with-devtools` |
+| Sécurité | `/security-and-hardening` (toute migration, RPC, Edge Function, paiement ou nouvelle entrée utilisateur) |
+| Livraison | `/git-workflow-and-versioning`, `/ci-cd-and-automation`, `/shipping-and-launch`, `/documentation-and-adrs` |
+| Évolution | `/deprecation-and-migration`, `/observability-and-instrumentation` |
+
+Méta : `/using-agent-skills` explique comment choisir ; `/context-engineering`, `/source-driven-development`, `/constraint-driven-development`, `/doubt-driven-development` pour les sessions longues ou les décisions risquées.
+
+### Précédence en cas de conflit
+
+1. Règles « Sécurité et données » et conventions du projet (ce fichier) — toujours prioritaires.
+2. Skills UI/UX du tableau ci-dessus pour tout ce qui se voit.
+3. agent-skills pour le processus, puis ponytail pour la sobriété du code.
+
+Pas de hooks automatiques installés (ponytail/graphify/agent-skills proposent des hooks Node/PreToolUse) : on les ajoutera seulement sur demande explicite.
+
 ## Stack technique
 
 - **Framework** : React 19 + TypeScript + Vite
