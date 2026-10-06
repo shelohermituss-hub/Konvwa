@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { useScrollManager } from '@/lib/use-scroll-manager'
 import { haptics } from '@/lib/haptic'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -335,6 +336,8 @@ export function ClientLayout() {
   const unread = useUnreadCount(user?.id)
   const { refresh: refreshCart } = useCart()
   usePendingPayments(user?.id, () => { void refreshCart() })
+  const mainRef = useRef<HTMLElement>(null)
+  useScrollManager(mainRef)
 
   return (
     <div className="flex h-dvh bg-background overflow-hidden">
@@ -345,7 +348,7 @@ export function ClientLayout() {
           <TopHeader />
         </div>
 
-        <main className="flex-1 min-h-0 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-8">
+        <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-8">
           <PwaExperience userId={user?.id} />
           <div key={location.pathname} className="page-enter flex min-h-full flex-col [&>*]:flex-1">
             <Outlet />

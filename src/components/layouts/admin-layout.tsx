@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { useScrollManager } from '@/lib/use-scroll-manager'
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useAdminBadges, type AdminBadges } from '@/hooks/use-admin-badges'
@@ -196,13 +197,15 @@ function AdminTopBar() {
 }
 
 export function AdminLayout() {
+  const mainRef = useRef<HTMLElement>(null)
+  useScrollManager(mainRef)
   return (
     <MfaGate>
     <SidebarProvider>
       <AdminSidebar />
       <SidebarInset>
         <AdminTopBar />
-        <main className="flex-1 overflow-auto p-6 bg-[#F4F5F7]">
+        <main ref={mainRef} className="flex-1 overflow-auto p-6 bg-[#F4F5F7]">
           <Outlet />
         </main>
       </SidebarInset>

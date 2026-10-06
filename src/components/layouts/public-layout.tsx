@@ -3,7 +3,8 @@ import { Flag } from '@/components/shared/flag'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { Menu, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useScrollManager } from '@/lib/use-scroll-manager'
 import { cn } from '@/lib/utils'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { LanguageToggle } from '@/components/shared/language-toggle'
@@ -213,6 +214,8 @@ function Footer() {
 
 export function PublicLayout() {
   usePageSeo()
+  // this layout scrolls the window itself: the manager only needs a (never scrolled) container
+  useScrollManager(useRef<HTMLElement>(null))
   return (
     <div className="flex min-h-screen flex-col">
       <Header />

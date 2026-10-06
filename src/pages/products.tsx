@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ProductFeed } from '@/components/shared/product-feed'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
 import { Search, ShoppingCart, Loader2, Tag, SlidersHorizontal } from 'lucide-react'
 import { priceRange } from '@/lib/product-pricing'
 import { supabase } from '@/lib/supabase'
@@ -13,25 +13,41 @@ import { CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProdu
 import { useAuth } from '@/lib/auth-context'
 
 import { tr } from '@/lib/i18n'
+// The catalogue stays in memory and the filters in the session, so coming back from a product puts the feed back exactly as it was
+let catalogCache: CatalogProduct[] | null = null
+const FILTERS_KEY = 'konvwa-products-filters'
+type Sort = 'default' | 'price_asc' | 'price_desc' | 'popular'
+interface SavedFilters { search: string; activeCategory: string | null; sort: Sort; minPrice: string; maxPrice: string; maxMoq: string; verifiedOnly: boolean; inStockOnly: boolean; wholesaleOnly: boolean }
+function savedFilters(): Partial<SavedFilters> {
+  try { return JSON.parse(sessionStorage.getItem(FILTERS_KEY) ?? '{}') as Partial<SavedFilters> } catch { return {} }
+}
+
 export function ProductsPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { count } = useCart()
   const { profile } = useAuth()
   const isReseller = !!profile?.is_reseller
-  const [wholesaleOnly, setWholesaleOnly] = useState(false)
-  const [products, setProducts] = useState<CatalogProduct[]>([])
-  const [loading, setLoading] = useState(true)
+  const navType = useNavigationType()
+  // filters come back only when the user goes back to this page, a fresh visit starts clean
+  const [saved] = useState<Partial<SavedFilters>>(() => (navType === 'POP' ? savedFilters() : {}))
+  const [wholesaleOnly, setWholesaleOnly] = useState(saved.wholesaleOnly ?? false)
+  const [products, setProducts] = useState<CatalogProduct[]>(catalogCache ?? [])
+  const [loading, setLoading] = useState(catalogCache === null)
   const [params] = useSearchParams()
-  const [search, setSearch] = useState(params.get('q') ?? '')
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [search, setSearch] = useState(params.get('q') ?? saved.search ?? '')
+  const [activeCategory, setActiveCategory] = useState<string | null>(saved.activeCategory ?? null)
   const [showFilters, setShowFilters] = useState(false)
-  const [sort, setSort] = useState<'default' | 'price_asc' | 'price_desc' | 'popular'>('default')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [maxMoq, setMaxMoq] = useState('')
-  const [verifiedOnly, setVerifiedOnly] = useState(false)
-  const [inStockOnly, setInStockOnly] = useState(false)
+  const [sort, setSort] = useState<Sort>(saved.sort ?? 'default')
+  const [minPrice, setMinPrice] = useState(saved.minPrice ?? '')
+  const [maxPrice, setMaxPrice] = useState(saved.maxPrice ?? '')
+  const [maxMoq, setMaxMoq] = useState(saved.maxMoq ?? '')
+  const [verifiedOnly, setVerifiedOnly] = useState(saved.verifiedOnly ?? false)
+  const [inStockOnly, setInStockOnly] = useState(saved.inStockOnly ?? false)
+
+  useEffect(() => {
+    try { sessionStorage.setItem(FILTERS_KEY, JSON.stringify({ search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly } satisfies SavedFilters)) } catch { /* storage blocked */ }
+  }, [search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly])
 
   useEffect(() => {
     async function load() {
@@ -41,7 +57,10 @@ export function ProductsPage() {
         .eq('active', true)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
-      if (data) setProducts((data as unknown as CatalogProduct[]).map(localizeProduct))
+      if (data) {
+        catalogCache = (data as unknown as CatalogProduct[]).map(localizeProduct)
+        setProducts(catalogCache)
+      }
       setLoading(false)
     }
     load()
