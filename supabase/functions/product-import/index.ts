@@ -76,7 +76,8 @@ async function resolveShort(start: string): Promise<ProductTarget | null> {
   return cur && !cur.short ? cur : null
 }
 
-async function scrape(url: string, apiKey: string, platform: Platform): Promise<Scraped | null> {
+/** The page data, and the address Firecrawl ended on (after redirects, JavaScript ones included). */
+async function scrape(url: string, apiKey: string, platform: Platform): Promise<{ data: Scraped | null; finalUrl: string | null }> {
   const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -93,10 +94,12 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
   })
   if (!res.ok) {
     console.error('[product-import] firecrawl', res.status, (await res.text().catch(() => '')).slice(0, 300))
-    return null
+    return { data: null, finalUrl: null }
   }
-  const body = await res.json().catch(() => null) as { success?: boolean; data?: { json?: Scraped } } | null
-  return body?.success && body.data?.json && typeof body.data.json === 'object' ? body.data.json : null
+  const body = await res.json().catch(() => null) as { success?: boolean; data?: { json?: Scraped; metadata?: { url?: unknown; sourceURL?: unknown } } } | null
+  const meta = body?.data?.metadata
+  const final = typeof meta?.url === 'string' ? meta.url : typeof meta?.sourceURL === 'string' ? meta.sourceURL : null
+  return { data: body?.success && body.data?.json && typeof body.data.json === 'object' ? body.data.json : null, finalUrl: final }
 }
 
 async function askAi(input: {
@@ -219,15 +222,26 @@ Deno.serve(async (req) => {
 
     let target = typeof body.url === 'string' && body.url.length <= 2000 ? parseProductUrl(body.url.trim()) : null
     if (!target) return json({ error: 'Lien non pris en charge : collez un lien de produit Amazon, Shein, Alibaba, Temu ou Muscle & Strength.' }, 400)
-    if (target.short) target = await resolveShort(target.url).catch(() => null)
-    if (!target) return json({ error: 'Ce lien de partage n\'a pas pu être ouvert : ouvrez le produit dans le navigateur et copiez l\'adresse complète de la page.' }, 400)
-    if (!target.id) return json({ error: 'Lien incomplet : collez le lien d\'une page produit, pas celui d\'une boutique ou d\'une recherche.' }, 400)
-    const platform = target.platform
-    const productId = target.id
-    const sourceUrl = target.url
+    // a share link: its HTTP redirects are followed first; when they lead nowhere (some apps redirect with JavaScript), the page itself is read and the address it ends on is used
+    const shortLink = target.short ? target : null
+    if (shortLink) {
+      const resolved = await resolveShort(shortLink.url).catch(() => null)
+      if (resolved) target = resolved
+    }
+    const shareError = { error: 'Ce lien de partage n\'a pas pu \u00eatre ouvert : ouvrez le produit dans le navigateur et copiez l\'adresse compl\u00e8te de la page.' }
+    if (!target.short && !target.id) return json({ error: 'Lien incomplet : collez le lien d\'une page produit, pas celui d\'une boutique ou d\'une recherche.' }, 400)
 
-    const scraped = await scrape(sourceUrl, firecrawlKey, platform).catch((e) => { console.error('[product-import] scrape', e); return null })
-    if (!scraped || !cleanText(scraped.title, 300)) return json({ error: `Impossible de lire la page ${platform.name} (bloquée, protégée par un captcha ou produit introuvable). Réessayez dans un instant, ou remplissez la fiche à la main.`, code: 'unreadable' }, 502)
+    let platform = target.platform
+    const read = await scrape(target.url, firecrawlKey, platform).catch((e) => { console.error('[product-import] scrape', e); return { data: null, finalUrl: null } })
+    if (target.short) {
+      const real = read.finalUrl ? parseProductUrl(read.finalUrl) : null
+      if (!real || real.short || !real.id) return json(shareError, 400)
+      target = real; platform = real.platform
+    }
+    const scraped = read.data
+    const productId = target.id as string
+    const sourceUrl = target.url
+    if (!scraped || !cleanText(scraped.title, 300)) return json({ error: `Impossible de lire la page ${platform.name} (bloqu\u00e9e, prot\u00e9g\u00e9e par un captcha ou produit introuvable). R\u00e9essayez dans un instant, ou remplissez la fiche \u00e0 la main.`, code: 'unreadable' }, 502)
 
     const warnings: string[] = []
 
