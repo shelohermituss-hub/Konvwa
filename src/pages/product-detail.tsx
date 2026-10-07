@@ -497,8 +497,8 @@ export function ProductDetailPage() {
               <p className="mt-2 text-sm text-muted-foreground">{tr('Commande minimale :')}{' '}{product.moq} {product.unit}</p>
             )}
             {offer && (
-              <p className="mt-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-relaxed text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100">
-                <span className="font-bold uppercase">{offerLabel(offer)}</span>{' · '}
+              <p className="mt-2 rounded-xl border border-[#0165FF]/30 bg-[#0165FF]/10 px-3 py-2 text-xs leading-relaxed text-foreground">
+                <span className="font-bold uppercase text-[#0165FF]">{offerLabel(offer)}</span>{' · '}
                 {tr('la réduction s\'applique par lot complet de {0}, les autres unités sont au prix normal.', offer.min_qty)}
               </p>
             )}
