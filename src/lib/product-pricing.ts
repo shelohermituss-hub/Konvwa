@@ -48,9 +48,13 @@ export function variantUnitPrice(
   variant: PricedVariant,
   quantity: number,
 ): number {
-  const ratio = product.price_htg > 0 ? unitPriceFor(product, quantity) / product.price_htg : 1
-  const tiered = Math.round(variant.price_htg * ratio * 100) / 100
   const pct = product.reseller_price ? (product.reseller_discount_pct ?? 0) : 0
+  // a supplier offer ("Buy 2 for $119.99", tier marked src = 'sync') belongs to the base option: the other variants keep their own price
+  const inForce = [...normalizeTiers(product.price_tiers)].reverse().find((t) => t.min_qty <= quantity)
+  const baseBeforeReseller = pct > 0 ? product.price_htg / (1 - pct / 100) : product.price_htg
+  const outsideOffer = inForce?.src === 'sync' && Math.abs(variant.price_htg - baseBeforeReseller) >= 0.5
+  const ratio = product.price_htg > 0 && !outsideOffer ? unitPriceFor(product, quantity) / product.price_htg : 1
+  const tiered = Math.round(variant.price_htg * ratio * 100) / 100
   return pct > 0 ? Math.round(tiered * (1 - pct / 100) * 100) / 100 : tiered
 }
 

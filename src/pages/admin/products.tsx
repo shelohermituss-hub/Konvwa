@@ -214,7 +214,8 @@ export function AdminProductsPage() {
       price_htg: d.price_usd ? priceHtgFromUsd(d.price_usd, rate, margin) : 0,
       // wholesale ladder: minimum order and the cheaper prices from some quantity on (same rate and margin as the base price)
       moq: d.moq ?? 1,
-      price_tiers: (d.price_tiers ?? []).map((t) => ({ min_qty: t.min_qty, price_htg: priceHtgFromUsd(t.price_usd, rate, margin) })),
+      // Muscle & Strength offers are tiers followed by the nightly price check (marked 'sync'); Alibaba ladders are plain tiers
+      price_tiers: (d.price_tiers ?? []).map((t) => ({ min_qty: t.min_qty, price_htg: priceHtgFromUsd(t.price_usd, rate, margin), ...(d.platform === 'muscle_strength' ? { src: 'sync' as const } : {}) })),
       category: d.category ?? '',
       supplier_name: d.supplier_name,
       supplier_country: d.supplier_country,

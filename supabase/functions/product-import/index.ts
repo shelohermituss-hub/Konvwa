@@ -3,6 +3,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
 import { normalizeVariants } from './variants.ts'
+import { cartDiscountedPrice, promoTiers } from './promos.ts'
 import {
   cleanSpecs, cleanText, dimsFrom, extractJson, imageSize, looksLikeErrorPage, normalizeLadder, priceToUsd, titlesAgree, validateAi, weightFrom,
   type AiResult, type Dims,
@@ -28,14 +29,27 @@ const SCHEMA = {
   properties: {
     title: { type: 'string' },
     brand: { type: 'string' },
-    price: { type: 'number', description: 'REGULAR price of the product, without any discount, coupon or promotion (the struck-through original price when a promotion is shown); number only' },
+    price: { type: 'number', description: 'Price of ONE unit of the product (the default option) in USD: the usual price a customer pays for a single unit, never the price of a multi-unit offer ("Buy 2 for $119.99", "2 Pack Deal") and never a per-serving price; number only' },
     currency: { type: 'string', description: 'ISO currency code, e.g. USD' },
     price_tiers: {
       type: 'array', maxItems: 12,
       description: 'Wholesale quantity price ladder shown on the page (e.g. "2-99 pieces $5.20", "100-499 pieces $4.80", ">=500 pieces $4.20"): one entry per range, with the FIRST quantity of the range and the unit price of that range. Empty when the page shows a single price.',
       items: { type: 'object', properties: { min_qty: { type: 'integer', description: 'First quantity of the range' }, price: { type: 'number', description: 'Unit price for this range' }, currency: { type: 'string' } } },
     },
-    moq: { type: 'integer', description: 'Minimum order quantity (the smallest quantity that can be ordered), when shown' },
+    moq: { type: 'integer', description: 'Minimum order quantity of a wholesale listing (the smallest quantity that can be ordered), when the page states one. Not for retail offers such as "Buy 2 for $119.99"' },
+    promotions: {
+      type: 'array', maxItems: 8,
+      description: 'Retail offers announced on the product page (banners, labels near the price): "2 Pack Deal" / "Buy 2 for $X" (multi_buy), "Buy 1 Get 1 Free" / "Buy X Get Y Free" / "Buy 1 Get 1 50% Off" (free_item), "In Cart Discount" (cart_discount). "Limited Time Price Cut" is not an entry. Empty when there is none.',
+      items: { type: 'object', properties: {
+        kind: { type: 'string', enum: ['multi_buy', 'free_item', 'cart_discount', 'other'] },
+        qty: { type: 'integer', description: 'multi_buy: units in the offer; free_item: units to buy' },
+        total_price: { type: 'number', description: 'multi_buy: total price of the qty units in USD' },
+        free_qty: { type: 'integer', description: 'free_item: units that are free or discounted' },
+        discount_percent: { type: 'integer', description: 'free_item: discount on those units (100 = free, 50 = half price)' },
+        percent: { type: 'integer', description: 'cart_discount: percentage taken off' },
+        text: { type: 'string' },
+      } },
+    },
     description: { type: 'string' },
     features: { type: 'array', items: { type: 'string' }, description: 'About this item bullet points' },
     images: { type: 'array', maxItems: 15, items: { type: 'string' }, description: 'URLs of the large photos of the product itself, in the order of the page gallery (all angles, details, colours). Never include certification logos (CE, FCC, RoHS), icons, badges, banners, supplier logos, size charts or other products.' },
@@ -63,11 +77,11 @@ const SCHEMA = {
   },
   required: ['title'],
 }
-const scrapePrompt = (platform: Platform) => `Extract the product data of this ${platform.name} product page. Use the exact values shown on the page. Weight and dimensions: report both the item and the package/shipping values when shown. Wholesale pages: also read the quantity price ladder (every range with its unit price) and the minimum order quantity. Prices: always the REGULAR price without discount (ignore promotions, flash sales, coupons). List every variant (size, colour, model) with its own regular price and its own image URL when the page shows them.`
+const scrapePrompt = (platform: Platform) => `Extract the product data of this ${platform.name} product page. Use the exact values shown on the page. Weight and dimensions: report both the item and the package/shipping values when shown. Wholesale pages: also read the quantity price ladder (every range with its unit price) and the minimum order quantity. Retail pages: the price is the price of ONE unit, and the offers ("Buy 2 for $X", "Buy 1 Get 1 Free"…) go in `promotions`. Prices: always the REGULAR price without discount (ignore promotions, flash sales, coupons). List every variant (size, colour, model) with its own regular price and its own image URL when the page shows them.`
 
 interface Scraped {
   title?: string; brand?: string; price?: number; currency?: string; description?: string
-  price_tiers?: unknown; moq?: unknown
+  price_tiers?: unknown; moq?: unknown; promotions?: unknown
   video_url?: string
   features?: string[]; images?: string[]; rating?: number; review_count?: number
   availability?: string; category_path?: string[]
@@ -343,9 +357,15 @@ Deno.serve(async (req) => {
     const rates = { EUR: rateOf('eur_to_usd_rate', 1.08), CNY: rateOf('cny_to_usd_rate', 0.14) }
     const fallbackCurrency = platform.currency
     // wholesale ladder: the first range is the minimum order and the base price, the next ranges are the price tiers
-    const ladder = normalizeLadder(scraped.price_tiers, scraped.moq, scraped.currency || fallbackCurrency, rates)
+    // the quantity ladder and the minimum order are a wholesale thing (Alibaba): on a retail page "Buy 2 for $X" is an offer, not a minimum order
+    const ladder = platform.id === 'alibaba'
+      ? normalizeLadder(scraped.price_tiers, scraped.moq, scraped.currency || fallbackCurrency, rates)
+      : { moq: null, base_usd: null, tiers: [] as Array<{ min_qty: number; price_usd: number }> }
     const own = priceToUsd(scraped.price, scraped.currency || fallbackCurrency, rates)
-    const price = ladder.base_usd !== null ? { usd: ladder.base_usd } as typeof own : own
+    // Muscle & Strength: the product price is the price of ONE unit (after an "In Cart Discount"); its quantity offers become price tiers
+    const retailUnit = platform.id === 'muscle_strength' && own.usd !== null ? cartDiscountedPrice(own.usd, scraped.promotions) : null
+    const offerTiers = retailUnit !== null ? promoTiers(retailUnit, scraped.promotions).map((t) => ({ min_qty: t.min_qty, price_usd: t.unit_usd })) : []
+    const price = ladder.base_usd !== null ? { usd: ladder.base_usd } as typeof own : retailUnit !== null ? { usd: retailUnit } as typeof own : own
     if (price.warning) warnings.push(price.warning)
     if (platform.id === 'alibaba' && ladder.tiers.length === 0) warnings.push('tiers_missing')
 
@@ -427,7 +447,7 @@ Deno.serve(async (req) => {
       video_url,
       price_usd: price.usd,
       moq: ladder.moq,
-      price_tiers: ladder.tiers,
+      price_tiers: retailUnit !== null ? offerTiers : ladder.tiers,
       price_currency: price.usd === null ? cleanText(scraped.currency, 8).toUpperCase() || null : 'USD',
       specifications: cleanSpecs(scraped.specifications),
       rating: Number.isFinite(rating) && rating >= 0 && rating <= 5 ? Math.round(rating * 10) / 10 : null,

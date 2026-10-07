@@ -52,3 +52,24 @@ describe('variantPriceRange', () => {
     expect(variantPriceRange({ price_htg: 100, moq: 1, price_tiers: [] }, { price_htg: 120 })).toEqual({ min: 120, max: 120 })
   })
 })
+
+describe('a supplier offer belongs to the base option', () => {
+  const product = { price_htg: 14490, moq: 1, price_tiers: [{ min_qty: 2, price_htg: 9660, src: 'sync' }] }
+  it('discounts the variants priced like the base, not the others', () => {
+    expect(variantUnitPrice(product, { price_htg: 14490 }, 1)).toBe(14490)
+    expect(variantUnitPrice(product, { price_htg: 14490 }, 2)).toBe(9660)
+    expect(variantUnitPrice(product, { price_htg: 14975 }, 2)).toBe(14975)
+  })
+  it('keeps the same % rule for manual tiers', () => {
+    const manual = { price_htg: 100, moq: 1, price_tiers: [{ min_qty: 10, price_htg: 80 }] }
+    expect(variantUnitPrice(manual, { price_htg: 150 }, 10)).toBe(120)
+  })
+  it('keeps the tier marker when the tiers are cleaned', () => {
+    expect(normalizeTiers([{ min_qty: 2, price_htg: 5, src: 'sync' }, { min_qty: 3, price_htg: 4, src: 'x' }])).toEqual([{ min_qty: 2, price_htg: 5, src: 'sync' }, { min_qty: 3, price_htg: 4 }])
+  })
+  it('works for resellers (the base price already carries their discount)', () => {
+    const reseller = { ...product, price_htg: 11592, price_tiers: [{ min_qty: 2, price_htg: 7728, src: 'sync' }], reseller_price: true, reseller_discount_pct: 20 }
+    expect(variantUnitPrice(reseller, { price_htg: 14490 }, 2)).toBe(7728)
+    expect(variantUnitPrice(reseller, { price_htg: 14975 }, 2)).toBe(11980)
+  })
+})

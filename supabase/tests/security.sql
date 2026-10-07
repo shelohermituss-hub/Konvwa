@@ -769,5 +769,21 @@ BEGIN
   RESET ROLE;
 END $$;
 
+-- 28. a supplier offer (tier src = 'sync') belongs to the base option: another variant keeps its own price
+DO $$
+DECLARE a uuid; pid uuid; v1 uuid; v2 uuid; r jsonb;
+BEGIN
+  SELECT client_a INTO a FROM ctx;
+  INSERT INTO products (name, price_htg, moq, unit, active, stock_available, price_tiers) VALUES ('TEST offer', 1000, 1, 'pcs', true, true, '[{"min_qty":2,"price_htg":700,"src":"sync"}]'::jsonb) RETURNING id INTO pid;
+  INSERT INTO product_variants (product_id, label, price_htg, sort_order, active, stock_available) VALUES (pid, 'base', 1000, 1, true, true) RETURNING id INTO v1;
+  INSERT INTO product_variants (product_id, label, price_htg, sort_order, active, stock_available) VALUES (pid, 'other', 1200, 2, true, true) RETURNING id INTO v2;
+  PERFORM pg_temp.as_user(a);
+  r := public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', pid, 'variant_id', v1, 'quantity', 2)));
+  ASSERT (SELECT product_price_htg FROM product_order_items WHERE order_id = (r->>'order_id')::uuid) = 700, 'the base option gets the offer';
+  r := public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', pid, 'variant_id', v2, 'quantity', 2)));
+  ASSERT (SELECT product_price_htg FROM product_order_items WHERE order_id = (r->>'order_id')::uuid) = 1200, 'another variant must keep its own price';
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;
