@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { parseProductUrl, platformImages, platformImageUrl, type Platform, type ProductTarget } from './platforms.ts'
 import { normalizeVariants } from './variants.ts'
 import {
-  cleanSpecs, cleanText, dimsFrom, extractJson, looksLikeErrorPage, priceToUsd, titlesAgree, validateAi, weightFrom,
+  cleanSpecs, cleanText, dimsFrom, extractJson, looksLikeErrorPage, normalizeLadder, priceToUsd, titlesAgree, validateAi, weightFrom,
   type AiResult, type Dims,
 } from './normalize.ts'
 
@@ -26,6 +26,12 @@ const SCHEMA = {
     brand: { type: 'string' },
     price: { type: 'number', description: 'REGULAR price of the product, without any discount, coupon or promotion (the struck-through original price when a promotion is shown); number only' },
     currency: { type: 'string', description: 'ISO currency code, e.g. USD' },
+    price_tiers: {
+      type: 'array', maxItems: 12,
+      description: 'Wholesale quantity price ladder shown on the page (e.g. "2-99 pieces $5.20", "100-499 pieces $4.80", ">=500 pieces $4.20"): one entry per range, with the FIRST quantity of the range and the unit price of that range. Empty when the page shows a single price.',
+      items: { type: 'object', properties: { min_qty: { type: 'integer', description: 'First quantity of the range' }, price: { type: 'number', description: 'Unit price for this range' }, currency: { type: 'string' } } },
+    },
+    moq: { type: 'integer', description: 'Minimum order quantity (the smallest quantity that can be ordered), when shown' },
     description: { type: 'string' },
     features: { type: 'array', items: { type: 'string' }, description: 'About this item bullet points' },
     images: { type: 'array', items: { type: 'string' }, description: 'Full-size product image URLs' },
@@ -52,10 +58,11 @@ const SCHEMA = {
   },
   required: ['title'],
 }
-const scrapePrompt = (platform: Platform) => `Extract the product data of this ${platform.name} product page. Use the exact values shown on the page. Weight and dimensions: report both the item and the package/shipping values when shown. Prices: always the REGULAR price without discount (ignore promotions, flash sales, coupons). List every variant (size, colour, model) with its own regular price and its own image URL when the page shows them.`
+const scrapePrompt = (platform: Platform) => `Extract the product data of this ${platform.name} product page. Use the exact values shown on the page. Weight and dimensions: report both the item and the package/shipping values when shown. Wholesale pages: also read the quantity price ladder (every range with its unit price) and the minimum order quantity. Prices: always the REGULAR price without discount (ignore promotions, flash sales, coupons). List every variant (size, colour, model) with its own regular price and its own image URL when the page shows them.`
 
 interface Scraped {
   title?: string; brand?: string; price?: number; currency?: string; description?: string
+  price_tiers?: unknown; moq?: unknown
   features?: string[]; images?: string[]; rating?: number; review_count?: number
   availability?: string; category_path?: string[]
   item_weight?: unknown; package_weight?: unknown; item_dimensions?: unknown; package_dimensions?: unknown
@@ -299,8 +306,12 @@ Deno.serve(async (req) => {
     const rateOf = (k: string, fallback: number) => { const v = Number(rateRows?.find((r: { key: string; value: string }) => r.key === k)?.value); return v > 0 ? v : fallback }
     const rates = { EUR: rateOf('eur_to_usd_rate', 1.08), CNY: rateOf('cny_to_usd_rate', 0.14) }
     const fallbackCurrency = platform.currency
-    const price = priceToUsd(scraped.price, scraped.currency || fallbackCurrency, rates)
+    // wholesale ladder: the first range is the minimum order and the base price, the next ranges are the price tiers
+    const ladder = normalizeLadder(scraped.price_tiers, scraped.moq, scraped.currency || fallbackCurrency, rates)
+    const own = priceToUsd(scraped.price, scraped.currency || fallbackCurrency, rates)
+    const price = ladder.base_usd !== null ? { usd: ladder.base_usd } as typeof own : own
     if (price.warning) warnings.push(price.warning)
+    if (platform.id === 'alibaba' && ladder.tiers.length === 0) warnings.push('tiers_missing')
 
     // variants: explicit list, or colours x sizes; images and prices are checked, the regular price is expected
     const normalized = normalizeVariants(scraped, {
@@ -363,6 +374,8 @@ Deno.serve(async (req) => {
       tags_en: ai?.tags_en ?? [],
       images: stored,
       price_usd: price.usd,
+      moq: ladder.moq,
+      price_tiers: ladder.tiers,
       price_currency: price.usd === null ? cleanText(scraped.currency, 8).toUpperCase() || null : 'USD',
       specifications: cleanSpecs(scraped.specifications),
       rating: Number.isFinite(rating) && rating >= 0 && rating <= 5 ? Math.round(rating * 10) / 10 : null,

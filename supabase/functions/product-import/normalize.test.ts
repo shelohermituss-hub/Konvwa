@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom, titlesAgree, looksLikeErrorPage } from './normalize'
+import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom, titlesAgree, looksLikeErrorPage, normalizeLadder } from './normalize'
 
 describe('units', () => {
   it('converts weights to kg', () => {
@@ -111,5 +111,26 @@ describe('looksLikeErrorPage', () => {
   it('spots error, robot-check and sign-in pages but not products', () => {
     for (const bad of ["Page d'erreur 404", '404 Not Found', 'Access Denied', 'Are you a robot?', 'Sign in - Alibaba.com', 'Oops! Something went wrong']) expect(looksLikeErrorPage(bad)).toBe(true)
     for (const ok of ['Robe fleurie manches longues femme', 'Wireless earbuds Bluetooth 5.3 with 404 mAh case'.replace(' 404 mAh', ''), 'Casque de moto modulable']) expect(looksLikeErrorPage(ok)).toBe(false)
+  })
+})
+
+describe('normalizeLadder', () => {
+  const rates = { EUR: 1.08, CNY: 0.14 }
+  it('takes the first range as the minimum order and base price, the others as tiers', () => {
+    const l = normalizeLadder([
+      { min_qty: 500, price: 4.2, currency: 'USD' }, { min_qty: 50, price: 5.2, currency: 'USD' }, { min_qty: 100, price: 4.8, currency: 'USD' },
+    ], null, 'USD', rates)
+    expect(l).toEqual({ moq: 50, base_usd: 5.2, tiers: [{ min_qty: 100, price_usd: 4.8 }, { min_qty: 500, price_usd: 4.2 }] })
+  })
+  it('drops ranges whose price does not go down, duplicates and garbage', () => {
+    const l = normalizeLadder([
+      { min_qty: 10, price: 3 }, { min_qty: 10, price: 2.5 }, { min_qty: 20, price: 3.5 }, { min_qty: 30, price: 2 }, { min_qty: 0, price: 1 }, { min_qty: 40, price: 'x' }, null,
+    ], null, 'USD', rates)
+    expect(l).toEqual({ moq: 10, base_usd: 3, tiers: [{ min_qty: 30, price_usd: 2 }] })
+  })
+  it('converts CNY and falls back to the page minimum when there is no ladder', () => {
+    expect(normalizeLadder([{ min_qty: 2, price: 100 }], null, 'CNY', rates).base_usd).toBe(14)
+    expect(normalizeLadder([], 60, 'USD', rates)).toEqual({ moq: 60, base_usd: null, tiers: [] })
+    expect(normalizeLadder(undefined, 'abc', 'USD', rates)).toEqual({ moq: null, base_usd: null, tiers: [] })
   })
 })

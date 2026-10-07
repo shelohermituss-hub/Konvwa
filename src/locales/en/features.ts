@@ -934,4 +934,6 @@ export const FEATURES_EN: Record<string, string> = {
   "{0} résultat(s) dans le Sourcing gros": "{0} result(s) in Bulk sourcing",
   "Activer le son": "Turn sound on",
   "Couper le son": "Turn sound off",
+  "{0} paliers de prix par quantité importés (minimum {1}) : vérifiez-les avant d'enregistrer.": "{0} quantity price tiers imported (minimum {1}): check them before saving.",
+  "La page ne donne pas de prix par quantité : ajoutez les paliers à la main (section « Prix par quantité »).": "The page shows no quantity prices: add the tiers by hand (\"Price by quantity\" section).",
 }

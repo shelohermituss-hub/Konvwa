@@ -13,6 +13,9 @@ export interface ImportedProduct {
   images: string[]
   price_usd: number | null
   price_currency: string | null
+  /** Minimum order read from the page (wholesale), and the cheaper unit prices from some quantity on, in USD. */
+  moq: number | null
+  price_tiers: Array<{ min_qty: number; price_usd: number }>
   specifications: Record<string, string>
   rating: number | null
   review_count: number | null

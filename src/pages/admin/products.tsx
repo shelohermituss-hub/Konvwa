@@ -187,6 +187,9 @@ export function AdminProductsPage() {
       name: d.name,
       description: d.description,
       price_htg: d.price_usd ? priceHtgFromUsd(d.price_usd, rate, margin) : 0,
+      // wholesale ladder: minimum order and the cheaper prices from some quantity on (same rate and margin as the base price)
+      moq: d.moq ?? 1,
+      price_tiers: (d.price_tiers ?? []).map((t) => ({ min_qty: t.min_qty, price_htg: priceHtgFromUsd(t.price_usd, rate, margin) })),
       category: d.category ?? '',
       supplier_name: d.supplier_name,
       supplier_country: d.supplier_country,
@@ -217,6 +220,8 @@ export function AdminProductsPage() {
     if (d.variants.length > 0) toast.success(tr('{0} variantes importées : vérifiez leurs prix avant d\'enregistrer.', d.variants.length))
     if (d.warnings.includes('share_data')) toast.warning(tr('Le site a bloqué la lecture de la page : la fiche est remplie avec les informations du lien de partage (nom, prix, image). Vérifiez-la et complétez-la.'), { duration: 12000 })
     if (d.warnings.includes('page_mismatch')) toast.warning(tr('La lecture automatique ne correspond pas bien à ce produit : seuls le titre, la description et l\'image de la page sont repris. Vérifiez et remplissez le prix à la main.'), { duration: 12000 })
+    if ((d.price_tiers ?? []).length > 0) toast.success(tr('{0} paliers de prix par quantité importés (minimum {1}) : vérifiez-les avant d\'enregistrer.', d.price_tiers.length, d.moq ?? 1))
+    if (d.warnings.includes('tiers_missing')) toast.warning(tr('La page ne donne pas de prix par quantité : ajoutez les paliers à la main (section « Prix par quantité »).'), { duration: 10000 })
     if (d.warnings.includes('variant_prices_missing')) toast.warning(tr('La page ne donne pas de prix par variante : toutes ont le prix de base, à corriger si besoin.'))
     if (d.warnings.includes('variants_truncated')) toast.warning(tr('Plus de 100 variantes : seules les 100 premières sont gardées.'))
     if (d.warnings.includes('ai_not_configured')) toast.info(tr('Traduction et estimation IA désactivées : ajoutez le secret OPENROUTER_API_KEY.'))

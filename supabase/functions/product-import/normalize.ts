@@ -93,6 +93,38 @@ export function priceToUsd(price: unknown, currency: unknown, rates: Rates): { u
   return { usd: null, warning: `currency_${c || 'unknown'}` }
 }
 
+export interface Ladder {
+  /** Minimum order quantity read from the page (the first range of the ladder), or null. */
+  moq: number | null
+  /** Price of the first range: the regular unit price below the next range. */
+  base_usd: number | null
+  /** The following ranges: from `min_qty` units, a lower unit price. */
+  tiers: Array<{ min_qty: number; price_usd: number }>
+}
+
+/**
+ * Wholesale quantity ladder ("50-99 pcs $5.20, 100-499 pcs $4.80, 500+ pcs $4.20"): the first range gives the minimum order
+ * and the base price, the others become price tiers. Only ranges whose price really goes down are kept.
+ */
+export function normalizeLadder(raw: unknown, moqRaw: unknown, fallbackCurrency: string, rates: Rates): Ladder {
+  const rows = (Array.isArray(raw) ? raw : []).slice(0, 12).flatMap((t) => {
+    const o = (t ?? {}) as Record<string, unknown>
+    const min = num(o.min_qty)
+    const usd = priceToUsd(o.price, o.currency || fallbackCurrency, rates).usd
+    return min !== null && Number.isInteger(min) && min >= 1 && min <= 10_000_000 && usd !== null ? [{ min_qty: min, price_usd: usd }] : []
+  }).sort((a, b) => a.min_qty - b.min_qty)
+  const kept: typeof rows = []
+  for (const r of rows) {
+    const last = kept[kept.length - 1]
+    if (!last) kept.push(r)
+    else if (r.min_qty > last.min_qty && r.price_usd < last.price_usd) kept.push(r)
+  }
+  const m = num(moqRaw)
+  const moqOwn = m !== null && Number.isInteger(m) && m >= 1 && m <= 10_000_000 ? m : null
+  if (kept.length === 0) return { moq: moqOwn, base_usd: null, tiers: [] }
+  return { moq: kept[0].min_qty, base_usd: kept[0].price_usd, tiers: kept.slice(1, 8) }
+}
+
 /** Control characters and invisible separators (zero-width, line/paragraph separators, BOM). */
 const isJunk = (c: number) => c <= 8 || c === 11 || c === 12 || (c >= 14 && c <= 31) || c === 127 || (c >= 8203 && c <= 8207) || c === 8232 || c === 8233 || c === 65279
 
