@@ -14,6 +14,7 @@ const FR: Dict = {
   'nav.notifs': 'Notifs',
   'nav.profile': 'Profil',
   'nav.products': 'Produits',
+  'nav.wholesale': 'Sourcing gros',
 
   'common.new': 'Nouveau',
   'common.submit': 'Soumettre',
@@ -120,6 +121,7 @@ const EN: Dict = {
   'nav.notifs': 'Notifs',
   'nav.profile': 'Profile',
   'nav.products': 'Products',
+  'nav.wholesale': 'Bulk sourcing',
 
   'common.new': 'New',
   'common.submit': 'Submit',

@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import {
   LayoutDashboard, ShoppingBag, Ship, Bell, User, Wallet, HelpCircle, Send,
   Globe, ChevronDown, Check, LogOut, Settings, Activity, CreditCard,
-  ShoppingCart, Package, Download,
+  ShoppingCart, Package, Download, Boxes,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n, type Lang } from '@/lib/i18n-context'
@@ -28,6 +28,13 @@ const NAV_ITEMS = [
   { labelKey: 'nav.shipments', Icon: Ship,            path: '/shipments' },
   { labelKey: 'nav.products',  Icon: Package,         path: '/products' },
   { labelKey: 'nav.profile',   Icon: User,            path: '/profile' },
+]
+
+// the bulk-sourcing shelf lives next to "Products" in the sidebar; on the phone it is reached from the Products page itself
+const SIDEBAR_ITEMS = [
+  ...NAV_ITEMS.slice(0, 4),
+  { labelKey: 'nav.wholesale', Icon: Boxes,           path: '/wholesale' },
+  ...NAV_ITEMS.slice(4),
 ]
 
 const SIDEBAR_EXTRAS = [
@@ -168,7 +175,7 @@ function DesktopSidebar({ unread }: { unread: number }) {
 
       <nav className="flex-1 overflow-y-auto px-3 pt-4 pb-2 space-y-0.5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-3 pb-2">{tr('Navigation')}</p>
-        {NAV_ITEMS.map((item) => {
+        {SIDEBAR_ITEMS.map((item) => {
           const isActive = location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
           const { Icon } = item
@@ -293,7 +300,8 @@ function BottomNav({ unread: _unread }: { unread: number }) {
       <div className="flex items-stretch h-16">
         {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path ||
-            (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
+            (item.path !== '/dashboard' && location.pathname.startsWith(item.path)) ||
+            (item.path === '/products' && location.pathname.startsWith('/wholesale'))
           const { Icon } = item
 
           return (

@@ -34,6 +34,8 @@ export interface CatalogProduct {
   certifications_en: string[]
   reseller_discount_pct?: number
   wholesale_only?: boolean
+  /** 'retail': finished product sold by the unit; 'wholesale': sourcing sold in bulk with a minimum order quantity. */
+  sale_type?: 'retail' | 'wholesale'
   reseller_price?: boolean
   product_variants?: ProductVariant[]
 }
@@ -64,7 +66,7 @@ export function sortVariants(list: ProductVariant[] | null | undefined): Product
 }
 
 export const CATALOG_LIST_SELECT =
-  'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, reseller_discount_pct, wholesale_only'
+  'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, reseller_discount_pct, wholesale_only, sale_type'
 
 /** In English, shows the English content the admin wrote (field by field, falling back to the original). */
 export function localizeProduct<T extends CatalogProduct>(p: T): T {

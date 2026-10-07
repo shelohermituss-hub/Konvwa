@@ -407,6 +407,13 @@ export function ProductDetailPage() {
               </div>
             )}
 
+            {product.sale_type === 'wholesale' && (
+              <p className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-xs leading-relaxed text-foreground/80">
+                <span className="font-bold text-primary">{tr('Achat en gros')}</span>{' · '}
+                {tr('commande minimale de {0} {1}. Plus la quantité est grande, plus le prix unitaire baisse.', product.moq.toLocaleString(LOCALE_TAG), product.unit)}
+              </p>
+            )}
+
             {/* Price by quantity */}
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-muted/50 p-3" aria-label={tr('Prix selon la quantité')}>
               {rows.map((r) => {

@@ -50,6 +50,7 @@ interface Product {
   certifications: string[]
   reseller_discount_pct?: number
   wholesale_only?: boolean
+  sale_type?: 'retail' | 'wholesale'
   name_en?: string | null
   description_en?: string | null
   tags_en?: string[]
@@ -97,6 +98,7 @@ const emptyDraft = (): ProductDraft => ({
   certifications: [],
   reseller_discount_pct: 0,
   wholesale_only: false,
+  sale_type: 'retail',
   weight_kg: null,
   length_cm: null,
   width_cm: null,
@@ -195,6 +197,8 @@ export function AdminProductsPage() {
       weight_kg: d.weight_kg, length_cm: d.length_cm, width_cm: d.width_cm, height_cm: d.height_cm,
       package_estimated: d.package_estimated,
       brand: d.brand, source_url: d.source_url, source_asin: d.source_asin,
+      // Alibaba is the bulk sourcing shelf, every other platform sells finished products by the unit
+      sale_type: d.platform === 'alibaba' ? 'wholesale' : 'retail',
     })
     setImagesRaw(d.images.join(', '))
     // Variants arrive priced in USD: same exchange rate and margin as the base price (the regular price, never a promotion)
@@ -264,6 +268,7 @@ export function AdminProductsPage() {
       certifications: p.certifications,
       reseller_discount_pct: p.reseller_discount_pct ?? 0,
       wholesale_only: p.wholesale_only ?? false,
+      sale_type: p.sale_type ?? 'retail',
       weight_kg: p.weight_kg ?? null,
       length_cm: p.length_cm ?? null,
       width_cm: p.width_cm ?? null,
@@ -565,6 +570,13 @@ export function AdminProductsPage() {
               <div className="space-y-1.5">
                 <Label>{tr('Quantité minimum (MOQ)')}</Label>
                 <Input type="number" min={1} value={draft.moq || ''} onChange={e => setField('moq', parseInt(e.target.value) || 1)} />
+              </div>
+              <div className="space-y-1.5 col-span-2">
+                <Label htmlFor="sale-type">{tr('Type de vente')}</Label>
+                <select id="sale-type" value={draft.sale_type ?? 'retail'} onChange={e => setField('sale_type', e.target.value as 'retail' | 'wholesale')} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                  <option value="retail">{tr('Boutique : produit fini, vendu à l\'unité')}</option>
+                  <option value="wholesale">{tr('Sourcing gros : vendu en grande quantité (MOQ élevé)')}</option>
+                </select>
               </div>
               <div className="space-y-1.5">
                 <Label>{tr('Catégorie')}</Label>

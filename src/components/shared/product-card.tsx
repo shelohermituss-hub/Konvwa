@@ -8,6 +8,7 @@ import { flagFor, supplierLogo } from '@/lib/supplier-badges'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { currencyLabel } from '@/lib/currency'
+import { cn } from '@/lib/utils'
 /** The single most persuasive fact we have about the product, shown under the supplier line. */
 function highlight(p: CatalogProduct): string | null {
   if (p.repurchase_rate != null) return tr('Taux de réachat de {0} %', p.repurchase_rate)
@@ -51,6 +52,11 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
         )}
         {product.featured && (
           <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">{tr('Vedette')}</span>
+        )}
+        {product.sale_type === 'wholesale' && (
+          <span className={cn('absolute left-2 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold text-white', product.featured ? 'top-8' : 'top-2')}>
+            {tr('Gros · MOQ {0}', product.moq.toLocaleString(LOCALE_TAG))}
+          </span>
         )}
         {product.reseller_price && (
           <span className="absolute bottom-2 left-2 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold text-white">{tr('Prix revendeur')}</span>
