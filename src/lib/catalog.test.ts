@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { expandVariants, productPath, resellerPriced, type CatalogProduct } from './catalog'
+import { expandVariants, productPath, resellerPriced, sizeOf, type CatalogProduct } from './catalog'
 
 describe('resellerPriced', () => {
   const p = { price_htg: 155, price_tiers: [{ min_qty: 500, price_htg: 142 }], reseller_discount_pct: 20 }
@@ -13,6 +13,20 @@ describe('resellerPriced', () => {
     expect(resellerPriced(p, false)).toBe(p)
     const plain = { price_htg: 10, reseller_discount_pct: 0 }
     expect(resellerPriced(plain, true)).toBe(plain)
+  })
+})
+
+describe('sizeOf / expandVariants by size', () => {
+  const w = (id: string, label: string, order: number) => ({ id, label, label_en: null, group_name: 'Couleur / Taille', price_htg: 100, image: `${id}.jpg`, stock_available: true, sort_order: order })
+  it('reads the size of a label', () => {
+    expect(sizeOf('Chocolat / 12lbs')).toBe('12lb')
+    expect(sizeOf('300g Sans saveur')).toBe('300g')
+    expect(sizeOf('Triple Chocolat - 5 lbs')).toBe('5lb')
+    expect(sizeOf('Vanille')).toBe('')
+  })
+  it('makes one card per size, not per flavour', () => {
+    const p = { id: 'p1', product_variants: [w('a', 'Banane / 6lbs', 1), w('b', 'Chocolat / 6lbs', 2), w('c', 'Banane / 12lbs', 3), w('d', 'Chocolat / 12lbs', 4)] } as unknown as CatalogProduct
+    expect(expandVariants([p]).map((c) => c.feed_key.split(':')[1])).toEqual(['a', 'c'])
   })
 })
 

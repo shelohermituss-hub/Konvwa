@@ -106,6 +106,12 @@ const MAX_CARDS_PER_PRODUCT = 3
 /** Name of a colour option group ("Couleur", "Couleur / Taille", "Color"…). */
 const COLOUR_GROUP = /couleur|colou?r|coloris|teinte/i
 
+/** The size written in a variant label ("Chocolat / 12lbs" → "12lb", "300g Sans saveur" → "300g"), or '' when there is none. */
+export function sizeOf(label: string): string {
+  const m = /(\d+(?:[.,]\d+)?)\s*(lbs?|kg|g|oz)\b/i.exec(label)
+  return m ? `${m[1].replace(',', '.')}${m[2].toLowerCase().replace(/^lbs$/, 'lb')}` : ''
+}
+
 /**
  * A product with variants shows up as one card per variant (its picture, name and price), all opening the same product page.
  * Only colour variants with a picture get a card; variants sharing a picture (sizes of one colour) make a single one, and a product never takes more than 3 cards.
@@ -114,10 +120,16 @@ const COLOUR_GROUP = /couleur|colou?r|coloris|teinte/i
 export function expandVariants(products: CatalogProduct[]): FeedItem[] {
   return products.flatMap((p): FeedItem[] => {
     const seen = new Set<string>()
-    // only colours (with a picture) get a card: sizes, models and the like, or a variant without a picture, stay on the product page
-    const cards = sortVariants(p.product_variants).filter((v) => {
-      if (!v.image || !COLOUR_GROUP.test(v.group_name ?? '') || seen.has(v.image)) return false
-      seen.add(v.image)
+    const sorted = sortVariants(p.product_variants)
+    // supplements (Muscle & Strength…): the options that matter are the SIZES (3 lbs, 6 lbs, 300 g…), the flavours are not what sets the cards apart
+    const sizes = new Set(sorted.map((v) => sizeOf(v.label)).filter(Boolean))
+    const bySize = sizes.size >= 2
+    // otherwise only colours (with a picture) get a card: models and the like, or a variant without a picture, stay on the product page
+    const cards = sorted.filter((v) => {
+      if (!v.image) return false
+      const key = bySize ? sizeOf(v.label) : COLOUR_GROUP.test(v.group_name ?? '') ? v.image : ''
+      if (!key || seen.has(key)) return false
+      seen.add(key)
       return true
     }).slice(0, MAX_CARDS_PER_PRODUCT)
     return cards.length === 0 ? [{ ...p, feed_key: p.id }] : cards.map((v) => ({ ...p, feed_key: `${p.id}:${v.id}`, feed_variant: v }))
