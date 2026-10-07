@@ -91,12 +91,22 @@ async function checkOne(admin: ReturnType<typeof createClient>, row: Row, apiKey
       else reference = null
     }
     if (needsReview(reference, page.price)) {
-      const ratio = page.price / (reference as number)
-      await admin.from('price_sync_log').insert({
-        product_id: row.id, status: 'review', old_usd: reference, new_usd: page.price,
-        old_htg: row.price_htg, new_htg: Math.ceil((row.price_htg * ratio) / 5) * 5, promos: tiers,
-      })
-      return { status: 'review' }
+      // a big change is not a surprise when the price is back to one the shop already followed (end of a sale), or is the one the admin refused
+      const { data: history } = await admin.from('price_sync_log').select('status, old_usd, new_usd')
+        .eq('product_id', row.id).in('status', ['accepted', 'updated', 'refused']).order('checked_at', { ascending: false }).limit(30)
+      const near = (a: unknown, b: number) => a != null && Math.abs(Number(a) / b - 1) <= 0.02
+      if ((history ?? []).some((h: { status: string; old_usd: unknown }) => h.status !== 'refused' && near(h.old_usd, page.price))) {
+        // known price: applied like any other change
+      } else if ((history ?? []).some((h: { status: string; new_usd: unknown }) => h.status === 'refused' && near(h.new_usd, page.price))) {
+        return { status: 'unchanged', note: 'refused price still shown by the supplier' }
+      } else {
+        const ratio = page.price / (reference as number)
+        await admin.from('price_sync_log').insert({
+          product_id: row.id, status: 'review', old_usd: reference, new_usd: page.price,
+          old_htg: row.price_htg, new_htg: Math.ceil((row.price_htg * ratio) / 5) * 5, promos: tiers,
+        })
+        return { status: 'review' }
+      }
     }
     const { data, error } = await admin.rpc('apply_price_sync', { p_product: row.id, p_new_usd: page.price, p_promos: tiers })
     if (error) return await fail(error.message)

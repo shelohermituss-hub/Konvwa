@@ -758,7 +758,7 @@ BEGIN
   PERFORM pg_temp.as_user(adm, 'aal2');
   PERFORM public.admin_resolve_price_review(lid, false);
   RESET ROLE;
-  ASSERT (SELECT price_htg FROM products WHERE id = pid) = 5500 AND (SELECT source_price_usd FROM products WHERE id = pid) = 40, 'refusing keeps the price and moves the reference';
+  ASSERT (SELECT price_htg FROM products WHERE id = pid) = 5500 AND (SELECT source_price_usd FROM products WHERE id = pid) = 27.5, 'refusing keeps the price and the reference';
   PERFORM pg_temp.as_user(adm, 'aal2');
   BEGIN PERFORM public.admin_resolve_price_review(lid, true); ASSERT false, 'a review was answered twice'; EXCEPTION WHEN raise_exception THEN NULL; END;
   PERFORM public.admin_resolve_price_review(lid2, true);
