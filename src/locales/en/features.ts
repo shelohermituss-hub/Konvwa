@@ -932,4 +932,6 @@ export const FEATURES_EN: Record<string, string> = {
   "Achat en grande quantité : chaque produit a une quantité minimale à commander (MOQ) et des prix qui baissent avec le volume. Pour une ou deux pièces, passez par la": "Large-quantity buying: every product has a minimum order quantity (MOQ) and prices that drop with volume. For one or two pieces, use the",
   "{0} résultat(s) dans la Boutique": "{0} result(s) in the Shop",
   "{0} résultat(s) dans le Sourcing gros": "{0} result(s) in Bulk sourcing",
+  "Activer le son": "Turn sound on",
+  "Couper le son": "Turn sound off",
 }

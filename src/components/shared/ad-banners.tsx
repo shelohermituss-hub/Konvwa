@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Megaphone } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { LANG, tr } from '@/lib/i18n'
+import { MuteButton, useAdVideo } from '@/components/shared/ad-video'
 
 export interface Ad {
   id: string
@@ -30,26 +31,23 @@ export function adMediaUrl(path: string | null): string | null {
 
 const pick = (fr: string | null, en: string | null) => (LANG === 'en' && en ? en : fr)
 
-function prefersReducedMotion() {
-  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false }
-}
-
 /** One advertising card: media on top, small caps label, bold title, grey subtitle (App Store "Today" style). */
 export function AdCard({ ad, mediaSrc }: { ad: Ad; mediaSrc?: string | null }) {
   const src = mediaSrc ?? adMediaUrl(ad.media_path)
   const eyebrow = pick(ad.eyebrow, ad.eyebrow_en)
   const subtitle = pick(ad.subtitle, ad.subtitle_en)
   const title = pick(ad.title, ad.title_en) ?? ''
+  const video = useAdVideo()
 
   const body = (
     <article className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-[#F05A28] to-[#0A1628]">
         {src && ad.media_type === 'video' ? (
           <video
+            ref={video.ref}
             src={src}
             className="absolute inset-0 h-full w-full object-cover"
             muted loop playsInline preload="metadata"
-            autoPlay={!prefersReducedMotion()}
             aria-label={title}
           />
         ) : src ? (
@@ -66,9 +64,18 @@ export function AdCard({ ad, mediaSrc }: { ad: Ad; mediaSrc?: string | null }) {
     </article>
   )
 
-  if (!ad.link_url) return body
-  if (ad.link_url.startsWith('/')) return <Link to={ad.link_url} className="pressable block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{body}</Link>
-  return <a href={ad.link_url} target="_blank" rel="noopener noreferrer" className="pressable block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{body}</a>
+  const linkClass = 'pressable block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40'
+  const wrapped = !ad.link_url ? body
+    : ad.link_url.startsWith('/') ? <Link to={ad.link_url} className={linkClass}>{body}</Link>
+    : <a href={ad.link_url} target="_blank" rel="noopener noreferrer" className={linkClass}>{body}</a>
+  if (!(src && ad.media_type === 'video')) return wrapped
+  // the sound button sits next to the link, not inside it, so tapping it never opens the ad
+  return (
+    <div className="relative">
+      {wrapped}
+      <MuteButton muted={video.muted} onToggle={video.toggle} className="right-3 top-3" />
+    </div>
+  )
 }
 
 /** Live ads configured in the admin (the database only returns the active ones inside their schedule). */

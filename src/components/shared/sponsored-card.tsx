@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Megaphone } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { LANG, tr } from '@/lib/i18n'
+import { MuteButton, useAdVideo } from '@/components/shared/ad-video'
 import { AD_COLUMNS, adMediaUrl, type Ad } from '@/components/shared/ad-banners'
 
 const pick = (fr: string | null, en: string | null) => (LANG === 'en' && en ? en : fr)
@@ -25,6 +26,7 @@ export function useFeedAds(): Ad[] {
 /** An ad dressed like a product card (picture, title, text), always marked "Sponsorisé". */
 export function SponsoredCard({ ad }: { ad: Ad }) {
   const navigate = useNavigate()
+  const video = useAdVideo()
   const src = adMediaUrl(ad.media_path)
   const title = pick(ad.title, ad.title_en) ?? ''
   const subtitle = pick(ad.subtitle, ad.subtitle_en)
@@ -47,7 +49,7 @@ export function SponsoredCard({ ad }: { ad: Ad }) {
       >
         <div className="relative min-h-32 bg-gray-50">
           {src && ad.media_type === 'video' ? (
-            <video src={src} className="block h-auto w-full" muted loop playsInline autoPlay preload="metadata" aria-hidden />
+            <video ref={video.ref} src={src} className="block h-auto w-full" muted loop playsInline preload="metadata" aria-hidden />
           ) : src ? (
             <img src={src} alt="" loading="lazy" className="block h-auto w-full" />
           ) : (
@@ -64,6 +66,7 @@ export function SponsoredCard({ ad }: { ad: Ad }) {
           </p>
         </div>
       </button>
+      {src && ad.media_type === 'video' && <MuteButton muted={video.muted} onToggle={video.toggle} className="right-2 top-2" />}
     </div>
   )
 }
