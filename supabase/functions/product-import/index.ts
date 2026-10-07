@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { parseProductUrl, platformImages, platformImageUrl, type Platform, type ProductTarget } from './platforms.ts'
 import { normalizeVariants } from './variants.ts'
 import {
-  cleanSpecs, cleanText, dimsFrom, extractJson, priceToUsd, titlesAgree, validateAi, weightFrom,
+  cleanSpecs, cleanText, dimsFrom, extractJson, looksLikeErrorPage, priceToUsd, titlesAgree, validateAi, weightFrom,
   type AiResult, type Dims,
 } from './normalize.ts'
 
@@ -88,9 +88,9 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
       url,
       formats: [{ type: 'json', schema: SCHEMA, prompt: scrapePrompt(platform) }],
       onlyMainContent: false,
-      ...(platform.id === 'amazon' ? {} : { waitFor: platform.id === 'shein' || platform.id === 'temu' ? 5000 : 3000 }),
-      // Shein and Temu block ordinary crawlers: their pages are read through the stealth proxy
-      proxy: platform.id === 'shein' || platform.id === 'temu' ? 'stealth' : 'auto',
+      ...(platform.id === 'amazon' ? {} : { waitFor: platform.id === 'shein' || platform.id === 'temu' || platform.id === 'alibaba' ? 5000 : 3000 }),
+      // Shein, Temu and Alibaba block ordinary crawlers (404 / robot pages): their pages are read through the stealth proxy
+      proxy: platform.id === 'shein' || platform.id === 'temu' || platform.id === 'alibaba' ? 'stealth' : 'auto',
       timeout: 60000,
     }),
     signal: AbortSignal.timeout(90000),
@@ -266,6 +266,10 @@ Deno.serve(async (req) => {
     } else if (!scraped && read.meta.title) {
       scraped = { title: read.meta.title, description: read.meta.description, images: read.meta.image ? [read.meta.image] : [] }
       warnings.push('page_mismatch')
+    }
+    // the shop sent an error / robot-check / sign-in page instead of the product: nothing of it must reach the product sheet
+    if (looksLikeErrorPage(read.meta.title) || (scraped && looksLikeErrorPage(cleanText(scraped.title, 300)))) {
+      return json({ error: `${platform.name} a renvoy\u00e9 une page d\u2019erreur au lieu du produit (lien expir\u00e9 ou lecture bloqu\u00e9e). Ouvrez le produit dans un navigateur, copiez l\u2019adresse compl\u00e8te de la page et r\u00e9essayez, ou remplissez la fiche \u00e0 la main.`, code: 'error_page' }, 502)
     }
     if (!scraped || !cleanText(scraped.title, 300)) return json({ error: `Impossible de lire la page ${platform.name} (bloqu\u00e9e, prot\u00e9g\u00e9e par un captcha ou produit introuvable). R\u00e9essayez dans un instant, ou remplissez la fiche \u00e0 la main.`, code: 'unreadable' }, 502)
 

@@ -185,3 +185,10 @@ export function titlesAgree(a: string, b: string): boolean {
   for (const t of ta) if (tb.has(t)) return true
   return false
 }
+
+/** Titles of the pages shops show instead of a product: error, not found, robot check, sign-in. */
+export function looksLikeErrorPage(title: string): boolean {
+  const t = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  return /\b(404|403|410|500|502|503)\b/.test(t)
+    || /(page d'?erreur|error page|page not found|not found|introuvable|access denied|acces refuse|forbidden|captcha|are you a robot|verify you are human|unusual traffic|sign in|log in|se connecter|connexion requise|temporarily unavailable|oops)/.test(t)
+}

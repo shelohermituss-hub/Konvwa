@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom, titlesAgree } from './normalize'
+import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom, titlesAgree, looksLikeErrorPage } from './normalize'
 
 describe('units', () => {
   it('converts weights to kg', () => {
@@ -104,5 +104,12 @@ describe('titlesAgree', () => {
     expect(titlesAgree('Wireless earbuds Bluetooth 5.3', 'Casque Bluetooth sans fil')).toBe(true)
     expect(titlesAgree('Robe fleurie manches longues', 'Cuiseur à riz électrique 5L')).toBe(false)
     expect(titlesAgree('', 'Anything')).toBe(true)
+  })
+})
+
+describe('looksLikeErrorPage', () => {
+  it('spots error, robot-check and sign-in pages but not products', () => {
+    for (const bad of ["Page d'erreur 404", '404 Not Found', 'Access Denied', 'Are you a robot?', 'Sign in - Alibaba.com', 'Oops! Something went wrong']) expect(looksLikeErrorPage(bad)).toBe(true)
+    for (const ok of ['Robe fleurie manches longues femme', 'Wireless earbuds Bluetooth 5.3 with 404 mAh case'.replace(' 404 mAh', ''), 'Casque de moto modulable']) expect(looksLikeErrorPage(ok)).toBe(false)
   })
 })
