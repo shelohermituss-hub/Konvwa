@@ -103,18 +103,20 @@ export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications, vi
 export type FeedItem = CatalogProduct & { feed_key: string; feed_variant?: ProductVariant }
 
 const MAX_CARDS_PER_PRODUCT = 8
+/** Name of a colour option group ("Couleur", "Couleur / Taille", "Color"…). */
+const COLOUR_GROUP = /couleur|colou?r|coloris|teinte/i
 
 /**
  * A product with variants shows up as one card per variant (its picture, name and price), all opening the same product page.
- * Only variants with a picture get a card; variants sharing a picture (sizes of one colour) make a single one, and a product never takes more than 8 cards.
+ * Only colour variants with a picture get a card; variants sharing a picture (sizes of one colour) make a single one, and a product never takes more than 8 cards.
  * A product whose variants have no picture stays one plain card.
  */
 export function expandVariants(products: CatalogProduct[]): FeedItem[] {
   return products.flatMap((p): FeedItem[] => {
     const seen = new Set<string>()
-    // a variant without a picture stays on the product page only
+    // only colours (with a picture) get a card: sizes, models and the like, or a variant without a picture, stay on the product page
     const cards = sortVariants(p.product_variants).filter((v) => {
-      if (!v.image || seen.has(v.image)) return false
+      if (!v.image || !COLOUR_GROUP.test(v.group_name ?? '') || seen.has(v.image)) return false
       seen.add(v.image)
       return true
     }).slice(0, MAX_CARDS_PER_PRODUCT)

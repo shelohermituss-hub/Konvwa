@@ -17,7 +17,7 @@ describe('resellerPriced', () => {
 })
 
 describe('expandVariants', () => {
-  const v = (id: string, image: string | null, order: number) => ({ id, label: id, label_en: null, group_name: null, price_htg: 100, image, stock_available: true, sort_order: order })
+  const v = (id: string, image: string | null, order: number, group: string | null = 'Couleur') => ({ id, label: id, label_en: null, group_name: group, price_htg: 100, image, stock_available: true, sort_order: order })
   const base = (variants: ReturnType<typeof v>[]) => ({ id: 'p1', product_variants: variants }) as unknown as CatalogProduct
 
   it('makes one card per variant, all opening the same product', () => {
@@ -36,6 +36,12 @@ describe('expandVariants', () => {
     const plain = expandVariants([base([v('a', null, 1), v('b', null, 2)])])
     expect(plain).toHaveLength(1)
     expect(plain[0].feed_variant).toBeUndefined()
+  })
+  it('only colours get a card, not sizes or other options', () => {
+    const cards = expandVariants([base([v('red', 'r.jpg', 1), v('xl', 'x.jpg', 2, 'Taille'), v('pro', 'p.jpg', 3, null), v('blue / M', 'b.jpg', 4, 'Couleur / Taille')])])
+    expect(cards.map((c) => c.feed_key)).toEqual(['p1:red', 'p1:blue / M'])
+    expect(expandVariants([base([v('s', 's.jpg', 1, 'Taille'), v('m', 'm.jpg', 2, 'Taille')])])).toHaveLength(1)
+    expect(expandVariants([base([v('red', 'r.jpg', 1, 'Color')])])[0].feed_variant?.id).toBe('red')
   })
   it('merges variants that share a picture and caps the cards of one product', () => {
     expect(expandVariants([base([v('s', 'red.jpg', 1), v('m', 'red.jpg', 2), v('l', 'blue.jpg', 3)])])).toHaveLength(2)
