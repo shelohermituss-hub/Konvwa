@@ -211,6 +211,7 @@ export function AdminProductsPage() {
     setLinkOpen(false)
     setDialogOpen(true)
     if (d.variants.length > 0) toast.success(tr('{0} variantes importées : vérifiez leurs prix avant d\'enregistrer.', d.variants.length))
+    if (d.warnings.includes('share_data')) toast.warning(tr('Le site a bloqué la lecture de la page : la fiche est remplie avec les informations du lien de partage (nom, prix, image). Vérifiez-la et complétez-la.'), { duration: 12000 })
     if (d.warnings.includes('page_mismatch')) toast.warning(tr('La lecture automatique ne correspond pas bien à ce produit : seuls le titre, la description et l\'image de la page sont repris. Vérifiez et remplissez le prix à la main.'), { duration: 12000 })
     if (d.warnings.includes('variant_prices_missing')) toast.warning(tr('La page ne donne pas de prix par variante : toutes ont le prix de base, à corriger si besoin.'))
     if (d.warnings.includes('variants_truncated')) toast.warning(tr('Plus de 100 variantes : seules les 100 premières sont gardées.'))

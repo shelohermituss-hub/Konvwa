@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseProductUrl, platformImageUrl, platformImages } from './platforms'
+import { parseProductUrl, parseSharePrice, platformImageUrl, platformImages } from './platforms'
 
 describe('parseProductUrl', () => {
   it('keeps Amazon working', () => {
@@ -58,5 +58,21 @@ describe('platformImageUrl', () => {
   })
   it('lists distinct valid pictures up to the limit', () => {
     expect(platformImages('temu', ['https://img.kwcdn.com/a.jpg', 'https://img.kwcdn.com/a.jpg', 'https://evil.test/b.jpg', 'https://img.kwcdn.com/c.jpg'], 2)).toEqual(['https://img.kwcdn.com/a.jpg', 'https://img.kwcdn.com/c.jpg'])
+  })
+})
+
+describe('Alibaba share page', () => {
+  const link = 'https://www.alibaba.com/share/product-detail.html?from=share&productId=1600629956999&name=de+Leggings+Veste+3+Pi%C3%A8ces&price=8%2C80%C2%A0%24US&imageUrl=https%3A%2F%2Fs.alicdn.com%2F%40sc04%2Fkf%2FH0c418d.jpg_720x720Q50.jpg&moq=Min.+Ordre%3A+1+pi%C3%A8ce&companyInfo=6+ans+%C2%B7+CN+%C2%B7+Shenzhen+Co.&shortKey=B2XZTa&language=fr'
+  it('reads the product id, the canonical page and the data carried by the address', () => {
+    const t = parseProductUrl(link)
+    expect(t).toMatchObject({ platform: { id: 'alibaba' }, id: '1600629956999', url: 'https://www.alibaba.com/product-detail/_1600629956999.html' })
+    expect(t?.hint).toMatchObject({ name: 'de Leggings Veste 3 Pièces', price: 8.8, currency: 'USD', image: 'https://s.alicdn.com/@sc04/kf/H0c418d.jpg' })
+    expect(t?.hint?.note).toContain('Shenzhen')
+  })
+  it('parses prices written in several ways', () => {
+    expect(parseSharePrice('8,80\u00a0$US')).toEqual({ price: 8.8, currency: 'USD' })
+    expect(parseSharePrice('US $12.50')).toEqual({ price: 12.5, currency: 'USD' })
+    expect(parseSharePrice('€ 7,5')).toEqual({ price: 7.5, currency: 'EUR' })
+    expect(parseSharePrice(null)).toEqual({ price: null, currency: 'USD' })
   })
 })

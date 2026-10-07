@@ -39,6 +39,19 @@ export interface ProductTarget {
   amazon?: AmazonTarget
   /** Share / short links (shein.top, temu.to, share.temu.com, a.co…): the real product page is found by following their redirects. */
   short?: boolean
+  /** What an Alibaba "share" page address carries about the product (name, price, picture…): a fallback when the page itself cannot be read. */
+  hint?: ShareHint
+}
+
+export interface ShareHint { name: string; price: number | null; currency: string; image: string | null; note: string }
+
+/** "8,80 $US", "US $8.80", "€ 7,5" -> number and currency. */
+export function parseSharePrice(raw: string | null): { price: number | null; currency: string } {
+  const text = (raw ?? '').replace(/\u00a0/g, ' ')
+  const m = /(\d+(?:[.,]\d{1,2})?)/.exec(text.replace(/(\d)[ ,](\d{3})(?!\d)/g, '$1$2'))
+  const price = m ? Number(m[1].replace(',', '.')) : null
+  const currency = /\u20ac|eur/i.test(text) ? 'EUR' : /\u00a5|cny|rmb/i.test(text) ? 'CNY' : 'USD'
+  return { price: price !== null && Number.isFinite(price) && price > 0 ? price : null, currency }
 }
 
 /** The hosts of the apps' "share" links: they only redirect to the product page. */
@@ -69,6 +82,19 @@ export function parseProductUrl(raw: string): ProductTarget | null {
   if (SHORT_HOSTS.test(host)) return { platform, url: url.toString(), id: null, short: true }
   // Alibaba app / website share links: alibaba.com/x/AbC123?ck=pdp
   if (platform.id === 'alibaba' && /^\/x\/[A-Za-z0-9_-]{3,20}\/?$/.test(url.pathname)) return { platform, url: `https://${host}${url.pathname}`, id: null, short: true }
+  // Alibaba "share" page: /share/product-detail.html?productId=…&name=…&price=…&imageUrl=…: the canonical product page is read, the address's own data is kept as a fallback
+  if (platform.id === 'alibaba' && /^\/share\/product-detail\.html$/.test(url.pathname)) {
+    const pid = url.searchParams.get('productId') ?? ''
+    if (/^\d{8,}$/.test(pid)) {
+      const { price, currency } = parseSharePrice(url.searchParams.get('price'))
+      const name = (url.searchParams.get('name') ?? '').replace(/\s+/g, ' ').trim().slice(0, 300)
+      const note = [url.searchParams.get('moq'), url.searchParams.get('companyInfo')].filter(Boolean).join(' \u00b7 ').slice(0, 300)
+      return {
+        platform, id: pid, url: `https://${host}/product-detail/_${pid}.html`,
+        hint: { name, price, currency, image: platformImageUrl('alibaba', url.searchParams.get('imageUrl')), note },
+      }
+    }
+  }
   const path = url.pathname
   let id: string | null = null
   const keep = new URLSearchParams()

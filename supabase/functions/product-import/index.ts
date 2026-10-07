@@ -268,10 +268,19 @@ Deno.serve(async (req) => {
       warnings.push('page_mismatch')
     }
     // the shop sent an error / robot-check / sign-in page instead of the product: nothing of it must reach the product sheet
-    if (looksLikeErrorPage(read.meta.title) || (scraped && looksLikeErrorPage(cleanText(scraped.title, 300)))) {
+    const blocked = looksLikeErrorPage(read.meta.title) || (!!scraped && looksLikeErrorPage(cleanText(scraped.title, 300)))
+    const hint = target.hint
+    if ((blocked || !scraped || !cleanText(scraped.title, 300)) && hint?.name) {
+      // the page cannot be read, but the share link itself carries the name, price and picture of the product
+      scraped = { title: hint.name, price: hint.price ?? undefined, currency: hint.currency, description: hint.note, images: hint.image ? [hint.image] : [] }
+      const i = warnings.indexOf('page_mismatch'); if (i >= 0) warnings.splice(i, 1)
+      warnings.push('share_data')
+    } else if (blocked) {
       return json({ error: `${platform.name} a renvoy\u00e9 une page d\u2019erreur au lieu du produit (lien expir\u00e9 ou lecture bloqu\u00e9e). Ouvrez le produit dans un navigateur, copiez l\u2019adresse compl\u00e8te de la page et r\u00e9essayez, ou remplissez la fiche \u00e0 la main.`, code: 'error_page' }, 502)
     }
     if (!scraped || !cleanText(scraped.title, 300)) return json({ error: `Impossible de lire la page ${platform.name} (bloqu\u00e9e, prot\u00e9g\u00e9e par un captcha ou produit introuvable). R\u00e9essayez dans un instant, ou remplissez la fiche \u00e0 la main.`, code: 'unreadable' }, 502)
+    // the page was read but gave no price: the one written in the share link is used
+    if (hint?.price != null && !(Number(scraped.price) > 0)) scraped = { ...scraped, price: hint.price, currency: hint.currency }
 
     // package: Amazon package data first, then the item's own values (both flagged), then the AI estimate
     const pkgWeight = weightFrom(scraped.package_weight)
