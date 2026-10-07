@@ -731,5 +731,43 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   RESET ROLE;
 END $$;
 
+-- 27. nightly price follow-up: the log is private, only the service role applies a supplier price, only an admin answers a review
+DO $$
+DECLARE a uuid; adm uuid; pid uuid; lid uuid; lid2 uuid; r text; htg numeric; tiers jsonb;
+BEGIN
+  SELECT client_a, admin_id INTO a, adm FROM ctx;
+  INSERT INTO products (name, price_htg, moq, unit, active, price_tiers) VALUES ('TEST price sync', 5000, 1, 'pcs', false, '[{"min_qty":10,"price_htg":4000}]'::jsonb) RETURNING id INTO pid;
+  UPDATE products SET source_price_usd = 25 WHERE id = pid;
+  r := public.apply_price_sync(pid, 27.5, '[{"min_qty":2,"unit_usd":13.75}]'::jsonb);
+  SELECT price_htg, price_tiers INTO htg, tiers FROM products WHERE id = pid;
+  ASSERT r = 'updated' AND htg = 5500, 'price should follow the supplier (+10%): ' || htg;
+  ASSERT tiers = '[{"src":"sync","min_qty":2,"price_htg":2750},{"min_qty":10,"price_htg":4400}]'::jsonb, 'tiers: ' || tiers::text;
+  r := public.apply_price_sync(pid, 27.5, '[]'::jsonb);
+  ASSERT (SELECT price_tiers FROM products WHERE id = pid) = '[{"min_qty":10,"price_htg":4400}]'::jsonb, 'an offer that is gone must disappear';
+
+  INSERT INTO price_sync_log (product_id, status, old_usd, new_usd, old_htg, new_htg) VALUES (pid, 'review', 27.5, 40, 5500, 8000) RETURNING id INTO lid;
+  INSERT INTO price_sync_log (product_id, status, old_usd, new_usd, old_htg, new_htg) VALUES (pid, 'review', 27.5, 40, 5500, 8000) RETURNING id INTO lid2;
+
+  PERFORM pg_temp.as_user(a, 'aal2');
+  ASSERT (SELECT count(*) FROM price_sync_log) = 0, 'client reads the price log';
+  BEGIN PERFORM public.apply_price_sync(pid, 1, '[]'::jsonb); ASSERT false, 'client applied a price'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM public.admin_resolve_price_review(lid, true); ASSERT false, 'client answered a review'; EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN INSERT INTO price_sync_log (product_id, status) VALUES (pid, 'error'); ASSERT false, 'client wrote the price log'; EXCEPTION WHEN insufficient_privilege OR check_violation OR others THEN NULL; END;
+  RESET ROLE;
+
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  PERFORM public.admin_resolve_price_review(lid, false);
+  RESET ROLE;
+  ASSERT (SELECT price_htg FROM products WHERE id = pid) = 5500 AND (SELECT source_price_usd FROM products WHERE id = pid) = 40, 'refusing keeps the price and moves the reference';
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  BEGIN PERFORM public.admin_resolve_price_review(lid, true); ASSERT false, 'a review was answered twice'; EXCEPTION WHEN raise_exception THEN NULL; END;
+  PERFORM public.admin_resolve_price_review(lid2, true);
+  RESET ROLE;
+  ASSERT (SELECT status FROM price_sync_log WHERE id = lid2) = 'accepted', 'accepted review not marked';
+  PERFORM pg_temp.as_user(a);
+  ASSERT (SELECT count(*) FROM app_settings WHERE key = 'price_sync_secret') = 0, 'client reads the price sync secret';
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

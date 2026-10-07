@@ -17,6 +17,7 @@ import { ProductLinkImport } from '@/components/shared/product-link-import'
 import { VariantsEditor, variantsError, variantsPayload, type VariantRow } from '@/components/shared/variants-editor'
 import { estimateShipping, type ImportedProduct, type ShippingEstimate } from '@/lib/product-import-api'
 import { priceHtgFromUsd } from '@/lib/import-pricing'
+import { PriceReviews } from '@/pages/admin/price-reviews'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { money, moneyAmount } from '@/lib/currency'
@@ -65,6 +66,11 @@ interface Product {
   brand?: string | null
   source_url?: string | null
   source_asin?: string | null
+  /** Nightly price follow-up of the supplier page (Muscle & Strength for now). */
+  price_sync?: boolean
+  price_checked_at?: string | null
+  /** Supplier price (USD) the follow-up compares with: only written when a product is created from an import. */
+  source_price_usd?: number | null
   created_at: string
 }
 
@@ -109,6 +115,7 @@ const emptyDraft = (): ProductDraft => ({
   brand: null,
   source_url: null,
   source_asin: null,
+  price_sync: false,
 })
 
 const lines = (raw: string) => raw.split('\n').map(l => l.trim()).filter(Boolean)
@@ -162,6 +169,22 @@ export function AdminProductsPage() {
 
   useEffect(() => { load() }, [])
 
+  // one product checked against the supplier page right now (the same job the nightly run does)
+  const [checkingPrice, setCheckingPrice] = useState(false)
+  async function checkPriceNow(productId: string) {
+    setCheckingPrice(true)
+    const { data, error } = await supabase.functions.invoke('price-sync', { body: { product_id: productId } })
+    setCheckingPrice(false)
+    if (error || data?.error) { toast.error(String(data?.error ?? tr('Erreur réseau'))); return }
+    const r = (data?.results ?? [])[0] as { status: string; note?: string } | undefined
+    if (!r) toast.info(tr('Rien à vérifier.'))
+    else if (r.status === 'review') toast.warning(tr('Le prix a beaucoup changé : il attend votre validation en haut de la page.'), { duration: 8000 })
+    else if (r.status === 'updated') toast.success(tr('Prix mis à jour. Rouvrez le produit pour le voir.'))
+    else if (r.status === 'unchanged') toast.success(tr('Le prix du fournisseur n\'a pas changé.'))
+    else toast.error(tr('Lecture impossible : {0}', r.note ?? ''))
+    void load()
+  }
+
   function openAdd() {
     setEditing(null)
     const d = emptyDraft()
@@ -203,6 +226,8 @@ export function AdminProductsPage() {
       weight_kg: d.weight_kg, length_cm: d.length_cm, width_cm: d.width_cm, height_cm: d.height_cm,
       package_estimated: d.package_estimated,
       brand: d.brand, source_url: d.source_url, source_asin: d.source_asin,
+      // the first price read is the reference of the nightly follow-up (supported for Muscle & Strength)
+      price_sync: d.platform === 'muscle_strength', source_price_usd: d.price_usd,
       // Alibaba is the bulk sourcing shelf, every other platform sells finished products by the unit
       sale_type: d.platform === 'alibaba' ? 'wholesale' : 'retail',
     })
@@ -288,6 +313,7 @@ export function AdminProductsPage() {
       brand: p.brand ?? null,
       source_url: p.source_url ?? null,
       source_asin: p.source_asin ?? null,
+      price_sync: p.price_sync ?? false,
     })
     setImportInfo(null)
     setVariantRows([])
@@ -421,6 +447,8 @@ export function AdminProductsPage() {
 
   return (
     <div className="space-y-6">
+      <PriceReviews onChanged={() => void load()} />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -629,6 +657,25 @@ export function AdminProductsPage() {
                     <a href={draft.source_url} target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline">{draft.source_url}</a>
                   </p>
                 )}
+                {draft.source_url?.startsWith('https://www.muscleandstrength.com/') && (
+                  <div className="mt-2 space-y-1.5 rounded-xl border border-gray-100 bg-gray-50/60 p-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={!!draft.price_sync} onChange={e => setField('price_sync', e.target.checked)} className="h-4 w-4 rounded" />
+                      <span className="text-sm font-medium">{tr('Suivre le prix du fournisseur chaque nuit')}</span>
+                    </label>
+                    <p className="text-xs text-muted-foreground">{tr('Le prix, les paliers et les variantes suivent le prix du fournisseur, et ses offres (« 2 pour 40 », « 1 acheté, 1 offert ») deviennent des paliers tant qu\'elles durent.')}</p>
+                    {editing && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button type="button" size="sm" variant="outline" disabled={checkingPrice} onClick={() => void checkPriceNow(editing.id)} className="gap-1.5 rounded-xl">
+                          {checkingPrice && <Loader2 className="h-3.5 w-3.5 animate-spin" />}{tr('Vérifier maintenant')}
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                          {editing.price_checked_at ? tr('Dernier contrôle : {0}', new Date(editing.price_checked_at).toLocaleString(LOCALE_TAG)) : tr('Pas encore contrôlé')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Package + shipping estimate */}
@@ -704,8 +751,9 @@ export function AdminProductsPage() {
               </p>
               {draft.price_tiers.map((tier, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <Input type="number" min={1} value={tier.min_qty || ''} onChange={e => setTier(i, { min_qty: parseInt(e.target.value) || 0 })} placeholder={tr('À partir de (qté)')} className="flex-1" />
-                  <Input type="number" min={0} value={tier.price_htg || ''} onChange={e => setTier(i, { price_htg: parseFloat(e.target.value) || 0 })} placeholder={tr('Prix unitaire HTG')} className="flex-1" />
+                  <Input type="number" min={1} value={tier.min_qty || ''} onChange={e => setTier(i, { min_qty: parseInt(e.target.value) || 0, src: undefined })} placeholder={tr('À partir de (qté)')} className="flex-1" />
+                  <Input type="number" min={0} value={tier.price_htg || ''} onChange={e => setTier(i, { price_htg: parseFloat(e.target.value) || 0, src: undefined })} placeholder={tr('Prix unitaire HTG')} className="flex-1" />
+                  {tier.src === 'sync' && <Badge variant="outline" className="shrink-0 border-sky-300 bg-sky-50 text-sky-800" title={tr('Offre du fournisseur : mise à jour chaque nuit, retirée quand l\'offre disparaît. Modifiez-la pour la fixer.')}>{tr('Offre auto')}</Badge>}
                   <button type="button" onClick={() => setDraft(prev => ({ ...prev, price_tiers: prev.price_tiers.filter((_, j) => j !== i) }))} className="text-destructive hover:text-destructive/80" aria-label={tr('Retirer le palier')}>
                     <Trash2 className="h-4 w-4" />
                   </button>

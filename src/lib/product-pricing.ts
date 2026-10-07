@@ -5,6 +5,8 @@ import { moneyAmount } from '@/lib/currency'
 export interface PriceTier {
   min_qty: number
   price_htg: number
+  /** 'sync': a tier made by the nightly price follow-up from a supplier offer ("2 for $40"): it disappears with the offer. */
+  src?: 'sync'
 }
 
 export interface PricedProduct {
@@ -17,7 +19,7 @@ export interface PricedProduct {
 export function normalizeTiers(raw: unknown): PriceTier[] {
   if (!Array.isArray(raw)) return []
   return raw
-    .map((t) => ({ min_qty: Number((t as PriceTier)?.min_qty), price_htg: Number((t as PriceTier)?.price_htg) }))
+    .map((t) => ({ min_qty: Number((t as PriceTier)?.min_qty), price_htg: Number((t as PriceTier)?.price_htg), ...((t as PriceTier)?.src === 'sync' ? { src: 'sync' as const } : {}) }))
     .filter((t) => Number.isFinite(t.min_qty) && t.min_qty > 0 && Number.isFinite(t.price_htg) && t.price_htg > 0)
     .sort((a, b) => a.min_qty - b.min_qty)
 }
