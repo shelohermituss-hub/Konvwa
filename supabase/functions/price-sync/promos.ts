@@ -13,10 +13,11 @@ const money = (v: unknown): number | null => {
 }
 
 /**
- * Offers of the page -> tiers ("from `min_qty` units, each costs `unit_usd`").
- *  - multi_buy : `qty` items for `total_price` in total ("2 for $40" -> 2 units at $20)
- *  - free_item : buy `qty`, get `free_qty` free ("buy 1 get 1 free" -> 2 units at half price)
- * Anything else (percent off, free gift, free shipping…) is ignored. Only offers that really lower the unit price are kept, at most 4.
+ * Offers of the page -> tiers ("from `min_qty` units, each costs `unit_usd`"). The kinds follow Muscle & Strength's own offer filters:
+ *  - multi_buy     : `qty` items for `total_price` in total ("2 Pack Deal", "2 for $40" -> 2 units at $20)
+ *  - free_item     : buy `qty`, get `free_qty` free ("Buy 1 Get 1 Free", "Buy X Get Y Free") or at `discount_percent` off ("Buy 1 Get 1 50% Off")
+ * "Limited Time Price Cut" is the price itself (read as the current price) and "In Cart Discount" is handled by `cartDiscountedPrice`.
+ * Anything else is ignored. Only offers that really lower the unit price are kept, at most 4.
  */
 export function promoTiers(baseUsd: number, raw: unknown): Tier[] {
   if (!(baseUsd > 0) || !Array.isArray(raw)) return []
@@ -28,7 +29,8 @@ export function promoTiers(baseUsd: number, raw: unknown): Tier[] {
       if (n && total) found.push({ min_qty: n, unit_usd: round2(total / n) })
     } else if (o.kind === 'free_item') {
       const buy = int(o.qty, 1, 20); const free = int(o.free_qty, 1, 20)
-      if (buy && free) found.push({ min_qty: buy + free, unit_usd: round2((baseUsd * buy) / (buy + free)) })
+      const off = int(o.discount_percent, 1, 100) ?? 100
+      if (buy && free) found.push({ min_qty: buy + free, unit_usd: round2((baseUsd * (buy + (free * (100 - off)) / 100)) / (buy + free)) })
     }
   }
   // sorted by quantity; per quantity the cheapest offer; the unit price must go down as the quantity goes up
@@ -41,6 +43,18 @@ export function promoTiers(baseUsd: number, raw: unknown): Tier[] {
     out.push(t)
   }
   return out.slice(0, 4)
+}
+
+/** "In Cart Discount": a percentage taken off the product when it is in the cart. The best one (at most 50 %) lowers the unit price. */
+export function cartDiscountedPrice(price: number, raw: unknown): number {
+  if (!(price > 0) || !Array.isArray(raw)) return price
+  let best = 0
+  for (const item of raw.slice(0, 12)) {
+    const o = (item ?? {}) as Record<string, unknown>
+    const pct = o.kind === 'cart_discount' ? int(o.percent, 1, 50) : null
+    if (pct && pct > best) best = pct
+  }
+  return best > 0 ? round2(price * (1 - best / 100)) : price
 }
 
 /** A supplier price moved by more than this share waits for the admin instead of being applied alone. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { impliedUsd, needsReview, promoTiers } from './promos'
+import { cartDiscountedPrice, impliedUsd, needsReview, promoTiers } from './promos'
 
 describe('promoTiers', () => {
   it('reads "2 for $40" as 2 units at $20', () => {
@@ -41,5 +41,20 @@ describe('impliedUsd', () => {
     expect(impliedUsd(4025, 140, 15)).toBe(25)
     expect(impliedUsd(13685, 140, 15)).toBe(85)
     expect(impliedUsd(0, 140, 15)).toBe(0)
+  })
+})
+
+describe('the offers of Muscle & Strength', () => {
+  it('reads "Buy 1 Get 1 50% Off" as 2 units at 75% of the price', () => {
+    expect(promoTiers(40, [{ kind: 'free_item', qty: 1, free_qty: 1, discount_percent: 50 }])).toEqual([{ min_qty: 2, unit_usd: 30 }])
+  })
+  it('reads "Buy X Get Y Free" with any numbers', () => {
+    expect(promoTiers(20, [{ kind: 'free_item', qty: 3, free_qty: 1 }])).toEqual([{ min_qty: 4, unit_usd: 15 }])
+  })
+  it('takes an in-cart discount off the unit price, never more than 50%', () => {
+    expect(cartDiscountedPrice(40, [{ kind: 'cart_discount', percent: 15 }])).toBe(34)
+    expect(cartDiscountedPrice(40, [{ kind: 'cart_discount', percent: 15 }, { kind: 'cart_discount', percent: 20 }])).toBe(32)
+    expect(cartDiscountedPrice(40, [{ kind: 'cart_discount', percent: 80 }])).toBe(40)
+    expect(cartDiscountedPrice(40, undefined)).toBe(40)
   })
 })
