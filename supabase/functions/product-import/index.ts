@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
 import { normalizeVariants } from './variants.ts'
 import { cartDiscountedPrice, promoTiers } from './promos.ts'
+import { normalizeReviews } from './reviews.ts'
 import {
   cleanSpecs, cleanText, dimsFrom, extractJson, imageSize, looksLikeErrorPage, normalizeLadder, priceToUsd, titlesAgree, validateAi, weightFrom,
   type AiResult, type Dims,
@@ -56,6 +57,11 @@ const SCHEMA = {
     video_url: { type: 'string', description: 'Direct address of the product video file (.mp4) when the page has a video; empty otherwise' },
     rating: { type: 'number' },
     review_count: { type: 'integer' },
+    reviews: {
+      type: 'array', maxItems: 20,
+      description: 'The most recent customer reviews written on the page itself (not the ratings summary): one entry per review with the reviewer name, the star rating from 1 to 5, the review title, the review text and its date. Skip reviews from other products. Empty when the page shows no written review.',
+      items: { type: 'object', properties: { author: { type: 'string' }, rating: { type: 'number', description: 'Stars, 1 to 5' }, title: { type: 'string' }, text: { type: 'string' }, date: { type: 'string', description: 'Date of the review, ISO yyyy-mm-dd when possible' } } },
+    },
     availability: { type: 'string' },
     category_path: { type: 'array', items: { type: 'string' }, description: 'Breadcrumb categories' },
     item_weight: { type: 'object', properties: { value: { type: 'number' }, unit: { type: 'string' } } },
@@ -77,13 +83,13 @@ const SCHEMA = {
   },
   required: ['title'],
 }
-const scrapePrompt = (platform: Platform) => `Extract the product data of this ${platform.name} product page. Use the exact values shown on the page. Weight and dimensions: report both the item and the package/shipping values when shown. Wholesale pages: also read the quantity price ladder (every range with its unit price) and the minimum order quantity. Retail pages: the price is the price of ONE unit, and the offers ("Buy 2 for $X", "Buy 1 Get 1 Free"…) go in `promotions`. Prices: always the REGULAR price without discount (ignore promotions, flash sales, coupons). List every variant (size, colour, model) with its own regular price and its own image URL when the page shows them.`
+const scrapePrompt = (platform: Platform) => `Extract the product data of this ${platform.name} product page. Use the exact values shown on the page. Weight and dimensions: report both the item and the package/shipping values when shown. Wholesale pages: also read the quantity price ladder (every range with its unit price) and the minimum order quantity. Retail pages: the price is the price of ONE unit, and the offers ("Buy 2 for $X", "Buy 1 Get 1 Free"…) go in `promotions`. Prices: always the REGULAR price without discount (ignore promotions, flash sales, coupons). List every variant (size, colour, model) with its own regular price and its own image URL when the page shows them. Also read the written customer reviews shown on the page (reviewer, stars, title, text, date), the most recent first.`
 
 interface Scraped {
   title?: string; brand?: string; price?: number; currency?: string; description?: string
   price_tiers?: unknown; moq?: unknown; promotions?: unknown
   video_url?: string
-  features?: string[]; images?: string[]; rating?: number; review_count?: number
+  features?: string[]; images?: string[]; rating?: number; review_count?: number; reviews?: unknown
   availability?: string; category_path?: string[]
   item_weight?: unknown; package_weight?: unknown; item_dimensions?: unknown; package_dimensions?: unknown
   specifications?: unknown
@@ -464,6 +470,8 @@ Deno.serve(async (req) => {
       supplier_name: platform.name,
       supplier_country: platform.id === 'amazon' ? amazonCountry(target.amazon?.domain ?? target.url) : platform.country,
       variants,
+      // written customer reviews, shown with their source (Amazon and Muscle & Strength only)
+      reviews: platform.id === 'amazon' || platform.id === 'muscle_strength' ? normalizeReviews(scraped.reviews) : [],
       warnings,
     })
   } catch (e) {

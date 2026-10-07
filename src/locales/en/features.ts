@@ -969,4 +969,10 @@ export const FEATURES_EN: Record<string, string> = {
   'Les prix sont visibles après connexion': 'Prices are shown after login',
   'Se connecter pour voir le prix et commander': 'Log in to see the price and order',
   'Créez un compte gratuit ou connectez-vous pour voir les prix et commander.': 'Create a free account or log in to see prices and order.',
+  "Avis du site d'origine": "Reviews from the original site",
+  'Avis publiés sur {0}, pas par des clients KONVWA.': 'Reviews published on {0}, not by KONVWA customers.',
+  'Voir sur {0}': 'View on {0}',
+  '{0} avis de {1} seront enregistrés (affichés avec leur source).': '{0} reviews from {1} will be saved (shown with their source).',
+  'Ne pas importer': 'Do not import',
+  'Produit enregistré, mais pas ses avis : {0}': 'Product saved, but not its reviews: {0}',
 }

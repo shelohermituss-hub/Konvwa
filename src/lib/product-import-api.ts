@@ -35,6 +35,8 @@ export interface ImportedProduct {
   supplier_country: string
   /** Variants (size, colour…) with their regular price in USD (the product's own price when the page gave none) and their picture. */
   variants: Array<{ group_name: string | null; label: string; label_en: string | null; price_usd: number | null; image: string | null; stock_available: boolean }>
+  /** Written customer reviews read from the page (Amazon, Muscle & Strength), shown on the product with their source. */
+  reviews: Array<{ author: string; rating: number; title: string; text: string; date: string | null }>
   warnings: string[]
 }
 

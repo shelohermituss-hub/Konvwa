@@ -813,5 +813,26 @@ BEGIN
   RESET ROLE;
 END $$;
 
+-- 30. imported reviews: readable by visitors (not hidden, visible products only), writable only through the admin RPC
+DO $$
+DECLARE pid uuid; hid uuid; ad uuid; a uuid; r jsonb; n integer;
+BEGIN
+  SELECT client_a INTO a FROM ctx;
+  INSERT INTO products (name, price_htg, moq, unit, active, is_active, stock_available) VALUES ('TEST rev shown', 1000, 1, 'pcs', true, true, true) RETURNING id INTO pid;
+  INSERT INTO products (name, price_htg, moq, unit, active, is_active, stock_available, wholesale_only) VALUES ('TEST rev reseller', 1000, 1, 'pcs', true, true, true, true) RETURNING id INTO hid;
+  INSERT INTO imported_reviews (product_id, source, author_name, rating, comment) VALUES (pid, 'amazon', 'A', 5, 'good'), (hid, 'amazon', 'B', 4, 'ok');
+  INSERT INTO imported_reviews (product_id, source, author_name, rating, comment, hidden) VALUES (pid, 'amazon', 'C', 1, 'hidden one', true);
+  SET LOCAL ROLE anon;
+  SELECT count(*) INTO n FROM imported_reviews;
+  ASSERT n = 1, 'a visitor sees only the visible reviews of visible products';
+  BEGIN INSERT INTO imported_reviews (product_id, source, author_name, rating, comment) VALUES (pid, 'amazon', 'X', 5, 'x'); ASSERT false, 'a visitor wrote a review'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+  PERFORM pg_temp.as_user(a);
+  BEGIN INSERT INTO imported_reviews (product_id, source, author_name, rating, comment) VALUES (pid, 'amazon', 'X', 5, 'x'); ASSERT false, 'a client wrote a review'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  r := public.admin_save_imported_reviews(pid, 'amazon', NULL, '[]'::jsonb);
+  ASSERT (r->>'success')::boolean = false, 'a client must not run the admin import';
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

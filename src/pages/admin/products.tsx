@@ -131,6 +131,8 @@ export function AdminProductsPage() {
   const [linkOpen, setLinkOpen] = useState(false)
   const [backfillOpen, setBackfillOpen] = useState(false)
   // what the last link import found (kept only to show where the price and the package come from)
+  // reviews read from the supplier page: saved with the product (source shown to customers)
+  const [pendingReviews, setPendingReviews] = useState<{ source: ImportedProduct['platform']; sourceUrl: string; items: ImportedProduct['reviews'] } | null>(null)
   const [importInfo, setImportInfo] = useState<{ supplier: string; priceUsd: number | null; rate: number; margin: number; packageSource: ImportedProduct['package_source']; warnings: string[] } | null>(null)
   const [estimate, setEstimate] = useState<ShippingEstimate | null>(null)
   const [estQty, setEstQty] = useState(1)
@@ -198,6 +200,7 @@ export function AdminProductsPage() {
     setSpecKey('')
     setSpecVal('')
     setImportInfo(null)
+    setPendingReviews(null)
     setDialogOpen(true)
   }
 
@@ -246,6 +249,7 @@ export function AdminProductsPage() {
     setNameEn(d.name_en); setDescEn(d.description_en)
     setSpecKey(''); setSpecVal('')
     setEstQty(1); setEstCat(d.brand ? 'branded' : 'generic')
+    setPendingReviews(d.reviews?.length > 0 ? { source: d.platform, sourceUrl: d.source_url, items: d.reviews } : null)
     setImportInfo({ supplier: d.supplier_name, priceUsd: d.price_usd, rate, margin, packageSource: d.package_source, warnings: d.warnings })
     setLinkOpen(false)
     setDialogOpen(true)
@@ -320,6 +324,7 @@ export function AdminProductsPage() {
       price_sync: p.price_sync ?? false,
     })
     setImportInfo(null)
+    setPendingReviews(null)
     setVariantRows([])
     void supabase.from('product_variants').select('id, group_name, label, label_en, price_htg, image, stock_available').eq('product_id', p.id).eq('active', true).order('sort_order')
       .then(({ data }) => setVariantRows((data ?? []).map((v) => ({
@@ -416,6 +421,10 @@ export function AdminProductsPage() {
         toast.error(tr('Produit enregistré, mais pas ses variantes : {0}', varError?.message ?? res?.error ?? ''))
         setSaving(false); load(); return
       }
+    }
+    if (pendingReviews) {
+      const { data: rev, error: revError } = await supabase.rpc('admin_save_imported_reviews', { p_product: productId, p_source: pendingReviews.source, p_source_url: pendingReviews.sourceUrl, p_reviews: pendingReviews.items })
+      if (revError || !rev?.success) toast.warning(tr('Produit enregistré, mais pas ses avis : {0}', revError?.message ?? rev?.error ?? ''))
     }
     toast.success(editing ? tr('Produit mis à jour') : tr('Produit ajouté'))
 
@@ -605,6 +614,12 @@ export function AdminProductsPage() {
                 ) : importInfo ? (
                   <p className="text-xs text-amber-700">{tr('Prix non converti : saisissez le prix en HTG.')}</p>
                 ) : null}
+                {pendingReviews && (
+                  <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{tr('{0} avis de {1} seront enregistrés (affichés avec leur source).', pendingReviews.items.length, importInfo?.supplier ?? '')}</span>
+                    <button type="button" onClick={() => setPendingReviews(null)} className="font-bold text-primary">{tr('Ne pas importer')}</button>
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>{tr('Unité')}</Label>

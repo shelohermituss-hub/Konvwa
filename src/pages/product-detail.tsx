@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ProductFeed } from '@/components/shared/product-feed'
+import { ImportedReviews } from '@/components/shared/imported-reviews'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
@@ -679,6 +680,7 @@ export function ProductDetailPage() {
         )}
 
         {!guest && <ProductReviews productId={product.id} />}
+        <ImportedReviews productId={product.id} />
       </div>
 
       {related.length > 0 && (
