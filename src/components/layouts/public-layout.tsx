@@ -82,6 +82,7 @@ function Header() {
 
         <div className="hidden lg:flex items-center gap-8">
           {[
+            [tr('Boutique'), '/products'],
             [tr('Comment ça marche'), '/how-it-works'],
             [tr('Tarifs'), '/prices'],
             ['FAQ', '/faq'],
@@ -129,6 +130,7 @@ function Header() {
         <div className="lg:hidden border-t border-border bg-background/95 backdrop-blur-xl">
           <div className="container px-4 py-4 mx-auto space-y-3">
             {[
+              [tr('Boutique'), '/products'],
               [tr('Comment ça marche'), '/how-it-works'],
               [tr('Tarifs'), '/prices'],
               ['FAQ', '/faq'],

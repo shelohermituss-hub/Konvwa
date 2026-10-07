@@ -791,5 +791,27 @@ BEGIN
   RESET ROLE;
 END $$;
 
+-- 29. guest catalogue: a visitor (role anon) reads products WITHOUT any price, and nothing reserved for resellers or inactive
+DO $$
+DECLARE pid uuid; hid uuid; vid uuid; n integer;
+BEGIN
+  INSERT INTO products (name, price_htg, moq, unit, active, is_active, stock_available) VALUES ('TEST guest shown', 1000, 1, 'pcs', true, true, true) RETURNING id INTO pid;
+  INSERT INTO products (name, price_htg, moq, unit, active, is_active, stock_available, wholesale_only) VALUES ('TEST guest reseller', 1000, 1, 'pcs', true, true, true, true) RETURNING id INTO hid;
+  INSERT INTO product_variants (product_id, label, price_htg, sort_order, active, stock_available) VALUES (pid, 'v', 1100, 1, true, true) RETURNING id INTO vid;
+  SET LOCAL ROLE anon;
+  SELECT count(*) INTO n FROM products WHERE id = pid;
+  ASSERT n = 1, 'a visitor must see an active product';
+  SELECT count(*) INTO n FROM products WHERE id = hid;
+  ASSERT n = 0, 'a visitor must not see a product reserved for resellers';
+  SELECT count(*) INTO n FROM product_variants WHERE id = vid;
+  ASSERT n = 1, 'a visitor must see the variants (without price)';
+  BEGIN PERFORM price_htg FROM products LIMIT 1; ASSERT false, 'a visitor read products.price_htg'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM price_tiers FROM products LIMIT 1; ASSERT false, 'a visitor read products.price_tiers'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM source_price_usd FROM products LIMIT 1; ASSERT false, 'a visitor read products.source_price_usd'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM price_htg FROM product_variants LIMIT 1; ASSERT false, 'a visitor read product_variants.price_htg'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN UPDATE products SET name = 'x' WHERE id = pid; ASSERT false, 'a visitor wrote a product'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

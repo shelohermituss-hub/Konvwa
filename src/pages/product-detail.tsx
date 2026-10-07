@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ProductFeed } from '@/components/shared/product-feed'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   CheckCircle2, ChevronDown, ChevronLeft, Headset, Loader2, Lock, MessageCircle, Minus, Package,
   Play, Plus, Search, Share2, ShieldCheck, ShoppingCart, Star, Store, Truck, Wallet, Zap,
@@ -9,7 +9,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
-import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, expandVariants, productPath, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
+import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, CATALOG_GUEST_CARD_SELECT, CATALOG_GUEST_DETAIL_SELECT, guestProduct, expandVariants, productPath, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 import { bestOffer, effectiveUnitPrice, formatHtg, lineTotal, offerLabel, tierRows, variantUnitPrice } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
@@ -55,9 +55,12 @@ export function ProductDetailPage() {
   const [searchParams] = useSearchParams()
   const wantedVariant = searchParams.get('variant')
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useI18n()
   const { addItem, count } = useCart()
-  const { profile } = useAuth()
+  const { profile, user } = useAuth()
+  // a visitor who is not logged in sees the product without any price, and logs in to buy
+  const guest = !user
   const isReseller = !!profile?.is_reseller
   const [product, setProduct] = useState<CatalogProduct | null>(null)
   const [related, setRelated] = useState<CatalogProduct[]>([])
@@ -79,14 +82,14 @@ export function ProductDetailPage() {
     setLoading(true)
     supabase
       .from('products')
-      .select(CATALOG_DETAIL_SELECT)
+      .select((guest ? CATALOG_GUEST_DETAIL_SELECT : CATALOG_DETAIL_SELECT) as string)
       .eq('id', id)
       .eq('active', true)
       .eq('product_variants.active', true)
       .maybeSingle()
       .then(({ data }) => {
         const raw = data as unknown as CatalogProduct | null
-        const p = raw ? resellerPriced(localizeProduct(raw), isReseller) : null
+        const p = raw ? (guest ? localizeProduct(guestProduct(raw)) : resellerPriced(localizeProduct(raw), isReseller)) : null
         setProduct(p)
         if (p) setQuantity(p.moq)
         setActiveImg(0)
@@ -101,20 +104,20 @@ export function ProductDetailPage() {
         setLoading(false)
         window.scrollTo?.({ top: 0 })
       })
-  }, [id, isReseller, wantedVariant])
+  }, [id, isReseller, wantedVariant, guest])
 
   useEffect(() => {
     if (!product?.category) { setRelated([]); return }
     supabase
       .from('products')
-      .select(CATALOG_CARD_SELECT)
+      .select((guest ? CATALOG_GUEST_CARD_SELECT : CATALOG_CARD_SELECT) as string)
       .eq('active', true)
       .eq('product_variants.active', true)
       .eq('category', product.category)
       .neq('id', product.id)
       .limit(8)
-      .then(({ data }) => setRelated(((data ?? []) as unknown as CatalogProduct[]).map(localizeProduct).map(r => resellerPriced(r, isReseller))))
-  }, [product?.id, product?.category, isReseller])
+      .then(({ data }) => setRelated(((data ?? []) as unknown as CatalogProduct[]).map(guest ? (r) => localizeProduct(guestProduct(r)) : (r) => resellerPriced(localizeProduct(r), isReseller))))
+  }, [product?.id, product?.category, isReseller, guest])
 
   const goToImage = useCallback((index: number) => {
     const el = galleryRef.current
@@ -249,7 +252,7 @@ export function ProductDetailPage() {
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="truncate text-sm text-muted-foreground">{product.category ? tr(product.category) : tr('Rechercher un produit')}</span>
           </button>
-          <WishlistButton productId={product.id} className="h-11 w-11 shrink-0 bg-transparent shadow-none hover:bg-muted" />
+          {!guest && <WishlistButton productId={product.id} className="h-11 w-11 shrink-0 bg-transparent shadow-none hover:bg-muted" />}
           <button
             onClick={handleWhatsApp}
             aria-label={tr('Partager sur WhatsApp')}
@@ -264,6 +267,7 @@ export function ProductDetailPage() {
           >
             <Share2 className="h-5 w-5" strokeWidth={1.8} />
           </button>
+          {!guest && (
           <button
             onClick={() => navigate('/cart')}
             aria-label={tr('Panier')}
@@ -276,6 +280,7 @@ export function ProductDetailPage() {
               </span>
             )}
           </button>
+          )}
         </div>
         <div className="flex gap-6 px-4" role="tablist">
           {TABS.filter((tb) => tb.id !== 'related' || related.length > 0).map((tb) => (
@@ -443,7 +448,7 @@ export function ProductDetailPage() {
                             <span className="min-w-0">
                               <span className={cn('block max-w-[11rem] truncate font-semibold', !v.stock_available && 'line-through')}>{variantLabel(v)}</span>
                               <span className="block text-xs tabular-nums text-muted-foreground">
-                                {v.stock_available ? `${formatHtg(variantUnitPrice(product, v, quantity))} ${currencyLabel()}` : tr('Rupture de stock')}
+                                {!v.stock_available ? tr('Rupture de stock') : guest ? tr('En stock') : `${formatHtg(variantUnitPrice(product, v, quantity))} ${currencyLabel()}`}
                               </span>
                             </span>
                           </button>
@@ -463,6 +468,13 @@ export function ProductDetailPage() {
               </p>
             )}
 
+            {guest ? (
+              <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
+                <p className="flex items-center gap-2 text-sm font-bold text-foreground"><Lock className="h-4 w-4 text-primary" aria-hidden />{tr('Les prix sont visibles après connexion')}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{tr('Commande minimale :')}{' '}{product.moq} {product.unit}</p>
+              </div>
+            ) : (
+              <>
             {/* Price by quantity */}
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-muted/50 p-3" aria-label={tr('Prix selon la quantité')}>
               {rows.map((r) => {
@@ -490,13 +502,15 @@ export function ProductDetailPage() {
                 {tr('la réduction s\'applique par lot complet de {0}, les autres unités sont au prix normal.', offer.min_qty)}
               </p>
             )}
+              </>
+            )}
 
             {/* Quantity */}
             <div className="mt-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tr('Quantité')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {formatHtg(unitPrice)} {currencyLabel()} / {product.unit}
+                  {guest ? product.unit : `${formatHtg(unitPrice)} ${currencyLabel()} / ${product.unit}`}
                 </p>
               </div>
               <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">
@@ -664,7 +678,7 @@ export function ProductDetailPage() {
           </Section>
         )}
 
-        <ProductReviews productId={product.id} />
+        {!guest && <ProductReviews productId={product.id} />}
       </div>
 
       {related.length > 0 && (
@@ -695,6 +709,17 @@ export function ProductDetailPage() {
             <Store className="h-5 w-5" strokeWidth={1.8} />
             <span className="text-[11px]">{tr('Magasin')}</span>
           </button>
+          {guest ? (
+            <button
+              onClick={() => navigate('/auth', { state: { from: location } })}
+              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-sm font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
+            >
+              <Lock className="h-4 w-4" aria-hidden />
+              {tr('Se connecter pour voir le prix et commander')}
+            </button>
+          ) : (
+            <>
           <button
             onClick={handleBuyNow}
             disabled={!product.stock_available}
@@ -716,6 +741,8 @@ export function ProductDetailPage() {
               <span className="truncate">{variants.length > 0 && !chosen ? tr('Choisir une option') : `${t('products.add_to_cart')} · ${formatHtg(subtotal)}`}</span>
             )}
           </button>
+            </>
+          )}
         </div>
       </div>
     </div>

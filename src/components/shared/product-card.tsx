@@ -1,4 +1,5 @@
-import { Check, Package } from 'lucide-react'
+import { Check, Lock, Package } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useI18n } from '@/lib/i18n-context'
 import { bestOffer, formatHtg, formatPriceRange, offerLabel, variantUnitPrice } from '@/lib/product-pricing'
@@ -20,12 +21,14 @@ function highlight(p: CatalogProduct): string | null {
 /** A product card; in the feed a product with variants gets one card per variant (`feed_variant`): its picture, name and price, same product page. */
 export function ProductCard({ product, onPress }: { product: CatalogProduct & { feed_variant?: ProductVariant }; onPress: () => void }) {
   const { t } = useI18n()
+  // a visitor who is not logged in sees the product without any price
+  const guest = !useAuth().user
   const extra = highlight(product)
   const variant = product.feed_variant
   const picture = variant?.image || product.images[0]
   // the card shows the price of ONE unit; a supplier offer ("2 for $48") is announced by the strip under the picture
   const unitPrice = variant ? variantUnitPrice(product, variant, product.moq) : null
-  const offer = bestOffer(product, variant)
+  const offer = guest ? null : bestOffer(product, variant)
   const inStock = product.stock_available && (variant?.stock_available ?? true)
   const logo = supplierLogo(product.supplier_name)
   const flag = flagFor(product.supplier_country)
@@ -92,6 +95,12 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
         <p className="line-clamp-2 text-[13px] leading-snug text-foreground">{product.name}</p>
         {variant && <p className="-mt-0.5 line-clamp-1 text-[11px] font-bold text-primary">{variantLabel(variant)}</p>}
 
+        {guest ? (
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-semibold text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-primary"><Lock className="h-3 w-3" aria-hidden />{tr('Prix après connexion')}</span>
+            <span className="whitespace-nowrap font-medium">{tr('MOQ :')}{' '}{product.moq}</span>
+          </p>
+        ) : (
         <p className="flex flex-wrap items-baseline gap-x-1.5 text-base font-extrabold leading-tight tracking-tight text-foreground">
           <span className="whitespace-nowrap">
             {unitPrice !== null ? formatHtg(unitPrice) : formatPriceRange(product)}
@@ -99,6 +108,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
           </span>
           <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">{tr('MOQ :')}{' '}{product.moq}</span>
         </p>
+        )}
 
         {(product.supplier_verified || supplierMeta) && (
           <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
@@ -120,7 +130,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
         )}
       </div>
     </button>
-    <WishlistButton productId={product.id} className="absolute right-2 top-2" />
+    {!guest && <WishlistButton productId={product.id} className="absolute right-2 top-2" />}
     </div>
   )
 }

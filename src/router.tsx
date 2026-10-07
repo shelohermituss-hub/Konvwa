@@ -11,6 +11,7 @@ import { SetupPage } from '@/pages/setup'
 import { AuthGuard, SetupGate } from '@/components/shared/auth-guard'
 import { AdminGuard, SuperAdminGuard } from '@/components/shared/auth-guard'
 import { HomeGuard } from '@/components/shared/home-guard'
+import { CatalogShell } from '@/components/shared/catalog-shell'
 
 // Auth
 import { AuthPage } from '@/pages/auth'
@@ -116,6 +117,18 @@ export const router = createBrowserRouter([
     ),
   },
 
+  // Catalogue: open to visitors (without prices), the full app for customers
+  {
+    path: '/',
+    errorElement: <RouteError />,
+    element: <CatalogShell />,
+    children: [
+      { path: 'products', element: <ProductsPage mode="retail" /> },
+      { path: 'wholesale', element: <ProductsPage mode="wholesale" /> },
+      { path: 'products/:id', element: <ProductDetailPage /> },
+    ],
+  },
+
   // Client routes (authenticated)
   {
     path: '/',
@@ -139,12 +152,9 @@ export const router = createBrowserRouter([
       { path: 'support', element: <SupportPage /> },
       { path: 'activity-log', element: <ActivityLogPage /> },
       { path: 'billing', element: <BillingPage /> },
-      { path: 'products', element: <ProductsPage mode="retail" /> },
-      { path: 'wholesale', element: <ProductsPage mode="wholesale" /> },
       { path: 'wishlist', element: <WishlistPage /> },
       { path: 'reseller', element: <ResellerPage /> },
       { path: 'support/:id', element: <SupportTicketPage /> },
-      { path: 'products/:id', element: <ProductDetailPage /> },
       { path: 'cart', element: <CartPage /> },
       { path: 'checkout', element: <CheckoutPage /> },
     ],

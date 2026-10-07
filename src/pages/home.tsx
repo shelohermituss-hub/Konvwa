@@ -9,7 +9,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { cn } from '@/lib/utils'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Store } from 'lucide-react'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 // ── Data ────────────────────────────────────────────────────────────────
@@ -260,10 +260,11 @@ export function HomePage() {
             <Button
               asChild
               size="lg"
-              className="btn-gradient min-h-12 rounded-full px-8 text-base"
+              className="btn-gradient min-h-14 w-full rounded-full px-8 text-base font-bold shadow-lg shadow-primary/25 sm:w-auto"
             >
-              <Link to="/auth">
-                {tr('Commencer gratuitement')}
+              <Link to="/products">
+                <Store className="mr-2 h-5 w-5" aria-hidden />
+                {tr('Voir la boutique')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -272,6 +273,14 @@ export function HomePage() {
               variant="outline"
               size="lg"
               className="min-h-12 rounded-full px-8 text-base"
+            >
+              <Link to="/auth">{tr('Commencer gratuitement')}</Link>
+            </Button>
+            <Button
+              asChild
+              variant="ghost"
+              size="lg"
+              className="min-h-12 rounded-full px-6 text-base"
             >
               <Link to="/auth">{tr('Se connecter')}</Link>
             </Button>

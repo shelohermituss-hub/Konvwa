@@ -964,4 +964,9 @@ export const FEATURES_EN: Record<string, string> = {
   "{0} achetés, {1} à -{2} %": "Buy {0}, {1} at {2}% off",
   "{0} pour {1}": "{0} for {1}",
   "la réduction s'applique par lot complet de {0}, les autres unités sont au prix normal.": "the discount applies to each full set of {0}; the other units are at the regular price.",
+  'Prix après connexion': 'Price after login',
+  'Voir la boutique': 'Browse the shop',
+  'Les prix sont visibles après connexion': 'Prices are shown after login',
+  'Se connecter pour voir le prix et commander': 'Log in to see the price and order',
+  'Créez un compte gratuit ou connectez-vous pour voir les prix et commander.': 'Create a free account or log in to see prices and order.',
 }

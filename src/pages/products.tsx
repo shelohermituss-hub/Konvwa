@@ -11,12 +11,12 @@ import { cn } from '@/lib/utils'
 import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
 import { ProductCard } from '@/components/shared/product-card'
 import { feedOrder } from '@/lib/feed-order'
-import { CATALOG_CARD_SELECT, expandVariants, productPath, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_CARD_SELECT, CATALOG_GUEST_CARD_SELECT, guestProduct, expandVariants, productPath, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 
 import { tr } from '@/lib/i18n'
 // The catalogue stays in memory and the filters in the session, so coming back from a product puts the feed back exactly as it was
-let catalogCache: CatalogProduct[] | null = null
+let catalogCache: { guest: boolean; items: CatalogProduct[] } | null = null
 const FILTERS_KEY = 'konvwa-products-filters'
 const filtersKey = (mode: CatalogMode) => `${FILTERS_KEY}-${mode}`
 type Sort = 'default' | 'price_asc' | 'price_desc' | 'popular'
@@ -30,14 +30,16 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { count } = useCart()
-  const { profile } = useAuth()
+  const { profile, user } = useAuth()
+  // a visitor who is not logged in browses the catalogue without prices (the prices come with the login)
+  const guest = !user
   const isReseller = !!profile?.is_reseller
   const navType = useNavigationType()
   // filters come back only when the user goes back to this page, a fresh visit starts clean
   const [saved] = useState<Partial<SavedFilters>>(() => (navType === 'POP' ? savedFilters(mode) : {}))
   const [wholesaleOnly, setWholesaleOnly] = useState(saved.wholesaleOnly ?? false)
-  const [products, setProducts] = useState<CatalogProduct[]>(catalogCache ?? [])
-  const [loading, setLoading] = useState(catalogCache === null)
+  const [products, setProducts] = useState<CatalogProduct[]>(catalogCache?.guest === guest ? catalogCache.items : [])
+  const [loading, setLoading] = useState(catalogCache?.guest !== guest)
   const [params] = useSearchParams()
   const [search, setSearch] = useState(params.get('q') ?? saved.search ?? '')
   const [activeCategory, setActiveCategory] = useState<string | null>(saved.activeCategory ?? null)
@@ -57,19 +59,20 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
     async function load() {
       const { data } = await supabase
         .from('products')
-        .select(CATALOG_CARD_SELECT)
+        .select((guest ? CATALOG_GUEST_CARD_SELECT : CATALOG_CARD_SELECT) as string)
         .eq('active', true)
         .eq('product_variants.active', true)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })
       if (data) {
-        catalogCache = (data as unknown as CatalogProduct[]).map(localizeProduct)
-        setProducts(catalogCache)
+        const items = (data as unknown as CatalogProduct[]).map(guest ? (p) => localizeProduct(guestProduct(p)) : localizeProduct)
+        catalogCache = { guest, items }
+        setProducts(items)
       }
       setLoading(false)
     }
     load()
-  }, [])
+  }, [guest])
 
   const priced = useMemo(() => products.map(p => resellerPriced(p, isReseller)), [products, isReseller])
   // each shelf shows its own products only
@@ -86,12 +89,13 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
       (p.supplier_name ?? '').toLowerCase().includes(search.toLowerCase())
     const matchCat = !activeCategory || p.category === activeCategory
     const price = priceRange(p).min
-    const matchPrice = (!minPrice || price >= Number(minPrice)) && (!maxPrice || price <= Number(maxPrice))
+    const matchPrice = guest || (!minPrice || price >= Number(minPrice)) && (!maxPrice || price <= Number(maxPrice))
     const matchMoq = !maxMoq || p.moq <= Number(maxMoq)
     const matchVerified = !verifiedOnly || p.supplier_verified
     const matchStock = !inStockOnly || p.stock_available
     return matchSearch && matchCat && matchPrice && matchMoq && matchVerified && matchStock
   }).sort((a, b) => {
+    if (guest) return sort === 'popular' ? (b.sold_count ?? 0) - (a.sold_count ?? 0) : 0
     if (sort === 'price_asc') return priceRange(a).min - priceRange(b).min
     if (sort === 'price_desc') return priceRange(b).min - priceRange(a).min
     if (sort === 'popular') return (b.sold_count ?? 0) - (a.sold_count ?? 0)
@@ -112,6 +116,9 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
           <h1 className="text-2xl font-bold tracking-tight">{mode === 'wholesale' ? tr('Sourcing en gros') : tr('Boutique')}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{mode === 'wholesale' ? tr('Prix usine, quantités minimales (MOQ), prix dégressifs') : tr('Produits finis, vendus à l\'unité')}</p>
         </div>
+        {guest ? (
+          <Link to="/auth" className="flex h-10 items-center rounded-2xl bg-primary px-4 text-sm font-bold text-white shadow-sm">{tr('Connexion')}</Link>
+        ) : (
         <button
           onClick={() => navigate('/cart')}
           aria-label={tr('Panier')}
@@ -124,7 +131,15 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
             </span>
           )}
         </button>
+        )}
       </div>
+
+      {guest && (
+        <p className="mx-4 mb-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs leading-relaxed text-foreground/80">
+          {tr('Créez un compte gratuit ou connectez-vous pour voir les prix et commander.')}{' '}
+          <Link to="/auth" className="font-bold text-primary underline-offset-2 hover:underline">{tr('Se connecter')}</Link>
+        </p>
+      )}
 
       <CatalogSwitch mode={mode} />
 
@@ -168,19 +183,19 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
             <select id="f-sort" value={sort} onChange={e => setSort(e.target.value as typeof sort)} className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm">
               <option value="default">{tr('Pertinence')}</option>
               <option value="popular">{tr('Plus vendus')}</option>
-              <option value="price_asc">{tr('Prix croissant')}</option>
-              <option value="price_desc">{tr('Prix décroissant')}</option>
+              {!guest && <option value="price_asc">{tr('Prix croissant')}</option>}
+              {!guest && <option value="price_desc">{tr('Prix décroissant')}</option>}
             </select>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div>
+          <div className={cn('grid gap-2', guest ? 'grid-cols-1' : 'grid-cols-3')}>
+            {!guest && <div>
               <label htmlFor="f-min" className="mb-1 block text-xs font-semibold text-muted-foreground">{tr('Prix min')}</label>
               <input id="f-min" inputMode="numeric" value={minPrice} onChange={e => setMinPrice(e.target.value.replace(/\D/g, ''))} placeholder="0" className="h-10 w-full rounded-xl border border-gray-200 px-3 text-sm" />
-            </div>
-            <div>
+            </div>}
+            {!guest && <div>
               <label htmlFor="f-max" className="mb-1 block text-xs font-semibold text-muted-foreground">{tr('Prix max')}</label>
               <input id="f-max" inputMode="numeric" value={maxPrice} onChange={e => setMaxPrice(e.target.value.replace(/\D/g, ''))} placeholder="∞" className="h-10 w-full rounded-xl border border-gray-200 px-3 text-sm" />
-            </div>
+            </div>}
             <div>
               <label htmlFor="f-moq" className="mb-1 block text-xs font-semibold text-muted-foreground">{tr('MOQ max')}</label>
               <input id="f-moq" inputMode="numeric" value={maxMoq} onChange={e => setMaxMoq(e.target.value.replace(/\D/g, ''))} placeholder="∞" className="h-10 w-full rounded-xl border border-gray-200 px-3 text-sm" />

@@ -31,8 +31,8 @@ export function AuthGuard({ children, requireAuth = true, redirectTo = '/auth' }
   }
 
   if (!requireAuth && user) {
-    const from = (location.state as { from?: Location })?.from?.pathname || '/dashboard'
-    return <Navigate to={from} replace />
+    const from = (location.state as { from?: { pathname?: string; search?: string } })?.from
+    return <Navigate to={from?.pathname ? `${from.pathname}${from.search ?? ''}` : '/dashboard'} replace />
   }
 
   return <>{children}</>
