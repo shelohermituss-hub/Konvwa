@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AdBanners } from '@/components/shared/ad-banners'
 import { SetupReminder } from '@/components/shared/setup-reminder'
 import { ProductCard } from '@/components/shared/product-card'
+import { feedOrderByPage } from '@/lib/feed-order'
 import { CATALOG_CARD_SELECT, expandVariants, productPath, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -335,7 +336,7 @@ export function DashboardPage() {
           </div>
         ) : (
           /* ── Staggered 2-column grid ── */
-          <ProductFeed products={expandVariants(products.map((p) => resellerPriced(p, isReseller)))} render={(p) => (
+          <ProductFeed products={feedOrderByPage(products.map((p) => resellerPriced(p, isReseller)), PAGE_SIZE, expandVariants)} render={(p) => (
             <ProductCard product={p} onPress={() => navigate(productPath(p))} />
           )} />
         )}

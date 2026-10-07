@@ -10,6 +10,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
 import { ProductCard } from '@/components/shared/product-card'
+import { feedOrder } from '@/lib/feed-order'
 import { CATALOG_CARD_SELECT, expandVariants, productPath, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 
@@ -256,7 +257,7 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
             )}
           </div>
         ) : (
-          <ProductFeed products={expandVariants(filtered)} render={(product) => (
+          <ProductFeed products={sort === 'default' ? feedOrder(expandVariants(filtered)) : expandVariants(filtered)} render={(product) => (
             <ProductCard product={product} onPress={() => navigate(productPath(product))} />
           )} />
         )}

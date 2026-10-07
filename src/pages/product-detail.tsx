@@ -13,6 +13,7 @@ import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, expandVariants, productPath
 import { useAuth } from '@/lib/auth-context'
 import { formatHtg, tierRows, unitPriceFor, variantUnitPrice } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
+import { feedOrder } from '@/lib/feed-order'
 import { ProductReviews } from '@/components/shared/product-reviews'
 import { WishlistButton } from '@/components/shared/wishlist-button'
 import { ImageViewer } from '@/components/shared/image-viewer'
@@ -662,7 +663,7 @@ export function ProductDetailPage() {
       {related.length > 0 && (
         <div id="section-related" className="scroll-mt-28 px-3 pt-4">
           <h2 className="mb-3 px-1 text-base font-bold tracking-tight">{tr('Autres produits')}</h2>
-          <ProductFeed products={expandVariants(related)} render={(p) => (
+          <ProductFeed products={feedOrder(expandVariants(related))} render={(p) => (
             <ProductCard product={p} onPress={() => navigate(productPath(p))} />
           )} />
         </div>
