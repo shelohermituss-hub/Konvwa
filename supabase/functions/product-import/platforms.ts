@@ -24,7 +24,7 @@ export const PLATFORMS: Record<PlatformId, Platform> = {
 
 const HOSTS: Array<[Exclude<PlatformId, 'amazon'>, RegExp]> = [
   ['shein', /^(?:www\.|m\.|[a-z]{2,3}\.)?shein\.(?:com|fr|co\.uk|de|es|it|ca|com\.mx|com\.au)$|^shein\.top$|^(?:api-shein|onelink)\.shein\.com$/i],
-  ['alibaba', /^(?:www\.|m\.|[a-z]{2,10}\.)?alibaba\.com$|^detail\.1688\.com$|^m\.1688\.com$/i],
+  ['alibaba', /^(?:www\.|m\.|s\.|[a-z]{2,10}\.)?alibaba\.com$|^detail\.1688\.com$|^m\.1688\.com$/i],
   ['temu', /^(?:www\.|m\.|app\.|share\.)?temu\.com$|^temu\.to$/i],
   ['muscle_strength', /^(?:www\.)?muscleandstrength\.com$/i],
 ]
@@ -42,7 +42,7 @@ export interface ProductTarget {
 }
 
 /** The hosts of the apps' "share" links: they only redirect to the product page. */
-const SHORT_HOSTS = /^(?:shein\.top|api-shein\.shein\.com|onelink\.shein\.com|temu\.to|share\.temu\.com|app\.temu\.com)$/i
+const SHORT_HOSTS = /^(?:s\.alibaba\.com|shein\.top|api-shein\.shein\.com|onelink\.shein\.com|temu\.to|share\.temu\.com|app\.temu\.com)$/i
 
 function cleanHttps(raw: string): URL | null {
   let url: URL
@@ -67,6 +67,8 @@ export function parseProductUrl(raw: string): ProductTarget | null {
   const platform = PLATFORMS[hit[0]]
   // a share link keeps its whole address (the code is in the path / query): it is only used to follow its redirects
   if (SHORT_HOSTS.test(host)) return { platform, url: url.toString(), id: null, short: true }
+  // Alibaba app / website share links: alibaba.com/x/AbC123?ck=pdp
+  if (platform.id === 'alibaba' && /^\/x\/[A-Za-z0-9_-]{3,20}\/?$/.test(url.pathname)) return { platform, url: `https://${host}${url.pathname}`, id: null, short: true }
   const path = url.pathname
   let id: string | null = null
   const keep = new URLSearchParams()

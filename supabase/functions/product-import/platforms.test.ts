@@ -20,6 +20,8 @@ describe('parseProductUrl', () => {
     }
     expect(parseProductUrl('https://www.temu.com/fr/some-product-g-601099512345678.html?x=1')).toMatchObject({ platform: { id: 'temu' }, id: '601099512345678' })
     expect(parseProductUrl('https://fr.shein.com/Robe-p-12345678.html')).toMatchObject({ platform: { id: 'shein' }, id: '12345678' })
+    expect(parseProductUrl('https://www.alibaba.com/x/B2XYex?ck=pdp')).toMatchObject({ platform: { id: 'alibaba' }, short: true, id: null, url: 'https://www.alibaba.com/x/B2XYex' })
+    expect(parseProductUrl('https://www.alibaba.com/product-detail/Bottle_1600123456789.html')).toMatchObject({ id: '1600123456789' })
     expect(parseProductUrl('https://temu.to.evil.test/k/abc')).toBeNull()
     expect(parseProductUrl('https://www.shein.top.evil.test/x')).toBeNull()
   })
