@@ -11,7 +11,7 @@ import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, expandVariants, productPath, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
-import { formatHtg, tierRows, unitPriceFor, variantUnitPrice } from '@/lib/product-pricing'
+import { bestOffer, effectiveUnitPrice, formatHtg, lineTotal, offerLabel, tierRows, variantUnitPrice } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
 import { feedOrder } from '@/lib/feed-order'
 import { ProductReviews } from '@/components/shared/product-reviews'
@@ -216,8 +216,9 @@ export function ProductDetailPage() {
     return acc
   }, [])
   const rows = tierRows(product).map((r) => (priced ? { ...r, price: variantUnitPrice(product, priced, r.from) } : r))
-  const unitPrice = priced ? variantUnitPrice(product, priced, quantity) : unitPriceFor(product, quantity)
-  const subtotal = unitPrice * quantity
+  const unitPrice = effectiveUnitPrice(product, quantity, priced)
+  const subtotal = lineTotal(product, quantity, priced)
+  const offer = bestOffer(product, chosen)
   const specs = Object.entries(product.specifications ?? {})
   const shownSpecs = allSpecs ? specs : specs.slice(0, SPEC_PREVIEW)
   const shownOptions = allOptions ? product.customization_options : product.customization_options.slice(0, OPTION_PREVIEW)
@@ -482,6 +483,12 @@ export function ProductDetailPage() {
             </div>
             {rows.length === 1 && (
               <p className="mt-2 text-sm text-muted-foreground">{tr('Commande minimale :')}{' '}{product.moq} {product.unit}</p>
+            )}
+            {offer && (
+              <p className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900">
+                <span className="font-bold uppercase">{offerLabel(offer)}</span>{' · '}
+                {tr('la réduction s\'applique par lot complet de {0}, les autres unités sont au prix normal.', offer.min_qty)}
+              </p>
             )}
 
             {/* Quantity */}

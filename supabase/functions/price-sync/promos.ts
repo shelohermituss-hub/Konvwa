@@ -1,6 +1,7 @@
 // Quantity offers shown on a supplier page ("2 for $40", "buy 1 get 1 free") turned into price tiers. Pure: unit-tested with vitest.
 
-export interface Tier { min_qty: number; unit_usd: number }
+/** One offer as a price tier: `min_qty` units in a pack, each costing `unit_usd`; the kind and numbers let the shop name the offer. */
+export interface Tier { min_qty: number; unit_usd: number; kind?: 'multi_buy' | 'free_item'; buy?: number; free?: number; off?: number }
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 const int = (v: unknown, min: number, max: number): number | null => {
@@ -26,11 +27,11 @@ export function promoTiers(baseUsd: number, raw: unknown): Tier[] {
     const o = (item ?? {}) as Record<string, unknown>
     if (o.kind === 'multi_buy') {
       const n = int(o.qty, 2, 50); const total = money(o.total_price)
-      if (n && total) found.push({ min_qty: n, unit_usd: round2(total / n) })
+      if (n && total) found.push({ min_qty: n, unit_usd: round2(total / n), kind: 'multi_buy', buy: n })
     } else if (o.kind === 'free_item') {
       const buy = int(o.qty, 1, 20); const free = int(o.free_qty, 1, 20)
       const off = int(o.discount_percent, 1, 100) ?? 100
-      if (buy && free) found.push({ min_qty: buy + free, unit_usd: round2((baseUsd * (buy + (free * (100 - off)) / 100)) / (buy + free)) })
+      if (buy && free) found.push({ min_qty: buy + free, unit_usd: round2((baseUsd * (buy + (free * (100 - off)) / 100)) / (buy + free)), kind: 'free_item', buy, free, off })
     }
   }
   // sorted by quantity; per quantity the cheapest offer; the unit price must go down as the quantity goes up

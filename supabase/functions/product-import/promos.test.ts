@@ -3,18 +3,18 @@ import { cartDiscountedPrice, impliedUsd, needsReview, promoTiers } from './prom
 
 describe('promoTiers', () => {
   it('reads "2 for $40" as 2 units at $20', () => {
-    expect(promoTiers(25, [{ kind: 'multi_buy', qty: 2, total_price: 40 }])).toEqual([{ min_qty: 2, unit_usd: 20 }])
+    expect(promoTiers(25, [{ kind: 'multi_buy', qty: 2, total_price: 40 }])).toMatchObject([{ min_qty: 2, unit_usd: 20 }])
   })
   it('reads "buy 1 get 1 free" as 2 units at half price, "buy 2 get 1 free" as 3 units at two thirds', () => {
-    expect(promoTiers(30, [{ kind: 'free_item', qty: 1, free_qty: 1 }])).toEqual([{ min_qty: 2, unit_usd: 15 }])
-    expect(promoTiers(30, [{ kind: 'free_item', qty: 2, free_qty: 1 }])).toEqual([{ min_qty: 3, unit_usd: 20 }])
+    expect(promoTiers(30, [{ kind: 'free_item', qty: 1, free_qty: 1 }])).toMatchObject([{ min_qty: 2, unit_usd: 15 }])
+    expect(promoTiers(30, [{ kind: 'free_item', qty: 2, free_qty: 1 }])).toMatchObject([{ min_qty: 3, unit_usd: 20 }])
   })
   it('combines several offers, the unit price going down with the quantity', () => {
-    expect(promoTiers(35, [{ kind: 'multi_buy', qty: 3, total_price: 90 }, { kind: 'multi_buy', qty: 2, total_price: 60 }])).toEqual([{ min_qty: 2, unit_usd: 30 }])
-    expect(promoTiers(35, [{ kind: 'multi_buy', qty: 3, total_price: 75 }, { kind: 'multi_buy', qty: 2, total_price: 60 }])).toEqual([{ min_qty: 2, unit_usd: 30 }, { min_qty: 3, unit_usd: 25 }])
+    expect(promoTiers(35, [{ kind: 'multi_buy', qty: 3, total_price: 90 }, { kind: 'multi_buy', qty: 2, total_price: 60 }])).toMatchObject([{ min_qty: 2, unit_usd: 30 }])
+    expect(promoTiers(35, [{ kind: 'multi_buy', qty: 3, total_price: 75 }, { kind: 'multi_buy', qty: 2, total_price: 60 }])).toMatchObject([{ min_qty: 2, unit_usd: 30 }, { min_qty: 3, unit_usd: 25 }])
   })
   it('keeps the cheapest offer of a quantity and drops offers that do not lower the price', () => {
-    expect(promoTiers(20, [{ kind: 'multi_buy', qty: 2, total_price: 36 }, { kind: 'multi_buy', qty: 2, total_price: 34 }])).toEqual([{ min_qty: 2, unit_usd: 17 }])
+    expect(promoTiers(20, [{ kind: 'multi_buy', qty: 2, total_price: 36 }, { kind: 'multi_buy', qty: 2, total_price: 34 }])).toMatchObject([{ min_qty: 2, unit_usd: 17 }])
     expect(promoTiers(20, [{ kind: 'multi_buy', qty: 2, total_price: 40 }, { kind: 'multi_buy', qty: 3, total_price: 70 }])).toEqual([])
   })
   it('ignores other kinds, absurd values and garbage', () => {
@@ -36,6 +36,13 @@ describe('needsReview', () => {
   })
 })
 
+describe('offer details', () => {
+  it('keeps the kind and the numbers so the shop can name the offer', () => {
+    expect(promoTiers(30, [{ kind: 'multi_buy', qty: 2, total_price: 48 }])).toEqual([{ min_qty: 2, unit_usd: 24, kind: 'multi_buy', buy: 2 }])
+    expect(promoTiers(30, [{ kind: 'free_item', qty: 1, free_qty: 1 }])).toEqual([{ min_qty: 2, unit_usd: 15, kind: 'free_item', buy: 1, free: 1, off: 100 }])
+  })
+})
+
 describe('impliedUsd', () => {
   it('goes back from a shop price to the supplier price', () => {
     expect(impliedUsd(4025, 140, 15)).toBe(25)
@@ -46,10 +53,10 @@ describe('impliedUsd', () => {
 
 describe('the offers of Muscle & Strength', () => {
   it('reads "Buy 1 Get 1 50% Off" as 2 units at 75% of the price', () => {
-    expect(promoTiers(40, [{ kind: 'free_item', qty: 1, free_qty: 1, discount_percent: 50 }])).toEqual([{ min_qty: 2, unit_usd: 30 }])
+    expect(promoTiers(40, [{ kind: 'free_item', qty: 1, free_qty: 1, discount_percent: 50 }])).toMatchObject([{ min_qty: 2, unit_usd: 30 }])
   })
   it('reads "Buy X Get Y Free" with any numbers', () => {
-    expect(promoTiers(20, [{ kind: 'free_item', qty: 3, free_qty: 1 }])).toEqual([{ min_qty: 4, unit_usd: 15 }])
+    expect(promoTiers(20, [{ kind: 'free_item', qty: 3, free_qty: 1 }])).toMatchObject([{ min_qty: 4, unit_usd: 15 }])
   })
   it('takes an in-cart discount off the unit price, never more than 50%', () => {
     expect(cartDiscountedPrice(40, [{ kind: 'cart_discount', percent: 15 }])).toBe(34)

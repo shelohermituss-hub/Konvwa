@@ -364,7 +364,7 @@ Deno.serve(async (req) => {
     const own = priceToUsd(scraped.price, scraped.currency || fallbackCurrency, rates)
     // Muscle & Strength: the product price is the price of ONE unit (after an "In Cart Discount"); its quantity offers become price tiers
     const retailUnit = platform.id === 'muscle_strength' && own.usd !== null ? cartDiscountedPrice(own.usd, scraped.promotions) : null
-    const offerTiers = retailUnit !== null ? promoTiers(retailUnit, scraped.promotions).map((t) => ({ min_qty: t.min_qty, price_usd: t.unit_usd })) : []
+    const offerTiers = retailUnit !== null ? promoTiers(retailUnit, scraped.promotions).map((t) => ({ min_qty: t.min_qty, price_usd: t.unit_usd, kind: t.kind, buy: t.buy, free: t.free, off: t.off })) : []
     const price = ladder.base_usd !== null ? { usd: ladder.base_usd } as typeof own : retailUnit !== null ? { usd: retailUnit } as typeof own : own
     if (price.warning) warnings.push(price.warning)
     if (platform.id === 'alibaba' && ladder.tiers.length === 0) warnings.push('tiers_missing')

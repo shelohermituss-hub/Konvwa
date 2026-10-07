@@ -782,6 +782,12 @@ BEGIN
   ASSERT (SELECT product_price_htg FROM product_order_items WHERE order_id = (r->>'order_id')::uuid) = 700, 'the base option gets the offer';
   r := public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', pid, 'variant_id', v2, 'quantity', 2)));
   ASSERT (SELECT product_price_htg FROM product_order_items WHERE order_id = (r->>'order_id')::uuid) = 1200, 'another variant must keep its own price';
+  -- offers are packs: 3 units = one pack of 2 (2 x 700) + one unit at the regular price; 4 units = two packs
+  r := public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', pid, 'variant_id', v1, 'quantity', 3)));
+  ASSERT (SELECT subtotal_htg FROM product_order_items WHERE order_id = (r->>'order_id')::uuid) = 2400, 'odd quantity: one pack + one unit';
+  r := public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', pid, 'variant_id', v1, 'quantity', 4)));
+  ASSERT (SELECT subtotal_htg FROM product_order_items WHERE order_id = (r->>'order_id')::uuid) = 2800, 'even quantity: two packs';
+  ASSERT (SELECT total_htg FROM product_orders WHERE id = (r->>'order_id')::uuid) = 2800, 'order total follows the line subtotal';
   RESET ROLE;
 END $$;
 

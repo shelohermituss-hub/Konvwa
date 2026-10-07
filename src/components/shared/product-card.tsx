@@ -1,7 +1,7 @@
 import { Check, Package } from 'lucide-react'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useI18n } from '@/lib/i18n-context'
-import { formatHtg, formatPriceRange, variantPriceRange } from '@/lib/product-pricing'
+import { bestOffer, formatHtg, formatPriceRange, offerLabel, variantUnitPrice } from '@/lib/product-pricing'
 import { variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { WishlistButton } from '@/components/shared/wishlist-button'
 import { flagFor, supplierLogo } from '@/lib/supplier-badges'
@@ -23,7 +23,9 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
   const extra = highlight(product)
   const variant = product.feed_variant
   const picture = variant?.image || product.images[0]
-  const range = variant ? variantPriceRange(product, variant) : null
+  // the card shows the price of ONE unit; a supplier offer ("2 for $48") is announced by the strip under the picture
+  const unitPrice = variant ? variantUnitPrice(product, variant, product.moq) : null
+  const offer = bestOffer(product, variant)
   const inStock = product.stock_available && (variant?.stock_available ?? true)
   const logo = supplierLogo(product.supplier_name)
   const flag = flagFor(product.supplier_country)
@@ -82,6 +84,9 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
           </div>
         )}
       </div>
+      {offer && (
+        <p className="truncate bg-emerald-600 px-3 py-1.5 text-[11px] font-bold uppercase leading-tight tracking-wide text-white">{offerLabel(offer)}</p>
+      )}
 
       <div className="space-y-1.5 p-3">
         <p className="line-clamp-2 text-[13px] leading-snug text-foreground">{product.name}</p>
@@ -89,7 +94,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
 
         <p className="flex flex-wrap items-baseline gap-x-1.5 text-base font-extrabold leading-tight tracking-tight text-foreground">
           <span className="whitespace-nowrap">
-            {range ? (range.min === range.max ? formatHtg(range.min) : `${formatHtg(range.min)} – ${formatHtg(range.max)}`) : formatPriceRange(product)}
+            {unitPrice !== null ? formatHtg(unitPrice) : formatPriceRange(product)}
             <span className="ml-1 text-[11px] font-semibold text-muted-foreground">{currencyLabel()}</span>
           </span>
           <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">{tr('MOQ :')}{' '}{product.moq}</span>

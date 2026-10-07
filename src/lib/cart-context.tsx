@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { LANG } from '@/lib/i18n'
 import { useAuth } from '@/lib/auth-context'
-import { unitPriceFor, variantUnitPrice } from '@/lib/product-pricing'
+import { effectiveUnitPrice } from '@/lib/product-pricing'
 import { resellerPriced, variantLabel, VARIANT_SELECT, type ProductVariant } from '@/lib/catalog'
 
 export interface CartItem {
@@ -42,7 +42,8 @@ interface CartContextType {
 /** Unit price shown for a cart line (the order itself is priced by the database). */
 export function cartLineUnitPrice(item: CartItem): number {
   if (!item.products) return 0
-  return item.product_variants ? variantUnitPrice(item.products, item.product_variants, item.quantity) : unitPriceFor(item.products, item.quantity)
+  // the average price of one unit of the line: supplier offers ("2 for $48") count by full packs, the other units at the regular price
+  return effectiveUnitPrice(item.products, item.quantity, item.product_variants)
 }
 
 export const CART_PRODUCT_SELECT = 'id, name, name_en, reseller_discount_pct, price_htg, price_tiers, images, unit, moq, stock_available, supplier_country'

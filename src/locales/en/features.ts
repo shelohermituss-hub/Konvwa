@@ -959,4 +959,9 @@ export const FEATURES_EN: Record<string, string> = {
   "Pas encore contrôlé": "Not checked yet",
   "Offre du fournisseur : mise à jour chaque nuit, retirée quand l'offre disparaît. Modifiez-la pour la fixer.": "Supplier offer: updated every night, removed when the offer ends. Edit it to make it permanent.",
   "Offre auto": "Auto offer",
+  "{0} acheté, {1} offert": "Buy {0}, get {1} free",
+  "{0} acheté, le suivant à -{1} %": "Buy {0}, the next one {1}% off",
+  "{0} achetés, {1} à -{2} %": "Buy {0}, {1} at {2}% off",
+  "{0} pour {1}": "{0} for {1}",
+  "la réduction s'applique par lot complet de {0}, les autres unités sont au prix normal.": "the discount applies to each full set of {0}; the other units are at the regular price.",
 }
