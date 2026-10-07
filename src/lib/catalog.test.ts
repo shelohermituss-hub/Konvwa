@@ -45,6 +45,6 @@ describe('expandVariants', () => {
   })
   it('merges variants that share a picture and caps the cards of one product', () => {
     expect(expandVariants([base([v('s', 'red.jpg', 1), v('m', 'red.jpg', 2), v('l', 'blue.jpg', 3)])])).toHaveLength(2)
-    expect(expandVariants([base(Array.from({ length: 30 }, (_, i) => v(`v${i}`, `${i}.jpg`, i)))])).toHaveLength(8)
+    expect(expandVariants([base(Array.from({ length: 30 }, (_, i) => v(`v${i}`, `${i}.jpg`, i)))])).toHaveLength(3)
   })
 })

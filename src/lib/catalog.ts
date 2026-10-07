@@ -102,13 +102,13 @@ export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications, vi
 /** One card of the feed: a product, or one variant of a product (it then opens the same product page). */
 export type FeedItem = CatalogProduct & { feed_key: string; feed_variant?: ProductVariant }
 
-const MAX_CARDS_PER_PRODUCT = 8
+const MAX_CARDS_PER_PRODUCT = 3
 /** Name of a colour option group ("Couleur", "Couleur / Taille", "Color"…). */
 const COLOUR_GROUP = /couleur|colou?r|coloris|teinte/i
 
 /**
  * A product with variants shows up as one card per variant (its picture, name and price), all opening the same product page.
- * Only colour variants with a picture get a card; variants sharing a picture (sizes of one colour) make a single one, and a product never takes more than 8 cards.
+ * Only colour variants with a picture get a card; variants sharing a picture (sizes of one colour) make a single one, and a product never takes more than 3 cards.
  * A product whose variants have no picture stays one plain card.
  */
 export function expandVariants(products: CatalogProduct[]): FeedItem[] {
