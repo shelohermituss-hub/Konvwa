@@ -11,7 +11,7 @@ export function ProductFeed<T extends { id: string }>({ products, render }: { pr
   return (
     <MasonryGrid<FeedEntry<T, Ad>>
       items={entries}
-      getKey={(e) => (e.kind === 'ad' ? `ad-${e.ad.id}-${e.slot}` : e.item.id)}
+      getKey={(e) => (e.kind === 'ad' ? `ad-${e.ad.id}-${e.slot}` : (e.item as { feed_key?: string }).feed_key ?? e.item.id)}
       render={(e) => (e.kind === 'ad' ? <SponsoredCard ad={e.ad} /> : render(e.item))}
     />
   )

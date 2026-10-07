@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ProductFeed } from '@/components/shared/product-feed'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   CheckCircle2, ChevronDown, ChevronLeft, Headset, Loader2, Lock, MessageCircle, Minus, Package,
   Play, Plus, Search, Share2, ShieldCheck, ShoppingCart, Star, Store, Truck, Wallet, Zap,
@@ -9,7 +9,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
-import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
+import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, expandVariants, productPath, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 import { formatHtg, tierRows, unitPriceFor, variantUnitPrice } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
@@ -51,6 +51,8 @@ function Section({ id, title, children }: { id?: string; title: string; children
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
+  const wantedVariant = searchParams.get('variant')
   const navigate = useNavigate()
   const { t } = useI18n()
   const { addItem, count } = useCart()
@@ -87,11 +89,18 @@ export function ProductDetailPage() {
         setProduct(p)
         if (p) setQuantity(p.moq)
         setActiveImg(0)
-        setVariantId(null)
+        // a variant card of the feed opens the page with that variant already chosen (and its photo shown)
+        const at = p?.product_variants?.find((v) => v.id === wantedVariant)
+        setVariantId(at?.id ?? null)
+        if (p && at?.image) {
+          const photos = [...p.images, ...sortVariants(p.product_variants).map((v) => v.image).filter((u): u is string => !!u)].filter((u, i, all) => all.indexOf(u) === i)
+          const index = photos.indexOf(at.image)
+          if (index > 0) window.setTimeout(() => galleryRef.current?.scrollTo({ left: index * galleryRef.current.clientWidth }), 60)
+        }
         setLoading(false)
         window.scrollTo?.({ top: 0 })
       })
-  }, [id, isReseller])
+  }, [id, isReseller, wantedVariant])
 
   useEffect(() => {
     if (!product?.category) { setRelated([]); return }
@@ -99,6 +108,7 @@ export function ProductDetailPage() {
       .from('products')
       .select(CATALOG_CARD_SELECT)
       .eq('active', true)
+      .eq('product_variants.active', true)
       .eq('category', product.category)
       .neq('id', product.id)
       .limit(8)
@@ -652,8 +662,8 @@ export function ProductDetailPage() {
       {related.length > 0 && (
         <div id="section-related" className="scroll-mt-28 px-3 pt-4">
           <h2 className="mb-3 px-1 text-base font-bold tracking-tight">{tr('Autres produits')}</h2>
-          <ProductFeed products={related} render={(p) => (
-            <ProductCard product={p} onPress={() => navigate(`/products/${p.id}`)} />
+          <ProductFeed products={expandVariants(related)} render={(p) => (
+            <ProductCard product={p} onPress={() => navigate(productPath(p))} />
           )} />
         </div>
       )}

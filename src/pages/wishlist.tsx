@@ -5,7 +5,7 @@ import { ChevronLeft, Heart } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useWishlist } from '@/lib/wishlist-context'
 import { ProductCard } from '@/components/shared/product-card'
-import { CATALOG_CARD_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 import { tr } from '@/lib/i18n'
 
@@ -21,7 +21,7 @@ export function WishlistPage() {
     const list = [...ids]
     if (list.length === 0) { setProducts([]); setLoading(false); return }
     let cancelled = false
-    void supabase.from('products').select(CATALOG_CARD_SELECT).eq('active', true).in('id', list).then(({ data }) => {
+    void supabase.from('products').select(CATALOG_LIST_SELECT).eq('active', true).in('id', list).then(({ data }) => {
       if (cancelled) return
       setProducts(((data ?? []) as unknown as CatalogProduct[]).map(localizeProduct).map(p => resellerPriced(p, isReseller)))
       setLoading(false)

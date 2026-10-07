@@ -69,8 +69,8 @@ export function sortVariants(list: ProductVariant[] | null | undefined): Product
 export const CATALOG_LIST_SELECT =
   'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, reseller_discount_pct, wholesale_only, sale_type'
 
-/** What the catalogue cards need: the list columns plus a light embed of the variants (picture and name) shown under the price. */
-export const CATALOG_CARD_SELECT = `${CATALOG_LIST_SELECT}, product_variants(id, label, label_en, image, sort_order, stock_available)`
+/** What the catalogue cards need: the list columns plus the variants, each shown in the feed as a card of its own. */
+export const CATALOG_CARD_SELECT = `${CATALOG_LIST_SELECT}, product_variants(id, label, label_en, group_name, price_htg, image, sort_order, stock_available)`
 
 /** In English, shows the English content the admin wrote (field by field, falling back to the original). */
 export function localizeProduct<T extends CatalogProduct>(p: T): T {
@@ -98,3 +98,30 @@ export function resellerPriced<T extends { price_htg: number; price_tiers?: unkn
 }
 
 export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications, video_url, product_variants(${VARIANT_SELECT})`
+
+/** One card of the feed: a product, or one variant of a product (it then opens the same product page). */
+export type FeedItem = CatalogProduct & { feed_key: string; feed_variant?: ProductVariant }
+
+const MAX_CARDS_PER_PRODUCT = 8
+
+/**
+ * A product with variants shows up as one card per variant (its picture, name and price), all opening the same product page.
+ * Variants sharing a picture (sizes of one colour) make a single card, and a product never takes more than 8 cards.
+ */
+export function expandVariants(products: CatalogProduct[]): FeedItem[] {
+  return products.flatMap((p): FeedItem[] => {
+    const seen = new Set<string>()
+    const cards = sortVariants(p.product_variants).filter((v) => {
+      const key = v.image || `label:${v.label}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    }).slice(0, MAX_CARDS_PER_PRODUCT)
+    return cards.length === 0 ? [{ ...p, feed_key: p.id }] : cards.map((v) => ({ ...p, feed_key: `${p.id}:${v.id}`, feed_variant: v }))
+  })
+}
+
+/** Address of the product page; a variant card opens it with that variant already chosen. */
+export function productPath(item: { id: string; feed_variant?: { id: string } }): string {
+  return `/products/${item.id}${item.feed_variant ? `?variant=${item.feed_variant.id}` : ''}`
+}

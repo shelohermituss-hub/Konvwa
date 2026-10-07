@@ -1,17 +1,14 @@
 import { Check, Package } from 'lucide-react'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useI18n } from '@/lib/i18n-context'
-import { formatPriceRange } from '@/lib/product-pricing'
-import { sortVariants, variantLabel, type CatalogProduct } from '@/lib/catalog'
+import { formatHtg, formatPriceRange, variantPriceRange } from '@/lib/product-pricing'
+import { variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { WishlistButton } from '@/components/shared/wishlist-button'
 import { flagFor, supplierLogo } from '@/lib/supplier-badges'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { currencyLabel } from '@/lib/currency'
 import { cn } from '@/lib/utils'
-/** Variant pictures / names shown under a card; the rest is summed up as "+N". */
-const MAX_VARIANT_CHIPS = 4
-
 /** The single most persuasive fact we have about the product, shown under the supplier line. */
 function highlight(p: CatalogProduct): string | null {
   if (p.repurchase_rate != null) return tr('Taux de réachat de {0} %', p.repurchase_rate)
@@ -21,9 +18,14 @@ function highlight(p: CatalogProduct): string | null {
   return null
 }
 
-export function ProductCard({ product, onPress }: { product: CatalogProduct; onPress: () => void }) {
+/** A product card; in the feed a product with variants gets one card per variant (`feed_variant`): its picture, name and price, same product page. */
+export function ProductCard({ product, onPress }: { product: CatalogProduct & { feed_variant?: ProductVariant }; onPress: () => void }) {
   const { t } = useI18n()
   const extra = highlight(product)
+  const variant = product.feed_variant
+  const picture = variant?.image || product.images[0]
+  const range = variant ? variantPriceRange(product, variant) : null
+  const inStock = product.stock_available && (variant?.stock_available ?? true)
   const logo = supplierLogo(product.supplier_name)
   const flag = flagFor(product.supplier_country)
   const supplierMeta = [
@@ -31,16 +33,16 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
     product.supplier_country,
   ].filter(Boolean).join(' · ')
 
-  const variants = sortVariants(product.product_variants)
-  const shownVariants = variants.slice(0, MAX_VARIANT_CHIPS)
-
   return (
     <div className="relative mb-3 break-inside-avoid">
-    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-transform duration-100 has-[>button:active]:scale-[0.98]">
-    <button type="button" onClick={onPress} className="block w-full text-left">
+    <button
+      type="button"
+      onClick={onPress}
+      className="block w-full overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition-transform duration-100 active:scale-[0.98]"
+    >
       <div className="relative min-h-32 bg-gray-50">
-        {product.images.length > 0 ? (
-          <img src={product.images[0]} alt={product.name} loading="lazy" className="block h-auto w-full" />
+        {picture ? (
+          <img src={picture} alt={variant ? `${product.name} – ${variantLabel(variant)}` : product.name} loading="lazy" className="block h-auto w-full" />
         ) : (
           <div className="flex aspect-square w-full flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 shadow-sm">
@@ -78,7 +80,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
             )}
           </div>
         )}
-        {!product.stock_available && (
+        {!inStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70">
             <span className="rounded-full border border-destructive/20 bg-white/90 px-2 py-1 text-[10px] font-bold text-destructive">
               {t('products.out_of_stock')}
@@ -89,10 +91,11 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
 
       <div className="space-y-1.5 p-3">
         <p className="line-clamp-2 text-[13px] leading-snug text-foreground">{product.name}</p>
+        {variant && <p className="-mt-0.5 line-clamp-1 text-[11px] font-bold text-primary">{variantLabel(variant)}</p>}
 
         <p className="flex flex-wrap items-baseline gap-x-1.5 text-base font-extrabold leading-tight tracking-tight text-foreground">
           <span className="whitespace-nowrap">
-            {formatPriceRange(product)}
+            {range ? (range.min === range.max ? formatHtg(range.min) : `${formatHtg(range.min)} – ${formatHtg(range.max)}`) : formatPriceRange(product)}
             <span className="ml-1 text-[11px] font-semibold text-muted-foreground">{currencyLabel()}</span>
           </span>
           <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">{tr('MOQ :')}{' '}{product.moq}</span>
@@ -118,35 +121,6 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
         )}
       </div>
     </button>
-    {variants.length > 0 && (
-      <ul className="flex flex-wrap items-center gap-1.5 px-3 pb-3" aria-label={tr('Options')}>
-        {shownVariants.map((v) => (
-          <li key={v.id}>
-            <button
-              type="button"
-              onClick={onPress}
-              aria-label={variantLabel(v)}
-              title={variantLabel(v)}
-              className={cn(
-                'flex h-8 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white text-[10px] font-semibold text-foreground transition-colors active:scale-95',
-                v.image ? 'w-8' : 'max-w-[4.5rem] px-1.5',
-                !v.stock_available && 'opacity-40',
-              )}
-            >
-              {v.image ? <img src={v.image} alt="" loading="lazy" className="h-full w-full object-cover" /> : <span className="truncate">{variantLabel(v)}</span>}
-            </button>
-          </li>
-        ))}
-        {variants.length > shownVariants.length && (
-          <li>
-            <button type="button" onClick={onPress} className="flex h-8 items-center rounded-lg bg-muted px-2 text-[11px] font-bold text-muted-foreground active:scale-95">
-              +{variants.length - shownVariants.length}
-            </button>
-          </li>
-        )}
-      </ul>
-    )}
-    </div>
     <WishlistButton productId={product.id} className="absolute right-2 top-2" />
     </div>
   )

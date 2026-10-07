@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resellerPriced } from './catalog'
+import { expandVariants, productPath, resellerPriced, type CatalogProduct } from './catalog'
 
 describe('resellerPriced', () => {
   const p = { price_htg: 155, price_tiers: [{ min_qty: 500, price_htg: 142 }], reseller_discount_pct: 20 }
@@ -13,5 +13,26 @@ describe('resellerPriced', () => {
     expect(resellerPriced(p, false)).toBe(p)
     const plain = { price_htg: 10, reseller_discount_pct: 0 }
     expect(resellerPriced(plain, true)).toBe(plain)
+  })
+})
+
+describe('expandVariants', () => {
+  const v = (id: string, image: string | null, order: number) => ({ id, label: id, label_en: null, group_name: null, price_htg: 100, image, stock_available: true, sort_order: order })
+  const base = (variants: ReturnType<typeof v>[]) => ({ id: 'p1', product_variants: variants }) as unknown as CatalogProduct
+
+  it('makes one card per variant, all opening the same product', () => {
+    const cards = expandVariants([base([v('a', 'a.jpg', 2), v('b', 'b.jpg', 1), v('c', 'c.jpg', 3)])])
+    expect(cards.map((c) => c.feed_key)).toEqual(['p1:b', 'p1:a', 'p1:c'])
+    expect(cards.map((c) => productPath(c))).toEqual(['/products/p1?variant=b', '/products/p1?variant=a', '/products/p1?variant=c'])
+  })
+  it('keeps a product without variants as one plain card', () => {
+    const cards = expandVariants([base([])])
+    expect(cards).toHaveLength(1)
+    expect(cards[0].feed_variant).toBeUndefined()
+    expect(productPath(cards[0])).toBe('/products/p1')
+  })
+  it('merges variants that share a picture and caps the cards of one product', () => {
+    expect(expandVariants([base([v('s', 'red.jpg', 1), v('m', 'red.jpg', 2), v('l', 'blue.jpg', 3)])])).toHaveLength(2)
+    expect(expandVariants([base(Array.from({ length: 30 }, (_, i) => v(`v${i}`, `${i}.jpg`, i)))])).toHaveLength(8)
   })
 })

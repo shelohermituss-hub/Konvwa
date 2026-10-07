@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AdBanners } from '@/components/shared/ad-banners'
 import { SetupReminder } from '@/components/shared/setup-reminder'
 import { ProductCard } from '@/components/shared/product-card'
-import { CATALOG_CARD_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_CARD_SELECT, expandVariants, productPath, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -99,6 +99,7 @@ export function DashboardPage() {
       .from('products')
       .select(CATALOG_CARD_SELECT)
       .eq('active', true)
+      .eq('product_variants.active', true)
       .order('featured', { ascending: false })
       .order('created_at', { ascending: false })
       .range(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE - 1)
@@ -334,8 +335,8 @@ export function DashboardPage() {
           </div>
         ) : (
           /* ── Staggered 2-column grid ── */
-          <ProductFeed products={products} render={(p) => (
-            <ProductCard product={resellerPriced(p, isReseller)} onPress={() => navigate(`/products/${p.id}`)} />
+          <ProductFeed products={expandVariants(products.map((p) => resellerPriced(p, isReseller)))} render={(p) => (
+            <ProductCard product={p} onPress={() => navigate(productPath(p))} />
           )} />
         )}
 

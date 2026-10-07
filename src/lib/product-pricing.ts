@@ -82,3 +82,15 @@ export function formatPriceRange(product: PricedProduct): string {
   const { min, max } = priceRange(product)
   return min === max ? formatHtg(min) : `${formatHtg(min)} – ${formatHtg(max)}`
 }
+
+/** Lowest and highest unit price of a variant across the quantity tiers of its product (display only). */
+export function variantPriceRange(
+  product: PricedProduct & { reseller_price?: boolean; reseller_discount_pct?: number },
+  variant: PricedVariant,
+): { min: number; max: number } {
+  const tiers = normalizeTiers(product.price_tiers)
+  const top = tiers.length > 0 ? tiers[tiers.length - 1].min_qty : product.moq
+  const first = variantUnitPrice(product, variant, product.moq)
+  const last = variantUnitPrice(product, variant, top)
+  return { min: Math.min(first, last), max: Math.max(first, last) }
+}
