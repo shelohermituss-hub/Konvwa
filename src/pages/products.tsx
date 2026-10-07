@@ -10,7 +10,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
 import { ProductCard } from '@/components/shared/product-card'
-import { CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_CARD_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 
 import { tr } from '@/lib/i18n'
@@ -56,7 +56,7 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
     async function load() {
       const { data } = await supabase
         .from('products')
-        .select(CATALOG_LIST_SELECT)
+        .select(CATALOG_CARD_SELECT)
         .eq('active', true)
         .order('featured', { ascending: false })
         .order('created_at', { ascending: false })

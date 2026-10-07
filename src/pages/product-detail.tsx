@@ -9,7 +9,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
-import { CATALOG_DETAIL_SELECT, CATALOG_LIST_SELECT, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
+import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 import { formatHtg, tierRows, unitPriceFor, variantUnitPrice } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
@@ -97,7 +97,7 @@ export function ProductDetailPage() {
     if (!product?.category) { setRelated([]); return }
     supabase
       .from('products')
-      .select(CATALOG_LIST_SELECT)
+      .select(CATALOG_CARD_SELECT)
       .eq('active', true)
       .eq('category', product.category)
       .neq('id', product.id)

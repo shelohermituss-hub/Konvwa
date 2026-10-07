@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AdBanners } from '@/components/shared/ad-banners'
 import { SetupReminder } from '@/components/shared/setup-reminder'
 import { ProductCard } from '@/components/shared/product-card'
-import { CATALOG_LIST_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
+import { CATALOG_CARD_SELECT, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -97,7 +97,7 @@ export function DashboardPage() {
   const fetchPage = useCallback(async (pageIndex: number) => {
     let q = supabase
       .from('products')
-      .select(CATALOG_LIST_SELECT)
+      .select(CATALOG_CARD_SELECT)
       .eq('active', true)
       .order('featured', { ascending: false })
       .order('created_at', { ascending: false })

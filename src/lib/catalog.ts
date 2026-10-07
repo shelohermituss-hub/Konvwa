@@ -69,6 +69,9 @@ export function sortVariants(list: ProductVariant[] | null | undefined): Product
 export const CATALOG_LIST_SELECT =
   'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, reseller_discount_pct, wholesale_only, sale_type'
 
+/** What the catalogue cards need: the list columns plus a light embed of the variants (picture and name) shown under the price. */
+export const CATALOG_CARD_SELECT = `${CATALOG_LIST_SELECT}, product_variants(id, label, label_en, image, sort_order, stock_available)`
+
 /** In English, shows the English content the admin wrote (field by field, falling back to the original). */
 export function localizeProduct<T extends CatalogProduct>(p: T): T {
   if (LANG !== 'en') return p

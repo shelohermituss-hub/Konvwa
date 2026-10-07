@@ -2,13 +2,16 @@ import { Check, Package } from 'lucide-react'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useI18n } from '@/lib/i18n-context'
 import { formatPriceRange } from '@/lib/product-pricing'
-import type { CatalogProduct } from '@/lib/catalog'
+import { sortVariants, variantLabel, type CatalogProduct } from '@/lib/catalog'
 import { WishlistButton } from '@/components/shared/wishlist-button'
 import { flagFor, supplierLogo } from '@/lib/supplier-badges'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { currencyLabel } from '@/lib/currency'
 import { cn } from '@/lib/utils'
+/** Variant pictures / names shown under a card; the rest is summed up as "+N". */
+const MAX_VARIANT_CHIPS = 4
+
 /** The single most persuasive fact we have about the product, shown under the supplier line. */
 function highlight(p: CatalogProduct): string | null {
   if (p.repurchase_rate != null) return tr('Taux de réachat de {0} %', p.repurchase_rate)
@@ -28,13 +31,13 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
     product.supplier_country,
   ].filter(Boolean).join(' · ')
 
+  const variants = sortVariants(product.product_variants)
+  const shownVariants = variants.slice(0, MAX_VARIANT_CHIPS)
+
   return (
     <div className="relative mb-3 break-inside-avoid">
-    <button
-      type="button"
-      onClick={onPress}
-      className="block w-full overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition-transform duration-100 active:scale-[0.98]"
-    >
+    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-transform duration-100 has-[>button:active]:scale-[0.98]">
+    <button type="button" onClick={onPress} className="block w-full text-left">
       <div className="relative min-h-32 bg-gray-50">
         {product.images.length > 0 ? (
           <img src={product.images[0]} alt={product.name} loading="lazy" className="block h-auto w-full" />
@@ -115,6 +118,35 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct; onP
         )}
       </div>
     </button>
+    {variants.length > 0 && (
+      <ul className="flex flex-wrap items-center gap-1.5 px-3 pb-3" aria-label={tr('Options')}>
+        {shownVariants.map((v) => (
+          <li key={v.id}>
+            <button
+              type="button"
+              onClick={onPress}
+              aria-label={variantLabel(v)}
+              title={variantLabel(v)}
+              className={cn(
+                'flex h-8 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white text-[10px] font-semibold text-foreground transition-colors active:scale-95',
+                v.image ? 'w-8' : 'max-w-[4.5rem] px-1.5',
+                !v.stock_available && 'opacity-40',
+              )}
+            >
+              {v.image ? <img src={v.image} alt="" loading="lazy" className="h-full w-full object-cover" /> : <span className="truncate">{variantLabel(v)}</span>}
+            </button>
+          </li>
+        ))}
+        {variants.length > shownVariants.length && (
+          <li>
+            <button type="button" onClick={onPress} className="flex h-8 items-center rounded-lg bg-muted px-2 text-[11px] font-bold text-muted-foreground active:scale-95">
+              +{variants.length - shownVariants.length}
+            </button>
+          </li>
+        )}
+      </ul>
+    )}
+    </div>
     <WishlistButton productId={product.id} className="absolute right-2 top-2" />
     </div>
   )
