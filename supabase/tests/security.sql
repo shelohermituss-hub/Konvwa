@@ -791,7 +791,7 @@ BEGIN
   RESET ROLE;
 END $$;
 
--- 29. guest catalogue: a visitor (role anon) reads products WITHOUT any price, and nothing reserved for resellers or inactive
+-- 29. guest catalogue: a visitor (role anon) reads the public product data (selling price included, nothing private), and nothing reserved for resellers or inactive
 DO $$
 DECLARE pid uuid; hid uuid; vid uuid; n integer;
 BEGIN
@@ -805,10 +805,13 @@ BEGIN
   ASSERT n = 0, 'a visitor must not see a product reserved for resellers';
   SELECT count(*) INTO n FROM product_variants WHERE id = vid;
   ASSERT n = 1, 'a visitor must see the variants (without price)';
-  BEGIN PERFORM price_htg FROM products LIMIT 1; ASSERT false, 'a visitor read products.price_htg'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
-  BEGIN PERFORM price_tiers FROM products LIMIT 1; ASSERT false, 'a visitor read products.price_tiers'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  -- selling prices are public (Facebook catalogue ads need them on the page); everything else about the price stays private
+  PERFORM price_htg, price_tiers FROM products LIMIT 1;
+  PERFORM price_htg FROM product_variants LIMIT 1;
   BEGIN PERFORM source_price_usd FROM products LIMIT 1; ASSERT false, 'a visitor read products.source_price_usd'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
-  BEGIN PERFORM price_htg FROM product_variants LIMIT 1; ASSERT false, 'a visitor read product_variants.price_htg'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM reseller_discount_pct FROM products LIMIT 1; ASSERT false, 'a visitor read products.reseller_discount_pct'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM price_checked_at FROM products LIMIT 1; ASSERT false, 'a visitor read products.price_checked_at'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM sku FROM product_variants LIMIT 1; ASSERT false, 'a visitor read product_variants.sku'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
   BEGIN UPDATE products SET name = 'x' WHERE id = pid; ASSERT false, 'a visitor wrote a product'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
   RESET ROLE;
 END $$;

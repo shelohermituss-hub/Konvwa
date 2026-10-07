@@ -23,6 +23,24 @@ export default async function handler(req, res) {
   // the product's own picture; the app icon only when the product has none
   const image = p && p.image ? p.image : `${SITE}/icon-512.png`
 
+  // product data for the Facebook / Instagram catalogue: the price and the availability read here must match the feed (otherwise the ads are refused)
+  const amount = p && Number(p.price_htg) > 0 ? Number(p.price_htg).toFixed(2) : ''
+  const stock = p && p.in_stock === false ? 'out of stock' : 'in stock'
+  const productTags = amount ? `
+<meta property="product:retailer_item_id" content="${esc(p.id)}">
+<meta property="product:price:amount" content="${amount}">
+<meta property="product:price:currency" content="HTG">
+<meta property="og:price:amount" content="${amount}">
+<meta property="og:price:currency" content="HTG">
+<meta property="product:availability" content="${stock}">
+<meta property="product:condition" content="new">${p.brand ? `
+<meta property="product:brand" content="${esc(p.brand)}">` : ''}
+<script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: desc, image: image, sku: p.id,
+    ...(p.brand ? { brand: { '@type': 'Brand', name: p.brand } } : {}),
+    offers: { '@type': 'Offer', url: `${SITE}/products/${p.id}`, price: amount, priceCurrency: 'HTG', itemCondition: 'https://schema.org/NewCondition', availability: stock === 'in stock' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' },
+  }).replace(/</g, '\\u003c')}</script>` : ''
+
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
   res.status(200).send(`<!doctype html>
@@ -39,6 +57,6 @@ export default async function handler(req, res) {
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(desc)}">
 <meta name="twitter:image" content="${esc(image)}">
-<link rel="canonical" href="${url}">
+<link rel="canonical" href="${url}">${productTags}
 </head><body><p><a href="${url}">${esc(title)}</a></p></body></html>`)
 }

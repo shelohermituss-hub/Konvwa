@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { CheckCircle, XCircle, Loader2, Wallet } from 'lucide-react'
 import { verifyPayment, type VerifyPaymentResult } from '@/lib/payment-api'
 import { supabase } from '@/lib/supabase'
+import { trackPixel } from '@/lib/meta-pixel'
 
 import { tr } from '@/lib/i18n'
 import { money } from '@/lib/currency'
@@ -35,6 +36,11 @@ export function PaymentReturnPage() {
               if (result.source === 'cart') {
                 const { data: { user } } = await supabase.auth.getUser()
                 if (user) await supabase.from('cart_items').delete().eq('user_id', user.id)
+              }
+              // once per payment (the page can be reloaded): the reference is also the event id
+              if (!sessionStorage.getItem(`pixel-purchase-${ref}`)) {
+                sessionStorage.setItem(`pixel-purchase-${ref}`, '1')
+                trackPixel('Purchase', { value: result.amount ?? 0, currency: 'HTG' }, ref!)
               }
               setState('ordered')
             } else {

@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
 
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   const { data } = await admin.from('products')
-    .select('id, name, name_en, description, description_en, images, price_htg, moq, unit, active, wholesale_only')
+    .select('id, name, name_en, description, description_en, images, price_htg, moq, unit, brand, supplier_name, stock_available, active, wholesale_only')
     .eq('id', id).eq('active', true).eq('wholesale_only', false).maybeSingle()
   if (!data) return json({ error: 'not_found' }, 404)
 
@@ -25,5 +25,6 @@ Deno.serve(async (req) => {
     description: (data.description ?? '').slice(0, 300), description_en: (data.description_en ?? '').slice(0, 300),
     image: images[0] ?? null,
     price_htg: data.price_htg, moq: data.moq, unit: data.unit,
+    brand: data.brand || data.supplier_name || null, in_stock: data.stock_available !== false,
   })
 })

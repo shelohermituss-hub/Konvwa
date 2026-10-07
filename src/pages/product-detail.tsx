@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ProductFeed } from '@/components/shared/product-feed'
 import { ImportedReviews } from '@/components/shared/imported-reviews'
+import { productParams, trackPixel } from '@/lib/meta-pixel'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
@@ -60,7 +61,7 @@ export function ProductDetailPage() {
   const { t } = useI18n()
   const { addItem, count } = useCart()
   const { profile, user } = useAuth()
-  // a visitor who is not logged in sees the product without any price, and logs in to buy
+  // a visitor who is not logged in sees the same product page, prices included, and logs in to order
   const guest = !user
   const isReseller = !!profile?.is_reseller
   const [product, setProduct] = useState<CatalogProduct | null>(null)
@@ -92,6 +93,7 @@ export function ProductDetailPage() {
         const raw = data as unknown as CatalogProduct | null
         const p = raw ? (guest ? localizeProduct(guestProduct(raw)) : resellerPriced(localizeProduct(raw), isReseller)) : null
         setProduct(p)
+        if (p) trackPixel('ViewContent', productParams(p, p.price_htg))
         if (p) setQuantity(p.moq)
         setActiveImg(0)
         // a variant card of the feed opens the page with that variant already chosen (and its photo shown)
@@ -147,6 +149,7 @@ export function ProductDetailPage() {
     }
     setAdding(true)
     await addItem(product.id, quantity, chosen?.id)
+    trackPixel('AddToCart', productParams(product, subtotal, quantity))
     setAdding(false)
     toast.success(t('products.added'), {
       description: `${quantity} × ${product.name}${chosen ? ` (${variantLabel(chosen)})` : ''}`,
@@ -449,7 +452,7 @@ export function ProductDetailPage() {
                             <span className="min-w-0">
                               <span className={cn('block max-w-[11rem] truncate font-semibold', !v.stock_available && 'line-through')}>{variantLabel(v)}</span>
                               <span className="block text-xs tabular-nums text-muted-foreground">
-                                {!v.stock_available ? tr('Rupture de stock') : guest ? tr('En stock') : `${formatHtg(variantUnitPrice(product, v, quantity))} ${currencyLabel()}`}
+                                {v.stock_available ? `${formatHtg(variantUnitPrice(product, v, quantity))} ${currencyLabel()}` : tr('Rupture de stock')}
                               </span>
                             </span>
                           </button>
@@ -469,13 +472,6 @@ export function ProductDetailPage() {
               </p>
             )}
 
-            {guest ? (
-              <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
-                <p className="flex items-center gap-2 text-sm font-bold text-foreground"><Lock className="h-4 w-4 text-primary" aria-hidden />{tr('Les prix sont visibles après connexion')}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{tr('Commande minimale :')}{' '}{product.moq} {product.unit}</p>
-              </div>
-            ) : (
-              <>
             {/* Price by quantity */}
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-muted/50 p-3" aria-label={tr('Prix selon la quantité')}>
               {rows.map((r) => {
@@ -503,15 +499,13 @@ export function ProductDetailPage() {
                 {tr('la réduction s\'applique par lot complet de {0}, les autres unités sont au prix normal.', offer.min_qty)}
               </p>
             )}
-              </>
-            )}
 
             {/* Quantity */}
             <div className="mt-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tr('Quantité')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {guest ? product.unit : `${formatHtg(unitPrice)} ${currencyLabel()} / ${product.unit}`}
+                  {formatHtg(unitPrice)} {currencyLabel()} / {product.unit}
                 </p>
               </div>
               <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">
@@ -718,7 +712,7 @@ export function ProductDetailPage() {
               style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
             >
               <Lock className="h-4 w-4" aria-hidden />
-              {tr('Se connecter pour voir le prix et commander')}
+              {tr('Se connecter pour commander')}
             </button>
           ) : (
             <>

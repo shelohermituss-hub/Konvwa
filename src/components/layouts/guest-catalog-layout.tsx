@@ -3,10 +3,11 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { LanguageToggle } from '@/components/shared/language-toggle'
+import { CurrencyToggle } from '@/components/shared/currency-toggle'
 import { useScrollManager } from '@/lib/use-scroll-manager'
 import { tr } from '@/lib/i18n'
 
-/** The catalogue seen by a visitor who is not logged in: the shop without prices, with the way to log in always at hand. */
+/** The catalogue seen by a visitor who is not logged in: the same shop and prices, with the way to log in always at hand (ordering needs an account). */
 export function GuestCatalogLayout() {
   const mainRef = useRef<HTMLElement>(null)
   const { pathname } = useLocation()
@@ -17,6 +18,7 @@ export function GuestCatalogLayout() {
       <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-gray-100 bg-white px-4">
         <Link to="/" aria-label={tr('Accueil')}><KonvwaLogo size={30} /></Link>
         <div className="flex items-center gap-2">
+          <CurrencyToggle />
           <LanguageToggle />
           <Button asChild variant="ghost" size="sm" className="rounded-full"><Link to="/auth" state={{ from: { pathname } }}>{tr('Connexion')}</Link></Button>
           <Button asChild size="sm" className="btn-gradient rounded-full px-4"><Link to="/auth" state={{ from: { pathname } }}>{tr('S\'inscrire')}</Link></Button>

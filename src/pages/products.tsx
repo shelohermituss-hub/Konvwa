@@ -31,7 +31,7 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
   const navigate = useNavigate()
   const { count } = useCart()
   const { profile, user } = useAuth()
-  // a visitor who is not logged in browses the catalogue without prices (the prices come with the login)
+  // a visitor who is not logged in browses the same catalogue, prices included; ordering needs a login
   const guest = !user
   const isReseller = !!profile?.is_reseller
   const navType = useNavigationType()
@@ -89,13 +89,12 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
       (p.supplier_name ?? '').toLowerCase().includes(search.toLowerCase())
     const matchCat = !activeCategory || p.category === activeCategory
     const price = priceRange(p).min
-    const matchPrice = guest || (!minPrice || price >= Number(minPrice)) && (!maxPrice || price <= Number(maxPrice))
+    const matchPrice = (!minPrice || price >= Number(minPrice)) && (!maxPrice || price <= Number(maxPrice))
     const matchMoq = !maxMoq || p.moq <= Number(maxMoq)
     const matchVerified = !verifiedOnly || p.supplier_verified
     const matchStock = !inStockOnly || p.stock_available
     return matchSearch && matchCat && matchPrice && matchMoq && matchVerified && matchStock
   }).sort((a, b) => {
-    if (guest) return sort === 'popular' ? (b.sold_count ?? 0) - (a.sold_count ?? 0) : 0
     if (sort === 'price_asc') return priceRange(a).min - priceRange(b).min
     if (sort === 'price_desc') return priceRange(b).min - priceRange(a).min
     if (sort === 'popular') return (b.sold_count ?? 0) - (a.sold_count ?? 0)
@@ -136,7 +135,7 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
 
       {guest && (
         <p className="mx-4 mb-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs leading-relaxed text-foreground/80">
-          {tr('Créez un compte gratuit ou connectez-vous pour voir les prix et commander.')}{' '}
+          {tr('Créez un compte gratuit ou connectez-vous pour commander.')}{' '}
           <Link to="/auth" className="font-bold text-primary underline-offset-2 hover:underline">{tr('Se connecter')}</Link>
         </p>
       )}
@@ -183,19 +182,19 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
             <select id="f-sort" value={sort} onChange={e => setSort(e.target.value as typeof sort)} className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm">
               <option value="default">{tr('Pertinence')}</option>
               <option value="popular">{tr('Plus vendus')}</option>
-              {!guest && <option value="price_asc">{tr('Prix croissant')}</option>}
-              {!guest && <option value="price_desc">{tr('Prix décroissant')}</option>}
+              <option value="price_asc">{tr('Prix croissant')}</option>
+              <option value="price_desc">{tr('Prix décroissant')}</option>
             </select>
           </div>
-          <div className={cn('grid gap-2', guest ? 'grid-cols-1' : 'grid-cols-3')}>
-            {!guest && <div>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
               <label htmlFor="f-min" className="mb-1 block text-xs font-semibold text-muted-foreground">{tr('Prix min')}</label>
               <input id="f-min" inputMode="numeric" value={minPrice} onChange={e => setMinPrice(e.target.value.replace(/\D/g, ''))} placeholder="0" className="h-10 w-full rounded-xl border border-gray-200 px-3 text-sm" />
-            </div>}
-            {!guest && <div>
+            </div>
+            <div>
               <label htmlFor="f-max" className="mb-1 block text-xs font-semibold text-muted-foreground">{tr('Prix max')}</label>
               <input id="f-max" inputMode="numeric" value={maxPrice} onChange={e => setMaxPrice(e.target.value.replace(/\D/g, ''))} placeholder="∞" className="h-10 w-full rounded-xl border border-gray-200 px-3 text-sm" />
-            </div>}
+            </div>
             <div>
               <label htmlFor="f-moq" className="mb-1 block text-xs font-semibold text-muted-foreground">{tr('MOQ max')}</label>
               <input id="f-moq" inputMode="numeric" value={maxMoq} onChange={e => setMaxMoq(e.target.value.replace(/\D/g, ''))} placeholder="∞" className="h-10 w-full rounded-xl border border-gray-200 px-3 text-sm" />

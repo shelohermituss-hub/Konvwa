@@ -100,19 +100,19 @@ export function resellerPriced<T extends { price_htg: number; price_tiers?: unkn
 export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications, video_url, product_variants(${VARIANT_SELECT})`
 
 /**
- * What a visitor who is not logged in may read: the same products WITHOUT any price (the database only grants these columns to `anon`).
- * The prices are shown after login only.
+ * What a visitor who is not logged in may read: the public product data, selling price included (the database only grants these columns to `anon`:
+ * no supplier price, reseller discount, weight or source link). Ordering, the cart and favourites need a login.
  */
 const GUEST_LIST_SELECT =
-  'id, name, description, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, wholesale_only, sale_type'
-const GUEST_VARIANT_SELECT = 'id, label, label_en, group_name, image, sort_order, stock_available'
+  'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, wholesale_only, sale_type'
+const GUEST_VARIANT_SELECT = 'id, label, label_en, group_name, price_htg, image, sort_order, stock_available'
 export const CATALOG_GUEST_CARD_SELECT = `${GUEST_LIST_SELECT}, product_variants(${GUEST_VARIANT_SELECT})`
 export const CATALOG_GUEST_DETAIL_SELECT = `${GUEST_LIST_SELECT}, specifications, video_url, product_variants(${GUEST_VARIANT_SELECT})`
 
-/** A product read as a visitor: the fields the pages expect but the visitor never gets are filled with neutral values (nothing is shown from them). */
+/** A product read as a visitor: the fields the pages expect but the visitor never gets (the reseller discount) get neutral values. */
 export function guestProduct(raw: unknown): CatalogProduct {
   const p = raw as CatalogProduct
-  return { ...p, price_htg: 0, price_tiers: [], product_variants: (p.product_variants ?? []).map((v) => ({ ...v, price_htg: 0 })) }
+  return { ...p, price_htg: Number(p.price_htg), reseller_discount_pct: 0 }
 }
 
 /** One card of the feed: a product, or one variant of a product (it then opens the same product page). */

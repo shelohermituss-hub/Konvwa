@@ -15,6 +15,7 @@ import { createCheckoutPayment } from '@/lib/payment-api'
 import { createCheckout, fetchCheckoutShipping, type CheckoutShipping, type CreatedOrder } from '@/lib/checkout-api'
 import { cn } from '@/lib/utils'
 import { money } from '@/lib/currency'
+import { trackPixel } from '@/lib/meta-pixel'
 interface WalletData {
   id: string
   available_balance: number
@@ -104,6 +105,12 @@ export function CheckoutPage() {
   const chosen = shipping?.options.find(o => o.rate_id === rateId) ?? null
   const shippingFee = hasUs && chosen ? chosen.amount_htg : 0
   const grandTotal = total + shippingFee
+  // Meta Pixel: the customer reached the payment step (once per page visit, when the lines are known)
+  const startedCheckout = items.length > 0
+  useEffect(() => {
+    if (startedCheckout) trackPixel('InitiateCheckout', { content_type: 'product', content_ids: items.map(i => i.product_id), value: grandTotal, currency: 'HTG' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startedCheckout])
   const blocked = (shipping?.missing.length ?? 0) > 0
   const noMethod = hasUs && !blocked && !chosen
   const canPay = !shippingLoading && !shippingError && !blocked && !noMethod
@@ -163,6 +170,7 @@ export function CheckoutPage() {
       await clearCart()
       setPaidOrders(done)
       setOrderId(done[0]?.order_id ?? null)
+      trackPixel('Purchase', { content_type: 'product', content_ids: items.map(i => i.product_id), value: grandTotal, currency: 'HTG' }, done[0]?.order_id)
       setSuccess(true)
       inviteInstall()
     } catch (e: unknown) {

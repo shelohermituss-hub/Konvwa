@@ -17,6 +17,7 @@ import { WishlistProvider } from '@/lib/wishlist-context'
 import { installErrorReporting } from '@/lib/error-reporter'
 import { supabase } from '@/lib/supabase'
 import { saveUsdRate } from '@/lib/currency'
+import { initPixel, trackPixel } from '@/lib/meta-pixel'
 import { UpdateBanner } from "@/components/shared/update-banner"
 import { OfflineBanner } from "@/components/shared/offline-banner"
 
@@ -35,6 +36,13 @@ toast.error = ((message: Parameters<typeof toast.error>[0], data?: Parameters<ty
 if (LANG === 'en') document.title = tr('KONVWA — Importez depuis Alibaba, Shein et Temu en Haïti')
 
 installErrorReporting()
+
+// Meta Pixel (only when its id is configured): one PageView per page of the app
+initPixel()
+let lastPixelPath = window.location.pathname
+router.subscribe((state) => {
+  if (state.location.pathname !== lastPixelPath) { lastPixelPath = state.location.pathname; trackPixel('PageView') }
+})
 
 // A friend's referral link (?ref=CODE) is remembered until the new account exists
 try {
