@@ -85,7 +85,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
         )}
       </div>
       {offer && (
-        <p className="truncate bg-emerald-600 px-3 py-1.5 text-[11px] font-bold uppercase leading-tight tracking-wide text-white">{offerLabel(offer)}</p>
+        <p className="truncate bg-sky-100 px-3 py-1.5 text-[11px] font-bold uppercase leading-tight tracking-wide text-sky-800 dark:bg-sky-500/20 dark:text-sky-200">{offerLabel(offer)}</p>
       )}
 
       <div className="space-y-1.5 p-3">
