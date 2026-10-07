@@ -182,3 +182,11 @@ export function findVideoUrl(platform: PlatformId, html: unknown): string | null
   }
   return null
 }
+
+/** The product name written in a Shein / Temu product address ("Women-Casual-Dress-p-123-cat-9.html" -> "Women Casual Dress"). */
+export function productSlug(url: string): string {
+  let path = ''
+  try { path = decodeURIComponent(new URL(url).pathname) } catch { return '' }
+  const last = path.split('/').filter(Boolean).pop() ?? ''
+  return last.replace(/\.html?$/i, '').replace(/-(?:p|g)-\d+.*$/i, '').replace(/[-_]+/g, ' ').trim()
+}

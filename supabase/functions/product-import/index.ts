@@ -1,7 +1,7 @@
 // Admin tool: paste a product link (Amazon, Shein, Alibaba/1688, Temu, Muscle & Strength) -> product sheet data, variants and package.
 // Page reading: Firecrawl (REST). Text work: OpenRouter. Secrets (Edge Function secrets): FIRECRAWL_API_KEY, OPENROUTER_API_KEY, OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, type Platform, type ProductTarget } from './platforms.ts'
+import { findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
 import { normalizeVariants } from './variants.ts'
 import {
   cleanSpecs, cleanText, dimsFrom, extractJson, imageSize, looksLikeErrorPage, normalizeLadder, priceToUsd, titlesAgree, validateAi, weightFrom,
@@ -285,13 +285,22 @@ Deno.serve(async (req) => {
     const sourceUrl = target.url
     // Shein and Temu send robots to a login / home / other page: then the extraction would describe whatever product is featured there.
     // The page Firecrawl ended on must be the product that was asked for.
+    let idChanged = false
     if (read.finalUrl && (platform.id === 'shein' || platform.id === 'temu')) {
       const landed = parseProductUrl(read.finalUrl)
       if (!landed || landed.short || landed.id !== productId) {
-        return json({ error: `${platform.name} a renvoy\u00e9 une autre page que ce produit (connexion, accueil ou autre article). R\u00e9essayez dans un instant, ou remplissez la fiche \u00e0 la main.`, code: 'wrong_page' }, 502)
+        // the shop may land on another colour / size of the same product (other id): accepted when the page title still matches the name written in the link
+        const slug = productSlug(target.url)
+        const same = !!landed && !landed.short && !!landed.id && !!slug && !!read.meta.title && !looksLikeErrorPage(read.meta.title) && titlesAgree(slug, read.meta.title)
+        console.error('[product-import] landed elsewhere', { asked: target.url, landed: read.finalUrl, title: read.meta.title, accepted: same })
+        if (!same) {
+          return json({ error: `${platform.name} a renvoy\u00e9 une autre page que ce produit (connexion, accueil ou autre article). R\u00e9essayez dans un instant, ou remplissez la fiche \u00e0 la main.`, code: 'wrong_page' }, 502)
+        }
+        idChanged = true
       }
     }
     const warnings: string[] = []
+    if (idChanged) warnings.push('id_changed')
     let scraped = read.data
     // the page's own title is the reference: when the extraction talks about something else, only the page's own data is kept
     if (read.meta.title && scraped && cleanText(scraped.title, 300) && !titlesAgree(read.meta.title, cleanText(scraped.title, 300))) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findVideoUrl, parseProductUrl, parseSharePrice, platformImageUrl, platformImages, platformVideoUrl } from './platforms'
+import { findVideoUrl, parseProductUrl, parseSharePrice, platformImageUrl, platformImages, platformVideoUrl, productSlug } from './platforms'
 
 describe('parseProductUrl', () => {
   it('keeps Amazon working', () => {
@@ -92,5 +92,13 @@ describe('product video', () => {
     expect(findVideoUrl('alibaba', '<video src="//video.alicdn.com/v.mp4?a=1&amp;b=2"></video>')).toBe('https://video.alicdn.com/v.mp4?a=1&b=2')
     expect(findVideoUrl('alibaba', '<a href="https://evil.test/v.mp4">x</a>')).toBeNull()
     expect(findVideoUrl('alibaba', undefined)).toBeNull()
+  })
+})
+
+describe('productSlug', () => {
+  it('reads the product name from the address', () => {
+    expect(productSlug('https://fr.shein.com/Women-Casual-Dress-p-12345678-cat-1727.html?src=x')).toBe('Women Casual Dress')
+    expect(productSlug('https://www.temu.com/robe-femme-g-601099512345678.html')).toBe('robe femme')
+    expect(productSlug('not a url')).toBe('')
   })
 })
