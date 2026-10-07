@@ -75,7 +75,9 @@ export function parseProductUrl(raw: string): ProductTarget | null {
   if (platform.id === 'shein') {
     id = /-p-(\d{4,})(?:-|\.html)/.exec(path)?.[1] ?? null
   } else if (platform.id === 'alibaba') {
-    id = /\/offer\/(\d{6,})\.html/.exec(path)?.[1] ?? /(\d{8,})\.html$/.exec(path)?.[1] ?? null
+    const q = url.searchParams
+    const qid = q.get('productId') ?? q.get('product_id') ?? q.get('id') ?? ''
+    id = /\/offer\/(\d{6,})\.html/.exec(path)?.[1] ?? /(\d{8,})\.html$/.exec(path)?.[1] ?? /\/(?:product|item)s?\/(\d{8,})(?:[/.]|$)/.exec(path)?.[1] ?? (/^\d{8,}$/.test(qid) ? qid : null)
   } else if (platform.id === 'temu') {
     const g = url.searchParams.get('goods_id')
     id = /-g-(\d{6,})\.html/.exec(path)?.[1] ?? (g && /^\d{6,}$/.test(g) ? g : null)

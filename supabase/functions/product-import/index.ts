@@ -234,16 +234,20 @@ Deno.serve(async (req) => {
       if (resolved) target = resolved
     }
     const shareError = { error: 'Ce lien de partage n\'a pas pu \u00eatre ouvert : ouvrez le produit dans le navigateur et copiez l\'adresse compl\u00e8te de la page.' }
-    if (!target.short && !target.id) return json({ error: 'Lien incomplet : collez le lien d\'une page produit, pas celui d\'une boutique ou d\'une recherche.' }, 400)
+    // an Alibaba share link can lead to a product page whose address has no id we know: it is still imported (the id only names files)
+    const viaShare = !!shortLink
+    if (!target.short && !target.id && !(viaShare && target.platform.id === 'alibaba')) return json({ error: 'Lien incomplet : collez le lien d\'une page produit, pas celui d\'une boutique ou d\'une recherche.' }, 400)
 
+    const looksLikeProduct = (u: string) => /\/(?:product|offer|item)/i.test(new URL(u).pathname)
+    if (!target.short && !target.id && !looksLikeProduct(target.url)) return json(shareError, 400)
     let platform = target.platform
     const read = await scrape(target.url, firecrawlKey, platform).catch((e) => { console.error('[product-import] scrape', e); return { data: null, finalUrl: null, meta: { title: '', description: '', image: null } } })
     if (target.short) {
       const real = read.finalUrl ? parseProductUrl(read.finalUrl) : null
-      if (!real || real.short || !real.id) return json(shareError, 400)
+      if (!real || real.short || (!real.id && !(real.platform.id === 'alibaba' && looksLikeProduct(real.url)))) return json(shareError, 400)
       target = real; platform = real.platform
     }
-    const productId = target.id as string
+    const productId = target.id ?? `s${Array.from(target.url).reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0, 7)}`
     const sourceUrl = target.url
     // Shein and Temu send robots to a login / home / other page: then the extraction would describe whatever product is featured there.
     // The page Firecrawl ended on must be the product that was asked for.

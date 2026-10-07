@@ -22,6 +22,8 @@ describe('parseProductUrl', () => {
     expect(parseProductUrl('https://fr.shein.com/Robe-p-12345678.html')).toMatchObject({ platform: { id: 'shein' }, id: '12345678' })
     expect(parseProductUrl('https://www.alibaba.com/x/B2XYex?ck=pdp')).toMatchObject({ platform: { id: 'alibaba' }, short: true, id: null, url: 'https://www.alibaba.com/x/B2XYex' })
     expect(parseProductUrl('https://www.alibaba.com/product-detail/Bottle_1600123456789.html')).toMatchObject({ id: '1600123456789' })
+    expect(parseProductUrl('https://m.alibaba.com/product/1600123456789/Some-Name.html')).toMatchObject({ platform: { id: 'alibaba' }, id: '1600123456789' })
+    expect(parseProductUrl('https://www.alibaba.com/product-detail/x.html?productId=1600123456789')).toMatchObject({ id: '1600123456789' })
     expect(parseProductUrl('https://temu.to.evil.test/k/abc')).toBeNull()
     expect(parseProductUrl('https://www.shein.top.evil.test/x')).toBeNull()
   })
