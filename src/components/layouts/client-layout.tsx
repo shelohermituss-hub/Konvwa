@@ -30,12 +30,13 @@ const NAV_ITEMS = [
   { labelKey: 'nav.profile',   Icon: User,            path: '/profile' },
 ]
 
-// the bulk-sourcing shelf lives next to "Products" in the sidebar; on the phone it is reached from the Products page itself
-const SIDEBAR_ITEMS = [
-  ...NAV_ITEMS.slice(0, 4),
-  { labelKey: 'nav.wholesale', Icon: Boxes,           path: '/wholesale' },
-  ...NAV_ITEMS.slice(4),
-]
+const WHOLESALE_ITEM = { labelKey: 'nav.wholesale', Icon: Boxes, path: '/wholesale' }
+
+// sidebar: bulk sourcing sits next to "Products", profile stays last
+const SIDEBAR_ITEMS = [...NAV_ITEMS.slice(0, 4), WHOLESALE_ITEM, ...NAV_ITEMS.slice(4)]
+
+// phone: the profile is one tap away in the header, so its tab makes room for bulk sourcing
+const BOTTOM_ITEMS = [...NAV_ITEMS.slice(0, 4), WHOLESALE_ITEM]
 
 const SIDEBAR_EXTRAS = [
   { label: tr('Soumettre'),      Icon: Send,          path: '/submit' },
@@ -298,10 +299,9 @@ function BottomNav({ unread: _unread }: { unread: number }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-100 pb-safe shadow-[0_-1px_12px_rgba(10,22,40,0.06)]">
       <div className="flex items-stretch h-16">
-        {NAV_ITEMS.map((item) => {
+        {BOTTOM_ITEMS.map((item) => {
           const isActive = location.pathname === item.path ||
-            (item.path !== '/dashboard' && location.pathname.startsWith(item.path)) ||
-            (item.path === '/products' && location.pathname.startsWith('/wholesale'))
+            (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
           const { Icon } = item
 
           return (
