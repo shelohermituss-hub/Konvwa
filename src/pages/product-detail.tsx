@@ -4,7 +4,7 @@ import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   CheckCircle2, ChevronDown, ChevronLeft, Headset, Loader2, Lock, MessageCircle, Minus, Package,
-  Plus, Search, Share2, ShieldCheck, ShoppingCart, Star, Store, Truck, Wallet, Zap,
+  Play, Plus, Search, Share2, ShieldCheck, ShoppingCart, Star, Store, Truck, Wallet, Zap,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
@@ -69,6 +69,7 @@ export function ProductDetailPage() {
   const [allOptions, setAllOptions] = useState(false)
   const [tab, setTab] = useState<TabId>('overview')
   const galleryRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
     if (!id) return
@@ -291,7 +292,10 @@ export function ProductDetailPage() {
               ref={galleryRef}
               onScroll={(e) => {
                 const el = e.currentTarget
-                setActiveImg(Math.round(el.scrollLeft / el.clientWidth))
+                const at = Math.round(el.scrollLeft / el.clientWidth)
+                setActiveImg(at)
+                // the product video is the last slide: it stops as soon as another slide is shown
+                if (at !== gallery.length) videoRef.current?.pause()
               }}
               className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto bg-gray-50 scrollbar-none"
             >
@@ -306,19 +310,38 @@ export function ProductDetailPage() {
                     className="h-full w-full shrink-0 cursor-zoom-in snap-center object-cover"
                   />
                 ))
-              ) : (
+              ) : !product.video_url && (
                 <div className="flex h-full w-full shrink-0 items-center justify-center">
                   <Package className="h-20 w-20 text-muted-foreground/20" />
                 </div>
               )}
+              {product.video_url && (
+                <video
+                  ref={videoRef}
+                  src={product.video_url}
+                  poster={gallery[0]}
+                  controls playsInline preload="metadata"
+                  aria-label={tr('Vidéo du produit')}
+                  className="h-full w-full shrink-0 snap-center bg-black object-contain"
+                />
+              )}
             </div>
-            {gallery.length > 1 && (
+            {product.video_url && activeImg !== gallery.length && (
+              <button
+                type="button"
+                onClick={() => goToImage(gallery.length)}
+                className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm active:scale-95"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" aria-hidden />{tr('Vidéo')}
+              </button>
+            )}
+            {gallery.length + (product.video_url ? 1 : 0) > 1 && (
               <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
-                {tr('Photos')}{' '}{activeImg + 1}/{gallery.length}
+                {activeImg === gallery.length && product.video_url ? tr('Vidéo') : `${tr('Photos')} ${activeImg + 1}/${gallery.length}`}
               </span>
             )}
           </div>
-          {gallery.length > 1 && (
+          {gallery.length + (product.video_url ? 1 : 0) > 1 && (
             <div className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-none">
               {gallery.map((img, i) => (
                 <button
@@ -333,6 +356,20 @@ export function ProductDetailPage() {
                   <img src={img} alt="" className="h-full w-full object-cover" />
                 </button>
               ))}
+              {product.video_url && (
+                <button
+                  type="button"
+                  onClick={() => goToImage(gallery.length)}
+                  aria-label={tr('Vidéo du produit')}
+                  className={cn(
+                    'relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 bg-black transition-colors',
+                    activeImg === gallery.length ? 'border-foreground' : 'border-gray-100',
+                  )}
+                >
+                  {gallery[0] && <img src={gallery[0]} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />}
+                  <Play className="relative h-5 w-5 fill-white text-white" aria-hidden />
+                </button>
+              )}
             </div>
           )}
         </div>

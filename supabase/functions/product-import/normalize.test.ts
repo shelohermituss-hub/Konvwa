@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom, titlesAgree, looksLikeErrorPage, normalizeLadder } from './normalize'
+import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom, titlesAgree, looksLikeErrorPage, normalizeLadder, imageSize } from './normalize'
 
 describe('units', () => {
   it('converts weights to kg', () => {
@@ -132,5 +132,20 @@ describe('normalizeLadder', () => {
     expect(normalizeLadder([{ min_qty: 2, price: 100 }], null, 'CNY', rates).base_usd).toBe(14)
     expect(normalizeLadder([], 60, 'USD', rates)).toEqual({ moq: 60, base_usd: null, tiers: [] })
     expect(normalizeLadder(undefined, 'abc', 'USD', rates)).toEqual({ moq: null, base_usd: null, tiers: [] })
+  })
+})
+
+describe('imageSize', () => {
+  it('reads PNG, JPEG and WebP headers', () => {
+    const png = new Uint8Array(32); png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 0); png.set([0, 0, 2, 0], 16); png.set([0, 0, 1, 0x80], 20)
+    expect(imageSize(png)).toEqual({ w: 512, h: 384 })
+    const jpg = new Uint8Array(40); jpg.set([0xff, 0xd8, 0xff, 0xe0, 0, 4, 0, 0, 0xff, 0xc0, 0, 11, 8, 0x01, 0x90, 0x02, 0x58], 0)
+    expect(imageSize(jpg)).toEqual({ w: 600, h: 400 })
+    const webp = new Uint8Array(40); webp.set([...'RIFF'].map((c) => c.charCodeAt(0)), 0); webp.set([...'WEBPVP8X'].map((c) => c.charCodeAt(0)), 8); webp.set([0x1f, 0x03, 0], 24); webp.set([0x57, 0x02, 0], 27)
+    expect(imageSize(webp)).toEqual({ w: 800, h: 600 })
+  })
+  it('returns null for anything else', () => {
+    expect(imageSize(new Uint8Array(10))).toBeNull()
+    expect(imageSize(new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>'))).toBeNull()
   })
 })

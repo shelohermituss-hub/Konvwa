@@ -18,6 +18,7 @@ export interface CatalogProduct {
   processing_days: number | null
   images: string[]
   specifications: Record<string, string> | null
+  video_url?: string | null
   stock_available: boolean
   featured: boolean
   sold_count: number
@@ -93,4 +94,4 @@ export function resellerPriced<T extends { price_htg: number; price_tiers?: unkn
   return { ...p, price_htg: Math.round(p.price_htg * factor * 100) / 100, price_tiers: tiers, reseller_price: true }
 }
 
-export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications, product_variants(${VARIANT_SELECT})`
+export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications, video_url, product_variants(${VARIANT_SELECT})`

@@ -11,6 +11,8 @@ export interface ImportedProduct {
   tags: string[]
   tags_en: string[]
   images: string[]
+  /** Product video copied into our storage (Alibaba), when the page has one. */
+  video_url: string | null
   price_usd: number | null
   price_currency: string | null
   /** Minimum order read from the page (wholesale), and the cheaper unit prices from some quantity on, in USD. */

@@ -32,6 +32,7 @@ interface Product {
   delivery_days_min: number | null
   delivery_days_max: number | null
   images: string[]
+  video_url: string | null
   specifications: Record<string, string>
   active: boolean
   featured: boolean
@@ -80,6 +81,7 @@ const emptyDraft = (): ProductDraft => ({
   delivery_days_min: null,
   delivery_days_max: null,
   images: [],
+  video_url: null,
   specifications: {},
   active: true,
   featured: false,
@@ -194,6 +196,7 @@ export function AdminProductsPage() {
       supplier_name: d.supplier_name,
       supplier_country: d.supplier_country,
       images: d.images,
+      video_url: d.video_url ?? null,
       specifications: d.specifications,
       rating: d.rating,
       review_count: d.review_count ?? 0,
@@ -221,6 +224,8 @@ export function AdminProductsPage() {
     if (d.warnings.includes('share_data')) toast.warning(tr('Le site a bloqué la lecture de la page : la fiche est remplie avec les informations du lien de partage (nom, prix, image). Vérifiez-la et complétez-la.'), { duration: 12000 })
     if (d.warnings.includes('page_mismatch')) toast.warning(tr('La lecture automatique ne correspond pas bien à ce produit : seuls le titre, la description et l\'image de la page sont repris. Vérifiez et remplissez le prix à la main.'), { duration: 12000 })
     if ((d.price_tiers ?? []).length > 0) toast.success(tr('{0} paliers de prix par quantité importés (minimum {1}) : vérifiez-les avant d\'enregistrer.', d.price_tiers.length, d.moq ?? 1))
+    if (d.video_url) toast.success(tr('Vidéo du produit importée.'))
+    if (d.warnings.includes('video_failed')) toast.warning(tr('La page a une vidéo mais elle n\'a pas pu être copiée (trop lourde ou protégée) : ajoutez-la à la main si besoin.'), { duration: 10000 })
     if (d.warnings.includes('tiers_missing')) toast.warning(tr('La page ne donne pas de prix par quantité : ajoutez les paliers à la main (section « Prix par quantité »).'), { duration: 10000 })
     if (d.warnings.includes('variant_prices_missing')) toast.warning(tr('La page ne donne pas de prix par variante : toutes ont le prix de base, à corriger si besoin.'))
     if (d.warnings.includes('variants_truncated')) toast.warning(tr('Plus de 100 variantes : seules les 100 premières sont gardées.'))
@@ -255,6 +260,7 @@ export function AdminProductsPage() {
       delivery_days_min: p.delivery_days_min,
       delivery_days_max: p.delivery_days_max,
       images: p.images,
+      video_url: p.video_url ?? null,
       specifications: p.specifications,
       active: p.active,
       featured: p.featured,
@@ -606,6 +612,12 @@ export function AdminProductsPage() {
               <div className="col-span-2 space-y-1.5">
                 <Label>{tr('Images (URLs séparées par des virgules)')}</Label>
                 <Input value={imagesRaw} onChange={e => setImagesRaw(e.target.value)} placeholder="https://…, https://…" />
+              </div>
+
+              <div className="col-span-2 space-y-1.5">
+                <Label>{tr('Vidéo du produit (lien .mp4, facultatif)')}</Label>
+                <Input value={draft.video_url ?? ''} onChange={e => setField('video_url', e.target.value.trim() || null)} placeholder="https://…/video.mp4" />
+                {draft.video_url && <video src={draft.video_url} controls preload="metadata" playsInline className="mt-2 max-h-40 rounded-xl bg-black" />}
               </div>
 
               <div className="col-span-2 space-y-1.5">

@@ -156,3 +156,29 @@ export function platformImages(platform: PlatformId, list: unknown, max = 5): st
   }
   return out
 }
+
+const VIDEO_HOSTS: Partial<Record<PlatformId, RegExp>> = {
+  alibaba: /(?:^|\.)(?:alicdn|alibaba)\.com$/i,
+}
+
+/** A product video file (https, .mp4 / .webm) hosted by the platform's own domains, or null. Protocol-relative links are accepted. */
+export function platformVideoUrl(platform: PlatformId, raw: unknown): string | null {
+  const re = VIDEO_HOSTS[platform]
+  if (!re || typeof raw !== 'string') return null
+  const text = raw.trim().startsWith('//') ? `https:${raw.trim()}` : raw.trim()
+  const url = cleanHttps(text)
+  if (!url || !re.test(url.hostname) || !/\.(mp4|webm)$/i.test(url.pathname)) return null
+  url.hash = ''
+  return url.toString().length <= 600 ? url.toString() : null
+}
+
+/** The first valid video address found in a page's source (JSON blobs escape slashes as \/ or \u002F). */
+export function findVideoUrl(platform: PlatformId, html: unknown): string | null {
+  if (typeof html !== 'string') return null
+  const text = html.replace(/\\u002F/gi, '/').replace(/\\\//g, '/').replace(/&amp;/g, '&')
+  for (const m of text.matchAll(/(?:https?:)?\/\/[^\s"'<>\\)]+?\.(?:mp4|webm)(?:\?[^\s"'<>\\)]*)?/gi)) {
+    const u = platformVideoUrl(platform, m[0].replace(/^http:/i, 'https:'))
+    if (u) return u
+  }
+  return null
+}

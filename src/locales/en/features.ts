@@ -936,4 +936,9 @@ export const FEATURES_EN: Record<string, string> = {
   "Couper le son": "Turn sound off",
   "{0} paliers de prix par quantité importés (minimum {1}) : vérifiez-les avant d'enregistrer.": "{0} quantity price tiers imported (minimum {1}): check them before saving.",
   "La page ne donne pas de prix par quantité : ajoutez les paliers à la main (section « Prix par quantité »).": "The page shows no quantity prices: add the tiers by hand (\"Price by quantity\" section).",
+  "Vidéo du produit (lien .mp4, facultatif)": "Product video (.mp4 link, optional)",
+  "Vidéo du produit importée.": "Product video imported.",
+  "La page a une vidéo mais elle n'a pas pu être copiée (trop lourde ou protégée) : ajoutez-la à la main si besoin.": "The page has a video but it could not be copied (too large or protected): add it by hand if needed.",
+  "Vidéo du produit": "Product video",
+  "Vidéo": "Video",
 }

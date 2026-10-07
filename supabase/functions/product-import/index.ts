@@ -1,10 +1,10 @@
 // Admin tool: paste a product link (Amazon, Shein, Alibaba/1688, Temu, Muscle & Strength) -> product sheet data, variants and package.
 // Page reading: Firecrawl (REST). Text work: OpenRouter. Secrets (Edge Function secrets): FIRECRAWL_API_KEY, OPENROUTER_API_KEY, OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { parseProductUrl, platformImages, platformImageUrl, type Platform, type ProductTarget } from './platforms.ts'
+import { findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, type Platform, type ProductTarget } from './platforms.ts'
 import { normalizeVariants } from './variants.ts'
 import {
-  cleanSpecs, cleanText, dimsFrom, extractJson, looksLikeErrorPage, normalizeLadder, priceToUsd, titlesAgree, validateAi, weightFrom,
+  cleanSpecs, cleanText, dimsFrom, extractJson, imageSize, looksLikeErrorPage, normalizeLadder, priceToUsd, titlesAgree, validateAi, weightFrom,
   type AiResult, type Dims,
 } from './normalize.ts'
 
@@ -16,6 +16,10 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 
 const MAX_IMAGE = 4_000_000
+const MAX_VIDEO = 30_000_000
+/** Pictures narrower than this are badges, icons or logos, not photos of the product. */
+const MIN_PHOTO_SIDE = 300
+const MAX_PHOTOS = 8
 const MAX_HOPS = 3
 const DEFAULT_MODEL = 'mistralai/mistral-small-3.2-24b-instruct'
 
@@ -34,7 +38,8 @@ const SCHEMA = {
     moq: { type: 'integer', description: 'Minimum order quantity (the smallest quantity that can be ordered), when shown' },
     description: { type: 'string' },
     features: { type: 'array', items: { type: 'string' }, description: 'About this item bullet points' },
-    images: { type: 'array', items: { type: 'string' }, description: 'Full-size product image URLs' },
+    images: { type: 'array', maxItems: 15, items: { type: 'string' }, description: 'URLs of the large photos of the product itself, in the order of the page gallery (all angles, details, colours). Never include certification logos (CE, FCC, RoHS), icons, badges, banners, supplier logos, size charts or other products.' },
+    video_url: { type: 'string', description: 'Direct address of the product video file (.mp4) when the page has a video; empty otherwise' },
     rating: { type: 'number' },
     review_count: { type: 'integer' },
     availability: { type: 'string' },
@@ -63,6 +68,7 @@ const scrapePrompt = (platform: Platform) => `Extract the product data of this $
 interface Scraped {
   title?: string; brand?: string; price?: number; currency?: string; description?: string
   price_tiers?: unknown; moq?: unknown
+  video_url?: string
   features?: string[]; images?: string[]; rating?: number; review_count?: number
   availability?: string; category_path?: string[]
   item_weight?: unknown; package_weight?: unknown; item_dimensions?: unknown; package_dimensions?: unknown
@@ -84,7 +90,7 @@ async function resolveShort(start: string): Promise<ProductTarget | null> {
 }
 
 /** The page data, and the address Firecrawl ended on (after redirects, JavaScript ones included). */
-interface PageMeta { title: string; description: string; image: string | null }
+interface PageMeta { title: string; description: string; image: string | null; html?: string }
 
 async function scrape(url: string, apiKey: string, platform: Platform): Promise<{ data: Scraped | null; finalUrl: string | null; meta: PageMeta }> {
   const noMeta: PageMeta = { title: '', description: '', image: null }
@@ -93,7 +99,8 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       url,
-      formats: [{ type: 'json', schema: SCHEMA, prompt: scrapePrompt(platform) }],
+      // Alibaba: the page source is also kept, the product video address is often only there
+      formats: [{ type: 'json', schema: SCHEMA, prompt: scrapePrompt(platform) }, ...(platform.id === 'alibaba' ? ['rawHtml'] : [])],
       onlyMainContent: false,
       ...(platform.id === 'amazon' ? {} : { waitFor: platform.id === 'shein' || platform.id === 'temu' || platform.id === 'alibaba' ? 5000 : 3000 }),
       // Shein, Temu and Alibaba block ordinary crawlers (404 / robot pages): their pages are read through the stealth proxy
@@ -106,11 +113,11 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
     console.error('[product-import] firecrawl', res.status, (await res.text().catch(() => '')).slice(0, 300))
     return { data: null, finalUrl: null, meta: noMeta }
   }
-  const body = await res.json().catch(() => null) as { success?: boolean; data?: { json?: Scraped; metadata?: Record<string, unknown> } } | null
+  const body = await res.json().catch(() => null) as { success?: boolean; data?: { json?: Scraped; rawHtml?: string; metadata?: Record<string, unknown> } } | null
   const meta = body?.data?.metadata
   const str = (v: unknown) => (typeof v === 'string' ? v : '')
   const final = str(meta?.url) || str(meta?.sourceURL) || null
-  const pageMeta: PageMeta = { title: cleanText(str(meta?.ogTitle) || str(meta?.title), 300), description: cleanText(str(meta?.ogDescription) || str(meta?.description), 1500, true), image: str(meta?.ogImage) || null }
+  const pageMeta: PageMeta = { title: cleanText(str(meta?.ogTitle) || str(meta?.title), 300), description: cleanText(str(meta?.ogDescription) || str(meta?.description), 1500, true), image: str(meta?.ogImage) || null, html: typeof body?.data?.rawHtml === 'string' ? body.data.rawHtml.slice(0, 3_000_000) : undefined }
   return { data: body?.success && body.data?.json && typeof body.data.json === 'object' ? body.data.json : null, finalUrl: final, meta: pageMeta }
 }
 
@@ -181,7 +188,7 @@ async function readLimited(res: Response, limit: number): Promise<Uint8Array> {
   return out
 }
 
-async function storeImage(admin: ReturnType<typeof createClient>, userId: string, tag: string, index: number, imageUrl: string): Promise<string | null> {
+async function storeImage(admin: ReturnType<typeof createClient>, userId: string, tag: string, index: number, imageUrl: string, minSide = 0): Promise<string | null> {
   try {
     const res = await fetch(imageUrl, { signal: AbortSignal.timeout(10000), redirect: 'error', headers: { 'User-Agent': 'Mozilla/5.0' } })
     const type = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase()
@@ -189,10 +196,30 @@ async function storeImage(admin: ReturnType<typeof createClient>, userId: string
     if (!res.ok || !ext) return null
     const bytes = await readLimited(res, MAX_IMAGE)
     if (bytes.length < 500 || bytes.length >= MAX_IMAGE) return null
+    if (minSide > 0) { const size = imageSize(bytes); if (size && Math.min(size.w, size.h) < minSide) return null }
     const path = `${userId}/${tag}-${Date.now()}-${index}.${ext}`
     const { error } = await admin.storage.from('product-images').upload(path, bytes, { contentType: type, upsert: false })
     if (error) return null
     return admin.storage.from('product-images').getPublicUrl(path).data.publicUrl
+  } catch {
+    return null
+  }
+}
+
+/** Copies the product video into our bucket (mp4 / webm, up to 30 MB); null when it cannot be read or is too big. */
+async function storeVideo(admin: ReturnType<typeof createClient>, userId: string, tag: string, videoUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(videoUrl, { signal: AbortSignal.timeout(40000), redirect: 'error', headers: { 'User-Agent': 'Mozilla/5.0', Referer: 'https://www.alibaba.com/' } })
+    const type = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase()
+    const ext = type === 'video/webm' ? 'webm' : type === 'video/mp4' || type === 'application/octet-stream' || type === 'binary/octet-stream' ? (/\.webm(?:\?|$)/i.test(videoUrl) ? 'webm' : 'mp4') : null
+    const declared = Number(res.headers.get('content-length') ?? 0)
+    if (!res.ok || !ext || declared > MAX_VIDEO) { await res.body?.cancel().catch(() => {}); return null }
+    const bytes = await readLimited(res, MAX_VIDEO + 1)
+    if (bytes.length < 5000 || bytes.length > MAX_VIDEO) return null
+    const path = `${userId}/${tag}-${Date.now()}.${ext}`
+    const { error } = await admin.storage.from('product-videos').upload(path, bytes, { contentType: ext === 'webm' ? 'video/webm' : 'video/mp4', upsert: false })
+    if (error) { console.error('[product-import] video upload', error.message); return null }
+    return admin.storage.from('product-videos').getPublicUrl(path).data.publicUrl
   } catch {
     return null
   }
@@ -336,19 +363,34 @@ Deno.serve(async (req) => {
     }
     if (!weight_kg || !dims) warnings.push('package_incomplete')
 
-    // pictures: the product's own, then the variants' (each distinct picture is copied once into our bucket)
-    const wanted = variantsOnly ? [] : platformImages(platform.id, scraped.images, 5)
-    const variantImages = [...new Set(normalized.rows.map((v) => v.image).filter((u): u is string => !!u))].filter((u) => !wanted.includes(u)).slice(0, 30)
-    const all = [...wanted, ...variantImages]
+    // pictures: the product's own (small ones, badges and logos are dropped, the first 8 good ones are kept), then the variants' (each distinct picture is copied once into our bucket)
+    const tag = `${platform.id}-${productId.slice(0, 20)}`
+    const candidates = variantsOnly ? [] : platformImages(platform.id, scraped.images, 15)
+    const stored: string[] = []
     const copied = new Map<string, string>()
-    for (let i = 0; i < all.length; i += 6) {
-      const chunk = all.slice(i, i + 6)
-      const urls = await Promise.all(chunk.map((u, j) => storeImage(admin, user.id, `${platform.id}-${productId.slice(0, 20)}`, i + j, u)))
-      chunk.forEach((u, j) => { const stored = urls[j]; if (stored) copied.set(u, stored) })
+    for (let i = 0; i < candidates.length && stored.length < MAX_PHOTOS; i += 6) {
+      const chunk = candidates.slice(i, i + 6)
+      const urls = await Promise.all(chunk.map((u, j) => storeImage(admin, user.id, tag, i + j, u, MIN_PHOTO_SIDE)))
+      chunk.forEach((u, j) => { const url = urls[j]; if (url && stored.length < MAX_PHOTOS) { stored.push(url); copied.set(u, url) } })
     }
-    const stored = wanted.map((u) => copied.get(u)).filter((u): u is string => !!u)
-    if (wanted.length > 0 && stored.length === 0) warnings.push('images_failed')
+    const variantImages = [...new Set(normalized.rows.map((v) => v.image).filter((u): u is string => !!u))].filter((u) => !copied.has(u)).slice(0, 30)
+    for (let i = 0; i < variantImages.length; i += 6) {
+      const chunk = variantImages.slice(i, i + 6)
+      const urls = await Promise.all(chunk.map((u, j) => storeImage(admin, user.id, tag, 100 + i + j, u)))
+      chunk.forEach((u, j) => { const url = urls[j]; if (url) copied.set(u, url) })
+    }
+    if (candidates.length > 0 && stored.length === 0) warnings.push('images_failed')
     if (normalized.rows.some((v) => v.image && !copied.has(v.image))) warnings.push('variant_images_partial')
+
+    // product video (Alibaba): the address given by the extraction, or found in the page source
+    let video_url: string | null = null
+    if (!variantsOnly) {
+      const videoSrc = platformVideoUrl(platform.id, scraped.video_url) ?? findVideoUrl(platform.id, read.meta.html)
+      if (videoSrc) {
+        video_url = await storeVideo(admin, user.id, tag, videoSrc)
+        if (!video_url) warnings.push('video_failed')
+      }
+    }
 
     const variants = normalized.rows.map((v) => {
       const tr = ai?.labels[v.label]
@@ -373,6 +415,7 @@ Deno.serve(async (req) => {
       tags: ai?.tags_fr ?? [],
       tags_en: ai?.tags_en ?? [],
       images: stored,
+      video_url,
       price_usd: price.usd,
       moq: ladder.moq,
       price_tiers: ladder.tiers,

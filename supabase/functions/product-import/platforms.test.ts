@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseProductUrl, parseSharePrice, platformImageUrl, platformImages } from './platforms'
+import { findVideoUrl, parseProductUrl, parseSharePrice, platformImageUrl, platformImages, platformVideoUrl } from './platforms'
 
 describe('parseProductUrl', () => {
   it('keeps Amazon working', () => {
@@ -74,5 +74,23 @@ describe('Alibaba share page', () => {
     expect(parseSharePrice('US $12.50')).toEqual({ price: 12.5, currency: 'USD' })
     expect(parseSharePrice('€ 7,5')).toEqual({ price: 7.5, currency: 'EUR' })
     expect(parseSharePrice(null)).toEqual({ price: null, currency: 'USD' })
+  })
+})
+
+describe('product video', () => {
+  it('accepts mp4 / webm files of the platform\'s own hosts only', () => {
+    expect(platformVideoUrl('alibaba', 'https://cloud.video.alibaba.com/play/u/1/p/1/e/6/t/1/v.mp4')).toBe('https://cloud.video.alibaba.com/play/u/1/p/1/e/6/t/1/v.mp4')
+    expect(platformVideoUrl('alibaba', '//video.alicdn.com/a/b.mp4?x=1')).toBe('https://video.alicdn.com/a/b.mp4?x=1')
+    expect(platformVideoUrl('alibaba', 'https://evil.test/a.mp4')).toBeNull()
+    expect(platformVideoUrl('alibaba', 'https://alicdn.com.evil.test/a.mp4')).toBeNull()
+    expect(platformVideoUrl('alibaba', 'http://video.alicdn.com/a.mp4')).toBeNull()
+    expect(platformVideoUrl('alibaba', 'https://video.alicdn.com/a.m3u8')).toBeNull()
+    expect(platformVideoUrl('temu', 'https://video.alicdn.com/a.mp4')).toBeNull()
+  })
+  it('finds the video in a page source, escaped or not', () => {
+    expect(findVideoUrl('alibaba', '<script>{"videoUrl":"https:\\/\\/cloud.video.alibaba.com\\/play\\/x.mp4"}</script>')).toBe('https://cloud.video.alibaba.com/play/x.mp4')
+    expect(findVideoUrl('alibaba', '<video src="//video.alicdn.com/v.mp4?a=1&amp;b=2"></video>')).toBe('https://video.alicdn.com/v.mp4?a=1&b=2')
+    expect(findVideoUrl('alibaba', '<a href="https://evil.test/v.mp4">x</a>')).toBeNull()
+    expect(findVideoUrl('alibaba', undefined)).toBeNull()
   })
 })

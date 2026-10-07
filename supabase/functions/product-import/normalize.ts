@@ -125,6 +125,33 @@ export function normalizeLadder(raw: unknown, moqRaw: unknown, fallbackCurrency:
   return { moq: kept[0].min_qty, base_usd: kept[0].price_usd, tiers: kept.slice(1, 8) }
 }
 
+/** Width and height of a PNG, JPEG or WebP picture from its first bytes, or null when unknown (used to drop badges and icons). */
+export function imageSize(b: Uint8Array): { w: number; h: number } | null {
+  const u16 = (i: number) => (b[i] << 8) | b[i + 1]
+  const u32 = (i: number) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0
+  const ascii = (i: number, n: number) => String.fromCharCode(...Array.from(b.subarray(i, i + n)))
+  if (b.length > 24 && b[0] === 0x89 && ascii(1, 3) === 'PNG') return { w: u32(16), h: u32(20) }
+  if (b.length > 4 && b[0] === 0xff && b[1] === 0xd8) {
+    let i = 2
+    while (i + 9 < b.length) {
+      if (b[i] !== 0xff) { i++; continue }
+      const m = b[i + 1]
+      if (m === 0xff) { i++; continue }
+      if (m === 0xd8 || (m >= 0xd0 && m <= 0xd7) || m === 0x01) { i += 2; continue }
+      if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return { w: u16(i + 7), h: u16(i + 5) }
+      i += 2 + u16(i + 2)
+    }
+    return null
+  }
+  if (b.length > 30 && ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') {
+    const kind = ascii(12, 4)
+    if (kind === 'VP8X') return { w: 1 + (b[24] | (b[25] << 8) | (b[26] << 16)), h: 1 + (b[27] | (b[28] << 8) | (b[29] << 16)) }
+    if (kind === 'VP8 ') return { w: (b[26] | (b[27] << 8)) & 0x3fff, h: (b[28] | (b[29] << 8)) & 0x3fff }
+    if (kind === 'VP8L') { const v = (b[21] | (b[22] << 8) | (b[23] << 16) | (b[24] << 24)) >>> 0; return { w: (v & 0x3fff) + 1, h: ((v >>> 14) & 0x3fff) + 1 } }
+  }
+  return null
+}
+
 /** Control characters and invisible separators (zero-width, line/paragraph separators, BOM). */
 const isJunk = (c: number) => c <= 8 || c === 11 || c === 12 || (c >= 14 && c <= 31) || c === 127 || (c >= 8203 && c <= 8207) || c === 8232 || c === 8233 || c === 65279
 
