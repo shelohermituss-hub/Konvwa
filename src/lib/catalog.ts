@@ -106,15 +106,16 @@ const MAX_CARDS_PER_PRODUCT = 8
 
 /**
  * A product with variants shows up as one card per variant (its picture, name and price), all opening the same product page.
- * Variants sharing a picture (sizes of one colour) make a single card, and a product never takes more than 8 cards.
+ * Only variants with a picture get a card; variants sharing a picture (sizes of one colour) make a single one, and a product never takes more than 8 cards.
+ * A product whose variants have no picture stays one plain card.
  */
 export function expandVariants(products: CatalogProduct[]): FeedItem[] {
   return products.flatMap((p): FeedItem[] => {
     const seen = new Set<string>()
+    // a variant without a picture stays on the product page only
     const cards = sortVariants(p.product_variants).filter((v) => {
-      const key = v.image || `label:${v.label}`
-      if (seen.has(key)) return false
-      seen.add(key)
+      if (!v.image || seen.has(v.image)) return false
+      seen.add(v.image)
       return true
     }).slice(0, MAX_CARDS_PER_PRODUCT)
     return cards.length === 0 ? [{ ...p, feed_key: p.id }] : cards.map((v) => ({ ...p, feed_key: `${p.id}:${v.id}`, feed_variant: v }))

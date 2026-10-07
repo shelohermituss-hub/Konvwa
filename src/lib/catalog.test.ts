@@ -31,6 +31,12 @@ describe('expandVariants', () => {
     expect(cards[0].feed_variant).toBeUndefined()
     expect(productPath(cards[0])).toBe('/products/p1')
   })
+  it('leaves variants without a picture out of the feed', () => {
+    expect(expandVariants([base([v('a', 'a.jpg', 1), v('b', null, 2), v('c', 'c.jpg', 3)])]).map((c) => c.feed_key)).toEqual(['p1:a', 'p1:c'])
+    const plain = expandVariants([base([v('a', null, 1), v('b', null, 2)])])
+    expect(plain).toHaveLength(1)
+    expect(plain[0].feed_variant).toBeUndefined()
+  })
   it('merges variants that share a picture and caps the cards of one product', () => {
     expect(expandVariants([base([v('s', 'red.jpg', 1), v('m', 'red.jpg', 2), v('l', 'blue.jpg', 3)])])).toHaveLength(2)
     expect(expandVariants([base(Array.from({ length: 30 }, (_, i) => v(`v${i}`, `${i}.jpg`, i)))])).toHaveLength(8)
