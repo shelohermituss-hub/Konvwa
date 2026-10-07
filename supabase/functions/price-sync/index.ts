@@ -8,6 +8,9 @@ const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 }
+/** Each product is read once every 3 days; 70 h (not 72) so the check stays inside the nightly window (the job runs 07:00-09:30 UTC every day). */
+const EVERY_HOURS = 70
+
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 
@@ -71,7 +74,7 @@ async function checkOne(admin: ReturnType<typeof createClient>, row: Row, apiKey
   const fail = async (note: string) => {
     // retried about an hour later by the next run of the job
     await admin.from('price_sync_log').insert({ product_id: row.id, status: 'error', note: note.slice(0, 300) })
-    await admin.from('products').update({ price_checked_at: new Date(Date.now() - 19 * 3600_000).toISOString() }).eq('id', row.id)
+    await admin.from('products').update({ price_checked_at: new Date(Date.now() - (EVERY_HOURS - 1) * 3600_000).toISOString() }).eq('id', row.id)
     return { status: 'error', note }
   }
   try {
@@ -161,7 +164,7 @@ Deno.serve(async (req) => {
       // the products waiting for the admin are not read again until he has answered
       const { data: pending } = await admin.from('price_sync_log').select('product_id').eq('status', 'review').is('resolved_at', null)
       const skip = new Set((pending ?? []).map((r: { product_id: string }) => r.product_id))
-      const since = new Date(Date.now() - 20 * 3600_000).toISOString()
+      const since = new Date(Date.now() - EVERY_HOURS * 3600_000).toISOString()
       const { data } = await admin.from('products').select(columns)
         .eq('price_sync', true).eq('active', true).not('source_url', 'is', null)
         .or(`price_checked_at.is.null,price_checked_at.lt.${since}`)

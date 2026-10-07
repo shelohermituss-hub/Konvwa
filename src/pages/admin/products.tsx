@@ -665,7 +665,7 @@ export function AdminProductsPage() {
                   <div className="mt-2 space-y-1.5 rounded-xl border border-gray-100 bg-gray-50/60 p-3">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={!!draft.price_sync} onChange={e => setField('price_sync', e.target.checked)} className="h-4 w-4 rounded" />
-                      <span className="text-sm font-medium">{tr('Suivre le prix du fournisseur chaque nuit')}</span>
+                      <span className="text-sm font-medium">{tr('Suivre le prix du fournisseur (tous les 3 jours)')}</span>
                     </label>
                     <p className="text-xs text-muted-foreground">{tr('Le prix, les paliers et les variantes suivent le prix du fournisseur, et ses offres (« 2 pour 40 », « 1 acheté, 1 offert ») deviennent des paliers tant qu\'elles durent.')}</p>
                     {editing && (
@@ -757,7 +757,7 @@ export function AdminProductsPage() {
                 <div key={i} className="flex items-center gap-2">
                   <Input type="number" min={1} value={tier.min_qty || ''} onChange={e => setTier(i, { min_qty: parseInt(e.target.value) || 0, src: undefined })} placeholder={tr('À partir de (qté)')} className="flex-1" />
                   <Input type="number" min={0} value={tier.price_htg || ''} onChange={e => setTier(i, { price_htg: parseFloat(e.target.value) || 0, src: undefined })} placeholder={tr('Prix unitaire HTG')} className="flex-1" />
-                  {tier.src === 'sync' && <Badge variant="outline" className="shrink-0 border-sky-300 bg-sky-50 text-sky-800" title={tr('Offre du fournisseur : mise à jour chaque nuit, retirée quand l\'offre disparaît. Modifiez-la pour la fixer.')}>{tr('Offre auto')}</Badge>}
+                  {tier.src === 'sync' && <Badge variant="outline" className="shrink-0 border-sky-300 bg-sky-50 text-sky-800" title={tr('Offre du fournisseur : mise à jour tous les 3 jours, retirée quand l\'offre disparaît. Modifiez-la pour la fixer.')}>{tr('Offre auto')}</Badge>}
                   <button type="button" onClick={() => setDraft(prev => ({ ...prev, price_tiers: prev.price_tiers.filter((_, j) => j !== i) }))} className="text-destructive hover:text-destructive/80" aria-label={tr('Retirer le palier')}>
                     <Trash2 className="h-4 w-4" />
                   </button>
