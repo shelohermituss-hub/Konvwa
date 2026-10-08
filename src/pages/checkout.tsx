@@ -17,6 +17,8 @@ import { createCheckout, fetchCheckoutShipping, type CheckoutShipping, type Crea
 import { cn } from '@/lib/utils'
 import { money } from '@/lib/currency'
 import { trackPixel } from '@/lib/meta-pixel'
+import { CarrierLogo } from '@/components/shared/carrier-logo'
+import { useCarrierLogos } from '@/lib/carrier-logos'
 interface WalletData {
   id: string
   available_balance: number
@@ -47,6 +49,7 @@ export function CheckoutPage() {
   const [shippingLoading, setShippingLoading] = useState(true)
   const [shippingError, setShippingError] = useState('')
   const [rateId, setRateId] = useState<string | null>(null)
+  const carrierLogos = useCarrierLogos()
   // How the customer pays: the wallet, or MonCash / NatCash directly (redirected to the gateway; nothing is ordered until it confirms)
   const [payWith, setPayWith] = useState<'wallet' | 'moncash' | 'natcash' | 'stripe'>('wallet')
 
@@ -330,6 +333,7 @@ export function CheckoutPage() {
                       <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', active ? 'bg-primary text-white' : 'bg-gray-100 text-muted-foreground')}>
                         {o.mode === 'ocean' ? <Ship className="h-4 w-4" /> : <Plane className="h-4 w-4" />}
                       </span>
+                      <CarrierLogo src={carrierLogos[o.rate_id]} name={o.name} />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-semibold">{o.name}</span>
                         {o.transit_days_min && o.transit_days_max ? <span className="text-xs text-muted-foreground">{o.transit_days_min}-{o.transit_days_max} {tr('jours')}</span> : null}

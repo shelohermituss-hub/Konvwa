@@ -8,6 +8,8 @@ import { useStepUp } from '@/lib/step-up'
 import { cn } from '@/lib/utils'
 import { tr, trServer, LOCALE_TAG } from '@/lib/i18n'
 import { currencyLabel, money, moneyAmount } from '@/lib/currency'
+import { CarrierLogo } from '@/components/shared/carrier-logo'
+import { useCarrierLogos } from '@/lib/carrier-logos'
 
 export type ShippableOrderKind = 'order' | 'product_order'
 
@@ -44,6 +46,7 @@ export function ShippingMethodPicker({ kind, orderId, balance, onPaid }: {
   const [data, setData] = useState<OptionsResult | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [paying, setPaying] = useState(false)
+  const carrierLogos = useCarrierLogos()
 
   const load = useCallback(async () => {
     const { data: res } = await supabase.rpc('order_shipping_options', { p_kind: kind, p_id: orderId })
@@ -110,6 +113,7 @@ export function ShippingMethodPicker({ kind, orderId, balance, onPaid }: {
                 <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', active ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500')}>
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
+                <CarrierLogo src={carrierLogos[o.rate_id]} name={o.name} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{o.name}</span>
                   <span className="block text-xs text-muted-foreground">

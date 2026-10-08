@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
+import { CarrierLogo } from '@/components/shared/carrier-logo'
+import { CarrierLogoField } from '@/components/shared/carrier-logo-field'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Plus, Pencil, Trash2, Loader2, Truck, MapPin, Package, Globe, Ship, Plane, DollarSign, Warehouse, Tag } from 'lucide-react'
@@ -46,6 +48,7 @@ interface ShippingRate {
   per_cbm_usd: number | null; per_cuft_usd: number | null
   transit_days_min: number | null; transit_days_max: number | null
   description: string | null; active: boolean; sort_order: number
+  carrier_logo_url?: string | null
   shipping_origins?: { name: string; flag_emoji: string | null } | null
 }
 
@@ -989,12 +992,13 @@ type RateForm = {
   description: string
   active: boolean
   sort_order: string
+  carrier_logo_url: string
 }
 
 const EMPTY_RATE_FORM: RateForm = {
   mode: 'ocean', name: '', type_label: 'Standard', origin_id: '',
   per_cbm_usd: '', per_kg_usd: '', min_amount_usd: '0',
-  transit_days_min: '', transit_days_max: '', description: '', active: true, sort_order: '0',
+  transit_days_min: '', transit_days_max: '', description: '', active: true, sort_order: '0', carrier_logo_url: '',
 }
 
 function ShippingRatesSection() {
@@ -1025,7 +1029,7 @@ function ShippingRatesSection() {
       per_cbm_usd: r.per_cbm_usd?.toString() ?? '', per_kg_usd: r.per_kg_usd?.toString() ?? '',
       min_amount_usd: r.min_amount_usd.toString(),
       transit_days_min: r.transit_days_min?.toString() ?? '', transit_days_max: r.transit_days_max?.toString() ?? '',
-      description: r.description ?? '', active: r.active, sort_order: r.sort_order.toString(),
+      description: r.description ?? '', active: r.active, sort_order: r.sort_order.toString(), carrier_logo_url: r.carrier_logo_url ?? '',
     }
   }
 
@@ -1050,6 +1054,8 @@ function ShippingRatesSection() {
       description: form.description.trim() || null,
       active: form.active,
       sort_order: parseInt(form.sort_order) || 0,
+      // the logo column is only sent when there is something to change (a logo to set, or the one to remove)
+      ...(form.carrier_logo_url ? { carrier_logo_url: form.carrier_logo_url } : editing?.carrier_logo_url ? { carrier_logo_url: null } : {}),
     }
   }
 
@@ -1113,6 +1119,7 @@ function ShippingRatesSection() {
                 <div className={cn('flex h-8 w-8 items-center justify-center rounded-full shrink-0', item.mode === 'ocean' ? 'bg-blue-50' : 'bg-sky-50')}>
                   <Icon className={cn('h-3.5 w-3.5', color)} />
                 </div>
+                <CarrierLogo src={item.carrier_logo_url} name={item.name} className="h-8 w-12" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold truncate">{item.name}</p>
@@ -1259,6 +1266,9 @@ function ShippingRatesSection() {
               <Input type="number" placeholder="0" value={form.sort_order}
                 onChange={e => setForm(p => ({ ...p, sort_order: e.target.value }))} className="rounded-xl" />
             </div>
+
+            {/* Carrier logo */}
+            <CarrierLogoField value={form.carrier_logo_url} name={form.name} onChange={url => setForm(p => ({ ...p, carrier_logo_url: url }))} />
 
             {/* Description */}
             <div className="space-y-1.5">

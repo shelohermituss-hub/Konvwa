@@ -984,4 +984,12 @@ export const FEATURES_EN: Record<string, string> = {
   'Lien retiré : les boutons sont cachés.': 'Link removed: the buttons are hidden.',
   'Boutons visibles sur le site.': 'Buttons visible on the site.',
   'Aucun lien : les boutons sont cachés.': 'No link: the buttons are hidden.',
+  'Image JPG, PNG ou WebP seulement.': 'JPG, PNG or WebP image only.',
+  'Image trop lourde (max 2 Mo).': 'Image too large (max 2 MB).',
+  "Envoi de l'image impossible.": 'Could not upload the image.',
+  'Logo de la compagnie (optionnel)': 'Carrier logo (optional)',
+  'Changer le logo': 'Change the logo',
+  'Ajouter le logo': 'Add the logo',
+  "Affiché au client quand il choisit son mode d'expédition. Fond clair conseillé.": 'Shown to the customer when he chooses the shipping method. Light background recommended.',
+  'Logo': 'Logo',
 }
