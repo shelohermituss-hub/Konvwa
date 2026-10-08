@@ -995,4 +995,5 @@ export const FEATURES_EN: Record<string, string> = {
   '+ {0} $ de frais': '+ ${0} fee',
   'Frais généraux (USD, fixes par expédition)': 'General fees (USD, fixed per shipment)',
   'Ajoutés une fois au prix de chaque expédition de ce tarif (manutention, dossier, emballage…), en plus du prix au poids ou au volume. Le client voit un seul prix.': 'Added once to the price of every shipment of this rate (handling, file, packing…), on top of the weight or volume price. The customer sees a single price.',
+  'Volume : {0} m³ · poids facturé par avion (volumétrique) : {1} kg': 'Volume: {0} m³ · air chargeable weight (volumetric): {1} kg',
 }

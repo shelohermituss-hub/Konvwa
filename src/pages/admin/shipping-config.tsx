@@ -1128,12 +1128,12 @@ function ShippingRatesSection() {
                     <p className="text-sm font-semibold truncate">{item.name}</p>
                     <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full shrink-0">{item.type_label}</span>
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                     {org && <span><Flag emoji={org.flag_emoji} /> {org.name}</span>}
-                    {transit && <span>{transit}</span>}
-                    <span className="font-semibold text-foreground">{rate}</span>
-                    {item.min_amount_usd > 0 && <span>min ${item.min_amount_usd}</span>}
-                    {(item.general_fee_usd ?? 0) > 0 && <span>{tr('+ {0} $ de frais', item.general_fee_usd ?? 0)}</span>}
+                    {transit && <span className="whitespace-nowrap">{transit}</span>}
+                    <span className="whitespace-nowrap font-semibold text-foreground">{rate}</span>
+                    {item.min_amount_usd > 0 && <span className="whitespace-nowrap">min ${item.min_amount_usd}</span>}
+                    {(item.general_fee_usd ?? 0) > 0 && <span className="whitespace-nowrap">{tr('+ {0} $ de frais', item.general_fee_usd ?? 0)}</span>}
                   </div>
                 </div>
                 <ActiveBadge active={item.active} onToggle={() => handleToggle(item)} />

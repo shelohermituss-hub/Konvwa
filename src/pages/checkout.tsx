@@ -322,7 +322,12 @@ export function CheckoutPage() {
         {hasUs && !blocked && !shippingLoading && (
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
             <p className="text-sm font-bold">{tr('Mode d\'expédition')}</p>
-            <p className="mb-3 text-xs text-muted-foreground">{tr('Colis estimé : {0} kg. Le prix est calculé selon le poids et le volume.', (shipping?.kg ?? 0).toLocaleString(LOCALE_TAG))}</p>
+            <p className="text-xs text-muted-foreground">{tr('Colis estimé : {0} kg. Le prix est calculé selon le poids et le volume.', (shipping?.kg ?? 0).toLocaleString(LOCALE_TAG))}</p>
+            {/* by air the parcel is charged at the greater of its weight and its volumetric weight (1 CBM = 166.67 kg) */}
+            {shipping && shipping.cbm * 166.6667 > shipping.kg && (
+              <p className="text-xs text-muted-foreground">{tr('Volume : {0} m³ · poids facturé par avion (volumétrique) : {1} kg', shipping.cbm.toLocaleString(LOCALE_TAG), (Math.round(shipping.cbm * 166.6667 * 1000) / 1000).toLocaleString(LOCALE_TAG))}</p>
+            )}
+            <div className="mb-3" />
             {shipping && shipping.options.length > 0 ? (
               <div className="space-y-2" role="radiogroup" aria-label={tr('Mode d\'expédition')}>
                 {shipping.options.map(o => {
