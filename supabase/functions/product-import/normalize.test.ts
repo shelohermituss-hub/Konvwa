@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom, titlesAgree, looksLikeErrorPage, normalizeLadder, imageSize } from './normalize'
+import { cleanSpecs, cleanText, dimsFrom, extractJson, parseDimensionsText, parseWeightText, priceToUsd, toCm, toKg, validateAi, weightFrom, guessItemType, checkItemType, titlesAgree, looksLikeErrorPage, normalizeLadder, imageSize } from './normalize'
 
 describe('units', () => {
   it('converts weights to kg', () => {
@@ -147,5 +147,31 @@ describe('imageSize', () => {
   it('returns null for anything else', () => {
     expect(imageSize(new Uint8Array(10))).toBeNull()
     expect(imageSize(new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>'))).toBeNull()
+  })
+})
+
+describe('carrier item type', () => {
+  const all = ['phone', 'laptop', 'perfume', 'earbuds', 'smartwatch', 'power_bank', 'battery', 'router']
+  it('finds the type from the title', () => {
+    expect(guessItemType('Apple iPhone 15 Pro 256GB', all)).toBe('phone')
+    expect(guessItemType('Lenovo IdeaPad Laptop 15.6"', all)).toBe('laptop')
+    expect(guessItemType('Dior Sauvage Eau de Parfum 100ml', all)).toBe('perfume')
+    expect(guessItemType('Apple AirPods Pro 2', all)).toBe('earbuds')
+    expect(guessItemType('Anker Power Bank 20000mAh', all)).toBe('power_bank')
+  })
+  it('leaves accessories and unknown products on the weight rate', () => {
+    expect(guessItemType('iPhone 15 Pro silicone case', all)).toBeNull()
+    expect(guessItemType('Chargeur pour iPhone', all)).toBeNull()
+    expect(guessItemType('Protein powder 5 lb', all)).toBeNull()
+    expect(guessItemType('Apple iPhone 15', ['laptop'])).toBeNull()
+  })
+  it('checks the type chosen by the AI', () => {
+    expect(checkItemType('phone', 'Samsung Galaxy S24')).toBe('phone')
+    expect(checkItemType('phone', 'Coque pour Samsung Galaxy S24')).toBeNull()
+    expect(checkItemType(null, 'x')).toBeNull()
+  })
+  it('keeps only an allowed AI type', () => {
+    expect(validateAi({ name_fr: 'X', shipping_item_type: 'phone' }, [], ['phone'])?.item_type).toBe('phone')
+    expect(validateAi({ name_fr: 'X', shipping_item_type: 'bomb' }, [], ['phone'])?.item_type).toBeNull()
   })
 })

@@ -182,6 +182,8 @@ export interface AiResult {
   name_fr: string; name_en: string
   description_fr: string; description_en: string
   category: string | null
+  /** Carrier item type (phone, laptop, perfume…) among the allowed slugs, or null. */
+  item_type: string | null
   tags_fr: string[]; tags_en: string[]
   estimated_package: { weight_kg: number; length_cm: number; width_cm: number; height_cm: number } | null
   /** Variant labels translated, keyed by the original label. */
@@ -206,7 +208,7 @@ function cleanLabels(v: unknown): Record<string, { fr: string; en: string }> {
 }
 
 /** The model output is untrusted: keep only well-formed, bounded values. */
-export function validateAi(raw: unknown, allowedCategories: string[]): AiResult | null {
+export function validateAi(raw: unknown, allowedCategories: string[], allowedTypes: string[] = []): AiResult | null {
   if (!raw || typeof raw !== 'object') return null
   const o = raw as Record<string, unknown>
   const name_fr = cleanText(o.name_fr, 200)
@@ -220,6 +222,7 @@ export function validateAi(raw: unknown, allowedCategories: string[]): AiResult 
     name_fr: name_fr || name_en, name_en: name_en || name_fr,
     description_fr: cleanText(o.description_fr, 4000, true), description_en: cleanText(o.description_en, 4000, true),
     category,
+    item_type: allowedTypes.find((t) => t === cleanText(o.shipping_item_type, 40)) ?? null,
     tags_fr: strList(o.tags_fr, 10, 40), tags_en: strList(o.tags_en, 10, 40),
     estimated_package: w && l && wi && h ? { weight_kg: w, length_cm: l, width_cm: wi, height_cm: h } : null,
     labels: cleanLabels(o.labels),
@@ -250,4 +253,56 @@ export function looksLikeErrorPage(title: string): boolean {
   const t = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   return /\b(404|403|410|500|502|503)\b/.test(t)
     || /(page d'?erreur|error page|page not found|not found|introuvable|access denied|acces refuse|forbidden|captcha|are you a robot|verify you are human|unusual traffic|sign in|log in|se connecter|connexion requise|temporarily unavailable|oops)/.test(t)
+}
+
+/** Accessories (case, charger, strap…) are not the device itself: they stay on the weight rate. */
+const ACCESSORY = /\b(case|cover|coque|housse|etui|étui|protector|protecteur|film|glass|verre|charger|chargeur|cable|câble|cord|holder|support|stand|mount|strap|bracelet|band|adapter|adaptateur|dock|sleeve|skin|sticker|autocollant|replacement|remplacement|pour|for)\b/i
+
+/** Keyword -> carrier item type, most specific first. */
+const ITEM_KEYWORDS: Array<[string, RegExp]> = [
+  ['mini_perfume', /\bmini\b.*(perfume|parfum)|(perfume|parfum).*\b(miniature|travel size|mini)\b/i],
+  ['perfume', /\b(perfume|parfum|cologne|fragrance|eau de (toilette|parfum))\b/i],
+  ['alcohol', /\b(whisk(e)?y|vodka|rhum|rum|liquor|alcool|champagne|cognac|tequila)\b/i],
+  ['power_bank', /\b(power ?bank|batterie externe|chargeur portable)\b/i],
+  ['battery', /\b(batter(y|ies|ie|ies)|piles?)\b/i],
+  ['smartwatch', /\b(smart ?watch|montre connect[ée]e|apple watch|galaxy watch|fitbit)\b/i],
+  ['earbuds', /\b(airpods|galaxy buds|earbuds|[ée]couteurs|true wireless)\b/i],
+  ['headphones', /\b(headphones?|headset|casque)\b/i],
+  ['tablet', /\b(tablet|tablette|ipad)\b/i],
+  ['laptop', /\b(laptop|notebook|macbook|chromebook|ordinateur portable)\b/i],
+  ['phone', /\b(iphone|smartphone|cell ?phone|mobile phone|t[ée]l[ée]phone|galaxy [sazm]\d|pixel \d)\b/i],
+  ['drone', /\b(drone|quadcopter)\b/i],
+  ['surveillance_camera', /\b(surveillance|security camera|cctv|ip camera|cam[ée]ra de surveillance)\b/i],
+  ['camera', /\b(camera|cam[ée]ra|gopro)\b/i],
+  ['dvr', /\b(dvr|nvr)\b/i],
+  ['game_console', /\b(playstation|ps[45]|xbox|nintendo switch|game console|console de jeu)\b/i],
+  ['game_controller', /\b(game ?controller|gamepad|manette)\b/i],
+  ['inverter_regulator', /\b(inverter regulator|r[ée]gulateur)\b/i],
+  ['inverter', /\b(inverter|onduleur)\b/i],
+  ['printer', /\b(printer|imprimante)\b/i],
+  ['projector', /\b(projector|projecteur)\b/i],
+  ['router', /\b(router|routeur)\b/i],
+  ['smart_tv', /\b(smart tv|t[ée]l[ée]viseur|television)\b/i],
+  ['screen_monitor', /\b(monitor|moniteur)\b/i],
+  ['desktop', /\b(desktop|ordinateur de bureau|mini pc)\b/i],
+  ['starlink', /\bstarlink\b/i],
+]
+/** Types that are never an accessory themselves (no guard). */
+const NO_GUARD = new Set(['perfume', 'mini_perfume', 'alcohol', 'power_bank', 'battery'])
+
+/** The carrier item type of a product from its title / breadcrumb, among the types that exist (null when unsure or when it is an accessory). */
+export function guessItemType(text: string, allowed: string[]): string | null {
+  const t = text.toLowerCase()
+  for (const [slug, re] of ITEM_KEYWORDS) {
+    if (!allowed.includes(slug) || !re.test(t)) continue
+    if (!NO_GUARD.has(slug) && ACCESSORY.test(t)) return null
+    return slug
+  }
+  return null
+}
+
+/** A type chosen by the AI is kept only if the title is not an accessory of a device. */
+export function checkItemType(slug: string | null, title: string): string | null {
+  if (!slug) return null
+  return !NO_GUARD.has(slug) && ACCESSORY.test(title.toLowerCase()) ? null : slug
 }

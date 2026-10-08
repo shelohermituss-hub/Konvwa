@@ -8,6 +8,8 @@ export interface ImportedProduct {
   description_en: string
   brand: string | null
   category: string | null
+  /** Carrier item type slug (phone, laptop, perfume…) found at import, or null (priced by weight). */
+  shipping_item_type?: string | null
   tags: string[]
   tags_en: string[]
   images: string[]

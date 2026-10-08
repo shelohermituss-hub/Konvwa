@@ -229,6 +229,7 @@ export function AdminProductsPage() {
         ...(d.platform === 'muscle_strength' ? { src: 'sync' as const, kind: t.kind, buy: t.buy, free: t.free, off: t.off } : {}),
       })),
       category: d.category ?? '',
+      shipping_item_type: d.shipping_item_type ?? null,
       supplier_name: d.supplier_name,
       supplier_country: d.supplier_country,
       images: d.images,

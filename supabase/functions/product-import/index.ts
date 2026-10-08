@@ -6,7 +6,7 @@ import { normalizeVariants } from './variants.ts'
 import { cartDiscountedPrice, promoTiers } from './promos.ts'
 import { normalizeReviews } from './reviews.ts'
 import {
-  cleanSpecs, cleanText, dimsFrom, extractJson, imageSize, looksLikeErrorPage, normalizeLadder, priceToUsd, titlesAgree, validateAi, weightFrom,
+  cleanSpecs, cleanText, dimsFrom, extractJson, imageSize, looksLikeErrorPage, normalizeLadder, priceToUsd, titlesAgree, validateAi, weightFrom, guessItemType, checkItemType,
   type AiResult, type Dims,
 } from './normalize.ts'
 
@@ -142,7 +142,7 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
 }
 
 async function askAi(input: {
-  apiKey: string; model: string; scraped: Scraped; categories: string[]
+  apiKey: string; model: string; scraped: Scraped; categories: string[]; itemTypes: Array<{ slug: string; label: string }>
   knownPackage: boolean; platform: Platform; variantLabels: string[]
 }): Promise<AiResult | null> {
   const { scraped } = input
@@ -161,6 +161,7 @@ async function askAi(input: {
     'name_fr, name_en (clear product name, max 120 chars, no brand spam, no ALL CAPS),',
     'description_fr, description_en (3-6 short sentences or lines based ONLY on the facts; never invent specifications, materials, certifications or numbers),',
     `category (one of: ${JSON.stringify(input.categories)} or null),`,
+    `shipping_item_type (the slug of the type this product IS among ${JSON.stringify(input.itemTypes)}, or null: null for accessories such as cases, chargers, cables, straps, and when unsure),`,
     'tags_fr, tags_en (up to 8 short search tags each),',
     input.knownPackage
       ? 'estimated_package: null,'
@@ -188,7 +189,7 @@ async function askAi(input: {
   if (!res.ok) { console.error('[product-import] openrouter', res.status, (await res.text().catch(() => '')).slice(0, 300)); return null }
   const data = await res.json().catch(() => null) as { choices?: Array<{ message?: { content?: string } }> } | null
   const content = data?.choices?.[0]?.message?.content
-  return content ? validateAi(extractJson(content), input.categories) : null
+  return content ? validateAi(extractJson(content), input.categories, input.itemTypes.map((t) => t.slug)) : null
 }
 
 async function readLimited(res: Response, limit: number): Promise<Uint8Array> {
@@ -356,6 +357,8 @@ Deno.serve(async (req) => {
 
     const { data: cats } = await admin.from('categories').select('name').limit(60)
     const { data: used } = await admin.from('products').select('category').not('category', 'is', null).limit(200)
+    const { data: typeRows } = await admin.from('shipping_item_types').select('slug, label').order('sort_order').limit(100)
+    const itemTypes = (typeRows ?? []) as Array<{ slug: string; label: string }>
     const categories = [...new Set([...(cats ?? []).map((c: { name: string }) => c.name), ...(used ?? []).map((p: { category: string }) => p.category)].filter(Boolean))].slice(0, 40)
 
     const { data: rateRows } = await admin.from('app_settings').select('key, value').in('key', ['eur_to_usd_rate', 'cny_to_usd_rate'])
@@ -385,7 +388,7 @@ Deno.serve(async (req) => {
 
     let ai: AiResult | null = null
     if (routerKey) {
-      ai = await askAi({ apiKey: routerKey, model: Deno.env.get('OPENROUTER_MODEL') || DEFAULT_MODEL, scraped, categories, knownPackage: !!(weight_kg && dims), platform, variantLabels: [...new Set(normalized.rows.map((v) => v.label))].slice(0, 100) })
+      ai = await askAi({ apiKey: routerKey, model: Deno.env.get('OPENROUTER_MODEL') || DEFAULT_MODEL, scraped, categories, itemTypes, knownPackage: !!(weight_kg && dims), platform, variantLabels: [...new Set(normalized.rows.map((v) => v.label))].slice(0, 100) })
         .catch((e) => { console.error('[product-import] ai', e); return null })
       if (!ai) warnings.push('ai_failed')
     } else {
@@ -447,6 +450,8 @@ Deno.serve(async (req) => {
       description_en: ai?.description_en || '',
       brand: cleanText(scraped.brand, 120) || null,
       category: ai?.category ?? null,
+      // carrier item type (phone, laptop, perfume…): the AI's choice, else keywords on the title and breadcrumb; null = priced by weight
+      shipping_item_type: checkItemType(ai?.item_type ?? null, name) ?? guessItemType(`${name} ${(scraped.category_path ?? []).join(' ')}`, itemTypes.map((t) => t.slug)),
       tags: ai?.tags_fr ?? [],
       tags_en: ai?.tags_en ?? [],
       images: stored,
