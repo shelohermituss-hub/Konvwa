@@ -890,8 +890,8 @@ BEGIN
   usd := coalesce((SELECT value::numeric FROM app_settings WHERE key = 'usd_to_htg_rate'), 140);
   ASSERT NOT has_function_privilege('authenticated', 'public.cart_shipping_options(jsonb,uuid,text)', 'execute'), 'cart pricing callable by clients';
   ASSERT NOT has_function_privilege('anon', 'public.cart_shipping_options(jsonb,uuid,text)', 'execute'), 'cart pricing callable by visitors';
-  INSERT INTO shipping_rates (mode, name, per_kg_usd, min_amount_usd, base_fee_usd, general_fee_usd, active, sort_order, volumetric_divisor, flat_max_lb, flat_max_value_usd, flat_price_usd)
-    VALUES ('air', 'TEST carrier rules', 10, 0, 0, 2, true, 9997, 132, 5, 200, 20) RETURNING id INTO rid;
+  INSERT INTO shipping_rates (mode, name, per_kg_usd, min_amount_usd, base_fee_usd, general_fee_usd, active, sort_order, volumetric_divisor, volumetric_unit, flat_max_lb, flat_max_value_usd, flat_price_usd)
+    VALUES ('air', 'TEST carrier rules', 10, 0, 0, 2, true, 9997, 132, 'in', 5, 200, 20) RETURNING id INTO rid;
   INSERT INTO shipping_item_types (slug, label) VALUES ('test_phone', 'T'), ('test_perfume', 'T'), ('test_battery', 'T') ON CONFLICT DO NOTHING;
   INSERT INTO shipping_item_rules (rate_id, item_type, mode, price_usd, value_min_usd, value_max_usd) VALUES
     (rid, 'test_phone', 'fixed', 30, 0, 300), (rid, 'test_phone', 'fixed', 50, 300.01, NULL), (rid, 'test_perfume', 'extra', 4, 0, NULL), (rid, 'test_battery', 'per_lb', 5, 0, NULL);
@@ -912,6 +912,15 @@ BEGIN
   -- per-pound item: 2 kg of batteries = 4.409 lb x $5, rest by weight
   SELECT amount_htg INTO a FROM cart_shipping_options('[{"kg":2,"cbm":0.001,"qty":1,"item_type":"test_battery","unit_usd":40},{"kg":10,"cbm":0.05,"qty":1,"unit_usd":500}]', NULL, NULL) WHERE rate_id = rid;
   ASSERT a > round(2 * 2.2046226 * 5 * usd), 'per-lb item priced on its weight';
+  -- no CBM price: a sea rate with a CBM price is charged by weight only (volumetric weight chosen by the rate)
+  INSERT INTO shipping_rates (mode, name, per_kg_usd, per_cbm_usd, min_amount_usd, base_fee_usd, general_fee_usd, active, sort_order, volumetric_divisor, volumetric_unit)
+    VALUES ('ocean', 'TEST weight only', 3, 99999, 0, 0, 0, true, 9996, 2000, 'cm') RETURNING id INTO rid;
+  SELECT amount_htg, billed_kg INTO a, billed FROM cart_shipping_options('[{"kg":1,"cbm":0.02,"qty":1,"unit_usd":10}]', NULL, NULL) WHERE rate_id = rid;
+  ASSERT round(billed, 3) = round(0.02 * 1000000 / 2000 / 2.2046226, 3), 'cm / 2000 volumetric weight, got ' || billed;
+  ASSERT a = round(billed * 3 * usd), 'sea rate priced by weight only, got ' || a;
+  UPDATE shipping_rates SET volumetric_unit = 'none', volumetric_divisor = NULL WHERE id = rid;
+  SELECT amount_htg INTO a FROM cart_shipping_options('[{"kg":1,"cbm":0.02,"qty":1,"unit_usd":10}]', NULL, NULL) WHERE rate_id = rid;
+  ASSERT a = round(3 * usd), 'real weight only when the rate has no volumetric formula, got ' || a;
   -- clients cannot read or write the rules (admin only)
   PERFORM set_config('request.jwt.claims', json_build_object('sub', (SELECT id FROM profiles WHERE role = 'client' LIMIT 1), 'role', 'authenticated')::text, true);
   SET LOCAL ROLE authenticated;

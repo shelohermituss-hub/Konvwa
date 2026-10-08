@@ -18,6 +18,7 @@ import {
 
 import { PackagePhotos } from '@/components/shared/package-photos'
 import { useSearchParams } from 'react-router-dom'
+import { billedWeightKg } from '@/lib/shipping-weight'
 import { tr, trServer, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 interface ShippingRateOption {
   id: string
@@ -25,9 +26,10 @@ interface ShippingRateOption {
   name: string
   base_fee_usd: number
   general_fee_usd: number
-  per_cbm_usd: number | null
   per_kg_usd: number | null
   min_amount_usd: number | null
+  volumetric_divisor: number | null
+  volumetric_unit: 'in' | 'cm' | 'none' | null
 }
 
 
@@ -140,7 +142,7 @@ function AdminActionSheet({
   useEffect(() => {
     Promise.all([
       supabase.from('shipping_rates')
-        .select('id, mode, name, base_fee_usd, general_fee_usd, per_cbm_usd, per_kg_usd, min_amount_usd')
+        .select('id, mode, name, base_fee_usd, general_fee_usd, per_kg_usd, min_amount_usd, volumetric_divisor, volumetric_unit')
         .eq('active', true)
         .order('mode').order('sort_order'),
       supabase.from('app_settings').select('value').eq('key', 'usd_to_htg_rate').single(),
@@ -162,8 +164,8 @@ function AdminActionSheet({
     const kg  = parseFloat(form.actual_kg)  || 0
     // the coefficient only applies to parcels from China (rates leaving from another origin are priced at x1)
     const mult = (request.origin_country ?? 'CN') === 'CN' ? (request.product_rate_category?.rate_multiplier ?? 1) : 1
-    // same rule as the customer's shipping options (database): ocean = greater of volume / weight price, air = weight price, minimum charge
-    const freight = rate.mode === 'ocean' ? Math.max((rate.per_cbm_usd ?? 0) * cbm, (rate.per_kg_usd ?? 0) * kg) : (rate.per_kg_usd ?? 0) * kg
+    // same rule as the customer's shipping options (database): the greater of the real and the volumetric weight (formula of the rate) x price per kg, minimum charge
+    const freight = (rate.per_kg_usd ?? 0) * billedWeightKg(rate.volumetric_divisor, rate.volumetric_unit, kg, cbm)
     const usd  = Math.max(rate.min_amount_usd ?? 0, rate.base_fee_usd + freight)
     // the general fee of the rate is added once, after the category coefficient (same rule as the database)
     return { usd, mult, htg: Math.round((usd * mult + (rate.general_fee_usd ?? 0)) * usdToHtg) }
@@ -413,7 +415,6 @@ function AdminActionSheet({
                             {oceanRates.map(r => (
                               <SelectItem key={r.id} value={r.id}>
                                 {r.name}
-                                {r.per_cbm_usd != null && ` · $${r.per_cbm_usd}/m³`}
                                 {r.per_kg_usd  != null && ` · $${r.per_kg_usd}/kg`}
                               </SelectItem>
                             ))}

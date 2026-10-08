@@ -52,6 +52,7 @@ interface ShippingRate {
   carrier_logo_url?: string | null
   general_fee_usd?: number
   volumetric_divisor?: number | null
+  volumetric_unit?: 'in' | 'cm' | 'none' | null
   flat_max_lb?: number | null
   flat_max_value_usd?: number | null
   flat_price_usd?: number | null
@@ -987,6 +988,20 @@ function ProductTypesSection() {
 
 const LB_PER_KG = 2.2046226
 
+type VolumetricFormula = 'in_132' | 'cm_2000' | 'standard' | 'none'
+const FORMULA_FIELDS: Record<VolumetricFormula, { volumetric_divisor: number | null; volumetric_unit: 'in' | 'cm' | 'none' | null }> = {
+  in_132: { volumetric_divisor: 132, volumetric_unit: 'in' },
+  cm_2000: { volumetric_divisor: 2000, volumetric_unit: 'cm' },
+  standard: { volumetric_divisor: null, volumetric_unit: null },
+  none: { volumetric_divisor: null, volumetric_unit: 'none' },
+}
+function formulaOf(r: { volumetric_divisor?: number | null; volumetric_unit?: string | null }): VolumetricFormula {
+  if (r.volumetric_unit === 'none') return 'none'
+  if (r.volumetric_unit === 'cm' && r.volumetric_divisor === 2000) return 'cm_2000'
+  if (r.volumetric_divisor === 132) return 'in_132'
+  return 'standard'
+}
+
 type RateForm = {
   mode: 'ocean' | 'air'
   name: string
@@ -1004,7 +1019,7 @@ type RateForm = {
   sort_order: string
   carrier_logo_url: string
   general_fee_usd: string
-  volumetric_divisor: string
+  volumetric_formula: VolumetricFormula
   flat_max_lb: string
   flat_max_value_usd: string
   flat_price_usd: string
@@ -1014,7 +1029,7 @@ const EMPTY_RATE_FORM: RateForm = {
   mode: 'ocean', name: '', type_label: 'Standard', origin_id: '',
   per_cbm_usd: '', per_kg_usd: '', per_lb_input: '', min_amount_usd: '0',
   transit_days_min: '', transit_days_max: '', description: '', active: true, sort_order: '0', carrier_logo_url: '', general_fee_usd: '',
-  volumetric_divisor: '', flat_max_lb: '', flat_max_value_usd: '', flat_price_usd: '',
+  volumetric_formula: 'standard', flat_max_lb: '', flat_max_value_usd: '', flat_price_usd: '',
 }
 
 function ShippingRatesSection() {
@@ -1047,7 +1062,7 @@ function ShippingRatesSection() {
       min_amount_usd: r.min_amount_usd.toString(),
       transit_days_min: r.transit_days_min?.toString() ?? '', transit_days_max: r.transit_days_max?.toString() ?? '',
       description: r.description ?? '', active: r.active, sort_order: r.sort_order.toString(), carrier_logo_url: r.carrier_logo_url ?? '', general_fee_usd: r.general_fee_usd ? String(r.general_fee_usd) : '',
-      volumetric_divisor: r.volumetric_divisor ? String(r.volumetric_divisor) : '', flat_max_lb: r.flat_max_lb ? String(r.flat_max_lb) : '',
+      volumetric_formula: formulaOf(r), flat_max_lb: r.flat_max_lb ? String(r.flat_max_lb) : '',
       flat_max_value_usd: r.flat_max_value_usd != null ? String(r.flat_max_value_usd) : '', flat_price_usd: r.flat_price_usd != null ? String(r.flat_price_usd) : '',
     }
   }
@@ -1061,7 +1076,7 @@ function ShippingRatesSection() {
       name: form.name.trim(),
       type_label: form.type_label.trim() || 'Standard',
       origin_id: form.origin_id || null,
-      per_cbm_usd: form.per_cbm_usd ? parseFloat(form.per_cbm_usd) : null,
+      per_cbm_usd: null,
       per_kg_usd: form.per_kg_usd ? parseFloat(form.per_kg_usd) : null,
       per_lb_usd: null,
       per_cuft_usd: null,
@@ -1074,7 +1089,7 @@ function ShippingRatesSection() {
       active: form.active,
       sort_order: parseInt(form.sort_order) || 0,
       general_fee_usd: Math.max(0, parseFloat(form.general_fee_usd) || 0),
-      volumetric_divisor: parseFloat(form.volumetric_divisor) > 0 ? parseFloat(form.volumetric_divisor) : null,
+      ...FORMULA_FIELDS[form.volumetric_formula],
       // small-parcel flat price: only when a price AND a weight limit are given
       flat_price_usd: form.flat_price_usd !== '' && parseFloat(form.flat_max_lb) > 0 ? Math.max(0, parseFloat(form.flat_price_usd) || 0) : null,
       flat_max_lb: form.flat_price_usd !== '' && parseFloat(form.flat_max_lb) > 0 ? parseFloat(form.flat_max_lb) : null,
@@ -1086,8 +1101,7 @@ function ShippingRatesSection() {
 
   async function handleSave() {
     if (!form.name.trim()) { toast.error(tr('Nom requis.')); return }
-    if (form.mode === 'ocean' && !form.per_cbm_usd && !form.per_kg_usd) { toast.error(tr('Tarif CBM ou tarif kg / livre requis pour l\'océan.')); return }
-    if (form.mode === 'air'   && !form.per_kg_usd)  { toast.error(tr('Tarif kg requis pour l\'aérien.')); return }
+    if (!(parseFloat(form.per_kg_usd) > 0)) { toast.error(tr('Tarif au kg (ou à la livre) requis.')); return }
     setSaving(true)
     if (editing) {
       const { error } = await supabase.from('shipping_rates').update(buildPayload()).eq('id', editing.id)
@@ -1137,7 +1151,7 @@ function ShippingRatesSection() {
               ? tr('{0}{1} j', item.transit_days_min, item.transit_days_max != null ? '–' + item.transit_days_max : '')
               : null
             const rate = item.mode === 'ocean'
-              ? [item.per_cbm_usd != null ? `$${item.per_cbm_usd}/CBM` : '', item.per_kg_usd != null ? `$${item.per_kg_usd}/kg` : ''].filter(Boolean).join(' · ') || '—'
+              ? (item.per_kg_usd != null ? `$${item.per_kg_usd}/kg` : '—')
               : (item.per_kg_usd  != null ? `$${item.per_kg_usd}/kg`  : '—')
             return (
               <div key={item.id} className="flex items-center gap-3 px-4 py-3.5">
@@ -1243,49 +1257,24 @@ function ShippingRatesSection() {
               </Select>
             </div>
 
-            {/* Rate fields */}
-            {form.mode === 'ocean' ? (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">{tr('Tarif / CBM (USD)')}</Label>
-                  <Input type="number" step="0.01" placeholder="790" value={form.per_cbm_usd}
-                    onChange={e => setForm(p => ({ ...p, per_cbm_usd: e.target.value }))} className="rounded-xl" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">{tr('Tarif / livre (USD)')}</Label>
-                  <Input type="number" step="0.0001" placeholder="2.7" value={form.per_lb_input}
-                    onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_lb_input: v, per_kg_usd: n > 0 ? String(Math.round(n * LB_PER_KG * 10000) / 10000) : '' })) }} className="rounded-xl" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">{tr('Tarif / kg (USD)')}</Label>
-                  <Input type="number" step="0.0001" placeholder="5.9525" value={form.per_kg_usd}
-                    onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_kg_usd: v, per_lb_input: n > 0 ? String(Math.round((n / LB_PER_KG) * 10000) / 10000) : '' })) }} className="rounded-xl" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">{tr('Minimum (USD)')}</Label>
-                  <Input type="number" step="0.01" placeholder="0" value={form.min_amount_usd}
-                    onChange={e => setForm(p => ({ ...p, min_amount_usd: e.target.value }))} className="rounded-xl" />
-                </div>
+            {/* Rate fields: priced by weight (the CBM price is gone) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">{tr('Tarif / livre (USD)')}</Label>
+                <Input type="number" step="0.0001" placeholder="2.7" value={form.per_lb_input}
+                  onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_lb_input: v, per_kg_usd: n > 0 ? String(Math.round(n * LB_PER_KG * 10000) / 10000) : '' })) }} className="rounded-xl" />
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">{tr('Tarif / livre (USD)')}</Label>
-                  <Input type="number" step="0.0001" placeholder="2.7" value={form.per_lb_input}
-                    onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_lb_input: v, per_kg_usd: n > 0 ? String(Math.round(n * LB_PER_KG * 10000) / 10000) : '' })) }} className="rounded-xl" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">{tr('Tarif / kg (USD)')}{' '}<span className="text-destructive">*</span></Label>
-                  <Input type="number" step="0.0001" placeholder="5.9525" value={form.per_kg_usd}
-                    onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_kg_usd: v, per_lb_input: n > 0 ? String(Math.round((n / LB_PER_KG) * 10000) / 10000) : '' })) }} className="rounded-xl" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">{tr('Minimum (USD)')}</Label>
-                  <Input type="number" step="0.01" placeholder="0" value={form.min_amount_usd}
-                    onChange={e => setForm(p => ({ ...p, min_amount_usd: e.target.value }))} className="rounded-xl" />
-                </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">{tr('Tarif / kg (USD)')}{' '}<span className="text-destructive">*</span></Label>
+                <Input type="number" step="0.0001" placeholder="5.9525" value={form.per_kg_usd}
+                  onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_kg_usd: v, per_lb_input: n > 0 ? String(Math.round((n / LB_PER_KG) * 10000) / 10000) : '' })) }} className="rounded-xl" />
               </div>
-            )}
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">{tr('Minimum (USD)')}</Label>
+                <Input type="number" step="0.01" placeholder="0" value={form.min_amount_usd}
+                  onChange={e => setForm(p => ({ ...p, min_amount_usd: e.target.value }))} className="rounded-xl" />
+              </div>
+            </div>
 
             {/* Transit */}
             <div className="grid grid-cols-2 gap-3">
@@ -1316,15 +1305,17 @@ function ShippingRatesSection() {
               <p className="text-xs text-muted-foreground">{tr('Ajoutés une fois au prix de chaque expédition de ce tarif (manutention, dossier, emballage…), en plus du prix au poids ou au volume. Le client voit un seul prix.')}</p>
             </div>
 
-            {/* Volumetric weight (air): length x width x height (inches) / divisor = pounds */}
-            {form.mode === 'air' && (
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">{tr('Poids volumétrique : diviseur (po³ par livre)')}</Label>
-                <Input type="number" step="1" min="50" placeholder="132" value={form.volumetric_divisor}
-                  onChange={e => setForm(p => ({ ...p, volumetric_divisor: e.target.value }))} className="rounded-xl" />
-                <p className="text-xs text-muted-foreground">{tr('Longueur × largeur × hauteur (en pouces) ÷ ce nombre = livres facturées si c\'est plus que le poids réel. 132 pour IBC et Petits Courriers. Vide = règle standard de la plateforme.')}</p>
-              </div>
-            )}
+            {/* Volumetric weight: the parcel is charged at the greater of its real and its volumetric weight */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">{tr('Calcul du poids volumétrique')}</Label>
+              <select value={form.volumetric_formula} onChange={e => setForm(p => ({ ...p, volumetric_formula: e.target.value as VolumetricFormula }))} className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm">
+                <option value="in_132">{tr('Pouces : L × l × h ÷ 132 (en livres)')}</option>
+                <option value="cm_2000">{tr('Centimètres : L × l × h ÷ 2000 (en livres)')}</option>
+                <option value="standard">{tr('Standard : cm³ ÷ 6000 (en kg)')}</option>
+                <option value="none">{tr('Aucun : poids réel seulement')}</option>
+              </select>
+              <p className="text-xs text-muted-foreground">{tr('Le système compare le poids volumétrique au poids réel du colis, garde le plus élevé, puis le multiplie par le tarif au kg (et le coefficient du type de produit). Les dimensions du produit sont converties dans l\'unité choisie.')}</p>
+            </div>
 
             {/* Small-parcel flat price */}
             <div className="space-y-1.5">
