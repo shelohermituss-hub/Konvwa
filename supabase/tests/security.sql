@@ -883,5 +883,42 @@ BEGIN
   ASSERT b = round(20 * mult * usd), 'the coefficient applies to a China rate';
 END $$;
 
+-- 34. carrier rules: fixed price per item type (by declared value), extra fee, per-lb price, small-parcel flat price, per-rate volumetric weight
+DO $$
+DECLARE usd numeric; rid uuid; a numeric; b numeric; c numeric; d numeric; billed numeric;
+BEGIN
+  usd := coalesce((SELECT value::numeric FROM app_settings WHERE key = 'usd_to_htg_rate'), 140);
+  ASSERT NOT has_function_privilege('authenticated', 'public.cart_shipping_options(jsonb,uuid,text)', 'execute'), 'cart pricing callable by clients';
+  ASSERT NOT has_function_privilege('anon', 'public.cart_shipping_options(jsonb,uuid,text)', 'execute'), 'cart pricing callable by visitors';
+  INSERT INTO shipping_rates (mode, name, per_kg_usd, min_amount_usd, base_fee_usd, general_fee_usd, active, sort_order, volumetric_divisor, flat_max_lb, flat_max_value_usd, flat_price_usd)
+    VALUES ('air', 'TEST carrier rules', 10, 0, 0, 2, true, 9997, 132, 5, 200, 20) RETURNING id INTO rid;
+  INSERT INTO shipping_item_types (slug, label) VALUES ('test_phone', 'T'), ('test_perfume', 'T'), ('test_battery', 'T') ON CONFLICT DO NOTHING;
+  INSERT INTO shipping_item_rules (rate_id, item_type, mode, price_usd, value_min_usd, value_max_usd) VALUES
+    (rid, 'test_phone', 'fixed', 30, 0, 300), (rid, 'test_phone', 'fixed', 50, 300.01, NULL), (rid, 'test_perfume', 'extra', 4, 0, NULL), (rid, 'test_battery', 'per_lb', 5, 0, NULL);
+  BEGIN INSERT INTO shipping_item_rules (rate_id, item_type, mode, price_usd) VALUES (rid, 'test_phone', 'weird', 1); ASSERT false, 'unknown rule mode accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+  BEGIN INSERT INTO shipping_item_rules (rate_id, item_type, mode, price_usd) VALUES (rid, 'test_phone', 'fixed', -1); ASSERT false, 'negative rule price accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+  -- a phone alone: fixed price by value, plus the general fee once (no weight price)
+  SELECT amount_htg INTO a FROM cart_shipping_options('[{"kg":0.3,"cbm":0.001,"qty":2,"item_type":"test_phone","unit_usd":250}]', NULL, NULL) WHERE rate_id = rid;
+  ASSERT a = round((2 * 30 + 2) * usd), 'phone below $300: fixed price x qty + general fee';
+  SELECT amount_htg INTO b FROM cart_shipping_options('[{"kg":0.3,"cbm":0.001,"qty":1,"item_type":"test_phone","unit_usd":900}]', NULL, NULL) WHERE rate_id = rid;
+  ASSERT b = round((50 + 2) * usd), 'phone above $300: second value range';
+  -- small parcel (<= 5 lb, <= $200): flat price replaces the weight price; the perfume fee is added on top
+  SELECT amount_htg, billed_kg INTO c, billed FROM cart_shipping_options('[{"kg":1,"cbm":0.001,"qty":1,"item_type":"test_perfume","unit_usd":50}]', NULL, NULL) WHERE rate_id = rid;
+  ASSERT c = round((20 + 2) * usd) + round(4 * usd), 'flat price + extra fee';
+  -- bigger parcel: weight price; volumetric weight 61023.744 / 132 / 2.2046226 = 209.69 kg per m3
+  SELECT amount_htg, billed_kg INTO d, billed FROM cart_shipping_options('[{"kg":10,"cbm":0.1,"qty":1,"unit_usd":500}]', NULL, NULL) WHERE rate_id = rid;
+  ASSERT round(billed, 2) = round(0.1 * 61023.744 / 132 / 2.2046226, 2), 'volumetric weight of the rate';
+  ASSERT d = round((billed * 10 + 2) * usd), 'weight price on the volumetric weight';
+  -- per-pound item: 2 kg of batteries = 4.409 lb x $5, rest by weight
+  SELECT amount_htg INTO a FROM cart_shipping_options('[{"kg":2,"cbm":0.001,"qty":1,"item_type":"test_battery","unit_usd":40},{"kg":10,"cbm":0.05,"qty":1,"unit_usd":500}]', NULL, NULL) WHERE rate_id = rid;
+  ASSERT a > round(2 * 2.2046226 * 5 * usd), 'per-lb item priced on its weight';
+  -- clients cannot read or write the rules (admin only)
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', (SELECT id FROM profiles WHERE role = 'client' LIMIT 1), 'role', 'authenticated')::text, true);
+  SET LOCAL ROLE authenticated;
+  ASSERT (SELECT count(*) FROM shipping_item_rules) = 0, 'a client can read carrier rules';
+  BEGIN INSERT INTO shipping_item_rules (rate_id, item_type, mode, price_usd) VALUES (rid, 'test_phone', 'fixed', 1); ASSERT false, 'a client wrote a carrier rule'; EXCEPTION WHEN insufficient_privilege OR check_violation THEN NULL; END;
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;
