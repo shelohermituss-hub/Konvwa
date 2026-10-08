@@ -1,9 +1,9 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth-context'
-import type { ReactNode } from 'react'
 import { SplashScreen, useSplashHold } from '@/components/shared/splash-screen'
 
-export function HomeGuard({ children }: { children: ReactNode }) {
+/** There is no landing page: a visitor lands on the product feed, a customer on the dashboard. */
+export function HomeGuard() {
   const { user, loading } = useAuth()
 
   const hold = useSplashHold(loading)
@@ -12,9 +12,5 @@ export function HomeGuard({ children }: { children: ReactNode }) {
     return <SplashScreen />
   }
 
-  if (user) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  return <>{children}</>
+  return <Navigate to={user ? '/dashboard' : '/products'} replace />
 }

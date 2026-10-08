@@ -17,7 +17,6 @@ import { CatalogShell } from '@/components/shared/catalog-shell'
 import { AuthPage } from '@/pages/auth'
 
 // Public pages
-import { HomePage } from '@/pages/home'
 import { TermsPage, PrivacyPage } from '@/pages/legal'
 
 // Client pages
@@ -90,17 +89,14 @@ export const router = createBrowserRouter([
   { path: '/login',    element: <Navigate to="/auth" replace /> },
   { path: '/register', element: <Navigate to="/auth" replace /> },
 
-  // Public marketing routes (landing page + sub-pages)
+  // Public pages (home redirect + legal)
   {
     path: '/',
     element: <PublicLayout />,
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <HomeGuard><HomePage /></HomeGuard> },
-      { path: 'how-it-works', element: <HomePage /> },
-      { path: 'prices', element: <HomePage /> },
-      { path: 'faq', element: <HomePage /> },
-      { path: 'contact', element: <HomePage /> },
+      // no landing page: visitors go straight to the product feed, customers to their dashboard
+      { index: true, element: <HomeGuard /> },
       { path: 'terms', element: <TermsPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
     ],

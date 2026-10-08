@@ -16,22 +16,6 @@ const SEO: Record<string, { title: string; description: string }> = {
     title: tr('KONVWA — Importez depuis Alibaba, Shein et Temu en Haïti'),
     description: tr('KONVWA vous aide à importer des produits d\'Alibaba, Shein et Temu vers Haïti. Devis clair, paiement par MonCash ou NatCash, suivi de commande et d\'expédition en gourdes (HTG).'),
   },
-  '/how-it-works': {
-    title: tr('Comment ça marche — KONVWA'),
-    description: tr('Envoyez votre lien produit, recevez un devis en gourdes, payez par MonCash ou NatCash et suivez votre colis jusqu\'en Haïti.'),
-  },
-  '/prices': {
-    title: tr('Tarifs — KONVWA'),
-    description: tr('Tarifs d\'importation et d\'expédition vers Haïti : frais de service, transport maritime et aérien, calculés en gourdes (HTG).'),
-  },
-  '/faq': {
-    title: tr('Questions fréquentes — KONVWA'),
-    description: tr('Délais, paiements MonCash et NatCash, frais d\'expédition, suivi de colis : les réponses aux questions sur l\'importation avec KONVWA.'),
-  },
-  '/contact': {
-    title: tr('Contact — KONVWA'),
-    description: tr('Contactez l\'équipe KONVWA pour vos importations depuis Alibaba, Shein et Temu vers Haïti.'),
-  },
   '/terms': {
     title: tr('Conditions d\'utilisation — KONVWA'),
     description: tr('Conditions d\'utilisation du service d\'importation KONVWA.'),
@@ -83,10 +67,6 @@ function Header() {
         <div className="hidden lg:flex items-center gap-8">
           {[
             [tr('Boutique'), '/products'],
-            [tr('Comment ça marche'), '/how-it-works'],
-            [tr('Tarifs'), '/prices'],
-            ['FAQ', '/faq'],
-            [tr('Contact'), '/contact'],
           ].map(([label, path]) => (
             <Link key={path} to={path} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               {label}
@@ -131,10 +111,6 @@ function Header() {
           <div className="container px-4 py-4 mx-auto space-y-3">
             {[
               [tr('Boutique'), '/products'],
-              [tr('Comment ça marche'), '/how-it-works'],
-              [tr('Tarifs'), '/prices'],
-              ['FAQ', '/faq'],
-              [tr('Contact'), '/contact'],
             ].map(([label, path]) => (
               <Link key={path} to={path} onClick={() => setMobileMenuOpen(false)}
                 className="block text-sm font-medium text-muted-foreground hover:text-foreground py-1 transition-colors">
@@ -182,16 +158,12 @@ function Footer() {
             <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest text-muted-foreground">{tr('Services')}</h3>
             <ul className="space-y-2 text-sm">
               <li><Link to="/auth" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Soumettre un lien')}</Link></li>
-              <li><Link to="/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Comment ça marche')}</Link></li>
-              <li><Link to="/prices" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Tarifs')}</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold mb-4 text-sm uppercase tracking-widest text-muted-foreground">{tr('Aide')}</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">{tr('FAQ')}</Link></li>
-              <li><Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Contact')}</Link></li>
               <li><Link to="/support" className="text-muted-foreground hover:text-foreground transition-colors">{tr('Support')}</Link></li>
             </ul>
           </div>
