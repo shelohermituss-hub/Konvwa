@@ -8,6 +8,8 @@ export interface CheckoutShippingOption {
   transit_days_min: number | null
   transit_days_max: number | null
   amount_htg: number
+  /** Weight the price is based on (kg): for air, the greater of the real and the volumetric weight of this rate. */
+  billed_kg?: number
 }
 
 export interface CheckoutShipping {

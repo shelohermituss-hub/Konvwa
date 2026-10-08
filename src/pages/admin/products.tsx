@@ -63,6 +63,7 @@ interface Product {
   width_cm?: number | null
   height_cm?: number | null
   package_estimated?: boolean
+  shipping_item_type?: string | null
   brand?: string | null
   source_url?: string | null
   source_asin?: string | null
@@ -112,6 +113,7 @@ const emptyDraft = (): ProductDraft => ({
   width_cm: null,
   height_cm: null,
   package_estimated: false,
+  shipping_item_type: null,
   brand: null,
   source_url: null,
   source_asin: null,
@@ -123,6 +125,7 @@ const numOrNull = (raw: string) => (raw === '' ? null : Number(raw))
 
 export function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
+  const [itemTypes, setItemTypes] = useState<{ slug: string; label: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -170,6 +173,9 @@ export function AdminProductsPage() {
   }
 
   useEffect(() => { load() }, [])
+  useEffect(() => {
+    void supabase.from('shipping_item_types').select('slug, label').order('sort_order').then(({ data }) => setItemTypes(data ?? []))
+  }, [])
 
   // one product checked against the supplier page right now (the same job the nightly run does)
   const [checkingPrice, setCheckingPrice] = useState(false)
@@ -318,6 +324,7 @@ export function AdminProductsPage() {
       width_cm: p.width_cm ?? null,
       height_cm: p.height_cm ?? null,
       package_estimated: p.package_estimated ?? false,
+      shipping_item_type: p.shipping_item_type ?? null,
       brand: p.brand ?? null,
       source_url: p.source_url ?? null,
       source_asin: p.source_asin ?? null,
@@ -716,6 +723,16 @@ export function AdminProductsPage() {
                     </div>
                   ))}
                 </div>
+                {itemTypes.length > 0 && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">{tr('Type d\'article (tarifs spéciaux des transporteurs)')}</Label>
+                    <select value={draft.shipping_item_type ?? ''} onChange={e => setDraft(prev => ({ ...prev, shipping_item_type: e.target.value || null }))} className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm">
+                      <option value="">{tr('Aucun : tarif au poids')}</option>
+                      {itemTypes.map(t => <option key={t.slug} value={t.slug}>{t.label}</option>)}
+                    </select>
+                    <p className="text-xs text-muted-foreground">{tr('Téléphone, laptop, parfum…: certains transporteurs (IBC, Petits Courriers) ont un prix fixe ou des frais par article.')}</p>
+                  </div>
+                )}
                 {(draft.weight_kg || (draft.length_cm && draft.width_cm && draft.height_cm)) ? (
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-end gap-3">

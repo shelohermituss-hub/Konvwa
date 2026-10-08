@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { CarrierLogo } from '@/components/shared/carrier-logo'
+import { CarrierRulesEditor } from '@/components/shared/carrier-rules-editor'
 import { CarrierLogoField } from '@/components/shared/carrier-logo-field'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -50,6 +51,10 @@ interface ShippingRate {
   description: string | null; active: boolean; sort_order: number
   carrier_logo_url?: string | null
   general_fee_usd?: number
+  volumetric_divisor?: number | null
+  flat_max_lb?: number | null
+  flat_max_value_usd?: number | null
+  flat_price_usd?: number | null
   shipping_origins?: { name: string; flag_emoji: string | null } | null
 }
 
@@ -999,12 +1004,17 @@ type RateForm = {
   sort_order: string
   carrier_logo_url: string
   general_fee_usd: string
+  volumetric_divisor: string
+  flat_max_lb: string
+  flat_max_value_usd: string
+  flat_price_usd: string
 }
 
 const EMPTY_RATE_FORM: RateForm = {
   mode: 'ocean', name: '', type_label: 'Standard', origin_id: '',
   per_cbm_usd: '', per_kg_usd: '', per_lb_input: '', min_amount_usd: '0',
   transit_days_min: '', transit_days_max: '', description: '', active: true, sort_order: '0', carrier_logo_url: '', general_fee_usd: '',
+  volumetric_divisor: '', flat_max_lb: '', flat_max_value_usd: '', flat_price_usd: '',
 }
 
 function ShippingRatesSection() {
@@ -1037,6 +1047,8 @@ function ShippingRatesSection() {
       min_amount_usd: r.min_amount_usd.toString(),
       transit_days_min: r.transit_days_min?.toString() ?? '', transit_days_max: r.transit_days_max?.toString() ?? '',
       description: r.description ?? '', active: r.active, sort_order: r.sort_order.toString(), carrier_logo_url: r.carrier_logo_url ?? '', general_fee_usd: r.general_fee_usd ? String(r.general_fee_usd) : '',
+      volumetric_divisor: r.volumetric_divisor ? String(r.volumetric_divisor) : '', flat_max_lb: r.flat_max_lb ? String(r.flat_max_lb) : '',
+      flat_max_value_usd: r.flat_max_value_usd != null ? String(r.flat_max_value_usd) : '', flat_price_usd: r.flat_price_usd != null ? String(r.flat_price_usd) : '',
     }
   }
 
@@ -1062,6 +1074,11 @@ function ShippingRatesSection() {
       active: form.active,
       sort_order: parseInt(form.sort_order) || 0,
       general_fee_usd: Math.max(0, parseFloat(form.general_fee_usd) || 0),
+      volumetric_divisor: parseFloat(form.volumetric_divisor) > 0 ? parseFloat(form.volumetric_divisor) : null,
+      // small-parcel flat price: only when a price AND a weight limit are given
+      flat_price_usd: form.flat_price_usd !== '' && parseFloat(form.flat_max_lb) > 0 ? Math.max(0, parseFloat(form.flat_price_usd) || 0) : null,
+      flat_max_lb: form.flat_price_usd !== '' && parseFloat(form.flat_max_lb) > 0 ? parseFloat(form.flat_max_lb) : null,
+      flat_max_value_usd: form.flat_price_usd !== '' && parseFloat(form.flat_max_lb) > 0 && form.flat_max_value_usd !== '' ? Math.max(0, parseFloat(form.flat_max_value_usd) || 0) : null,
       // the logo column is only sent when there is something to change (a logo to set, or the one to remove)
       ...(form.carrier_logo_url ? { carrier_logo_url: form.carrier_logo_url } : editing?.carrier_logo_url ? { carrier_logo_url: null } : {}),
     }
@@ -1298,6 +1315,32 @@ function ShippingRatesSection() {
                 onChange={e => setForm(p => ({ ...p, general_fee_usd: e.target.value }))} className="rounded-xl" />
               <p className="text-xs text-muted-foreground">{tr('Ajoutés une fois au prix de chaque expédition de ce tarif (manutention, dossier, emballage…), en plus du prix au poids ou au volume. Le client voit un seul prix.')}</p>
             </div>
+
+            {/* Volumetric weight (air): length x width x height (inches) / divisor = pounds */}
+            {form.mode === 'air' && (
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">{tr('Poids volumétrique : diviseur (po³ par livre)')}</Label>
+                <Input type="number" step="1" min="50" placeholder="132" value={form.volumetric_divisor}
+                  onChange={e => setForm(p => ({ ...p, volumetric_divisor: e.target.value }))} className="rounded-xl" />
+                <p className="text-xs text-muted-foreground">{tr('Longueur × largeur × hauteur (en pouces) ÷ ce nombre = livres facturées si c\'est plus que le poids réel. 132 pour IBC et Petits Courriers. Vide = règle standard de la plateforme.')}</p>
+              </div>
+            )}
+
+            {/* Small-parcel flat price */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">{tr('Prix fixe petit colis (optionnel)')}</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Input type="number" step="0.1" min="0" placeholder={tr('≤ lb')} value={form.flat_max_lb} onChange={e => setForm(p => ({ ...p, flat_max_lb: e.target.value }))} className="rounded-xl" />
+                <Input type="number" step="1" min="0" placeholder={tr('≤ valeur $')} value={form.flat_max_value_usd} onChange={e => setForm(p => ({ ...p, flat_max_value_usd: e.target.value }))} className="rounded-xl" />
+                <Input type="number" step="0.01" min="0" placeholder={tr('Prix $')} value={form.flat_price_usd} onChange={e => setForm(p => ({ ...p, flat_price_usd: e.target.value }))} className="rounded-xl" />
+              </div>
+              <p className="text-xs text-muted-foreground">{tr('Un colis de moins de X livres et de moins de Y $ de valeur coûte ce prix fixe, à la place du prix au poids (ex. Petits Courriers : 5 lb, 200 $, 25 $).')}</p>
+            </div>
+
+            {/* Prices by item type (needs the saved rate) */}
+            {editing ? <CarrierRulesEditor rateId={editing.id} /> : (
+              <p className="rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">{tr('Enregistrez le tarif, puis rouvrez-le pour définir les prix par type d\'article (téléphone, laptop, parfum…).')}</p>
+            )}
 
             {/* Carrier logo */}
             <CarrierLogoField value={form.carrier_logo_url} name={form.name} onChange={url => setForm(p => ({ ...p, carrier_logo_url: url }))} />
