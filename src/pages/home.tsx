@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/accordion'
 import { cn } from '@/lib/utils'
 import { ArrowRight, Store } from 'lucide-react'
+import { WhatsAppChannelButton } from '@/components/shared/whatsapp-channel-button'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 // ── Data ────────────────────────────────────────────────────────────────
@@ -288,6 +289,7 @@ export function HomePage() {
           <p className="text-sm text-muted-foreground">
             {tr('Pas besoin de carte bancaire. Créez votre compte en moins de 2 minutes.')}
           </p>
+          <WhatsAppChannelButton variant="link" className="w-fit" />
         </div>
 
         {/* Right: hero import visual composition */}

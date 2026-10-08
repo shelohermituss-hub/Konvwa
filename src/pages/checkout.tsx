@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { WhatsAppChannelButton } from '@/components/shared/whatsapp-channel-button'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -200,6 +201,7 @@ export function CheckoutPage() {
                 ? tr('Achat et expédition sont payés : il n\'y a plus rien à payer. Nous vous suivons votre colis jusqu\'à la livraison.')
                 : tr('Vous avez payé l\'achat des produits. À l\'arrivée du colis à l\'entrepôt, nous vous préviendrons pour payer l\'expédition.')}
           </p>
+          <WhatsAppChannelButton variant="card" className="mb-4 text-left" />
           <button
             onClick={() => navigate(paidOrders.length === 1 && orderId ? `/product-orders/${orderId}` : '/orders')}
             className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white mb-3"

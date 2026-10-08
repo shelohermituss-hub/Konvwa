@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { WhatsAppChannelButton } from '@/components/shared/whatsapp-channel-button'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { Flag } from '@/components/shared/flag'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -193,6 +194,8 @@ export function ProfilePage() {
               </Link>
             ))}
           </div>
+
+          <WhatsAppChannelButton variant="card" />
 
           <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-2xl border border-destructive/20 bg-white px-5 py-3.5 shadow-sm transition-colors hover:bg-destructive/5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10"><LogOut className="h-4 w-4 text-destructive" aria-hidden="true" /></span>

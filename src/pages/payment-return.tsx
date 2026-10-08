@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { WhatsAppChannelButton } from '@/components/shared/whatsapp-channel-button'
 import { useSearchParams, Link } from 'react-router-dom'
 import { CheckCircle, XCircle, Loader2, Wallet } from 'lucide-react'
 import { verifyPayment, type VerifyPaymentResult } from '@/lib/payment-api'
@@ -114,6 +115,7 @@ export function PaymentReturnPage() {
             <h1 className="text-lg font-bold mb-2">{tr('Paiement confirmé, commande passée !')}</h1>
             {amount && <p className="text-3xl font-black text-emerald-700 mb-1">{money(amount)}</p>}
             <p className="text-sm text-muted-foreground mb-6">{tr('Votre commande est en cours de traitement. Suivez-la dans Commandes.')}</p>
+            <WhatsAppChannelButton variant="card" className="mb-4 text-left" />
             <Link
               to="/orders"
               className="flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-bold text-white"

@@ -837,5 +837,20 @@ BEGIN
   RESET ROLE;
 END $$;
 
+-- 31. WhatsApp channel link: a visitor reads that ONE setting and nothing else of app_settings, and cannot write
+DO $$
+DECLARE n integer; secret text;
+BEGIN
+  INSERT INTO app_settings (key, value, label, sensitive) VALUES ('whatsapp_channel_url', 'https://whatsapp.com/channel/0029VaTestTest', 'test', false) ON CONFLICT (key) DO UPDATE SET value = excluded.value;
+  SET LOCAL ROLE anon;
+  SELECT count(*) INTO n FROM app_settings;
+  ASSERT n = 1, 'a visitor must read only the channel link setting';
+  SELECT count(*) INTO n FROM app_settings WHERE key = 'usd_to_htg_rate';
+  ASSERT n = 0, 'a visitor must not read the other settings';
+  BEGIN UPDATE app_settings SET value = 'https://whatsapp.com/channel/evilevilevil' WHERE key = 'whatsapp_channel_url'; ASSERT false, 'a visitor wrote a setting'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN INSERT INTO app_settings (key, value, label, sensitive) VALUES ('x', 'y', 'z', false); ASSERT false, 'a visitor created a setting'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

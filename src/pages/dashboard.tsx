@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { WhatsAppChannelInvite } from '@/components/shared/whatsapp-channel-button'
 import { ProductFeed } from '@/components/shared/product-feed'
 import { haptics } from '@/lib/haptic'
 import { Link, useNavigate } from 'react-router-dom'
@@ -296,6 +297,9 @@ export function DashboardPage() {
 
         {/* Advertising cards configured in the admin */}
         {!query && <AdBanners />}
+
+        {/* Invitation to the WhatsApp channel (closed for good once dismissed) */}
+        {!query && <WhatsAppChannelInvite className="mb-4" />}
 
         {/* Section header */}
         <div className="flex items-center justify-between mb-3">

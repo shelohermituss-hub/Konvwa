@@ -9,6 +9,7 @@ import { Loader2, Save, RefreshCw, DollarSign, Plane, Landmark, Percent, CreditC
 
 import { tr, DATE_LOCALE, LOCALE_TAG } from '@/lib/i18n'
 import { AdminSecuritySettings } from '@/components/shared/admin-security-settings'
+import { WhatsAppChannelSetting } from '@/components/shared/whatsapp-channel-setting'
 interface Setting {
   key: string
   value: string
@@ -108,6 +109,8 @@ export function AdminSettingsPage() {
           {tr('Enregistrer')}
         </Button>
       </div>
+
+      <WhatsAppChannelSetting />
 
       {/* ── Payment API settings ── */}
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
