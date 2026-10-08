@@ -491,7 +491,7 @@ export const ADMIN_EN: Record<string, string> = {
   'Tarif au kg (ou à la livre) requis.': 'Rate per kg (or per pound) required.',
   'Calcul du poids volumétrique': 'Volumetric weight calculation',
   'Pouces : L × l × h ÷ 132 (en livres)': 'Inches: L × W × H ÷ 132 (in pounds)',
-  'Centimètres : L × l × h ÷ 2000 (en livres)': 'Centimetres: L × W × H ÷ 2000 (in pounds)',
+  'Centimètres : L × l × h ÷ 2000 (en kg)': 'Centimetres: L × W × H ÷ 2000 (in kg)',
   'Standard : cm³ ÷ 6000 (en kg)': 'Standard: cm³ ÷ 6000 (in kg)',
   'Aucun : poids réel seulement': 'None: real weight only',
   'Le système compare le poids volumétrique au poids réel du colis, garde le plus élevé, puis le multiplie par le tarif au kg (et le coefficient du type de produit). Les dimensions du produit sont converties dans l\'unité choisie.': 'The system compares the volumetric weight with the parcel\'s real weight, keeps the higher one, then multiplies it by the price per kg (and the product type coefficient). Product dimensions are converted to the chosen unit.',

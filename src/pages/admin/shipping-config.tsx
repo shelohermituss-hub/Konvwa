@@ -1310,7 +1310,7 @@ function ShippingRatesSection() {
               <Label className="text-sm font-semibold">{tr('Calcul du poids volumétrique')}</Label>
               <select value={form.volumetric_formula} onChange={e => setForm(p => ({ ...p, volumetric_formula: e.target.value as VolumetricFormula }))} className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm">
                 <option value="in_132">{tr('Pouces : L × l × h ÷ 132 (en livres)')}</option>
-                <option value="cm_2000">{tr('Centimètres : L × l × h ÷ 2000 (en livres)')}</option>
+                <option value="cm_2000">{tr('Centimètres : L × l × h ÷ 2000 (en kg)')}</option>
                 <option value="standard">{tr('Standard : cm³ ÷ 6000 (en kg)')}</option>
                 <option value="none">{tr('Aucun : poids réel seulement')}</option>
               </select>

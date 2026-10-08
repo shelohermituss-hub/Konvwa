@@ -916,7 +916,7 @@ BEGIN
   INSERT INTO shipping_rates (mode, name, per_kg_usd, per_cbm_usd, min_amount_usd, base_fee_usd, general_fee_usd, active, sort_order, volumetric_divisor, volumetric_unit)
     VALUES ('ocean', 'TEST weight only', 3, 99999, 0, 0, 0, true, 9996, 2000, 'cm') RETURNING id INTO rid;
   SELECT amount_htg, billed_kg INTO a, billed FROM cart_shipping_options('[{"kg":1,"cbm":0.02,"qty":1,"unit_usd":10}]', NULL, NULL) WHERE rate_id = rid;
-  ASSERT round(billed, 3) = round(0.02 * 1000000 / 2000 / 2.2046226, 3), 'cm / 2000 volumetric weight, got ' || billed;
+  ASSERT round(billed, 3) = round(0.02 * 1000000 / 2000, 3), 'cm / 2000 volumetric weight (kg), got ' || billed;
   ASSERT a = round(billed * 3 * usd), 'sea rate priced by weight only, got ' || a;
   UPDATE shipping_rates SET volumetric_unit = 'none', volumetric_divisor = NULL WHERE id = rid;
   SELECT amount_htg INTO a FROM cart_shipping_options('[{"kg":1,"cbm":0.02,"qty":1,"unit_usd":10}]', NULL, NULL) WHERE rate_id = rid;

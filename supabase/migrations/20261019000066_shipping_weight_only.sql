@@ -1,5 +1,5 @@
 -- Shipping is priced by WEIGHT only: the CBM price is gone. The parcel is charged at the greater of its real weight and its volumetric weight,
--- the volumetric formula being chosen per rate: inches (L x W x H / 132, result in lb), cm (L x W x H / 2000, result in lb),
+-- the volumetric formula being chosen per rate: inches (L x W x H / 132, result in lb), cm (L x W x H / 2000, result in kg; corrected by migration 67),
 -- standard (cm3 / 6000 = kg, the platform default) or none (real weight only). The price is that weight x the price per kg x the category coefficient.
 ALTER TABLE public.shipping_rates ADD COLUMN IF NOT EXISTS volumetric_unit text;
 ALTER TABLE public.shipping_rates DROP CONSTRAINT IF EXISTS shipping_rates_volumetric_unit;

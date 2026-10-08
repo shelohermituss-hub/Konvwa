@@ -7,8 +7,8 @@ describe('billedWeightKg', () => {
     expect(billedWeightKg(132, 'in', 10, 0.1)).toBeCloseTo(20.97, 1)
     expect(billedWeightKg(132, 'in', 30, 0.1)).toBe(30)
   })
-  it('converts centimetres (÷ 2000, in pounds)', () => {
-    expect(billedWeightKg(2000, 'cm', 1, 0.02)).toBeCloseTo(0.02 * 1_000_000 / 2000 / 2.2046226, 3)
+  it('centimetres ÷ 2000 gives kilograms', () => {
+    expect(billedWeightKg(2000, 'cm', 1, 0.02)).toBeCloseTo(10, 3)
   })
   it('real weight only, or the platform default', () => {
     expect(billedWeightKg(null, 'none', 2, 5)).toBe(2)
