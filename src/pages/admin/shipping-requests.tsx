@@ -160,12 +160,13 @@ function AdminActionSheet({
     if (!rate) return null
     const cbm = parseFloat(form.actual_cbm) || 0
     const kg  = parseFloat(form.actual_kg)  || 0
-    const mult = request.product_rate_category?.rate_multiplier ?? 1
+    // the coefficient only applies to parcels from China (rates leaving from another origin are priced at x1)
+    const mult = (request.origin_country ?? 'CN') === 'CN' ? (request.product_rate_category?.rate_multiplier ?? 1) : 1
     // same rule as the customer's shipping options (database): ocean = greater of volume / weight price, air = weight price, minimum charge
     const freight = rate.mode === 'ocean' ? Math.max((rate.per_cbm_usd ?? 0) * cbm, (rate.per_kg_usd ?? 0) * kg) : (rate.per_kg_usd ?? 0) * kg
     const usd  = Math.max(rate.min_amount_usd ?? 0, rate.base_fee_usd + freight)
     // the general fee of the rate is added once, after the category coefficient (same rule as the database)
-    return { usd, htg: Math.round((usd * mult + (rate.general_fee_usd ?? 0)) * usdToHtg) }
+    return { usd, mult, htg: Math.round((usd * mult + (rate.general_fee_usd ?? 0)) * usdToHtg) }
   }, [form.selected_rate_id, form.actual_cbm, form.actual_kg, rates, usdToHtg, request.product_rate_category])
 
   const finalAmount = form.override_amount
@@ -448,7 +449,7 @@ function AdminActionSheet({
                         </p>
                         <p className="text-sm text-muted-foreground font-medium">HTG</p>
                         <span className="text-xs text-muted-foreground ml-auto">
-                          ≈ ${calcResult.usd.toFixed(2)} USD × {usdToHtg} × ×{request.product_rate_category?.rate_multiplier ?? 1}
+                          ≈ ${calcResult.usd.toFixed(2)} USD × {usdToHtg} × ×{calcResult.mult}
                         </span>
                       </div>
                       {form.override_amount && (

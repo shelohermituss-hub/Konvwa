@@ -866,5 +866,22 @@ BEGIN
   BEGIN UPDATE shipping_rates SET general_fee_usd = -1 WHERE id = rid; ASSERT false, 'negative general fee accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
 END $$;
 
+-- 33. the category coefficient only applies to China rates: a rate leaving from the USA is priced at x1
+DO $$
+DECLARE us uuid; cn uuid; cat uuid; mult numeric; rus uuid; rcn uuid; a numeric; b numeric; usd numeric;
+BEGIN
+  usd := coalesce((SELECT value::numeric FROM app_settings WHERE key = 'usd_to_htg_rate'), 140);
+  SELECT id INTO us FROM shipping_origins WHERE upper(country_code) = 'US' LIMIT 1;
+  SELECT id INTO cn FROM shipping_origins WHERE upper(country_code) = 'CN' LIMIT 1;
+  SELECT id, rate_multiplier INTO cat, mult FROM product_rate_categories WHERE rate_multiplier > 1 LIMIT 1;
+  IF us IS NULL OR cn IS NULL OR cat IS NULL THEN RETURN; END IF;
+  INSERT INTO shipping_rates (mode, name, per_kg_usd, min_amount_usd, base_fee_usd, active, sort_order, origin_id) VALUES ('air', 'TEST coef US', 10, 0, 0, true, 9998, us) RETURNING id INTO rus;
+  INSERT INTO shipping_rates (mode, name, per_kg_usd, min_amount_usd, base_fee_usd, active, sort_order, origin_id) VALUES ('air', 'TEST coef CN', 10, 0, 0, true, 9999, cn) RETURNING id INTO rcn;
+  SELECT amount_htg INTO a FROM shipping_options_for(2, NULL, cat) WHERE rate_id = rus;
+  SELECT amount_htg INTO b FROM shipping_options_for(2, NULL, cat) WHERE rate_id = rcn;
+  ASSERT a = round(20 * usd), 'the coefficient must not apply to a US rate';
+  ASSERT b = round(20 * mult * usd), 'the coefficient applies to a China rate';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;
