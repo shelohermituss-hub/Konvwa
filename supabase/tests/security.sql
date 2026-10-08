@@ -852,5 +852,19 @@ BEGIN
   RESET ROLE;
 END $$;
 
+-- 32. general fee of a shipping rate: added once to the price of the shipment (not scaled by the category) in shipping_options_for
+DO $$
+DECLARE rid uuid; a numeric; b numeric; usd numeric;
+BEGIN
+  usd := coalesce((SELECT value::numeric FROM app_settings WHERE key = 'usd_to_htg_rate'), 140);
+  INSERT INTO shipping_rates (mode, name, per_kg_usd, min_amount_usd, base_fee_usd, active, sort_order) VALUES ('air', 'TEST general fee', 10, 0, 0, true, 9999) RETURNING id INTO rid;
+  SELECT amount_htg INTO a FROM shipping_options_for(2, NULL, NULL) WHERE rate_id = rid;
+  UPDATE shipping_rates SET general_fee_usd = 5 WHERE id = rid;
+  SELECT amount_htg INTO b FROM shipping_options_for(2, NULL, NULL) WHERE rate_id = rid;
+  ASSERT a = round(20 * usd), 'price without general fee';
+  ASSERT b = round(25 * usd), 'the general fee is added once to the price';
+  BEGIN UPDATE shipping_rates SET general_fee_usd = -1 WHERE id = rid; ASSERT false, 'negative general fee accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

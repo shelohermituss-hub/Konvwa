@@ -49,6 +49,7 @@ interface ShippingRate {
   transit_days_min: number | null; transit_days_max: number | null
   description: string | null; active: boolean; sort_order: number
   carrier_logo_url?: string | null
+  general_fee_usd?: number
   shipping_origins?: { name: string; flag_emoji: string | null } | null
 }
 
@@ -993,12 +994,13 @@ type RateForm = {
   active: boolean
   sort_order: string
   carrier_logo_url: string
+  general_fee_usd: string
 }
 
 const EMPTY_RATE_FORM: RateForm = {
   mode: 'ocean', name: '', type_label: 'Standard', origin_id: '',
   per_cbm_usd: '', per_kg_usd: '', min_amount_usd: '0',
-  transit_days_min: '', transit_days_max: '', description: '', active: true, sort_order: '0', carrier_logo_url: '',
+  transit_days_min: '', transit_days_max: '', description: '', active: true, sort_order: '0', carrier_logo_url: '', general_fee_usd: '',
 }
 
 function ShippingRatesSection() {
@@ -1029,7 +1031,7 @@ function ShippingRatesSection() {
       per_cbm_usd: r.per_cbm_usd?.toString() ?? '', per_kg_usd: r.per_kg_usd?.toString() ?? '',
       min_amount_usd: r.min_amount_usd.toString(),
       transit_days_min: r.transit_days_min?.toString() ?? '', transit_days_max: r.transit_days_max?.toString() ?? '',
-      description: r.description ?? '', active: r.active, sort_order: r.sort_order.toString(), carrier_logo_url: r.carrier_logo_url ?? '',
+      description: r.description ?? '', active: r.active, sort_order: r.sort_order.toString(), carrier_logo_url: r.carrier_logo_url ?? '', general_fee_usd: r.general_fee_usd ? String(r.general_fee_usd) : '',
     }
   }
 
@@ -1054,6 +1056,7 @@ function ShippingRatesSection() {
       description: form.description.trim() || null,
       active: form.active,
       sort_order: parseInt(form.sort_order) || 0,
+      general_fee_usd: Math.max(0, parseFloat(form.general_fee_usd) || 0),
       // the logo column is only sent when there is something to change (a logo to set, or the one to remove)
       ...(form.carrier_logo_url ? { carrier_logo_url: form.carrier_logo_url } : editing?.carrier_logo_url ? { carrier_logo_url: null } : {}),
     }
@@ -1130,6 +1133,7 @@ function ShippingRatesSection() {
                     {transit && <span>{transit}</span>}
                     <span className="font-semibold text-foreground">{rate}</span>
                     {item.min_amount_usd > 0 && <span>min ${item.min_amount_usd}</span>}
+                    {(item.general_fee_usd ?? 0) > 0 && <span>{tr('+ {0} $ de frais', item.general_fee_usd ?? 0)}</span>}
                   </div>
                 </div>
                 <ActiveBadge active={item.active} onToggle={() => handleToggle(item)} />
@@ -1265,6 +1269,14 @@ function ShippingRatesSection() {
               <Label className="text-sm font-semibold">{tr('Ordre d\'affichage')}</Label>
               <Input type="number" placeholder="0" value={form.sort_order}
                 onChange={e => setForm(p => ({ ...p, sort_order: e.target.value }))} className="rounded-xl" />
+            </div>
+
+            {/* General fee: a fixed amount added once to every shipment of this rate */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">{tr('Frais généraux (USD, fixes par expédition)')}</Label>
+              <Input type="number" step="0.01" min="0" placeholder="0" value={form.general_fee_usd}
+                onChange={e => setForm(p => ({ ...p, general_fee_usd: e.target.value }))} className="rounded-xl" />
+              <p className="text-xs text-muted-foreground">{tr('Ajoutés une fois au prix de chaque expédition de ce tarif (manutention, dossier, emballage…), en plus du prix au poids ou au volume. Le client voit un seul prix.')}</p>
             </div>
 
             {/* Carrier logo */}

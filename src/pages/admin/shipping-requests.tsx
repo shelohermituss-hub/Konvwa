@@ -24,6 +24,7 @@ interface ShippingRateOption {
   mode: 'ocean' | 'air'
   name: string
   base_fee_usd: number
+  general_fee_usd: number
   per_cbm_usd: number | null
   per_kg_usd: number | null
   min_amount_usd: number | null
@@ -139,7 +140,7 @@ function AdminActionSheet({
   useEffect(() => {
     Promise.all([
       supabase.from('shipping_rates')
-        .select('id, mode, name, base_fee_usd, per_cbm_usd, per_kg_usd, min_amount_usd')
+        .select('id, mode, name, base_fee_usd, general_fee_usd, per_cbm_usd, per_kg_usd, min_amount_usd')
         .eq('active', true)
         .order('mode').order('sort_order'),
       supabase.from('app_settings').select('value').eq('key', 'usd_to_htg_rate').single(),
@@ -163,7 +164,8 @@ function AdminActionSheet({
     // same rule as the customer's shipping options (database): ocean = greater of volume / weight price, air = weight price, minimum charge
     const freight = rate.mode === 'ocean' ? Math.max((rate.per_cbm_usd ?? 0) * cbm, (rate.per_kg_usd ?? 0) * kg) : (rate.per_kg_usd ?? 0) * kg
     const usd  = Math.max(rate.min_amount_usd ?? 0, rate.base_fee_usd + freight)
-    return { usd, htg: Math.round(usd * mult * usdToHtg) }
+    // the general fee of the rate is added once, after the category coefficient (same rule as the database)
+    return { usd, htg: Math.round((usd * mult + (rate.general_fee_usd ?? 0)) * usdToHtg) }
   }, [form.selected_rate_id, form.actual_cbm, form.actual_kg, rates, usdToHtg, request.product_rate_category])
 
   const finalAmount = form.override_amount

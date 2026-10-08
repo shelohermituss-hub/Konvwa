@@ -992,4 +992,7 @@ export const FEATURES_EN: Record<string, string> = {
   'Ajouter le logo': 'Add the logo',
   "Affiché au client quand il choisit son mode d'expédition. Fond clair conseillé.": 'Shown to the customer when he chooses the shipping method. Light background recommended.',
   'Logo': 'Logo',
+  '+ {0} $ de frais': '+ ${0} fee',
+  'Frais généraux (USD, fixes par expédition)': 'General fees (USD, fixed per shipment)',
+  'Ajoutés une fois au prix de chaque expédition de ce tarif (manutention, dossier, emballage…), en plus du prix au poids ou au volume. Le client voit un seul prix.': 'Added once to the price of every shipment of this rate (handling, file, packing…), on top of the weight or volume price. The customer sees a single price.',
 }
