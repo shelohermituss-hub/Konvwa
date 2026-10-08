@@ -210,3 +210,27 @@ export function productSlug(url: string): string {
   const last = path.split('/').filter(Boolean).pop() ?? ''
   return last.replace(/\.html?$/i, '').replace(/-(?:p|g)-\d+.*$/i, '').replace(/[-_]+/g, ' ').trim()
 }
+
+const EBAY_IMG = /https:\/\/i\.ebayimg\.com\/(?:thumbs\/)?images\/g\/([A-Za-z0-9~_-]+)\/s-l\d+\.(?:jpe?g|png|webp)/i
+
+/**
+ * The photos of an eBay listing's own gallery, read from the page source (the extraction also picks up "similar items" and ads).
+ * Only the gallery items (`ux-image-carousel-item`) are read, in their order, one picture per image id; empty when the page has none.
+ */
+export function ebayGalleryImages(html: unknown, max = 15): string[] {
+  if (typeof html !== 'string') return []
+  const text = html.replace(/\\u002F/gi, '/').replace(/\\\//g, '/').replace(/&amp;/g, '&')
+  const seen = new Set<string>()
+  const out: string[] = []
+  let from = 0
+  while (out.length < max) {
+    const at = text.indexOf('ux-image-carousel-item', from)
+    if (at < 0) break
+    from = at + 22
+    const m = EBAY_IMG.exec(text.slice(at, at + 2500))
+    if (!m || seen.has(m[1])) continue
+    seen.add(m[1])
+    out.push(`https://i.ebayimg.com/images/g/${m[1]}/s-l1600.jpg`)
+  }
+  return out
+}

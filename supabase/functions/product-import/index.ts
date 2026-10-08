@@ -1,7 +1,7 @@
 // Admin tool: paste a product link (Amazon, Shein, Alibaba/1688, Temu, Muscle & Strength) -> product sheet data, variants and package.
 // Page reading: Firecrawl (REST). Text work: OpenRouter. Secrets (Edge Function secrets): FIRECRAWL_API_KEY, OPENROUTER_API_KEY, OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
+import { ebayGalleryImages, findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
 import { normalizeVariants } from './variants.ts'
 import { cartDiscountedPrice, promoTiers } from './promos.ts'
 import { normalizeReviews } from './reviews.ts'
@@ -122,7 +122,7 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
     body: JSON.stringify({
       url,
       // Alibaba: the page source is also kept, the product video address is often only there
-      formats: [{ type: 'json', schema: SCHEMA, prompt: scrapePrompt(platform) }, ...(platform.id === 'alibaba' ? ['rawHtml'] : [])],
+      formats: [{ type: 'json', schema: SCHEMA, prompt: scrapePrompt(platform) }, ...(platform.id === 'alibaba' || platform.id === 'ebay' ? ['rawHtml'] : [])],
       onlyMainContent: false,
       ...(platform.id === 'amazon' ? {} : { waitFor: PROTECTED.has(platform.id) ? 5000 : 3000 }),
       // Shein, Temu and Alibaba block ordinary crawlers (404 / robot pages): their pages are read through the stealth proxy
@@ -405,7 +405,10 @@ Deno.serve(async (req) => {
 
     // pictures: the product's own (small ones, badges and logos are dropped, the first 8 good ones are kept), then the variants' (each distinct picture is copied once into our bucket)
     const tag = `${platform.id}-${productId.slice(0, 20)}`
-    const candidates = variantsOnly ? [] : platformImages(platform.id, scraped.images, 15)
+    // eBay: the listing's own gallery is read from the page source (the extraction mixes in photos of other items); without it, only the page's main picture is kept
+    const gallery = platform.id === 'ebay' ? ebayGalleryImages(read.meta.html) : []
+    const ebayImages = gallery.length > 0 ? gallery : read.meta.image ? [read.meta.image] : []
+    const candidates = variantsOnly ? [] : platformImages(platform.id, platform.id === 'ebay' ? ebayImages : scraped.images, 15)
     const stored: string[] = []
     const copied = new Map<string, string>()
     for (let i = 0; i < candidates.length && stored.length < MAX_PHOTOS; i += 6) {

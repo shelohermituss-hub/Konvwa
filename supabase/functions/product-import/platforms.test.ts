@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findVideoUrl, parseProductUrl, parseSharePrice, platformImageUrl, platformImages, platformVideoUrl, productSlug } from './platforms'
+import { findVideoUrl, parseProductUrl, parseSharePrice, platformImageUrl, platformImages, platformVideoUrl, productSlug, ebayGalleryImages } from './platforms'
 
 describe('parseProductUrl', () => {
   it('keeps Amazon working', () => {
@@ -131,5 +131,18 @@ describe('Walmart, AliExpress and eBay links', () => {
     expect(platformImageUrl('ebay', 'https://i.ebayimg.com/images/g/AbC/s-l225.jpg')).toBe('https://i.ebayimg.com/images/g/AbC/s-l1600.jpg')
     expect(platformImageUrl('walmart', 'https://evil.test/x.jpg')).toBeNull()
     expect(platformImageUrl('ebay', 'https://i5.walmartimages.com/x.jpg')).toBeNull()
+  })
+})
+
+describe('eBay gallery', () => {
+  const item = (token: string, size = 140) => `<div class="ux-image-carousel-item image-treatment"><img src="https://i.ebayimg.com/images/g/${token}/s-l${size}.jpg" data-zoom-src="https://i.ebayimg.com/images/g/${token}/s-l1600.jpg"></div>`
+  it('reads only the listing gallery, in order, once per picture', () => {
+    const html = `<html><div class="srp-river">${'<img src="https://i.ebayimg.com/images/g/OTHER1/s-l225.jpg">'}</div>${item('AAA~bbb')}${item('CCC-ddd')}${item('AAA~bbb')}<div class="x">similar <img src="https://i.ebayimg.com/images/g/OTHER2/s-l225.jpg"></div>`
+    expect(ebayGalleryImages(html)).toEqual(['https://i.ebayimg.com/images/g/AAA~bbb/s-l1600.jpg', 'https://i.ebayimg.com/images/g/CCC-ddd/s-l1600.jpg'])
+  })
+  it('handles thumbs addresses and escaped slashes, and gives nothing without a gallery', () => {
+    expect(ebayGalleryImages('<div class="ux-image-carousel-item"><img data-src="https:\\/\\/i.ebayimg.com\\/thumbs\\/images\\/g\\/ZZZ123\\/s-l140.webp"></div>')).toEqual(['https://i.ebayimg.com/images/g/ZZZ123/s-l1600.jpg'])
+    expect(ebayGalleryImages('<img src="https://i.ebayimg.com/images/g/OTHER/s-l225.jpg">')).toEqual([])
+    expect(ebayGalleryImages(null)).toEqual([])
   })
 })
