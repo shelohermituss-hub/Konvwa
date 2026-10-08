@@ -23,6 +23,8 @@ const MAX_VIDEO = 30_000_000
 const MIN_PHOTO_SIDE = 300
 const MAX_PHOTOS = 8
 const MAX_HOPS = 3
+/** Shops that block ordinary crawlers (404 / robot pages): their pages are read through the stealth proxy. */
+const PROTECTED = new Set(['shein', 'temu', 'alibaba', 'walmart', 'aliexpress'])
 const DEFAULT_MODEL = 'mistralai/mistral-small-3.2-24b-instruct'
 
 const SCHEMA = {
@@ -83,7 +85,7 @@ const SCHEMA = {
   },
   required: ['title'],
 }
-const scrapePrompt = (platform: Platform) => `Extract the product data of this ${platform.name} product page. Use the exact values shown on the page. Weight and dimensions: report both the item and the package/shipping values when shown. Wholesale pages: also read the quantity price ladder (every range with its unit price) and the minimum order quantity. Retail pages: the price is the price of ONE unit, and the offers ("Buy 2 for $X", "Buy 1 Get 1 Free"…) go in \`promotions\`. Prices: always the REGULAR price without discount (ignore promotions, flash sales, coupons). List every variant (size, colour, model) with its own regular price and its own image URL when the page shows them. Also read the written customer reviews shown on the page (reviewer, stars, title, text, date), the most recent first.`
+const scrapePrompt = (platform: Platform) => `Extract the product data of this ${platform.name} product page. Use the exact values shown on the page. Weight and dimensions: report both the item and the package/shipping values when shown. Wholesale pages: also read the quantity price ladder (every range with its unit price) and the minimum order quantity. Retail pages: the price is the price of ONE unit, and the offers ("Buy 2 for $X", "Buy 1 Get 1 Free"…) go in \`promotions\`. Prices: always the REGULAR price without discount (ignore promotions, flash sales, coupons). List every variant (size, colour, model) with its own regular price and its own image URL when the page shows them. Also read the written customer reviews shown on the page (reviewer, stars, title, text, date), the most recent first.${platform.id === 'ebay' ? ' eBay: the price is the fixed "Buy It Now" price of the listing, never a bid or an offer; the variants are the listing\'s options (size, colour…).' : ''}`
 
 interface Scraped {
   title?: string; brand?: string; price?: number; currency?: string; description?: string
@@ -122,9 +124,9 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
       // Alibaba: the page source is also kept, the product video address is often only there
       formats: [{ type: 'json', schema: SCHEMA, prompt: scrapePrompt(platform) }, ...(platform.id === 'alibaba' ? ['rawHtml'] : [])],
       onlyMainContent: false,
-      ...(platform.id === 'amazon' ? {} : { waitFor: platform.id === 'shein' || platform.id === 'temu' || platform.id === 'alibaba' ? 5000 : 3000 }),
+      ...(platform.id === 'amazon' ? {} : { waitFor: PROTECTED.has(platform.id) ? 5000 : 3000 }),
       // Shein, Temu and Alibaba block ordinary crawlers (404 / robot pages): their pages are read through the stealth proxy
-      proxy: platform.id === 'shein' || platform.id === 'temu' || platform.id === 'alibaba' ? 'stealth' : 'auto',
+      proxy: PROTECTED.has(platform.id) ? 'stealth' : 'auto',
       timeout: 60000,
     }),
     signal: AbortSignal.timeout(90000),
@@ -281,7 +283,7 @@ Deno.serve(async (req) => {
     if (!firecrawlKey) return json({ error: 'Outil non configuré : ajoutez le secret FIRECRAWL_API_KEY dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
 
     let target = typeof body.url === 'string' && body.url.length <= 2000 ? parseProductUrl(body.url.trim()) : null
-    if (!target) return json({ error: 'Lien non pris en charge : collez un lien de produit Amazon, Shein, Alibaba, Temu ou Muscle & Strength.' }, 400)
+    if (!target) return json({ error: 'Lien non pris en charge : collez un lien de produit Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu ou Muscle & Strength.' }, 400)
     // a share link: its HTTP redirects are followed first; when they lead nowhere (some apps redirect with JavaScript), the page itself is read and the address it ends on is used
     const shortLink = target.short ? target : null
     if (shortLink) {
@@ -307,7 +309,7 @@ Deno.serve(async (req) => {
     // Shein and Temu send robots to a login / home / other page: then the extraction would describe whatever product is featured there.
     // The page Firecrawl ended on must be the product that was asked for.
     let idChanged = false
-    if (read.finalUrl && (platform.id === 'shein' || platform.id === 'temu')) {
+    if (read.finalUrl && ['shein', 'temu', 'walmart', 'aliexpress', 'ebay'].includes(platform.id)) {
       const landed = parseProductUrl(read.finalUrl)
       if (!landed || landed.short || landed.id !== productId) {
         // the shop may land on another colour / size of the same product (other id): accepted when the page title still matches the name written in the link

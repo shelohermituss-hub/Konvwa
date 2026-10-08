@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { importProductFromLink, type ImportedProduct } from '@/lib/product-import-api'
 import { tr } from '@/lib/i18n'
 
-/** Paste a product link (Amazon, Shein, Alibaba, Temu, Muscle & Strength): the product sheet (and its package) is filled for you to check before saving. */
+/** Paste a product link (Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu, Muscle & Strength): the product sheet (and its package) is filled for you to check before saving. */
 export function ProductLinkImport({ open, onClose, onImported }: { open: boolean; onClose: () => void; onImported: (p: ImportedProduct) => void }) {
   const [url, setUrl] = useState('')
   const [busy, setBusy] = useState(false)
@@ -41,7 +41,7 @@ export function ProductLinkImport({ open, onClose, onImported }: { open: boolean
       <DialogContent className="rounded-2xl sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />{tr('Importer depuis un lien')}</DialogTitle>
-          <DialogDescription>{tr('Collez le lien d\'un produit Amazon, Shein, Alibaba, Temu ou Muscle & Strength : la fiche (nom, description, images, prix normal, caractéristiques), les variantes (tailles, couleurs avec leur photo et leur prix) et le colis sont remplis. Vous vérifiez avant d\'enregistrer.')}</DialogDescription>
+          <DialogDescription>{tr('Collez le lien d\'un produit Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu ou Muscle & Strength : la fiche (nom, description, images, prix normal, caractéristiques), les variantes (tailles, couleurs avec leur photo et leur prix) et le colis sont remplis. Vous vérifiez avant d\'enregistrer.')}</DialogDescription>
         </DialogHeader>
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run() }}>
           <div className="relative">

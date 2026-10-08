@@ -32,7 +32,7 @@ export interface ImportedProduct {
   source_url: string
   /** Amazon ASIN only; other platforms are identified by `source_url`. */
   source_asin: string | null
-  platform: 'amazon' | 'shein' | 'alibaba' | 'temu' | 'muscle_strength'
+  platform: 'amazon' | 'shein' | 'alibaba' | 'temu' | 'muscle_strength' | 'walmart' | 'aliexpress' | 'ebay'
   supplier_name: string
   supplier_country: string
   /** Variants (size, colour…) with their regular price in USD (the product's own price when the page gave none) and their picture. */

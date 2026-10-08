@@ -5,6 +5,9 @@ const LOGOS: Array<{ test: RegExp; src: string; name: string }> = [
   { test: /amazon/i, src: '/brands/amazon.png', name: 'Amazon' },
   { test: /shein/i, src: '/brands/shein.png', name: 'Shein' },
   { test: /temu/i, src: '/brands/temu.jpg', name: 'Temu' },
+  { test: /walmart/i, src: '/brands/walmart.jpg', name: 'Walmart' },
+  { test: /ebay/i, src: '/brands/ebay.jpg', name: 'eBay' },
+  { test: /aliexpress/i, src: '/brands/aliexpress.png', name: 'AliExpress' },
   { test: /muscle\s*(&|and)\s*strength/i, src: '/brands/muscle-strength.png', name: 'Muscle & Strength' },
 ]
 

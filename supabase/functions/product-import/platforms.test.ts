@@ -102,3 +102,34 @@ describe('productSlug', () => {
     expect(productSlug('not a url')).toBe('')
   })
 })
+
+describe('Walmart, AliExpress and eBay links', () => {
+  it('reads their product pages (tracking removed, canonical address)', () => {
+    expect(parseProductUrl('https://www.walmart.com/ip/Some-Product-Name/123456789?classType=VARIANT&athbdg=L1600')).toMatchObject({ platform: { id: 'walmart', country: 'US' }, id: '123456789', url: 'https://www.walmart.com/ip/123456789' })
+    expect(parseProductUrl('https://www.walmart.com/ip/987654321')).toMatchObject({ id: '987654321' })
+    expect(parseProductUrl('https://www.aliexpress.com/item/1005006123456789.html?spm=a2g0o')).toMatchObject({ platform: { id: 'aliexpress', country: 'CN' }, id: '1005006123456789', url: 'https://www.aliexpress.com/item/1005006123456789.html' })
+    expect(parseProductUrl('https://fr.aliexpress.com/item/some-name/1005006123456789.html')).toMatchObject({ id: '1005006123456789' })
+    expect(parseProductUrl('https://www.ebay.com/itm/Some-Listing-Title/314159265358?var=5&hash=item')).toMatchObject({ platform: { id: 'ebay', country: 'US' }, id: '314159265358', url: 'https://www.ebay.com/itm/314159265358' })
+    expect(parseProductUrl('https://www.ebay.com/itm/314159265358')).toMatchObject({ id: '314159265358' })
+  })
+  it('follows their share links', () => {
+    for (const link of ['https://a.aliexpress.com/_mAbCdEf', 'https://s.click.aliexpress.com/e/_abc', 'https://ebay.us/abc123', 'https://walmrt.us/3xYz']) {
+      expect(parseProductUrl(link)).toMatchObject({ short: true, id: null })
+    }
+  })
+  it('refuses look-alike hosts and shop pages without a product', () => {
+    expect(parseProductUrl('https://www.walmart.com.evil.test/ip/123456789')).toBeNull()
+    expect(parseProductUrl('https://aliexpress.com.evil.test/item/1005006123456789.html')).toBeNull()
+    expect(parseProductUrl('https://www.ebay.com.evil.test/itm/314159265358')).toBeNull()
+    expect(parseProductUrl('https://www.walmart.com/browse/electronics/3944')?.id).toBeNull()
+    expect(parseProductUrl('https://www.ebay.com/b/Laptops/177')?.id).toBeNull()
+  })
+  it('only downloads pictures from their own image hosts', () => {
+    expect(platformImageUrl('walmart', 'https://i5.walmartimages.com/seo/Name_abc.jpeg?odnHeight=612&odnWidth=612')).toBe('https://i5.walmartimages.com/seo/Name_abc.jpeg')
+    expect(platformImageUrl('aliexpress', 'https://ae01.alicdn.com/kf/Sabc123.jpg_220x220q90.jpg')).toBe('https://ae01.alicdn.com/kf/Sabc123.jpg')
+    expect(platformImageUrl('aliexpress', '//ae-pic-a1.aliexpress-media.com/kf/Sabc123.jpg_480x480.jpg')).toBe('https://ae-pic-a1.aliexpress-media.com/kf/Sabc123.jpg')
+    expect(platformImageUrl('ebay', 'https://i.ebayimg.com/images/g/AbC/s-l225.jpg')).toBe('https://i.ebayimg.com/images/g/AbC/s-l1600.jpg')
+    expect(platformImageUrl('walmart', 'https://evil.test/x.jpg')).toBeNull()
+    expect(platformImageUrl('ebay', 'https://i5.walmartimages.com/x.jpg')).toBeNull()
+  })
+})

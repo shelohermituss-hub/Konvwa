@@ -15,7 +15,7 @@ interface ImportedReview {
   source_url: string | null
 }
 
-const SOURCE_NAMES: Record<string, string> = { amazon: 'Amazon', muscle_strength: 'Muscle & Strength', alibaba: 'Alibaba', shein: 'Shein', temu: 'Temu' }
+const SOURCE_NAMES: Record<string, string> = { amazon: 'Amazon', muscle_strength: 'Muscle & Strength', alibaba: 'Alibaba', shein: 'Shein', temu: 'Temu', walmart: 'Walmart', aliexpress: 'AliExpress', ebay: 'eBay' }
 
 /** Reviews written on the supplier's site, read at import time: shown apart from KONVWA customers' reviews, always with their source. */
 export function ImportedReviews({ productId }: { productId: string }) {

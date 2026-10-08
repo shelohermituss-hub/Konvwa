@@ -819,7 +819,7 @@ export const FEATURES_EN: Record<string, string> = {
   "dès": "from",
   "Choisir une option": "Choose an option",
   "Lecture de la page du produit…": "Reading the product page…",
-  "Collez le lien d'un produit Amazon, Shein, Alibaba, Temu ou Muscle & Strength : la fiche (nom, description, images, prix normal, caractéristiques), les variantes (tailles, couleurs avec leur photo et leur prix) et le colis sont remplis. Vous vérifiez avant d'enregistrer.": "Paste the link of an Amazon, Shein, Alibaba, Temu or Muscle & Strength product: the sheet (name, description, images, regular price, characteristics), the variants (sizes, colours with their photo and price) and the parcel are filled in. You check before saving.",
+  "Collez le lien d'un produit Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu ou Muscle & Strength : la fiche (nom, description, images, prix normal, caractéristiques), les variantes (tailles, couleurs avec leur photo et leur prix) et le colis sont remplis. Vous vérifiez avant d'enregistrer.": "Paste the link of an Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu or Muscle & Strength product: the sheet (name, description, images, regular price, characteristics), the variants (sizes, colours with their photo and price) and the parcel are filled in. You check before saving.",
   "Lien du produit": "Product link",
   "{0} variantes importées : vérifiez leurs prix avant d'enregistrer.": "{0} variants imported: check their prices before saving.",
   "La page ne donne pas de prix par variante : toutes ont le prix de base, à corriger si besoin.": "The page gives no price per variant: all have the base price, fix them if needed.",

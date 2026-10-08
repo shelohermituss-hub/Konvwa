@@ -3,7 +3,7 @@
 // platform's own image hosts are downloaded.
 import { amazonImageUrl, canonicalUrl, parseAmazonUrl, type AmazonTarget } from './amazon.ts'
 
-export type PlatformId = 'amazon' | 'shein' | 'alibaba' | 'temu' | 'muscle_strength'
+export type PlatformId = 'amazon' | 'shein' | 'alibaba' | 'temu' | 'muscle_strength' | 'walmart' | 'aliexpress' | 'ebay'
 
 export interface Platform {
   id: PlatformId
@@ -20,6 +20,9 @@ export const PLATFORMS: Record<PlatformId, Platform> = {
   alibaba: { id: 'alibaba', name: 'Alibaba', country: 'CN', currency: 'USD' },
   temu: { id: 'temu', name: 'Temu', country: 'CN', currency: 'USD' },
   muscle_strength: { id: 'muscle_strength', name: 'Muscle & Strength', country: 'US', currency: 'USD' },
+  walmart: { id: 'walmart', name: 'Walmart', country: 'US', currency: 'USD' },
+  aliexpress: { id: 'aliexpress', name: 'AliExpress', country: 'CN', currency: 'USD' },
+  ebay: { id: 'ebay', name: 'eBay', country: 'US', currency: 'USD' },
 }
 
 const HOSTS: Array<[Exclude<PlatformId, 'amazon'>, RegExp]> = [
@@ -27,6 +30,9 @@ const HOSTS: Array<[Exclude<PlatformId, 'amazon'>, RegExp]> = [
   ['alibaba', /^(?:www\.|m\.|s\.|[a-z]{2,10}\.)?alibaba\.com$|^detail\.1688\.com$|^m\.1688\.com$/i],
   ['temu', /^(?:www\.|m\.|app\.|share\.)?temu\.com$|^temu\.to$/i],
   ['muscle_strength', /^(?:www\.)?muscleandstrength\.com$/i],
+  ['walmart', /^(?:www\.)?walmart\.com$|^walmrt\.us$/i],
+  ['aliexpress', /^(?:www\.|m\.|[a-z]{2,3}\.)?aliexpress\.(?:com|us)$|^(?:a|s\.click)\.aliexpress\.com$/i],
+  ['ebay', /^(?:www\.|m\.)?ebay\.com$|^ebay\.(?:us|to)$/i],
 ]
 
 export interface ProductTarget {
@@ -55,7 +61,7 @@ export function parseSharePrice(raw: string | null): { price: number | null; cur
 }
 
 /** The hosts of the apps' "share" links: they only redirect to the product page. */
-const SHORT_HOSTS = /^(?:s\.alibaba\.com|shein\.top|api-shein\.shein\.com|onelink\.shein\.com|temu\.to|share\.temu\.com|app\.temu\.com)$/i
+const SHORT_HOSTS = /^(?:s\.alibaba\.com|shein\.top|api-shein\.shein\.com|onelink\.shein\.com|temu\.to|share\.temu\.com|app\.temu\.com|walmrt\.us|a\.aliexpress\.com|s\.click\.aliexpress\.com|ebay\.us|ebay\.to)$/i
 
 function cleanHttps(raw: string): URL | null {
   let url: URL
@@ -108,6 +114,15 @@ export function parseProductUrl(raw: string): ProductTarget | null {
     const g = url.searchParams.get('goods_id')
     id = /-g-(\d{6,})\.html/.exec(path)?.[1] ?? (g && /^\d{6,}$/.test(g) ? g : null)
     if (g && /^\d{6,}$/.test(g)) keep.set('goods_id', g)
+  } else if (platform.id === 'walmart') {
+    const wid = /\/ip\/(?:[^/]+\/)?(\d{5,})(?:[/?#]|$)/.exec(path)?.[1] ?? null
+    return { platform, url: wid ? `https://www.walmart.com/ip/${wid}` : `https://${host}${path}`, id: wid }
+  } else if (platform.id === 'aliexpress') {
+    const aid = /\/(?:item|i)\/(?:[^/]+\/)?(\d{8,})\.html$/.exec(path)?.[1] ?? null
+    return { platform, url: aid ? `https://www.aliexpress.com/item/${aid}.html` : `https://${host}${path}`, id: aid }
+  } else if (platform.id === 'ebay') {
+    const eid = /\/itm\/(?:[^/]+\/)?(\d{9,14})(?:[/?#]|$)/.exec(path)?.[1] ?? null
+    return { platform, url: eid ? `https://www.ebay.com/itm/${eid}` : `https://${host}${path}`, id: eid }
   } else {
     id = /^\/store\/([a-z0-9][a-z0-9-]*)(?:\.html)?\/?$/i.exec(path) ? slug(path.replace(/^\/store\//, '').replace(/\.html$/, '')) : null
   }
@@ -121,6 +136,9 @@ const IMAGE_HOSTS: Record<PlatformId, RegExp> = {
   alibaba: /(?:^|\.)alicdn\.com$/i,
   temu: /(?:^|\.)kwcdn\.com$/i,
   muscle_strength: /(?:^|\.)muscleandstrength\.com$/i,
+  walmart: /(?:^|\.)walmartimages\.com$/i,
+  aliexpress: /(?:^|\.)(?:alicdn\.com|aliexpress-media\.com)$/i,
+  ebay: /(?:^|\.)ebayimg\.com$/i,
 }
 
 /** Size suffixes that thumbnails carry in their file names, removed to get the original picture. */
@@ -138,6 +156,8 @@ export function platformImageUrl(platform: PlatformId, raw: unknown): string | n
   if (!url || !IMAGE_HOSTS[platform].test(url.hostname)) return null
   let path = url.pathname
   for (const re of SIZE_SUFFIX) path = path.replace(re, (_m, ext?: string) => ext ?? '')
+  // eBay thumbnails (s-l225.jpg) -> the large picture
+  if (platform === 'ebay') path = path.replace(/\/s-l\d+\.(jpe?g|png|webp)$/i, '/s-l1600.$1')
   if (!/\.(jpe?g|png|webp)$/i.test(path)) return null
   url.pathname = path
   url.search = ''
