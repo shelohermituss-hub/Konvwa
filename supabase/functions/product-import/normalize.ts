@@ -256,7 +256,7 @@ export function looksLikeErrorPage(title: string): boolean {
 }
 
 /** Accessories (case, charger, strap…) are not the device itself: they stay on the weight rate. */
-const ACCESSORY = /\b(case|cover|coque|housse|etui|étui|protector|protecteur|film|glass|verre|charger|chargeur|cable|câble|cord|holder|support|stand|mount|strap|bracelet|band|adapter|adaptateur|dock|sleeve|skin|sticker|autocollant|replacement|remplacement|pour|for)\b/i
+const ACCESSORY = /\b(case|cover|coque|housse|etui|étui|protector|protecteur|film|glass|verre|charger|chargeur|cable|câble|cord|holder|support|stand|mount|strap|bracelet|band|adapter|adaptateur|dock|sleeve|skin|sticker|autocollant|replacement|remplacement)\b/i
 
 /** Keyword -> carrier item type, most specific first. */
 const ITEM_KEYWORDS: Array<[string, RegExp]> = [
