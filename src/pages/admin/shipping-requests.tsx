@@ -167,7 +167,7 @@ function AdminActionSheet({
     const usd  = Math.max(rate.min_amount_usd ?? 0, rate.base_fee_usd + freight)
     // the general fee of the rate is added once, after the category coefficient (same rule as the database)
     return { usd, mult, htg: Math.round((usd * mult + (rate.general_fee_usd ?? 0)) * usdToHtg) }
-  }, [form.selected_rate_id, form.actual_cbm, form.actual_kg, rates, usdToHtg, request.product_rate_category])
+  }, [form.selected_rate_id, form.actual_cbm, form.actual_kg, rates, usdToHtg, request.product_rate_category, request.origin_country])
 
   const finalAmount = form.override_amount
     ? parseFloat(form.override_amount)

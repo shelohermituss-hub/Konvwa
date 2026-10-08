@@ -457,6 +457,8 @@ export const ADMIN_EN: Record<string, string> = {
   'Nom du type': 'Type name',
   'Électronique': 'Electronics',
   "Tarif CBM requis pour l'océan.": 'CBM rate required for sea freight.',
+  "Tarif CBM ou tarif kg / livre requis pour l'océan.": 'CBM rate or kg / pound rate required for sea freight.',
+  'Tarif / livre (USD)': 'Rate / pound (USD)',
   'Tarif kg requis pour l\'aérien.': 'Per-kg rate required for air freight.',
   'Erreur mise à jour.': 'Update error.',
   'Tarif mis à jour.': 'Rate updated.',

@@ -980,6 +980,8 @@ function ProductTypesSection() {
 
 // ── Shipping rates section ────────────────────────────────────────────────────
 
+const LB_PER_KG = 2.2046226
+
 type RateForm = {
   mode: 'ocean' | 'air'
   name: string
@@ -987,6 +989,8 @@ type RateForm = {
   origin_id: string
   per_cbm_usd: string
   per_kg_usd: string
+  /** helper only (not saved): the price per pound typed by the admin, converted to per kg */
+  per_lb_input: string
   min_amount_usd: string
   transit_days_min: string
   transit_days_max: string
@@ -999,7 +1003,7 @@ type RateForm = {
 
 const EMPTY_RATE_FORM: RateForm = {
   mode: 'ocean', name: '', type_label: 'Standard', origin_id: '',
-  per_cbm_usd: '', per_kg_usd: '', min_amount_usd: '0',
+  per_cbm_usd: '', per_kg_usd: '', per_lb_input: '', min_amount_usd: '0',
   transit_days_min: '', transit_days_max: '', description: '', active: true, sort_order: '0', carrier_logo_url: '', general_fee_usd: '',
 }
 
@@ -1029,6 +1033,7 @@ function ShippingRatesSection() {
     return {
       mode: r.mode, name: r.name, type_label: r.type_label, origin_id: r.origin_id ?? '',
       per_cbm_usd: r.per_cbm_usd?.toString() ?? '', per_kg_usd: r.per_kg_usd?.toString() ?? '',
+      per_lb_input: r.per_kg_usd ? String(Math.round((r.per_kg_usd / LB_PER_KG) * 10000) / 10000) : '',
       min_amount_usd: r.min_amount_usd.toString(),
       transit_days_min: r.transit_days_min?.toString() ?? '', transit_days_max: r.transit_days_max?.toString() ?? '',
       description: r.description ?? '', active: r.active, sort_order: r.sort_order.toString(), carrier_logo_url: r.carrier_logo_url ?? '', general_fee_usd: r.general_fee_usd ? String(r.general_fee_usd) : '',
@@ -1064,7 +1069,7 @@ function ShippingRatesSection() {
 
   async function handleSave() {
     if (!form.name.trim()) { toast.error(tr('Nom requis.')); return }
-    if (form.mode === 'ocean' && !form.per_cbm_usd) { toast.error(tr('Tarif CBM requis pour l\'océan.')); return }
+    if (form.mode === 'ocean' && !form.per_cbm_usd && !form.per_kg_usd) { toast.error(tr('Tarif CBM ou tarif kg / livre requis pour l\'océan.')); return }
     if (form.mode === 'air'   && !form.per_kg_usd)  { toast.error(tr('Tarif kg requis pour l\'aérien.')); return }
     setSaving(true)
     if (editing) {
@@ -1115,7 +1120,7 @@ function ShippingRatesSection() {
               ? tr('{0}{1} j', item.transit_days_min, item.transit_days_max != null ? '–' + item.transit_days_max : '')
               : null
             const rate = item.mode === 'ocean'
-              ? (item.per_cbm_usd != null ? `$${item.per_cbm_usd}/CBM` : '—')
+              ? [item.per_cbm_usd != null ? `$${item.per_cbm_usd}/CBM` : '', item.per_kg_usd != null ? `$${item.per_kg_usd}/kg` : ''].filter(Boolean).join(' · ') || '—'
               : (item.per_kg_usd  != null ? `$${item.per_kg_usd}/kg`  : '—')
             return (
               <div key={item.id} className="flex items-center gap-3 px-4 py-3.5">
@@ -1225,9 +1230,19 @@ function ShippingRatesSection() {
             {form.mode === 'ocean' ? (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold">{tr('Tarif / CBM (USD)')}{' '}<span className="text-destructive">*</span></Label>
+                  <Label className="text-sm font-semibold">{tr('Tarif / CBM (USD)')}</Label>
                   <Input type="number" step="0.01" placeholder="790" value={form.per_cbm_usd}
                     onChange={e => setForm(p => ({ ...p, per_cbm_usd: e.target.value }))} className="rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">{tr('Tarif / livre (USD)')}</Label>
+                  <Input type="number" step="0.0001" placeholder="2.7" value={form.per_lb_input}
+                    onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_lb_input: v, per_kg_usd: n > 0 ? String(Math.round(n * LB_PER_KG * 10000) / 10000) : '' })) }} className="rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">{tr('Tarif / kg (USD)')}</Label>
+                  <Input type="number" step="0.0001" placeholder="5.9525" value={form.per_kg_usd}
+                    onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_kg_usd: v, per_lb_input: n > 0 ? String(Math.round((n / LB_PER_KG) * 10000) / 10000) : '' })) }} className="rounded-xl" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm font-semibold">{tr('Minimum (USD)')}</Label>
@@ -1238,9 +1253,14 @@ function ShippingRatesSection() {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">{tr('Tarif / livre (USD)')}</Label>
+                  <Input type="number" step="0.0001" placeholder="2.7" value={form.per_lb_input}
+                    onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_lb_input: v, per_kg_usd: n > 0 ? String(Math.round(n * LB_PER_KG * 10000) / 10000) : '' })) }} className="rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
                   <Label className="text-sm font-semibold">{tr('Tarif / kg (USD)')}{' '}<span className="text-destructive">*</span></Label>
-                  <Input type="number" step="0.001" placeholder="10.978" value={form.per_kg_usd}
-                    onChange={e => setForm(p => ({ ...p, per_kg_usd: e.target.value }))} className="rounded-xl" />
+                  <Input type="number" step="0.0001" placeholder="5.9525" value={form.per_kg_usd}
+                    onChange={e => { const v = e.target.value; const n = parseFloat(v); setForm(p => ({ ...p, per_kg_usd: v, per_lb_input: n > 0 ? String(Math.round((n / LB_PER_KG) * 10000) / 10000) : '' })) }} className="rounded-xl" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm font-semibold">{tr('Minimum (USD)')}</Label>
