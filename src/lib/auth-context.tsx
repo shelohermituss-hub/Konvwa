@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { trackRegistration } from '@/lib/meta-pixel'
 
 import { tr } from '@/lib/i18n'
 type UserRole = 'client' | 'agent' | 'manager' | 'admin'
@@ -61,6 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
+        // a social sign-up (Google / Facebook): the account is brand new when it was created a moment ago
+        const u = session.user
+        const provider = String(u.app_metadata?.provider ?? 'email')
+        if (_event === 'SIGNED_IN' && provider !== 'email' && Date.now() - new Date(u.created_at).getTime() < 120_000) {
+          trackRegistration(u.id, provider === 'google' || provider === 'facebook' ? provider : 'other')
+        }
         fetchProfile(session.user.id)
       } else {
         setProfile(null)
@@ -138,6 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       return { error: new Error(error.message) }
     }
+    // an address that already has an account comes back as a user without identities: not a new sign-up
+    if (data.user && (data.user.identities?.length ?? 1) > 0) trackRegistration(data.user.id, 'email')
 
     // No session means "Confirm email" is on: the profile/wallet are created by the DB trigger
     if (!data.session) {

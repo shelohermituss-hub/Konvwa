@@ -25,6 +25,17 @@ export function trackPixel(event: string, params?: Record<string, unknown>, even
   try { window.fbq?.('track', event, params ?? {}, eventId ? { eventID: eventId } : undefined) } catch { /* blocked by the browser */ }
 }
 
+/**
+ * A new account was created (the event ads campaigns optimise for when the goal is sign-ups). Sent once per account (remembered in the browser),
+ * with the account id as event id so a later server-side copy of the event would be counted only once.
+ */
+export function trackRegistration(userId: string, method: 'email' | 'google' | 'facebook' | 'other'): void {
+  if (!pixelEnabled || !userId) return
+  const key = `konvwa_reg_${userId}`
+  try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1') } catch { /* private mode: the event id still dedupes */ }
+  trackPixel('CompleteRegistration', { content_name: 'signup', status: true, registration_method: method }, `reg-${userId}`)
+}
+
 /** Product data in the shape Meta expects: the ids are the ones of the catalogue feed (the product id), the price is the selling price. */
 export function productParams(product: { id: string; name: string }, valueHtg: number, quantity = 1): Record<string, unknown> {
   return { content_type: 'product', content_ids: [product.id], content_name: product.name, contents: [{ id: product.id, quantity }], value: valueHtg, currency: 'HTG' }
