@@ -115,12 +115,18 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
           </p>
         )}
 
-        {extra && (
-          <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Check className="h-3 w-3 shrink-0 text-emerald-700" aria-hidden />
-            <span className="truncate">{extra}</span>
-          </p>
-        )}
+        <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          {extra ? (
+            <p className="flex min-w-0 items-center gap-1">
+              <Check className="h-3 w-3 shrink-0 text-emerald-700" aria-hidden />
+              <span className="truncate">{extra}</span>
+            </p>
+          ) : <span />}
+          <span className="flex shrink-0 items-center gap-1 font-semibold text-foreground/80">
+            {tr('Livré en Haïti')}
+            <img src="/flags/ht.svg" alt="" loading="lazy" className="h-3.5 w-3.5 rounded-full border border-black/5 object-cover" />
+          </span>
+        </div>
       </div>
     </button>
     {!guest && <WishlistButton productId={product.id} className="absolute right-2 top-2" />}

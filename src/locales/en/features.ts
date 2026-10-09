@@ -914,6 +914,7 @@ export const FEATURES_EN: Record<string, string> = {
   "Devise d'affichage : {0}. Passer en {1}": "Display currency: {0}. Switch to {1}",
   "La lecture automatique ne correspond pas bien à ce produit : seuls le titre, la description et l'image de la page sont repris. Vérifiez et remplissez le prix à la main.": "The automatic reading does not match this product well: only the page's title, description and image were kept. Check it and fill in the price by hand.",
   "Livraison en Haïti": "Delivery to Haiti",
+  "Livré en Haïti": "Delivered in Haiti",
   "Le site a bloqué la lecture de la page : la fiche est remplie avec les informations du lien de partage (nom, prix, image). Vérifiez-la et complétez-la.": "The site blocked the reading of the page: the sheet was filled with what the share link carries (name, price, picture). Check it and complete it.",
   "Boutique": "Shop",
   "Par unité · clients finaux": "By the unit · end customers",
