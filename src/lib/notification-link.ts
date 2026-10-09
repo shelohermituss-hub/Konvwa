@@ -11,6 +11,8 @@ export function resolveNotificationLink(n: NotifLinkInput, role?: string | null)
   let link = (n.link ?? '').trim()
 
   if (!link || !link.startsWith('/') || link.startsWith('//')) {
+    // the "home" category: a visitor lands on the product feed, a customer on the dashboard (the home route decides)
+    if (n.type === 'home') return '/'
     const t = (n.title ?? '').toLowerCase()
     if (n.type === 'payment' || /recharge|paiement|portefeuille|dépôt|depot|payment|wallet|top-up/.test(t)) return '/wallet'
     if (/expédition|expedition|colis|shipment|parcel/.test(t)) return '/shipments'

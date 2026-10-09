@@ -24,4 +24,8 @@ describe('resolveNotificationLink', () => {
     expect(r({ link: 'https://evil.example' }, 'client')).toBe('/notifications')
     expect(r({ link: '//evil.example' }, 'client')).toBe('/notifications')
   })
+  it('the home category opens the home route', () => {
+    expect(r({ link: null, type: 'home', title: 'Nouveautés' }, 'client')).toBe('/')
+    expect(r({ link: '/', type: 'home' }, 'client')).toBe('/')
+  })
 })

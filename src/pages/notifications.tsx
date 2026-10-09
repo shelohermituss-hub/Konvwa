@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Bell, Check, Trash2, Info, AlertTriangle } from 'lucide-react'
+import { Bell, Check, Trash2, Info, AlertTriangle, Home } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -38,6 +38,7 @@ const TYPE_CONFIG: Record<string, IconConfig> = {
   success: { imgSrc: IconValide, iconBg: 'bg-emerald-50', iconColor: '', dotColor: 'bg-success' },
   warning: { icon: AlertTriangle, iconBg: 'bg-warning/10', iconColor: 'text-warning', dotColor: 'bg-warning' },
   error: { icon: Bell, iconBg: 'bg-destructive/10', iconColor: 'text-destructive', dotColor: 'bg-destructive' },
+  home: { icon: Home, iconBg: 'bg-primary/10', iconColor: 'text-primary', dotColor: 'bg-primary' },
 }
 
 export function NotificationsPage() {

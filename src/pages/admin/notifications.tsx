@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Bell, BellOff, Plus, Search, RefreshCw, Send, Loader2,
-  Users, CheckCheck, Mail, AlertTriangle, Package, CreditCard, Info,
+  Users, CheckCheck, Mail, AlertTriangle, Package, CreditCard, Info, Home,
   X, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import { PushSettingsRow } from '@/components/shared/pwa-experience'
@@ -48,6 +48,8 @@ const TYPE_CONFIG: Record<string, { label: string; icon: typeof Bell; color: str
   warning: { label: tr('Alerte'),    icon: AlertTriangle,color: 'text-amber-600 bg-amber-50' },
   error:   { label: tr('Erreur'),    icon: AlertTriangle,color: 'text-red-600 bg-red-50' },
   info:    { label: tr('Info'),      icon: Info,         color: 'text-sky-600 bg-sky-50' },
+  // opens the platform's home when the customer taps it
+  home:    { label: tr('Accueil'),   icon: Home,         color: 'text-primary bg-primary/10' },
 }
 
 const ALL_TYPES = Object.keys(TYPE_CONFIG)
@@ -102,7 +104,7 @@ function CreateDialog({
     try {
       if (target === 'all') {
         const rows = users.map(u => ({
-          user_id: u.user_id, type, title: title.trim(), body: body.trim(), read: false,
+          user_id: u.user_id, type, title: title.trim(), body: body.trim(), read: false, ...(type === 'home' ? { link: '/' } : {}),
         }))
         if (rows.length === 0) { toast.error(tr('Aucun utilisateur trouvé')); return }
         const { error } = await supabase.from('notifications').insert(rows)
@@ -110,7 +112,7 @@ function CreateDialog({
         toast.success(tr('Notification envoyée à {0} utilisateurs', rows.length))
       } else {
         const { error } = await supabase.from('notifications').insert({
-          user_id: userId, type, title: title.trim(), body: body.trim(), read: false,
+          user_id: userId, type, title: title.trim(), body: body.trim(), read: false, ...(type === 'home' ? { link: '/' } : {}),
         })
         if (error) throw error
         toast.success(tr('Notification envoyée'))
