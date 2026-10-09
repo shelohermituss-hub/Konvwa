@@ -207,6 +207,7 @@ export const PUBLIC_EN: Record<string, string> = {
   'Paiement en attente': 'Payment pending',
   'Votre paiement est en cours de traitement. Il sera crédité dans quelques minutes. Vérifiez votre portefeuille.': 'Your payment is being processed. It will be credited in a few minutes. Check your wallet.',
   'Paiement échoué': 'Payment failed',
+  'Ce paiement n\'a pas été validé en 1 heure : il a été annulé. Aucun montant n\'a été crédité. Lancez une nouvelle demande.': 'This payment was not validated within 1 hour: it was cancelled and nothing was credited. Please start a new request.',
   "Votre paiement n'a pas pu être traité. Aucun montant n'a été débité.": 'Your payment could not be processed. You have not been charged.',
   'Réessayer': 'Try again',
   'Si vous avez effectué un paiement, contactez le support avec votre référence.': 'If you made a payment, contact support with your reference.',

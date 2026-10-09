@@ -16,6 +16,8 @@ export interface VerifyPaymentResult {
   method?: string
   status?: string
   failed?: boolean
+  /** Cancelled because the gateway did not validate it within 1 hour: start a new request. */
+  expired?: boolean
   already_processed?: boolean
   /** Checkout only: the orders were placed (false = paid but not ordered, the money is in the wallet). */
   ok?: boolean

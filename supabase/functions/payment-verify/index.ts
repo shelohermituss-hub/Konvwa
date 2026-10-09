@@ -82,6 +82,8 @@ Deno.serve(async (req) => {
         await supabaseAdmin.from('checkout_intents').update({ status: 'failed', updated_at: new Date().toISOString() }).eq('id', intent.id).eq('status', 'pending')
         return json({ kind: 'checkout', verified: false, failed: true })
       }
+      // cancelled after 1 h without validation: the customer must start a new request (a late genuine payment is still honoured above)
+      if (intent.status === 'failed') return json({ kind: 'checkout', verified: false, failed: true, expired: true })
       return json({ kind: 'checkout', verified: false, status: 'pending' })
     }
 
@@ -110,7 +112,7 @@ Deno.serve(async (req) => {
         .from('wallet_transactions')
         .update({ status: 'completed' })
         .eq('id', tx.id)
-        .in('status', ['pending', 'failed'])
+        .in('status', ['pending', 'failed', 'cancelled'])  // 'cancelled' = expired after 1 h: a late genuine payment is still credited
         .select('id')
       if (!claimed?.length) return json({ kind: 'topup', verified: true, already_processed: true, amount: tx.amount })
 
@@ -125,6 +127,8 @@ Deno.serve(async (req) => {
       await supabaseAdmin.from('wallet_transactions').update({ status: 'failed' }).eq('id', tx.id).eq('status', 'pending')
       return json({ kind: 'topup', verified: false, status: String(plopData.trans_status ?? 'no'), failed: true })
     }
+    // cancelled after 1 h without validation: the customer must start a new request
+    if (tx.status === 'cancelled') return json({ kind: 'topup', verified: false, failed: true, expired: true })
     // still waiting for the customer / the gateway: nothing changes, nothing is shown to the team
     return json({ kind: 'topup', verified: false, status: String(plopData.trans_status ?? 'pending'), failed: false })
   } catch (err) {

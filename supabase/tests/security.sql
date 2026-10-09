@@ -929,5 +929,19 @@ BEGIN
   RESET ROLE;
 END $$;
 
+-- gateway payments not validated within 1 hour are cancelled by the job; clients cannot trigger it
+DO $$ DECLARE w uuid; old_id uuid; new_id uuid; BEGIN
+  SELECT id INTO w FROM wallets LIMIT 1;
+  INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, reference, created_at) VALUES (w, 'deposit', 500, 'pending', 'moncash', 'T-EXP-OLD', now() - interval '2 hours') RETURNING id INTO old_id;
+  INSERT INTO wallet_transactions (wallet_id, type, amount, status, payment_method, reference, created_at) VALUES (w, 'deposit', 500, 'pending', 'natcash', 'T-EXP-NEW', now() - interval '30 minutes') RETURNING id INTO new_id;
+  PERFORM public.expire_stale_gateway_payments();
+  ASSERT (SELECT status FROM wallet_transactions WHERE id = old_id) = 'cancelled', 'a payment older than 1 h stays pending';
+  ASSERT (SELECT status FROM wallet_transactions WHERE id = new_id) = 'pending', 'a recent payment was cancelled';
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', (SELECT id FROM profiles WHERE role = 'client' LIMIT 1), 'role', 'authenticated')::text, true);
+  SET LOCAL ROLE authenticated;
+  BEGIN PERFORM public.expire_stale_gateway_payments(); ASSERT false, 'a client can run the expiry job'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

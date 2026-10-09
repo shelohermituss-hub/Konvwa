@@ -16,6 +16,7 @@ export function PaymentReturnPage() {
   const [amount, setAmount] = useState<number | null>(null)
   const [errMsg, setErrMsg] = useState('')
   const [checkout, setCheckout] = useState(false)
+  const [expired, setExpired] = useState(false)
   const [notOrderedReason, setNotOrderedReason] = useState('')
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export function PaymentReturnPage() {
             setState('success')
           }
         } else if (result.failed) {
+          setExpired(result.expired === true)
           setState('failed')
         } else if (tries < maxTries) {
           // Transaction still pending — retry in 3s
@@ -176,7 +178,9 @@ export function PaymentReturnPage() {
             </div>
             <h1 className="text-lg font-bold mb-2">{tr('Paiement échoué')}</h1>
             <p className="text-sm text-muted-foreground mb-6">
-              {tr('Votre paiement n\'a pas pu être traité. Aucun montant n\'a été débité.')}
+              {expired
+                ? tr('Ce paiement n\'a pas été validé en 1 heure : il a été annulé. Aucun montant n\'a été crédité. Lancez une nouvelle demande.')
+                : tr('Votre paiement n\'a pas pu être traité. Aucun montant n\'a été débité.')}
               {checkout && <> {tr('Aucune commande n\'a été passée.')}</>}
             </p>
             <Link

@@ -323,11 +323,12 @@ export function WalletPage() {
         setTransactions(txRes.data as Transaction[])
         // A MonCash / NatCash top-up waiting for the gateway is checked again (the customer may have paid then closed the page):
         // only the gateway's confirmation credits it, and only then does it exist for the team
-        const waiting = (txRes.data as Transaction[]).filter(t => t.type === 'deposit' && t.status === 'pending' && (t.payment_method === 'moncash' || t.payment_method === 'natcash' || t.payment_method === 'stripe') && t.reference
+        const waiting = (txRes.data as Transaction[]).filter(t => t.type === 'deposit' && (t.status === 'pending' ? (t.payment_method === 'moncash' || t.payment_method === 'natcash' || t.payment_method === 'stripe') : (t.status === 'cancelled' && (t.payment_method === 'moncash' || t.payment_method === 'natcash'))) && t.reference
           && Date.now() - new Date(t.created_at).getTime() < 24 * 3600 * 1000).slice(0, 3)
         if (waiting.length > 0) {
-          void Promise.all(waiting.map(t => verifyPayment(t.reference as string).catch(() => null))).then(rs => {
-            if (rs.some(r => r?.verified || r?.failed)) void loadData()
+          void Promise.all(waiting.map(t => verifyPayment(t.reference as string).catch(() => null).then(r => ({ r, expired: t.status === 'cancelled' })))).then(rs => {
+            // an expired (cancelled) payment is only worth a reload if the gateway confirmed it late; otherwise it would loop
+            if (rs.some(({ r, expired }) => r?.verified || (r?.failed && !expired))) void loadData()
           })
         }
       }
