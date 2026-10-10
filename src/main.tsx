@@ -63,6 +63,10 @@ if ('serviceWorker' in navigator) {
   })
 }
 
+// once the first screen is idle, fetch the code of the screens a visitor opens next (product page, cart) so they open instantly
+const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 2500))
+window.addEventListener('load', () => idle(() => { void import('@/pages/product-detail'); void import('@/pages/auth'); void import('@/pages/cart') }))
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="light" storageKey="haiti-import-theme">

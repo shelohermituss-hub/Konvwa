@@ -1,74 +1,77 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { page } from '@/lib/lazy-page'
 
 // Layouts
 import { PublicLayout } from '@/components/layouts/public-layout'
-import { ClientLayout } from '@/components/layouts/client-layout'
-import { MfaGate } from '@/components/shared/mfa-gate'
-import { AdminLayout } from '@/components/layouts/admin-layout'
 
 // Guards
-import { SetupPage } from '@/pages/setup'
 import { AuthGuard, SetupGate } from '@/components/shared/auth-guard'
 import { AdminGuard, SuperAdminGuard } from '@/components/shared/auth-guard'
 import { HomeGuard } from '@/components/shared/home-guard'
 import { CatalogShell } from '@/components/shared/catalog-shell'
 
-// Auth
-import { AuthPage } from '@/pages/auth'
 
 // Public pages
-import { TermsPage, PrivacyPage } from '@/pages/legal'
 
 // Client pages
-import { DashboardPage } from '@/pages/dashboard'
-import { SubmitPage } from '@/pages/submit'
-import { OrdersPage } from '@/pages/orders'
-import { ProductOrderDetailPage } from '@/pages/product-order-detail'
-import { OrderDetailPage } from '@/pages/order-detail'
-import { ShipmentsPage } from '@/pages/shipments'
-import { ShipmentDetailPage } from '@/pages/shipment-detail'
-import { WalletPage } from '@/pages/wallet'
-import { NotificationsPage } from '@/pages/notifications'
-import { ProfilePage } from '@/pages/profile'
-import { SupportPage } from '@/pages/support'
-import { ActivityLogPage } from '@/pages/activity-log'
-import { BillingPage } from '@/pages/billing'
 import { ProductsPage } from '@/pages/products'
-import { WishlistPage } from '@/pages/wishlist'
-import { ResellerPage } from '@/pages/reseller'
-import { AdminResellersPage } from '@/pages/admin/resellers'
-import { AdminLabelsPage } from '@/pages/admin/labels'
-import { AdminScanPage } from '@/pages/admin/scan'
-import { SupportTicketPage } from '@/pages/support-ticket'
-import { ProductDetailPage } from '@/pages/product-detail'
-import { CartPage } from '@/pages/cart'
-import { CheckoutPage } from '@/pages/checkout'
-import { PaymentReturnPage } from '@/pages/payment-return'
 
 // Admin pages
-import { AdminDashboard } from '@/pages/admin/dashboard'
-import { AdminOrdersPage } from '@/pages/admin/orders'
-import { AdminSuppliersPage } from '@/pages/admin/suppliers'
-import { AdminQuotesPage } from '@/pages/admin/quotes'
-import { AdminShipmentsPage } from '@/pages/admin/shipments'
-import { AdminPaymentsPage } from '@/pages/admin/payments'
-import { AdminUsersPage } from '@/pages/admin/users'
-import { AdminDisputesPage } from '@/pages/admin/disputes'
-import { AdminSettingsPage } from '@/pages/admin/settings'
-import { AdminProductOrdersPage } from '@/pages/admin/product-orders'
-import { AdminDeliveryOptionsPage } from '@/pages/admin/delivery-options'
-import { AdminShippingConfigPage } from '@/pages/admin/shipping-config'
-import { AdminShippingRequestsPage } from '@/pages/admin/shipping-requests'
-import { AdminProductsPage } from '@/pages/admin/products'
-import { AdminNotificationsPage } from '@/pages/admin/notifications'
-import { AdminAuditLogsPage } from '@/pages/admin/audit-logs'
-import { AdminKycPage } from '@/pages/admin/kyc'
-import { AdminPromosPage } from '@/pages/admin/promos'
-import { AdminAdsPage } from '@/pages/admin/ads'
-import { AdminInsightsPage } from '@/pages/admin/insights'
 import { RouteError } from '@/pages/route-error'
-import { AdminErrorsPage } from '@/pages/admin/errors'
-import { AdminReconciliationPage } from '@/pages/admin/reconciliation'
+
+// Pages and layouts are downloaded when first opened; the visitor's first screens (product feed, sign-up) stay in the first download
+const AuthPage = page(() => import('@/pages/auth'), 'AuthPage')
+const ClientLayout = page(() => import('@/components/layouts/client-layout'), 'ClientLayout')
+const MfaGate = page<{ enroll?: boolean; children?: React.ReactNode }>(() => import('@/components/shared/mfa-gate'), 'MfaGate')
+const AdminLayout = page(() => import('@/components/layouts/admin-layout'), 'AdminLayout')
+const SetupPage = page(() => import('@/pages/setup'), 'SetupPage')
+const TermsPage = page(() => import('@/pages/legal'), 'TermsPage')
+const PrivacyPage = page(() => import('@/pages/legal'), 'PrivacyPage')
+const DashboardPage = page(() => import('@/pages/dashboard'), 'DashboardPage')
+const SubmitPage = page(() => import('@/pages/submit'), 'SubmitPage')
+const OrdersPage = page(() => import('@/pages/orders'), 'OrdersPage')
+const ProductOrderDetailPage = page(() => import('@/pages/product-order-detail'), 'ProductOrderDetailPage')
+const OrderDetailPage = page(() => import('@/pages/order-detail'), 'OrderDetailPage')
+const ShipmentsPage = page(() => import('@/pages/shipments'), 'ShipmentsPage')
+const ShipmentDetailPage = page(() => import('@/pages/shipment-detail'), 'ShipmentDetailPage')
+const WalletPage = page(() => import('@/pages/wallet'), 'WalletPage')
+const NotificationsPage = page(() => import('@/pages/notifications'), 'NotificationsPage')
+const ProfilePage = page(() => import('@/pages/profile'), 'ProfilePage')
+const SupportPage = page(() => import('@/pages/support'), 'SupportPage')
+const ActivityLogPage = page(() => import('@/pages/activity-log'), 'ActivityLogPage')
+const BillingPage = page(() => import('@/pages/billing'), 'BillingPage')
+const WishlistPage = page(() => import('@/pages/wishlist'), 'WishlistPage')
+const ResellerPage = page(() => import('@/pages/reseller'), 'ResellerPage')
+const AdminResellersPage = page(() => import('@/pages/admin/resellers'), 'AdminResellersPage')
+const AdminLabelsPage = page(() => import('@/pages/admin/labels'), 'AdminLabelsPage')
+const AdminScanPage = page(() => import('@/pages/admin/scan'), 'AdminScanPage')
+const SupportTicketPage = page(() => import('@/pages/support-ticket'), 'SupportTicketPage')
+const ProductDetailPage = page(() => import('@/pages/product-detail'), 'ProductDetailPage')
+const CartPage = page(() => import('@/pages/cart'), 'CartPage')
+const CheckoutPage = page(() => import('@/pages/checkout'), 'CheckoutPage')
+const PaymentReturnPage = page(() => import('@/pages/payment-return'), 'PaymentReturnPage')
+const AdminDashboard = page(() => import('@/pages/admin/dashboard'), 'AdminDashboard')
+const AdminOrdersPage = page(() => import('@/pages/admin/orders'), 'AdminOrdersPage')
+const AdminSuppliersPage = page(() => import('@/pages/admin/suppliers'), 'AdminSuppliersPage')
+const AdminQuotesPage = page(() => import('@/pages/admin/quotes'), 'AdminQuotesPage')
+const AdminShipmentsPage = page(() => import('@/pages/admin/shipments'), 'AdminShipmentsPage')
+const AdminPaymentsPage = page(() => import('@/pages/admin/payments'), 'AdminPaymentsPage')
+const AdminUsersPage = page(() => import('@/pages/admin/users'), 'AdminUsersPage')
+const AdminDisputesPage = page(() => import('@/pages/admin/disputes'), 'AdminDisputesPage')
+const AdminSettingsPage = page(() => import('@/pages/admin/settings'), 'AdminSettingsPage')
+const AdminProductOrdersPage = page(() => import('@/pages/admin/product-orders'), 'AdminProductOrdersPage')
+const AdminDeliveryOptionsPage = page(() => import('@/pages/admin/delivery-options'), 'AdminDeliveryOptionsPage')
+const AdminShippingConfigPage = page(() => import('@/pages/admin/shipping-config'), 'AdminShippingConfigPage')
+const AdminShippingRequestsPage = page(() => import('@/pages/admin/shipping-requests'), 'AdminShippingRequestsPage')
+const AdminProductsPage = page(() => import('@/pages/admin/products'), 'AdminProductsPage')
+const AdminNotificationsPage = page(() => import('@/pages/admin/notifications'), 'AdminNotificationsPage')
+const AdminAuditLogsPage = page(() => import('@/pages/admin/audit-logs'), 'AdminAuditLogsPage')
+const AdminKycPage = page(() => import('@/pages/admin/kyc'), 'AdminKycPage')
+const AdminPromosPage = page(() => import('@/pages/admin/promos'), 'AdminPromosPage')
+const AdminAdsPage = page(() => import('@/pages/admin/ads'), 'AdminAdsPage')
+const AdminInsightsPage = page(() => import('@/pages/admin/insights'), 'AdminInsightsPage')
+const AdminErrorsPage = page(() => import('@/pages/admin/errors'), 'AdminErrorsPage')
+const AdminReconciliationPage = page(() => import('@/pages/admin/reconciliation'), 'AdminReconciliationPage')
 
 export const router = createBrowserRouter([
   // Payment return — public (MonCash/NatCash redirect callback)

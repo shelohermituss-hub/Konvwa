@@ -2,16 +2,19 @@
 import { useEffect, useState } from 'react'
 import { tr } from '@/lib/i18n'
 
-const SPLASH_MS = 2000
+const SPLASH_MS = 900
+const SEEN_KEY = 'konvwa_splash_seen'
 
-/** True while the app is loading OR the 2 s opening animation (started when the page opened) is not over yet. */
+const seen = () => { try { return sessionStorage.getItem(SEEN_KEY) === '1' } catch { return false } }
+const left = () => seen() ? 0 : Math.max(0, SPLASH_MS - performance.now())
+
+/** True while the app is loading OR the short opening animation (started when the page opened) is not over yet; the animation plays once per visit, not on every page load. */
 export function useSplashHold(loading: boolean): boolean {
-  const left = () => Math.max(0, SPLASH_MS - performance.now())
   const [waiting, setWaiting] = useState(() => left() > 0)
   useEffect(() => {
     const ms = left()
     if (ms <= 0) { setWaiting(false); return }
-    const t = window.setTimeout(() => setWaiting(false), ms)
+    const t = window.setTimeout(() => { setWaiting(false); try { sessionStorage.setItem(SEEN_KEY, '1') } catch { /* ignore */ } }, ms)
     return () => window.clearTimeout(t)
   }, [])
   return loading || waiting
