@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { KonvwaLogo } from '@/components/shared/konvwa-logo'
 import { LanguageToggle } from '@/components/shared/language-toggle'
 import { CurrencyToggle } from '@/components/shared/currency-toggle'
+import { InAppBrowserBanner } from '@/components/shared/in-app-browser-banner'
 import { useScrollManager } from '@/lib/use-scroll-manager'
 import { tr } from '@/lib/i18n'
 
@@ -24,6 +25,7 @@ export function GuestCatalogLayout() {
           <Button asChild size="sm" className="btn-gradient rounded-full px-4"><Link to="/auth" state={{ from: { pathname } }}>{tr('S\'inscrire')}</Link></Button>
         </div>
       </header>
+      <InAppBrowserBanner />
       <main ref={mainRef} className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col [&>*]:flex-1">
           <Outlet />

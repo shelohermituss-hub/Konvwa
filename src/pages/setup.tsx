@@ -17,7 +17,7 @@ import { PasskeysSection } from '@/components/shared/passkeys-section'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { usePushNotifications } from '@/hooks/use-push-notifications'
-import { INSTALLED_KEY, isStandalone, requestInstall } from '@/lib/pwa'
+import { INSTALLED_KEY, inviteInstall, isStandalone, requestInstall } from '@/lib/pwa'
 import { passkeysSupported } from '@/lib/passkeys'
 import { STEPS, canContinue, skippedItems, validName, validPhone, type SetupState, type StepId } from '@/lib/setup-steps'
 import { trServer } from '@/lib/i18n'
@@ -144,6 +144,8 @@ export function SetupPage() {
     if (error) { toast.error(tr('Erreur lors de la mise à jour.')); return }
     await refreshProfile()
     setProfileSaved(true)
+    // the registration is done: the best moment to offer the install (once; the pop-up stays quiet if installed or dismissed lately)
+    inviteInstall(600)
     next()
   }
 
@@ -236,15 +238,15 @@ export function SetupPage() {
 
         {step === 'access' && (
           <>
-            <StepHeader Icon={ShieldCheck} required title={tr('Autorisations de l\'application')} body={tr('Pour bien fonctionner, KONVWA a besoin de quelques accès sur votre téléphone. Vous gardez le contrôle et pouvez les modifier à tout moment.')} />
+            <StepHeader Icon={ShieldCheck} required={false} title={tr('Autorisations de l\'application')} body={tr('Pour bien fonctionner, KONVWA a besoin de quelques accès sur votre téléphone. Vous gardez le contrôle et pouvez les modifier à tout moment.')} />
             <div className="space-y-3">
               <AccessRow
-                Icon={Bell} required done={state.notifications || notificationsUnsupported}
+                Icon={Bell} required={false} done={state.notifications || notificationsUnsupported}
                 title={tr('Notifications')}
                 why={notificationsUnsupported
                   ? tr('Indisponibles sur ce navigateur. Installez l\'application sur votre écran d\'accueil pour les recevoir.')
                   : tr('Soyez prévenu quand votre devis est prêt, que votre colis arrive ou qu\'un paiement est confirmé.')}
-                hint={denied ? tr('Vous avez refusé les notifications. Autorisez-les dans les réglages du navigateur pour ce site, puis revenez ici.') : undefined}
+                hint={denied ? tr('Vous avez refusé les notifications. Vous pourrez les autoriser plus tard dans les réglages du navigateur.') : undefined}
                 action={
                   <Button onClick={() => void enableNotifications()} disabled={notifBusy} className="h-11 w-full gap-2 rounded-xl">
                     {notifBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bell className="h-4 w-4" aria-hidden="true" />}
@@ -311,7 +313,7 @@ export function SetupPage() {
             <ul className="divide-y divide-border/50 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
               {([
                 [tr('Informations personnelles'), state.profile, true],
-                [tr('Notifications'), state.notifications || notificationsUnsupported, true],
+                [tr('Notifications'), state.notifications || notificationsUnsupported, false],
                 [tr('Empreinte / Face ID'), state.passkey, false],
                 [tr('Caméra'), state.camera, false],
                 [tr('Adresse de livraison'), state.address, false],
@@ -356,9 +358,6 @@ export function SetupPage() {
             </>
           )}
         </div>
-        {step === 'access' && !canContinue(step, state) && (
-          <p className="mx-auto mt-2 max-w-md text-center text-xs text-muted-foreground">{tr('Les notifications sont obligatoires pour continuer.')}</p>
-        )}
       </footer>
     </div>
   )

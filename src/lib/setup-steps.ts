@@ -9,7 +9,7 @@ export interface StepDef {
 
 export const STEPS: StepDef[] = [
   { id: 'profile', required: true },
-  { id: 'access', required: true },
+  { id: 'access', required: false },
   { id: 'address', required: false },
   { id: 'mfa', required: false },
   { id: 'kyc', required: false },
@@ -40,13 +40,13 @@ export interface SetupState {
 /** Can the user leave this step with "Continue"? Required steps block until satisfied. */
 export function canContinue(step: StepId, s: SetupState): boolean {
   if (step === 'profile') return s.profile
-  if (step === 'access') return s.notifications || s.notificationsUnsupported
   return true
 }
 
 /** Optional items the user did not do: stored on the profile so a reminder can be shown later. */
 export function skippedItems(s: SetupState): string[] {
   const out: string[] = []
+  if (!s.notifications && !s.notificationsUnsupported) out.push('notifications')
   if (!s.address) out.push('address')
   if (!s.passkey) out.push('passkey')
   if (!s.camera) out.push('camera')

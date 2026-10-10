@@ -1,25 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Download, MoreVertical, Share, SquarePlus, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isInAppBrowser } from '@/lib/in-app-browser'
 
 import {
-  INSTALLED_KEY, OPEN_INSTALL_EVENT, DISMISSED_KEY, SNOOZE_MS, isIos, isStandalone,
+  INSTALLED_KEY, OPEN_INSTALL_EVENT, DISMISSED_KEY, isIos,
   type BeforeInstallPromptEvent,
 } from '@/lib/pwa'
 
 import { tr } from '@/lib/i18n'
-const SHOW_DELAY_MS = 1500
-
-function isSnoozed() {
-  try {
-    if (localStorage.getItem(INSTALLED_KEY)) return true
-    const at = Number(localStorage.getItem(DISMISSED_KEY))
-    return !!at && Date.now() - at < SNOOZE_MS
-  } catch {
-    return false
-  }
-}
-
 export function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(
     () => window.__installPrompt ?? null,
@@ -48,14 +37,6 @@ export function PwaInstallPrompt() {
       window.removeEventListener('appinstalled', onInstalled)
     }
   }, [])
-
-  const canInstall = !!deferredPrompt || ios
-
-  useEffect(() => {
-    if (!canInstall || isStandalone() || isSnoozed()) return
-    const t = setTimeout(() => setVisible(true), SHOW_DELAY_MS)
-    return () => clearTimeout(t)
-  }, [canInstall])
 
   function dismiss() {
     setSlideOut(true)
@@ -86,10 +67,12 @@ export function PwaInstallPrompt() {
     }
   }
 
-  if (!visible) return null
+  // opened only on invitation (right after sign-up, after an order…), never by itself, and never inside Facebook / Instagram's browser (no install there)
+  if (!visible || isInAppBrowser()) return null
+  const onSetup = window.location.pathname.startsWith('/setup')
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[70] flex items-end justify-center px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pointer-events-none [body:has(nav.fixed.bottom-0)_&]:pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-6">
+    <div className={cn("fixed inset-x-0 bottom-0 z-[70] flex items-end justify-center px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pointer-events-none [body:has(nav.fixed.bottom-0)_&]:pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-6", onSetup && "pb-[calc(6rem+env(safe-area-inset-bottom))]")}>
       <div
         role="dialog"
         aria-label={tr('Installer KONVWA')}

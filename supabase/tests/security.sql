@@ -212,12 +212,10 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); r jsonb; BEGIN
   RESET ROLE;
   UPDATE profiles SET phone = '+509 5562 6676' WHERE user_id = a;
   PERFORM pg_temp.as_user(a);
-  r := public.complete_onboarding('{}', false);
-  ASSERT (r ->> 'success')::boolean = false AND r ->> 'code' = 'notifications', 'completed without notifications: ' || r::text;
-  r := public.complete_onboarding(ARRAY['mfa', 'bogus'], true);
+  r := public.complete_onboarding(ARRAY['mfa', 'notifications', 'bogus'], false);  -- notifications are optional: skipping them must not block
   RESET ROLE;
   ASSERT (r ->> 'success')::boolean, 'completion failed: ' || r::text;
-  ASSERT (SELECT onboarding_skipped FROM profiles WHERE user_id = a) = ARRAY['mfa'], 'unknown skipped items were stored';
+  ASSERT (SELECT onboarding_skipped FROM profiles WHERE user_id = a) = ARRAY['mfa', 'notifications'], 'unknown skipped items were stored';
   ASSERT NOT has_function_privilege('anon', 'public.complete_onboarding(text[],boolean)', 'execute'), 'anon can complete onboarding';
 END $$;
 
