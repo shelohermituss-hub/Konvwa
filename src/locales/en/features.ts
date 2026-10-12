@@ -914,6 +914,7 @@ export const FEATURES_EN: Record<string, string> = {
   "La lecture automatique ne correspond pas bien à ce produit : seuls le titre, la description et l'image de la page sont repris. Vérifiez et remplissez le prix à la main.": "The automatic reading does not match this product well: only the page's title, description and image were kept. Check it and fill in the price by hand.",
   "Livraison en Haïti": "Delivery to Haiti",
   "Offres du moment": "Deals of the moment",
+  "Boutique USA et sourcing en gros, au même endroit": "US shop and bulk sourcing, in one place",
   "Réductions": "Deals",
   "Réduction": "Discount",
   "Remise affichée (%)": "Displayed discount (%)",

@@ -20,15 +20,14 @@ import { tr } from '@/lib/i18n'
 // The catalogue stays in memory and the filters in the session, so coming back from a product puts the feed back exactly as it was
 let catalogCache: { guest: boolean; items: CatalogProduct[] } | null = null
 const FILTERS_KEY = 'konvwa-products-filters'
-const filtersKey = (mode: CatalogMode) => `${FILTERS_KEY}-${mode}`
 type Sort = 'default' | 'price_asc' | 'price_desc' | 'popular'
-interface SavedFilters { search: string; activeCategory: string | null; sort: Sort; minPrice: string; maxPrice: string; maxMoq: string; verifiedOnly: boolean; inStockOnly: boolean; wholesaleOnly: boolean; shelf: ShelfRef | null }
-function savedFilters(mode: CatalogMode): Partial<SavedFilters> {
-  try { return JSON.parse(sessionStorage.getItem(filtersKey(mode)) ?? '{}') as Partial<SavedFilters> } catch { return {} }
+interface SavedFilters { search: string; activeCategory: string | null; sort: Sort; minPrice: string; maxPrice: string; maxMoq: string; verifiedOnly: boolean; inStockOnly: boolean; wholesaleOnly: boolean; shelf: ShelfRef | null; sale: CatalogMode | null }
+function savedFilters(): Partial<SavedFilters> {
+  try { return JSON.parse(sessionStorage.getItem(FILTERS_KEY) ?? '{}') as Partial<SavedFilters> } catch { return {} }
 }
 
-/** The two shelves of the catalogue: 'retail' (finished products by the unit) and 'wholesale' (bulk sourcing with a minimum order quantity). */
-export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
+/** The catalogue: ONE feed with both shelves ('retail' finished products by the unit, 'wholesale' bulk sourcing); the two shelf buttons filter it, a second tap clears the filter. */
+export function ProductsPage({ initialSale = null }: { initialSale?: CatalogMode | null }) {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { count } = useCart()
@@ -38,7 +37,7 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
   const isReseller = !!profile?.is_reseller
   const navType = useNavigationType()
   // filters come back only when the user goes back to this page, a fresh visit starts clean
-  const [saved] = useState<Partial<SavedFilters>>(() => (navType === 'POP' ? savedFilters(mode) : {}))
+  const [saved] = useState<Partial<SavedFilters>>(() => (navType === 'POP' ? savedFilters() : {}))
   const [wholesaleOnly, setWholesaleOnly] = useState(saved.wholesaleOnly ?? false)
   const [products, setProducts] = useState<CatalogProduct[]>(catalogCache?.guest === guest ? catalogCache.items : [])
   const [loading, setLoading] = useState(catalogCache?.guest !== guest)
@@ -53,11 +52,13 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
   const [verifiedOnly, setVerifiedOnly] = useState(saved.verifiedOnly ?? false)
   const [inStockOnly, setInStockOnly] = useState(saved.inStockOnly ?? false)
   // "See all" on a home shelf turns it into the filter of the whole feed
+  const queryParam = params.get('sale')
+  const [sale, setSale] = useState<CatalogMode | null>(queryParam === 'retail' || queryParam === 'wholesale' ? queryParam : initialSale ?? saved.sale ?? null)
   const [shelf, setShelf] = useState<ShelfRef | null>(parseShelf(params.get('shelf')) ?? saved.shelf ?? null)
 
   useEffect(() => {
-    try { sessionStorage.setItem(filtersKey(mode), JSON.stringify({ search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly, shelf } satisfies SavedFilters)) } catch { /* storage blocked */ }
-  }, [mode, search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly, shelf])
+    try { sessionStorage.setItem(FILTERS_KEY, JSON.stringify({ search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly, shelf, sale } satisfies SavedFilters)) } catch { /* storage blocked */ }
+  }, [search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly, shelf, sale])
 
   useEffect(() => {
     async function load() {
@@ -79,10 +80,8 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
   }, [guest])
 
   const priced = useMemo(() => products.map(p => resellerPriced(p, isReseller)), [products, isReseller])
-  // each shelf shows its own products only
-  const shown = useMemo(() => priced.filter(p => (p.sale_type ?? 'retail') === mode), [priced, mode])
-  const otherShelf = useMemo(() => priced.filter(p => (p.sale_type ?? 'retail') !== mode), [priced, mode])
-  const otherMatches = search.trim() ? otherShelf.filter(p => p.name.toLowerCase().includes(search.trim().toLowerCase())).length : 0
+  // both shelves in one feed; a shelf button keeps only that shelf
+  const shown = useMemo(() => priced.filter(p => !sale || (p.sale_type ?? 'retail') === sale), [priced, sale])
   const categories = Array.from(new Set(shown.map(p => p.category).filter(Boolean))) as string[]
 
   const filtered = shown.filter(p => {
@@ -121,8 +120,8 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
       {/* Header */}
       <div className="px-5 pt-5 pb-3 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{mode === 'wholesale' ? tr('Sourcing en gros') : tr('Boutique')}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{mode === 'wholesale' ? tr('Prix usine, quantités minimales (MOQ), prix dégressifs') : tr('Produits finis, vendus à l\'unité')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{sale === 'wholesale' ? tr('Sourcing en gros') : sale === 'retail' ? tr('Boutique') : tr('Produits')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{sale === 'wholesale' ? tr('Prix usine, quantités minimales (MOQ), prix dégressifs') : sale === 'retail' ? tr('Produits finis, vendus à l\'unité') : tr('Boutique USA et sourcing en gros, au même endroit')}</p>
         </div>
         {guest ? (
           <Link to="/auth" className="flex h-10 items-center rounded-2xl bg-primary px-4 text-sm font-bold text-white shadow-sm">{tr('Connexion')}</Link>
@@ -149,12 +148,12 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
         </p>
       )}
 
-      <CatalogSwitch mode={mode} />
+      <CatalogSwitch value={sale} onChange={setSale} />
 
-      {mode === 'wholesale' && (
+      {sale === 'wholesale' && (
         <p className="mx-4 mb-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs leading-relaxed text-foreground/80">
           {tr('Achat en grande quantité : chaque produit a une quantité minimale à commander (MOQ) et des prix qui baissent avec le volume. Pour une ou deux pièces, passez par la')}{' '}
-          <Link to="/products" replace className="font-bold text-primary underline-offset-2 hover:underline">{tr('Boutique')}</Link>.
+          <button type="button" onClick={() => setSale('retail')} className="font-bold text-primary underline-offset-2 hover:underline">{tr('Boutique')}</button>.
         </p>
       )}
 
@@ -286,11 +285,6 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
             <IllustrationEmptyProducts className="w-48 h-auto" />
             <p className="text-sm font-bold mt-1">{t('products.empty')}</p>
             <p className="text-xs text-muted-foreground text-center max-w-[200px] leading-relaxed">{t('products.empty_sub')}</p>
-            {otherMatches > 0 && (
-              <Link to={mode === 'wholesale' ? '/products' : '/wholesale'} replace className="mt-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-bold text-primary">
-                {mode === 'wholesale' ? tr('{0} résultat(s) dans la Boutique', otherMatches) : tr('{0} résultat(s) dans le Sourcing gros', otherMatches)}
-              </Link>
-            )}
           </div>
         ) : (
           <ProductFeed products={sort === 'default' ? feedOrder(expandVariants(filtered)) : expandVariants(filtered)} render={(product) => (

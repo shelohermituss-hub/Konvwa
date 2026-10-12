@@ -122,8 +122,8 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
     element: <CatalogShell />,
     children: [
-      { path: 'products', element: <ProductsPage mode="retail" /> },
-      { path: 'wholesale', element: <ProductsPage mode="wholesale" /> },
+      { path: 'products', element: <ProductsPage /> },
+      { path: 'wholesale', element: <ProductsPage initialSale="wholesale" /> },
       { path: 'products/:id', element: <ProductDetailPage /> },
     ],
   },
