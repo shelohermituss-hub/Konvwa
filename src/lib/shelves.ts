@@ -53,3 +53,11 @@ export function buildShelves(products: CatalogProduct[]): Shelf[] {
 
   return shelves.filter((s) => s.items.length >= MIN_ITEMS).map((s) => ({ ...s, items: s.items.slice(0, MAX_ITEMS) }))
 }
+
+/** The shelf named by a link ("/products?shelf=category:Électronique"), or null when the text is not a shelf. */
+export function parseShelf(key: string | null): ShelfRef | null {
+  if (!key) return null
+  if (key === 'sale' || key === 'offers' || key === 'featured') return { kind: key }
+  const m = /^(category|brand):(.{1,80})$/.exec(key)
+  return m ? { kind: m[1] as 'category' | 'brand', value: m[2] } : null
+}

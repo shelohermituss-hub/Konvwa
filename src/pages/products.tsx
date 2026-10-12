@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
 import { ProductCard } from '@/components/shared/product-card'
 import { ProductShelves, shelfTitle } from '@/components/shared/product-shelves'
-import { buildShelves, inShelf, type ShelfRef } from '@/lib/shelves'
+import { buildShelves, inShelf, parseShelf, type ShelfRef } from '@/lib/shelves'
 import { feedOrder } from '@/lib/feed-order'
 import { CATALOG_CARD_SELECT, CATALOG_GUEST_CARD_SELECT, guestProduct, expandVariants, productPath, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
@@ -53,7 +53,7 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
   const [verifiedOnly, setVerifiedOnly] = useState(saved.verifiedOnly ?? false)
   const [inStockOnly, setInStockOnly] = useState(saved.inStockOnly ?? false)
   // "See all" on a home shelf turns it into the filter of the whole feed
-  const [shelf, setShelf] = useState<ShelfRef | null>(saved.shelf ?? null)
+  const [shelf, setShelf] = useState<ShelfRef | null>(parseShelf(params.get('shelf')) ?? saved.shelf ?? null)
 
   useEffect(() => {
     try { sessionStorage.setItem(filtersKey(mode), JSON.stringify({ search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly, shelf } satisfies SavedFilters)) } catch { /* storage blocked */ }
@@ -108,9 +108,9 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
 
   const activeFilters = [minPrice, maxPrice, maxMoq].filter(Boolean).length + (verifiedOnly ? 1 : 0) + (inStockOnly ? 1 : 0) + (sort !== 'default' ? 1 : 0)
 
-  // the home shelves show only on the plain feed: no search, no category, no filter
+  // a visitor lands here (he has no Accueil menu): the shelves show on his plain feed. A customer has them on his Accueil, not here.
   const plainFeed = !search.trim() && !activeCategory && activeFilters === 0 && !wholesaleOnly && !shelf
-  const shelves = useMemo(() => (plainFeed ? buildShelves(shown) : []), [plainFeed, shown])
+  const shelves = useMemo(() => (guest && plainFeed ? buildShelves(shown) : []), [guest, plainFeed, shown])
 
   function resetFilters() {
     setSort('default'); setMinPrice(''); setMaxPrice(''); setMaxMoq(''); setVerifiedOnly(false); setInStockOnly(false)

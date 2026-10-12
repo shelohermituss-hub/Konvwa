@@ -6,6 +6,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AdBanners } from '@/components/shared/ad-banners'
 import { SetupReminder } from '@/components/shared/setup-reminder'
 import { ProductCard } from '@/components/shared/product-card'
+import { ProductShelves } from '@/components/shared/product-shelves'
+import { useShelves } from '@/hooks/use-shelves'
+import { shelfKey } from '@/lib/shelves'
 import { feedOrderByPage } from '@/lib/feed-order'
 import { CATALOG_CARD_SELECT, expandVariants, productPath, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -60,6 +63,8 @@ export function DashboardPage() {
 
   const [search, setSearch]           = useState('')
   const [query, setQuery]             = useState('')
+
+  const shelves = useShelves(!query, isReseller)
 
   const sentinelRef = useRef<HTMLDivElement>(null)
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -300,6 +305,13 @@ export function DashboardPage() {
 
         {/* Invitation to the WhatsApp channel (closed for good once dismissed) */}
         {!query && <WhatsAppChannelInvite className="mb-4" />}
+
+        {/* Themed rows: deals, offers, favourites, categories, brands ("See all" opens the Products menu on that shelf) */}
+        {!query && shelves.length > 0 && (
+          <div className="-mx-4">
+            <ProductShelves shelves={shelves} onSeeAll={(ref) => navigate(`/products?shelf=${encodeURIComponent(shelfKey(ref))}`)} onPress={(p) => navigate(productPath(p))} />
+          </div>
+        )}
 
         {/* Section header */}
         <div className="flex items-center justify-between mb-3">

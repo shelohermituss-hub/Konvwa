@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildShelves, inShelf, shelfKey } from './shelves'
+import { buildShelves, inShelf, parseShelf, shelfKey } from './shelves'
 import type { CatalogProduct } from './catalog'
 
 let n = 0
@@ -28,6 +28,11 @@ describe('home shelves', () => {
   })
   it('never shows an out-of-stock product in offers or favourites', () => {
     expect(inShelf(product({ featured: true, stock_available: false }), { kind: 'featured' })).toBe(false)
+  })
+  it('reads a shelf back from its link key', () => {
+    for (const key of ['sale', 'offers', 'featured', 'category:Électronique', 'brand:Muscle & Strength']) expect(shelfKey(parseShelf(key)!)).toBe(key)
+    expect(parseShelf('nope')).toBeNull()
+    expect(parseShelf(null)).toBeNull()
   })
   it('caps a shelf at 12 products', () => {
     const [shelf] = buildShelves(many(30, { featured: true, category: null }))
