@@ -17,6 +17,11 @@ describe('home shelves', () => {
     const shelves = buildShelves([...many(5, { category: 'Beauté & Santé' }), ...many(4, { category: 'Électronique' }), ...many(3, { category: 'Jouets & Jeux' })])
     expect(shelves.map((s) => shelfKey(s.ref))).toEqual(['category:Électronique', 'category:Beauté & Santé'])
   })
+  it('puts the discounted products first, but not the reseller-priced ones', () => {
+    const shelves = buildShelves([...many(4, { discount_pct: 20, category: null }), ...many(4, { discount_pct: 20, reseller_price: true, category: null }), ...many(4, { price_tiers: offerTier, category: null })])
+    expect(shelves.map((s) => shelfKey(s.ref))).toEqual(['sale', 'offers'])
+    expect(shelves[0].items).toHaveLength(4)
+  })
   it('builds the offers and favourites shelves from the products that qualify', () => {
     const shelves = buildShelves([...many(4, { price_tiers: offerTier, category: null }), ...many(4, { featured: true, category: null }), ...many(6, { category: null })])
     expect(shelves.map((s) => shelfKey(s.ref))).toEqual(['offers', 'featured'])

@@ -2,7 +2,7 @@ import { Check, Package } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useI18n } from '@/lib/i18n-context'
-import { bestOffer, formatHtg, formatPriceRange, offerLabel, variantUnitPrice } from '@/lib/product-pricing'
+import { bestOffer, discountPct, strikePrice, formatHtg, formatPriceRange, offerLabel, priceRange, variantUnitPrice } from '@/lib/product-pricing'
 import { variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { WishlistButton } from '@/components/shared/wishlist-button'
 import { flagFor, supplierLogo } from '@/lib/supplier-badges'
@@ -30,6 +30,9 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
   const unitPrice = variant ? variantUnitPrice(product, variant, product.moq) : null
   const offer = bestOffer(product, variant)
   const inStock = product.stock_available && (variant?.stock_available ?? true)
+  const pct = discountPct(product)
+  // a struck price only goes next to ONE price (a unit price, or a product whose price range is a single value)
+  const shownPrice = unitPrice !== null ? unitPrice : priceRange(product).min === priceRange(product).max ? priceRange(product).min : null
   const logo = supplierLogo(product.supplier_name)
   const flag = flagFor(product.supplier_country)
   const supplierMeta = [
@@ -59,8 +62,11 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
             )}
           </div>
         )}
-        {product.featured && (
-          <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">{tr('Vedette')}</span>
+        {(pct > 0 || product.featured) && (
+          <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
+            {pct > 0 && <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white">-{pct} %</span>}
+            {product.featured && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">{tr('Vedette')}</span>}
+          </div>
         )}
         {product.reseller_price && (
           <span className="absolute bottom-2 left-2 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold text-white">{tr('Prix revendeur')}</span>
@@ -99,6 +105,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
           <span className="whitespace-nowrap">
             {unitPrice !== null ? formatHtg(unitPrice) : formatPriceRange(product)}
             <span className="ml-1 text-[11px] font-semibold text-muted-foreground">{currencyLabel()}</span>
+            {pct > 0 && shownPrice !== null && <s className="ml-1.5 text-[11px] font-medium text-muted-foreground">{formatHtg(strikePrice(shownPrice, pct))}</s>}
           </span>
           <span className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">{tr('MOQ :')}{' '}{product.moq}</span>
         </p>

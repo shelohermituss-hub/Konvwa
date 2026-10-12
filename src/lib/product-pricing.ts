@@ -157,3 +157,15 @@ export function offerLabel(offer: PriceTier): string {
   const pack = offer.min_qty * offer.price_htg
   return tr('{0} pour {1}', offer.min_qty, `${formatHtg(pack)} ${currencyLabel()}`)
 }
+
+/** The "% off" shown on a product (0 when none). A reseller price is already a special price: no struck price on top of it. */
+export function discountPct(product: { discount_pct?: number | null; reseller_price?: boolean }): number {
+  const pct = product.discount_pct ?? 0
+  return pct >= 5 && pct <= 90 && !product.reseller_price ? pct : 0
+}
+
+/** The old (struck) price that goes with a selling price: price / (1 - pct), rounded up to 5 HTG and always above the price. */
+export function strikePrice(unit: number, pct: number): number {
+  const old = Math.ceil(unit / (1 - pct / 100) / 5) * 5
+  return old > unit ? old : unit + 5
+}

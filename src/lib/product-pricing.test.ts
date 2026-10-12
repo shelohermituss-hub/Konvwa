@@ -96,3 +96,16 @@ describe('supplier offers are packs', () => {
       .toEqual([{ min_qty: 2, price_htg: 5, src: 'sync', kind: 'free_item', buy: 1, free: 1, off: 50 }, { min_qty: 3, price_htg: 4 }])
   })
 })
+
+describe('struck price', () => {
+  it('computes the old price from the discount, always above the selling price', async () => {
+    const { strikePrice, discountPct } = await import('./product-pricing')
+    expect(strikePrice(800, 20)).toBe(1000)
+    expect(strikePrice(3350, 20)).toBe(4190)
+    expect(strikePrice(100, 5)).toBeGreaterThan(100)
+    expect(discountPct({ discount_pct: 20 })).toBe(20)
+    expect(discountPct({ discount_pct: 20, reseller_price: true })).toBe(0)
+    expect(discountPct({ discount_pct: 3 })).toBe(0)
+    expect(discountPct({})).toBe(0)
+  })
+})

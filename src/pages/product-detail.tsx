@@ -13,7 +13,7 @@ import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, CATALOG_GUEST_CARD_SELECT, CATALOG_GUEST_DETAIL_SELECT, guestProduct, expandVariants, productPath, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
-import { bestOffer, effectiveUnitPrice, formatHtg, lineTotal, offerLabel, tierRows, variantUnitPrice } from '@/lib/product-pricing'
+import { bestOffer, discountPct, strikePrice, effectiveUnitPrice, formatHtg, lineTotal, offerLabel, tierRows, variantUnitPrice } from '@/lib/product-pricing'
 import { ProductCard } from '@/components/shared/product-card'
 import { feedOrder } from '@/lib/feed-order'
 import { ProductReviews } from '@/components/shared/product-reviews'
@@ -224,6 +224,7 @@ export function ProductDetailPage() {
   }, [])
   const rows = tierRows(product).map((r) => (priced ? { ...r, price: variantUnitPrice(product, priced, r.from) } : r))
   const unitPrice = effectiveUnitPrice(product, quantity, priced)
+  const pct = discountPct(product)
   const subtotal = lineTotal(product, quantity, priced)
   const offer = bestOffer(product, chosen)
   const specs = Object.entries(product.specifications ?? {})
@@ -473,6 +474,7 @@ export function ProductDetailPage() {
             )}
 
             {/* Price by quantity */}
+            {pct > 0 && <p className="mt-3"><span className="rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold text-white">{tr('Réduction')} -{pct} %</span></p>}
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-muted/50 p-3" aria-label={tr('Prix selon la quantité')}>
               {rows.map((r) => {
                 const active = quantity >= r.from && (r.to === null || quantity <= r.to)
@@ -480,6 +482,7 @@ export function ProductDetailPage() {
                   <div key={r.from}>
                     <p className={cn('text-xl font-extrabold tabular-nums tracking-tight', active ? 'text-primary' : 'text-foreground')}>
                       {variants.length > 0 && !chosen && <span className="mr-1 text-xs font-semibold text-muted-foreground">{tr('dès')}</span>}{formatHtg(r.price)} <span className="text-xs font-semibold text-muted-foreground">{currencyLabel()}</span>
+                      {pct > 0 && <s className="ml-2 text-sm font-medium text-muted-foreground">{formatHtg(strikePrice(r.price, pct))}</s>}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {rows.length > 1 && r === rows[0]

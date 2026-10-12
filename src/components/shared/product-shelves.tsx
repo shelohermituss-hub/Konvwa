@@ -1,4 +1,4 @@
-import { ChevronRight, Flame, Heart, Smartphone, Tag, Store } from 'lucide-react'
+import { BadgePercent, ChevronRight, Flame, Heart, Smartphone, Tag, Store } from 'lucide-react'
 import { ProductCard } from '@/components/shared/product-card'
 import { shelfKey, type Shelf, type ShelfRef } from '@/lib/shelves'
 import type { CatalogProduct } from '@/lib/catalog'
@@ -6,6 +6,7 @@ import { tr } from '@/lib/i18n'
 
 export function shelfTitle(r: ShelfRef): string {
   switch (r.kind) {
+    case 'sale': return tr('Réductions')
     case 'offers': return tr('Offres du moment')
     case 'featured': return tr('Coups de cœur')
     case 'category': return tr(r.value)
@@ -15,6 +16,7 @@ export function shelfTitle(r: ShelfRef): string {
 
 function ShelfIcon({ r }: { r: ShelfRef }) {
   const cls = 'h-4 w-4 text-primary'
+  if (r.kind === 'sale') return <BadgePercent className={cls} aria-hidden />
   if (r.kind === 'offers') return <Flame className={cls} aria-hidden />
   if (r.kind === 'featured') return <Heart className={cls} aria-hidden />
   if (r.kind === 'brand') return <Store className={cls} aria-hidden />

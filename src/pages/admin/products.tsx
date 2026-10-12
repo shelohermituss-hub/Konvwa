@@ -21,11 +21,14 @@ import { PriceReviews } from '@/pages/admin/price-reviews'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { money, moneyAmount } from '@/lib/currency'
+import { strikePrice } from '@/lib/product-pricing'
 interface Product {
   id: string
   name: string
   description: string | null
   price_htg: number
+  /** Display only: % off shown with a struck old price. */
+  discount_pct?: number | null
   moq: number
   unit: string
   supplier_name: string | null
@@ -81,6 +84,7 @@ const emptyDraft = (): ProductDraft => ({
   name: '',
   description: '',
   price_htg: 0,
+  discount_pct: null,
   moq: 1,
   unit: tr('unité'),
   supplier_name: '',
@@ -293,6 +297,7 @@ export function AdminProductsPage() {
       name: p.name,
       description: p.description ?? '',
       price_htg: p.price_htg,
+      discount_pct: p.discount_pct ?? null,
       moq: p.moq,
       unit: p.unit,
       supplier_name: p.supplier_name ?? '',
@@ -383,6 +388,10 @@ export function AdminProductsPage() {
   async function handleSave() {
     if (!draft.name.trim() || draft.price_htg <= 0) {
       toast.error(tr('Veuillez renseigner le nom et un prix valide.'))
+      return
+    }
+    if (draft.discount_pct != null && (!Number.isInteger(draft.discount_pct) || draft.discount_pct < 5 || draft.discount_pct > 90)) {
+      toast.error(tr('La remise affichée doit être un nombre entier entre 5 et 90 %.'))
       return
     }
     const tiers = normalizeTiers(draft.price_tiers)
@@ -628,6 +637,15 @@ export function AdminProductsPage() {
                     <button type="button" onClick={() => setPendingReviews(null)} className="font-bold text-primary">{tr('Ne pas importer')}</button>
                   </p>
                 )}
+              </div>
+              <div className="space-y-1.5">
+                <Label>{tr('Remise affichée (%)')}</Label>
+                <Input type="number" min={5} max={90} step={1} value={draft.discount_pct ?? ''} onChange={e => setField('discount_pct', e.target.value === '' ? null : parseInt(e.target.value, 10))} placeholder={tr('Aucune')} />
+                <p className="text-xs text-muted-foreground">
+                  {draft.discount_pct && draft.price_htg > 0
+                    ? tr('Affiche {0} barré à côté de {1} (-{2} %). Le client paie toujours le prix ci-contre.', moneyAmount(strikePrice(draft.price_htg, draft.discount_pct)), moneyAmount(draft.price_htg), draft.discount_pct)
+                    : tr('5 à 90. Laisser vide : pas de réduction. Le produit entre dans la rangée « Réductions » de l\'accueil.')}
+                </p>
               </div>
               <div className="space-y-1.5">
                 <Label>{tr('Unité')}</Label>

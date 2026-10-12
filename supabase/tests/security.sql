@@ -941,5 +941,22 @@ DO $$ DECLARE w uuid; old_id uuid; new_id uuid; BEGIN
   RESET ROLE;
 END $$;
 
+-- the displayed discount: 5-90 only, readable by visitors, never writable by a client
+DO $$ DECLARE pid uuid; n integer; BEGIN
+  SELECT id INTO pid FROM products WHERE active LIMIT 1;
+  UPDATE products SET discount_pct = 20 WHERE id = pid;
+  BEGIN UPDATE products SET discount_pct = 3 WHERE id = pid; ASSERT false, 'a 3 % discount was accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+  SET LOCAL ROLE anon;
+  SELECT count(*) INTO n FROM products WHERE discount_pct = 20;
+  ASSERT n >= 1, 'a visitor cannot read the discount';
+  RESET ROLE;
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', (SELECT user_id FROM profiles WHERE role = 'client' LIMIT 1), 'role', 'authenticated')::text, true);
+  SET LOCAL ROLE authenticated;
+  UPDATE products SET discount_pct = 50 WHERE id = pid;
+  GET DIAGNOSTICS n = ROW_COUNT;
+  ASSERT n = 0, 'a client could set a discount';
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

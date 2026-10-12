@@ -1,9 +1,10 @@
-import { bestOffer } from '@/lib/product-pricing'
+import { bestOffer, discountPct } from '@/lib/product-pricing'
 import { supplierLogo } from '@/lib/supplier-badges'
 import type { CatalogProduct } from '@/lib/catalog'
 
 /** A themed row of the home feed ("rayon"): what it is, so the page can title it, filter by it and list it. */
 export type ShelfRef =
+  | { kind: 'sale' }
   | { kind: 'offers' }
   | { kind: 'featured' }
   | { kind: 'category'; value: string }
@@ -22,6 +23,7 @@ export const shelfKey = (r: ShelfRef): string => (r.kind === 'category' || r.kin
 /** Does this product belong to the shelf? (also used when "See all" turns a shelf into the filter of the whole feed) */
 export function inShelf(p: CatalogProduct, r: ShelfRef): boolean {
   switch (r.kind) {
+    case 'sale': return p.stock_available && discountPct(p) > 0
     case 'offers': return p.stock_available && bestOffer(p) !== null
     case 'featured': return p.stock_available && p.featured
     case 'category': return p.category === r.value
@@ -30,12 +32,12 @@ export function inShelf(p: CatalogProduct, r: ShelfRef): boolean {
 }
 
 /**
- * The shelves of the home feed, in the order shown: offers of the moment, favourites, the biggest categories (electronics first),
+ * The shelves of the home feed, in the order shown: discounts, offers of the moment, favourites, the biggest categories (electronics first),
  * then the brands whose logo we know (Amazon, Muscle & Strength…). Small shelves are left out; a product may appear in several.
  */
 export function buildShelves(products: CatalogProduct[]): Shelf[] {
   const make = (ref: ShelfRef): Shelf => ({ ref, items: products.filter((p) => inShelf(p, ref)) })
-  const shelves: Shelf[] = [make({ kind: 'offers' }), make({ kind: 'featured' })]
+  const shelves: Shelf[] = [make({ kind: 'sale' }), make({ kind: 'offers' }), make({ kind: 'featured' })]
 
   const count = new Map<string, number>()
   for (const p of products) if (p.category) count.set(p.category, (count.get(p.category) ?? 0) + 1)

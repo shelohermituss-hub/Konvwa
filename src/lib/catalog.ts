@@ -21,6 +21,8 @@ export interface CatalogProduct {
   video_url?: string | null
   stock_available: boolean
   featured: boolean
+  /** Display only: % off shown with a struck old price (price / (1 - pct)). What the customer pays is always price_htg. */
+  discount_pct?: number | null
   sold_count: number
   rating: number | null
   review_count: number
@@ -67,7 +69,7 @@ export function sortVariants(list: ProductVariant[] | null | undefined): Product
 }
 
 export const CATALOG_LIST_SELECT =
-  'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, reseller_discount_pct, wholesale_only, sale_type'
+  'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, discount_pct, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, reseller_discount_pct, wholesale_only, sale_type'
 
 /** What the catalogue cards need: the list columns plus the variants, each shown in the feed as a card of its own. */
 export const CATALOG_CARD_SELECT = `${CATALOG_LIST_SELECT}, product_variants(id, label, label_en, group_name, price_htg, image, sort_order, stock_available)`
@@ -104,7 +106,7 @@ export const CATALOG_DETAIL_SELECT = `${CATALOG_LIST_SELECT}, specifications, vi
  * no supplier price, reseller discount, weight or source link). Ordering, the cart and favourites need a login.
  */
 const GUEST_LIST_SELECT =
-  'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, wholesale_only, sale_type'
+  'id, name, description, price_htg, price_tiers, moq, unit, supplier_name, supplier_verified, supplier_years, supplier_country, category, delivery_days_min, delivery_days_max, processing_days, images, stock_available, featured, discount_pct, sold_count, rating, review_count, repurchase_rate, customization_options, tags, certifications, name_en, description_en, tags_en, customization_options_en, certifications_en, wholesale_only, sale_type'
 const GUEST_VARIANT_SELECT = 'id, label, label_en, group_name, price_htg, image, sort_order, stock_available'
 export const CATALOG_GUEST_CARD_SELECT = `${GUEST_LIST_SELECT}, product_variants(${GUEST_VARIANT_SELECT})`
 export const CATALOG_GUEST_DETAIL_SELECT = `${GUEST_LIST_SELECT}, specifications, video_url, product_variants(${GUEST_VARIANT_SELECT})`
