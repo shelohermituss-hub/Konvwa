@@ -42,8 +42,8 @@ export function ProductShelves({ shelves, onSeeAll, onPress }: {
           </div>
           <div className="scrollbar-none flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1">
             {shelf.items.map((p) => (
-              <div key={p.id} className="w-[44vw] max-w-[190px] shrink-0 snap-start [&>div]:mb-0">
-                <ProductCard product={p} onPress={() => onPress(p)} />
+              <div key={p.id} className="w-[44vw] max-w-[190px] shrink-0 snap-start [&>div]:mb-0 [&>div]:h-full">
+                <ProductCard product={p} onPress={() => onPress(p)} uniform />
               </div>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import { Check, Package } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 import { VerifiedBadge } from '@/components/shared/verified-badge'
 import { useI18n } from '@/lib/i18n-context'
@@ -19,7 +20,7 @@ function highlight(p: CatalogProduct): string | null {
 }
 
 /** A product card; in the feed a product with variants gets one card per variant (`feed_variant`): its picture, name and price, same product page. */
-export function ProductCard({ product, onPress }: { product: CatalogProduct & { feed_variant?: ProductVariant }; onPress: () => void }) {
+export function ProductCard({ product, onPress, uniform = false }: { product: CatalogProduct & { feed_variant?: ProductVariant }; onPress: () => void; /** Same-size cards (horizontal rows): square picture, card stretched to the row's height. The feed keeps each picture's own height. */ uniform?: boolean }) {
   const { t } = useI18n()
   // a visitor who is not logged in sees the same card (prices included); favourites need a login
   const guest = !useAuth().user
@@ -41,15 +42,15 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
   ].filter(Boolean).join(' · ')
 
   return (
-    <div className="relative mb-3 break-inside-avoid">
+    <div className={cn('relative mb-3 break-inside-avoid', uniform && 'h-full')}>
     <button
       type="button"
       onClick={onPress}
-      className="block w-full overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition-transform duration-100 active:scale-[0.98]"
+      className={cn('block w-full overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition-transform duration-100 active:scale-[0.98]', uniform && 'flex h-full flex-col')}
     >
-      <div className="relative min-h-32 bg-gray-50">
+      <div className={cn('relative min-h-32 bg-gray-50', uniform && 'aspect-square shrink-0 min-h-0')}>
         {picture ? (
-          <img src={picture} alt={variant ? `${product.name} – ${variantLabel(variant)}` : product.name} loading="lazy" className="block h-auto w-full" />
+          <img src={picture} alt={variant ? `${product.name} – ${variantLabel(variant)}` : product.name} loading="lazy" className={uniform ? 'block h-full w-full object-contain' : 'block h-auto w-full'} />
         ) : (
           <div className="flex aspect-square w-full flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/70 shadow-sm">
@@ -97,7 +98,7 @@ export function ProductCard({ product, onPress }: { product: CatalogProduct & { 
         <p className="truncate bg-[#0165FF] px-3 py-1.5 text-center text-[11px] font-bold uppercase leading-tight tracking-wide text-white">{offerLabel(offer)}</p>
       )}
 
-      <div className="space-y-1.5 p-3">
+      <div className={cn('space-y-1.5 p-3', uniform && 'flex-1')}>
         <p className="line-clamp-2 text-[13px] leading-snug text-foreground">{product.name}</p>
         {variant && <p className="-mt-0.5 line-clamp-1 text-[11px] font-bold text-primary">{variantLabel(variant)}</p>}
 
