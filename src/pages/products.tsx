@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { ProductFeed } from '@/components/shared/product-feed'
 import { CatalogSwitch, type CatalogMode } from '@/components/shared/catalog-switch'
 import { Link, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom'
-import { Search, ShoppingCart, Loader2, Tag, SlidersHorizontal } from 'lucide-react'
+import { Search, ShoppingCart, Loader2, Tag, SlidersHorizontal, X } from 'lucide-react'
 import { priceRange } from '@/lib/product-pricing'
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
@@ -10,6 +10,8 @@ import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyProducts } from '@/components/shared/illustrations'
 import { ProductCard } from '@/components/shared/product-card'
+import { ProductShelves, shelfTitle } from '@/components/shared/product-shelves'
+import { buildShelves, inShelf, type ShelfRef } from '@/lib/shelves'
 import { feedOrder } from '@/lib/feed-order'
 import { CATALOG_CARD_SELECT, CATALOG_GUEST_CARD_SELECT, guestProduct, expandVariants, productPath, localizeProduct, resellerPriced, type CatalogProduct } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
@@ -20,7 +22,7 @@ let catalogCache: { guest: boolean; items: CatalogProduct[] } | null = null
 const FILTERS_KEY = 'konvwa-products-filters'
 const filtersKey = (mode: CatalogMode) => `${FILTERS_KEY}-${mode}`
 type Sort = 'default' | 'price_asc' | 'price_desc' | 'popular'
-interface SavedFilters { search: string; activeCategory: string | null; sort: Sort; minPrice: string; maxPrice: string; maxMoq: string; verifiedOnly: boolean; inStockOnly: boolean; wholesaleOnly: boolean }
+interface SavedFilters { search: string; activeCategory: string | null; sort: Sort; minPrice: string; maxPrice: string; maxMoq: string; verifiedOnly: boolean; inStockOnly: boolean; wholesaleOnly: boolean; shelf: ShelfRef | null }
 function savedFilters(mode: CatalogMode): Partial<SavedFilters> {
   try { return JSON.parse(sessionStorage.getItem(filtersKey(mode)) ?? '{}') as Partial<SavedFilters> } catch { return {} }
 }
@@ -50,10 +52,12 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
   const [maxMoq, setMaxMoq] = useState(saved.maxMoq ?? '')
   const [verifiedOnly, setVerifiedOnly] = useState(saved.verifiedOnly ?? false)
   const [inStockOnly, setInStockOnly] = useState(saved.inStockOnly ?? false)
+  // "See all" on a home shelf turns it into the filter of the whole feed
+  const [shelf, setShelf] = useState<ShelfRef | null>(saved.shelf ?? null)
 
   useEffect(() => {
-    try { sessionStorage.setItem(filtersKey(mode), JSON.stringify({ search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly } satisfies SavedFilters)) } catch { /* storage blocked */ }
-  }, [mode, search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly])
+    try { sessionStorage.setItem(filtersKey(mode), JSON.stringify({ search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly, shelf } satisfies SavedFilters)) } catch { /* storage blocked */ }
+  }, [mode, search, activeCategory, sort, minPrice, maxPrice, maxMoq, verifiedOnly, inStockOnly, wholesaleOnly, shelf])
 
   useEffect(() => {
     async function load() {
@@ -82,6 +86,7 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
   const categories = Array.from(new Set(shown.map(p => p.category).filter(Boolean))) as string[]
 
   const filtered = shown.filter(p => {
+    if (shelf && !inShelf(p, shelf)) return false
     if (wholesaleOnly && !(p.wholesale_only || (p.reseller_discount_pct ?? 0) > 0)) return false
     const matchSearch = !search ||
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -102,6 +107,10 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
   })
 
   const activeFilters = [minPrice, maxPrice, maxMoq].filter(Boolean).length + (verifiedOnly ? 1 : 0) + (inStockOnly ? 1 : 0) + (sort !== 'default' ? 1 : 0)
+
+  // the home shelves show only on the plain feed: no search, no category, no filter
+  const plainFeed = !search.trim() && !activeCategory && activeFilters === 0 && !wholesaleOnly && !shelf
+  const shelves = useMemo(() => (plainFeed ? buildShelves(shown) : []), [plainFeed, shown])
 
   function resetFilters() {
     setSort('default'); setMinPrice(''); setMaxPrice(''); setMaxMoq(''); setVerifiedOnly(false); setInStockOnly(false)
@@ -252,8 +261,21 @@ export function ProductsPage({ mode = 'retail' }: { mode?: CatalogMode }) {
         </div>
       )}
 
+      {shelf && (
+        <div className="flex items-center gap-2 px-4 pb-3">
+          <button type="button" onClick={() => setShelf(null)} className="flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-xs font-bold text-white shadow-sm" aria-label={tr('Retirer le filtre')}>
+            {shelfTitle(shelf)}<X className="h-3.5 w-3.5" aria-hidden />
+          </button>
+        </div>
+      )}
+
+      {!loading && shelves.length > 0 && (
+        <ProductShelves shelves={shelves} onSeeAll={setShelf} onPress={(product) => navigate(productPath(product))} />
+      )}
+
       {/* Content */}
       <div className="px-4 pb-8">
+        {!loading && shelves.length > 0 && <h2 className="mb-3 text-base font-bold tracking-tight">{tr('Tous les produits')}</h2>}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 className="h-7 w-7 animate-spin text-primary/60" />
