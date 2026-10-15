@@ -3,7 +3,7 @@
 // platform's own image hosts are downloaded.
 import { amazonImageUrl, canonicalUrl, parseAmazonUrl, type AmazonTarget } from './amazon.ts'
 
-export type PlatformId = 'amazon' | 'shein' | 'alibaba' | 'temu' | 'muscle_strength' | 'walmart' | 'aliexpress' | 'ebay'
+export type PlatformId = 'amazon' | 'shein' | 'alibaba' | 'temu' | 'muscle_strength' | 'walmart' | 'aliexpress' | 'ebay' | 'southood'
 
 export interface Platform {
   id: PlatformId
@@ -23,6 +23,7 @@ export const PLATFORMS: Record<PlatformId, Platform> = {
   walmart: { id: 'walmart', name: 'Walmart', country: 'US', currency: 'USD' },
   aliexpress: { id: 'aliexpress', name: 'AliExpress', country: 'CN', currency: 'USD' },
   ebay: { id: 'ebay', name: 'eBay', country: 'US', currency: 'USD' },
+  southood: { id: 'southood', name: 'Southood', country: 'US', currency: 'USD' },
 }
 
 const HOSTS: Array<[Exclude<PlatformId, 'amazon'>, RegExp]> = [
@@ -33,6 +34,7 @@ const HOSTS: Array<[Exclude<PlatformId, 'amazon'>, RegExp]> = [
   ['walmart', /^(?:www\.)?walmart\.com$|^walmrt\.us$/i],
   ['aliexpress', /^(?:www\.|m\.|[a-z]{2,3}\.)?aliexpress\.(?:com|us)$|^(?:a|s\.click)\.aliexpress\.com$/i],
   ['ebay', /^(?:www\.|m\.)?ebay\.com$|^ebay\.(?:us|to)$/i],
+  ['southood', /^(?:www\.)?southoodeyewear\.com$/i],
 ]
 
 export interface ProductTarget {
@@ -123,6 +125,10 @@ export function parseProductUrl(raw: string): ProductTarget | null {
   } else if (platform.id === 'ebay') {
     const eid = /\/itm\/(?:[^/]+\/)?(\d{9,14})(?:[/?#]|$)/.exec(path)?.[1] ?? null
     return { platform, url: eid ? `https://www.ebay.com/itm/${eid}` : `https://${host}${path}`, id: eid }
+  } else if (platform.id === 'southood') {
+    // an online shop (Shopify): /products/<handle>, also reached through a collection: /collections/<name>/products/<handle>
+    const handle = /\/products\/([a-z0-9][a-z0-9-]*)\/?$/i.exec(path)?.[1]?.toLowerCase() ?? null
+    return { platform, url: handle ? `https://www.southoodeyewear.com/products/${handle}` : `https://${host}${path}`, id: handle }
   } else {
     id = /^\/store\/([a-z0-9][a-z0-9-]*)(?:\.html)?\/?$/i.exec(path) ? slug(path.replace(/^\/store\//, '').replace(/\.html$/, '')) : null
   }
@@ -139,12 +145,14 @@ const IMAGE_HOSTS: Record<PlatformId, RegExp> = {
   walmart: /(?:^|\.)walmartimages\.com$/i,
   aliexpress: /(?:^|\.)(?:alicdn\.com|aliexpress-media\.com)$/i,
   ebay: /(?:^|\.)ebayimg\.com$/i,
+  southood: /^(?:cdn\.shopify\.com|(?:www\.)?southoodeyewear\.com)$/i,
 }
 
 /** Size suffixes that thumbnails carry in their file names, removed to get the original picture. */
 const SIZE_SUFFIX = [
   /_thumbnail_\d+x\d*(\.[a-z]+)$/i, // Shein
   /(\.(?:jpe?g|png|webp))_\d+x\d+[a-z0-9]*(?:\.(?:jpe?g|png|webp))?$/i, // Alibaba: .jpg_220x220q90.jpg
+  /_(?:\d+x\d*|\d*x\d+|pico|icon|thumb|small|compact|medium|large|grande)(\.(?:jpe?g|png|webp))$/i, // Shopify: name_800x.jpg, name_grande.jpg
 ]
 
 /** A picture URL of the platform's own image hosts (https, jpg/png/webp), or null. Protocol-relative links are accepted. */

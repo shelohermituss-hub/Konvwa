@@ -30,6 +30,7 @@ const SHOPS = [
   { name: 'Shein', logo: '/brands/shein.png', href: 'https://www.shein.com' },
   { name: 'Amazon', logo: '/brands/amazon.png', href: 'https://www.amazon.com' },
   { name: 'Temu', logo: '/brands/temu.jpg', href: 'https://www.temu.com' },
+  { name: 'Southood', logo: '/brands/southood.png', href: 'https://www.southoodeyewear.com' },
 ]
 interface WalletData {
   available_balance: number

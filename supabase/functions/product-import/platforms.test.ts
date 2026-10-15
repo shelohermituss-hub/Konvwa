@@ -146,3 +146,23 @@ describe('eBay gallery', () => {
     expect(ebayGalleryImages(null)).toEqual([])
   })
 })
+
+describe('Southood (online shop)', () => {
+  it('reads a product page, directly or through a collection, and drops tracking', () => {
+    expect(parseProductUrl('https://www.southoodeyewear.com/products/aviator-gold?variant=123&utm_source=fb')).toMatchObject({ platform: { id: 'southood', country: 'US' }, id: 'aviator-gold', url: 'https://www.southoodeyewear.com/products/aviator-gold' })
+    expect(parseProductUrl('https://southoodeyewear.com/collections/sunglasses/products/Round-Black/')).toMatchObject({ id: 'round-black', url: 'https://www.southoodeyewear.com/products/round-black' })
+  })
+  it('does not take a collection or home page for a product', () => {
+    expect(parseProductUrl('https://www.southoodeyewear.com/')?.id).toBeNull()
+    expect(parseProductUrl('https://www.southoodeyewear.com/collections/sunglasses')?.id).toBeNull()
+  })
+  it('refuses look-alike hosts and plain http', () => {
+    expect(parseProductUrl('https://southoodeyewear.com.evil.test/products/x')).toBeNull()
+    expect(parseProductUrl('http://www.southoodeyewear.com/products/x')).toBeNull()
+  })
+  it('accepts its pictures from the Shopify CDN and its own host only, at full size', () => {
+    expect(platformImageUrl('southood', 'https://cdn.shopify.com/s/files/1/0001/products/aviator_800x.jpg?v=1700000000')).toBe('https://cdn.shopify.com/s/files/1/0001/products/aviator.jpg')
+    expect(platformImageUrl('southood', '//www.southoodeyewear.com/cdn/shop/files/aviator.png?v=2&width=500')).toBe('https://www.southoodeyewear.com/cdn/shop/files/aviator.png')
+    expect(platformImageUrl('southood', 'https://evil.test/x.jpg')).toBeNull()
+  })
+})
