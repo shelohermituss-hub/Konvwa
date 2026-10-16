@@ -1,4 +1,4 @@
-// Admin tool: paste a product link (Amazon, Shein, Alibaba/1688, Temu, Muscle & Strength) -> product sheet data, variants and package.
+// Admin tool: paste a product link (Amazon, Walmart, eBay, AliExpress, Shein, Alibaba/1688, Temu, Southood, Muscle & Strength) -> product sheet data, variants and package.
 // Page reading: Firecrawl (REST). Text work: OpenRouter. Secrets (Edge Function secrets): FIRECRAWL_API_KEY, OPENROUTER_API_KEY, OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { ebayGalleryImages, findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
@@ -283,7 +283,7 @@ Deno.serve(async (req) => {
     if (!firecrawlKey) return json({ error: 'Outil non configuré : ajoutez le secret FIRECRAWL_API_KEY dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
 
     let target = typeof body.url === 'string' && body.url.length <= 2000 ? parseProductUrl(body.url.trim()) : null
-    if (!target) return json({ error: 'Lien non pris en charge : collez un lien de produit Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu ou Muscle & Strength.' }, 400)
+    if (!target) return json({ error: 'Lien non pris en charge : collez un lien de produit Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu, Southood ou Muscle & Strength.' }, 400)
     // a share link: its HTTP redirects are followed first; when they lead nowhere (some apps redirect with JavaScript), the page itself is read and the address it ends on is used
     const shortLink = target.short ? target : null
     if (shortLink) {
