@@ -14,6 +14,7 @@ import { ProductImportDialog } from '@/components/shared/product-import-dialog'
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { VariantsBackfill } from '@/components/shared/variants-backfill'
 import { ProductLinkImport } from '@/components/shared/product-link-import'
+import { CutoutTool } from '@/components/shared/cutout-tool'
 import { OptionsEditor, loadOptionGroups, optionGroupsError, saveOptionGroups, type OptionGroupRow } from '@/components/shared/options-editor'
 import { VariantsEditor, variantsError, variantsPayload, type VariantRow } from '@/components/shared/variants-editor'
 import { estimateShipping, type ImportedProduct, type ShippingEstimate } from '@/lib/product-import-api'
@@ -704,6 +705,14 @@ export function AdminProductsPage() {
                 <Label>{tr('Images (URLs séparées par des virgules)')}</Label>
                 <Input value={imagesRaw} onChange={e => setImagesRaw(e.target.value)} placeholder="https://…, https://…" />
               </div>
+              <CutoutTool
+                variantUrls={variantRows.map(r => r.image.trim()).filter(Boolean)}
+                galleryUrls={imagesRaw.split(',').map(s => s.trim()).filter(Boolean)}
+                onApply={(map) => {
+                  setImagesRaw(imagesRaw.split(',').map(s => s.trim()).filter(Boolean).map(u => map[u] ?? u).join(', '))
+                  setVariantRows(rows => rows.map(r => (map[r.image.trim()] ? { ...r, image: map[r.image.trim()] } : r)))
+                }}
+              />
 
               <div className="col-span-2 space-y-1.5">
                 <Label>{tr('Vidéo du produit (lien .mp4, facultatif)')}</Label>
