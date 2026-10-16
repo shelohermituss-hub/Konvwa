@@ -1043,4 +1043,5 @@ export const FEATURES_EN: Record<string, string> = {
   "facultatif": "optional",
   "plusieurs choix possibles": "several choices allowed",
   "dont options": "incl. options",
+  "Seulement pour ces choix (aucun coché = tous)": "Only for these choices (none ticked = all)",
 }

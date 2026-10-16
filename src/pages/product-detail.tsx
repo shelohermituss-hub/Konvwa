@@ -505,7 +505,7 @@ export function ProductDetailPage() {
                           on ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white hover:border-gray-300',
                         )}
                       >
-                        {o.image && <img src={o.image} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-lg object-cover" />}
+                        {o.image && <img src={o.image} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-black/10" />}
                         <span className="min-w-0">
                           <span className="block max-w-[11rem] truncate font-semibold">{optionLabel(o)}</span>
                           {o.price_htg > 0 && <span className="block text-xs tabular-nums text-muted-foreground">+{formatHtg(o.price_htg)} {currencyLabel()}</span>}

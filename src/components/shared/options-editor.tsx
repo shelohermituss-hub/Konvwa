@@ -14,11 +14,13 @@ export interface OptionGroupRow {
   multi: boolean
   /** id of the group that must have a choice for this one to be shown ('' = always shown) */
   show_when: string
+  /** Only these options of that group show it (none ticked = any choice). */
+  show_when_options: string[]
   options: OptionRow[]
 }
 
 export const emptyOption = (): OptionRow => ({ id: crypto.randomUUID(), label: '', label_en: '', image: '', price_htg: 0 })
-export const emptyOptionGroup = (): OptionGroupRow => ({ id: crypto.randomUUID(), name: '', name_en: '', required: false, multi: false, show_when: '', options: [emptyOption()] })
+export const emptyOptionGroup = (): OptionGroupRow => ({ id: crypto.randomUUID(), name: '', name_en: '', required: false, multi: false, show_when: '', show_when_options: [], options: [emptyOption()] })
 
 export function optionGroupsError(rows: OptionGroupRow[]): string | null {
   if (rows.length > 20) return tr('20 groupes d\'options au maximum.')
@@ -37,12 +39,12 @@ export function optionGroupsError(rows: OptionGroupRow[]): string | null {
 
 export async function loadOptionGroups(productId: string): Promise<OptionGroupRow[]> {
   const { data } = await supabase.from('product_option_groups')
-    .select('id, name, name_en, sort_order, required, multi, show_when_group, product_options(id, label, label_en, image, price_htg, sort_order, active)')
+    .select('id, name, name_en, sort_order, required, multi, show_when_group, show_when_options, product_options(id, label, label_en, image, price_htg, sort_order, active)')
     .eq('product_id', productId).order('sort_order')
-  type Row = { id: string; name: string; name_en: string | null; required: boolean; multi: boolean; show_when_group: string | null
+  type Row = { id: string; name: string; name_en: string | null; required: boolean; multi: boolean; show_when_group: string | null; show_when_options: string[] | null
     product_options: Array<{ id: string; label: string; label_en: string | null; image: string | null; price_htg: number; sort_order: number; active: boolean }> }
   return ((data ?? []) as unknown as Row[]).map((g) => ({
-    id: g.id, name: g.name, name_en: g.name_en ?? '', required: g.required, multi: g.multi, show_when: g.show_when_group ?? '',
+    id: g.id, name: g.name, name_en: g.name_en ?? '', required: g.required, multi: g.multi, show_when: g.show_when_group ?? '', show_when_options: g.show_when_options ?? [],
     options: g.product_options.filter((o) => o.active).sort((a, b) => a.sort_order - b.sort_order)
       .map((o) => ({ id: o.id, label: o.label, label_en: o.label_en ?? '', image: o.image ?? '', price_htg: Number(o.price_htg) })),
   }))
@@ -53,6 +55,7 @@ export async function saveOptionGroups(productId: string, rows: OptionGroupRow[]
   const groups = rows.map((g, i) => ({
     id: g.id, product_id: productId, name: g.name.trim(), name_en: g.name_en.trim() || null, sort_order: i,
     required: g.required, multi: g.multi, show_when_group: g.show_when || null,
+    show_when_options: g.show_when ? g.show_when_options : [],
   }))
   const options = rows.flatMap((g) => g.options.map((o, i) => ({
     id: o.id, group_id: g.id, label: o.label.trim(), label_en: o.label_en.trim() || null, image: o.image.trim() || null,
@@ -90,10 +93,22 @@ export function OptionsEditor({ rows, onChange }: { rows: OptionGroupRow[]; onCh
           <div className="grid grid-cols-2 gap-2">
             <Input value={g.name} onChange={e => setGroup(i, { name: e.target.value })} placeholder={tr('Nom du groupe (ex. Verres)')} aria-label={tr('Nom du groupe')} maxLength={80} />
             <Input value={g.name_en} onChange={e => setGroup(i, { name_en: e.target.value })} placeholder={tr('Nom en anglais')} aria-label={tr('Nom en anglais')} maxLength={80} />
-            <select value={g.show_when} onChange={e => setGroup(i, { show_when: e.target.value })} aria-label={tr('Afficher seulement après un choix dans')} className="col-span-2 h-9 rounded-md border border-input bg-background px-2 text-sm">
+            <select value={g.show_when} onChange={e => setGroup(i, { show_when: e.target.value, show_when_options: [] })} aria-label={tr('Afficher seulement après un choix dans')} className="col-span-2 h-9 rounded-md border border-input bg-background px-2 text-sm">
               <option value="">{tr('Toujours affiché')}</option>
               {rows.filter(x => x.id !== g.id).map(x => <option key={x.id} value={x.id}>{tr('Après un choix dans « {0} »', x.name || '…')}</option>)}
             </select>
+            {g.show_when && (
+              <div className="col-span-2 flex flex-wrap gap-x-4 gap-y-1 rounded-lg bg-muted/40 p-2 text-sm">
+                <span className="w-full text-xs text-muted-foreground">{tr('Seulement pour ces choix (aucun coché = tous)')}</span>
+                {(rows.find(x => x.id === g.show_when)?.options ?? []).map(o => (
+                  <label key={o.id} className="flex cursor-pointer items-center gap-1.5">
+                    <input type="checkbox" checked={g.show_when_options.includes(o.id)} className="h-4 w-4 rounded"
+                      onChange={e => setGroup(i, { show_when_options: e.target.checked ? [...g.show_when_options, o.id] : g.show_when_options.filter(x => x !== o.id) })} />
+                    {o.label || '…'}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={g.required} onChange={e => setGroup(i, { required: e.target.checked })} className="h-4 w-4 rounded" />{tr('Obligatoire')}</label>

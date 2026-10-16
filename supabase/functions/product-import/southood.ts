@@ -19,6 +19,8 @@ export interface ShopGroup {
   multi: boolean
   /** Index (in the returned list) of the group that must have a choice for this one to be shown. */
   show_when: number | null
+  /** Indexes (in the options of the `show_when` group) of the only choices that show this group; empty = any choice. */
+  show_when_options: number[]
   options: ShopOption[]
 }
 
@@ -97,23 +99,37 @@ export function southoodGroups(bcpo: Record<string, unknown> | null): ShopGroup[
     if (keys.some((k) => /^anti-blue\s*light$/i.test(k))) lenses.push({ label: 'Anti-lumière bleue', label_en: 'Anti-blue light', image: null, price_usd: PRICE_ANTI_BLUE })
     if (keys.some((k) => /^\W*photochromic$/i.test(k))) lenses.push({ label: 'Photochromique', label_en: 'Photochromic', image: null, price_usd: PRICE_PHOTOCHROMIC })
     if (keys.some((k) => /^anti-blue\+photochromic$/i.test(k))) lenses.push({ label: 'Anti-lumière bleue + photochromique', label_en: 'Anti-blue + photochromic', image: null, price_usd: PRICE_ANTI_BLUE_PHOTOCHROMIC })
-    if (lenses.length > 0) groups.push({ name: 'Verres', name_en: 'Lenses', required: false, multi: false, show_when: null, options: lenses })
+    if (lenses.length > 0) groups.push({ name: 'Verres', name_en: 'Lenses', required: false, multi: false, show_when: null, show_when_options: [], options: lenses })
+    // the photochromic lenses (alone, and with the anti-blue layer) take a colour, shown as a swatch
+    const colours = photochromicColours(virtual)
+    const photoAt = lenses.map((l, i) => (/photochrom/i.test(l.label_en) ? i : -1)).filter((i) => i >= 0)
+    if (colours.length > 0 && photoAt.length > 0) groups.push({ name: 'Couleur du verre photochromique', name_en: 'Photochromic lens colour', required: true, multi: false, show_when: 0, show_when_options: photoAt, options: colours })
   }
 
   const power = virtual.find((g) => text(g.title).toLowerCase() === 'reading glasses')
   if (power && groups.length > 0) {
     const options = values(power).map((v) => text(v.key)).filter((k) => /^[+-]?\d{2,3}$/.test(k))
       .map((k) => ({ label: k, label_en: k, image: null, price_usd: PRICE_POWER }))
-    if (options.length > 0) groups.push({ name: 'Puissance du verre', name_en: 'Lens power', required: false, multi: false, show_when: 0, options })
+    if (options.length > 0) groups.push({ name: 'Puissance du verre', name_en: 'Lens power', required: false, multi: false, show_when: 0, show_when_options: [], options })
   }
 
   const cases = virtual.find((g) => /frequently bought together/i.test(text(g.title)))
   if (cases) {
     const options = values(cases).map((v) => ({ key: text(v.key), image: southoodImage(v.value) })).filter((v) => v.key)
       .map((v) => ({ label: CASE_FR[v.key.toLowerCase()] ?? v.key, label_en: v.key, image: v.image, price_usd: PRICE_CASE }))
-    if (options.length > 0) groups.push({ name: 'Étui', name_en: 'Case', required: false, multi: true, show_when: null, options })
+    if (options.length > 0) groups.push({ name: 'Étui', name_en: 'Case', required: false, multi: true, show_when: null, show_when_options: [], options })
   }
   return groups
+}
+
+const COLOUR_FR: Record<string, string> = { gray: 'Gris', brown: 'Marron', blue: 'Bleu', purple: 'Violet', pink: 'Rose', green: 'Vert', orange: 'Orange' }
+
+/** The colours of the photochromic lens (a picture each), included in the lens price. Night-vision variants are left out. */
+function photochromicColours(virtual: Record<string, unknown>[]): ShopOption[] {
+  const g = virtual.find((x) => text(x.title).toLowerCase() === 'photochromic lens')
+  return arr(g?.values).map(obj).map((v) => ({ key: text(v.key).replace(/^photochromic\s+/i, ''), image: southoodImage(v.value) }))
+    .filter((v) => COLOUR_FR[v.key.toLowerCase()])
+    .map((v) => ({ label: COLOUR_FR[v.key.toLowerCase()], label_en: v.key, image: v.image, price_usd: 0 }))
 }
 
 const CASE_FR: Record<string, string> = { blue: 'Bleu', brown: 'Marron', red: 'Rouge', 'rose red': 'Rose', silver: 'Argent', black: 'Noir' }

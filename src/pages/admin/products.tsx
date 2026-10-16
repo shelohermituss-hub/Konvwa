@@ -261,9 +261,11 @@ export function AdminProductsPage() {
     })))
     // extra options: supplements priced like the product (same rate and margin)
     const groupIds = (d.options ?? []).map(() => crypto.randomUUID())
+    const optionIds = (d.options ?? []).map((g) => g.options.map(() => crypto.randomUUID()))
     setOptionRows((d.options ?? []).map((g, i) => ({
       id: groupIds[i], name: g.name, name_en: g.name_en, required: g.required, multi: g.multi, show_when: g.show_when !== null ? groupIds[g.show_when] ?? '' : '',
-      options: g.options.map((o) => ({ id: crypto.randomUUID(), label: o.label, label_en: o.label_en, image: o.image ?? '', price_htg: priceHtgFromUsd(o.price_usd, rate, margin) })),
+      show_when_options: g.show_when !== null ? (g.show_when_options ?? []).map((k) => optionIds[g.show_when as number]?.[k] ?? '').filter(Boolean) : [],
+      options: g.options.map((o, k) => ({ id: optionIds[i][k], label: o.label, label_en: o.label_en, image: o.image ?? '', price_htg: priceHtgFromUsd(o.price_usd, rate, margin) })),
     })))
     setOptionsRaw(''); setCertsRaw(''); setOptionsEnRaw(''); setCertsEnRaw('')
     setTagsRaw(d.tags.join('\n')); setTagsEnRaw(d.tags_en.join('\n'))

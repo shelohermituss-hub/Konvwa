@@ -20,10 +20,12 @@ export interface OptionGroup {
   required: boolean
   multi: boolean
   show_when_group: string | null
+  /** When not empty, the group is shown only if one of these options is chosen. */
+  show_when_options: string[]
   product_options: ProductOption[]
 }
 
-export const OPTION_GROUP_SELECT = 'id, name, name_en, sort_order, required, multi, show_when_group, product_options(id, group_id, label, label_en, image, price_htg, sort_order)'
+export const OPTION_GROUP_SELECT = 'id, name, name_en, sort_order, required, multi, show_when_group, show_when_options, product_options(id, group_id, label, label_en, image, price_htg, sort_order)'
 
 const byOrder = <T extends { sort_order: number }>(a: T, b: T) => a.sort_order - b.sort_order
 
@@ -33,7 +35,7 @@ export const groupName = (g: Pick<OptionGroup, 'name' | 'name_en'>) => (LANG ===
 /** Groups and options in display order, with numeric prices. */
 export function normalizeGroups(rows: unknown): OptionGroup[] {
   return ((rows ?? []) as OptionGroup[])
-    .map((g) => ({ ...g, product_options: (g.product_options ?? []).map((o) => ({ ...o, price_htg: Number(o.price_htg) })).sort(byOrder) }))
+    .map((g) => ({ ...g, show_when_options: g.show_when_options ?? [], product_options: (g.product_options ?? []).map((o) => ({ ...o, price_htg: Number(o.price_htg) })).sort(byOrder) }))
     .filter((g) => g.product_options.length > 0)
     .sort(byOrder)
 }
@@ -54,7 +56,10 @@ export function useProductOptions(productId: string | undefined): OptionGroup[] 
 
 /** A group is shown unless it depends on another group in which nothing is chosen yet. */
 export function visibleGroups(groups: OptionGroup[], selected: string[]): OptionGroup[] {
-  return groups.filter((g) => !g.show_when_group || groups.find((p) => p.id === g.show_when_group)?.product_options.some((o) => selected.includes(o.id)))
+  return groups.filter((g) => {
+    const parent = !g.show_when_group || groups.find((p) => p.id === g.show_when_group)?.product_options.some((o) => selected.includes(o.id))
+    return parent && (g.show_when_options.length === 0 || g.show_when_options.some((id) => selected.includes(id)))
+  })
 }
 
 /** Keeps only the choices of groups that are shown (hiding a group forgets what was chosen in it). */

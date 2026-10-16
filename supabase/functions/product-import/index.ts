@@ -215,10 +215,16 @@ async function readLimited(res: Response, limit: number): Promise<Uint8Array> {
 async function storeImage(admin: ReturnType<typeof createClient>, userId: string, tag: string, index: number, imageUrl: string, minSide = 0): Promise<string | null> {
   try {
     const res = await fetch(imageUrl, { signal: AbortSignal.timeout(10000), redirect: 'error', headers: { 'User-Agent': 'Mozilla/5.0' } })
-    const type = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase()
-    const ext = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as Record<string, string>)[type]
-    if (!res.ok || !ext) return null
+    const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as Record<string, string>
+    if (!res.ok) return null
     const bytes = await readLimited(res, MAX_IMAGE)
+    // some CDNs answer with a vague type ("image"): the picture's own first bytes tell what it is
+    const declared = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase()
+    const sniffed = bytes[0] === 0xff && bytes[1] === 0xd8 ? 'image/jpeg' : bytes[0] === 0x89 && bytes[1] === 0x50 ? 'image/png'
+      : bytes.length > 11 && String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) === 'RIFF' && String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]) === 'WEBP' ? 'image/webp' : ''
+    const type = EXT[declared] ? declared : sniffed
+    const ext = EXT[type]
+    if (!ext) return null
     if (bytes.length < 500 || bytes.length >= MAX_IMAGE) return null
     if (minSide > 0) { const size = imageSize(bytes); if (size && Math.min(size.w, size.h) < minSide) return null }
     const path = `${userId}/${tag}-${Date.now()}-${index}.${ext}`
