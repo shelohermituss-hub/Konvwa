@@ -983,5 +983,25 @@ DO $$ DECLARE pid uuid; uid uuid; g1 uuid; g2 uuid; o1 uuid; o2 uuid; res jsonb;
   RESET ROLE;
 END $$;
 
+-- minimum order quantity: counts the TOTAL of a product across its lines (variants / options), never each line alone
+DO $$ DECLARE pid uuid; uid uuid; g uuid; o1 uuid; o2 uuid; res jsonb; BEGIN
+  SELECT p.id INTO pid FROM products p WHERE active AND NOT wholesale_only AND stock_available AND moq = 1
+     AND NOT EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = p.id AND v.active) AND upper(coalesce(supplier_country, '')) <> 'US' LIMIT 1;
+  SELECT u.id INTO uid FROM auth.users u JOIN profiles pr ON pr.user_id = u.id AND pr.role = 'client' LIMIT 1;
+  UPDATE products SET moq = 20 WHERE id = pid;
+  INSERT INTO product_option_groups(product_id, name, sort_order) VALUES (pid, 'Couleur', 1) RETURNING id INTO g;
+  INSERT INTO product_options(group_id, label) VALUES (g, 'A') RETURNING id INTO o1;
+  INSERT INTO product_options(group_id, label) VALUES (g, 'B') RETURNING id INTO o2;
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
+  SET LOCAL ROLE authenticated;
+  res := public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', pid, 'quantity', 10, 'option_ids', jsonb_build_array(o1)), jsonb_build_object('product_id', pid, 'quantity', 10, 'option_ids', jsonb_build_array(o2))), NULL);
+  ASSERT (res ->> 'success')::boolean, '10 + 10 of a product with a MOQ of 20 was refused';
+  BEGIN
+    PERFORM public.create_product_order(jsonb_build_array(jsonb_build_object('product_id', pid, 'quantity', 10, 'option_ids', jsonb_build_array(o1)), jsonb_build_object('product_id', pid, 'quantity', 5, 'option_ids', jsonb_build_array(o2))), NULL);
+    ASSERT false, '10 + 5 of a product with a MOQ of 20 was accepted';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

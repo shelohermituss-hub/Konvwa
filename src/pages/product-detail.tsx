@@ -60,7 +60,7 @@ export function ProductDetailPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { t } = useI18n()
-  const { addItem, count } = useCart()
+  const { addItem, count, items: cartItems } = useCart()
   const { profile, user } = useAuth()
   // a visitor who is not logged in sees the same product page, prices included, and logs in to order
   const guest = !user
@@ -97,7 +97,8 @@ export function ProductDetailPage() {
         const p = raw ? (guest ? localizeProduct(guestProduct(raw)) : resellerPriced(localizeProduct(raw), isReseller)) : null
         setProduct(p)
         if (p) trackPixel('ViewContent', productParams(p, p.price_htg))
-        if (p) setQuantity(p.moq)
+        // a product sold in variants can be bought a few of each: its minimum counts all of them together
+        if (p) setQuantity((p.product_variants?.length ?? 0) > 0 ? 1 : p.moq)
         setPicked([])
         setActiveImg(0)
         // a variant card of the feed opens the page with that variant already chosen (and its photo shown)
@@ -166,7 +167,7 @@ export function ProductDetailPage() {
     trackPixel('AddToCart', productParams(product, subtotal, quantity))
     setAdding(false)
     toast.success(t('products.added'), {
-      description: `${quantity} × ${product.name}${chosen ? ` (${variantLabel(chosen)})` : ''}`,
+      description: `${quantity} × ${product.name}${chosen ? ` (${variantLabel(chosen)})` : ''}${totalQty < product.moq ? ` — ${tr('Il manque {0} pour le minimum de {1}.', product.moq - totalQty, product.moq)}` : ''}`,
       action: { label: tr('Voir panier'), onClick: () => navigate('/cart') },
     })
   }
@@ -180,6 +181,10 @@ export function ProductDetailPage() {
       return
     }
     if (!optionsReady()) return
+    if (quantity < product.moq) {
+      toast.error(tr('Achat direct : minimum {0} {1}. Ajoutez au panier pour mélanger plusieurs variantes.', product.moq, product.unit))
+      return
+    }
     navigate('/checkout', { state: { buyNow: { product_id: product.id, variant_id: chosen?.id ?? null, option_ids: picked, quantity } } })
   }
 
@@ -239,9 +244,14 @@ export function ProductDetailPage() {
   }, [])
   const rows = tierRows(product).map((r) => (priced ? { ...r, price: variantUnitPrice(product, priced, r.from) } : r))
   const supplement = optionsSupplement(optionGroups, picked)
-  const unitPrice = effectiveUnitPrice(product, quantity, priced) + supplement
+  // what is already in the cart for this product under another choice: the minimum and the quantity tiers count all of it
+  const sameChoice = (i: (typeof cartItems)[number]) => i.variant_id === (chosen?.id ?? null) && [...i.option_ids].sort().join() === [...picked].sort().join()
+  const othersInCart = cartItems.filter((i) => i.product_id === product.id && !sameChoice(i)).reduce((n, i) => n + i.quantity, 0)
+  const lineMin = variants.length > 0 || optionGroups.length > 0 ? 1 : product.moq
+  const totalQty = quantity + othersInCart
+  const unitPrice = effectiveUnitPrice(product, quantity, priced, totalQty) + supplement
   const pct = discountPct(product)
-  const subtotal = lineTotal(product, quantity, priced) + supplement * quantity
+  const subtotal = lineTotal(product, quantity, priced, totalQty) + supplement * quantity
   const offer = bestOffer(product, chosen)
   const specs = Object.entries(product.specifications ?? {})
   const shownSpecs = allSpecs ? specs : specs.slice(0, SPEC_PREVIEW)
@@ -548,7 +558,7 @@ export function ProductDetailPage() {
             {pct > 0 && <p className="mt-3"><span className="rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold text-white">{tr('Réduction')} -{pct} %</span></p>}
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-muted/50 p-3" aria-label={tr('Prix selon la quantité')}>
               {rows.map((r) => {
-                const active = quantity >= r.from && (r.to === null || quantity <= r.to)
+                const active = totalQty >= r.from && (r.to === null || totalQty <= r.to)
                 return (
                   <div key={r.from}>
                     <p className={cn('text-xl font-extrabold tabular-nums tracking-tight', active ? 'text-primary' : 'text-foreground')}>
@@ -585,8 +595,8 @@ export function ProductDetailPage() {
               </div>
               <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">
                 <button
-                  onClick={() => setQuantity((q) => Math.max(product.moq, q - 1))}
-                  disabled={quantity <= product.moq}
+                  onClick={() => setQuantity((q) => Math.max(lineMin, q - 1))}
+                  disabled={quantity <= lineMin}
                   aria-label={tr('Diminuer la quantité')}
                   className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white disabled:opacity-30"
                 >
@@ -595,10 +605,10 @@ export function ProductDetailPage() {
                 <input
                   type="number"
                   inputMode="numeric"
-                  min={product.moq}
+                  min={lineMin}
                   value={quantity}
                   aria-label={tr('Quantité')}
-                  onChange={(e) => setQuantity(Math.max(product.moq, Math.floor(Number(e.target.value)) || product.moq))}
+                  onChange={(e) => setQuantity(Math.max(lineMin, Math.floor(Number(e.target.value)) || lineMin))}
                   className="h-10 w-16 bg-transparent text-center text-sm font-bold tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <button
@@ -610,6 +620,14 @@ export function ProductDetailPage() {
                 </button>
               </div>
             </div>
+            {product.moq > 1 && lineMin === 1 && (
+              <p className={cn('mt-2 text-xs', totalQty >= product.moq ? 'text-emerald-700' : 'text-muted-foreground')} aria-live="polite">
+                {totalQty >= product.moq
+                  ? tr('Minimum de {0} {1} atteint (toutes variantes confondues).', product.moq, product.unit)
+                  : tr('Minimum {0} {1} au total pour ce produit, toutes variantes confondues. Il vous en manque {2}.', product.moq, product.unit, product.moq - totalQty)}
+                {othersInCart > 0 && ` ${tr('Déjà dans votre panier : {0}.', othersInCart)}`}
+              </p>
+            )}
           </div>
 
           {/* Delivery + customization tiles */}

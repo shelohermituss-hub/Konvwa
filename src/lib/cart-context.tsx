@@ -44,10 +44,32 @@ interface CartContextType {
 }
 
 /** Unit price shown for a cart line (the order itself is priced by the database). */
-export function cartLineUnitPrice(item: CartItem): number {
+export function cartLineUnitPrice(item: CartItem, productQuantity: number = item.quantity): number {
   if (!item.products) return 0
-  // the average price of one unit of the line: supplier offers ("2 for $48") count by full packs, the other units at the regular price
-  return effectiveUnitPrice(item.products, item.quantity, item.product_variants) + cartLineSupplement(item)
+  // the average price of one unit of the line: supplier offers ("2 for $48") count by full packs, the other units at the regular price;
+  // the quantity tiers follow the product's total quantity in the cart (all its variants together)
+  return effectiveUnitPrice(item.products, item.quantity, item.product_variants, productQuantity) + cartLineSupplement(item)
+}
+
+/** Total quantity of each product in the cart (all its variants / option choices together). */
+export function productQuantities(items: CartItem[]): Map<string, number> {
+  const totals = new Map<string, number>()
+  for (const i of items) totals.set(i.product_id, (totals.get(i.product_id) ?? 0) + i.quantity)
+  return totals
+}
+
+/** Products whose total quantity is below their minimum order quantity (the minimum counts all variants together). */
+export function moqShortfalls(items: CartItem[]): Array<{ product_id: string; name: string; moq: number; have: number; unit: string }> {
+  const totals = productQuantities(items)
+  const seen = new Set<string>()
+  const out: Array<{ product_id: string; name: string; moq: number; have: number; unit: string }> = []
+  for (const i of items) {
+    if (seen.has(i.product_id) || !i.products) continue
+    seen.add(i.product_id)
+    const have = totals.get(i.product_id) ?? 0
+    if (have < i.products.moq) out.push({ product_id: i.product_id, name: i.products.name, moq: i.products.moq, have, unit: i.products.unit })
+  }
+  return out
 }
 
 /** Supplement per unit of the options chosen on a line. */
@@ -134,7 +156,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const count = items.reduce((sum, i) => sum + i.quantity, 0)
-  const total = items.reduce((sum, i) => sum + i.quantity * cartLineUnitPrice(i), 0)
+  const totals = productQuantities(items)
+  const total = items.reduce((sum, i) => sum + i.quantity * cartLineUnitPrice(i, totals.get(i.product_id)), 0)
 
   return (
     <CartContext.Provider value={{ items, count, total, loading, addItem, updateQuantity, removeItem, clearCart, refresh }}>

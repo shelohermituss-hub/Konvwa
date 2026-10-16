@@ -3,7 +3,7 @@ import { WhatsAppChannelButton } from '@/components/shared/whatsapp-channel-butt
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { CART_PRODUCT_SELECT, cartLineChoices, cartLineUnitPrice, toCartProduct, useCart, type CartItem } from '@/lib/cart-context'
+import { CART_PRODUCT_SELECT, cartLineChoices, cartLineUnitPrice, moqShortfalls, productQuantities, toCartProduct, useCart, type CartItem } from '@/lib/cart-context'
 import { fetchCartOptions, type CartOption } from '@/lib/product-options'
 import { VARIANT_SELECT, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
@@ -36,6 +36,8 @@ export function CheckoutPage() {
   const [buyItem, setBuyItem] = useState<CartItem | null>(null)
   const [buyLoading, setBuyLoading] = useState(!!buyNow)
   const items = useMemo(() => (buyNow ? (buyItem ? [buyItem] : []) : cartItems), [buyNow, buyItem, cartItems])
+  const totals = useMemo(() => productQuantities(items), [items])
+  const shortfalls = useMemo(() => moqShortfalls(items), [items])
   const total = buyNow ? (buyItem ? cartLineUnitPrice(buyItem) * buyItem.quantity : 0) : cartTotal
   const clearCart = async () => { if (!buyNow) await clearCartItems() }
   const { confirmPayment } = useStepUp()
@@ -120,7 +122,7 @@ export function CheckoutPage() {
   }, [startedCheckout])
   const blocked = (shipping?.missing.length ?? 0) > 0
   const noMethod = hasUs && !blocked && !chosen
-  const canPay = !shippingLoading && !shippingError && !blocked && !noMethod
+  const canPay = !shippingLoading && !shippingError && !blocked && !noMethod && shortfalls.length === 0
 
   // Redirect if cart is empty (and not just paid)
   useEffect(() => {
@@ -283,10 +285,10 @@ export function CheckoutPage() {
                       {(item.products?.supplier_country ?? '').toUpperCase() === 'US' ? tr('Expédition incluse') : tr('Achat seul')}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">{item.quantity} × {money(cartLineUnitPrice(item))}</p>
+                  <p className="text-xs text-muted-foreground">{item.quantity} × {money(cartLineUnitPrice(item, totals.get(item.product_id)))}</p>
                 </div>
                 <p className="text-sm font-bold text-primary shrink-0">
-                  {money((cartLineUnitPrice(item) * item.quantity))}
+                  {money((cartLineUnitPrice(item, totals.get(item.product_id)) * item.quantity))}
                 </p>
               </div>
             ))}
@@ -312,6 +314,11 @@ export function CheckoutPage() {
         {shippingError && (
           <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive" role="alert">{shippingError}</div>
         )}
+        {shortfalls.map(s => (
+          <div key={s.product_id} role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            {tr('« {0} » : minimum {1} {2} au total, toutes variantes confondues. Il vous en manque {3}.', s.name, s.moq, s.unit, s.moq - s.have)}
+          </div>
+        ))}
         {blocked && shipping && (
           <div className="flex gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />

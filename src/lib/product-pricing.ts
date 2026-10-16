@@ -88,8 +88,9 @@ function onBaseOption(product: WithReseller, variant?: PricedVariant | null): bo
  * What a line of `quantity` units costs. The supplier's offers are PACKS: with "2 for $40", 3 units cost one pack plus one unit at the
  * regular price, 4 units cost two packs. Mirrors `create_product_order` (display only, the database prices the order).
  */
-export function lineTotal(product: WithReseller, quantity: number, variant?: PricedVariant | null): number {
-  const unit = variant ? variantUnitPrice(product, variant, quantity) : unitPriceFor(product, quantity)
+export function lineTotal(product: WithReseller, quantity: number, variant?: PricedVariant | null, tierQuantity: number = quantity): number {
+  // the hand-made tiers follow the TOTAL quantity of the product (all its variants together); the offers follow the line
+  const unit = variant ? variantUnitPrice(product, variant, tierQuantity) : unitPriceFor(product, tierQuantity)
   const flat = unit * quantity
   const offers = offerTiers(product.price_tiers).sort((a, b) => b.min_qty - a.min_qty)
   if (offers.length === 0 || !onBaseOption(product, variant)) return Math.round(flat * 100) / 100
@@ -105,8 +106,8 @@ export function lineTotal(product: WithReseller, quantity: number, variant?: Pri
 }
 
 /** Average price of one unit in the line (the total divided by the quantity), unrounded so that unit × quantity gives the total back. */
-export function effectiveUnitPrice(product: WithReseller, quantity: number, variant?: PricedVariant | null): number {
-  return quantity > 0 ? lineTotal(product, quantity, variant) / quantity : 0
+export function effectiveUnitPrice(product: WithReseller, quantity: number, variant?: PricedVariant | null, tierQuantity: number = quantity): number {
+  return quantity > 0 ? lineTotal(product, quantity, variant, tierQuantity) / quantity : 0
 }
 
 /** Lowest and highest unit price of a product: its own price and its hand-made tiers (supplier offers are shown apart). */

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import { Trash2, Minus, Plus, Package, ArrowRight, ChevronLeft } from 'lucide-react'
-import { cartLineChoices, cartLineUnitPrice, useCart } from '@/lib/cart-context'
+import { Trash2, Minus, Plus, Package, ArrowRight, ChevronLeft, AlertTriangle } from 'lucide-react'
+import { cartLineChoices, cartLineUnitPrice, moqShortfalls, productQuantities, useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyCart } from '@/components/shared/illustrations'
@@ -11,6 +11,9 @@ export function CartPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { items, total, loading, updateQuantity, removeItem } = useCart()
+  const totals = productQuantities(items)
+  // the minimum order of a product counts all its variants together
+  const shortfalls = moqShortfalls(items)
 
   return (
     <div className="min-h-full bg-[#F4F5F7] pb-32">
@@ -54,9 +57,15 @@ export function CartPage() {
         </div>
       ) : (
         <div className="px-4 pt-4 space-y-3">
+          {shortfalls.map(s => (
+            <div key={s.product_id} role="alert" className="flex gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              <p>{tr('« {0} » : minimum {1} {2} au total, toutes variantes confondues. Il vous en manque {3}.', s.name, s.moq, s.unit, s.moq - s.have)}</p>
+            </div>
+          ))}
           {items.map(item => {
             const product = item.products
-            const unitPrice = cartLineUnitPrice(item)
+            const unitPrice = cartLineUnitPrice(item, totals.get(item.product_id))
             const variantName = cartLineChoices(item)
             const thumb = item.product_variants?.image ?? product?.images?.[0]
             const subtotal = unitPrice * item.quantity
@@ -90,11 +99,11 @@ export function CartPage() {
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         className={cn(
                           'h-6 w-6 flex items-center justify-center rounded-md transition-colors',
-                          item.quantity <= (product?.moq ?? 1)
+                          item.quantity <= 1
                             ? 'text-muted-foreground/30 cursor-not-allowed'
                             : 'hover:bg-white text-muted-foreground'
                         )}
-                        disabled={item.quantity <= (product?.moq ?? 1)}
+                        disabled={item.quantity <= 1}
                       >
                         <Minus className="h-3 w-3" />
                       </button>
@@ -132,9 +141,11 @@ export function CartPage() {
             <span className="text-sm text-muted-foreground font-medium">{t('cart.total')}</span>
             <span className="text-xl font-black text-primary">{money(total)}</span>
           </div>
+          {shortfalls.length > 0 && <p className="mb-2 text-xs font-medium text-amber-800">{tr('Complétez la quantité minimale pour continuer.')}</p>}
           <button
             onClick={() => navigate('/checkout')}
-            className="w-full flex items-center justify-center gap-2 h-13 rounded-xl text-sm font-bold text-white"
+            disabled={shortfalls.length > 0}
+            className="w-full flex items-center justify-center gap-2 h-13 rounded-xl text-sm font-bold text-white disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg, #F05A28, #D44E21)' }}
           >
             {t('cart.checkout')}

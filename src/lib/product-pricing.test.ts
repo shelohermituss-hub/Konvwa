@@ -109,3 +109,15 @@ describe('struck price', () => {
     expect(discountPct({})).toBe(0)
   })
 })
+
+describe('quantity tiers follow the product total, not the line', () => {
+  const p = { price_htg: 100, moq: 20, price_tiers: [{ min_qty: 100, price_htg: 80 }] }
+  it('prices a small line at the tier reached by all the variants together', () => {
+    expect(lineTotal(p, 20, null, 100)).toBe(1600)
+    expect(lineTotal(p, 20)).toBe(2000)
+  })
+  it('keeps the old behaviour when no total is given', () => {
+    expect(effectiveUnitPrice(p, 100)).toBe(80)
+  })
+})
+

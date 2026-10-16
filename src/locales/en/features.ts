@@ -1056,4 +1056,11 @@ export const FEATURES_EN: Record<string, string> = {
   "{0} photos hébergées ailleurs seront ignorées.": "{0} photos hosted elsewhere will be skipped.",
   "Inclus": "Included",
   "Supplément des options (par unité)": "Options supplement (per unit)",
+  "« {0} » : minimum {1} {2} au total, toutes variantes confondues. Il vous en manque {3}.": "“{0}”: minimum {1} {2} in total, all variants together. You are {3} short.",
+  "Complétez la quantité minimale pour continuer.": "Reach the minimum quantity to continue.",
+  "Minimum de {0} {1} atteint (toutes variantes confondues).": "Minimum of {0} {1} reached (all variants together).",
+  "Minimum {0} {1} au total pour ce produit, toutes variantes confondues. Il vous en manque {2}.": "Minimum {0} {1} in total for this product, all variants together. You are {2} short.",
+  "Déjà dans votre panier : {0}.": "Already in your cart: {0}.",
+  "Achat direct : minimum {0} {1}. Ajoutez au panier pour mélanger plusieurs variantes.": "Direct purchase: minimum {0} {1}. Add to cart to mix several variants.",
+  "Il manque {0} pour le minimum de {1}.": "{0} short of the minimum of {1}.",
 }
