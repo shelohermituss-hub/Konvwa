@@ -9,7 +9,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|Googlebot|bingbot|Embedly|redditbot|Applebot).*"
+          "value": ".*(facebookexternalhit|Facebot|meta-external|WhatsApp|Twitterbot|TelegramBot|Slackbot|Slack-ImgProxy|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|Googlebot|Google-PageRenderer|Google-InspectionTool|GoogleOther|bingbot|BingPreview|MicrosoftPreview|Embedly|redditbot|Applebot|Viber|Signal|Snap URL Preview|TikTok|Bytespider|Iframely|vkShare|Mastodon|Mattermost|LinkPreview|Line/|Zalo|YandexBot|DuckDuckBot|Yahoo).*"
         }
       ],
       "destination": "/api/share?id=:id"
