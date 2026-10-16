@@ -517,6 +517,26 @@ export function ProductDetailPage() {
               </div>
             ))}
 
+            {/* What the chosen options add to the price, per unit: shown as soon as something is picked */}
+            {picked.length > 0 && (
+              <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm" aria-live="polite">
+                <ul className="space-y-1">
+                  {optionGroups.flatMap((g) => g.product_options.filter((o) => picked.includes(o.id)).map((o) => ({ g, o }))).map(({ g, o }) => (
+                    <li key={o.id} className="flex items-baseline justify-between gap-3">
+                      <span className="min-w-0 truncate text-foreground/80">{groupName(g)} : <span className="font-semibold text-foreground">{optionLabel(o)}</span></span>
+                      <span className="shrink-0 font-semibold tabular-nums">{o.price_htg > 0 ? `+${formatHtg(o.price_htg)} ${currencyLabel()}` : tr('Inclus')}</span>
+                    </li>
+                  ))}
+                </ul>
+                {supplement > 0 && (
+                  <p className="mt-2 flex items-baseline justify-between gap-3 border-t border-primary/20 pt-2 font-bold">
+                    <span>{tr('Supplément des options (par unité)')}</span>
+                    <span key={supplement} className="animate-in fade-in zoom-in-95 tabular-nums text-primary duration-200">+{formatHtg(supplement)} {currencyLabel()}</span>
+                  </p>
+                )}
+              </div>
+            )}
+
             {product.sale_type === 'wholesale' && (
               <p className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-xs leading-relaxed text-foreground/80">
                 <span className="font-bold text-primary">{tr('Achat en gros')}</span>{' · '}

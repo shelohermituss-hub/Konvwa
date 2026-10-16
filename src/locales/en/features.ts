@@ -1054,4 +1054,6 @@ export const FEATURES_EN: Record<string, string> = {
   "Photo {0} sur {1}…": "Photo {0} of {1}…",
   "Gratuit : le fond est retiré sur votre appareil (quelques secondes par photo, mieux vaut un ordinateur). Les originales restent conservées ; rien n'est changé tant que vous n'enregistrez pas.": "Free: the background is removed on your device (a few seconds per photo, a computer is better). The originals are kept; nothing changes until you save.",
   "{0} photos hébergées ailleurs seront ignorées.": "{0} photos hosted elsewhere will be skipped.",
+  "Inclus": "Included",
+  "Supplément des options (par unité)": "Options supplement (per unit)",
 }

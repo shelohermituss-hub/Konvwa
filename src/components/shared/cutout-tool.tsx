@@ -35,6 +35,7 @@ export function CutoutTool({ variantUrls, galleryUrls, onApply }: {
     setProgress({ done: 0, total: wanted.length, phase: 'model' })
     const done: Record<string, string> = {}
     let failed = 0
+    let lastError = ''
     try {
       const { removeBackground } = await import('@/lib/cutout')
       for (let i = 0; i < wanted.length; i++) {
@@ -50,6 +51,7 @@ export function CutoutTool({ variantUrls, galleryUrls, onApply }: {
         } catch (e) {
           console.error('[cutout]', e)
           failed++
+          lastError = String((e as { message?: string })?.message ?? e)
         }
       }
     } catch (e) {
@@ -64,7 +66,7 @@ export function CutoutTool({ variantUrls, galleryUrls, onApply }: {
       setUndo(Object.fromEntries(Object.entries(done).map(([old, now]) => [now, old])))
       toast.success(tr('{0} photos détourées : vérifiez le rendu puis enregistrez le produit.', n))
     }
-    if (failed > 0) toast.warning(tr('{0} photos n\'ont pas pu être traitées.', failed))
+    if (failed > 0) toast.warning(`${tr('{0} photos n\'ont pas pu être traitées.', failed)}${lastError ? ` (${lastError.slice(0, 120)})` : ''}`)
     setBusy(false); setProgress(null)
   }
 
