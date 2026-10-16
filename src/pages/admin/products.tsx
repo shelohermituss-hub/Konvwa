@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Pencil, Trash2, Package, Loader2, ToggleLeft, ToggleRight, Search, Star, Sparkles } from 'lucide-react'
+import { Plus, Pencil, Trash2, Package, Loader2, ToggleLeft, ToggleRight, Search, Star, Sparkles, Flame } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import { ProductImportDialog } from '@/components/shared/product-import-dialog'
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { VariantsBackfill } from '@/components/shared/variants-backfill'
 import { ProductLinkImport } from '@/components/shared/product-link-import'
+import { ProductDiscoverDialog } from '@/components/shared/product-discover-dialog'
 import { CutoutTool } from '@/components/shared/cutout-tool'
 import { OptionsEditor, loadOptionGroups, optionGroupsError, saveOptionGroups, type OptionGroupRow } from '@/components/shared/options-editor'
 import { VariantsEditor, variantsError, variantsPayload, type VariantRow } from '@/components/shared/variants-editor'
@@ -138,6 +139,7 @@ export function AdminProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null)
   const [importOpen, setImportOpen] = useState(false)
   const [linkOpen, setLinkOpen] = useState(false)
+  const [discoverOpen, setDiscoverOpen] = useState(false)
   const [backfillOpen, setBackfillOpen] = useState(false)
   // what the last link import found (kept only to show where the price and the package come from)
   // reviews read from the supplier page: saved with the product (source shown to customers)
@@ -514,6 +516,9 @@ export function AdminProductsPage() {
           <Button variant="outline" onClick={() => setLinkOpen(true)} className="gap-2 rounded-xl">
             <Sparkles className="h-4 w-4" />{tr('Importer depuis un lien')}
           </Button>
+          <Button variant="outline" onClick={() => setDiscoverOpen(true)} className="gap-2 rounded-xl">
+            <Flame className="h-4 w-4" />{tr('Produits tendance')}
+          </Button>
           <Button variant="outline" onClick={() => setBackfillOpen(true)} className="gap-2 rounded-xl">
             {tr('Récupérer les variantes')}
           </Button>
@@ -526,6 +531,7 @@ export function AdminProductsPage() {
           </Button>
         </div>
       </div>
+      <ProductDiscoverDialog open={discoverOpen} onClose={() => setDiscoverOpen(false)} onDone={() => void load()} />
       <ProductLinkImport open={linkOpen} onClose={() => setLinkOpen(false)} onImported={(d) => void applyImport(d)} />
       <VariantsBackfill open={backfillOpen} onClose={() => setBackfillOpen(false)} onDone={() => void load()} />
       <ProductImportDialog open={importOpen} onClose={() => setImportOpen(false)} onDone={() => void load()} />

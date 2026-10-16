@@ -99,3 +99,25 @@ export async function estimateShipping(args: {
   if (error || !res?.success) return null
   return { kg: res.kg, chargeable_kg: res.chargeable_kg, cbm: res.cbm, options: res.options ?? [] }
 }
+
+export interface DiscoveredProduct {
+  asin: string
+  url: string
+  title: string | null
+  rating: number | null
+  reviews: number | null
+  price_usd: number | null
+  rank: number
+}
+
+/** Trending / best-selling Amazon products not yet in the shop (admin-only `product-discover` Edge Function): up to 20 candidates. */
+export async function discoverAmazonProducts(args: { source: string; department: string; count: number }): Promise<{ candidates: DiscoveredProduct[]; skipped_existing: number; total_found: number }> {
+  const { data, error } = await supabase.functions.invoke('product-discover', { body: args })
+  if (error) {
+    const ctx = (error as { context?: Response }).context
+    const body = ctx && typeof ctx.json === 'function' ? await ctx.json().catch(() => null) as { error?: string } | null : null
+    throw new Error(body?.error || tr('Erreur réseau'))
+  }
+  if (data?.error) throw new Error(String(data.error))
+  return data as { candidates: DiscoveredProduct[]; skipped_existing: number; total_found: number }
+}
