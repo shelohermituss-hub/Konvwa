@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findVideoUrl, parseProductUrl, parseSharePrice, platformImageUrl, platformImages, platformVideoUrl, productSlug, ebayGalleryImages } from './platforms'
+import { findVideoUrl, parseProductUrl, parseSharePrice, platformImageUrl, platformImages, platformVideoUrl, productSlug, ebayGalleryImages, alibabaGalleryImages } from './platforms'
 
 describe('parseProductUrl', () => {
   it('keeps Amazon working', () => {
@@ -164,5 +164,16 @@ describe('Southood (online shop)', () => {
     expect(platformImageUrl('southood', 'https://cdn.shopify.com/s/files/1/0001/products/aviator_800x.jpg?v=1700000000')).toBe('https://cdn.shopify.com/s/files/1/0001/products/aviator.jpg')
     expect(platformImageUrl('southood', '//www.southoodeyewear.com/cdn/shop/files/aviator.png?v=2&width=500')).toBe('https://www.southoodeyewear.com/cdn/shop/files/aviator.png')
     expect(platformImageUrl('southood', 'https://evil.test/x.jpg')).toBeNull()
+  })
+})
+
+describe('alibabaGalleryImages', () => {
+  it('reads the gallery entries first, then other product pictures, only from Alibaba hosts', () => {
+    const html = '<img src="//sc04.alicdn.com/kf/Hother1.jpg"> {"fullPathImageURI":"https:\\/\\/sc04.alicdn.com\\/kf\\/Hmain.jpg_220x220.jpg"} <img src="https://evil.example/kf/x.jpg">'
+    const out = alibabaGalleryImages(html)
+    expect(out[0]).toBe('https://sc04.alicdn.com/kf/Hmain.jpg')
+    expect(out).toContain('https://sc04.alicdn.com/kf/Hother1.jpg')
+    expect(out.some((u) => u.includes('evil'))).toBe(false)
+    expect(alibabaGalleryImages(undefined)).toEqual([])
   })
 })

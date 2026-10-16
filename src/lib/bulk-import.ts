@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { priceHtgFromUsd } from '@/lib/import-pricing'
+import { importDefaults, priceHtgFromUsd } from '@/lib/import-pricing'
 import { importProductFromLink, type ImportedProduct } from '@/lib/product-import-api'
 import { tr } from '@/lib/i18n'
 
@@ -28,6 +28,7 @@ export function importedToRow(d: ImportedProduct, { rate, margin }: ImportRates)
     shipping_item_type: d.shipping_item_type ?? null,
     supplier_name: d.supplier_name,
     supplier_country: d.supplier_country,
+    ...importDefaults(d.supplier_country),
     images: d.images,
     video_url: d.video_url ?? null,
     specifications: d.specifications,

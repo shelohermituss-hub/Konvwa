@@ -19,7 +19,7 @@ import { CutoutTool } from '@/components/shared/cutout-tool'
 import { OptionsEditor, loadOptionGroups, optionGroupsError, saveOptionGroups, type OptionGroupRow } from '@/components/shared/options-editor'
 import { VariantsEditor, variantsError, variantsPayload, type VariantRow } from '@/components/shared/variants-editor'
 import { estimateShipping, type ImportedProduct, type ShippingEstimate } from '@/lib/product-import-api'
-import { priceHtgFromUsd } from '@/lib/import-pricing'
+import { importDefaults, priceHtgFromUsd } from '@/lib/import-pricing'
 import { PriceReviews } from '@/pages/admin/price-reviews'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
@@ -242,6 +242,7 @@ export function AdminProductsPage() {
       shipping_item_type: d.shipping_item_type ?? null,
       supplier_name: d.supplier_name,
       supplier_country: d.supplier_country,
+      ...importDefaults(d.supplier_country),
       images: d.images,
       video_url: d.video_url ?? null,
       specifications: d.specifications,

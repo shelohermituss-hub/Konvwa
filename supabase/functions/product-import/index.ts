@@ -1,7 +1,7 @@
 // Admin tool: paste a product link (Amazon, Walmart, eBay, AliExpress, Shein, Alibaba/1688, Temu, Southood, Muscle & Strength) -> product sheet data, variants and package.
 // Page reading: Firecrawl (REST). Text work: OpenRouter. Secrets (Edge Function secrets): FIRECRAWL_API_KEY, OPENROUTER_API_KEY, OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { ebayGalleryImages, findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
+import { alibabaGalleryImages, ebayGalleryImages, findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
 import { amazonGalleryImages } from './amazon.ts'
 import { normalizeVariants } from './variants.ts'
 import { cartDiscountedPrice, promoTiers } from './promos.ts'
@@ -435,6 +435,10 @@ Deno.serve(async (req) => {
     // Amazon: the extraction often misses the pictures, while the page source holds the whole gallery (and the page's main picture)
     if (!variantsOnly && platform.id === 'amazon' && candidates.length < 3) {
       candidates = [...new Set([...candidates, ...amazonGalleryImages(read.meta.html), ...platformImages('amazon', [read.meta.image], 1)])].slice(0, 15)
+    }
+    // Alibaba: same thing, the gallery is in the page source
+    if (!variantsOnly && platform.id === 'alibaba' && candidates.length < 3) {
+      candidates = [...new Set([...candidates, ...alibabaGalleryImages(read.meta.html), ...platformImages('alibaba', [read.meta.image], 1)])].slice(0, 15)
     }
     const stored: string[] = []
     const copied = new Map<string, string>()

@@ -242,3 +242,16 @@ export function ebayGalleryImages(html: unknown, max = 15): string[] {
   }
   return out
 }
+
+/**
+ * The photos of an Alibaba listing read from the page source: the gallery entries (`fullPathImageURI`) first, then the other product pictures
+ * (`/kf/` files, in page order). Only Alibaba's own image hosts are kept; the caller drops badges and small pictures by size.
+ */
+export function alibabaGalleryImages(html: unknown, max = 15): string[] {
+  if (typeof html !== 'string') return []
+  const text = html.replace(/\\u002F/gi, '/').replace(/\\\//g, '/').replace(/&amp;/g, '&')
+  const found: string[] = []
+  for (const m of text.matchAll(/"fullPathImageURI"\s*:\s*"([^"]+)"/g)) found.push(m[1])
+  for (const m of text.matchAll(/(?:https?:)?\/\/[a-z0-9.-]*alicdn\.com\/(?:@[a-z0-9]+\/)?kf\/[A-Za-z0-9_-]+\.(?:jpe?g|png|webp)/gi)) found.push(m[0])
+  return platformImages('alibaba', found, max)
+}
