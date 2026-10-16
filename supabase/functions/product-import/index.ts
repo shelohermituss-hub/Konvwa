@@ -2,6 +2,7 @@
 // Page reading: Firecrawl (REST). Text work: OpenRouter. Secrets (Edge Function secrets): FIRECRAWL_API_KEY, OPENROUTER_API_KEY, OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { ebayGalleryImages, findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
+import { amazonGalleryImages } from './amazon.ts'
 import { normalizeVariants } from './variants.ts'
 import { cartDiscountedPrice, promoTiers } from './promos.ts'
 import { normalizeReviews } from './reviews.ts'
@@ -430,13 +431,25 @@ Deno.serve(async (req) => {
     // eBay: the listing's own gallery is read from the page source (the extraction mixes in photos of other items); without it, only the page's main picture is kept
     const gallery = platform.id === 'ebay' ? ebayGalleryImages(read.meta.html) : []
     const ebayImages = gallery.length > 0 ? gallery : read.meta.image ? [read.meta.image] : []
-    const candidates = variantsOnly ? [] : platformImages(platform.id, platform.id === 'ebay' ? ebayImages : shop && shop.images.length > 0 ? shop.images : scraped.images, 15)
+    let candidates = variantsOnly ? [] : platformImages(platform.id, platform.id === 'ebay' ? ebayImages : shop && shop.images.length > 0 ? shop.images : scraped.images, 15)
+    // Amazon: the extraction often misses the pictures, while the page source holds the whole gallery (and the page's main picture)
+    if (!variantsOnly && platform.id === 'amazon' && candidates.length < 3) {
+      candidates = [...new Set([...candidates, ...amazonGalleryImages(read.meta.html), ...platformImages('amazon', [read.meta.image], 1)])].slice(0, 15)
+    }
     const stored: string[] = []
     const copied = new Map<string, string>()
     for (let i = 0; i < candidates.length && stored.length < MAX_PHOTOS; i += 6) {
       const chunk = candidates.slice(i, i + 6)
       const urls = await Promise.all(chunk.map((u, j) => storeImage(admin, user.id, tag, i + j, u, MIN_PHOTO_SIDE)))
       chunk.forEach((u, j) => { const url = urls[j]; if (url && stored.length < MAX_PHOTOS) { stored.push(url); copied.set(u, url) } })
+    }
+    // pictures that passed the download but were judged too small: better a small picture than none
+    if (!variantsOnly && candidates.length > 0 && stored.length === 0) {
+      for (let i = 0; i < candidates.length && stored.length < MAX_PHOTOS; i += 6) {
+        const chunk = candidates.slice(i, i + 6)
+        const urls = await Promise.all(chunk.map((u, j) => storeImage(admin, user.id, tag, 300 + i + j, u)))
+        chunk.forEach((u, j) => { const url = urls[j]; if (url && stored.length < MAX_PHOTOS) { stored.push(url); copied.set(u, url) } })
+      }
     }
     const variantImages = [...new Set(rows.map((v) => v.image).filter((u): u is string => !!u))].filter((u) => !copied.has(u)).slice(0, 30)
     for (let i = 0; i < variantImages.length; i += 6) {

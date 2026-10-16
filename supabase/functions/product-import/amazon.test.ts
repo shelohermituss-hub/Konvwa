@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { amazonImageUrl, canonicalUrl, parseAmazonUrl, pickImages } from './amazon'
+import { amazonGalleryImages, amazonImageUrl, canonicalUrl, parseAmazonUrl, pickImages } from './amazon'
 
 describe('parseAmazonUrl', () => {
   it('accepts marketplaces and extracts the ASIN', () => {
@@ -50,5 +50,13 @@ describe('amazon images', () => {
     expect(pickImages(list, 5)).toHaveLength(5)
     expect(pickImages(['https://m.media-amazon.com/images/I/a.jpg', 'https://m.media-amazon.com/images/I/a._AC_SL500_.jpg'])).toHaveLength(1)
     expect(pickImages('nope')).toEqual([])
+  })
+})
+
+describe('amazonGalleryImages', () => {
+  it('reads the gallery from the page source, large pictures first, without duplicates or foreign hosts', () => {
+    const html = '{"hiRes":"https:\\/\\/m.media-amazon.com\\/images\\/I\\/aaa._AC_SL1500_.jpg","large":"https://m.media-amazon.com/images/I/bbb._AC_.jpg"} {"hiRes":"https://m.media-amazon.com/images/I/aaa.jpg"} {"large":"https://evil.example/x.jpg"}'
+    expect(amazonGalleryImages(html)).toEqual(['https://m.media-amazon.com/images/I/aaa.jpg', 'https://m.media-amazon.com/images/I/bbb.jpg'])
+    expect(amazonGalleryImages(undefined)).toEqual([])
   })
 })

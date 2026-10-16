@@ -101,16 +101,19 @@ export async function estimateShipping(args: {
 }
 
 export interface DiscoveredProduct {
+  /** Amazon ASIN or Alibaba product number. */
   asin: string
+  platform: 'amazon' | 'alibaba'
   url: string
   title: string | null
+  image: string | null
   rating: number | null
   reviews: number | null
   price_usd: number | null
   rank: number
 }
 
-/** Trending / best-selling Amazon products not yet in the shop (admin-only `product-discover` Edge Function): up to 20 candidates. */
+/** Trending / best-selling Amazon (or popular Alibaba) products not yet in the shop (admin-only `product-discover` Edge Function): up to 20 candidates. */
 export async function discoverAmazonProducts(args: { source: string; department: string; count: number }): Promise<{ candidates: DiscoveredProduct[]; skipped_existing: number; total_found: number }> {
   const { data, error } = await supabase.functions.invoke('product-discover', { body: args })
   if (error) {

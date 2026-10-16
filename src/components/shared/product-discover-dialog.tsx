@@ -10,17 +10,29 @@ import { discoverAmazonProducts, type DiscoveredProduct } from '@/lib/product-im
 import { importAndSave, loadImportRates, runPool } from '@/lib/bulk-import'
 import { tr } from '@/lib/i18n'
 
-const SOURCES: Array<[string, string]> = [['movers', 'Tendances du moment'], ['bestsellers', 'Meilleures ventes'], ['new', 'Nouveautés populaires']]
+const SOURCES: Array<[string, string]> = [['movers', 'Amazon : tendances du moment'], ['bestsellers', 'Amazon : meilleures ventes'], ['new', 'Amazon : nouveautés populaires'], ['alibaba', 'Alibaba : produits populaires']]
 const DEPARTMENTS: Array<[string, string]> = [
   ['', 'Tous les rayons'], ['electronics', 'Électronique'], ['beauty', 'Beauté'], ['hpc', 'Santé et soins personnels'], ['home-garden', 'Maison et jardin'],
   ['kitchen', 'Cuisine'], ['sporting-goods', 'Sports et plein air'], ['toys-and-games', 'Jouets et jeux'], ['fashion', 'Mode'], ['automotive', 'Auto et moto'],
   ['pet-supplies', 'Animaux'], ['baby-products', 'Bébé'], ['office-products', 'Bureau'], ['hi', 'Bricolage et outils'], ['videogames', 'Jeux vidéo'],
   ['arts-crafts', 'Loisirs créatifs'], ['musical-instruments', 'Instruments de musique'],
 ]
+const ALIBABA_TOPICS: Array<[string, string]> = [
+  ['', 'Produits populaires'], ['phone accessories', 'Accessoires téléphone'], ['led lights', 'Lampes et LED'], ['smart watch', 'Montres connectées'], ['earbuds', 'Écouteurs'],
+  ['beauty tools', 'Beauté'], ['kitchen gadgets', 'Cuisine'], ['sports fitness', 'Sport et fitness'], ['pet products', 'Animaux'], ['baby products', 'Bébé'],
+  ['car accessories', 'Auto et moto'], ['bags', 'Sacs'], ['jewelry', 'Bijoux'], ['toys', 'Jouets'], ['home decor', 'Décoration'], ['tools', 'Outils'],
+]
 /** Products read at the same time: each one takes about half a minute (page, translation, pictures). */
 const PARALLEL = 3
 
 type Status = { state: 'wait' } | { state: 'run' } | { state: 'ok'; id: string; name: string } | { state: 'fail'; error: string }
+
+function Thumb({ src, small }: { src: string | null; small?: boolean }) {
+  const [bad, setBad] = useState(false)
+  const size = small ? 'h-9 w-9' : 'h-16 w-16'
+  if (!src || bad) return <div className={`${size} shrink-0 rounded-lg bg-gray-100`} aria-hidden />
+  return <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setBad(true)} className={`${size} shrink-0 rounded-lg border border-gray-100 bg-white object-contain`} />
+}
 
 /**
  * Admin: finds 20 trending / well-rated Amazon products by itself (Amazon's public rankings), then imports them all at once as hidden drafts
@@ -102,8 +114,8 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
     <Dialog open={open} onOpenChange={(o) => { if (!o && !importing) onClose() }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><Flame className="h-5 w-5 text-primary" />{tr('Produits tendance Amazon')}</DialogTitle>
-          <DialogDescription>{tr('Trouve jusqu\'à 20 produits populaires et bien notés sur Amazon.com, sans que vous fournissiez de lien, puis les importe d\'un coup (fiche, photos, variantes, avis, colis) en brouillons masqués. Vous relisez puis publiez.')}</DialogDescription>
+          <DialogTitle className="flex items-center gap-2"><Flame className="h-5 w-5 text-primary" />{tr('Produits tendance')}</DialogTitle>
+          <DialogDescription>{tr('Trouve jusqu\'à 20 produits populaires et bien notés sur Amazon.com ou Alibaba, sans que vous fournissiez de lien, puis les importe d\'un coup (fiche, photos, variantes, avis, colis) en brouillons masqués. Vous relisez puis publiez.')}</DialogDescription>
         </DialogHeader>
 
         {!started && (
@@ -111,21 +123,21 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1 text-sm font-semibold">
                 {tr('Type de classement')}
-                <NativeSelect value={source} onChange={(e) => setSource(e.target.value)} disabled={busy} className="w-full">
+                <NativeSelect value={source} onChange={(e) => { setSource(e.target.value); setDepartment('') }} disabled={busy} className="w-full">
                   {SOURCES.map(([v, l]) => <NativeSelectOption key={v} value={v}>{tr(l)}</NativeSelectOption>)}
                 </NativeSelect>
               </label>
               <label className="space-y-1 text-sm font-semibold">
-                {tr('Rayon')}
+                {source === 'alibaba' ? tr('Thème') : tr('Rayon')}
                 <NativeSelect value={department} onChange={(e) => setDepartment(e.target.value)} disabled={busy} className="w-full">
-                  {DEPARTMENTS.map(([v, l]) => <NativeSelectOption key={v || 'all'} value={v}>{tr(l)}</NativeSelectOption>)}
+                  {(source === 'alibaba' ? ALIBABA_TOPICS : DEPARTMENTS).map(([v, l]) => <NativeSelectOption key={v || 'all'} value={v}>{tr(l)}</NativeSelectOption>)}
                 </NativeSelect>
               </label>
             </div>
             <Button type="submit" disabled={busy} className="gap-1.5 rounded-xl">
               {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}{tr('Chercher 20 produits')}
             </Button>
-            {searching && <p className="text-sm text-muted-foreground" role="status">{tr('Lecture du classement Amazon (jusqu\'à une minute)…')}</p>}
+            {searching && <p className="text-sm text-muted-foreground" role="status">{tr('Lecture de la page (jusqu\'à deux minutes)…')}</p>}
           </form>
         )}
 
@@ -138,16 +150,17 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
             </p>
             <ul className="divide-y divide-gray-100 rounded-xl border border-gray-100">
               {found.map((c) => (
-                <li key={c.asin} className="flex items-start gap-3 p-2.5">
+                <li key={c.asin} className="flex items-center gap-3 p-2.5">
                   <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 rounded" checked={picked.has(c.asin)} aria-label={c.title ?? c.asin}
                     onChange={(e) => setPicked((cur) => { const n = new Set(cur); if (e.target.checked) n.add(c.asin); else n.delete(c.asin); return n })} />
+                  <Thumb src={c.image} />
                   <div className="min-w-0 flex-1 text-sm">
                     <p className="line-clamp-2 font-medium">{c.title ?? c.asin}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       #{c.rank}{c.rating != null && ` · ${String(c.rating).replace('.', ',')} ★`}{c.reviews != null && ` (${c.reviews.toLocaleString('fr-FR')})`}{c.price_usd != null && ` · $${c.price_usd.toFixed(2)}`}
                     </p>
                   </div>
-                  <a href={c.url} target="_blank" rel="noopener noreferrer" className="shrink-0 p-1 text-muted-foreground hover:text-foreground" aria-label={tr('Voir sur Amazon')}><ExternalLink className="h-4 w-4" /></a>
+                  <a href={c.url} target="_blank" rel="noopener noreferrer" className="shrink-0 p-1 text-muted-foreground hover:text-foreground" aria-label={tr('Voir le produit')}><ExternalLink className="h-4 w-4" /></a>
                 </li>
               ))}
             </ul>
@@ -168,9 +181,10 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
               {(found ?? []).filter((c) => status[c.asin]).map((c) => {
                 const s = status[c.asin]
                 return (
-                  <li key={c.asin} className="flex items-start gap-2 p-2.5">
+                  <li key={c.asin} className="flex items-center gap-2 p-2.5">
                     {s.state === 'ok' ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> : s.state === 'fail' ? <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                       : s.state === 'run' ? <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" /> : <span className="mt-1 h-3 w-3 shrink-0 rounded-full bg-gray-200" />}
+                    <Thumb src={c.image} small />
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-1">{s.state === 'ok' ? s.name : c.title ?? c.asin}</p>
                       {s.state === 'fail' && <p className="text-xs text-destructive">{s.error}</p>}

@@ -13,6 +13,10 @@ describe('discoverUrl', () => {
     expect(discoverUrl('constructor', 'beauty')).toBeNull()
     expect(Object.keys(DEPARTMENTS).length).toBeGreaterThan(10)
   })
+  it('builds Alibaba searches from the fixed topics only', () => {
+    expect(discoverUrl('alibaba', 'led lights')).toContain('SearchText=led%20lights')
+    expect(discoverUrl('alibaba', 'anything else')).toBeNull()
+  })
 })
 
 describe('extractCandidates', () => {
@@ -49,6 +53,22 @@ describe('extractCandidates', () => {
     const c = extractCandidates(links, markdown)
     expect(c.find((x) => x.asin === 'B0DDDDDDD4')).toBeUndefined()
     expect(c.find((x) => x.asin === 'B0CCCCCCC3')).toMatchObject({ rating: null, title: null })
+  })
+
+  it('reads the picture next to the product and fills gaps from the structured list', () => {
+    const md = '[![Earbuds pic](https://m.media-amazon.com/images/I/aaa.jpg)](https://www.amazon.com/x/dp/B0AAAAAAA1)'
+    const [a, b] = extractCandidates(
+      ['https://www.amazon.com/x/dp/B0AAAAAAA1', 'https://www.amazon.com/y/dp/B0BBBBBBB2'], md, 60,
+      [{ url: 'https://www.amazon.com/y/dp/B0BBBBBBB2', title: 'Structured Title Product', image_url: '//m.media-amazon.com/images/I/bbb.jpg', price_usd: 12.5, rating: 4.4, reviews: 99 }],
+    )
+    expect(a.image).toBe('https://m.media-amazon.com/images/I/aaa.jpg')
+    expect(a.title).toBe('Earbuds pic')
+    expect(b).toMatchObject({ title: 'Structured Title Product', image: 'https://m.media-amazon.com/images/I/bbb.jpg', price_usd: 12.5, rating: 4.4, reviews: 99 })
+  })
+
+  it('understands Alibaba product pages', () => {
+    const [c] = extractCandidates(['https://www.alibaba.com/product-detail/Cool-Lamp_1600123456789.html?spm=a'], '', 60, [])
+    expect(c).toMatchObject({ platform: 'alibaba', asin: '1600123456789', url: 'https://www.alibaba.com/product-detail/Cool-Lamp_1600123456789.html' })
   })
 
   it('survives a page without usable data', () => {

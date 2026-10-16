@@ -56,3 +56,13 @@ export function pickImages(list: unknown, max = 5): string[] {
   }
   return out
 }
+
+/** The product gallery written in the page source (`"hiRes":"…"` / `"large":"…"` of the colour-images data), large pictures first. */
+export function amazonGalleryImages(html: unknown, max = 15): string[] {
+  if (typeof html !== 'string') return []
+  const found: string[] = []
+  for (const re of [/"hiRes"\s*:\s*"(https:[^"]+)"/g, /"large"\s*:\s*"(https:[^"]+)"/g, /data-old-hires="(https:[^"]+)"/g]) {
+    for (const m of html.matchAll(re)) found.push(m[1].replace(/\\\//g, '/'))
+  }
+  return pickImages(found, max)
+}
