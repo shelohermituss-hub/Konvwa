@@ -57,7 +57,7 @@ const isCardRef = (ref: string) => ref.startsWith('KWS-')
 /** Pay a cart (or one product) with MonCash / NatCash: nothing is ordered until the gateway confirms the payment. */
 export async function createCheckoutPayment(args: {
   method: 'moncash' | 'natcash' | 'stripe'
-  items: Array<{ product_id: string; variant_id: string | null; quantity: number }>
+  items: Array<{ product_id: string; variant_id: string | null; option_ids?: string[]; quantity: number }>
   shipping_rate_id: string | null
   source: 'cart' | 'buy_now'
 }): Promise<CreatePaymentResult> {

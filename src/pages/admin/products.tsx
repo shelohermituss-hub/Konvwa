@@ -14,6 +14,7 @@ import { ProductImportDialog } from '@/components/shared/product-import-dialog'
 import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { VariantsBackfill } from '@/components/shared/variants-backfill'
 import { ProductLinkImport } from '@/components/shared/product-link-import'
+import { OptionsEditor, loadOptionGroups, optionGroupsError, saveOptionGroups, type OptionGroupRow } from '@/components/shared/options-editor'
 import { VariantsEditor, variantsError, variantsPayload, type VariantRow } from '@/components/shared/variants-editor'
 import { estimateShipping, type ImportedProduct, type ShippingEstimate } from '@/lib/product-import-api'
 import { priceHtgFromUsd } from '@/lib/import-pricing'
@@ -155,6 +156,7 @@ export function AdminProductsPage() {
   const [imagesRaw, setImagesRaw] = useState('')
   // Variants (size, colour…) are saved apart from the product, through admin_save_product_variants
   const [variantRows, setVariantRows] = useState<VariantRow[]>([])
+  const [optionRows, setOptionRows] = useState<OptionGroupRow[]>([])
   // One entry per line
   const [optionsRaw, setOptionsRaw] = useState('')
   const [tagsRaw, setTagsRaw] = useState('')
@@ -203,6 +205,7 @@ export function AdminProductsPage() {
     setDraft(d)
     setImagesRaw('')
     setVariantRows([])
+    setOptionRows([])
     setOptionsRaw('')
     setTagsRaw('')
     setCertsRaw('')
@@ -248,12 +251,19 @@ export function AdminProductsPage() {
       price_sync: d.platform === 'muscle_strength', source_price_usd: d.price_usd,
       // Alibaba is the bulk sourcing shelf, every other platform sells finished products by the unit
       sale_type: d.platform === 'alibaba' ? 'wholesale' : 'retail',
+      discount_pct: d.discount_pct ?? null,
     })
     setImagesRaw(d.images.join(', '))
     // Variants arrive priced in USD: same exchange rate and margin as the base price (the regular price, never a promotion)
     setVariantRows(d.variants.map((v) => ({
       group_name: v.group_name ?? '', label: v.label, label_en: v.label_en ?? '', image: v.image ?? '', stock_available: v.stock_available,
       price_htg: v.price_usd ? priceHtgFromUsd(v.price_usd, rate, margin) : 0,
+    })))
+    // extra options: supplements priced like the product (same rate and margin)
+    const groupIds = (d.options ?? []).map(() => crypto.randomUUID())
+    setOptionRows((d.options ?? []).map((g, i) => ({
+      id: groupIds[i], name: g.name, name_en: g.name_en, required: g.required, multi: g.multi, show_when: g.show_when !== null ? groupIds[g.show_when] ?? '' : '',
+      options: g.options.map((o) => ({ id: crypto.randomUUID(), label: o.label, label_en: o.label_en, image: o.image ?? '', price_htg: priceHtgFromUsd(o.price_usd, rate, margin) })),
     })))
     setOptionsRaw(''); setCertsRaw(''); setOptionsEnRaw(''); setCertsEnRaw('')
     setTagsRaw(d.tags.join('\n')); setTagsEnRaw(d.tags_en.join('\n'))
@@ -339,6 +349,8 @@ export function AdminProductsPage() {
     setImportInfo(null)
     setPendingReviews(null)
     setVariantRows([])
+    setOptionRows([])
+    void loadOptionGroups(p.id).then(setOptionRows)
     void supabase.from('product_variants').select('id, group_name, label, label_en, price_htg, image, stock_available').eq('product_id', p.id).eq('active', true).order('sort_order')
       .then(({ data }) => setVariantRows((data ?? []).map((v) => ({
         id: v.id as string, group_name: (v.group_name as string | null) ?? '', label: v.label as string, label_en: (v.label_en as string | null) ?? '',
@@ -400,7 +412,7 @@ export function AdminProductsPage() {
       return
     }
 
-    const variantProblem = variantsError(variantRows)
+    const variantProblem = variantsError(variantRows) ?? optionGroupsError(optionRows)
     if (variantProblem) { toast.error(variantProblem); return }
 
     setSaving(true)
@@ -438,6 +450,10 @@ export function AdminProductsPage() {
         toast.error(tr('Produit enregistré, mais pas ses variantes : {0}', varError?.message ?? res?.error ?? ''))
         setSaving(false); load(); return
       }
+    }
+    if (editing || optionRows.length > 0) {
+      const optError = await saveOptionGroups(productId, optionRows)
+      if (optError) { toast.error(tr('Produit enregistré, mais pas ses options : {0}', optError)); setSaving(false); load(); return }
     }
     if (pendingReviews) {
       const { data: rev, error: revError } = await supabase.rpc('admin_save_imported_reviews', { p_product: productId, p_source: pendingReviews.source, p_source_url: pendingReviews.sourceUrl, p_reviews: pendingReviews.items })
@@ -820,6 +836,8 @@ export function AdminProductsPage() {
             </div>
 
             <VariantsEditor rows={variantRows} onChange={setVariantRows} />
+
+            <OptionsEditor rows={optionRows} onChange={setOptionRows} />
 
             {/* Supplier + social proof */}
             <div className="grid grid-cols-2 gap-4">

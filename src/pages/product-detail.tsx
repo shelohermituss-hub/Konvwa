@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 
 import { tr, LOCALE_TAG } from '@/lib/i18n'
 import { currencyLabel } from '@/lib/currency'
+import { groupName, missingRequiredGroup, optionLabel, optionsSupplement, toggleOption, useProductOptions, visibleGroups } from '@/lib/product-options'
 import { Flag } from '@/components/shared/flag'
 type TabId = 'overview' | 'details' | 'related'
 
@@ -71,6 +72,8 @@ export function ProductDetailPage() {
   const [adding, setAdding] = useState(false)
   const [activeImg, setActiveImg] = useState(0)
   const [variantId, setVariantId] = useState<string | null>(null)
+  const optionGroups = useProductOptions(product?.id)
+  const [picked, setPicked] = useState<string[]>([])
   const [viewer, setViewer] = useState<number | null>(null)
   const [titleOpen, setTitleOpen] = useState(false)
   const [allSpecs, setAllSpecs] = useState(false)
@@ -95,6 +98,7 @@ export function ProductDetailPage() {
         setProduct(p)
         if (p) trackPixel('ViewContent', productParams(p, p.price_htg))
         if (p) setQuantity(p.moq)
+        setPicked([])
         setActiveImg(0)
         // a variant card of the feed opens the page with that variant already chosen (and its photo shown)
         const at = p?.product_variants?.find((v) => v.id === wantedVariant)
@@ -140,6 +144,15 @@ export function ProductDetailPage() {
     if (at >= 0) goToImage(at)
   }
 
+  /** A required option (lens…) must be chosen before ordering. */
+  function optionsReady(): boolean {
+    const missing = missingRequiredGroup(optionGroups, picked)
+    if (!missing) return true
+    toast.error(tr('Choisissez une option pour « {0} »', groupName(missing)))
+    document.getElementById(`option-group-${missing.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    return false
+  }
+
   async function handleAddToCart() {
     if (!product) return
     if (variants.length > 0 && !chosen) {
@@ -147,8 +160,9 @@ export function ProductDetailPage() {
       document.getElementById('section-variants')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
+    if (!optionsReady()) return
     setAdding(true)
-    await addItem(product.id, quantity, chosen?.id)
+    await addItem(product.id, quantity, chosen?.id, picked)
     trackPixel('AddToCart', productParams(product, subtotal, quantity))
     setAdding(false)
     toast.success(t('products.added'), {
@@ -165,7 +179,8 @@ export function ProductDetailPage() {
       document.getElementById('section-variants')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
-    navigate('/checkout', { state: { buyNow: { product_id: product.id, variant_id: chosen?.id ?? null, quantity } } })
+    if (!optionsReady()) return
+    navigate('/checkout', { state: { buyNow: { product_id: product.id, variant_id: chosen?.id ?? null, option_ids: picked, quantity } } })
   }
 
   async function handleShare() {
@@ -223,9 +238,10 @@ export function ProductDetailPage() {
     return acc
   }, [])
   const rows = tierRows(product).map((r) => (priced ? { ...r, price: variantUnitPrice(product, priced, r.from) } : r))
-  const unitPrice = effectiveUnitPrice(product, quantity, priced)
+  const supplement = optionsSupplement(optionGroups, picked)
+  const unitPrice = effectiveUnitPrice(product, quantity, priced) + supplement
   const pct = discountPct(product)
-  const subtotal = lineTotal(product, quantity, priced)
+  const subtotal = lineTotal(product, quantity, priced) + supplement * quantity
   const offer = bestOffer(product, chosen)
   const specs = Object.entries(product.specifications ?? {})
   const shownSpecs = allSpecs ? specs : specs.slice(0, SPEC_PREVIEW)
@@ -466,6 +482,41 @@ export function ProductDetailPage() {
               </div>
             )}
 
+
+            {/* Extra options (lenses, prescription, case…): each group has its own pictures and price supplements */}
+            {visibleGroups(optionGroups, picked).map((g) => (
+              <div key={g.id} id={`option-group-${g.id}`} className="mt-3 scroll-mt-28">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {groupName(g)}
+                  {g.required ? <span className="ml-1 text-destructive" aria-label={tr('obligatoire')}>*</span> : <span className="ml-1.5 font-medium normal-case">({tr('facultatif')}{g.multi ? ` · ${tr('plusieurs choix possibles')}` : ''})</span>}
+                </p>
+                <div role={g.multi ? 'group' : 'radiogroup'} aria-label={groupName(g)} className="flex flex-wrap gap-2">
+                  {g.product_options.map((o) => {
+                    const on = picked.includes(o.id)
+                    return (
+                      <button
+                        key={o.id}
+                        type="button"
+                        role={g.multi ? 'checkbox' : 'radio'}
+                        aria-checked={on}
+                        onClick={() => setPicked((cur) => toggleOption(optionGroups, cur, o.id))}
+                        className={cn(
+                          'flex min-h-11 items-center gap-2 rounded-xl border-2 px-2.5 py-1.5 text-left text-sm transition-colors active:scale-[0.98]',
+                          on ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white hover:border-gray-300',
+                        )}
+                      >
+                        {o.image && <img src={o.image} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-lg object-cover" />}
+                        <span className="min-w-0">
+                          <span className="block max-w-[11rem] truncate font-semibold">{optionLabel(o)}</span>
+                          {o.price_htg > 0 && <span className="block text-xs tabular-nums text-muted-foreground">+{formatHtg(o.price_htg)} {currencyLabel()}</span>}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+
             {product.sale_type === 'wholesale' && (
               <p className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-xs leading-relaxed text-foreground/80">
                 <span className="font-bold text-primary">{tr('Achat en gros')}</span>{' · '}
@@ -509,6 +560,7 @@ export function ProductDetailPage() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tr('Quantité')}</p>
                 <p className="text-sm text-muted-foreground">
                   {formatHtg(unitPrice)} {currencyLabel()} / {product.unit}
+                  {supplement > 0 && <span className="ml-1 text-xs">({tr('dont options')} +{formatHtg(supplement)})</span>}
                 </p>
               </div>
               <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1">

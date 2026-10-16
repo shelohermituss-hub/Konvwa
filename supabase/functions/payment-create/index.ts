@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     // The amount: for a top-up the customer's choice; for a checkout, what the database says the cart costs (never the browser)
     let amount = body.amount
-    let cleanItems: Array<{ product_id: string; variant_id: string | null; quantity: number }> = []
+    let cleanItems: Array<{ product_id: string; variant_id: string | null; option_ids: string[]; quantity: number }> = []
     const rateId = typeof body.shipping_rate_id === 'string' && UUID.test(body.shipping_rate_id) ? body.shipping_rate_id : null
     if (checkout) {
       const raw = Array.isArray(body.items) ? body.items : []
@@ -58,9 +58,10 @@ Deno.serve(async (req) => {
         return {
           product_id: String(o.product_id ?? ''), quantity: Number(o.quantity),
           variant_id: typeof o.variant_id === 'string' && o.variant_id ? o.variant_id : null,
+          option_ids: Array.isArray(o.option_ids) ? o.option_ids.slice(0, 30).map(String) : [],
         }
       })
-      if (cleanItems.length === 0 || cleanItems.some((i) => !UUID.test(i.product_id) || !Number.isInteger(i.quantity) || i.quantity < 1 || (i.variant_id !== null && !UUID.test(i.variant_id)))) {
+      if (cleanItems.length === 0 || cleanItems.some((i) => !UUID.test(i.product_id) || !Number.isInteger(i.quantity) || i.quantity < 1 || (i.variant_id !== null && !UUID.test(i.variant_id)) || i.option_ids.some((x) => !UUID.test(x)))) {
         return fail('Panier invalide', 400)
       }
       const { data: quote } = await userClient.rpc('quote_checkout', { p_items: cleanItems, p_rate: rateId })

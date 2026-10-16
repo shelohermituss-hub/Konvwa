@@ -3,7 +3,8 @@ import { WhatsAppChannelButton } from '@/components/shared/whatsapp-channel-butt
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Wallet, Loader2, CheckCircle, Package, ArrowRight, Plane, Ship, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { CART_PRODUCT_SELECT, cartLineUnitPrice, cartLineVariantName, toCartProduct, useCart, type CartItem } from '@/lib/cart-context'
+import { CART_PRODUCT_SELECT, cartLineChoices, cartLineUnitPrice, toCartProduct, useCart, type CartItem } from '@/lib/cart-context'
+import { fetchCartOptions, type CartOption } from '@/lib/product-options'
 import { VARIANT_SELECT, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 import { useI18n } from '@/lib/i18n-context'
@@ -31,7 +32,7 @@ export function CheckoutPage() {
   const { items: cartItems, total: cartTotal, clearCart: clearCartItems } = useCart()
   // "Buy" from a product page: only that product is bought, the cart is left as it is
   const location = useLocation()
-  const buyNow = (location.state as { buyNow?: { product_id: string; variant_id: string | null; quantity: number } } | null)?.buyNow ?? null
+  const buyNow = (location.state as { buyNow?: { product_id: string; variant_id: string | null; option_ids?: string[]; quantity: number } } | null)?.buyNow ?? null
   const [buyItem, setBuyItem] = useState<CartItem | null>(null)
   const [buyLoading, setBuyLoading] = useState(!!buyNow)
   const items = useMemo(() => (buyNow ? (buyItem ? [buyItem] : []) : cartItems), [buyNow, buyItem, cartItems])
@@ -57,14 +58,16 @@ export function CheckoutPage() {
     if (!buyNow || !user) return
     let cancelled = false
     void (async () => {
-      const [{ data: p }, { data: v }] = await Promise.all([
+      const optionIds = buyNow.option_ids ?? []
+      const [{ data: p }, { data: v }, known] = await Promise.all([
         supabase.from('products').select(CART_PRODUCT_SELECT).eq('id', buyNow.product_id).eq('active', true).maybeSingle(),
         buyNow.variant_id ? supabase.from('product_variants').select(VARIANT_SELECT).eq('id', buyNow.variant_id).maybeSingle() : Promise.resolve({ data: null }),
+        fetchCartOptions(optionIds),
       ])
       if (cancelled) return
       if (p && (!buyNow.variant_id || v)) {
         setBuyItem({
-          id: 'buy-now', product_id: buyNow.product_id, variant_id: buyNow.variant_id, quantity: Math.max(1, Math.floor(buyNow.quantity)),
+          id: 'buy-now', product_id: buyNow.product_id, variant_id: buyNow.variant_id, option_ids: optionIds, options: optionIds.map((id) => known.get(id)).filter((o): o is CartOption => !!o), quantity: Math.max(1, Math.floor(buyNow.quantity)),
           product_variants: v ? { ...(v as ProductVariant), price_htg: Number((v as ProductVariant).price_htg) } : null,
           products: toCartProduct(p as unknown as CartItem['products'], !!profile?.is_reseller),
         })
@@ -88,12 +91,12 @@ export function CheckoutPage() {
       })
   }, [user])
 
-  const cartKey = items.map(i => `${i.product_id}:${i.variant_id ?? ''}:${i.quantity}`).join(',')
+  const cartKey = items.map(i => `${i.product_id}:${i.variant_id ?? ''}:${i.option_ids.join('+')}:${i.quantity}`).join(',')
   useEffect(() => {
     if (items.length === 0) { setShippingLoading(false); return }
     let cancelled = false
     setShippingLoading(true); setShippingError('')
-    fetchCheckoutShipping(items.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity })))
+    fetchCheckoutShipping(items.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, option_ids: i.option_ids, quantity: i.quantity })))
       .then((r) => {
         if (cancelled) return
         setShipping(r)
@@ -134,7 +137,7 @@ export function CheckoutPage() {
       // The amount is recomputed by the database; the orders are only placed when the gateway confirms the payment
       const r = await createCheckoutPayment({
         method: payWith,
-        items: items.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity })),
+        items: items.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, option_ids: i.option_ids, quantity: i.quantity })),
         shipping_rate_id: hasUs ? rateId : null,
         source: buyNow ? 'buy_now' : 'cart',
       })
@@ -160,7 +163,7 @@ export function CheckoutPage() {
     setPaying(true)
     try {
       // The orders, their prices and the shipping fee are computed by the database from the product ids and the chosen method
-      const created = await createCheckout(items.map(item => ({ product_id: item.product_id, variant_id: item.variant_id, quantity: item.quantity })), hasUs ? rateId : null)
+      const created = await createCheckout(items.map(item => ({ product_id: item.product_id, variant_id: item.variant_id, option_ids: item.option_ids, quantity: item.quantity })), hasUs ? rateId : null)
       const done: CreatedOrder[] = []
       for (const order of created.orders) {
         const { data: rpcResult, error: rpcErr } = await supabase.rpc('pay_product_order', { p_order_id: order.order_id })
@@ -274,7 +277,7 @@ export function CheckoutPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{item.products?.name}</p>
-                  {cartLineVariantName(item) && <p className="truncate text-xs text-foreground/80">{cartLineVariantName(item)}</p>}
+                  {cartLineChoices(item) && <p className="truncate text-xs text-foreground/80">{cartLineChoices(item)}</p>}
                   {hasUs && (
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                       {(item.products?.supplier_country ?? '').toUpperCase() === 'US' ? tr('Expédition incluse') : tr('Achat seul')}

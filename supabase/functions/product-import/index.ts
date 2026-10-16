@@ -5,6 +5,7 @@ import { ebayGalleryImages, findVideoUrl, parseProductUrl, platformImages, platf
 import { normalizeVariants } from './variants.ts'
 import { cartDiscountedPrice, promoTiers } from './promos.ts'
 import { normalizeReviews } from './reviews.ts'
+import { discountFrom, extractBcpo, parseShopifyProduct, southoodGroups, type ShopGroup } from './southood.ts'
 import {
   cleanSpecs, cleanText, dimsFrom, extractJson, imageSize, looksLikeErrorPage, normalizeLadder, priceToUsd, titlesAgree, validateAi, weightFrom, guessItemType, checkItemType,
   type AiResult, type Dims,
@@ -229,6 +230,17 @@ async function storeImage(admin: ReturnType<typeof createClient>, userId: string
   }
 }
 
+/** Southood is a Shopify store: variants, prices and pictures come from the product's `.js` JSON, the extra options from the page source. */
+async function readSouthood(productUrl: string): Promise<{ variants: ReturnType<typeof parseShopifyProduct>['variants']; images: string[]; price_usd: number | null; discount_pct: number | null; groups: ShopGroup[] } | null> {
+  const base = productUrl.split(/[?#]/)[0]
+  const get = (u: string) => fetch(u, { signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'Mozilla/5.0', Accept: '*/*' } })
+  const [js, page] = await Promise.all([get(`${base}.js`), get(base)])
+  if (!js.ok || new URL(js.url).hostname.replace(/^www\./, '') !== 'southoodeyewear.com') return null
+  const shop = parseShopifyProduct(await js.json())
+  const html = page.ok && new URL(page.url).hostname.replace(/^www\./, '') === 'southoodeyewear.com' ? (await page.text()).slice(0, 4_000_000) : ''
+  return { variants: shop.variants, images: shop.images, price_usd: shop.price_usd, discount_pct: discountFrom(shop.price_usd, shop.compare_usd), groups: southoodGroups(extractBcpo(html)) }
+}
+
 /** Copies the product video into our bucket (mp4 / webm, up to 30 MB); null when it cannot be read or is too big. */
 async function storeVideo(admin: ReturnType<typeof createClient>, userId: string, tag: string, videoUrl: string): Promise<string | null> {
   try {
@@ -366,6 +378,8 @@ Deno.serve(async (req) => {
     const { data: rateRows } = await admin.from('app_settings').select('key, value').in('key', ['eur_to_usd_rate', 'cny_to_usd_rate'])
     const rateOf = (k: string, fallback: number) => { const v = Number(rateRows?.find((r: { key: string; value: string }) => r.key === k)?.value); return v > 0 ? v : fallback }
     const rates = { EUR: rateOf('eur_to_usd_rate', 1.08), CNY: rateOf('cny_to_usd_rate', 0.14) }
+    const shop = platform.id === 'southood' ? await readSouthood(target.url).catch((e) => { console.error('[product-import] southood', e); return null }) : null
+    if (platform.id === 'southood' && !shop) warnings.push('shop_data_missing')
     const fallbackCurrency = platform.currency
     // wholesale ladder: the first range is the minimum order and the base price, the next ranges are the price tiers
     // the quantity ladder and the minimum order are a wholesale thing (Alibaba): on a retail page "Buy 2 for $X" is an offer, not a minimum order
@@ -376,7 +390,7 @@ Deno.serve(async (req) => {
     // Muscle & Strength: the product price is the price of ONE unit (after an "In Cart Discount"); its quantity offers become price tiers
     const retailUnit = platform.id === 'muscle_strength' && own.usd !== null ? cartDiscountedPrice(own.usd, scraped.promotions) : null
     const offerTiers = retailUnit !== null ? promoTiers(retailUnit, scraped.promotions).map((t) => ({ min_qty: t.min_qty, price_usd: t.unit_usd, kind: t.kind, buy: t.buy, free: t.free, off: t.off })) : []
-    const price = ladder.base_usd !== null ? { usd: ladder.base_usd } as typeof own : retailUnit !== null ? { usd: retailUnit } as typeof own : own
+    const price = shop?.price_usd ? { usd: shop.price_usd } as typeof own : ladder.base_usd !== null ? { usd: ladder.base_usd } as typeof own : retailUnit !== null ? { usd: retailUnit } as typeof own : own
     if (price.warning) warnings.push(price.warning)
     if (platform.id === 'alibaba' && ladder.tiers.length === 0) warnings.push('tiers_missing')
 
@@ -385,12 +399,14 @@ Deno.serve(async (req) => {
       image: (raw) => platformImageUrl(platform.id, raw),
       price: (p, c) => priceToUsd(p, c || scraped.currency || fallbackCurrency, rates).usd,
     })
-    if (normalized.truncated) warnings.push('variants_truncated')
-    if (normalized.rows.length > 0 && normalized.rows.every((v) => v.price_usd === null)) warnings.push('variant_prices_missing')
+    // Southood: the shop's own variant list (exact colours, prices and pictures) replaces the page reading
+    const rows = shop && shop.variants.length > 0 ? shop.variants : normalized.rows
+    if (normalized.truncated && rows === normalized.rows) warnings.push('variants_truncated')
+    if (rows.length > 0 && rows.every((v) => v.price_usd === null)) warnings.push('variant_prices_missing')
 
     let ai: AiResult | null = null
     if (routerKey) {
-      ai = await askAi({ apiKey: routerKey, model: Deno.env.get('OPENROUTER_MODEL') || DEFAULT_MODEL, scraped, categories, itemTypes, knownPackage: !!(weight_kg && dims), platform, variantLabels: [...new Set(normalized.rows.map((v) => v.label))].slice(0, 100) })
+      ai = await askAi({ apiKey: routerKey, model: Deno.env.get('OPENROUTER_MODEL') || DEFAULT_MODEL, scraped, categories, itemTypes, knownPackage: !!(weight_kg && dims), platform, variantLabels: [...new Set(rows.map((v) => v.label))].slice(0, 100) })
         .catch((e) => { console.error('[product-import] ai', e); return null })
       if (!ai) warnings.push('ai_failed')
     } else {
@@ -408,7 +424,7 @@ Deno.serve(async (req) => {
     // eBay: the listing's own gallery is read from the page source (the extraction mixes in photos of other items); without it, only the page's main picture is kept
     const gallery = platform.id === 'ebay' ? ebayGalleryImages(read.meta.html) : []
     const ebayImages = gallery.length > 0 ? gallery : read.meta.image ? [read.meta.image] : []
-    const candidates = variantsOnly ? [] : platformImages(platform.id, platform.id === 'ebay' ? ebayImages : scraped.images, 15)
+    const candidates = variantsOnly ? [] : platformImages(platform.id, platform.id === 'ebay' ? ebayImages : shop && shop.images.length > 0 ? shop.images : scraped.images, 15)
     const stored: string[] = []
     const copied = new Map<string, string>()
     for (let i = 0; i < candidates.length && stored.length < MAX_PHOTOS; i += 6) {
@@ -416,14 +432,22 @@ Deno.serve(async (req) => {
       const urls = await Promise.all(chunk.map((u, j) => storeImage(admin, user.id, tag, i + j, u, MIN_PHOTO_SIDE)))
       chunk.forEach((u, j) => { const url = urls[j]; if (url && stored.length < MAX_PHOTOS) { stored.push(url); copied.set(u, url) } })
     }
-    const variantImages = [...new Set(normalized.rows.map((v) => v.image).filter((u): u is string => !!u))].filter((u) => !copied.has(u)).slice(0, 30)
+    const variantImages = [...new Set(rows.map((v) => v.image).filter((u): u is string => !!u))].filter((u) => !copied.has(u)).slice(0, 30)
     for (let i = 0; i < variantImages.length; i += 6) {
       const chunk = variantImages.slice(i, i + 6)
       const urls = await Promise.all(chunk.map((u, j) => storeImage(admin, user.id, tag, 100 + i + j, u)))
       chunk.forEach((u, j) => { const url = urls[j]; if (url) copied.set(u, url) })
     }
+    // option pictures (cases…) are copied too
+    const optionImages = [...new Set((shop?.groups ?? []).flatMap((g) => g.options.map((o) => o.image)).filter((u): u is string => !!u))].slice(0, 40)
+    const optionCopies = new Map<string, string>()
+    for (let i = 0; i < optionImages.length; i += 6) {
+      const chunk = optionImages.slice(i, i + 6)
+      const urls = await Promise.all(chunk.map((u, j) => storeImage(admin, user.id, tag, 200 + i + j, u)))
+      chunk.forEach((u, j) => { const url = urls[j]; if (url) optionCopies.set(u, url) })
+    }
     if (candidates.length > 0 && stored.length === 0) warnings.push('images_failed')
-    if (normalized.rows.some((v) => v.image && !copied.has(v.image))) warnings.push('variant_images_partial')
+    if (rows.some((v) => v.image && !copied.has(v.image))) warnings.push('variant_images_partial')
 
     // product video (Alibaba): the address given by the extraction, or found in the page source
     let video_url: string | null = null
@@ -435,13 +459,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    const variants = normalized.rows.map((v) => {
+    const variants = rows.map((v) => {
       const tr = ai?.labels[v.label]
       return {
         group_name: v.group_name, label: tr?.fr || v.label, label_en: tr?.en || null,
         price_usd: v.price_usd ?? price.usd, image: v.image ? copied.get(v.image) ?? null : null, stock_available: v.in_stock,
       }
     })
+
+    // extra options (lenses, power, cases…), priced in USD like the variants
+    const options = (shop?.groups ?? []).map((g) => ({ ...g, options: g.options.map((o) => ({ ...o, image: o.image ? optionCopies.get(o.image) ?? null : null })) }))
 
     if (variantsOnly) return json({ variants, price_usd: price.usd, warnings })
 
@@ -480,6 +507,8 @@ Deno.serve(async (req) => {
       supplier_name: platform.name,
       supplier_country: platform.id === 'amazon' ? amazonCountry(target.amazon?.domain ?? target.url) : platform.country,
       variants,
+      options,
+      discount_pct: shop?.discount_pct ?? null,
       // written customer reviews, shown with their source (Amazon and Muscle & Strength only)
       reviews: platform.id === 'amazon' || platform.id === 'muscle_strength' ? normalizeReviews(scraped.reviews) : [],
       warnings,

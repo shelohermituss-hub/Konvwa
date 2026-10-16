@@ -4,12 +4,16 @@ import { supabase } from '@/lib/supabase'
 import { LANG } from '@/lib/i18n'
 import { useAuth } from '@/lib/auth-context'
 import { effectiveUnitPrice } from '@/lib/product-pricing'
+import { fetchCartOptions, optionLabel, groupName, type CartOption } from '@/lib/product-options'
 import { resellerPriced, variantLabel, VARIANT_SELECT, type ProductVariant } from '@/lib/catalog'
 
 export interface CartItem {
   id: string
   product_id: string
   variant_id: string | null
+  option_ids: string[]
+  /** The chosen options with their group (filled by refresh). */
+  options: CartOption[]
   quantity: number
   product_variants: ProductVariant | null
   products: {
@@ -32,7 +36,7 @@ interface CartContextType {
   count: number
   total: number
   loading: boolean
-  addItem: (productId: string, quantity: number, variantId?: string | null) => Promise<void>
+  addItem: (productId: string, quantity: number, variantId?: string | null, optionIds?: string[]) => Promise<void>
   updateQuantity: (cartItemId: string, quantity: number) => Promise<void>
   removeItem: (cartItemId: string) => Promise<void>
   clearCart: () => Promise<void>
@@ -43,7 +47,12 @@ interface CartContextType {
 export function cartLineUnitPrice(item: CartItem): number {
   if (!item.products) return 0
   // the average price of one unit of the line: supplier offers ("2 for $48") count by full packs, the other units at the regular price
-  return effectiveUnitPrice(item.products, item.quantity, item.product_variants)
+  return effectiveUnitPrice(item.products, item.quantity, item.product_variants) + cartLineSupplement(item)
+}
+
+/** Supplement per unit of the options chosen on a line. */
+export function cartLineSupplement(item: CartItem): number {
+  return item.options.reduce((s, o) => s + o.price_htg, 0)
 }
 
 export const CART_PRODUCT_SELECT = 'id, name, name_en, reseller_discount_pct, price_htg, price_tiers, images, unit, moq, stock_available, supplier_country'
@@ -60,6 +69,11 @@ export function cartLineVariantName(item: CartItem): string {
   return v.group_name?.trim() ? `${v.group_name} : ${variantLabel(v)}` : variantLabel(v)
 }
 
+/** Variant and options of a line as one text ("Couleur : Noir · Verres : Anti-bleu"). */
+export function cartLineChoices(item: CartItem): string {
+  return [cartLineVariantName(item), ...item.options.map((o) => `${groupName({ name: o.group_name, name_en: o.group_name_en })} : ${optionLabel(o)}`)].filter(Boolean).join(' · ')
+}
+
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -73,27 +87,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLoading(true)
     const { data } = await supabase
       .from('cart_items')
-      .select(`id, product_id, variant_id, quantity, product_variants(${VARIANT_SELECT}), products(id, name, name_en, reseller_discount_pct, price_htg, price_tiers, images, unit, moq, stock_available, supplier_country)`)
+      .select(`id, product_id, variant_id, option_ids, quantity, product_variants(${VARIANT_SELECT}), products(id, name, name_en, reseller_discount_pct, price_htg, price_tiers, images, unit, moq, stock_available, supplier_country)`)
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
     if (data) {
-      setItems((data as unknown as Array<CartItem & { products: (CartItem['products'] & { name_en?: string | null }) | null }>).map((i) => (
-        i.products ? { ...i, products: toCartProduct(i.products, isReseller) } : i
-      )) as CartItem[])
+      const rows = data as unknown as Array<Omit<CartItem, 'options'> & { products: (CartItem['products'] & { name_en?: string | null }) | null }>
+      const ids = [...new Set(rows.flatMap((i) => i.option_ids ?? []))]
+      const known = await fetchCartOptions(ids)
+      setItems(rows.map((i) => ({
+        ...i, option_ids: i.option_ids ?? [], options: (i.option_ids ?? []).map((id) => known.get(id)).filter((o): o is CartOption => !!o),
+        ...(i.products ? { products: toCartProduct(i.products, isReseller) } : {}),
+      })) as CartItem[])
     }
     setLoading(false)
   }, [user, isReseller])
 
   useEffect(() => { refresh() }, [refresh])
 
-  // One line per (product, variant): look the line up first, then update or insert it.
-  async function addItem(productId: string, quantity: number, variantId?: string | null) {
+  // One line per (product, variant, options): look the line up first, then update or insert it.
+  async function addItem(productId: string, quantity: number, variantId?: string | null, optionIds: string[] = []) {
     if (!user) return
-    let find = supabase.from('cart_items').select('id').eq('user_id', user.id).eq('product_id', productId)
+    const options = [...optionIds].sort()
+    let find = supabase.from('cart_items').select('id').eq('user_id', user.id).eq('product_id', productId).eq('option_ids', `{${options.join(',')}}`)
     find = variantId ? find.eq('variant_id', variantId) : find.is('variant_id', null)
     const { data: existing } = await find.maybeSingle()
     if (existing) await supabase.from('cart_items').update({ quantity }).eq('id', existing.id)
-    else await supabase.from('cart_items').insert({ user_id: user.id, product_id: productId, variant_id: variantId ?? null, quantity })
+    else await supabase.from('cart_items').insert({ user_id: user.id, product_id: productId, variant_id: variantId ?? null, option_ids: options, quantity })
     await refresh()
   }
 

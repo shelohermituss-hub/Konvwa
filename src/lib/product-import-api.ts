@@ -37,6 +37,10 @@ export interface ImportedProduct {
   supplier_country: string
   /** Variants (size, colour…) with their regular price in USD (the product's own price when the page gave none) and their picture. */
   variants: Array<{ group_name: string | null; label: string; label_en: string | null; price_usd: number | null; image: string | null; stock_available: boolean }>
+  /** Extra options (lenses, power, cases…): groups of choices with a price supplement in USD, a group may depend on another one (index in this list). */
+  options?: Array<{ name: string; name_en: string; required: boolean; multi: boolean; show_when: number | null; options: Array<{ label: string; label_en: string; image: string | null; price_usd: number }> }>
+  /** Discount of the shop (struck price), as a whole percentage. */
+  discount_pct?: number | null
   /** Written customer reviews read from the page (Amazon, Muscle & Strength), shown on the product with their source. */
   reviews: Array<{ author: string; rating: number; title: string; text: string; date: string | null }>
   warnings: string[]

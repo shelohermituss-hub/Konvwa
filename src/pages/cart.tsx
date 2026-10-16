@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Trash2, Minus, Plus, Package, ArrowRight, ChevronLeft } from 'lucide-react'
-import { cartLineUnitPrice, cartLineVariantName, useCart } from '@/lib/cart-context'
+import { cartLineChoices, cartLineUnitPrice, useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { cn } from '@/lib/utils'
 import { IllustrationEmptyCart } from '@/components/shared/illustrations'
@@ -57,7 +57,7 @@ export function CartPage() {
           {items.map(item => {
             const product = item.products
             const unitPrice = cartLineUnitPrice(item)
-            const variantName = cartLineVariantName(item)
+            const variantName = cartLineChoices(item)
             const thumb = item.product_variants?.image ?? product?.images?.[0]
             const subtotal = unitPrice * item.quantity
 
