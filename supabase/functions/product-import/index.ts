@@ -123,8 +123,8 @@ async function scrape(url: string, apiKey: string, platform: Platform): Promise<
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       url,
-      // Alibaba: the page source is also kept, the product video address is often only there
-      formats: [{ type: 'json', schema: SCHEMA, prompt: scrapePrompt(platform) }, ...(platform.id === 'alibaba' || platform.id === 'ebay' ? ['rawHtml'] : [])],
+      // Alibaba: the page source is also kept (the product video address is often only there); Amazon: its picture gallery
+      formats: [{ type: 'json', schema: SCHEMA, prompt: scrapePrompt(platform) }, ...(platform.id === 'alibaba' || platform.id === 'ebay' || platform.id === 'amazon' ? ['rawHtml'] : [])],
       onlyMainContent: false,
       ...(platform.id === 'amazon' ? {} : { waitFor: PROTECTED.has(platform.id) ? 5000 : 3000 }),
       // Shein, Temu and Alibaba block ordinary crawlers (404 / robot pages): their pages are read through the stealth proxy
