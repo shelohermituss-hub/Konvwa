@@ -400,7 +400,7 @@ Deno.serve(async (req) => {
       price: (p, c) => priceToUsd(p, c || scraped.currency || fallbackCurrency, rates).usd,
     })
     // Southood: the shop's own variant list (exact colours, prices and pictures) replaces the page reading
-    const rows = shop && shop.variants.length > 0 ? shop.variants : normalized.rows
+    const rows = shop && shop.variants.length > 0 ? shop.variants.map((v) => ({ ...v, image: platformImageUrl(platform.id, v.image) })) : normalized.rows
     if (normalized.truncated && rows === normalized.rows) warnings.push('variants_truncated')
     if (rows.length > 0 && rows.every((v) => v.price_usd === null)) warnings.push('variant_prices_missing')
 
