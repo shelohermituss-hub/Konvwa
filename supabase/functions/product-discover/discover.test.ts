@@ -13,9 +13,11 @@ describe('discoverUrl', () => {
     expect(discoverUrl('constructor', 'beauty')).toBeNull()
     expect(Object.keys(DEPARTMENTS).length).toBeGreaterThan(10)
   })
-  it('builds Alibaba searches from the fixed topics only', () => {
-    expect(discoverUrl('alibaba', 'led lights')).toContain('SearchText=led%20lights')
+  it('builds Alibaba and Amazon searches from the fixed topics only', () => {
+    expect(discoverUrl('alibaba', 'laptop')).toContain('SearchText=laptop')
     expect(discoverUrl('alibaba', 'anything else')).toBeNull()
+    expect(discoverUrl('amazon_search', 'smartphone unlocked')).toBe('https://www.amazon.com/s?k=smartphone%20unlocked&rh=p_72%3A1248879011&s=exact-aware-popularity-rank')
+    expect(discoverUrl('amazon_search', 'x&y=1')).toBeNull()
   })
 })
 

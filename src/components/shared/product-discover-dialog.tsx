@@ -3,24 +3,34 @@ import { CheckCircle2, ExternalLink, Flame, Loader2, Search, XCircle } from 'luc
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '@/components/ui/native-select'
 import { Progress } from '@/components/ui/progress'
 import { supabase } from '@/lib/supabase'
 import { discoverAmazonProducts, type DiscoveredProduct } from '@/lib/product-import-api'
 import { importAndSave, loadImportRates, runPool } from '@/lib/bulk-import'
 import { tr } from '@/lib/i18n'
 
-const SOURCES: Array<[string, string]> = [['movers', 'Amazon : tendances du moment'], ['bestsellers', 'Amazon : meilleures ventes'], ['new', 'Amazon : nouveautés populaires'], ['alibaba', 'Alibaba : produits populaires']]
+const SOURCES: Array<[string, string]> = [['movers', 'Amazon : tendances du moment'], ['bestsellers', 'Amazon : meilleures ventes'], ['new', 'Amazon : nouveautés populaires'], ['amazon_search', 'Amazon : catégorie précise (les mieux notés)'], ['alibaba', 'Alibaba : catégorie précise']]
 const DEPARTMENTS: Array<[string, string]> = [
   ['', 'Tous les rayons'], ['electronics', 'Électronique'], ['beauty', 'Beauté'], ['hpc', 'Santé et soins personnels'], ['home-garden', 'Maison et jardin'],
   ['kitchen', 'Cuisine'], ['sporting-goods', 'Sports et plein air'], ['toys-and-games', 'Jouets et jeux'], ['fashion', 'Mode'], ['automotive', 'Auto et moto'],
   ['pet-supplies', 'Animaux'], ['baby-products', 'Bébé'], ['office-products', 'Bureau'], ['hi', 'Bricolage et outils'], ['videogames', 'Jeux vidéo'],
-  ['arts-crafts', 'Loisirs créatifs'], ['musical-instruments', 'Instruments de musique'],
+  ['arts-crafts', 'Loisirs créatifs'], ['musical-instruments', 'Instruments de musique'], ['wireless', 'Téléphones et accessoires'], ['pc', 'Ordinateurs et accessoires'],
+  ['photo', 'Photo et caméras'], ['appliances', 'Électroménager'], ['lawn-garden', 'Jardin et extérieur'], ['jewelry', 'Bijoux'], ['watches', 'Montres'], ['shoes', 'Chaussures'],
+  ['luggage', 'Bagagerie'], ['industrial', 'Industrie et sciences'],
 ]
-const ALIBABA_TOPICS: Array<[string, string]> = [
-  ['', 'Produits populaires'], ['phone accessories', 'Accessoires téléphone'], ['led lights', 'Lampes et LED'], ['smart watch', 'Montres connectées'], ['earbuds', 'Écouteurs'],
-  ['beauty tools', 'Beauté'], ['kitchen gadgets', 'Cuisine'], ['sports fitness', 'Sport et fitness'], ['pet products', 'Animaux'], ['baby products', 'Bébé'],
-  ['car accessories', 'Auto et moto'], ['bags', 'Sacs'], ['jewelry', 'Bijoux'], ['toys', 'Jouets'], ['home decor', 'Décoration'], ['tools', 'Outils'],
+/** Precise categories (same list as the `product-discover` function): search terms, grouped for the picker. */
+const TOPIC_GROUPS: Array<[string, Array<[string, string]>]> = [
+  ["Téléphones et accessoires", [["smartphone unlocked", "Smartphones"], ["iphone case", "Coques de téléphone"], ["phone charger fast charging", "Chargeurs de téléphone"], ["phone screen protector", "Protections d'écran"], ["power bank", "Batteries externes"], ["car phone mount", "Supports téléphone auto"], ["selfie stick tripod", "Perches et trépieds"]]],
+  ["Ordinateurs et tablettes", [["laptop", "Laptops"], ["gaming laptop", "Laptops gaming"], ["chromebook", "Chromebooks"], ["tablet", "Tablettes"], ["kids tablet", "Tablettes enfants"], ["monitor", "Écrans d'ordinateur"], ["computer keyboard", "Claviers"], ["computer mouse", "Souris"], ["laptop backpack", "Sacs pour laptop"], ["external hard drive ssd", "Disques durs et SSD"], ["usb flash drive", "Clés USB"], ["webcam", "Webcams"], ["wifi router", "Routeurs Wi-Fi"], ["printer", "Imprimantes"]]],
+  ["Audio et vidéo", [["wireless earbuds", "Écouteurs sans fil"], ["headphones", "Casques audio"], ["bluetooth speaker", "Haut-parleurs Bluetooth"], ["smart watch", "Montres connectées"], ["microphone", "Microphones"], ["smart tv", "Télévisions"], ["projector", "Projecteurs"], ["tv stick streaming", "Clés streaming TV"]]],
+  ["Photo, drones et sécurité", [["security camera", "Caméras de surveillance"], ["action camera", "Caméras sport"], ["drone", "Drones"], ["ring light", "Ring lights"], ["doorbell camera", "Sonnettes connectées"]]],
+  ["Jeux vidéo", [["gaming console", "Consoles de jeu"], ["game controller", "Manettes"], ["gaming headset", "Casques gaming"], ["gaming chair", "Chaises gaming"]]],
+  ["Maison et cuisine", [["air fryer", "Friteuses à air"], ["blender", "Blenders"], ["coffee maker", "Cafetières"], ["electric kettle", "Bouilloires"], ["rice cooker", "Cuiseurs à riz"], ["vacuum cleaner", "Aspirateurs"], ["robot vacuum", "Aspirateurs robots"], ["fan", "Ventilateurs"], ["led strip lights", "Rubans LED"], ["solar light", "Lampes solaires"], ["portable generator", "Générateurs portables"], ["storage organizer", "Rangements"], ["bedding set", "Linge de lit"], ["water bottle", "Gourdes"]]],
+  ["Beauté et soins", [["hair dryer", "Sèche-cheveux"], ["hair straightener", "Lisseurs"], ["electric shaver", "Rasoirs électriques"], ["beard trimmer", "Tondeuses barbe"], ["makeup brush set", "Pinceaux maquillage"], ["skincare serum", "Sérums visage"], ["perfume", "Parfums"], ["nail kit", "Manucure"]]],
+  ["Mode et accessoires", [["women sneakers", "Baskets femme"], ["men sneakers", "Baskets homme"], ["backpack", "Sacs à dos"], ["handbag", "Sacs à main"], ["sunglasses", "Lunettes de soleil"], ["men watch", "Montres homme"], ["women jewelry", "Bijoux femme"]]],
+  ["Bébé, animaux, sport", [["baby stroller", "Poussettes"], ["baby monitor", "Babyphones"], ["dog bed", "Lits pour chien"], ["cat litter box", "Litières"], ["yoga mat", "Tapis de yoga"], ["dumbbell set", "Haltères"], ["bicycle", "Vélos"]]],
+  ["Auto, outils, jouets", [["car vacuum", "Aspirateurs auto"], ["dash cam", "Dashcams"], ["tool set", "Caisses à outils"], ["cordless drill", "Perceuses"], ["lego", "Jouets de construction"], ["rc car", "Voitures télécommandées"]]],
 ]
 /** Products read at the same time: each one takes about half a minute (page, translation, pictures). */
 const PARALLEL = 3
@@ -128,9 +138,16 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
                 </NativeSelect>
               </label>
               <label className="space-y-1 text-sm font-semibold">
-                {source === 'alibaba' ? tr('Thème') : tr('Rayon')}
+                {source === 'alibaba' || source === 'amazon_search' ? tr('Catégorie') : tr('Rayon')}
                 <NativeSelect value={department} onChange={(e) => setDepartment(e.target.value)} disabled={busy} className="w-full">
-                  {(source === 'alibaba' ? ALIBABA_TOPICS : DEPARTMENTS).map(([v, l]) => <NativeSelectOption key={v || 'all'} value={v}>{tr(l)}</NativeSelectOption>)}
+                  {source === 'alibaba' || source === 'amazon_search'
+                    ? <>
+                        <NativeSelectOption value="">{tr('Produits populaires')}</NativeSelectOption>
+                        {TOPIC_GROUPS.map(([g, items]) => (
+                          <NativeSelectOptGroup key={g} label={tr(g)}>{items.map(([v, l]) => <NativeSelectOption key={v} value={v}>{tr(l)}</NativeSelectOption>)}</NativeSelectOptGroup>
+                        ))}
+                      </>
+                    : DEPARTMENTS.map(([v, l]) => <NativeSelectOption key={v || 'all'} value={v}>{tr(l)}</NativeSelectOption>)}
                 </NativeSelect>
               </label>
             </div>

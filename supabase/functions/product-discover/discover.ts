@@ -8,24 +8,99 @@ export const SOURCES = {
 } as const
 export type SourceId = keyof typeof SOURCES
 
-/** Alibaba has no public ranking: the best-matching products of a fixed list of popular searches are proposed instead. */
-export const ALIBABA_TOPICS: Record<string, string> = {
+/** Precise product categories: search terms read on Amazon (best rated first) or Alibaba (best matches). '' = popular products. */
+export const SEARCH_TOPICS: Record<string, string> = {
   '': 'Produits populaires',
-  'phone accessories': 'Accessoires téléphone',
-  'led lights': 'Lampes et LED',
-  'smart watch': 'Montres connectées',
-  'earbuds': 'Écouteurs',
-  'beauty tools': 'Beauté',
-  'kitchen gadgets': 'Cuisine',
-  'sports fitness': 'Sport et fitness',
-  'pet products': 'Animaux',
-  'baby products': 'Bébé',
-  'car accessories': 'Auto et moto',
-  'bags': 'Sacs',
-  'jewelry': 'Bijoux',
-  'toys': 'Jouets',
-  'home decor': 'Décoration',
-  'tools': 'Outils',
+  // Téléphones et accessoires
+  "smartphone unlocked": "Smartphones",
+  "iphone case": "Coques de téléphone",
+  "phone charger fast charging": "Chargeurs de téléphone",
+  "phone screen protector": "Protections d'écran",
+  "power bank": "Batteries externes",
+  "car phone mount": "Supports téléphone auto",
+  "selfie stick tripod": "Perches et trépieds",
+  // Ordinateurs et tablettes
+  "laptop": "Laptops",
+  "gaming laptop": "Laptops gaming",
+  "chromebook": "Chromebooks",
+  "tablet": "Tablettes",
+  "kids tablet": "Tablettes enfants",
+  "monitor": "Écrans d'ordinateur",
+  "computer keyboard": "Claviers",
+  "computer mouse": "Souris",
+  "laptop backpack": "Sacs pour laptop",
+  "external hard drive ssd": "Disques durs et SSD",
+  "usb flash drive": "Clés USB",
+  "webcam": "Webcams",
+  "wifi router": "Routeurs Wi-Fi",
+  "printer": "Imprimantes",
+  // Audio et vidéo
+  "wireless earbuds": "Écouteurs sans fil",
+  "headphones": "Casques audio",
+  "bluetooth speaker": "Haut-parleurs Bluetooth",
+  "smart watch": "Montres connectées",
+  "microphone": "Microphones",
+  "smart tv": "Télévisions",
+  "projector": "Projecteurs",
+  "tv stick streaming": "Clés streaming TV",
+  // Photo, drones et sécurité
+  "security camera": "Caméras de surveillance",
+  "action camera": "Caméras sport",
+  "drone": "Drones",
+  "ring light": "Ring lights",
+  "doorbell camera": "Sonnettes connectées",
+  // Jeux vidéo
+  "gaming console": "Consoles de jeu",
+  "game controller": "Manettes",
+  "gaming headset": "Casques gaming",
+  "gaming chair": "Chaises gaming",
+  // Maison et cuisine
+  "air fryer": "Friteuses à air",
+  "blender": "Blenders",
+  "coffee maker": "Cafetières",
+  "electric kettle": "Bouilloires",
+  "rice cooker": "Cuiseurs à riz",
+  "vacuum cleaner": "Aspirateurs",
+  "robot vacuum": "Aspirateurs robots",
+  "fan": "Ventilateurs",
+  "led strip lights": "Rubans LED",
+  "solar light": "Lampes solaires",
+  "portable generator": "Générateurs portables",
+  "storage organizer": "Rangements",
+  "bedding set": "Linge de lit",
+  "water bottle": "Gourdes",
+  // Beauté et soins
+  "hair dryer": "Sèche-cheveux",
+  "hair straightener": "Lisseurs",
+  "electric shaver": "Rasoirs électriques",
+  "beard trimmer": "Tondeuses barbe",
+  "makeup brush set": "Pinceaux maquillage",
+  "skincare serum": "Sérums visage",
+  "perfume": "Parfums",
+  "nail kit": "Manucure",
+  // Mode et accessoires
+  "women sneakers": "Baskets femme",
+  "men sneakers": "Baskets homme",
+  "backpack": "Sacs à dos",
+  "handbag": "Sacs à main",
+  "sunglasses": "Lunettes de soleil",
+  "men watch": "Montres homme",
+  "women jewelry": "Bijoux femme",
+  // Bébé, animaux, sport
+  "baby stroller": "Poussettes",
+  "baby monitor": "Babyphones",
+  "dog bed": "Lits pour chien",
+  "cat litter box": "Litières",
+  "yoga mat": "Tapis de yoga",
+  "dumbbell set": "Haltères",
+  "bicycle": "Vélos",
+  // Auto, outils, jouets
+  "car vacuum": "Aspirateurs auto",
+  "dash cam": "Dashcams",
+  "tool set": "Caisses à outils",
+  "cordless drill": "Perceuses",
+  "lego": "Jouets de construction",
+  "rc car": "Voitures télécommandées",
 }
 
 /** Amazon.com departments (slug used in the ranking address). '' = all departments. */
@@ -47,13 +122,24 @@ export const DEPARTMENTS: Record<string, string> = {
   videogames: 'Jeux vidéo',
   'arts-crafts': 'Loisirs créatifs',
   'musical-instruments': 'Instruments de musique',
+  wireless: 'Téléphones et accessoires',
+  pc: 'Ordinateurs et accessoires',
+  photo: 'Photo et caméras',
+  appliances: 'Électroménager',
+  'lawn-garden': 'Jardin et extérieur',
+  jewelry: 'Bijoux',
+  watches: 'Montres',
+  shoes: 'Chaussures',
+  luggage: 'Bagagerie',
+  industrial: 'Industrie et sciences',
 }
 
 export function discoverUrl(source: string, department: string): string | null {
-  if (source === 'alibaba') {
-    if (!Object.hasOwn(ALIBABA_TOPICS, department)) return null
-    const q = encodeURIComponent(department || 'hot selling products')
-    return `https://www.alibaba.com/trade/search?SearchText=${q}&IndexArea=product_en&tab=all&viewtype=G`
+  if (source === 'alibaba' || source === 'amazon_search') {
+    if (!Object.hasOwn(SEARCH_TOPICS, department)) return null
+    if (source === 'alibaba') return `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(department || 'hot selling products')}&IndexArea=product_en&tab=all&viewtype=G`
+    // Amazon search: 4 stars & up (p_72), most popular first
+    return `https://www.amazon.com/s?k=${encodeURIComponent(department || 'best sellers')}&rh=p_72%3A1248879011&s=exact-aware-popularity-rank`
   }
   if (!Object.hasOwn(SOURCES, source) || !Object.hasOwn(DEPARTMENTS, department)) return null
   const base = `https://www.amazon.com/${SOURCES[source as SourceId].path}`
