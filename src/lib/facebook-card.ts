@@ -1,5 +1,5 @@
 // The visual card posted on Facebook (1080x1350, the 4:5 feed format), drawn on a canvas in the browser from the product's own data.
-// Light theme, four layouts (the shop picks one at random, or the admin chooses): same ingredients, different composition.
+// A JPEG (Instagram takes nothing else). Light theme, four layouts (the shop picks one at random, or the admin chooses): same ingredients, different composition.
 import { tr } from '@/lib/i18n'
 
 export interface CardInput {
@@ -333,5 +333,5 @@ export async function renderProductCard(i: CardInput): Promise<Blob> {
   if (!c) throw new Error('canvas')
   const style = i.style !== undefined && i.style >= 0 && i.style < LAYOUTS.length ? i.style : Math.floor(Math.random() * LAYOUTS.length)
   LAYOUTS[style](c, i, main, rest.filter((t): t is HTMLImageElement => !!t))
-  return await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('png'))), 'image/png'))
+  return await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('jpeg'))), 'image/jpeg', 0.93))
 }

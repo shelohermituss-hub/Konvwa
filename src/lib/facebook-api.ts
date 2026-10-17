@@ -12,9 +12,19 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   return data as T
 }
 
-export interface FacebookPost { post_id: string; url: string; caption: string; photos: number; ai: boolean }
+export type SocialTarget = 'facebook' | 'instagram'
 
-/** Posts a product on the Facebook Page (`images` = our own public picture addresses, the visual card first). The server writes the caption from the product's data. */
-export const postProductToFacebook = (productId: string, images: string[]) => call<FacebookPost>({ product_id: productId, images })
+export interface SocialPost {
+  /** Facebook post (absent when Facebook was not asked for or failed). */
+  post_id?: string
+  url?: string
+  caption: string
+  instagram?: { id: string; url: string | null }
+  /** What went wrong on a network that failed while the other one worked. */
+  errors: { facebook?: string; instagram?: string }
+}
+
+/** Posts a product on the Facebook Page and/or Instagram (`images` = our own public picture addresses, the visual card first). The server writes the caption from the product's data. */
+export const postProductToSocial = (productId: string, images: string[], targets: SocialTarget[]) => call<SocialPost>({ product_id: productId, images, targets })
 
 export const deleteFacebookPost = (postId: string) => call<{ deleted: true }>({ action: 'delete', post_id: postId })
