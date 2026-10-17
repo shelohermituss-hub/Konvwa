@@ -16,6 +16,7 @@ import { VariantsBackfill } from '@/components/shared/variants-backfill'
 import { ProductLinkImport } from '@/components/shared/product-link-import'
 import { ProductDiscoverDialog } from '@/components/shared/product-discover-dialog'
 import { CutoutTool } from '@/components/shared/cutout-tool'
+import { FacebookPostButton } from '@/components/shared/facebook-post-button'
 import { OptionsEditor, loadOptionGroups, optionGroupsError, saveOptionGroups, type OptionGroupRow } from '@/components/shared/options-editor'
 import { VariantsEditor, variantsError, variantsPayload, type VariantRow } from '@/components/shared/variants-editor'
 import { estimateShipping, type ImportedProduct, type ShippingEstimate } from '@/lib/product-import-api'
@@ -720,6 +721,8 @@ export function AdminProductsPage() {
                   setVariantRows(rows => rows.map(r => (map[r.image.trim()] ? { ...r, image: map[r.image.trim()] } : r)))
                 }}
               />
+
+              {editing && <FacebookPostButton product={editing} />}
 
               <div className="col-span-2 space-y-1.5">
                 <Label>{tr('Vidéo du produit (lien .mp4, facultatif)')}</Label>
