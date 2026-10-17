@@ -1,12 +1,14 @@
-// Admin tool: publishes a product on the shop's Facebook Page and/or the linked Instagram account in one go: a rich post (visual card + product photos) with a written caption and the product link.
+// Admin tool (and the daily job: action `autopost`, header x-cron-secret): publishes a product on the shop's Facebook Page and/or the linked Instagram account in one go: a rich post (visual card + product photos) with a written caption and the product link.
 // The product's name, price and delivery come from the database, never from the browser. The caption's hook and bullet points are written by the AI from the product's own facts.
+// The daily job (see the migration social_autopost) draws the poster on the server (render.ts) and posts it; every poster posted is recorded in `social_posts`.
 // Secrets (Edge Function secrets): FACEBOOK_PAGE_ID, FACEBOOK_PAGE_TOKEN (access token with pages_manage_posts, pages_read_engagement, pages_show_list and, for Instagram, instagram_basic + instagram_content_publish),
 // INSTAGRAM_ACCOUNT_ID (optional: found from the Page otherwise), OPENROUTER_API_KEY (optional), OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { renderPosterJpeg } from './render.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 }
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
@@ -221,13 +223,141 @@ const fbMessage = (code: number, message: string) => {
   return `${base} [Facebook ${code || '?'} : ${message.replace(/\s+/g, ' ').slice(0, 220)}]`
 }
 
+const MAX_PER_PUBLISH = 4
+
+type Targets = Set<string>
+interface Published { out: Record<string, unknown>; errors: { facebook?: string; instagram?: string } }
+
+/** Posts `images` (our own public pictures, the poster first) with the product's caption on Facebook and/or Instagram. */
+async function publish(pageId: string, token: string, why: string, configured: string, product: Product, images: string[], targets: Targets, rate: number, copy: { hook: string; bullets: string[] } | null): Promise<Published> {
+  const errors: { facebook?: string; instagram?: string } = {}
+  const out: Record<string, unknown> = { ai: !!copy }
+
+  if (targets.has('facebook')) {
+    // pictures are uploaded unpublished, then attached to one post
+    const ids: string[] = []
+    let failure = ''
+    for (const url of images) {
+      const r = await graph(`/${pageId}/photos`, { url, published: 'false', access_token: token })
+      if (r.ok) ids.push(String(r.data.id))
+      else if (ids.length === 0) { failure = fbMessage(r.code, r.message) + why; break }
+    }
+    if (ids.length > 0) {
+      const message = caption(product, copy, rate)
+      const params: Record<string, string> = { message, access_token: token }
+      ids.forEach((id, i) => { params[`attached_media[${i}]`] = JSON.stringify({ media_fbid: id }) })
+      const post = await graph(`/${pageId}/feed`, params)
+      if (post.ok) {
+        const postId = String(post.data.id)
+        Object.assign(out, { post_id: postId, url: `https://www.facebook.com/${postId}`, caption: message, photos: ids.length })
+      } else failure = fbMessage(post.code, post.message) + why
+    }
+    if (failure) errors.facebook = failure
+  }
+
+  if (targets.has('instagram')) {
+    const account = await instagramAccount(pageId, token)
+    if ('error' in account) errors.instagram = account.error
+    else {
+      const r = await publishInstagram(account.id, token, images, caption(product, copy, rate, true))
+      if (r.ok) out.instagram = { id: r.id, url: r.url }
+      else errors.instagram = r.error + (/\[Instagram (?:10|200) /.test(r.error) ? await tokenScopes(configured) : '')
+    }
+  }
+  if (!out.caption) out.caption = caption(product, copy, rate)
+  return { out, errors }
+}
+
+/** Day in Haiti (yyyy-mm-dd): the daily budget of the automatic posts is counted on it. */
+const haitiDay = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Port-au-Prince' }).format(new Date())
+
+/** Remembers that a product got its poster (so that the daily job never posts it again), or why the attempt failed. */
+async function record(admin: ReturnType<typeof createClient>, productId: string, source: 'auto' | 'manual', done: Published) {
+  const posted = !!done.out.post_id || !!done.out.instagram
+  const fb = typeof done.out.post_id === 'string' ? done.out.post_id : null
+  const ig = (done.out.instagram as { id?: string } | undefined)?.id ?? null
+  const error = Object.values(done.errors).filter(Boolean).join(' | ').slice(0, 1500) || null
+  const { error: e } = await admin.from('social_posts').upsert({
+    product_id: productId, source, status: posted ? 'posted' : 'failed', facebook_post_id: fb, instagram_media_id: ig, error: posted ? null : error, local_day: haitiDay(), updated_at: new Date().toISOString(),
+  }, { onConflict: 'product_id' })
+  if (e) console.error('[facebook-post] social_posts', e.message)
+}
+
+/** One poster of the daily job: draws it on the server, posts it on both networks and records the result. The database function `autopost_dispatch` chose the product. */
+async function autopost(admin: ReturnType<typeof createClient>, supaUrl: string, productId: string): Promise<Response> {
+  const fail = async (message: string, status = 200) => {
+    await record(admin, productId, 'auto', { out: {}, errors: { facebook: message } })
+    return json({ posted: false, error: message }, status)
+  }
+  try {
+    if (!UUID.test(productId)) return json({ error: 'Produit inconnu.' }, 400)
+    const pageId = Deno.env.get('FACEBOOK_PAGE_ID')
+    const configured = Deno.env.get('FACEBOOK_PAGE_TOKEN')
+    if (!pageId || !configured) return await fail('Facebook n\'est pas configuré (secrets FACEBOOK_PAGE_ID / FACEBOOK_PAGE_TOKEN).')
+    const { data: row } = await admin.from('products').select(`${PRODUCT_FIELDS}, images`).eq('id', productId).maybeSingle()
+    const product = row as (Product & { images: string[] }) | null
+    if (!product || !product.active || !(Number(product.price_htg) > 0)) return await fail('Produit non éligible (introuvable, masqué ou sans prix).')
+
+    // the pictures: ours are used as they are, supplier ones are copied onto our storage first
+    const prefix = `${supaUrl}/storage/v1/object/public/product-images/`
+    const wanted = (product.images ?? []).filter((u) => typeof u === 'string' && /^https:\/\//.test(u)).slice(0, MAX_PER_PUBLISH)
+    const urls = (await Promise.all(wanted.map((u, i) => (u.startsWith(prefix) ? u : mirrorImage(admin, 'autopost', u, i))))).filter((u): u is string => !!u)
+    const files: Array<{ b: Uint8Array; u: string }> = []
+    for (const u of urls) {
+      const res = await fetch(u, { signal: AbortSignal.timeout(15000) }).catch(() => null)
+      if (res?.ok) files.push({ b: new Uint8Array(await res.arrayBuffer()), u })
+    }
+    if (files.length === 0) return await fail('Aucune photo utilisable.')
+
+    const rate = await usdRate(admin)
+    const old = strike(product.price_htg, product.discount_pct)
+    const jpeg = await renderPosterJpeg({
+      name: product.name, priceHtg: product.price_htg, strikeHtg: old, discountPct: old ? product.discount_pct : null, images: [],
+      deliveryMin: product.delivery_days_min, deliveryMax: product.delivery_days_max, verified: !!product.supplier_verified,
+      priceUsd: product.price_htg / rate, source: product.supplier_name?.trim() || null,
+    }, files.map((f) => f.b))
+    const path = `autopost/${productId}-${Date.now()}.jpg`
+    const { error: upErr } = await admin.storage.from('product-images').upload(path, jpeg, { contentType: 'image/jpeg', upsert: false })
+    if (upErr) return await fail(`Envoi de l'affiche impossible : ${upErr.message}`)
+    const cardUrl = admin.storage.from('product-images').getPublicUrl(path).data.publicUrl
+
+    const { token, why } = await pageToken(pageId, configured)
+    const copy = await writeCopy(product)
+    const done = await publish(pageId, token, why, configured, product, [cardUrl, ...files.map((f) => f.u).slice(0, 3)], new Set(['facebook', 'instagram']), rate, copy)
+    await record(admin, productId, 'auto', done)
+    return json({ posted: !!done.out.post_id || !!done.out.instagram, errors: done.errors })
+  } catch (e) {
+    console.error('[facebook-post] autopost', e)
+    return await fail(`Erreur interne : ${e instanceof Error ? e.message : String(e)}`.slice(0, 300), 500)
+  }
+}
+
+/** Constant-time comparison of two secrets. */
+function sameSecret(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   try {
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return json({ error: 'Unauthorized' }, 401)
     const supaUrl = Deno.env.get('SUPABASE_URL')!
     const admin = createClient(supaUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+
+    // the daily job (pg_cron -> database function -> here): proved by the shared secret, never by a user session
+    const cron = req.headers.get('x-cron-secret')
+    if (cron) {
+      const { data: s } = await admin.from('app_settings').select('value').eq('key', 'auto_post_secret').maybeSingle()
+      if (!s?.value || !sameSecret(cron, String(s.value))) return json({ error: 'Unauthorized' }, 401)
+      const job = await req.json().catch(() => ({})) as { action?: unknown; product_id?: unknown }
+      if (job.action !== 'autopost') return json({ error: 'Action inconnue.' }, 400)
+      return await autopost(admin, supaUrl, String(job.product_id ?? ''))
+    }
+
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) return json({ error: 'Unauthorized' }, 401)
     const { data: { user }, error: authError } = await admin.auth.getUser(authHeader.replace('Bearer ', ''))
     if (authError || !user) return json({ error: 'Unauthorized' }, 401)
 
@@ -290,45 +420,11 @@ Deno.serve(async (req) => {
     if (images.length === 0) return json({ error: 'Aucune image à publier.' }, 400)
 
     const [copy, rate] = [await writeCopy(product), await usdRate(admin)]
-    const errors: { facebook?: string; instagram?: string } = {}
-    const out: Record<string, unknown> = { ai: !!copy }
-
-    if (targets.has('facebook')) {
-      // pictures are uploaded unpublished, then attached to one post
-      const ids: string[] = []
-      let failure = ''
-      for (const url of images) {
-        const r = await graph(`/${pageId}/photos`, { url, published: 'false', access_token: token })
-        if (r.ok) ids.push(String(r.data.id))
-        else if (ids.length === 0) { failure = fbMessage(r.code, r.message) + why; break }
-      }
-      if (ids.length > 0) {
-        const message = caption(product, copy, rate)
-        const params: Record<string, string> = { message, access_token: token }
-        ids.forEach((id, i) => { params[`attached_media[${i}]`] = JSON.stringify({ media_fbid: id }) })
-        const post = await graph(`/${pageId}/feed`, params)
-        if (post.ok) {
-          const postId = String(post.data.id)
-          Object.assign(out, { post_id: postId, url: `https://www.facebook.com/${postId}`, caption: message, photos: ids.length })
-        } else failure = fbMessage(post.code, post.message) + why
-      }
-      if (failure) errors.facebook = failure
-    }
-
-    if (targets.has('instagram')) {
-      const account = await instagramAccount(pageId, token)
-      if ('error' in account) errors.instagram = account.error
-      else {
-        const r = await publishInstagram(account.id, token, images, caption(product, copy, rate, true))
-        if (r.ok) out.instagram = { id: r.id, url: r.url }
-        else errors.instagram = r.error + (/\[Instagram (?:10|200) /.test(r.error) ? await tokenScopes(configured) : '')
-      }
-    }
-
-    const done = !!out.post_id || !!out.instagram
-    if (!done) return json({ error: Object.values(errors).join(' — ') || 'Publication impossible.', errors }, 502)
-    if (!out.caption) out.caption = caption(product, copy, rate)
-    return json({ ...out, errors })
+    const done = await publish(pageId, token, why, configured, product, images, targets, rate, copy)
+    const ok = !!done.out.post_id || !!done.out.instagram
+    if (!ok) return json({ error: Object.values(done.errors).join(' \u2014 ') || 'Publication impossible.', errors: done.errors }, 502)
+    await record(admin, productId, 'manual', done)
+    return json({ ...done.out, errors: done.errors })
   } catch (e) {
     console.error('[facebook-post]', e)
     return json({ error: 'Erreur interne' }, 500)

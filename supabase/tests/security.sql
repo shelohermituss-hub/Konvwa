@@ -1003,5 +1003,32 @@ DO $$ DECLARE pid uuid; uid uuid; g uuid; o1 uuid; o2 uuid; res jsonb; BEGIN
   RESET ROLE;
 END $$;
 
+-- automatic posters: the log is read by the team only and never written from the browser; the job functions are not callable by clients; one poster per product
+DO $$ DECLARE pid uuid; adm uuid := (SELECT admin_id FROM ctx); cl uuid := (SELECT client_a FROM ctx); n integer; r text; picked uuid; BEGIN
+  SELECT id INTO pid FROM products WHERE active AND NOT wholesale_only AND sale_type = 'retail' AND stock_available AND price_htg > 0 AND coalesce(array_length(images, 1), 0) > 0 LIMIT 1;
+  INSERT INTO social_posts (product_id, source, status, local_day) VALUES (pid, 'manual', 'posted', current_date);
+  PERFORM pg_temp.as_user(cl);
+  SELECT count(*) INTO n FROM social_posts;
+  ASSERT n = 0, 'a client can read the poster log';
+  BEGIN INSERT INTO social_posts (product_id, source, status, local_day) VALUES (pid, 'auto', 'pending', current_date); ASSERT false, 'a client can write the poster log'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM public.admin_autopost_now(); ASSERT false, 'a client can post a poster'; EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN PERFORM public.autopost_tick(); ASSERT false, 'a client can run the daily job'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM public.autopost_dispatch(true); ASSERT false, 'a client can run the dispatcher'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  SELECT count(*) INTO n FROM social_posts;
+  ASSERT n >= 1, 'the team cannot read the poster log';
+  RESET ROLE;
+  -- the dispatcher: off by default, then it picks a product that has no poster yet, one at a time
+  UPDATE app_settings SET value = 'false' WHERE key = 'auto_post_enabled';
+  ASSERT public.autopost_tick() = 'disabled', 'the daily job ran while switched off';
+  r := public.autopost_dispatch(true);
+  ASSERT r = 'sent', 'the dispatcher did not start: ' || r;
+  SELECT product_id INTO picked FROM social_posts WHERE source = 'auto' AND status = 'pending';
+  ASSERT picked IS NOT NULL AND picked <> pid, 'the dispatcher chose a product that already has a poster';
+  ASSERT public.autopost_dispatch(true) = 'busy', 'two posters were started at once';
+  ASSERT (SELECT status FROM social_posts WHERE product_id = pid) = 'posted', 'a posted poster was touched';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

@@ -15,6 +15,7 @@ import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { VariantsBackfill } from '@/components/shared/variants-backfill'
 import { ProductLinkImport } from '@/components/shared/product-link-import'
 import { ProductDiscoverDialog } from '@/components/shared/product-discover-dialog'
+import { AutoPostPanel } from '@/components/shared/auto-post-panel'
 import { CutoutTool } from '@/components/shared/cutout-tool'
 import { FacebookPostButton } from '@/components/shared/facebook-post-button'
 import { OptionsEditor, loadOptionGroups, optionGroupsError, saveOptionGroups, type OptionGroupRow } from '@/components/shared/options-editor'
@@ -501,6 +502,7 @@ export function AdminProductsPage() {
   return (
     <div className="space-y-6">
       <PriceReviews onChanged={() => void load()} />
+      <AutoPostPanel />
 
       {/* Header */}
       <div className="flex items-center justify-between">
