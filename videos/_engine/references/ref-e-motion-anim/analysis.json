@@ -1,0 +1,16 @@
+{
+  "file": "91df0bd6-try_in_dms..._motiondesign_motion_animations.mp4",
+  "width": 720,
+  "height": 1280,
+  "fps": 30,
+  "duration": 9.92,
+  "aspect": "9:16",
+  "cuts": [],
+  "cutsPer10s": 0,
+  "hookCuts": 0,
+  "avgShot": 9.92,
+  "audio": {
+    "mean": -15.2,
+    "max": -0.7
+  }
+}

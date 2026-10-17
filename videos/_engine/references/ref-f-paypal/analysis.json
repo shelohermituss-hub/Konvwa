@@ -1,0 +1,22 @@
+{
+  "file": "eb622bd8-PayPal_motion_conceptaftereffects_animation_motiondesign_apple_paypal.mp4",
+  "width": 720,
+  "height": 720,
+  "fps": 30,
+  "duration": 12.26,
+  "aspect": "1:1",
+  "cuts": [
+    1.2,
+    2.93,
+    3.07,
+    3.83,
+    3.93
+  ],
+  "cutsPer10s": 4.1,
+  "hookCuts": 2,
+  "avgShot": 2.04,
+  "audio": {
+    "mean": -12.6,
+    "max": -2.2
+  }
+}

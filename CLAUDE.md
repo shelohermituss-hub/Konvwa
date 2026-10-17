@@ -75,6 +75,7 @@ Les 21 skills publiés de [heygen-com/hyperframes](https://github.com/heygen-com
 - **Format par défaut : vertical 9:16 (1080×1920)** pour TikTok, Reels et Shorts, sauf si la demande précise un autre format. Prévoir les zones de sécurité verticales (texte loin des bords haut et bas).
 - Les vidéos KONVWA suivent la marque : français, orange `#F05A28` sur `#0A1628`, Poppins, prix en HTG.
 - Les projets vidéo vivent hors de `src/` (ex. `videos/<nom>/`) ; les rendus `.mp4` ne sont pas commités.
+- **Moteur motion design KONVWA** (`videos/_engine/`, skill `/konvwa-motion`) : pour toute vidéo promo / explicative / produit au format TikTok-Reels-Shorts, écrire un *brief* JSON et laisser le moteur caler l'image sur la voix, placer les sons et imposer la **loi des 3 secondes** (hook ≤ 3 s, ≤ 7 mots, mouvement et son dès la première image). Commande : `node videos/_engine/bin/motion.mjs types|new|check|vo|vo-save|build|lint|snap|render|qa|ref`. Lire `videos/_engine/README.md`, `docs/HOOKS.md`, `docs/REFERENCES.md`. Les tests du moteur sont dans `npm test`.
 - Mise à jour : re-copier `skills/` depuis le dépôt amont (ou `npx hyperframes skills update`) et changer le commit ci-dessus.
 
 ### Précédence en cas de conflit

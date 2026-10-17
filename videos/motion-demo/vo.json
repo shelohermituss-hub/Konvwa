@@ -1,0 +1,72 @@
+{
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy",
+    "direction": "énergie, un rythme rapide et le sourire dans la voix",
+    "language": "fr-FR",
+    "model": "t2a-gemini-3-1-flash-tts"
+  },
+  "lines": [
+    {
+      "id": "s01",
+      "scene": 1,
+      "type": "hook.statement",
+      "text": "Achetez partout. Recevez en Haïti.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Achetez partout. Recevez en Haïti.",
+      "file": "assets/vo/s01.wav",
+      "estimatedSeconds": 2.12,
+      "measured": true
+    },
+    {
+      "id": "s02",
+      "scene": 2,
+      "type": "scene.chips",
+      "text": "Alibaba, Shein, Temu, Neewer. Collez le lien, on s’occupe du reste.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Alibaba, Shein, Temu, Neewer. Collez le lien, on s’occupe du reste.",
+      "file": "assets/vo/s02.wav",
+      "estimatedSeconds": 4.58,
+      "measured": true
+    },
+    {
+      "id": "s03",
+      "scene": 3,
+      "type": "scene.product",
+      "text": "Le prix final, en gourdes, livraison comprise.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Le prix final, en gourdes, livraison comprise.",
+      "file": "assets/vo/s03.wav",
+      "estimatedSeconds": 2.52,
+      "measured": true
+    },
+    {
+      "id": "s04",
+      "scene": 4,
+      "type": "scene.route",
+      "text": "Nous achetons, expédions, et vous suivez votre colis en direct.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Nous achetons, expédions, et vous suivez votre colis en direct.",
+      "file": "assets/vo/s04.wav",
+      "estimatedSeconds": 3.64,
+      "measured": true
+    },
+    {
+      "id": "s05",
+      "scene": 5,
+      "type": "scene.ui",
+      "text": "Payez avec MonCash ou NatCash, en toute sécurité.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Payez avec MonCash ou NatCash, en toute sécurité.",
+      "file": "assets/vo/s05.wav",
+      "estimatedSeconds": 2.91,
+      "measured": true
+    },
+    {
+      "id": "s06",
+      "scene": 6,
+      "type": "scene.end",
+      "text": "KONVWA. Achetez, nous livrons.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : KONVWA. Achetez, nous livrons.",
+      "file": "assets/vo/s06.wav",
+      "estimatedSeconds": 2.18,
+      "measured": true
+    }
+  ]
+}

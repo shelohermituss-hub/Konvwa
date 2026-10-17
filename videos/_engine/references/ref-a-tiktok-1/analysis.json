@@ -1,0 +1,19 @@
+{
+  "file": "d45ab68c-VID_20261017_155919_313.mp4",
+  "width": 1080,
+  "height": 1080,
+  "fps": 30,
+  "duration": 16.19,
+  "aspect": "1:1",
+  "cuts": [
+    0.23,
+    12.17
+  ],
+  "cutsPer10s": 1.2,
+  "hookCuts": 1,
+  "avgShot": 5.4,
+  "audio": {
+    "mean": -18,
+    "max": 0
+  }
+}

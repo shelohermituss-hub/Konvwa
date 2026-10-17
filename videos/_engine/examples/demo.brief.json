@@ -1,0 +1,96 @@
+{
+  "name": "demo",
+  "title": "Démo du moteur : KONVWA en 20 secondes",
+  "format": "9:16",
+  "theme": "light",
+  "brand": "konvwa",
+  "seed": 7,
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy"
+  },
+  "sfx": {
+    "level": 1
+  },
+  "scenes": [
+    {
+      "type": "hook.statement",
+      "text": "Achetez *partout*.|Recevez en Haïti.",
+      "vo": "Achetez partout. Recevez en Haïti.",
+      "glyphs": [
+        "✦",
+        "★"
+      ],
+      "tone": "accent"
+    },
+    {
+      "type": "scene.chips",
+      "text": "Collez *le lien*",
+      "items": [
+        "Alibaba",
+        "Shein",
+        "Temu",
+        "Neewer"
+      ],
+      "icons": [
+        "store",
+        "bag",
+        "tag",
+        "zap"
+      ],
+      "vo": "Alibaba, Shein, Temu, Neewer. Collez le lien, on s’occupe du reste."
+    },
+    {
+      "type": "scene.product",
+      "text": "Le prix final, *en gourdes*",
+      "images": [
+        "lib:products/powerbeats.jpg",
+        "lib:products/cerave.jpg",
+        "lib:products/r36s.jpg"
+      ],
+      "vo": "Le prix final, en gourdes, livraison comprise."
+    },
+    {
+      "type": "scene.route",
+      "text": "Suivi *en direct*",
+      "from": {
+        "label": "Chine",
+        "icon": "globe"
+      },
+      "to": {
+        "label": "Port-au-Prince",
+        "icon": "pin"
+      },
+      "badge": "Colis en route",
+      "vo": "Nous achetons, expédions, et vous suivez votre colis en direct."
+    },
+    {
+      "type": "scene.ui",
+      "text": "Payez avec *MonCash*",
+      "items": [
+        {
+          "kind": "toast",
+          "title": "Colis arrivé à Port-au-Prince",
+          "icon": "package"
+        },
+        {
+          "kind": "card",
+          "title": "Commande #1042",
+          "sub": "Livraison à domicile",
+          "value": "En route",
+          "icon": "truck"
+        },
+        {
+          "kind": "button",
+          "title": "Payer avec MonCash"
+        }
+      ],
+      "vo": "Payez avec MonCash ou NatCash, en toute sécurité."
+    },
+    {
+      "type": "scene.end",
+      "vo": "KONVWA. Achetez, nous livrons."
+    }
+  ]
+}

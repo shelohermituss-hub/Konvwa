@@ -1,0 +1,18 @@
+{
+  "file": "ebb2cf9b-VID_20261017_155818_798.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "duration": 30.48,
+  "aspect": "9:16",
+  "cuts": [
+    26.43
+  ],
+  "cutsPer10s": 0.3,
+  "hookCuts": 0,
+  "avgShot": 15.24,
+  "audio": {
+    "mean": -16.7,
+    "max": 0
+  }
+}

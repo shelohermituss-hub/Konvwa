@@ -1,0 +1,217 @@
+#!/usr/bin/env node
+// KONVWA motion engine — command line.   node videos/_engine/bin/motion.mjs <command> [project]
+import fs from 'node:fs'
+import path from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { ENGINE, M } from '../lib/runtime.mjs'
+import { loadBrief, validateBrief, voicePrompt, VOICE_STYLES } from '../lib/brief.mjs'
+import { schedule, placeSfx, hookReport, sceneId } from '../lib/schedule.mjs'
+import { emitProject, HYPERFRAMES_VERSION } from '../lib/emit.mjs'
+import { duration, hasFfmpeg, run } from '../lib/media.mjs'
+import { qa, printChecks } from '../lib/qa.mjs'
+import { analyze } from '../lib/ref.mjs'
+
+const VIDEOS = path.resolve(ENGINE, '..')
+const [cmd, ...rest] = process.argv.slice(2)
+const flags = Object.fromEntries(rest.filter((a) => a.startsWith('--')).map((a) => { const [k, v] = a.slice(2).split('='); return [k, v ?? true] }))
+const args = rest.filter((a) => !a.startsWith('--'))
+const log = console.log
+const die = (msg, code = 1) => { console.error(msg); process.exit(code) }
+
+function projectDir(arg) {
+  if (!arg) die('Indiquez le projet : node videos/_engine/bin/motion.mjs ' + cmd + ' <nom-du-projet>')
+  const direct = path.resolve(arg)
+  if (fs.existsSync(path.join(direct, 'brief.json'))) return direct
+  const named = path.join(VIDEOS, arg)
+  if (fs.existsSync(path.join(named, 'brief.json'))) return named
+  die(`Projet introuvable : ${arg} (attendu : ${named}/brief.json). Créez-le avec « new ».`)
+}
+
+/** Length of every voice-over file already generated for this project. */
+function measureVo(dir, count) {
+  const out = {}
+  for (let i = 0; i < count; i++) {
+    const id = sceneId(i)
+    for (const ext of ['wav', 'mp3', 'm4a']) {
+      const f = path.join(dir, 'assets/vo', `${id}.${ext}`)
+      if (fs.existsSync(f)) { const d = duration(f); if (d) out[id] = Number(d.toFixed(2)); break }
+    }
+  }
+  return out
+}
+
+function existsFor(dir) {
+  return (ref) => (ref.startsWith('lib:') ? fs.existsSync(path.join(ENGINE, 'library', ref.slice(4))) : fs.existsSync(path.join(dir, ref)))
+}
+
+function plan(dir) {
+  const { brief, brand } = loadBrief(path.join(dir, 'brief.json'))
+  brief.name = brief.name || path.basename(dir)
+  const { errors, warnings } = validateBrief(brief, existsFor(dir))
+  const voDur = hasFfmpeg() ? measureVo(dir, brief.scenes.length) : {}
+  let tl = null
+  let sfx = []
+  if (!errors.length) {
+    tl = schedule(brief, voDur)
+    sfx = placeSfx(brief, tl)
+    const hook = tl.scenes[0]
+    if (hook.vo && hook.vo.measured && hook.natural > M.HOOK.maxDur + 0.05) errors.push(`scène 1 : la voix du hook dure ${hook.vo.dur} s : elle déborde des 3 s (${hook.natural} s nécessaires). Raccourcissez la phrase`)
+    tl.scenes.forEach((s) => { if (s.natural > s.def.max + 0.6 && s.def.kind === 'scene') warnings.push(`scène ${s.i + 1} : ${s.natural} s pour un maximum conseillé de ${s.def.max} s (${s.spec.type}) — scindez la phrase`) })
+    const avg = tl.total / tl.scenes.length
+    if (avg > M.PACE.sceneAvg[1]) warnings.push(`rythme mou : ${avg.toFixed(1)} s par scène en moyenne (cible ${M.PACE.sceneAvg.join('–')} s)`)
+    if (tl.total < M.LIMITS.minTotal || tl.total > M.LIMITS.maxTotal) warnings.push(`durée totale ${tl.total} s hors de la plage ${M.LIMITS.minTotal}–${M.LIMITS.maxTotal} s`)
+  }
+  return { brief, brand, errors, warnings, tl, sfx, voDur }
+}
+
+function printPlan(p) {
+  const { tl, sfx, brief, voDur } = p
+  log(`\n${brief.name} — ${brief.format}, thème ${brief.theme}, voix ${brief.voice.mode === 'vo' ? brief.voice.name + ' (' + brief.voice.style + ')' : 'aucune (musique)'}`)
+  log('\n #   type              début   durée   transition   voix')
+  for (const s of tl.scenes) {
+    const v = s.vo ? `${s.env.vo.start.toFixed(2)} → ${(s.env.vo.start + s.env.vo.dur).toFixed(2)} (${s.vo.measured ? 'mesurée' : 'estimée'})` : '—'
+    log(` ${String(s.i + 1).padStart(2)}  ${s.spec.type.padEnd(16)}  ${s.start.toFixed(2).padStart(5)}   ${s.dur.toFixed(2).padStart(5)}   ${(s.env.transIn?.kind || '—').padEnd(10)}   ${v}`)
+  }
+  const measured = Object.keys(voDur).length
+  log(`\nTotal ${tl.total} s · ${sfx.length} effets sonores · voix : ${measured}/${tl.scenes.filter((s) => s.vo).length} fichiers présents`)
+  log('\nLoi des 3 secondes :')
+  for (const it of hookReport(brief, tl, sfx, p.brand)) log(`  ${it.ok ? '✓' : '✗'} ${it.label} — ${it.detail}`)
+}
+
+function hf(dir, hfArgs) {
+  const r = spawnSync('npx', ['--yes', `hyperframes@${HYPERFRAMES_VERSION}`, ...hfArgs], { cwd: dir, stdio: 'inherit' })
+  return r.status ?? 1
+}
+
+const COMMANDS = {
+  types() {
+    for (const kind of ['hook', 'scene', 'end']) {
+      log(`\n${kind === 'hook' ? 'HOOKS (3 premières secondes)' : kind === 'end' ? 'FIN' : 'SCÈNES'}`)
+      for (const t of M.types().filter((x) => M.catalog[x].kind === kind)) {
+        const d = M.catalog[t]
+        log(`  ${t.padEnd(16)} ${d.min}–${d.max} s   exige : ${d.needs.join(', ') || '—'}\n  ${' '.repeat(16)} ${d.label}`)
+      }
+    }
+    log('\nTransitions : ' + Object.keys(M.TRANSITIONS).join(', '))
+    log('Sons : ' + Object.keys(M.CUES).join(', '))
+    log('Styles de voix : ' + Object.keys(VOICE_STYLES).join(', '))
+    log('Formats : ' + Object.keys(M.FORMATS).join(', '))
+  },
+
+  new() {
+    const name = args[0]
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(name || '')) die('Usage : new <nom> (minuscules, chiffres, tirets)')
+    const dir = path.join(VIDEOS, name)
+    if (fs.existsSync(path.join(dir, 'brief.json'))) die(`Existe déjà : ${dir}/brief.json`)
+    const example = path.join(ENGINE, 'examples', `${flags.example || 'demo'}.brief.json`)
+    if (!fs.existsSync(example)) die(`Exemple introuvable : ${example}`)
+    const b = JSON.parse(fs.readFileSync(example, 'utf8'))
+    b.name = name
+    b.title = name
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(path.join(dir, 'brief.json'), JSON.stringify(b, null, 2) + '\n')
+    log(`Brief créé : ${path.relative(process.cwd(), dir)}/brief.json\nÉditez-le, puis : check → vo → build → hf check → snap → render → qa`)
+  },
+
+  check() {
+    const dir = projectDir(args[0])
+    const p = plan(dir)
+    p.warnings.forEach((w) => log('  ! ' + w))
+    p.errors.forEach((e) => log('  ✗ ' + e))
+    if (p.tl) printPlan(p)
+    if (p.errors.length) die(`\n${p.errors.length} erreur(s) : corrigez le brief.`)
+    log(p.warnings.length ? `\nOK avec ${p.warnings.length} avertissement(s)` : '\nBrief valide')
+  },
+
+  vo() {
+    const dir = projectDir(args[0])
+    const p = plan(dir)
+    if (p.errors.length) die(p.errors.map((e) => '✗ ' + e).join('\n'))
+    const { brief, brand, tl, voDur } = p
+    log(`Voix : ${brief.voice.name} · ${brand.voice?.language || 'fr-FR'} · modèle ${brand.voice?.model}`)
+    log(`Style : ${brief.voice.style} — « ${brief.voice.direction} »\n`)
+    let missing = 0
+    for (const s of tl.scenes) {
+      if (!s.spec.vo || brief.voice.mode !== 'vo') continue
+      const have = voDur[s.id] != null
+      if (!have) missing++
+      log(`${have ? '✓' : '·'} ${s.id}  assets/vo/${s.id}.wav  ${have ? voDur[s.id] + ' s' : '~' + s.env.vo.dur + ' s (à générer)'}\n    ${voicePrompt(brief, s.spec.vo)}`)
+    }
+    log(missing ? `\n${missing} voix à générer, puis relancer « build » pour caler l’image sur la voix.` : '\nToutes les voix sont là : « build » cale l’image sur leur durée réelle.')
+  },
+
+  /** vo-save <projet> s01=<url|fichier> s02=… : récupère les voix générées, coupe les silences de début et de fin (la voix démarre à la première image). */
+  'vo-save'() {
+    const dir = projectDir(args[0])
+    const pairs = args.slice(1).map((a) => a.split(/=(.+)/)).filter((p) => p[1])
+    if (!pairs.length) die('Usage : vo-save <projet> s01=<url ou fichier> s02=<url ou fichier> …')
+    fs.mkdirSync(path.join(dir, 'assets/vo'), { recursive: true })
+    for (const [id, src] of pairs) {
+      const tmp = path.join(dir, 'assets/vo', `${id}.raw`)
+      if (/^https?:/.test(src)) { const r = run('curl', ['-sSL', '--fail', '-o', tmp, src]); if (!r.ok) die(`${id} : téléchargement impossible (${r.err.trim()})`) } else fs.copyFileSync(src, tmp)
+      const trim = 'silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.04'
+      const out = path.join(dir, 'assets/vo', `${id}.wav`)
+      const r = run('ffmpeg', ['-v', 'error', '-y', '-i', tmp, '-af', `${trim},areverse,${trim},areverse`, '-ar', '48000', '-ac', '1', out])
+      fs.rmSync(tmp, { force: true })
+      if (!r.ok) die(`${id} : conversion impossible (${r.err.trim()})`)
+      log(`✓ ${id}  ${duration(out).toFixed(2)} s  → assets/vo/${id}.wav`)
+    }
+  },
+
+  build() {
+    const dir = projectDir(args[0])
+    const p = plan(dir)
+    p.warnings.forEach((w) => log('  ! ' + w))
+    if (p.errors.length) { p.errors.forEach((e) => log('  ✗ ' + e)); die(`\n${p.errors.length} erreur(s) : rien n’a été généré.`) }
+    const r = emitProject({ brief: p.brief, brand: p.brand, tl: p.tl, voDur: p.voDur, projectDir: dir })
+    printPlan(p)
+    log(`\nProjet généré dans ${path.relative(process.cwd(), dir)} (${r.sfx.length} sons, ${r.vo.length} voix, ${r.files} fichier(s) de bibliothèque).`)
+    if (!r.vo.length && p.brief.voice.mode === 'vo') log('Voix absentes : durées estimées (brouillon). « vo » liste ce qu’il faut générer.')
+  },
+
+  hf() { process.exit(hf(projectDir(args[0]), args.slice(1))) },
+  lint() { process.exit(hf(projectDir(args[0]), ['check'])) },
+  snap() {
+    const dir = projectDir(args[0])
+    const at = flags.at || '0.15,0.6,1.2,2.0,2.8'
+    process.exit(hf(dir, ['snapshot', '--at', String(at)]))
+  },
+  render() {
+    const dir = projectDir(args[0])
+    const name = path.basename(dir)
+    const q = flags.quality || 'looks'
+    process.exit(hf(dir, ['render', '--quality', String(q), '--output', `renders/${flags.out || name}.mp4`]))
+  },
+
+  qa() {
+    const dir = projectDir(args[0])
+    const planFile = path.join(dir, 'plan.json')
+    if (!fs.existsSync(planFile)) die('plan.json absent : lancez « build » d’abord.')
+    const pl = JSON.parse(fs.readFileSync(planFile, 'utf8'))
+    const rend = path.join(dir, 'renders')
+    const file = args[1] ? path.resolve(args[1]) : fs.existsSync(rend) ? fs.readdirSync(rend).filter((f) => f.endsWith('.mp4')).map((f) => path.join(rend, f)).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0] : null
+    if (!file || !fs.existsSync(file)) die('Aucun rendu trouvé (renders/*.mp4). Lancez « render ».')
+    log(`Contrôle de ${path.relative(process.cwd(), file)}\n`)
+    const r = qa(file, pl, { musicOnly: flags['music-only'] })
+    if (!printChecks(r.checks)) process.exit(1)
+  },
+
+  ref() {
+    if (!args.length) die('Usage : ref <video.mp4> [autres vidéos] [--name=dossier]')
+    for (const [i, f] of args.entries()) {
+      const name = (flags.name && args.length === 1 ? flags.name : path.basename(f).replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/gi, '-').toLowerCase().slice(0, 40)) + ''
+      const out = path.join(ENGINE, 'references', name || `ref-${i + 1}`)
+      const a = analyze(path.resolve(f), out)
+      log(`\n${a.file} → ${path.relative(process.cwd(), out)}\n  ${a.width}×${a.height} (${a.aspect}) · ${a.duration} s · ${a.fps} i/s · ${a.cuts.length} coupes (${a.cutsPer10s}/10 s, plan moyen ${a.avgShot} s) · ${a.hookCuts} dans les 3 premières secondes`)
+      if (a.audio) log(`  son : moyenne ${a.audio.mean} dB, crête ${a.audio.max} dB`)
+      log('  planches : hook.png (3 premières secondes) et all.png (vue d’ensemble)')
+    }
+  },
+}
+
+const fn = COMMANDS[cmd]
+if (!fn) {
+  log(`KONVWA motion engine\n\nCommandes :\n  types                  les scènes, transitions, sons et formats disponibles\n  new <nom> [--example=demo]   crée videos/<nom>/brief.json\n  check <projet>         valide le brief et affiche le calendrier + la loi des 3 secondes\n  vo <projet>            liste les voix à générer et celles déjà présentes\n  vo-save <projet> s01=<url> …   enregistre les voix générées (silences coupés)\n  build <projet>         génère le projet HyperFrames (image calée sur la voix, sons placés)\n  lint <projet>          hyperframes check\n  snap <projet> [--at=0.15,0.6,…]   captures aux instants donnés\n  render <projet> [--quality=looks|draft|delivery]\n  qa <projet> [rendu.mp4]   contrôle du rendu (format, son, énergie du hook…)\n  ref <video…>           analyse une vidéo de référence (coupes, son, planches)\n  hf <projet> <args…>    passe la main au CLI hyperframes`)
+  process.exit(cmd ? 1 : 0)
+}
+fn()

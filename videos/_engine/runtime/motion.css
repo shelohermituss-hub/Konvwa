@@ -1,0 +1,148 @@
+/* KONVWA motion engine — static styles for every scene type.
+ * Colours come from CSS variables that the brand kit writes (see lib/emit.mjs): --bg --bg2 --ink --mute --accent --accent2 --card --line
+ * and the translucent accents --a12 --a25 --a45. Fonts are named here so the renderer embeds them (never set a font only from script). */
+
+.mo, .mo * { box-sizing: border-box; margin: 0; padding: 0; }
+.mo { position: absolute; inset: 0; overflow: hidden; font-family: "Poppins", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+.mo img { display: block; }
+.mo-stage { position: absolute; inset: 0; overflow: hidden; background: var(--bg); color: var(--ink); }
+.mo-abs { position: absolute; }
+.mo-ic { display: block; flex: none; }
+
+/* ---------- text ---------- */
+.mo-center { display: flex; align-items: center; justify-content: center; }
+.mo-stack { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; width: 100%; text-align: center; }
+.mo-text { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; column-gap: 0.26em; row-gap: 0.06em; text-align: center; line-height: 1.04; font-weight: 800; letter-spacing: -0.02em; max-width: 100%; }
+.mo-h1 { color: var(--ink); }
+.mo-head { position: absolute; }
+.mo-w { display: inline-block; white-space: nowrap; }
+.mo-br { flex-basis: 100%; height: 0; }
+.mo-a { color: var(--atext); padding: 0 0.06em; margin: 0 -0.06em; background: linear-gradient(var(--a25), var(--a25)) no-repeat 0 92% / 0% 36%; }
+.mo-s { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-weight: 600; letter-spacing: -0.01em; }
+.mo-sub { font-weight: 500; color: var(--mute); letter-spacing: -0.005em; line-height: 1.16; }
+.mo-tag { font-weight: 700; color: var(--atext); }
+.mo-center-text { text-align: center; justify-content: center; }
+.mo-letters { flex-direction: column; flex-wrap: nowrap; align-items: center; justify-content: center; }
+.mo-line { display: flex; justify-content: center; white-space: nowrap; }
+.mo-ch { display: inline-block; white-space: pre; }
+.mo-sp { width: 0.28em; }
+.mo-cap { font-weight: 600; font-size: 34px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--atext); }
+.mo-glyph { position: absolute; color: var(--atext); line-height: 1; pointer-events: none; opacity: 0; font-weight: 800; }
+.mo-brandname { display: flex; justify-content: center; font-weight: 900; letter-spacing: 0.03em; line-height: 1; white-space: nowrap; color: #fff; }
+.mo-brandname.mo-ink { color: var(--ink); }
+.mo-handle { font-size: 46px; font-weight: 600; color: var(--mute); letter-spacing: 0.04em; }
+.mo-logo { display: block; }
+.mo-logo svg { display: block; width: 100%; height: 100%; }
+
+/* ---------- backgrounds ---------- */
+.mo-glow { border-radius: 50%; pointer-events: none; }
+.mo-rings { pointer-events: none; }
+.mo-dots { background-image: radial-gradient(var(--dot) 3px, transparent 3.5px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse at 50% 46%, #000 12%, transparent 74%); mask-image: radial-gradient(ellipse at 50% 46%, #000 12%, transparent 74%); pointer-events: none; }
+.mo-dapple { border-radius: 50%; background: radial-gradient(circle, var(--shade) 0%, transparent 66%); pointer-events: none; }
+.mo-onaccent { background: var(--accent); }
+.mo-poster { background: var(--bg2); }
+
+/* ---------- hook.statement / ring waves ---------- */
+.mo-ringwave { border: 5px solid var(--accent); border-radius: 50%; pointer-events: none; opacity: 0; }
+
+/* ---------- hook.pulse ---------- */
+.mo-halo { border-radius: 50%; background: radial-gradient(circle, var(--accent) 0%, var(--a25) 34%, transparent 64%); pointer-events: none; }
+.mo-pill { border-radius: 999px; background: var(--accent); color: #fff; overflow: hidden; box-shadow: 0 30px 80px var(--a45); }
+.mo-pillglow { border-radius: 999px; background: var(--accent); filter: blur(70px); pointer-events: none; }
+.mo-pill-ic { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255, 255, 255, 0.22); }
+.mo-pilltext { flex-wrap: nowrap; justify-content: flex-start; align-items: center; text-align: left; color: #fff; font-weight: 700; letter-spacing: -0.01em; }
+.mo-pilltext .mo-a { color: #fff; background: none; }
+
+/* ---------- hook.pixel ---------- */
+.mo-px { font-weight: 900; color: var(--ink); letter-spacing: -0.01em; }
+.mo-pxcell { background: var(--accent); opacity: 0; pointer-events: none; }
+.mo-scan { background: linear-gradient(90deg, transparent 0%, var(--a45) 50%, transparent 100%); pointer-events: none; }
+
+/* ---------- hook.logo ---------- */
+.mo-layer { overflow: hidden; }
+.mo-flip { background: var(--navy); overflow: hidden; }
+.mo-flip .mo-brandname { color: #fff; }
+.mo-white .mo-logo svg { filter: brightness(0) invert(1); }
+
+/* ---------- hook.product ---------- */
+.mo-ribbon { pointer-events: none; }
+.mo-dotring { border: 7px dotted var(--accent); border-radius: 50%; pointer-events: none; }
+.mo-dotring-thin { border: 3px dashed var(--ink); opacity: 0.5; }
+.mo-prod { object-fit: contain; mix-blend-mode: multiply; }
+.mo-dark .mo-prod { mix-blend-mode: normal; background: #fff; border-radius: 56px; padding: 22px; }
+.mo-kicker { font-weight: 500; color: var(--mute); letter-spacing: 0.01em; max-width: 940px; justify-content: flex-start; text-align: left; line-height: 1.1; }
+.mo-caps { font-family: "Archivo Black", "Poppins", sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.96; color: var(--ink); max-width: 940px; justify-content: flex-start; text-align: left; }
+.mo-kicker[style*="right"], .mo-caps[style*="right"] { justify-content: flex-end; text-align: right; }
+
+/* ---------- hook.poster ---------- */
+.mo-pcircle { border-radius: 50%; background: var(--accent); }
+.mo-pdot { border-radius: 50%; background: var(--ink); }
+.mo-ghost { font-family: "Archivo Black", "Poppins", sans-serif; font-weight: 400; color: var(--ghost); text-transform: uppercase; text-align: center; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; pointer-events: none; }
+.mo-ghost2 { -webkit-text-stroke: 2px var(--line); }
+.mo-cut { object-fit: contain; filter: grayscale(1) contrast(1.08); mix-blend-mode: multiply; }
+.mo-poster-text { color: var(--ink); text-shadow: 0 4px 30px var(--bg2); }
+.mo-micro { font-size: 25px; line-height: 1.5; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); font-weight: 500; }
+.mo-micro b { display: block; font-weight: 700; }
+.mo-qr i { position: absolute; width: 8px; height: 8px; background: var(--ink); }
+.mo-barcode i { position: absolute; top: 0; bottom: 0; background: var(--ink); }
+
+/* ---------- numbers ---------- */
+.mo-disc { border-radius: 50%; background: var(--card); box-shadow: 0 50px 120px var(--a25); border: 3px solid var(--line); }
+.mo-bignum { display: flex; align-items: baseline; justify-content: center; font-weight: 900; line-height: 1; letter-spacing: -0.04em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mo-numval { color: var(--atext); }
+.mo-numpre, .mo-numsuf { color: var(--ink); font-weight: 800; letter-spacing: -0.02em; margin: 0 0.04em; }
+.mo-flip3d { perspective: 900px; }
+.mo-flip3d .mo-w { backface-visibility: hidden; }
+
+/* ---------- scene.kinetic / chips / callouts ---------- */
+.mo-badge { display: flex; align-items: center; justify-content: center; width: 150px; height: 150px; border-radius: 46px; background: var(--accent); box-shadow: 0 22px 54px var(--a45); }
+.mo-chipwrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+.mo-chip { display: flex; align-items: center; gap: 26px; padding: 26px 56px 26px 28px; border-radius: 999px; border: 3px solid var(--line); background: var(--card); color: var(--ink); font-size: 64px; font-weight: 700; white-space: nowrap; box-shadow: 0 16px 40px rgba(10, 22, 40, 0.07); }
+.mo-chip-ic { display: flex; align-items: center; justify-content: center; width: 84px; height: 84px; border-radius: 50%; background: var(--a12); color: inherit; flex: none; font-style: normal; }
+.mo-lines { pointer-events: none; }
+.mo-hex { filter: drop-shadow(0 30px 50px var(--a25)); }
+.mo-hexic { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.mo-label { font-size: 52px; font-weight: 700; line-height: 1.1; color: var(--ink); width: max-content; letter-spacing: -0.01em; }
+
+/* ---------- scene.product ---------- */
+.mo-tile { background: var(--card); border-radius: 46px; padding: 26px; box-shadow: 0 34px 80px rgba(10, 22, 40, 0.18); border: 2px solid var(--line); }
+.mo-tile-img { width: 100%; height: 100%; object-fit: contain; border-radius: 26px; }
+.mo-price { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); background: var(--accent); color: #fff; font-weight: 800; font-size: 46px; padding: 10px 32px; border-radius: 999px; white-space: nowrap; box-shadow: 0 14px 34px var(--a45); }
+
+/* ---------- scene.ui ---------- */
+.mo-uicol { display: flex; flex-direction: column; gap: 30px; }
+.mo-toast { display: flex; align-items: center; gap: 28px; padding: 28px 36px; border-radius: 38px; background: var(--ink); color: var(--bg); font-size: 46px; font-weight: 600; box-shadow: 0 26px 60px rgba(10, 22, 40, 0.25); line-height: 1.15; }
+.mo-toast i { display: flex; align-items: center; justify-content: center; width: 78px; height: 78px; border-radius: 50%; background: var(--accent); flex: none; }
+.mo-uicard { display: flex; align-items: center; gap: 28px; padding: 30px 36px; border-radius: 38px; background: var(--card); border: 2px solid var(--line); box-shadow: 0 26px 64px rgba(10, 22, 40, 0.13); }
+.mo-uicard i { display: flex; align-items: center; justify-content: center; width: 92px; height: 92px; border-radius: 28px; background: var(--a12); flex: none; }
+.mo-uicard div { flex: 1; min-width: 0; }
+.mo-uicard b { display: block; font-size: 44px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+.mo-uicard em { display: block; font-style: normal; font-size: 30px; color: var(--mute); margin-top: 4px; }
+.mo-uicard strong { font-size: 48px; font-weight: 800; color: var(--atext); white-space: nowrap; }
+.mo-btn { text-align: center; padding: 36px 20px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 800; font-size: 52px; box-shadow: 0 24px 56px var(--a45); }
+.mo-cursor { pointer-events: none; filter: drop-shadow(0 8px 14px rgba(10, 22, 40, 0.3)); z-index: 5; }
+.mo-ripple { border: 6px solid var(--accent); border-radius: 50%; pointer-events: none; }
+
+/* ---------- scene.route ---------- */
+.mo-node { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.mo-node-c { display: flex; align-items: center; justify-content: center; width: 200px; height: 200px; flex: none; border-radius: 50%; background: var(--card); border: 5px solid var(--accent); box-shadow: 0 24px 60px var(--a25); }
+.mo-node-l { margin-top: 18px; font-weight: 800; font-size: 46px; color: var(--ink); white-space: nowrap; }
+.mo-parcel { display: flex; align-items: center; justify-content: center; border-radius: 34px; background: var(--accent); box-shadow: 0 16px 40px var(--a45); z-index: 3; }
+.mo-badge2 { text-align: center; padding: 22px 30px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 700; font-size: 46px; }
+
+/* ---------- scene.steps ---------- */
+.mo-step { display: flex; align-items: center; gap: 36px; }
+.mo-stepn { display: flex; align-items: center; justify-content: center; width: 122px; height: 122px; border-radius: 50%; flex: none; font-size: 62px; font-weight: 800; background: var(--card); border: 5px solid var(--accent); color: var(--ink); }
+.mo-stept { min-width: 0; }
+.mo-stept b { display: block; font-size: 56px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+.mo-stept em { display: block; font-style: normal; font-size: 34px; color: var(--mute); margin-top: 6px; }
+.mo-stepline { background: var(--accent); border-radius: 3px; }
+
+/* ---------- scene.ghost / scene.end ---------- */
+.mo-sq { background: var(--accent); border-radius: 20px; }
+.mo-cta { text-align: center; padding: 36px 20px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 800; font-size: 52px; box-shadow: 0 26px 64px var(--a45); }
+
+/* ---------- tone: the whole scene on the brand colour (strongest hook look) ---------- */
+.mo-tone-accent { --bg: var(--brand); --bg2: var(--brand); --ink: #fff; --mute: rgba(255, 255, 255, 0.88); --accent: #fff; --atext: var(--navy); --card: #fff; --line: rgba(255, 255, 255, 0.4); --dot: rgba(255, 255, 255, 0.22); --ghost: rgba(255, 255, 255, 0.16); --shade: rgba(10, 22, 40, 0.1); --a12: rgba(255, 255, 255, 0.16); --a25: rgba(255, 255, 255, 0.3); --a45: rgba(255, 255, 255, 0.5); --flash: #fff; }
+.mo-tone-accent .mo-a { background: linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32)) no-repeat 0 92% / 0% 36%; }
+.mo-tone-accent .mo-glow { opacity: 0.2 !important; }

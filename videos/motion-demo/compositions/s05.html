@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s05-template">
+      <style>
+        .mo-stage { font-family: "Poppins", sans-serif; }
+        .mo-s { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost { font-family: "Archivo Black", "Poppins", sans-serif; }
+      </style>
+      <div class="mo" id="s05-root" data-composition-id="s05" data-width="1080" data-height="1920"></div>
+      <script>
+        (function () {
+          var M = window.MOTION;
+          var spec = {"type":"scene.ui","text":"Payez avec *MonCash*","items":[{"kind":"toast","title":"Colis arrivé à Port-au-Prince","icon":"package"},{"kind":"card","title":"Commande #1042","sub":"Livraison à domicile","value":"En route","icon":"truck"},{"kind":"button","title":"Payer avec MonCash"}],"vo":"Payez avec MonCash ou NatCash, en toute sécurité."};
+          var env = {"id":"s05","W":1080,"H":1920,"safe":{"t":250,"b":440,"l":70,"r":70},"dur":4.09,"seed":75,"theme":"light","vo":{"start":0.5,"dur":2.91},"transIn":{"kind":"circle","dur":0.55},"transOut":{"kind":"circle","dur":0.55}};
+          env.brand = M.brand;
+          env.pal = M.pals[env.theme];
+          var root = document.getElementById("s05-root");
+          var tl = gsap.timeline({ paused: true });
+          M.mount(root, tl, spec, env);
+          window.__timelines = window.__timelines || {};
+          window.__timelines["s05"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

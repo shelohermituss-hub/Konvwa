@@ -1,0 +1,53 @@
+{
+  "id": "konvwa",
+  "name": "KONVWA",
+  "handle": "konvwa.shop",
+  "tagline": "Achetez, nous livrons.",
+  "cta": "Téléchargez l'app",
+  "audience": "Particuliers · Revendeurs · Entreprises",
+  "lang": "fr-FR",
+  "currency": "HTG",
+  "logo": "konvwa-logo.svg",
+  "accent": "#F05A28",
+  "accent2": "#FF7252",
+  "navy": "#0A1628",
+  "themes": {
+    "light": {
+      "bg": "#F7F1EB",
+      "bg2": "#EFE7E0",
+      "ink": "#0A1628",
+      "mute": "#5B6474",
+      "card": "#FFFFFF",
+      "line": "#E6DDD4",
+      "dot": "rgba(10,22,40,0.10)",
+      "shade": "rgba(10,22,40,0.055)",
+      "ghost": "rgba(10,22,40,0.07)",
+      "flash": "#FFFFFF",
+      "atext": "#DF4F1F"
+    },
+    "dark": {
+      "bg": "#0A1628",
+      "bg2": "#0F1F38",
+      "ink": "#FFFFFF",
+      "mute": "#9AA7BD",
+      "card": "#12233F",
+      "line": "#25406A",
+      "dot": "rgba(255,255,255,0.10)",
+      "shade": "rgba(255,255,255,0.05)",
+      "ghost": "rgba(255,255,255,0.07)",
+      "flash": "#F05A28",
+      "atext": "#F05A28"
+    }
+  },
+  "voice": {
+    "model": "t2a-gemini-3-1-flash-tts",
+    "name": "Algieba",
+    "language": "fr-FR"
+  },
+  "register": "vouvoiement, direct, concret, prix en HTG, pas de jargon",
+  "fonts": [
+    "Poppins",
+    "Playfair Display",
+    "Archivo Black"
+  ]
+}

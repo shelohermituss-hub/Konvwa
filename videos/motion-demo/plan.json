@@ -1,0 +1,51 @@
+{
+  "name": "motion-demo",
+  "format": "9:16",
+  "total": 22.09,
+  "scenes": [
+    {
+      "id": "s01",
+      "type": "hook.statement",
+      "start": 0,
+      "dur": 2.84,
+      "transition": null
+    },
+    {
+      "id": "s02",
+      "type": "scene.chips",
+      "start": 2.42,
+      "dur": 5.64,
+      "transition": "whip"
+    },
+    {
+      "id": "s03",
+      "type": "scene.product",
+      "start": 7.6,
+      "dur": 3.62,
+      "transition": "up"
+    },
+    {
+      "id": "s04",
+      "type": "scene.route",
+      "start": 10.72,
+      "dur": 4.8,
+      "transition": "scale"
+    },
+    {
+      "id": "s05",
+      "type": "scene.ui",
+      "start": 14.97,
+      "dur": 4.09,
+      "transition": "circle"
+    },
+    {
+      "id": "s06",
+      "type": "scene.end",
+      "start": 18.51,
+      "dur": 3.58,
+      "transition": "circle"
+    }
+  ],
+  "sfx": 27,
+  "hookEnd": 2.84
+}

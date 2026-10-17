@@ -1,0 +1,170 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { ENGINE, M, RUNTIME_FILES } from '../lib/runtime.mjs'
+import { estimateVo, loadBrief, validateBrief } from '../lib/brief.mjs'
+import { hookReport, placeSfx, schedule } from '../lib/schedule.mjs'
+import { emitProject } from '../lib/emit.mjs'
+
+/** Source of a runtime file without its comments (a comment may talk about what the code must not do). */
+const code = (f) => fs.readFileSync(path.join(ENGINE, 'runtime', f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+const demo = () => loadBrief(path.join(ENGINE, 'examples/demo.brief.json'))
+const exists = (ref) => ref.startsWith('lib:') && fs.existsSync(path.join(ENGINE, 'library', ref.slice(4)))
+
+describe('markup and layout', () => {
+  it('keeps punctuation glued to the styled word before it', () => {
+    const w = M.parse('Achetez *partout*.').filter((x) => x.t === 'w')
+    expect(w.map((x) => x.s)).toEqual(['Achetez', 'partout.'])
+    expect(w[1].k).toBe('a')
+  })
+  it('counts words without the markup', () => {
+    expect(M.wordCount('Une _idée_ *forte* | deux')).toBe(4)
+    expect(M.plain('Un *mot* | deux')).toBe('Un mot deux')
+  })
+  it('picks the biggest size that fits and balances the lines', () => {
+    const big = M.layout('Achetez *partout*.|Recevez en Haïti.', 940, { max: 200, min: 70, maxLines: 4 })
+    expect(big.size).toBeGreaterThan(150)
+    expect(big.lines).toBeLessThanOrEqual(4)
+    const t = M.layout('Le prix final, *en gourdes*', 940, { max: 120, min: 64, maxLines: 2 })
+    expect(t.lines).toBe(2)
+    expect(t.markup.split('|').map((s) => s.trim()).every(Boolean)).toBe(true)
+  })
+  it('never loses or reorders words', () => {
+    const src = 'Vous voulez *tout* acheter en ligne ?'
+    expect(M.plain(M.layout(src, 900, { max: 190, min: 70 }).markup)).toBe(M.plain(src))
+  })
+})
+
+describe('runtime registry', () => {
+  it('every scene type is well formed and its sounds exist', () => {
+    expect(M.types().length).toBeGreaterThanOrEqual(18)
+    const env = { vo: { start: 0.2, dur: 2 }, theme: 'light' }
+    for (const t of M.types()) {
+      const d = M.catalog[t]
+      expect(['hook', 'scene', 'end']).toContain(d.kind)
+      expect(d.min).toBeLessThanOrEqual(d.max)
+      expect(typeof d.build).toBe('function')
+      const spec = { text: 'Un *mot*', items: ['a', 'b'], labels: ['a', 'b'], steps: [{ title: 'a' }], images: ['x', 'y'], value: 5 }
+      for (const c of d.sfx(spec, env)) {
+        expect(M.CUES[c.cue], `${t} → ${c.cue}`).toBeTruthy()
+        expect(c.t).toBeGreaterThanOrEqual(0)
+      }
+    }
+    for (const t of M.types().filter(M.isHook)) expect(M.catalog[t].max).toBeLessThanOrEqual(M.HOOK.maxDur)
+  })
+  it('sound files of every cue are in the pack', () => {
+    for (const [name, c] of Object.entries(M.CUES)) expect(fs.existsSync(path.join(ENGINE, 'sfx', c.file)), name).toBe(true)
+  })
+  it('stays deterministic: no clock, no Math.random', () => {
+    for (const f of RUNTIME_FILES) {
+      const src = code(f)
+      expect(src, f).not.toMatch(/Math\.random|Date\.now|new Date|performance\.now|requestAnimationFrame|setTimeout|setInterval/)
+    }
+  })
+  it('never writes a <br> into body text', () => {
+    for (const f of RUNTIME_FILES) expect(code(f), f).not.toMatch(/<br\s*\/?>/)
+  })
+})
+
+describe('brief validation (the 3-second law)', () => {
+  it('accepts the demo brief', () => {
+    const { brief } = demo()
+    expect(validateBrief(brief, exists).errors).toEqual([])
+  })
+  it('refuses a video that does not open with a hook', () => {
+    const { brief } = demo()
+    brief.scenes.shift()
+    expect(validateBrief(brief, exists).errors.join(' ')).toMatch(/hook/)
+  })
+  it('refuses a hook that is too long to read or to say', () => {
+    const { brief } = demo()
+    brief.scenes[0].text = 'Achetez tout ce que vous voulez partout dans le monde entier aujourd’hui'
+    brief.scenes[0].vo = 'Achetez tout ce que vous voulez partout dans le monde entier aujourd’hui sans aucun stress'
+    const e = validateBrief(brief, exists).errors.join(' ')
+    expect(e).toMatch(/caractères/)
+    expect(e).toMatch(/trop longue à dire/)
+  })
+  it('refuses unknown types, missing fields and missing images', () => {
+    const { brief } = demo()
+    brief.scenes[1] = { type: 'scene.nope' }
+    brief.scenes[2] = { type: 'scene.product', images: ['lib:products/absent.jpg'] }
+    brief.scenes[3] = { type: 'scene.route' }
+    const e = validateBrief(brief, exists).errors.join('\n')
+    expect(e).toMatch(/type inconnu/)
+    expect(e).toMatch(/image introuvable/)
+    expect(e).toMatch(/exige le champ "from"/)
+  })
+  it('estimates a spoken line from its words', () => {
+    expect(estimateVo('')).toBe(0)
+    expect(estimateVo('Achetez partout. Recevez en Haïti.')).toBeGreaterThan(1.5)
+    expect(estimateVo('Achetez partout. Recevez en Haïti.')).toBeLessThan(3)
+  })
+})
+
+describe('timeline', () => {
+  const { brief } = demo()
+  const tl = schedule(brief, {})
+  it('overlaps each scene by exactly its transition and the hook stays under 3 s', () => {
+    expect(tl.scenes[0].dur).toBeLessThanOrEqual(M.HOOK.maxDur)
+    for (let i = 1; i < tl.scenes.length; i++) {
+      const prev = tl.scenes[i - 1]
+      const ov = tl.scenes[i].env.transIn ? tl.scenes[i].env.transIn.dur : 0
+      expect(tl.scenes[i].start).toBeCloseTo(prev.start + prev.dur - ov, 2)
+      expect(prev.env.transOut?.dur ?? 0).toBe(ov)
+    }
+    expect(tl.total).toBeCloseTo(tl.scenes.at(-1).start + tl.scenes.at(-1).dur, 2)
+  })
+  it('lets a real voice-over drive the length of the scene', () => {
+    const longer = schedule(brief, { s02: 9 })
+    expect(longer.scenes[1].dur).toBeGreaterThan(tl.scenes[1].dur)
+    expect(longer.scenes[1].vo.measured).toBe(true)
+    expect(longer.total).toBeGreaterThan(tl.total)
+  })
+  it('passes its own hook checklist', () => {
+    const sfx = placeSfx(brief, tl)
+    for (const it of hookReport(brief, tl, sfx)) expect(it.ok, it.label).toBe(true)
+  })
+  it('places sounds inside the video on tracks that never overlap', () => {
+    const sfx = placeSfx(brief, tl)
+    expect(sfx.length).toBeGreaterThan(10)
+    const byTrack = {}
+    for (const e of sfx) {
+      expect(e.t + e.dur).toBeLessThanOrEqual(tl.total + 1e-6)
+      expect(e.track).toBeGreaterThanOrEqual(20)
+      ;(byTrack[e.track] ||= []).push(e)
+    }
+    for (const list of Object.values(byTrack)) for (let i = 1; i < list.length; i++) expect(list[i].t).toBeGreaterThanOrEqual(list[i - 1].t + list[i - 1].dur - 1e-6)
+    expect(new Set(sfx.map((e) => e.id)).size).toBe(sfx.length)
+  })
+  it('is silent when asked to be', () => {
+    const quiet = { ...brief, sfx: { level: 0 } }
+    expect(placeSfx(quiet, tl)).toEqual([])
+  })
+})
+
+describe('project generation', () => {
+  it('writes a complete HyperFrames project', () => {
+    const { brief, brand } = demo()
+    const tl = schedule(brief, {})
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'motion-'))
+    const r = emitProject({ brief, brand, tl, voDur: {}, projectDir: dir })
+    const index = fs.readFileSync(path.join(dir, 'index.html'), 'utf8')
+    for (const sc of tl.scenes) {
+      expect(index).toContain(`data-composition-src="compositions/${sc.id}.html"`)
+      const html = fs.readFileSync(path.join(dir, 'compositions', `${sc.id}.html`), 'utf8')
+      expect(html).toContain(`window.__timelines["${sc.id}"]`)
+      expect(html).toContain('data-composition-id')
+    }
+    expect(index).toContain(`data-duration="${tl.total}"`)
+    expect(index).toContain('font-family: "Poppins"')
+    const ids = [...index.matchAll(/<audio id="([^"]+)"/g)].map((m) => m[1])
+    expect(ids.length).toBe(r.sfx.length)
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const e of r.sfx) expect(fs.existsSync(path.join(dir, 'assets/sfx', e.file))).toBe(true)
+    for (const f of RUNTIME_FILES) expect(fs.existsSync(path.join(dir, 'assets/engine', f))).toBe(true)
+    expect(fs.existsSync(path.join(dir, 'assets/lib/products/powerbeats.jpg'))).toBe(true)
+    expect(JSON.parse(fs.readFileSync(path.join(dir, 'vo.json'), 'utf8')).lines.length).toBe(6)
+    fs.rmSync(dir, { recursive: true, force: true })
+  })
+})
