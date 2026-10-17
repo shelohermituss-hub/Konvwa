@@ -29,7 +29,8 @@ describe('Muscle & Strength and Neewer sources', () => {
     expect(discoverUrl('neewer', '')).toBe('https://neewer.com/collections/top-daily-seller/products.json?limit=60')
     expect(discoverUrl('neewer', 'new-releases')).toBe('https://neewer.com/collections/new-releases/products.json?limit=60')
     expect(discoverUrl('neewer', 'x/../../admin')).toBeNull()
-    expect(discoverUrl('neewer', 'constructor')).toBeNull()
+    expect(discoverUrl('neewer', 'Phone-Cases')).toBeNull()
+    expect(discoverUrl('neewer', 'phone-cases')).toBe('https://neewer.com/collections/phone-cases/products.json?limit=60')
   })
 
   it('takes Muscle & Strength product pages only (not categories, reviews or other sites)', () => {

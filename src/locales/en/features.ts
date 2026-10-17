@@ -1064,6 +1064,7 @@ export const FEATURES_EN: Record<string, string> = {
   "Achat direct : minimum {0} {1}. Ajoutez au panier pour mélanger plusieurs variantes.": "Direct purchase: minimum {0} {1}. Add to cart to mix several variants.",
   "Il manque {0} pour le minimum de {1}.": "{0} short of the minimum of {1}.",
   "Tous les produits trouvés sont déjà dans la boutique. Essayez un autre rayon.": "All the products found are already in the shop. Try another department.",
+  "Collection : {0}": "Collection: {0}",
   "{0} produits publiés.": "{0} products published.",
   "Trouve jusqu'à 20 produits populaires sur Amazon.com, Alibaba, Muscle & Strength ou Neewer, sans que vous fournissiez de lien, puis les importe d'un coup (fiche, photos, variantes, avis, colis) en brouillons masqués. Vous relisez puis publiez.": "Finds up to 20 popular products on Amazon.com, Alibaba, Muscle & Strength or Neewer without you providing any link, then imports them all at once (sheet, photos, variants, reviews, package) as hidden drafts. You review, then publish.",
   "Muscle & Strength : classements": "Muscle & Strength: rankings",

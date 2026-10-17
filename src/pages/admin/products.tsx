@@ -142,6 +142,7 @@ export function AdminProductsPage() {
   const [importOpen, setImportOpen] = useState(false)
   const [linkOpen, setLinkOpen] = useState(false)
   const [discoverOpen, setDiscoverOpen] = useState(false)
+  const [collection, setCollection] = useState<string | null>(null)
   const [backfillOpen, setBackfillOpen] = useState(false)
   // what the last link import found (kept only to show where the price and the package come from)
   // reviews read from the supplier page: saved with the product (source shown to customers)
@@ -535,8 +536,8 @@ export function AdminProductsPage() {
           </Button>
         </div>
       </div>
-      <ProductDiscoverDialog open={discoverOpen} onClose={() => setDiscoverOpen(false)} onDone={() => void load()} />
-      <ProductLinkImport open={linkOpen} onClose={() => setLinkOpen(false)} onImported={(d) => void applyImport(d)} />
+      <ProductDiscoverDialog open={discoverOpen} collection={collection} onClose={() => { setDiscoverOpen(false); setCollection(null) }} onDone={() => void load()} />
+      <ProductLinkImport open={linkOpen} onClose={() => setLinkOpen(false)} onImported={(d) => void applyImport(d)} onCollection={(h) => { setLinkOpen(false); setCollection(h); setDiscoverOpen(true) }} />
       <VariantsBackfill open={backfillOpen} onClose={() => setBackfillOpen(false)} onDone={() => void load()} />
       <ProductImportDialog open={importOpen} onClose={() => setImportOpen(false)} onDone={() => void load()} />
 

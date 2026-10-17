@@ -100,6 +100,15 @@ export async function estimateShipping(args: {
   return { kg: res.kg, chargeable_kg: res.chargeable_kg, cbm: res.cbm, options: res.options ?? [] }
 }
 
+/** Handle of a Neewer collection link (neewer.com/collections/<handle>, not a product inside it), or null. */
+export function neewerCollectionHandle(link: string): string | null {
+  try {
+    const u = new URL(link)
+    if (u.hostname.replace(/^www\./, '') !== 'neewer.com') return null
+    return /^\/collections\/([a-z0-9][a-z0-9-]{0,79})\/?$/i.exec(u.pathname)?.[1]?.toLowerCase() ?? null
+  } catch { return null }
+}
+
 export interface DiscoveredProduct {
   /** Amazon ASIN, Alibaba product number, Muscle & Strength page name or Neewer handle. */
   asin: string

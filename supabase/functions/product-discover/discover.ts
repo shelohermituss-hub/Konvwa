@@ -159,7 +159,8 @@ export const NEEWER_COLLECTIONS: Record<string, string> = {
 
 export function discoverUrl(source: string, department: string): string | null {
   if (source === 'muscle_strength') return Object.hasOwn(MS_PAGES, department) ? `https://www.muscleandstrength.com/store/${department || 'top-sellers'}` : null
-  if (source === 'neewer') return Object.hasOwn(NEEWER_COLLECTIONS, department) ? `https://neewer.com/collections/${department || 'top-daily-seller'}/products.json?limit=60` : null
+  // any collection of the shop: its handle (letters, digits, dashes) is the only part taken from the caller
+  if (source === 'neewer') return /^(?:[a-z0-9][a-z0-9-]{0,79})?$/.test(department) ? `https://neewer.com/collections/${department || 'top-daily-seller'}/products.json?limit=60` : null
   if (source === 'alibaba' || source === 'amazon_search') {
     if (!Object.hasOwn(SEARCH_TOPICS, department)) return null
     if (source === 'alibaba') return `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(department || 'hot selling products')}&IndexArea=product_en&tab=all&viewtype=G`

@@ -53,7 +53,7 @@ function Thumb({ src, small }: { src: string | null; small?: boolean }) {
  * Admin: finds 20 trending / well-rated products by itself (Amazon's public rankings, Alibaba, Muscle & Strength's and Neewer's best sellers), then imports them all at once as hidden drafts
  * (same reading, translation and pricing as the single-link import). Nothing is shown to customers until the team publishes them.
  */
-export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
+export function ProductDiscoverDialog({ open, collection, onClose, onDone }: { open: boolean; collection?: string | null; onClose: () => void; onDone: () => void }) {
   const [source, setSource] = useState('movers')
   const [department, setDepartment] = useState('')
   const [searching, setSearching] = useState(false)
@@ -69,7 +69,10 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
   useEffect(() => {
     if (!open) return
     setFound(null); setError(''); setStatus({}); setImporting(false); setSearching(false); setPicked(new Set()); stop.current = false
-  }, [open])
+    // opened with a Neewer collection link pasted in the link import: its products are listed right away
+    if (collection) { setSource('neewer'); setDepartment(collection); void search('neewer', collection) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, collection])
 
   const chosen = (found ?? []).filter((c) => picked.has(c.asin))
   const results = Object.entries(status)
@@ -77,10 +80,10 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
   const saved = results.flatMap(([, s]) => (s.state === 'ok' ? [s.id] : []))
   const started = results.length > 0
 
-  async function search() {
+  async function search(src = source, dep = department) {
     setSearching(true); setError(''); setFound(null); setStatus({})
     try {
-      const r = await discoverAmazonProducts({ source, department, count: 20 })
+      const r = await discoverAmazonProducts({ source: src, department: dep, count: 20 })
       setFound(r.candidates); setSkipped(r.skipped_existing)
       setPicked(new Set(r.candidates.map((c) => c.asin)))
       if (r.candidates.length === 0) setError(tr('Tous les produits trouvés sont déjà dans la boutique. Essayez un autre rayon.'))
@@ -152,7 +155,10 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
                           <NativeSelectOptGroup key={g} label={tr(g)}>{items.map(([v, l]) => <NativeSelectOption key={v} value={v}>{tr(l)}</NativeSelectOption>)}</NativeSelectOptGroup>
                         ))}
                       </>
-                    : (SHOP_LISTS[source] ?? DEPARTMENTS).map(([v, l]) => <NativeSelectOption key={v || 'all'} value={v}>{tr(l)}</NativeSelectOption>)}
+                    : <>
+                        {(SHOP_LISTS[source] ?? DEPARTMENTS).map(([v, l]) => <NativeSelectOption key={v || 'all'} value={v}>{tr(l)}</NativeSelectOption>)}
+                        {source === 'neewer' && department && !SHOP_LISTS.neewer.some(([v]) => v === department) && <NativeSelectOption value={department}>{tr('Collection : {0}', department)}</NativeSelectOption>}
+                      </>}
                 </NativeSelect>
               </label>
             </div>

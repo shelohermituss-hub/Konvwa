@@ -3,11 +3,11 @@ import { Link2, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { importProductFromLink, type ImportedProduct } from '@/lib/product-import-api'
+import { importProductFromLink, neewerCollectionHandle, type ImportedProduct } from '@/lib/product-import-api'
 import { tr } from '@/lib/i18n'
 
 /** Paste a product link (Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu, Southood, Neewer, Muscle & Strength): the product sheet (and its package) is filled for you to check before saving. */
-export function ProductLinkImport({ open, onClose, onImported }: { open: boolean; onClose: () => void; onImported: (p: ImportedProduct) => void }) {
+export function ProductLinkImport({ open, onClose, onImported, onCollection }: { open: boolean; onClose: () => void; onImported: (p: ImportedProduct) => void; onCollection: (handle: string) => void }) {
   const [url, setUrl] = useState('')
   const [busy, setBusy] = useState(false)
   const [step, setStep] = useState(0)
@@ -23,6 +23,9 @@ export function ProductLinkImport({ open, onClose, onImported }: { open: boolean
   async function run() {
     const link = url.trim()
     if (!/^https:\/\//i.test(link)) { setError(tr('Collez un lien complet qui commence par https://')); return }
+    // a collection is a list of products: it goes to the bulk import instead
+    const collection = neewerCollectionHandle(link)
+    if (collection) { onCollection(collection); return }
     setBusy(true); setError(''); setStep(0)
     try {
       const data = await importProductFromLink(link)
