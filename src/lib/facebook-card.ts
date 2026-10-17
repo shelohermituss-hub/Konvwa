@@ -88,20 +88,35 @@ function fit(c: Ctx, s: string, width: number, maxLines: number, start: number, 
   return { lines: kept, size: min }
 }
 
-function mark(c: Ctx, x: number, y: number, s: number) {
-  c.fillStyle = ORANGE; rr(c, x, y, s, s, s * 0.26); c.fill()
-  text(c, 'K', x + s / 2, y + s * 0.74, `800 ${Math.round(s * 0.62)}px ${FONT}`, '#fff', 'center')
+/** The KONVWA icon (three stacked crates), drawn from the same shapes as the site's logo; `h` is its height. Returns its width. */
+function crates(c: Ctx, x: number, y: number, h: number): number {
+  const k = h / 72
+  const box = (bx: number, by: number, bw: number, bh: number, r: number, fill: string, alpha = 1) => {
+    c.globalAlpha = alpha; c.fillStyle = fill; rr(c, x + bx * k, y + by * k, bw * k, bh * k, r * k); c.fill(); c.globalAlpha = 1
+  }
+  for (const [bx, by] of [[1, 45], [35, 29], [69, 13]]) box(bx, by, 40, 24, 6, '#000000', 0.1)
+  const crate = (bx: number, by: number, body: string, side: string, slat: string, sx: number, sy: number) => {
+    box(bx, by, 40, 24, 6, body); box(bx, by, 9, 24, 6, side); box(bx + 31, by, 9, 24, 6, side)
+    for (const d of [0, 4.5, 9]) box(sx, sy + d, 22, 2.5, 1.2, slat)
+  }
+  crate(0, 42, '#8B2200', '#6B1800', '#7A1E00', 9, 48)
+  crate(34, 26, '#E53D15', '#C23010', '#CC3510', 43, 32)
+  crate(68, 10, '#FF7252', '#E05A3A', '#EE6040', 77, 16)
+  return 110 * k
 }
 
-/** Logo: orange mark + wordmark, centred on `x` or starting at it. */
+/** Logo: the crates icon + the wordmark, centred on `x` or starting at it, with the shop's tagline under it. */
 function logo(c: Ctx, x: number, y: number, align: 'center' | 'left', size = 52) {
-  c.font = `800 ${Math.round(size * 0.78)}px ${FONT}`
+  const ih = Math.round(size * 1.45)
+  const fs = Math.round(size * 0.92)
+  c.font = `800 ${fs}px ${FONT}`
   const tw = c.measureText('KONVWA').width
-  const total = size + 14 + tw
+  const iw = 110 * (ih / 72)
+  const total = iw + 16 + tw
   const x0 = align === 'center' ? x - total / 2 : x
-  mark(c, x0, y, size)
-  text(c, 'KONVWA', x0 + size + 14, y + size * 0.76, `800 ${Math.round(size * 0.78)}px ${FONT}`, INK, 'left')
-  text(c, tr('IMPORTATION HAÏTI'), align === 'center' ? x : x0, y + size + 28, `600 17px ${FONT}`, MUTED, align === 'center' ? 'center' : 'left')
+  crates(c, x0, y, ih)
+  text(c, 'KONVWA', x0 + iw + 16, y + ih * 0.78, `800 ${fs}px ${FONT}`, INK, 'left')
+  text(c, tr('IMPORTATION HAÏTI'), align === 'center' ? x : x0, y + ih + 28, `600 17px ${FONT}`, MUTED, align === 'center' ? 'center' : 'left')
 }
 
 function discountBadge(c: Ctx, cx: number, cy: number, r: number, pct: number) {
