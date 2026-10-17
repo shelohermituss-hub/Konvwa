@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="hud-template">
+      <style>
+        #hud-root {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          font-family: "IBM Plex Mono", monospace;
+          color: #fff6ec;
+          text-shadow: 0 2px 10px rgba(4, 9, 22, 0.85);
+        }
+        #hud-chrome {
+          position: absolute;
+          inset: 0;
+        }
+        .hud-band {
+          position: absolute;
+          left: 0;
+          width: 1920px;
+          height: 240px;
+        }
+        #hud-band-t {
+          top: 0;
+          background: linear-gradient(180deg, rgba(8, 16, 36, 0.94) 0%, rgba(8, 16, 36, 0.7) 52%, rgba(8, 16, 36, 0) 100%);
+        }
+        #hud-band-b {
+          bottom: 0;
+          background: linear-gradient(0deg, rgba(8, 16, 36, 0.94) 0%, rgba(8, 16, 36, 0.7) 52%, rgba(8, 16, 36, 0) 100%);
+        }
+        .hud-corner {
+          position: absolute;
+          width: 34px;
+          height: 34px;
+          border-color: rgba(255, 246, 236, 0.55);
+          border-style: solid;
+          border-width: 0;
+        }
+        #hud-c1 { left: 40px; top: 40px; border-left-width: 3px; border-top-width: 3px; }
+        #hud-c2 { right: 40px; top: 40px; border-right-width: 3px; border-top-width: 3px; }
+        #hud-c3 { left: 40px; bottom: 40px; border-left-width: 3px; border-bottom-width: 3px; }
+        #hud-c4 { right: 40px; bottom: 40px; border-right-width: 3px; border-bottom-width: 3px; }
+        #hud-brand {
+          position: absolute;
+          left: 74px;
+          top: 62px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        #hud-mark {
+          width: 40px;
+          height: 40px;
+          display: block;
+        }
+        #hud-brand-name {
+          font-family: "Archivo Black", sans-serif;
+          font-size: 26px;
+          letter-spacing: 0.02em;
+          line-height: 1;
+        }
+        #hud-brand-sub {
+          font-size: 18px;
+          letter-spacing: 0.12em;
+          opacity: 0.9;
+          margin-top: 6px;
+        }
+        #hud-live {
+          position: absolute;
+          right: 74px;
+          top: 62px;
+          text-align: right;
+        }
+        #hud-live-row {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 12px;
+          font-size: 18px;
+          letter-spacing: 0.14em;
+        }
+        #hud-dot {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #ff5a4e;
+          display: block;
+        }
+        #hud-clock {
+          font-size: 34px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          font-variant-numeric: tabular-nums;
+          margin-top: 4px;
+          width: 340px;
+        }
+        #hud-chapter {
+          position: absolute;
+          left: 74px;
+          bottom: 66px;
+          width: 620px;
+          height: 80px;
+        }
+        .hud-chap {
+          position: absolute;
+          left: 0;
+          bottom: 22px;
+          font-size: 24px;
+          letter-spacing: 0.14em;
+          white-space: nowrap;
+          opacity: 0;
+        }
+        .hud-chap b {
+          color: #ffc857;
+          font-weight: 700;
+          margin-right: 14px;
+        }
+        #hud-segs {
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          display: flex;
+          gap: 8px;
+        }
+        .hud-seg {
+          width: 56px;
+          height: 5px;
+          background: rgba(255, 246, 236, 0.22);
+          display: block;
+          position: relative;
+          overflow: hidden;
+        }
+        .hud-seg i {
+          position: absolute;
+          inset: 0;
+          background: #e23d3d;
+          display: block;
+          transform-origin: 0 50%;
+        }
+        #hud-count {
+          position: absolute;
+          right: 74px;
+          bottom: 62px;
+          text-align: right;
+        }
+        #hud-count-label {
+          font-size: 18px;
+          letter-spacing: 0.14em;
+          opacity: 0.92;
+        }
+        #hud-count-num {
+          font-size: 34px;
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+          margin-top: 4px;
+          width: 420px;
+        }
+        #hud-wipe {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+      </style>
+
+      <div id="hud-root" data-composition-id="hud" data-width="1920" data-height="1080">
+        <div id="hud-chrome">
+          <div class="hud-band" id="hud-band-t" data-layout-allow-occlusion></div>
+          <div class="hud-band" id="hud-band-b" data-layout-allow-occlusion></div>
+          <div class="hud-corner" id="hud-c1"></div>
+          <div class="hud-corner" id="hud-c2"></div>
+          <div class="hud-corner" id="hud-c3"></div>
+          <div class="hud-corner" id="hud-c4"></div>
+          <div id="hud-brand">
+            <svg id="hud-mark" viewBox="-26 -36 52 58"></svg>
+            <div>
+              <div id="hud-brand-name">PÈRE NOËL SA</div>
+              <div id="hud-brand-sub">CENTRE DE CONTRÔLE</div>
+            </div>
+          </div>
+          <div id="hud-live">
+            <div id="hud-live-row"><i id="hud-dot"></i><span>EN DIRECT · <span id="hud-date">24.12</span></span></div>
+            <div id="hud-clock">23:58:40</div>
+          </div>
+          <div id="hud-chapter">
+            <div class="hud-chap" id="hud-ch1"><b>01</b>LA DEMANDE</div>
+            <div class="hud-chap" id="hud-ch2"><b>02</b>PRODUCTION</div>
+            <div class="hud-chap" id="hud-ch3"><b>03</b>ITINÉRAIRE</div>
+            <div class="hud-chap" id="hud-ch4"><b>04</b>LA FLOTTE</div>
+            <div class="hud-chap" id="hud-ch5"><b>05</b>DERNIER KILOMÈTRE</div>
+            <div class="hud-chap" id="hud-ch6"><b>06</b>PERFORMANCE</div>
+            <div id="hud-segs">
+              <span class="hud-seg"><i id="hud-sg1"></i></span><span class="hud-seg"><i id="hud-sg2"></i></span><span class="hud-seg"><i id="hud-sg3"></i></span><span class="hud-seg"><i id="hud-sg4"></i></span><span class="hud-seg"><i id="hud-sg5"></i></span><span class="hud-seg"><i id="hud-sg6"></i></span>
+            </div>
+          </div>
+          <div id="hud-count">
+            <div id="hud-count-label">COLIS LIVRÉS</div>
+            <div id="hud-count-num">0</div>
+          </div>
+        </div>
+        <svg id="hud-wipe" viewBox="0 0 1920 1080"></svg>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const tl = gsap.timeline({ paused: true });
+          const CUTS = [6.6, 13.9, 19.4, 26.2, 36.2, 41.2];
+          const STARTS = [0, 6.6, 13.9, 19.4, 26.2, 36.2];
+
+          // Petit emblème : cube cadeau iso rouge.
+          document.getElementById("hud-mark").innerHTML = I.gift(-12, -12, 0, 24, "#E23D3D", "#FFC857", { shadow: false, h: 22 });
+
+          // --- Entrée du HUD ---
+          tl.fromTo("#hud-chrome", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out" }, 0.3);
+          tl.fromTo(".hud-corner", { scale: 1.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "power3.out", stagger: 0.06 }, 0.3);
+          tl.fromTo("#hud-brand", { x: -24 }, { x: 0, duration: 0.6, ease: "power3.out" }, 0.35);
+          tl.fromTo("#hud-live", { x: 24 }, { x: 0, duration: 0.6, ease: "power3.out" }, 0.4);
+          tl.fromTo("#hud-dot", { opacity: 1 }, { opacity: 0.25, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 39 }, 0.5);
+
+          // --- Chapitres + segments de progression ---
+          for (let i = 0; i < 6; i++) {
+            const el = "#hud-ch" + (i + 1);
+            const a = STARTS[i] + (i === 0 ? 0.5 : 0.35);
+            const b = CUTS[i] - 0.3;
+            tl.fromTo(el, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, a);
+            tl.to(el, { opacity: 0, y: -10, duration: 0.25, ease: "power2.in" }, b);
+            tl.fromTo("#hud-sg" + (i + 1), { scaleX: 0 }, { scaleX: 1, duration: CUTS[i] - STARTS[i], ease: "none" }, STARTS[i]);
+          }
+
+          // --- Horloge : la nuit défile (23:58:40 → minuit au décollage → 06:30) ---
+          const clock = document.getElementById("hud-clock");
+          const date = document.getElementById("hud-date");
+          const pad = (n) => String(n).padStart(2, "0");
+          const T0 = 23 * 3600 + 58 * 60 + 40;
+          function secondsAt(t) {
+            if (t <= 19.4) return T0 + (t / 19.4) * 80;
+            const k = Math.min(1, (t - 19.4) / (41.2 - 19.4));
+            return 24 * 3600 + k * (6.5 * 3600);
+          }
+          const clk = { t: 0 };
+          tl.fromTo(
+            clk,
+            { t: 0 },
+            {
+              t: 46,
+              duration: 46,
+              ease: "none",
+              onUpdate: () => {
+                const s = Math.floor(secondsAt(clk.t));
+                const d = s % 86400;
+                clock.textContent = pad(Math.floor(d / 3600)) + ":" + pad(Math.floor((d % 3600) / 60)) + ":" + pad(d % 60);
+                date.textContent = s >= 86400 ? "25.12" : "24.12";
+              },
+            },
+            0,
+          );
+
+          // --- Compteur de colis livrés ---
+          const num = document.getElementById("hud-count-num");
+          const fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+          const cnt = { v: 0 };
+          tl.fromTo(cnt, { v: 0 }, { v: 2147000000, duration: 41.0 - 20.4, ease: "power1.in", onUpdate: () => (num.textContent = fmt(cnt.v)) }, 20.4);
+          tl.fromTo("#hud-count-num", { color: "#FFF6EC" }, { color: "#FFC857", duration: 0.4 }, 40.6);
+
+          // --- Sortie du HUD avant la marque ---
+          tl.to("#hud-chrome", { opacity: 0, duration: 0.4, ease: "power2.in" }, 40.8);
+
+          // --- Transition signature : balayage de losanges isométriques ---
+          const wipe = document.getElementById("hud-wipe");
+          const W = 176;
+          const H = W * Math.tan(Math.PI / 6);
+          const R = I.rng(24);
+          let html = "";
+          const centers = [];
+          let n = 0;
+          for (let j = -1; j <= Math.ceil(1080 / (H / 2)) + 1; j++) {
+            for (let i = -1; i <= Math.ceil(1920 / W) + 1; i++) {
+              const cx = i * W + (j % 2 ? W / 2 : 0);
+              const cy = (j * H) / 2;
+              const roll = R();
+              const fill = roll < 0.12 ? "#E23D3D" : roll < 0.3 ? "#13254C" : "#0B1630";
+              html += `<polygon id="hud-d${n}" class="hud-d" points="${cx},${cy - H / 2 - 1} ${cx + W / 2 + 1},${cy} ${cx},${cy + H / 2 + 1} ${cx - W / 2 - 1},${cy}" fill="${fill}"/>`;
+              centers.push([cx, cy]);
+              n++;
+            }
+          }
+          wipe.innerHTML = html;
+          const diamonds = centers.map((_, k) => document.getElementById("hud-d" + k));
+          const delays = centers.map(([cx, cy]) => ((cx + (1080 - cy)) / 3000) * 0.26);
+          diamonds.forEach((el, k) => el.setAttribute("data-o", centers[k].join(" ")));
+          tl.set(diamonds, { scale: 0, svgOrigin: (k) => centers[k].join(" ") }, 0);
+          for (const cut of CUTS) {
+            tl.fromTo(
+              diamonds,
+              { scale: 0 },
+              { scale: 1, svgOrigin: (k) => centers[k].join(" "), duration: 0.2, ease: "power2.in", stagger: (k) => delays[k], immediateRender: false },
+              cut - 0.47,
+            );
+            tl.fromTo(
+              diamonds,
+              { scale: 1 },
+              { scale: 0, svgOrigin: (k) => centers[k].join(" "), duration: 0.22, ease: "power2.out", stagger: (k) => delays[k], immediateRender: false },
+              cut + 0.02,
+            );
+          }
+
+          window.__timelines["hud"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

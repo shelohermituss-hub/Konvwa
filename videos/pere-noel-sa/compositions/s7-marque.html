@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s7-marque-template">
+      <style>
+        #s7-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #0b1630;
+          color: #fff6ec;
+        }
+        #s7-dawn {
+          position: absolute;
+          left: -10%;
+          right: -10%;
+          bottom: -520px;
+          height: 1000px;
+          border-radius: 50%;
+          background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255, 168, 112, 0.75) 0%, rgba(232, 92, 96, 0.4) 38%, rgba(11, 22, 48, 0) 72%);
+        }
+        #s7-sky,
+        #s7-emb {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        #s7-lock {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 560px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+        #s7-word {
+          font-family: "Archivo Black", sans-serif;
+          font-size: 128px;
+          line-height: 1;
+          letter-spacing: 0.01em;
+          display: flex;
+          white-space: nowrap;
+        }
+        .s7-ch {
+          display: inline-block;
+        }
+        .s7-sp {
+          display: inline-block;
+          width: 36px;
+        }
+        #s7-sa {
+          color: #e23d3d;
+        }
+        #s7-tag {
+          font-family: "Archivo Black", sans-serif;
+          font-size: 58px;
+          color: #ffc857;
+          margin-top: 26px;
+          display: flex;
+          gap: 18px;
+          white-space: nowrap;
+        }
+        .s7-tw {
+          display: inline-block;
+        }
+        #s7-meta {
+          font-family: "IBM Plex Mono", monospace;
+          font-size: 24px;
+          letter-spacing: 0.2em;
+          margin-top: 30px;
+          opacity: 0.8;
+          white-space: nowrap;
+        }
+        #s7-rule {
+          width: 640px;
+          height: 3px;
+          background: rgba(255, 246, 236, 0.35);
+          margin-top: 30px;
+          display: block;
+          transform-origin: 50% 50%;
+        }
+      </style>
+
+      <div id="s7-root" data-composition-id="s7-marque" data-width="1920" data-height="1080">
+        <div id="s7-dawn"></div>
+        <svg id="s7-sky" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="0 0 1920 1080"></svg>
+        <svg id="s7-emb" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-960 -540 1920 1080"></svg>
+        <div id="s7-lock">
+          <div id="s7-word"></div>
+          <div id="s7-tag"><span class="s7-tw">Livré</span><span class="s7-tw">avant</span><span class="s7-tw">le</span><span class="s7-tw">réveil.</span></div>
+          <i id="s7-rule"></i>
+          <div id="s7-meta">LOGISTIQUE DE NUIT DEPUIS 1823</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const P = I.P;
+          const r1 = I.r1;
+          const tl = gsap.timeline({ paused: true });
+          const R = I.rng(1823);
+
+          // étoiles + neige légère
+          let sky = "";
+          for (let i = 0; i < 80; i++) sky += `<circle id="s7-st${i}" cx="${r1(R() * 1920)}" cy="${r1(R() * 760)}" r="${r1(0.8 + R() * 1.7)}" fill="#FFF6EC" opacity="0.55"/>`;
+          const sn = I.snowfall("s7s", 60, 12, 0, -20, 1920, 1100);
+          document.getElementById("s7-sky").innerHTML = sky + sn.svg;
+
+          // emblème : paquet iso assemblé face par face
+          const S = 190;
+          const H = 160;
+          const x = -S / 2,
+            y = -S / 2,
+            z = 0;
+          const c = I.shade("#E23D3D");
+          const rb = I.shade("#FFC857");
+          const k = 30;
+          const L = (a1, a2, b1, b2, f) => I.quad("L", y + S, a1, a2, b1, b2, f);
+          const Rq = (a1, a2, b1, b2, f) => I.quad("R", x + S, a1, a2, b1, b2, f);
+          const T = (a1, a2, b1, b2, f) => I.quad("T", z + H, a1, a2, b1, b2, f);
+          const faceL = L(x, x + S, z, z + H, c.left) + L(-k / 2, k / 2, z, z + H, rb.left);
+          const faceR = Rq(y, y + S, z, z + H, c.right) + Rq(-k / 2, k / 2, z, z + H, rb.right);
+          const faceT = T(x, x + S, y, y + S, c.top) + T(-k / 2, k / 2, y, y + S, rb.top) + T(x, x + S, -k / 2, k / 2, rb.top);
+          const ctop = P(0, 0, z + H);
+          const bow = `<g transform="translate(${r1(ctop[0])},${r1(ctop[1])})"><g id="s7-bow">
+              <path d="M0,-6 C-30,-56 -84,-40 -64,-14 C-52,2 -20,-2 0,-6 Z" fill="${rb.right}"/>
+              <path d="M0,-6 C30,-56 84,-40 64,-14 C52,2 20,-2 0,-6 Z" fill="${rb.top}"/>
+              <path d="M-4,-4 L-30,30 L-18,26 L-12,40 Z" fill="${rb.left}"/><path d="M4,-4 L30,30 L18,26 L12,40 Z" fill="${rb.right}"/>
+              <ellipse cx="0" cy="-6" rx="14" ry="11" fill="${rb.left}"/>
+            </g></g>`;
+          const edges = I.line([P(x, y + S, z + H), P(x + S, y + S, z + H), P(x + S, y, z + H)], "#FFE1D9", 2.5, 'opacity="0.8"') + I.line([P(x + S, y + S, z), P(x + S, y + S, z + H)], "#FFE1D9", 2, 'opacity="0.5"');
+          const shadow = `<ellipse cx="${r1(P(0, 0, 0)[0] - 30)}" cy="${r1(P(0, 0, 0)[1] + 72)}" rx="230" ry="42" fill="rgba(4,9,22,0.45)" id="s7-shadow"/>`;
+          const sparkle = (id, cx, cy, s) => `<g transform="translate(${cx},${cy})"><g id="${id}"><path d="M0,-${s} L${s * 0.22},-${s * 0.22} L${s},0 L${s * 0.22},${s * 0.22} L0,${s} L-${s * 0.22},${s * 0.22} L-${s},0 L-${s * 0.22},-${s * 0.22} Z" fill="#FFF6EC"/></g></g>`;
+          const emb = `<g transform="translate(0,-90)">${shadow}<g id="s7-fl">${faceL}</g><g id="s7-fr">${faceR}</g><g id="s7-ft">${faceT}</g><g id="s7-edges">${edges}</g>${bow}${sparkle("s7-sp1", 150, -260, 22)}${sparkle("s7-sp2", -170, -130, 14)}${sparkle("s7-sp3", 190, -40, 12)}</g>`;
+          document.getElementById("s7-emb").innerHTML = emb;
+
+          // mot-symbole lettre par lettre
+          const word = document.getElementById("s7-word");
+          let html = "";
+          let idx = 0;
+          for (const part of ["PÈRE", "NOËL", "SA"]) {
+            if (idx) html += `<span class="s7-sp"></span>`;
+            for (const ch of part) html += `<span class="s7-ch"${part === "SA" ? ' style="color:#E23D3D"' : ""}>${ch}</span>`;
+            idx++;
+          }
+          word.innerHTML = html;
+
+          // ---------- animation ----------
+          tl.fromTo("#s7-dawn", { y: 260, opacity: 0.2 }, { y: 0, opacity: 1, duration: 4.6, ease: "sine.out" }, 0.1);
+          tl.fromTo("#s7-fl", { x: -420, y: 120, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.6, ease: "power4.out" }, 0.2);
+          tl.fromTo("#s7-fr", { x: 420, y: 120, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.6, ease: "power4.out" }, 0.3);
+          tl.fromTo("#s7-ft", { y: -380, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power4.out" }, 0.4);
+          tl.fromTo("#s7-edges", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.95);
+          tl.fromTo("#s7-shadow", { opacity: 0, scale: 0.5, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.7, ease: "power3.out" }, 0.3);
+          tl.fromTo("#s7-bow", { scale: 0, rotation: -40, transformOrigin: "50% 70%" }, { scale: 1, rotation: 0, duration: 0.55, ease: "back.out(2)" }, 0.95);
+          tl.fromTo("#s7-emb", { y: 0 }, { y: -8, duration: 1.6, ease: "sine.inOut", yoyo: true, repeat: 1 }, 1.4);
+          ["#s7-sp1", "#s7-sp2", "#s7-sp3"].forEach((s, i) => {
+            tl.fromTo(s, { scale: 0, rotation: 0, transformOrigin: "50% 50%" }, { scale: 1, rotation: 90, duration: 0.5, ease: "power2.out", yoyo: true, repeat: 1 }, 1.2 + i * 0.35);
+          });
+          tl.fromTo(".s7-ch", { opacity: 0, y: 70, rotationX: -70, transformPerspective: 700 }, { opacity: 1, y: 0, rotationX: 0, duration: 0.5, ease: "power4.out", stagger: 0.045 }, 0.45);
+          tl.fromTo(".s7-tw", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.28 }, 2.05);
+          tl.fromTo("#s7-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power3.inOut" }, 2.9);
+          tl.fromTo("#s7-meta", { opacity: 0, y: 16 }, { opacity: 0.8, y: 0, duration: 0.6, ease: "power3.out" }, 3.05);
+          for (let i = 0; i < 80; i += 3) tl.fromTo("#s7-st" + i, { opacity: 0.2 }, { opacity: 0.9, duration: 0.7, yoyo: true, repeat: 3, ease: "sine.inOut" }, (i % 9) * 0.1);
+          const clk = { t: 0 };
+          tl.fromTo(clk, { t: 0 }, { t: 4.8, duration: 4.8, ease: "none", onUpdate: () => sn.update(clk.t) }, 0);
+
+          window.__timelines["s7-marque"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

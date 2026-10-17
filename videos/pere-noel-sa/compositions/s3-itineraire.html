@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s3-itineraire-template">
+      <style>
+        #s3-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 70% 70% at 62% 50%, #1a2f60 0%, #0b1630 74%);
+          color: #fff6ec;
+        }
+        #s3-world {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        #s3-card {
+          position: absolute;
+          left: 110px;
+          top: 250px;
+          width: 560px;
+          padding: 34px 40px 36px;
+          background: rgba(11, 22, 48, 0.92);
+          border-top: 6px solid #ffc857;
+          border-radius: 6px 6px 24px 24px;
+          box-shadow: 0 30px 60px rgba(4, 9, 22, 0.55);
+          font-family: "IBM Plex Mono", monospace;
+        }
+        #s3-card-k {
+          font-size: 24px;
+          letter-spacing: 0.16em;
+          color: #ffc857;
+        }
+        #s3-card-t {
+          font-family: "Archivo Black", sans-serif;
+          font-size: 50px;
+          line-height: 1.02;
+          margin: 12px 0 26px;
+        }
+        .s3-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          padding: 14px 0;
+          border-top: 2px solid rgba(255, 246, 236, 0.14);
+          font-size: 24px;
+          letter-spacing: 0.08em;
+        }
+        .s3-row b {
+          font-size: 36px;
+          font-weight: 700;
+          color: #fff6ec;
+          font-variant-numeric: tabular-nums;
+          letter-spacing: 0;
+        }
+        .s3-row span {
+          opacity: 0.78;
+        }
+        #s3-bar {
+          margin-top: 18px;
+          height: 10px;
+          border-radius: 5px;
+          background: rgba(255, 246, 236, 0.16);
+          overflow: hidden;
+          position: relative;
+        }
+        #s3-bar i {
+          position: absolute;
+          inset: 0;
+          display: block;
+          background: #e23d3d;
+          transform-origin: 0 50%;
+        }
+      </style>
+
+      <div id="s3-root" data-composition-id="s3-itineraire" data-width="1920" data-height="1080">
+        <svg id="s3-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-960 -540 1920 1080"></svg>
+        <div id="s3-card">
+          <div id="s3-card-k">ALGORITHME · TOURNÉE 2026</div>
+          <div id="s3-card-t">Itinéraire optimisé</div>
+          <div class="s3-row" id="s3-r1"><span>FUSEAUX HORAIRES</span><b id="s3-v1">0</b></div>
+          <div class="s3-row" id="s3-r2"><span>ARRÊTS</span><b id="s3-v2">0</b></div>
+          <div class="s3-row" id="s3-r3"><span>TEMPS DE CALCUL</span><b id="s3-v3">0,00 s</b></div>
+          <div id="s3-bar"><i id="s3-bar-i"></i></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const P = I.P;
+          const r1 = I.r1;
+          const tl = gsap.timeline({ paused: true });
+
+          // ---------- carte équirectangulaire posée à plat ----------
+          const W = 1120;
+          const LAT0 = 80;
+          const LAT1 = -60;
+          const H = (W * (LAT0 - LAT1)) / 360;
+          const U = (lon) => ((lon + 180) / 360) * W;
+          const Vv = (lat) => ((LAT0 - lat) / (LAT0 - LAT1)) * H;
+          const land = [
+            [[-168,65],[-160,71],[-140,70],[-120,70],[-95,72],[-80,73],[-70,66],[-62,58],[-56,52],[-66,45],[-70,42],[-76,35],[-81,31],[-80,26],[-82,25],[-84,30],[-90,29],[-97,27],[-97,22],[-92,18],[-87,21],[-88,16],[-84,11],[-79,9],[-80,7],[-84,9],[-90,13],[-96,16],[-105,20],[-110,24],[-112,30],[-117,32],[-120,35],[-124,40],[-124,46],[-127,50],[-134,57],[-142,60],[-152,59],[-158,56],[-165,60]],
+            [[-55,60],[-45,60],[-38,65],[-22,70],[-20,76],[-18,80],[-35,80],[-60,80],[-72,78],[-66,76],[-58,72],[-52,66]],
+            [[-80,8],[-72,12],[-62,10],[-52,5],[-50,0],[-44,-2],[-35,-6],[-38,-14],[-40,-22],[-48,-26],[-53,-34],[-58,-38],[-63,-41],[-66,-46],[-69,-52],[-74,-53],[-75,-46],[-73,-38],[-71,-30],[-70,-18],[-76,-14],[-81,-6],[-80,0],[-78,3]],
+            [[-10,36],[-9,43],[-2,44],[-4,48],[2,51],[8,54],[8,57],[5,62],[14,67],[22,70],[32,70],[42,67],[55,69],[70,73],[80,73],[100,77],[115,74],[130,72],[142,72],[160,70],[170,70],[180,66],[178,62],[165,60],[160,53],[156,51],[150,58],[140,54],[140,48],[132,43],[128,38],[126,34],[120,30],[121,24],[115,22],[108,21],[106,16],[109,12],[104,9],[101,3],[103,1],[98,8],[98,15],[94,17],[92,22],[88,22],[80,15],[78,8],[73,16],[72,21],[67,25],[62,25],[57,26],[56,24],[59,22],[52,17],[44,12],[43,16],[39,22],[35,28],[34,31],[36,36],[30,36],[27,37],[26,40],[23,40],[22,37],[18,40],[16,38],[12,44],[8,44],[3,43],[0,39],[-6,36]],
+            [[-17,21],[-16,12],[-12,7],[-8,4],[-2,5],[5,6],[9,4],[10,-2],[13,-9],[12,-17],[15,-26],[18,-34],[22,-34],[27,-33],[32,-28],[35,-22],[40,-15],[40,-10],[39,-4],[43,2],[48,6],[51,12],[44,11],[42,13],[38,18],[34,26],[32,31],[25,32],[20,31],[11,33],[10,37],[3,37],[-5,36],[-10,30],[-14,26]],
+            [[113,-22],[114,-34],[118,-35],[124,-33],[131,-31],[138,-35],[141,-38],[147,-38],[150,-37],[153,-32],[153,-25],[146,-19],[142,-11],[136,-12],[131,-12],[126,-14],[122,-18]],
+            [[-5,50],[1,51],[2,53],[-1,55],[-2,58],[-6,58],[-5,55],[-3,54]],
+            [[130,31],[135,34],[140,35],[142,40],[141,45],[139,40],[135,35]],
+            [[44,-25],[47,-25],[50,-15],[49,-12],[44,-17]],
+            [[109,1],[117,7],[119,1],[116,-4],[110,-3]],
+            [[95,5],[98,4],[106,-6],[102,-4]],
+            [[131,-1],[141,-3],[150,-10],[141,-9],[137,-5]],
+            [[172,-35],[178,-38],[174,-41],[167,-46],[171,-44]],
+            [[-75,20],[-72,20],[-68,18.5],[-70,18],[-74,18]],
+            [[-85,22],[-80,23],[-74,20],[-78,20],[-84,21]],
+          ].map((poly) => poly.map(([lo, la]) => [U(lo), Vv(Math.min(la, LAT0))]));
+          function inside(px, py, poly) {
+            let c = false;
+            for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+              const [xi, yi] = poly[i];
+              const [xj, yj] = poly[j];
+              if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) c = !c;
+            }
+            return c;
+          }
+          let dots = "";
+          const STEP = 9;
+          for (let v = STEP / 2; v < H; v += STEP) {
+            for (let u = STEP / 2; u < W; u += STEP) {
+              if (land.some((p) => inside(u, v, p))) dots += `<circle cx="${r1(u)}" cy="${r1(v)}" r="3.1"/>`;
+            }
+          }
+
+          // villes, d'est en ouest (on suit minuit)
+          const cities = [
+            ["Wellington", 175, -41],
+            ["Sydney", 151, -34],
+            ["Tokyo", 140, 36],
+            ["Pékin", 116, 40],
+            ["Delhi", 77, 29],
+            ["Moscou", 37, 56],
+            ["Paris", 2, 49],
+            ["Dakar", -17, 15],
+            ["Rio", -43, -23],
+            ["Port-au-Prince", -72.3, 18.5],
+            ["New York", -74, 41],
+            ["Mexico", -99, 19],
+            ["Los Angeles", -118, 34],
+            ["Anchorage", -150, 61],
+          ].map(([n, lo, la]) => ({ n, u: U(lo), v: Vv(la) }));
+          const labeled = { Tokyo: 1, Paris: 1, "Port-au-Prince": 1, "New York": -1, Sydney: 1 };
+
+          // chemin lissé (Catmull-Rom → Bézier)
+          let d = `M${r1(cities[0].u)},${r1(cities[0].v)}`;
+          for (let i = 0; i < cities.length - 1; i++) {
+            const p0 = cities[Math.max(0, i - 1)];
+            const p1 = cities[i];
+            const p2 = cities[i + 1];
+            const p3 = cities[Math.min(cities.length - 1, i + 2)];
+            const c1 = [p1.u + (p2.u - p0.u) / 6, p1.v + (p2.v - p0.v) / 6];
+            const c2 = [p2.u - (p3.u - p1.u) / 6, p2.v - (p3.v - p1.v) / 6];
+            d += ` C${r1(c1[0])},${r1(c1[1])} ${r1(c2[0])},${r1(c2[1])} ${r1(p2.u)},${r1(p2.v)}`;
+          }
+
+          // fuseaux horaires
+          let zones = "";
+          for (let k = 0; k <= 24; k++) zones += `<line x1="${r1((k * W) / 24)}" y1="0" x2="${r1((k * W) / 24)}" y2="${r1(H)}" stroke="#4C74B8" stroke-width="1.2" opacity="0.35"/>`;
+
+          const M = 46;
+          // (u, v) carte → monde : x = v, y = W - u  (est vers le haut-droite, nord vers le haut-gauche)
+          const MS = (u, v, zz) => P(v, W - u, zz);
+          const mapMatrix = (() => {
+            const o = MS(0, 0, 3);
+            return `matrix(${I.C},${-I.S},${I.C},${I.S},${r1(o[0])},${r1(o[1])})`;
+          })();
+          let w = I.defs("s3");
+          // socle
+          w += I.box(-M, -M, -46, H + 2 * M, W + 2 * M, 46, "#14284F", { edgeW: 2 });
+          w += I.box(-M + 10, -M + 10, 0, H + 2 * M - 20, W + 2 * M - 20, 3, "#0E1D3D", { shadow: false, edge: false });
+          w += `<g transform="${mapMatrix}">
+            <rect x="0" y="0" width="${W}" height="${r1(H)}" fill="#0F2148"/>
+            ${zones}
+            <rect id="s3-zone" x="0" y="0" width="${r1(W / 24)}" height="${r1(H)}" fill="#FFC857" opacity="0.16"/>
+            <g fill="#3E68AE">${dots}</g>
+            <path id="s3-route-glow" d="${d}" fill="none" stroke="#FFC857" stroke-width="12" stroke-linecap="round" opacity="0.22"/>
+            <path id="s3-route" d="${d}" fill="none" stroke="#FFC857" stroke-width="4.5" stroke-linecap="round"/>
+          </g>`;
+          // repères des fuseaux le long du bord avant
+          w += `<g transform="${I.planeRight(H + M, W + M, 0)}">`;
+          for (let k = 0; k < 24; k++) {
+            const off = 12 - k;
+            w += `<text x="${r1(M + ((24 - k - 0.5) * W) / 24)}" y="30" text-anchor="middle" font-family="IBM Plex Mono" font-weight="700" font-size="17" fill="#8FA9D6">${off > 0 ? "+" + off : off}</text>`;
+          }
+          w += `</g>`;
+          // épingles + étiquettes (debout, espace écran)
+          let pins = "";
+          cities.forEach((c, i) => {
+            const b = MS(c.u, c.v, 3);
+            const hpin = 46;
+            const isHT = c.n === "Port-au-Prince";
+            pins += `<g transform="translate(${r1(b[0])},${r1(b[1])})"><g id="s3-pin${i}">
+              <ellipse cx="0" cy="0" rx="9" ry="5" fill="#FFC857" opacity="0.5"/>
+              <line x1="0" y1="0" x2="0" y2="${-hpin}" stroke="#FFF6EC" stroke-width="3"/>
+              <circle cx="0" cy="${-hpin}" r="${isHT ? 11 : 9}" fill="${isHT ? "#FFC857" : "#E23D3D"}" stroke="#FFF6EC" stroke-width="3"/>
+              ${labeled[c.n] ? (() => {
+                const lw = c.n.length * 13.5 + 20;
+                const lx = labeled[c.n] < 0 ? -14 - lw : 14;
+                return `<g><rect x="${lx}" y="${-hpin - 17}" width="${lw}" height="32" rx="16" fill="#0B1630" opacity="0.92"/><text x="${lx + 10}" y="${-hpin + 6}" font-family="IBM Plex Mono" font-weight="700" font-size="21" fill="${isHT ? "#FFC857" : "#FFF6EC"}">${c.n}</text></g>`;
+              })() : ""}
+            </g></g>`;
+          });
+          w += pins;
+          // tête de la tournée
+          w += `<g id="s3-head"><circle r="26" fill="url(#s3-glow)"/><circle r="9" fill="#FFF6EC"/></g>`;
+
+          const svg = document.getElementById("s3-world");
+          svg.innerHTML = w;
+
+          // ---------- tracé ----------
+          const route = document.getElementById("s3-route");
+          const glow = document.getElementById("s3-route-glow");
+          const len = route.getTotalLength() * 1.02;
+          [route, glow].forEach((el) => {
+            el.setAttribute("stroke-dasharray", `${r1(len)} ${r1(len)}`);
+          });
+          // fraction de la longueur à laquelle chaque ville est atteinte
+          const fr = [];
+          const N = 400;
+          const samples = [];
+          for (let k = 0; k <= N; k++) {
+            const p = route.getPointAtLength((k / N) * (len / 1.02));
+            samples.push([p.x, p.y]);
+          }
+          cities.forEach((c) => {
+            let best = 0;
+            let bd = 1e9;
+            samples.forEach(([x, y], k) => {
+              const dd = (x - c.u) ** 2 + (y - c.v) ** 2;
+              if (dd < bd) {
+                bd = dd;
+                best = k;
+              }
+            });
+            fr.push(best / N);
+          });
+
+          const head = document.getElementById("s3-head");
+          const zone = document.getElementById("s3-zone");
+          const T0 = 0.55;
+          const TD = 4.1;
+          const prog = { p: 0 };
+          tl.fromTo(
+            prog,
+            { p: 0 },
+            {
+              p: 1,
+              duration: TD,
+              ease: "power1.inOut",
+              onUpdate: () => {
+                const off = len * (1 - prog.p);
+                route.setAttribute("stroke-dashoffset", r1(off));
+                glow.setAttribute("stroke-dashoffset", r1(off));
+                const pt = samples[Math.round(prog.p * N)];
+                const s = MS(pt[0], pt[1], 3);
+                head.setAttribute("transform", `translate(${r1(s[0])},${r1(s[1])})`);
+                const zi = Math.min(23, Math.max(0, Math.floor((pt[0] / W) * 24)));
+                zone.setAttribute("x", r1((zi * W) / 24));
+              },
+            },
+            T0,
+          );
+          // inverse de l'ease pour poser chaque épingle quand la tête l'atteint
+          const ease = gsap.parseEase("power1.inOut");
+          const inv = (y) => {
+            let lo = 0,
+              hi = 1;
+            for (let k = 0; k < 30; k++) {
+              const m = (lo + hi) / 2;
+              if (ease(m) < y) lo = m;
+              else hi = m;
+            }
+            return (lo + hi) / 2;
+          };
+          cities.forEach((c, i) => {
+            const t = T0 + TD * inv(fr[i]) - 0.05;
+            const el = document.getElementById("s3-pin" + i);
+            const k = { s: 0 };
+            el.setAttribute("transform", "scale(0)");
+            tl.fromTo(k, { s: 0 }, { s: 1, duration: 0.38, ease: "back.out(2)", onUpdate: () => el.setAttribute("transform", `scale(${k.s.toFixed(3)})`) }, Math.max(0.2, t));
+          });
+
+          // ---------- caméra : on suit la tournée d'est en ouest ----------
+          const rig = I.camera(svg, { x: 150, y: 270, s: 1.3 });
+          const cam = rig.cam;
+          const z = { v: Math.log(1.3), x: 150, y: 270 };
+          const ap = () => {
+            cam.s = Math.exp(z.v);
+            cam.x = z.x;
+            cam.y = z.y;
+            rig.apply();
+          };
+          tl.fromTo(z, { v: Math.log(1.3), x: 150, y: 270 }, { v: Math.log(0.86), x: -650, y: 400, duration: 5.5, ease: "power1.inOut", onUpdate: ap }, 0);
+
+          // ---------- carte de données ----------
+          tl.fromTo("#s3-card", { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" }, 0.25);
+          tl.fromTo([".s3-row", "#s3-bar"], { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.1 }, 0.5);
+          const v1 = document.getElementById("s3-v1");
+          const v2 = document.getElementById("s3-v2");
+          const v3 = document.getElementById("s3-v3");
+          const c1 = { v: 0 },
+            c2 = { v: 0 },
+            c3 = { v: 0 };
+          tl.fromTo(c1, { v: 0 }, { v: 38, duration: 1.4, ease: "power2.out", onUpdate: () => (v1.textContent = Math.round(c1.v)) }, 3.3);
+          tl.fromTo(c2, { v: 0 }, { v: 526, duration: 2.6, ease: "power2.out", onUpdate: () => (v2.textContent = Math.round(c2.v) + " M") }, 0.7);
+          tl.fromTo(c3, { v: 0 }, { v: 4, duration: 1.2, ease: "power2.out", onUpdate: () => (v3.textContent = "0,0" + Math.round(c3.v) + " s") }, 0.8);
+          tl.fromTo("#s3-r1", { color: "#FFF6EC" }, { color: "#FFC857", duration: 0.3, yoyo: true, repeat: 1 }, 3.3);
+          tl.fromTo("#s3-bar-i", { scaleX: 0 }, { scaleX: 1, duration: TD, ease: "power1.inOut" }, T0);
+
+          window.__timelines["s3-itineraire"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

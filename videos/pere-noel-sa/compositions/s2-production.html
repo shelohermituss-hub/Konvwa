@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s2-production-template">
+      <style>
+        #s2-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 75% 75% at 50% 40%, #1d3366 0%, #0b1630 75%);
+          color: #fff6ec;
+        }
+        #s2-world,
+        #s2-snow {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        .s2-anchor {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 0;
+          height: 0;
+        }
+        .s2-pos {
+          position: absolute;
+          left: -320px;
+          bottom: 0;
+          width: 640px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .s2-call {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 12px 24px 12px 12px;
+          background: #0b1630;
+          border-radius: 999px;
+          font-family: "IBM Plex Mono", monospace;
+          font-weight: 700;
+          font-size: 28px;
+          letter-spacing: 0.08em;
+          white-space: nowrap;
+          box-shadow: 0 14px 34px rgba(4, 9, 22, 0.45);
+          border: 2px solid rgba(255, 200, 87, 0.55);
+        }
+        .s2-num {
+          background: #e23d3d;
+          border-radius: 999px;
+          padding: 3px 13px;
+          font-size: 24px;
+        }
+        .s2-stem {
+          display: block;
+          width: 3px;
+          height: 74px;
+          background: #ffc857;
+          transform-origin: 50% 100%;
+        }
+        .s2-dot {
+          display: block;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #ffc857;
+          margin-bottom: -7px;
+          box-shadow: 0 0 0 6px rgba(255, 200, 87, 0.25);
+        }
+        #s2-qg {
+          padding: 18px 28px 20px;
+          background: #0b1630;
+          border-radius: 18px;
+          border-left: 8px solid #e23d3d;
+          box-shadow: 0 18px 40px rgba(4, 9, 22, 0.5);
+          text-align: left;
+        }
+        #s2-qg-t {
+          font-family: "Archivo Black", sans-serif;
+          font-size: 40px;
+          line-height: 1;
+          white-space: nowrap;
+        }
+        #s2-qg-s {
+          font-family: "IBM Plex Mono", monospace;
+          font-size: 22px;
+          letter-spacing: 0.12em;
+          color: #ffc857;
+          margin-top: 8px;
+          white-space: nowrap;
+        }
+      </style>
+
+      <div id="s2-root" data-composition-id="s2-production" data-width="1920" data-height="1080">
+        <svg id="s2-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-960 -540 1920 1080"></svg>
+        <svg id="s2-snow" viewBox="0 0 1920 1080"></svg>
+        <div class="s2-anchor" id="s2-a0">
+          <div class="s2-pos">
+            <div id="s2-qg">
+              <div id="s2-qg-t">QG · PÔLE NORD</div>
+              <div id="s2-qg-s">90°00′00″ N · ATELIER CENTRAL</div>
+            </div>
+            <i class="s2-stem" id="s2-stem0"></i><i class="s2-dot"></i>
+          </div>
+        </div>
+        <div class="s2-anchor" id="s2-a1">
+          <div class="s2-pos"><div class="s2-call" id="s2-call1"><span class="s2-num">01</span>FABRICATION</div><i class="s2-stem" id="s2-stem1"></i><i class="s2-dot"></i></div>
+        </div>
+        <div class="s2-anchor" id="s2-a2">
+          <div class="s2-pos"><div class="s2-call" id="s2-call2"><span class="s2-num">02</span>EMBALLAGE</div><i class="s2-stem" id="s2-stem2"></i><i class="s2-dot"></i></div>
+        </div>
+        <div class="s2-anchor" id="s2-a3">
+          <div class="s2-pos"><div class="s2-call" id="s2-call3"><span class="s2-num">03</span>CONTRÔLE QUALITÉ</div><i class="s2-stem" id="s2-stem3"></i><i class="s2-dot"></i></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const P = I.P;
+          const tl = gsap.timeline({ paused: true });
+          const R = I.rng(902);
+          const r1 = I.r1;
+
+          // ---------- géométrie ----------
+          const BX0 = -100;
+          const BX1 = 440;
+          const BY0 = -292;
+          const BW = 56;
+          const BZ = 24;
+          const GY = -284;
+          const GS = 40;
+          const GH = 34;
+          const ST = { press: 10, wrap: 170, qc: 330 };
+          const V = 100;
+          const SPACING = 90;
+          const NG = (BX1 - BX0) / SPACING;
+
+          function prof(svg, wx, wy, wz, sc) {
+            const o = P(wx, wy, wz);
+            return `<g transform="matrix(${(I.C * sc).toFixed(4)},${(-I.S * sc).toFixed(4)},0,${sc},${r1(o[0])},${r1(o[1])})">${svg}</g>`;
+          }
+          function at(wx, wy, wz, inner, id) {
+            const o = P(wx, wy, wz);
+            return `<g transform="translate(${r1(o[0])},${r1(o[1])})"><g${id ? ` id="${id}"` : ""}>${inner}</g></g>`;
+          }
+
+          let w = I.defs("s2");
+          w += I.island(-600, -460, 1220, 920, 40, { depth: 360 });
+
+          // arbres du fond
+          w += I.tree(560, -420, 0, 150, 40, { seed: 1 });
+          w += I.tree(-570, -70, 0, 170, 46);
+
+          // usine
+          const fac = I.house({ x: -520, y: -400, w: 420, d: 300, h: 170, rh: 120, wall: "#C9533F", trim: "#6E2F28", winR: 0, chimneyAt: 290, seed: 3 });
+          w += fac.svg;
+          // enseigne
+          w += I.quad("L", -100, -505, -115, 126, 162, "#0B1630");
+          w += `<g transform="${I.planeLeft(-505, -100, 162)}"><text data-layout-allow-occlusion x="195" y="28" text-anchor="middle" font-family="Archivo Black" font-size="27" fill="#FFC857" letter-spacing="2">PÈRE NOËL SA · ATELIER CENTRAL</text></g>`;
+          // porte du tapis sur le pignon
+          w += I.quad("R", -100, -306, -222, 0, 74, "#0E1A35");
+          w += I.quad("R", -100, -310, -306, 0, 78, "#6E2F28");
+          w += I.quad("R", -100, -222, -218, 0, 78, "#6E2F28");
+          w += I.quad("R", -100, -310, -218, 74, 80, "#6E2F28");
+
+          // lutin derrière le tapis
+          w += at(170, -338, 0, I.elf(1, { coat: "#3D6FB6" }), "s2-e2");
+
+          // tapis
+          w += I.box(BX0, BY0, 0, BX1 - BX0, BW, BZ, "#3A4766", { edgeW: 1 });
+          w += I.box(BX0 - 0, BY0 - 4, BZ, BX1 - BX0, 4, 8, "#556283", { shadow: false, edge: false });
+
+          // arrières des postes
+          function gantryBack(x0, color) {
+            return I.box(x0 - 36, -318, 0, 72, 14, 150, color, { edgeW: 1 });
+          }
+          w += gantryBack(ST.press, "#3D6FB6");
+          w += gantryBack(ST.wrap, "#2F8F6B");
+          w += gantryBack(ST.qc, "#C7D2E3");
+
+          // bandes du tapis (dynamiques)
+          let stripes = "";
+          for (let j = 0; j < 18; j++) {
+            stripes += `<polygon id="s2-sp${j}" points="${I.pts([P(0, BY0 + 6, BZ), P(5, BY0 + 6, BZ), P(5, BY0 + BW - 6, BZ), P(0, BY0 + BW - 6, BZ)])}" fill="#6D7A9C" opacity="0.7"/>`;
+          }
+          w += `<g>${stripes}</g>`;
+
+          // cadeaux sur le tapis (brut → emballé)
+          const pal = [
+            ["#E23D3D", "#FFC857"],
+            ["#2F8F6B", "#F4E9D8"],
+            ["#3D6FB6", "#FFC857"],
+            ["#E8A93A", "#E23D3D"],
+            ["#B83A5E", "#F4E9D8"],
+            ["#2F8F6B", "#FFC857"],
+          ];
+          let gifts = "";
+          for (let k = 0; k < NG; k++) {
+            const raw = I.box(-GS / 2, GY, BZ, GS, GS, GH, "#C49A6C", { shadow: false, edgeW: 1 }) + I.quad("T", BZ + GH, -GS / 2, GS / 2, GY + GS / 2 - 3, GY + GS / 2 + 3, "#A87C50");
+            const wrapped = I.gift(-GS / 2, GY, BZ, GS, pal[k][0], pal[k][1], { h: GH, shadow: false });
+            const c = P(0, GY + GS / 2, BZ + GH + 34);
+            const check = `<g id="s2-ck${k}" opacity="0"><circle cx="${r1(c[0])}" cy="${r1(c[1])}" r="15" fill="#3BD18A"/><path d="M${r1(c[0] - 7)},${r1(c[1])} l5,5 l9,-10" fill="none" stroke="#0B1630" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+            gifts += `<g id="s2-g${k}"><g id="s2-gr${k}">${raw}</g><g id="s2-gw${k}" opacity="0">${wrapped}</g>${check}</g>`;
+          }
+          w += `<g>${gifts}</g>`;
+
+          // avants des postes
+          function gantryFront(x0, color, extra) {
+            let s = "";
+            s += I.box(x0 - 36, -238, 0, 12, 12, 150, color, { edgeW: 1 });
+            s += I.box(x0 + 24, -238, 0, 12, 12, 150, color, { edgeW: 1 });
+            s += extra || "";
+            s += I.box(x0 - 40, -320, 150, 80, 96, 26, color, { shadow: false });
+            return s;
+          }
+          // presse : tête mobile
+          const head = I.box(ST.press - 18, -282, 0, 36, 36, 22, "#E8A93A", { shadow: false }) + I.quad("L", -246, ST.press - 18, ST.press + 18, 4, 9, "#0B1630");
+          w += `<g id="s2-head">${head}</g>`;
+          w += gantryFront(ST.press, "#3D6FB6");
+          w += I.box(ST.press - 40, -320, 176, 80, 96, 10, "#E8A93A", { shadow: false });
+          // emballage : bobine de ruban qui tourne
+          w += gantryFront(ST.wrap, "#2F8F6B");
+          const sp = P(ST.wrap + 36, -278, 120);
+          w += `<g transform="translate(${r1(sp[0] + 18)},${r1(sp[1])})"><g id="s2-spool"><ellipse rx="26" ry="30" fill="#E23D3D"/><ellipse rx="10" ry="12" fill="#FFC857"/><path d="M0,-30 L0,30 M-26,0 L26,0" stroke="#FFC857" stroke-width="4"/></g></g>`;
+          // contrôle qualité : faisceau + écran
+          w += `<polygon id="s2-beam" points="${I.pts([P(ST.qc, -318, 24), P(ST.qc, -226, 24), P(ST.qc, -226, 146), P(ST.qc, -318, 146)])}" fill="#3BD18A" opacity="0.18"/>`;
+          w += gantryFront(ST.qc, "#C7D2E3");
+          w += I.box(ST.qc - 28, -300, 176, 56, 10, 44, "#0B1630", { shadow: false });
+          w += `<g transform="${I.planeLeft(ST.qc - 28, -290, 216)}"><text id="s2-ok" x="28" y="31" text-anchor="middle" font-family="IBM Plex Mono" font-weight="700" font-size="24" fill="#3BD18A">OK</text></g>`;
+
+          // fumée de la cheminée (monde)
+          const ct = P(fac.chimneyTop[0], fac.chimneyTop[1], fac.chimneyTop[2]);
+          let smoke = "";
+          for (let k = 0; k < 7; k++) smoke += `<circle id="s2-sm${k}" r="10" fill="#C9D3E3" opacity="0"/>`;
+          w += `<g>${smoke}</g>`;
+
+          // accessoires devant (triés par profondeur)
+          const props = [];
+          props.push({ k: -195, s: at(ST.press - 6, -205, 0, I.elf(1), "s2-e1") });
+          props.push({ k: -130, s: at(ST.qc + 20, -200, 0, I.elf(-1, { coat: "#B83A5E", hat: "#2F8F6B" }) + `<rect x="-22" y="-30" width="13" height="17" rx="2" fill="#F4F7FB" transform="rotate(-12)"/>`, "s2-e3") });
+          // sac
+          const sk = P(500, -262, 0);
+          props.push({
+            k: 238,
+            s: `<g transform="translate(${r1(sk[0])},${r1(sk[1])})"><ellipse cx="-8" cy="6" rx="60" ry="18" fill="rgba(11,22,48,0.25)"/><path d="M-52,0 Q-62,-70 -22,-92 L-8,-104 L8,-92 Q54,-74 46,0 Q0,14 -52,0 Z" fill="#8A5A3C"/><path d="M-52,0 Q-62,-70 -22,-92 L-8,-104 L-4,0 Q-30,8 -52,0 Z" fill="#6E4630"/><path d="M-20,-92 Q-8,-84 6,-92" stroke="#E23D3D" stroke-width="6" fill="none" stroke-linecap="round"/><rect x="-30" y="-122" width="20" height="18" fill="#2F8F6B"/><rect x="-6" y="-128" width="22" height="22" fill="#E23D3D"/><rect x="2" y="-128" width="5" height="22" fill="#FFC857"/></g>`,
+          });
+          props.push({ k: 330, s: at(560, -230, 0, I.elf(-1, { coat: "#2F8F6B", hat: "#E23D3D" }), "s2-e4") });
+          // pôle Nord rayé
+          let pole = "";
+          for (let i = 0; i < 12; i++) pole += I.box(-258, 242, i * 16, 16, 16, 16, i % 2 ? "#F4F7FB" : "#E23D3D", { shadow: i === 0, edge: false });
+          const pt = P(-250, 250, 200);
+          pole += `<circle cx="${r1(pt[0])}" cy="${r1(pt[1])}" r="17" fill="#E8A93A"/><circle cx="${r1(pt[0] + 5)}" cy="${r1(pt[1] - 6)}" r="6" fill="#FFE7A8"/>`;
+          props.push({ k: 0, s: pole });
+          props.push({ k: -510, s: I.tree(-560, 150, 0, 140, 40) });
+          props.push({ k: -150, s: I.tree(-470, 320, 0, 120, 34) });
+          props.push({ k: 250, s: I.tree(-150, 400, 0, 110, 30) });
+          props.push({ k: 600, s: I.tree(180, 420, 0, 150, 40) });
+          props.push({ k: 710, s: I.tree(590, 120, 0, 130, 36) });
+          // traîneau garé + rennes
+          props.push({ k: 790, s: prof(I.sleigh(), 430, 360, 0, 1.25) });
+          props.push({ k: 580, s: prof(I.reindeer(false), 430, 150, 0, 1.25) });
+          props.push({ k: 430, s: prof(I.reindeer(true), 430, 0, 0, 1.25) });
+          props.push({ k: 700, s: at(330, 330, 0, I.elf(1, { coat: "#E8A93A", hat: "#E23D3D" }), "s2-e5") });
+          props.sort((a, b) => a.k - b.k).forEach((p) => (w += p.s));
+
+          const worldSvg = document.getElementById("s2-world");
+          worldSvg.innerHTML = w;
+
+          // ---------- neige (écran) ----------
+          const sn = I.snowfall("s2s", 120, 77, 0, -20, 1920, 1100);
+          document.getElementById("s2-snow").innerHTML = sn.svg;
+
+          // ---------- simulation de l'atelier (fonction pure du temps) ----------
+          const gEls = [],
+            gr = [],
+            gw = [],
+            ck = [];
+          for (let k = 0; k < NG; k++) {
+            gEls.push(document.getElementById("s2-g" + k));
+            gr.push(document.getElementById("s2-gr" + k));
+            gw.push(document.getElementById("s2-gw" + k));
+            ck.push(document.getElementById("s2-ck" + k));
+          }
+          const spEls = [];
+          for (let j = 0; j < 18; j++) spEls.push(document.getElementById("s2-sp" + j));
+          const headEl = document.getElementById("s2-head");
+          const spool = document.getElementById("s2-spool");
+          const beamEl = document.getElementById("s2-beam");
+          const okEl = document.getElementById("s2-ok");
+          const smEls = [];
+          for (let k = 0; k < 7; k++) smEls.push(document.getElementById("s2-sm" + k));
+          const elves = [1, 2, 3, 4, 5].map((n) => document.getElementById("s2-e" + n));
+          const L = BX1 - BX0;
+          const mod = (a, m) => ((a % m) + m) % m;
+
+          function sim(t) {
+            let flash = 0;
+            for (let k = 0; k < NG; k++) {
+              const cx = BX0 + mod(k * SPACING + V * t, L);
+              let z = 0;
+              let op = 1;
+              if (cx < -60) op = Math.max(0, (cx + 95) / 35);
+              if (cx > 410) {
+                z = -(cx - 410) * 1.4;
+                op = Math.max(0, 1 - (cx - 410) / 30);
+              }
+              const dx = cx * I.C;
+              const dy = cx * I.S - z;
+              gEls[k].setAttribute("transform", `translate(${r1(dx)},${r1(dy)})`);
+              gEls[k].setAttribute("opacity", op.toFixed(2));
+              const wrapped = cx >= ST.wrap;
+              gr[k].setAttribute("opacity", wrapped ? "0" : "1");
+              gw[k].setAttribute("opacity", wrapped ? "1" : "0");
+              const q = cx - ST.qc;
+              ck[k].setAttribute("opacity", q > 6 && q < 90 ? Math.min(1, (q - 6) / 12).toFixed(2) : "0");
+              flash = Math.max(flash, Math.exp(-Math.pow(q / 16, 2)));
+            }
+            for (let j = 0; j < 18; j++) {
+              const sx = BX0 + mod(j * 30 + V * t, L);
+              spEls[j].setAttribute("transform", `translate(${r1(sx * I.C)},${r1(sx * I.S)})`);
+            }
+            // presse : frappe quand un cadeau passe dessous
+            let u = mod(t - (mod(ST.press - BX0, SPACING) / V), SPACING / V);
+            if (u > SPACING / V / 2) u -= SPACING / V;
+            const depth = Math.exp(-Math.pow(u / 0.07, 2));
+            const hz = 104 - 44 * depth;
+            headEl.setAttribute("transform", `translate(0,${r1(-hz)})`);
+            spool.setAttribute("transform", `rotate(${r1(t * 420)})`);
+            beamEl.setAttribute("opacity", (0.16 + 0.6 * flash).toFixed(2));
+            okEl.setAttribute("opacity", (0.35 + 0.65 * flash).toFixed(2));
+            for (let k = 0; k < 7; k++) {
+              const a = mod(t + k * 0.43, 3.0);
+              smEls[k].setAttribute("cx", r1(ct[0] + a * 10));
+              smEls[k].setAttribute("cy", r1(ct[1] - 10 - a * 46));
+              smEls[k].setAttribute("r", r1(9 + a * 11));
+              smEls[k].setAttribute("opacity", (Math.min(1, a * 3) * (1 - a / 3) * 0.6).toFixed(2));
+            }
+            elves.forEach((el, n) => {
+              if (el) el.setAttribute("transform", `translate(0,${r1(-Math.abs(Math.sin(t * 6 + n * 1.3)) * 4)})`);
+            });
+            sn.update(t);
+          }
+          const clk = { t: 0 };
+          tl.fromTo(clk, { t: 0 }, { t: 7.3, duration: 7.3, ease: "none", onUpdate: () => sim(clk.t) }, 0);
+
+          // ---------- caméra ----------
+          const rig = I.camera(worldSvg, { x: 40, y: -30, s: 0.9 });
+          const cam = rig.cam;
+          const stP = (x) => P(x, -264, 60);
+          const pP = stP(ST.press);
+          const wP = stP(ST.wrap);
+          const qP = stP(ST.qc);
+          const z = { v: Math.log(0.9), x: 40, y: -30 };
+          const ap = () => {
+            cam.s = Math.exp(z.v);
+            cam.x = z.x;
+            cam.y = z.y;
+            rig.apply();
+          };
+          const leg = (to, at, dur, ease, from) =>
+            tl.fromTo(z, from, Object.assign({ duration: dur, ease, onUpdate: ap, immediateRender: at === 0 }, to), at);
+          let prev = { v: Math.log(0.9), x: 40, y: -30 };
+          const legs = [
+            [{ v: Math.log(0.98), x: 20, y: -40 }, 0, 1.4, "sine.inOut"],
+            [{ v: Math.log(1.6), x: pP[0], y: pP[1] - 30 }, 1.4, 2.1, "power3.inOut"],
+            [{ v: Math.log(1.66), x: pP[0] + 10, y: pP[1] - 26 }, 3.5, 0.45, "sine.inOut"],
+            [{ v: Math.log(1.66), x: wP[0], y: wP[1] - 30 }, 3.95, 0.95, "power2.inOut"],
+            [{ v: Math.log(1.66), x: qP[0], y: qP[1] - 30 }, 4.95, 0.95, "power2.inOut"],
+            [{ v: Math.log(1.02), x: 250, y: -40 }, 6.1, 1.2, "power2.inOut"],
+          ];
+          legs.forEach(([to, at, dur, ease]) => {
+            leg(to, at, dur, ease, Object.assign({}, prev));
+            prev = to;
+          });
+
+          // ---------- étiquettes ancrées ----------
+          rig.anchor(document.getElementById("s2-a0"), P(-250, 250, 220)[0], P(-250, 250, 220)[1]);
+          [ST.press, ST.wrap, ST.qc].forEach((x, i) => {
+            const p = P(x, -264, 210);
+            rig.anchor(document.getElementById("s2-a" + (i + 1)), p[0], p[1]);
+          });
+          rig.apply();
+          tl.fromTo("#s2-stem0", { scaleY: 0 }, { scaleY: 1, duration: 0.35, ease: "power3.out" }, 0.45);
+          tl.fromTo("#s2-qg", { opacity: 0, y: 24, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.6)" }, 0.6);
+          tl.to(["#s2-qg", "#s2-stem0"], { opacity: 0, duration: 0.3, ease: "power2.in" }, 1.9);
+          const callAt = [3.75, 4.98, 5.98];
+          callAt.forEach((t0, i) => {
+            const n = i + 1;
+            tl.fromTo("#s2-stem" + n, { scaleY: 0 }, { scaleY: 1, duration: 0.25, ease: "power3.out" }, t0 - 0.1);
+            tl.fromTo("#s2-call" + n, { opacity: 0, y: 26, scale: 0.6 }, { opacity: 1, y: 0, scale: 1, duration: 0.42, ease: "back.out(1.8)" }, t0);
+          });
+
+          sim(0);
+          window.__timelines["s2-production"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s4-flotte-template">
+      <style>
+        #s4-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 80% 70% at 60% 35%, #203a72 0%, #0b1630 78%);
+          color: #fff6ec;
+        }
+        #s4-world,
+        #s4-snow {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        .s4-blk {
+          position: absolute;
+          left: 110px;
+          top: 230px;
+        }
+        .s4-k {
+          font-family: "IBM Plex Mono", monospace;
+          font-weight: 700;
+          font-size: 30px;
+          letter-spacing: 0.16em;
+          color: #ffc857;
+        }
+        .s4-big {
+          font-family: "Archivo Black", sans-serif;
+          font-size: 150px;
+          line-height: 0.95;
+          letter-spacing: -0.02em;
+          margin-top: 8px;
+          white-space: nowrap;
+          text-shadow: 0 10px 40px rgba(4, 9, 22, 0.6);
+        }
+        #s4-sub {
+          font-family: "IBM Plex Mono", monospace;
+          font-size: 26px;
+          letter-spacing: 0.08em;
+          margin-top: 18px;
+          opacity: 0.85;
+        }
+        #s4-anchor {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 0;
+          height: 0;
+        }
+        #s4-pos {
+          position: absolute;
+          left: -300px;
+          bottom: 0;
+          width: 600px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        #s4-pill {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 24px;
+          background: #0b1630;
+          border-radius: 999px;
+          border: 2px solid rgba(255, 200, 87, 0.55);
+          font-family: "IBM Plex Mono", monospace;
+          font-weight: 700;
+          font-size: 26px;
+          letter-spacing: 0.08em;
+          white-space: nowrap;
+          box-shadow: 0 14px 34px rgba(4, 9, 22, 0.45);
+        }
+        #s4-pill i {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #3bd18a;
+          display: block;
+        }
+        #s4-stem {
+          display: block;
+          width: 3px;
+          height: 60px;
+          background: #ffc857;
+          transform-origin: 50% 100%;
+        }
+      </style>
+
+      <div id="s4-root" data-composition-id="s4-flotte" data-width="1920" data-height="1080">
+        <svg id="s4-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-960 -540 1920 1080"></svg>
+        <svg id="s4-snow" viewBox="0 0 1920 1080"></svg>
+        <div id="s4-anchor">
+          <div id="s4-pos"><div id="s4-pill"><i></i>TRAÎNEAU N°1 · DÉCOLLAGE AUTORISÉ</div><b id="s4-stem"></b></div>
+        </div>
+        <div class="s4-blk" id="s4-t1">
+          <div class="s4-k">ÉMISSIONS DE CO₂</div>
+          <div class="s4-big">ZÉRO.</div>
+        </div>
+        <div class="s4-blk" id="s4-t2">
+          <div class="s4-k">PROPULSION</div>
+          <div class="s4-big"><span id="s4-pct">100 %</span> RENNE</div>
+          <div id="s4-sub">VITESSE 1 040 km/s · 9 RENNES PAR TRAÎNEAU</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const P = I.P;
+          const r1 = I.r1;
+          const tl = gsap.timeline({ paused: true });
+          const R = I.rng(4404);
+          const D = 6.8;
+
+          // ---------- ville ----------
+          const X0 = -340;
+          const X1 = 340;
+          const Y0 = -2700;
+          const Y1 = 760;
+          let w = I.defs("s4");
+          w += I.island(X0, Y0, X1 - X0, Y1 - Y0, 40, { depth: 300 });
+          w += I.quad("T", 0.5, -52, 52, Y0 + 20, Y1 - 20, "#B5C4DC");
+          w += I.quad("T", 0.8, -4, 4, Y0 + 20, Y1 - 20, "#C9D6EA");
+
+          const walls = ["#C9533F", "#3D6FB6", "#2F8F6B", "#E8D9BF", "#B83A5E", "#E8A93A"];
+          const items = [];
+          const houses = [];
+          for (let k = 0; k < 13; k++) {
+            for (const side of [-1, 1]) {
+              const hw = 120 + R() * 50;
+              const hd = 110 + R() * 30;
+              const hx = side < 0 ? -300 + R() * 20 : 120 + R() * 30;
+              const hy = Y1 - 160 - k * 260 - (side > 0 ? 130 : 0) - R() * 30;
+              if (hy < Y0 + 40) continue;
+              const h = I.house({ x: hx, y: hy, w: hw, d: hd, h: 80 + R() * 40, rh: 46 + R() * 16, wall: walls[Math.floor(R() * walls.length)], trim: "#5A2A24", door: side > 0, wreath: true, seed: k * 3 + (side > 0 ? 1 : 0) });
+              items.push({ key: hx + hw / 2 + hy + hd / 2, svg: h.svg });
+              houses.push({ c: h.chimneyTop, y: hy + hd / 2 });
+            }
+            const ty = Y1 - 60 - k * 260;
+            items.push({ key: -330 + ty, svg: I.tree(-330, ty, 0, 110 + R() * 40, 30) });
+            items.push({ key: 320 + ty - 60, svg: I.tree(320, ty - 60, 0, 100 + R() * 40, 28) });
+            // réverbères
+            const ly = ty - 120;
+            const lamp = (lx) => {
+              const top = P(lx, ly, 96);
+              return I.box(lx - 3, ly - 3, 0, 6, 6, 92, "#28324A", { edge: false }) + `<circle cx="${r1(top[0])}" cy="${r1(top[1])}" r="28" fill="url(#s4-glow)"/><circle cx="${r1(top[0])}" cy="${r1(top[1])}" r="6" fill="#FFE7A8"/>`;
+            };
+            items.push({ key: -70 + ly, svg: lamp(-70) });
+            items.push({ key: 70 + ly, svg: lamp(70) });
+          }
+          items.sort((a, b) => a.key - b.key).forEach((it) => (w += it.svg));
+
+          // badges « livré » au-dessus des cheminées
+          const TAKE = 0.35;
+          const dist = (t) => (t < 1 ? 230 * t * t : 230 + 460 * (t - 1));
+          const ySl = (t) => Y1 - 140 - dist(t);
+          const zSl = (t) => (t < TAKE ? 0 : 300 * gsap.parseEase("power2.inOut")(Math.min(1, (t - TAKE) / 1.6)));
+          const drops = [];
+          houses.forEach((h, i) => {
+            // instant où le traîneau passe à la hauteur de la maison
+            let lo = 0,
+              hi = D;
+            for (let k = 0; k < 40; k++) {
+              const m = (lo + hi) / 2;
+              if (ySl(m) > h.y) lo = m;
+              else hi = m;
+            }
+            const tp = (lo + hi) / 2;
+            if (tp > 1.5 && tp < D - 0.7) drops.push({ h, tp, i });
+          });
+          let badges = "";
+          let dropG = "";
+          drops.forEach((d, n) => {
+            const c = P(d.h.c[0], d.h.c[1], d.h.c[2] + 44);
+            badges += `<g transform="translate(${r1(c[0])},${r1(c[1])})"><g id="s4-b${n}" transform="scale(0)"><circle r="20" fill="#3BD18A" stroke="#0B1630" stroke-width="3"/><path d="M-9,0 l6,6 l12,-13" fill="none" stroke="#0B1630" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></g></g>`;
+            dropG += `<g id="s4-d${n}" opacity="0">${I.gift(-9, -9, 0, 18, n % 2 ? "#E23D3D" : "#2F8F6B", "#FFC857", { shadow: false, h: 16 })}</g>`;
+          });
+          w += badges;
+
+          // ---------- traîneaux ----------
+          const reinU = [190, 300, 410, 520];
+          function team() {
+            let s = `<path d="M70,-34 L560,-46" stroke="#FFC857" stroke-width="2.5" opacity="0.9"/>`;
+            reinU.forEach((u, k) => {
+              s += `<g transform="translate(${u},${k % 2 ? -6 : 0})"><g class="s4-rd" data-ph="${k}">${I.reindeer(k === 3)}</g></g>`;
+            });
+            s += I.sleigh();
+            return s;
+          }
+          w += `<g id="s4-trail"></g>`;
+          w += `<ellipse id="s4-shadow" rx="160" ry="40" fill="rgba(11,22,48,0.28)"/>`;
+          w += `<g id="s4-ring" opacity="0"><ellipse rx="120" ry="60" fill="none" stroke="#FFC857" stroke-width="5"/></g>`;
+          w += `<g id="s4-f1">${team()}</g>`;
+          w += `<g id="s4-f2">${team()}</g>`;
+          w += `<g id="s4-f0">${team()}</g>`;
+          w += dropG;
+
+          const svg = document.getElementById("s4-world");
+          svg.innerHTML = w;
+          const sn = I.snowfall("s4s", 130, 41, 0, -20, 1920, 1100);
+          document.getElementById("s4-snow").innerHTML = sn.svg;
+
+          // traînée dorée (pool fixe)
+          const NT = 46;
+          let tr = "";
+          const TJ = [];
+          for (let k = 0; k < NT; k++) {
+            TJ.push([(R() - 0.5) * 30, (R() - 0.5) * 30, 0.6 + R() * 0.8]);
+            tr += `<circle id="s4-tp${k}" r="4" fill="${k % 3 ? "#FFC857" : "#FFF6EC"}" opacity="0"/>`;
+          }
+          document.getElementById("s4-trail").innerHTML = tr;
+          const tpEls = [];
+          for (let k = 0; k < NT; k++) tpEls.push(document.getElementById("s4-tp" + k));
+
+          const fleets = [
+            { el: document.getElementById("s4-f0"), dx: 0, dy: 0, dz: 0, k: 1.0, lag: 0 },
+            { el: document.getElementById("s4-f1"), dx: 320, dy: -327, dz: 330, k: 0.5, lag: 0.22 },
+            { el: document.getElementById("s4-f2"), dx: 170, dy: -176, dz: 430, k: 0.42, lag: 0.12 },
+          ];
+          const legsA = [...svg.querySelectorAll(".leg-a")];
+          const legsB = [...svg.querySelectorAll(".leg-b")];
+          const shadow = document.getElementById("s4-shadow");
+          const ring = document.getElementById("s4-ring");
+          const bEls = drops.map((_, n) => document.getElementById("s4-b" + n));
+          const dEls = drops.map((_, n) => document.getElementById("s4-d" + n));
+          const C = I.C,
+            S = I.S;
+          const sleighPos = (t, f) => {
+            const tt = Math.max(0, t - f.lag);
+            const bob = tt > TAKE ? Math.sin(tt * 3.2 + f.lag * 9) * 7 : 0;
+            return P(f.dx, ySl(tt) + f.dy, zSl(tt) + f.dz + bob);
+          };
+          const local = (f, u, y) => [C * f.k * u, -S * f.k * u + f.k * y];
+          const backOut = (x) => {
+            const c1 = 1.9,
+              c3 = c1 + 1;
+            return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+          };
+
+          // ---------- caméra ----------
+          const rig = I.camera(svg, { s: 1.3 });
+          const cam = rig.cam;
+          const zoom = { v: Math.log(1.32) };
+          tl.fromTo(zoom, { v: Math.log(1.32) }, { v: Math.log(0.92), duration: 2.4, ease: "power2.inOut" }, 0.3);
+          tl.fromTo(zoom, { v: Math.log(0.92) }, { v: Math.log(0.86), duration: D - 2.7, ease: "sine.inOut", immediateRender: false }, 2.7);
+
+          function sim(t) {
+            fleets.forEach((f, n) => {
+              const p = sleighPos(t, f);
+              f.el.setAttribute("transform", `translate(${r1(p[0])},${r1(p[1])}) matrix(${(C * f.k).toFixed(4)},${(-S * f.k).toFixed(4)},0,${f.k},0,0)`);
+            });
+            const lead = sleighPos(t, fleets[0]);
+            const g = P(0, ySl(t), 0);
+            const zz = zSl(t);
+            shadow.setAttribute("cx", r1(g[0] + 140));
+            shadow.setAttribute("cy", r1(g[1] - 70));
+            shadow.setAttribute("opacity", Math.max(0.15, 1 - zz / 360).toFixed(2));
+            const rk = Math.max(0, Math.min(1, (t - TAKE) / 0.9));
+            ring.setAttribute("transform", `translate(${r1(P(0, ySl(TAKE), 0)[0] + 40)},${r1(P(0, ySl(TAKE), 0)[1] - 20)}) scale(${(0.4 + rk * 2.2).toFixed(3)})`);
+            ring.setAttribute("opacity", (rk > 0 && rk < 1 ? 1 - rk : 0).toFixed(2));
+            // galop
+            const ph = Math.sin(t * 16);
+            legsA.forEach((el) => el.setAttribute("transform", `rotate(${r1(ph * 22)} 7 -24)`));
+            legsB.forEach((el) => el.setAttribute("transform", `rotate(${r1(-ph * 22)} 1 -24)`));
+            // traînée
+            for (let k = 0; k < NT; k++) {
+              const tk = t - k * 0.035;
+              if (tk < TAKE + 0.1) {
+                tpEls[k].setAttribute("opacity", "0");
+                continue;
+              }
+              const pp = sleighPos(tk, fleets[0]);
+              const o = local(fleets[0], -70, -20);
+              tpEls[k].setAttribute("cx", r1(pp[0] + o[0] + TJ[k][0] * (k / NT)));
+              tpEls[k].setAttribute("cy", r1(pp[1] + o[1] + TJ[k][1] * (k / NT)));
+              tpEls[k].setAttribute("r", r1(TJ[k][2] * (6 - (k / NT) * 4.5)));
+              tpEls[k].setAttribute("opacity", ((1 - k / NT) * 0.95).toFixed(2));
+            }
+            // largages
+            drops.forEach((d, n) => {
+              const a = (t - d.tp) / 0.6;
+              if (a <= 0 || a >= 1) {
+                dEls[n].setAttribute("opacity", "0");
+              } else {
+                const st = sleighPos(d.tp, fleets[0]);
+                const so = local(fleets[0], -10, -80);
+                const s0 = [st[0] + so[0], st[1] + so[1]];
+                const e = P(d.h.c[0], d.h.c[1], d.h.c[2]);
+                const x = s0[0] + (e[0] - s0[0]) * a;
+                const y = s0[1] + (e[1] - s0[1]) * a * a - Math.sin(a * Math.PI) * 30;
+                dEls[n].setAttribute("opacity", a > 0.85 ? ((1 - a) / 0.15).toFixed(2) : "1");
+                dEls[n].setAttribute("transform", `translate(${r1(x)},${r1(y)}) rotate(${r1(a * 160)})`);
+              }
+              const b = Math.max(0, Math.min(1, (t - d.tp - 0.6) / 0.3));
+              bEls[n].setAttribute("transform", `scale(${b > 0 ? backOut(b).toFixed(3) : 0})`);
+            });
+            // caméra : suit le traîneau de tête avec un peu d'avance
+            cam.s = Math.exp(zoom.v);
+            const lead2 = sleighPos(Math.min(D, t + 0.25), fleets[0]);
+            cam.x = lead2[0] - 150;
+            cam.y = lead2[1] - 110;
+            rig.apply();
+            // ancre de l'étiquette posée sur le traîneau
+            const tag = local(fleets[0], 0, -150);
+            const a = document.getElementById("s4-anchor");
+            const sx = (lead[0] + tag[0] - cam.x) * cam.s + 960;
+            const sy = (lead[1] + tag[1] - cam.y) * cam.s + 540;
+            a.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px)`;
+            sn.update(t);
+          }
+          const clk = { t: 0 };
+          tl.fromTo(clk, { t: 0 }, { t: D, duration: D, ease: "none", onUpdate: () => sim(clk.t) }, 0);
+
+          // ---------- textes ----------
+          tl.fromTo("#s4-stem", { scaleY: 0 }, { scaleY: 1, duration: 0.25, ease: "power3.out" }, 0.45);
+          tl.fromTo("#s4-pill", { opacity: 0, scale: 0.6, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.42, ease: "back.out(1.8)" }, 0.55);
+          tl.to(["#s4-pill", "#s4-stem"], { opacity: 0, duration: 0.3, ease: "power2.in" }, 2.3);
+
+          tl.fromTo("#s4-t1 .s4-k", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 2.5);
+          tl.fromTo("#s4-t1 .s4-big", { opacity: 0, scale: 1.5, transformOrigin: "0% 60%" }, { opacity: 1, scale: 1, duration: 0.4, ease: "expo.out" }, 2.62);
+          tl.to("#s4-t1", { opacity: 0, y: -40, duration: 0.3, ease: "power2.in" }, 3.95);
+          tl.fromTo("#s4-t2 .s4-k", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 4.1);
+          tl.fromTo("#s4-t2 .s4-big", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.45, ease: "power4.out" }, 4.2);
+          tl.fromTo("#s4-sub", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 4.75);
+          tl.fromTo("#s4-pct", { color: "#FFF6EC" }, { color: "#FFC857", duration: 0.3 }, 5.0);
+
+          sim(0);
+          window.__timelines["s4-flotte"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s6-chiffres-template">
+      <style>
+        #s6-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 60% 70% at 62% 55%, #1f3a73 0%, #0b1630 74%);
+          color: #fff6ec;
+        }
+        #s6-world,
+        #s6-fx {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        #s6-anchor {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 0;
+          height: 0;
+        }
+        #s6-numpos {
+          position: absolute;
+          left: -500px;
+          bottom: 0;
+          width: 1000px;
+          display: flex;
+          justify-content: center;
+        }
+        #s6-num {
+          font-family: "IBM Plex Mono", monospace;
+          font-weight: 700;
+          font-size: 190px;
+          line-height: 1;
+          letter-spacing: -0.04em;
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
+          display: block;
+          transform-origin: 50% 100%;
+          text-shadow: 0 16px 50px rgba(4, 9, 22, 0.7);
+        }
+        #s6-num em {
+          font-style: normal;
+          color: #ffc857;
+          display: inline-block;
+          margin-left: 34px;
+          font-size: 150px;
+        }
+        #s6-left {
+          position: absolute;
+          left: 110px;
+          top: 300px;
+          width: 620px;
+        }
+        #s6-k {
+          font-family: "IBM Plex Mono", monospace;
+          font-weight: 700;
+          font-size: 28px;
+          letter-spacing: 0.16em;
+          color: #ffc857;
+        }
+        #s6-t {
+          font-family: "Archivo Black", sans-serif;
+          font-size: 56px;
+          white-space: nowrap;
+          line-height: 0.98;
+          margin-top: 14px;
+        }
+        .s6-line {
+          display: block;
+        }
+        #s6-chips {
+          margin-top: 44px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .s6-chip {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          padding: 14px 24px 14px 14px;
+          background: rgba(11, 22, 48, 0.92);
+          border: 2px solid rgba(255, 246, 236, 0.16);
+          border-radius: 999px;
+          width: 470px;
+        }
+        .s6-ic {
+          width: 58px;
+          height: 58px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: none;
+        }
+        .s6-ic svg {
+          width: 34px;
+          height: 34px;
+          display: block;
+        }
+        .s6-chip b {
+          font-family: "Archivo Black", sans-serif;
+          font-weight: 400;
+          font-size: 36px;
+          white-space: nowrap;
+        }
+        .s6-chip span {
+          font-family: "IBM Plex Mono", monospace;
+          font-size: 22px;
+          letter-spacing: 0.08em;
+          opacity: 0.8;
+          margin-left: auto;
+          white-space: nowrap;
+        }
+      </style>
+
+      <div id="s6-root" data-composition-id="s6-chiffres" data-width="1920" data-height="1080">
+        <svg id="s6-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-960 -540 1920 1080"></svg>
+        <div id="s6-anchor">
+          <div id="s6-numpos"><span id="s6-num"><span id="s6-n">0,0</span><em>%</em></span></div>
+        </div>
+        <div id="s6-left">
+          <div id="s6-k">PERFORMANCE · 24.12</div>
+          <div id="s6-t"><span class="s6-line">des colis livrés</span><span class="s6-line">à l'heure</span></div>
+          <div id="s6-chips">
+            <div class="s6-chip" id="s6-c1">
+              <i class="s6-ic" style="background: #2f8f6b"><svg viewBox="0 0 34 34"><path d="M8,26 C8,12 18,6 28,6 C28,18 22,26 10,26 M8,26 L20,14" fill="none" stroke="#FFF6EC" stroke-width="3.5" stroke-linecap="round" /></svg></i>
+              <b>0 g</b><span>DE CO₂</span>
+            </div>
+            <div class="s6-chip" id="s6-c2">
+              <i class="s6-ic" style="background: #3d6fb6"><svg viewBox="0 0 34 34"><path d="M22,5 A12,12 0 1 0 29,22 A10,10 0 1 1 22,5 Z" fill="#FFC857" /></svg></i>
+              <b>1 nuit</b><span>POUR TOUT LIVRER</span>
+            </div>
+            <div class="s6-chip" id="s6-c3">
+              <i class="s6-ic" style="background: #e23d3d"><svg viewBox="0 0 34 34"><path d="M8,17 l6,6 l12,-13" fill="none" stroke="#FFF6EC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg></i>
+              <b>0</b><span>RÉCLAMATION</span>
+            </div>
+          </div>
+        </div>
+        <svg id="s6-fx" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="0 0 1920 1080"></svg>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const P = I.P;
+          const r1 = I.r1;
+          const tl = gsap.timeline({ paused: true });
+          const R = I.rng(999);
+          const D = 5;
+
+          const RR = 230;
+          let w = I.defs("s6");
+          w += I.box(-330, -330, -40, 660, 660, 40, "#16305E", { edgeW: 2 });
+          w += I.box(-310, -310, 0, 620, 620, 3, "#0E1D3D", { shadow: false, edge: false });
+          let ticks = "";
+          for (let k = 0; k < 72; k++) {
+            const a = (k / 72) * Math.PI * 2;
+            const r0 = RR + 30;
+            const r2 = RR + (k % 6 ? 42 : 54);
+            ticks += `<line x1="${r1(Math.cos(a) * r0)}" y1="${r1(Math.sin(a) * r0)}" x2="${r1(Math.cos(a) * r2)}" y2="${r1(Math.sin(a) * r2)}" stroke="#4C74B8" stroke-width="${k % 6 ? 2 : 4}" opacity="0.8"/>`;
+          }
+          w += `<g transform="${I.planeTop(0, 0, 4)}">
+            <circle r="${RR}" fill="none" stroke="#1D3566" stroke-width="40"/>
+            ${ticks}
+            <circle id="s6-ringglow" r="${RR}" fill="none" stroke="#FFC857" stroke-width="64" opacity="0.18" transform="rotate(135)"/>
+            <circle id="s6-ring" r="${RR}" fill="none" stroke="#FFC857" stroke-width="34" stroke-linecap="round" transform="rotate(135)"/>
+            <circle r="${RR - 60}" fill="#13284F"/>
+          </g>`;
+          // cadeaux en orbite
+          let orb = "";
+          for (let k = 0; k < 4; k++) orb += `<g id="s6-o${k}">${I.gift(-20, -20, 0, 40, ["#E23D3D", "#2F8F6B", "#3D6FB6", "#E8A93A"][k], "#FFC857", { h: 36 })}</g>`;
+          w += orb;
+          // socle lumineux sous le chiffre
+          const c0 = P(0, 0, 4);
+          w += `<ellipse cx="${r1(c0[0])}" cy="${r1(c0[1])}" rx="200" ry="115" fill="url(#s6-glow)" opacity="0.6" id="s6-pool"/>`;
+          const svg = document.getElementById("s6-world");
+          svg.innerHTML = w;
+
+          // confettis (pool fixe, trajectoires à graine)
+          let fx = "";
+          const conf = [];
+          const cols = ["#FFC857", "#E23D3D", "#3BD18A", "#FFF6EC", "#7FD4FF"];
+          for (let k = 0; k < 56; k++) {
+            const a = -Math.PI / 2 + (R() - 0.5) * 2.6;
+            const v = 520 + R() * 620;
+            conf.push({ vx: Math.cos(a) * v, vy: Math.sin(a) * v, rot: R() * 360, vr: (R() - 0.5) * 900, w: 10 + R() * 10, h: 6 + R() * 6 });
+            fx += `<rect id="s6-cf${k}" x="-8" y="-4" width="${r1(conf[k].w)}" height="${r1(conf[k].h)}" fill="${cols[k % cols.length]}" opacity="0"/>`;
+          }
+          document.getElementById("s6-fx").innerHTML = fx;
+          const cfEls = conf.map((_, k) => document.getElementById("s6-cf" + k));
+
+          // ---------- caméra ----------
+          const rig = I.camera(svg, { x: -360, y: -40, s: 1.0 });
+          const cam = rig.cam;
+          const z = { v: Math.log(0.94), x: -360, y: -30 };
+          rig.anchor(document.getElementById("s6-anchor"), c0[0], c0[1] - 120);
+          tl.fromTo(z, { v: Math.log(0.94), x: -360, y: -30 }, { v: Math.log(1.04), x: -350, y: -60, duration: D, ease: "sine.inOut", onUpdate: () => ((cam.s = Math.exp(z.v)), (cam.x = z.x), (cam.y = z.y), rig.apply()) }, 0);
+
+          // ---------- jauge + chiffre ----------
+          const ring = document.getElementById("s6-ring");
+          const ringGlow = document.getElementById("s6-ringglow");
+          const L = 2 * Math.PI * RR;
+          [ring, ringGlow].forEach((el) => el.setAttribute("stroke-dasharray", `${r1(L)} ${r1(L)}`));
+          const n = document.getElementById("s6-n");
+          const st = { v: 0 };
+          const COUNT_AT = 0.45;
+          const COUNT_DUR = 2.4;
+          tl.fromTo(
+            st,
+            { v: 0 },
+            {
+              v: 99.9,
+              duration: COUNT_DUR,
+              ease: "power3.out",
+              onUpdate: () => {
+                const v = Math.round(st.v * 10) / 10;
+                n.textContent = v.toFixed(1).replace(".", ",");
+                const off = L * (1 - st.v / 100);
+                ring.setAttribute("stroke-dashoffset", r1(off));
+                ringGlow.setAttribute("stroke-dashoffset", r1(off));
+              },
+            },
+            COUNT_AT,
+          );
+          tl.fromTo("#s6-num", { scale: 0.62, opacity: 0 }, { scale: 1, opacity: 1, duration: COUNT_DUR, ease: "power3.out" }, COUNT_AT);
+          tl.fromTo("#s6-num", { y: 0 }, { y: -14, duration: 0.25, ease: "power2.out", yoyo: true, repeat: 1, immediateRender: false }, COUNT_AT + COUNT_DUR);
+
+          // ---------- simulation : orbite + confettis ----------
+          const oEls = [0, 1, 2, 3].map((k) => document.getElementById("s6-o" + k));
+          const BURST = COUNT_AT + COUNT_DUR - 0.05;
+          function sim(t) {
+            oEls.forEach((el, k) => {
+              const a = t * 0.9 + (k * Math.PI) / 2;
+              const p = P(Math.cos(a) * (RR + 100), Math.sin(a) * (RR + 100), 4 + Math.abs(Math.sin(t * 3 + k)) * 10);
+              el.setAttribute("transform", `translate(${r1(p[0])},${r1(p[1])})`);
+            });
+            const u = t - BURST;
+            const sx = (c0[0] - cam.x) * cam.s + 960;
+            const sy = (c0[1] - 200 - cam.y) * cam.s + 540;
+            cfEls.forEach((el, k) => {
+              if (u <= 0 || u > 2.2) {
+                el.setAttribute("opacity", "0");
+                return;
+              }
+              const c = conf[k];
+              const x = sx + c.vx * u * 0.7;
+              const y = sy + c.vy * u * 0.7 + 0.5 * 1400 * u * u;
+              el.setAttribute("transform", `translate(${r1(x)},${r1(y)}) rotate(${r1(c.rot + c.vr * u)})`);
+              el.setAttribute("opacity", Math.min(1, (2.2 - u) * 1.5).toFixed(2));
+            });
+          }
+          const clk = { t: 0 };
+          tl.fromTo(clk, { t: 0 }, { t: D, duration: D, ease: "none", onUpdate: () => sim(clk.t) }, 0);
+          tl.fromTo("#s6-pool", { opacity: 0.3 }, { opacity: 0.9, duration: 0.3, yoyo: true, repeat: 1 }, BURST);
+
+          // ---------- colonne gauche ----------
+          tl.fromTo("#s6-k", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 0.3);
+          tl.fromTo(".s6-line", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: "power4.out", stagger: 0.12 }, 2.95);
+          tl.fromTo(".s6-chip", { opacity: 0, x: -50 }, { opacity: 1, x: 0, duration: 0.45, ease: "power3.out", stagger: 0.16 }, 3.45);
+
+          sim(0);
+          window.__timelines["s6-chiffres"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

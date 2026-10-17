@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s1-demande-template">
+      <style>
+        #s1-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 70% 70% at 50% 45%, #1c3164 0%, #0b1630 72%);
+          color: #fff6ec;
+        }
+        #s1-sky,
+        #s1-world {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        #s1-moonwrap {
+          position: absolute;
+          right: 300px;
+          top: 150px;
+          width: 220px;
+          height: 220px;
+        }
+        #s1-moon {
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          background: radial-gradient(circle at 38% 36%, #fffaf0 0%, #f3e6c8 58%, #d9c79d 100%);
+          box-shadow: 0 0 80px 30px rgba(255, 236, 190, 0.28);
+        }
+        #s1-dim {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse 60% 55% at 50% 50%, rgba(11, 22, 48, 0.55) 0%, rgba(11, 22, 48, 0.86) 100%);
+        }
+        #s1-card {
+          position: absolute;
+          left: 110px;
+          top: 360px;
+          width: 820px;
+          padding: 34px 44px 38px;
+          background: rgba(11, 22, 48, 0.9);
+          border-top: 6px solid #e23d3d;
+          border-radius: 6px 6px 24px 24px;
+          box-shadow: 0 30px 60px rgba(4, 9, 22, 0.55);
+        }
+        #s1-card-label {
+          font-family: "IBM Plex Mono", monospace;
+          font-size: 26px;
+          letter-spacing: 0.16em;
+          color: #ffc857;
+        }
+        #s1-count {
+          font-family: "IBM Plex Mono", monospace;
+          font-weight: 700;
+          font-size: 96px;
+          letter-spacing: -0.02em;
+          line-height: 1.05;
+          margin-top: 10px;
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
+          display: block;
+          transform-origin: 0 60%;
+        }
+        #s1-card-sub {
+          font-family: "Archivo Black", sans-serif;
+          font-size: 40px;
+          margin-top: 12px;
+          letter-spacing: 0.01em;
+        }
+        #s1-slam {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          font-family: "Archivo Black", sans-serif;
+          text-transform: uppercase;
+          line-height: 0.95;
+          letter-spacing: -0.02em;
+        }
+        #s1-slam-l1 {
+          display: flex;
+          gap: 34px;
+          font-size: 150px;
+        }
+        #s1-slam-l2 {
+          font-size: 260px;
+          color: #ffc857;
+          margin-top: 10px;
+        }
+        .s1-w {
+          display: inline-block;
+        }
+      </style>
+
+      <div id="s1-root" data-composition-id="s1-demande" data-width="1920" data-height="1080">
+        <svg id="s1-sky" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="0 0 1920 1080"></svg>
+        <div id="s1-moonwrap"><div id="s1-moon"></div></div>
+        <svg id="s1-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-960 -540 1920 1080"></svg>
+        <div id="s1-dim"></div>
+        <div id="s1-card">
+          <div id="s1-card-label">COMMANDES REÇUES · 24.12</div>
+          <div id="s1-count">0</div>
+          <div id="s1-card-sub">cadeaux à livrer</div>
+        </div>
+        <div id="s1-slam">
+          <div id="s1-slam-l1"><span class="s1-w" id="s1-w1">En</span><span class="s1-w" id="s1-w2">une</span><span class="s1-w" id="s1-w3">seule</span></div>
+          <div class="s1-w" id="s1-slam-l2">nuit.</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const tl = gsap.timeline({ paused: true });
+          const R = I.rng(1224);
+
+          // ---------- ciel étoilé ----------
+          let sky = "";
+          const stars = [];
+          for (let i = 0; i < 90; i++) {
+            const x = R() * 1920;
+            const y = R() * 1080;
+            const r = 0.8 + R() * 1.8;
+            sky += `<circle id="s1-st${i}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#FFF6EC" opacity="0.5"/>`;
+            stars.push(i);
+          }
+          document.getElementById("s1-sky").innerHTML = sky;
+
+          // ---------- monde iso ----------
+          const SP = 118;
+          const N = 8;
+          const items = [];
+          const palette = [
+            ["#E23D3D", "#FFC857"],
+            ["#2F8F6B", "#F4E9D8"],
+            ["#E8A93A", "#E23D3D"],
+            ["#F1E7D6", "#E23D3D"],
+            ["#3D6FB6", "#FFC857"],
+            ["#B83A5E", "#F4E9D8"],
+            ["#2F8F6B", "#FFC857"],
+          ];
+          for (let i = -N; i <= N; i++) {
+            for (let j = -N; j <= N; j++) {
+              if (Math.abs(i) <= 1 && Math.abs(j) <= 1) continue;
+              const s = 54 + R() * 28;
+              const pal = palette[Math.floor(R() * palette.length)];
+              const jx = (R() - 0.5) * 18;
+              const jy = (R() - 0.5) * 18;
+              const x = i * SP - s / 2 + jx;
+              const y = j * SP - s / 2 + jy;
+              const h = s * (0.65 + R() * 0.45);
+              let svg = I.gift(x, y, 0, s, pal[0], pal[1], { h });
+              if (R() < 0.22) {
+                const s2 = s * 0.55;
+                const p2 = palette[Math.floor(R() * palette.length)];
+                svg += I.gift(x + (s - s2) / 2, y + (s - s2) / 2, h, s2, p2[0], p2[1], { h: s2 * 0.9, shadow: false });
+              }
+              const base = I.P(i * SP, j * SP, 0);
+              items.push({ key: i + j, svg, base, d: Math.hypot(i, j) });
+            }
+          }
+
+          // Bloc-calendrier « 24 DÉC »
+          const cal = (function () {
+            const x = -130;
+            const y = -130;
+            const w = 260;
+            const d = 260;
+            let s = "";
+            s += I.box(x, y, 0, w, d, 176, { top: "#FBF7EF", right: "#EFE6D6", left: "#D9CDB8" }, { shadowLen: 70 });
+            for (let k = 1; k <= 5; k++) {
+              const z = k * 6;
+              s += I.line([I.P(x, y + d, z), I.P(x + w, y + d, z), I.P(x + w, y, z)], "#C2B39A", 1.2, 'opacity="0.8"');
+            }
+            s += I.box(x, y, 176, w, d, 44, "#E23D3D", { shadow: false });
+            for (const u of [-60, 60]) {
+              const c = I.P(u, 0, 220);
+              s += `<ellipse cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" rx="20" ry="11" fill="#7A1F22"/>`;
+              s += `<path d="M${(c[0] - 12).toFixed(1)},${c[1].toFixed(1)} q12,-34 24,0" fill="none" stroke="#FFC857" stroke-width="7" stroke-linecap="round"/>`;
+            }
+            s += `<g transform="${I.planeLeft(x, y + d, 176)}"><text x="${w / 2}" y="150" text-anchor="middle" font-family="Archivo Black" font-size="150" fill="#E23D3D" letter-spacing="-4">24</text></g>`;
+            s += `<g transform="${I.planeRight(x + w, y + d, 176)}"><text x="${d / 2}" y="104" text-anchor="middle" font-family="Archivo Black" font-size="74" fill="#0B1630">DÉC</text><text x="${d / 2}" y="146" text-anchor="middle" font-family="IBM Plex Mono" font-weight="700" font-size="26" fill="#0B1630" letter-spacing="3">2026</text></g>`;
+            s += `<g transform="${I.planeLeft(x, y + d, 220)}"><text x="${w / 2}" y="31" text-anchor="middle" font-family="IBM Plex Mono" font-weight="700" font-size="22" fill="#FFF6EC" letter-spacing="5">PÈRE NOËL SA</text></g>`;
+            return s;
+          })();
+          items.push({ key: 0.5, svg: cal, base: I.P(0, 0, 0), d: 0, cal: true });
+          items.sort((a, b) => a.key - b.key);
+
+          let world = I.defs("s1");
+          world += I.island(-N * SP - 90, -N * SP - 90, 2 * N * SP + 180, 2 * N * SP + 180, 46, { depth: 520 });
+          items.forEach((it, k) => {
+            it.id = it.cal ? "s1-cal" : "s1-g" + k;
+            world += `<g id="${it.id}">${it.svg}</g>`;
+          });
+          const worldSvg = document.getElementById("s1-world");
+          worldSvg.innerHTML = world;
+
+          // ---------- caméra ----------
+          const camRig = I.camera(worldSvg, { x: 0, y: -120, s: 1.75 });
+          const cam = camRig.cam;
+          const z = { v: Math.log(1.75), x: 0, y: -120 };
+          const applyZ = () => {
+            cam.s = Math.exp(z.v);
+            cam.x = z.x;
+            cam.y = z.y;
+            camRig.apply();
+          };
+          tl.fromTo(z, { v: Math.log(1.75), x: 0, y: -120 }, { v: Math.log(1.62), x: 10, y: -112, duration: 1.7, ease: "sine.inOut", onUpdate: applyZ }, 0);
+          tl.fromTo(z, { v: Math.log(1.62), x: 10, y: -112 }, { v: Math.log(0.6), x: 40, y: 10, duration: 2.6, ease: "power3.inOut", onUpdate: applyZ, immediateRender: false }, 1.7);
+          tl.fromTo(z, { v: Math.log(0.6), x: 40, y: 10 }, { v: Math.log(0.66), x: 40, y: 0, duration: 2.3, ease: "sine.inOut", onUpdate: applyZ, immediateRender: false }, 4.3);
+
+          // ---------- calendrier : construction ----------
+          const calBase = I.P(0, 0, 0);
+          tl.fromTo("#s1-cal", { scaleY: 0.02, scaleX: 0.7, svgOrigin: `${calBase[0]} ${calBase[1] + 130}` }, { scaleY: 1, scaleX: 1, duration: 0.7, ease: "back.out(1.6)" }, 0.15);
+
+          // ---------- vague de cadeaux ----------
+          items.forEach((it) => {
+            if (it.cal) return;
+            const o = `${it.base[0].toFixed(1)} ${it.base[1].toFixed(1)}`;
+            tl.fromTo("#" + it.id, { scale: 0, svgOrigin: o }, { scale: 1, svgOrigin: o, duration: 0.45, ease: "back.out(1.7)" }, 1.75 + it.d * 0.16);
+          });
+
+          // ---------- étoiles qui scintillent ----------
+          stars.forEach((i) => {
+            tl.fromTo("#s1-st" + i, { opacity: 0.2 }, { opacity: 0.9, duration: 0.6 + (i % 5) * 0.2, ease: "sine.inOut", yoyo: true, repeat: 5 }, (i % 11) * 0.12);
+          });
+
+          // ---------- compteur ----------
+          const count = document.getElementById("s1-count");
+          const fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+          tl.fromTo("#s1-card", { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" }, 1.95);
+          const c = { v: 0 };
+          tl.fromTo(c, { v: 0 }, { v: 2000000000, duration: 2.3, ease: "power2.out", onUpdate: () => (count.textContent = fmt(c.v)) }, 2.05);
+          tl.fromTo("#s1-count", { scale: 0.78 }, { scale: 1, duration: 2.3, ease: "power2.out" }, 2.05);
+          tl.to("#s1-card", { opacity: 0, x: -50, duration: 0.35, ease: "power2.in" }, 4.85);
+
+          // ---------- la nuit tombe ----------
+          tl.fromTo("#s1-dim", { opacity: 0 }, { opacity: 1, duration: 0.7, ease: "power2.inOut" }, 4.75);
+          tl.fromTo("#s1-moonwrap", { y: 140, opacity: 0 }, { y: 0, opacity: 1, duration: 1.4, ease: "power3.out" }, 4.7);
+
+          // ---------- « En une seule nuit. » ----------
+          tl.fromTo("#s1-w1", { opacity: 0, y: 70, rotation: -6 }, { opacity: 1, y: 0, rotation: 0, duration: 0.32, ease: "power4.out" }, 5.22);
+          tl.fromTo("#s1-w2", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.3, ease: "expo.out" }, 5.38);
+          tl.fromTo("#s1-w3", { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.32, ease: "power4.out" }, 5.55);
+          tl.fromTo("#s1-slam-l2", { opacity: 0, scale: 2.2, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.42, ease: "expo.out" }, 5.8);
+          tl.fromTo("#s1-slam", { scale: 1 }, { scale: 1.05, duration: 0.8, ease: "sine.out" }, 5.8);
+
+          window.__timelines["s1-demande"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
