@@ -84,12 +84,23 @@ async function graph(path: string, params: Record<string, string>, method: 'POST
 }
 /**
  * Posting "as the page" needs the Page's own access token. A token generated for a person (or a system user) is turned into the page's token
- * through the Graph API; a token that already is the page's keeps working as it is.
+ * through the Graph API (directly, then through the accounts the token manages); a token that already is the page's keeps working as it is.
+ * `why` says what Facebook answered when no page token could be obtained (it never contains a token).
  */
-async function pageToken(pageId: string, token: string): Promise<string> {
-  const res = await fetch(`${GRAPH}/${pageId}?${new URLSearchParams({ fields: 'access_token', access_token: token })}`, { signal: AbortSignal.timeout(20000) }).catch(() => null)
-  const data = await res?.json().catch(() => null) as { access_token?: unknown } | null
-  return res?.ok && typeof data?.access_token === 'string' && data.access_token ? data.access_token : token
+async function pageToken(pageId: string, token: string): Promise<{ token: string; why: string }> {
+  const get = async (path: string, fields: string) => {
+    const res = await fetch(`${GRAPH}${path}?${new URLSearchParams({ fields, limit: '100', access_token: token })}`, { signal: AbortSignal.timeout(20000) }).catch(() => null)
+    const data = await res?.json().catch(() => null) as { access_token?: unknown; data?: Array<{ id?: unknown; access_token?: unknown }>; error?: { message?: string; code?: number } } | null
+    return { ok: !!res?.ok && !data?.error, data, err: data?.error }
+  }
+  const direct = await get(`/${pageId}`, 'access_token')
+  if (direct.ok && typeof direct.data?.access_token === 'string' && direct.data.access_token) return { token: direct.data.access_token, why: '' }
+  const accounts = await get('/me/accounts', 'id,access_token')
+  const mine = accounts.data?.data?.find((a) => String(a.id) === pageId)
+  if (accounts.ok && typeof mine?.access_token === 'string' && mine.access_token) return { token: mine.access_token, why: '' }
+  const note = (e?: { message?: string; code?: number }) => (e ? `${e.code ?? '?'} ${String(e.message ?? '').replace(/\s+/g, ' ').slice(0, 140)}` : 'aucun jeton de page renvoyé')
+  const found = accounts.ok ? `la page ${pageId} n'est pas dans les pages gérées par ce jeton (${(accounts.data?.data ?? []).length} page(s) trouvée(s))` : note(accounts.err)
+  return { token, why: ` Jeton de page introuvable : /page → ${direct.ok ? 'aucun jeton de page renvoyé' : note(direct.err)} ; /me/accounts → ${found}.` }
 }
 const fbMessage = (code: number, message: string) => {
   const base = code === 190 ? 'Le jeton de la page Facebook est expiré ou invalide : générez-en un nouveau.'
@@ -122,7 +133,7 @@ Deno.serve(async (req) => {
     const configured = Deno.env.get('FACEBOOK_PAGE_TOKEN')
     if (!pageId || !configured) return json({ error: 'Facebook n\'est pas configuré : ajoutez les secrets FACEBOOK_PAGE_ID et FACEBOOK_PAGE_TOKEN dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
 
-    const token = await pageToken(pageId, configured)
+    const { token, why } = await pageToken(pageId, configured)
 
     const body = await req.json().catch(() => ({})) as { action?: unknown; product_id?: unknown; images?: unknown; post_id?: unknown }
 
@@ -131,7 +142,7 @@ Deno.serve(async (req) => {
       const postId = String(body.post_id ?? '')
       if (!/^\d+_\d+$/.test(postId) || !postId.startsWith(`${pageId}_`)) return json({ error: 'Publication inconnue.' }, 400)
       const r = await graph(`/${postId}`, { access_token: token }, 'DELETE')
-      return r.ok ? json({ deleted: true }) : json({ error: fbMessage(r.code, r.message) }, 502)
+      return r.ok ? json({ deleted: true }) : json({ error: fbMessage(r.code, r.message) + why }, 502)
     }
 
     const productId = String(body.product_id ?? '')
@@ -153,7 +164,7 @@ Deno.serve(async (req) => {
     for (const url of images) {
       const r = await graph(`/${pageId}/photos`, { url, published: 'false', access_token: token })
       if (!r.ok) {
-        if (ids.length === 0) return json({ error: fbMessage(r.code, r.message) }, 502)
+        if (ids.length === 0) return json({ error: fbMessage(r.code, r.message) + why }, 502)
         continue
       }
       ids.push(String(r.data.id))
@@ -163,7 +174,7 @@ Deno.serve(async (req) => {
     const params: Record<string, string> = { message, access_token: token }
     ids.forEach((id, i) => { params[`attached_media[${i}]`] = JSON.stringify({ media_fbid: id }) })
     const post = await graph(`/${pageId}/feed`, params)
-    if (!post.ok) return json({ error: fbMessage(post.code, post.message) }, 502)
+    if (!post.ok) return json({ error: fbMessage(post.code, post.message) + why }, 502)
     const postId = String(post.data.id)
     return json({ post_id: postId, url: `https://www.facebook.com/${postId}`, caption: message, photos: ids.length, ai: !!copy })
   } catch (e) {
