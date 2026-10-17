@@ -3,7 +3,7 @@
 // The products themselves are imported afterwards, one by one, by `product-import`.
 // Secret (Edge Function secrets): FIRECRAWL_API_KEY (not needed for Neewer).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { discoverUrl, extractCandidates, isKnown, knownPattern, neewerCandidates } from './discover.ts'
+import { discoverUrl, extractCandidates, isKnown, knownPattern, neewerCandidates, neewerTopicFilter } from './discover.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -62,11 +62,16 @@ async function readPage(url: string, apiKey: string): Promise<Page | null> {
 }
 
 /** Neewer's collection (public Shopify JSON): its products, or null when the shop cannot be read. */
-async function readNeewer(url: string): Promise<unknown[] | null> {
-  const res = await fetch(url, { signal: AbortSignal.timeout(20000), headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' } }).catch(() => null)
-  if (!res?.ok || new URL(res.url).hostname.replace(/^www\./, '') !== 'neewer.com') { await res?.body?.cancel().catch(() => {}); return null }
-  const body = await res.json().catch(() => null) as { products?: unknown } | null
-  return Array.isArray(body?.products) ? body.products : null
+async function readNeewer(url: string, pages = 1): Promise<unknown[] | null> {
+  const one = async (page: number) => {
+    const res = await fetch(pages > 1 ? `${url}&page=${page}` : url, { signal: AbortSignal.timeout(20000), headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json' } }).catch(() => null)
+    if (!res?.ok || new URL(res.url).hostname.replace(/^www\./, '') !== 'neewer.com') { await res?.body?.cancel().catch(() => {}); return null }
+    const body = await res.json().catch(() => null) as { products?: unknown } | null
+    return Array.isArray(body?.products) ? body.products : null
+  }
+  const lists = await Promise.all(Array.from({ length: pages }, (_, i) => one(i + 1)))
+  // the first page must be readable; a later page that is missing just ends the list
+  return lists[0] ? lists.flatMap((l) => l ?? []) : null
 }
 
 Deno.serve(async (req) => {
@@ -94,9 +99,11 @@ Deno.serve(async (req) => {
 
     let found
     if (body.source === 'neewer') {
-      const products = await readNeewer(url)
-      if (!products) return json({ error: 'La boutique Neewer n\'a pas pu être lue pour le moment. Réessayez dans un instant.', code: 'unreadable' }, 502)
-      found = neewerCandidates(products, 60)
+      const department = String(body.department ?? '')
+      const topic = url.includes('/collections/all-product/')
+      const products = await readNeewer(url, topic ? 3 : 1)
+      if (!products) return json({ error: 'La boutique Neewer n\'a pas pu être lue pour le moment (collection introuvable ?). Réessayez dans un instant.', code: 'unreadable' }, 502)
+      found = neewerCandidates(neewerTopicFilter(products, department), 60)
     } else {
       const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')
       if (!firecrawlKey) return json({ error: 'Outil non configuré : ajoutez le secret FIRECRAWL_API_KEY dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)

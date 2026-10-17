@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEPARTMENTS, discoverUrl, extractCandidates, isKnown, knownPattern, neewerCandidates } from './discover.ts'
+import { DEPARTMENTS, discoverUrl, extractCandidates, isKnown, knownPattern, neewerCandidates, neewerTopicFilter } from './discover.ts'
 
 describe('discoverUrl', () => {
   it('builds the ranking address from the fixed lists only', () => {
@@ -135,5 +135,14 @@ describe('extractCandidates', () => {
   it('survives a page without usable data', () => {
     expect(extractCandidates(undefined, undefined)).toEqual([])
     expect(extractCandidates(['https://www.amazon.com/x'], '')).toEqual([])
+  })
+
+  it('finds a Neewer product type by words in its whole catalogue', () => {
+    expect(discoverUrl('neewer', 'topic-tripods')).toBe('https://neewer.com/collections/all-product/products.json?limit=250')
+    expect(discoverUrl('neewer', 'ring-lights')).toBe('https://neewer.com/collections/ring-lights/products.json?limit=60')
+    const items = [{ title: 'NEEWER 79" Tripod Monopod' }, { title: 'NEEWER CM28 Wireless Lavalier Microphone', tags: ['audio'] }, { title: 'Softbox', product_type: 'Light Stand' }]
+    expect(neewerTopicFilter(items, 'topic-tripods').map((p) => (p as { title: string }).title)).toEqual(['NEEWER 79" Tripod Monopod', 'Softbox'])
+    expect(neewerTopicFilter(items, 'topic-microphones')).toHaveLength(1)
+    expect(neewerTopicFilter(items, 'ring-lights')).toHaveLength(3)
   })
 })

@@ -145,6 +145,11 @@ export const MS_PAGES: Record<string, string> = {
   'best-weight-gainers': 'Prise de masse',
   'best-protein-bars': 'Barres protéinées',
   'best-womens': 'Pour les femmes',
+  'best-fat-burners': 'Brûleurs de graisse',
+  'best-multivitamins': 'Multivitamines',
+  'goals/build-muscle': 'Prise de muscle',
+  'goals/improve-sports': 'Performance sportive',
+  'category/clearance.html': 'Déstockage',
 }
 
 /** Neewer collections kept by the shop itself ('' = its daily top sellers): the id is the collection's handle. */
@@ -155,12 +160,45 @@ export const NEEWER_COLLECTIONS: Record<string, string> = {
   'hot-sale-1': 'Promos du moment',
   'new-releases': 'Nouveautés',
   'featured-products': 'Produits vedettes',
+  'ring-lights': 'Ring lights',
+  'all-lights': 'Tous les éclairages',
+  '2-pack-bundles': 'Packs de 2',
+  '50-off-selected-products': 'Promos -50 %',
+}
+
+/** Neewer product types, found by words in the product's title, type and tags inside its whole catalogue (`all-product`): the key is what the picker sends. */
+export const NEEWER_TOPICS: Record<string, { label: string; words: RegExp }> = {
+  'topic-microphones': { label: 'Microphones', words: /microphone|lavalier|\bmic\b/i },
+  'topic-tripods': { label: 'Trépieds et stabilisateurs', words: /tripod|monopod|gimbal|stabilizer|slider|light stand|boom/i },
+  'topic-softboxes': { label: 'Softbox et parapluies', words: /softbox|umbrella|reflector|diffuser|octagon/i },
+  'topic-led-lights': { label: 'Lumières LED vidéo', words: /\bled\b|video light|light panel|rgb|bi-color/i },
+  'topic-backdrops': { label: 'Fonds et arrière-plans', words: /backdrop|background|green screen/i },
+  'topic-flash': { label: 'Flashs et déclencheurs', words: /flash|speedlite|trigger|strobe/i },
+  'topic-batteries': { label: 'Batteries et chargeurs', words: /battery|batteries|charger/i },
+  'topic-cages': { label: 'Cages et supports caméra', words: /\bcage\b|\brig\b|mount|bracket|handle/i },
+  'topic-phone': { label: 'Accessoires téléphone', words: /phone|smartphone|iphone|selfie/i },
+  'topic-bags': { label: 'Sacs et étuis', words: /\bbag\b|backpack|\bcase\b|pouch/i },
+  'topic-monitors': { label: 'Moniteurs de terrain', words: /monitor/i },
+}
+
+/** The products of a Neewer product type (by its words); every product when `department` is a plain collection. */
+export function neewerTopicFilter(products: unknown[], department: string): unknown[] {
+  if (!Object.hasOwn(NEEWER_TOPICS, department)) return products
+  const { words } = NEEWER_TOPICS[department]
+  return products.filter((item) => {
+    const p = (item ?? {}) as Record<string, unknown>
+    const tags = Array.isArray(p.tags) ? p.tags.join(' ') : typeof p.tags === 'string' ? p.tags : ''
+    return words.test(`${typeof p.title === 'string' ? p.title : ''} ${typeof p.product_type === 'string' ? p.product_type : ''} ${tags}`)
+  })
 }
 
 export function discoverUrl(source: string, department: string): string | null {
   if (source === 'muscle_strength') return Object.hasOwn(MS_PAGES, department) ? `https://www.muscleandstrength.com/store/${department || 'top-sellers'}` : null
   // any collection of the shop: its handle (letters, digits, dashes) is the only part taken from the caller
-  if (source === 'neewer') return /^(?:[a-z0-9][a-z0-9-]{0,79})?$/.test(department) ? `https://neewer.com/collections/${department || 'top-daily-seller'}/products.json?limit=60` : null
+  if (source === 'neewer') {
+    if (Object.hasOwn(NEEWER_TOPICS, department)) return 'https://neewer.com/collections/all-product/products.json?limit=250'
+    return /^(?:[a-z0-9][a-z0-9-]{0,79})?$/.test(department) ? `https://neewer.com/collections/${department || 'top-daily-seller'}/products.json?limit=60` : null
+  }
   if (source === 'alibaba' || source === 'amazon_search') {
     if (!Object.hasOwn(SEARCH_TOPICS, department)) return null
     if (source === 'alibaba') return `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(department || 'hot selling products')}&IndexArea=product_en&tab=all&viewtype=G`
