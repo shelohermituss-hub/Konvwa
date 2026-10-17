@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s5-expedie-template">
+      <style>
+        @font-face {
+          font-family: "Caveat";
+          src: url("assets/fonts/caveat-600.woff2") format("woff2");
+          font-weight: 600;
+        }
+        #s5-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 80% 50% at 50% 40%, #15294a 0%, #0a1628 60%, #060e1b 100%);
+          color: #f1e6d9;
+          font-family: "Poppins", sans-serif;
+        }
+        /* texte en contour qui défile (réf. B) */
+        .s5-marquee {
+          position: absolute;
+          left: 0;
+          font-size: 250px;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: -0.04em;
+          color: transparent;
+          -webkit-text-stroke: 2px rgba(241, 230, 217, 0.28);
+          white-space: nowrap;
+        }
+        #s5-m1 {
+          top: 560px;
+        }
+        #s5-m2 {
+          top: 800px;
+        }
+        #s5-step {
+          position: absolute;
+          left: 84px;
+          top: 236px;
+          font-family: "JetBrains Mono", monospace;
+          font-size: 26px;
+          letter-spacing: 0.14em;
+          color: #c9c2b8;
+        }
+        #s5-title {
+          position: absolute;
+          left: 72px;
+          top: 276px;
+          font-size: 150px;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: -0.045em;
+          color: #f1e6d9;
+          white-space: nowrap;
+        }
+        #s5-sub {
+          padding: 0 28px 12px 6px;
+          margin: 0 -28px -12px -6px;
+          position: absolute;
+          left: 560px;
+          top: 420px;
+          font-family: "Caveat", cursive;
+          font-weight: 600;
+          font-size: 110px;
+          line-height: 1;
+          color: #f05a28;
+          white-space: nowrap;
+        }
+        #s5-plane {
+          position: absolute;
+          left: 150px;
+          top: 600px;
+          width: 840px;
+        }
+        #s5-plane img {
+          display: block;
+          width: 840px;
+          filter: drop-shadow(0 40px 40px rgba(0, 0, 0, 0.55));
+        }
+        /* suivi */
+        #s5-track {
+          position: absolute;
+          left: 96px;
+          top: 1092px;
+          width: 880px;
+        }
+        #s5-rail {
+          position: absolute;
+          left: 21px;
+          top: 26px;
+          width: 4px;
+          height: 368px;
+          background: rgba(241, 230, 217, 0.18);
+        }
+        #s5-rail-fill {
+          position: absolute;
+          left: 21px;
+          top: 26px;
+          width: 4px;
+          height: 368px;
+          background: #f05a28;
+          transform-origin: 50% 0;
+        }
+        .s5-row {
+          position: relative;
+          height: 92px;
+          display: flex;
+          align-items: center;
+          gap: 30px;
+        }
+        .s5-dot {
+          position: relative;
+          flex: 0 0 auto;
+          width: 46px;
+          height: 46px;
+          border-radius: 50%;
+          border: 3px solid rgba(241, 230, 217, 0.35);
+          background: #0a1628;
+        }
+        .s5-dot-on {
+          position: absolute;
+          inset: -3px;
+          border-radius: 50%;
+          background: #f05a28;
+          color: #0a1628;
+          font-size: 26px;
+          font-weight: 900;
+          line-height: 46px;
+          text-align: center;
+        }
+        .s5-txt {
+          position: relative;
+          font-size: 40px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        .s5-txt-off {
+          color: #8e97a6;
+        }
+        .s5-txt-on {
+          position: absolute;
+          left: 0;
+          top: 0;
+          color: #f1e6d9;
+        }
+        #s5-foot {
+          position: absolute;
+          left: 96px;
+          top: 1560px;
+          font-family: "JetBrains Mono", monospace;
+          font-size: 28px;
+          letter-spacing: 0.08em;
+          color: #f05a28;
+          white-space: nowrap;
+        }
+      </style>
+
+      <div id="s5-root" data-composition-id="s5-expedie" data-width="1080" data-height="1920">
+        <div class="s5-marquee" id="s5-m1" data-layout-ignore aria-hidden="true">EXPÉDITION · EXPÉDITION · EXPÉDITION</div>
+        <div class="s5-marquee" id="s5-m2" data-layout-ignore aria-hidden="true">CHINE → HAÏTI · CHINE → HAÏTI · CHINE → HAÏTI</div>
+
+        <div id="s5-plane"><img src="assets/img/plane.png" alt="Avion-cargo portant un conteneur" /></div>
+
+        <div id="s5-step">ÉTAPE 03 / 04</div>
+        <div id="s5-title">on expédie</div>
+        <div id="s5-sub">pour toi</div>
+
+        <div id="s5-track">
+          <div id="s5-rail"></div>
+          <div id="s5-rail-fill"></div>
+        </div>
+        <div id="s5-foot">45–70 JOURS · SUIVI EN DIRECT DANS L'APP</div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          const BEAT = 0.6;
+          const D = 3.6;
+          const steps = ["Entrepôt en Chine", "Expédié", "Transit maritime", "Arrivé en Haïti", "Livraison"];
+          const track = document.getElementById("s5-track");
+          track.insertAdjacentHTML(
+            "beforeend",
+            steps
+              .map(
+                (s, k) =>
+                  `<div class="s5-row" id="s5-r${k}"><div class="s5-dot"><div class="s5-dot-on" id="s5-d${k}">✓</div></div>` +
+                  `<div class="s5-txt" data-layout-allow-overlap><span class="s5-txt-off">${s}</span><span class="s5-txt-on" id="s5-t${k}">${s}</span></div></div>`,
+              )
+              .join(""),
+          );
+
+          // contours qui défilent en sens opposés
+          tl.fromTo("#s5-m1", { x: 0 }, { x: -900, duration: D, ease: "none" }, 0);
+          tl.fromTo("#s5-m2", { x: -1100 }, { x: -200, duration: D, ease: "none" }, 0);
+
+          // avion : traversée rapide avec traînée floue, puis plane au ralenti
+          tl.fromTo("#s5-plane", { x: -1300, y: 120, rotation: 8, filter: "blur(16px)" }, { x: 0, y: 0, rotation: -4, filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0.05);
+          tl.fromTo("#s5-plane", { x: 0, y: 0 }, { x: 70, y: -26, duration: D - 0.75, ease: "none", immediateRender: false }, 0.75);
+
+          tl.fromTo("#s5-step", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "none" }, 0.1);
+          tl.fromTo("#s5-title", { opacity: 0, y: 70, rotation: 3 }, { opacity: 1, y: 0, rotation: 0, duration: 0.45, ease: "circ.out" }, 0.15);
+          tl.fromTo("#s5-sub", { clipPath: "inset(0 100% 0 0)", rotation: -5 }, { clipPath: "inset(0 0% 0 0)", rotation: -5, duration: 0.5, ease: "power2.out" }, BEAT);
+
+          // étapes du suivi qui s'allument une par une
+          tl.fromTo(".s5-row", { opacity: 0, x: -50 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out", stagger: 0.07 }, 1.0);
+          steps.forEach((_, k) => {
+            tl.set([`#s5-d${k}`, `#s5-t${k}`], { opacity: 0 }, 0);
+          });
+          tl.fromTo("#s5-rail-fill", { scaleY: 0 }, { scaleY: 0, duration: 0.01, ease: "none" }, 0);
+          const on = [1.5, 1.5 + BEAT, 1.5 + 2 * BEAT, 1.5 + 3 * BEAT];
+          on.forEach((t0, k) => {
+            tl.fromTo(`#s5-d${k}`, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(3)" }, t0);
+            tl.fromTo(`#s5-t${k}`, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, t0);
+            tl.fromTo("#s5-rail-fill", { scaleY: k / 4 }, { scaleY: Math.min(1, (k + 0.75) / 4), duration: 0.45, ease: "power2.out", immediateRender: false }, t0);
+          });
+          tl.fromTo("#s5-foot", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 2.2);
+
+          window.__timelines["s5-expedie"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

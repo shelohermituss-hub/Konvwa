@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="hud-template">
+      <style>
+        #hud-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+        }
+        #hud-grain {
+          position: absolute;
+          inset: 0;
+          background-image: url("assets/img/grain.png");
+          background-size: 512px 512px;
+          mix-blend-mode: overlay;
+          opacity: 0.16;
+        }
+        #hud-vignette {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse 80% 65% at 50% 48%, rgba(0, 0, 0, 0) 60%, rgba(10, 22, 40, 0.22) 100%);
+        }
+      </style>
+      <div id="hud-root" data-composition-id="hud" data-width="1080" data-height="1920">
+        <div id="hud-grain"></div>
+        <div id="hud-vignette"></div>
+      </div>
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          const D = 24.4;
+          const FPS = 12;
+          const grain = document.getElementById("hud-grain");
+          // le grain saute de position 12 fois par seconde (positions précalculées, déterministes)
+          for (let k = 0; k < Math.floor(D * FPS); k++) {
+            const x = (k * 197) % 512;
+            const y = (k * 331) % 512;
+            tl.set(grain, { backgroundPosition: `${x}px ${y}px` }, k / FPS);
+          }
+          window.__timelines["hud"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

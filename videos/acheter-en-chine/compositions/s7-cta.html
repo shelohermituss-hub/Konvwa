@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s7-cta-template">
+      <style>
+        @font-face {
+          font-family: "Caveat";
+          src: url("assets/fonts/caveat-600.woff2") format("woff2");
+          font-weight: 600;
+        }
+        @font-face {
+          font-family: "Poppins Light";
+          src: url("assets/fonts/poppins-300.woff2") format("woff2");
+          font-weight: 300;
+        }
+        #s7-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #070f1c;
+          color: #f1e6d9;
+          font-family: "Poppins", sans-serif;
+        }
+        #s7-glow {
+          position: absolute;
+          left: 40px;
+          top: 520px;
+          width: 1000px;
+          height: 1000px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(240, 90, 40, 0.3) 0%, rgba(240, 90, 40, 0.09) 38%, rgba(240, 90, 40, 0) 68%);
+        }
+        #s7-crates {
+          position: absolute;
+          left: 340px;
+          top: 520px;
+          width: 400px;
+        }
+        #s7-lock {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 760px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+        #s7-a {
+          font-family: "Poppins Light", "Poppins", sans-serif;
+          font-weight: 300;
+          font-size: 76px;
+          line-height: 1;
+          color: #f1e6d9;
+        }
+        #s7-word {
+          display: flex;
+          margin-top: 18px;
+          font-size: 214px;
+          font-weight: 900;
+          line-height: 0.95;
+          letter-spacing: -0.04em;
+          color: #f05a28;
+          text-shadow: 0 0 46px rgba(240, 90, 40, 0.55);
+          white-space: nowrap;
+        }
+        .s7-ch {
+          display: inline-block;
+        }
+        #s7-script {
+          padding: 0 28px 12px 6px;
+          margin: 0 -28px -12px -6px;
+          margin-top: 6px;
+          font-family: "Caveat", cursive;
+          font-weight: 600;
+          font-size: 104px;
+          line-height: 1;
+          color: #f1e6d9;
+          white-space: nowrap;
+        }
+        #s7-pill {
+          margin-top: 54px;
+          padding: 18px 54px;
+          border-radius: 999px;
+          background: #f05a28;
+          color: #0a1628;
+          font-size: 50px;
+          font-weight: 900;
+          letter-spacing: -0.01em;
+          white-space: nowrap;
+        }
+        #s7-pays {
+          margin-top: 30px;
+          font-family: "JetBrains Mono", monospace;
+          font-size: 28px;
+          letter-spacing: 0.12em;
+          color: #c9c2b8;
+          white-space: nowrap;
+        }
+        #s7-fade {
+          position: absolute;
+          inset: 0;
+          background: #000000;
+        }
+      </style>
+
+      <div id="s7-root" data-composition-id="s7-cta" data-width="1080" data-height="1920">
+        <div id="s7-glow"></div>
+        <img id="s7-crates" src="assets/img/konvwa-crates.png" alt="" />
+        <div id="s7-lock">
+          <div id="s7-a">commande sur</div>
+          <div id="s7-word"></div>
+          <div id="s7-script">achetez, nous livrons</div>
+          <div id="s7-pill">konvwa.shop</div>
+          <div id="s7-pays">CHINE · USA → HAÏTI</div>
+        </div>
+        <div id="s7-fade"></div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          const BEAT = 0.6;
+          const D = 5.2;
+          document.getElementById("s7-word").innerHTML = "KONVWA"
+            .split("")
+            .map((c) => `<span class="s7-ch">${c}</span>`)
+            .join("");
+
+          tl.fromTo("#s7-glow", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 1.0, ease: "power2.out" }, 0);
+          tl.fromTo("#s7-glow", { scale: 1 }, { scale: 1.08, duration: 1.4, ease: "sine.inOut", yoyo: true, repeat: 2, immediateRender: false }, 1.0);
+          tl.fromTo("#s7-crates", { opacity: 0, y: -60, scale: 0.6 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.8)" }, 0.05);
+          tl.fromTo("#s7-a", { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.45, ease: "power3.out" }, 0.25);
+          tl.fromTo(".s7-ch", { opacity: 0, y: 90, filter: "blur(16px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power4.out", stagger: 0.06 }, BEAT);
+          tl.fromTo("#s7-script", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.7, ease: "power2.out" }, 3 * BEAT);
+          tl.fromTo("#s7-pill", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2.2)" }, 4 * BEAT);
+          tl.fromTo("#s7-pays", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "none" }, 4.6 * BEAT);
+          tl.fromTo("#s7-lock", { scale: 1 }, { scale: 1.03, duration: D - 3.2, ease: "none" }, 3.2);
+          tl.fromTo("#s7-fade", { opacity: 0 }, { opacity: 1, duration: 0.7, ease: "power1.in" }, D - 0.7);
+
+          window.__timelines["s7-cta"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

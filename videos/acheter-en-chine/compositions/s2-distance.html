@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s2-distance-template">
+      <style>
+        @font-face {
+          font-family: "Caveat";
+          src: url("assets/fonts/caveat-600.woff2") format("woff2");
+          font-weight: 600;
+        }
+        @font-face {
+          font-family: "Poppins Light";
+          src: url("assets/fonts/poppins-300.woff2") format("woff2");
+          font-weight: 300;
+        }
+        #s2-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 75% 55% at 50% 45%, #162a4a 0%, #0a1628 62%, #060e1b 100%);
+          color: #f1e6d9;
+          font-family: "Poppins", sans-serif;
+        }
+        #s2-frames {
+          position: absolute;
+          inset: 0;
+          width: 1080px;
+          height: 1920px;
+        }
+        #s2-map {
+          position: absolute;
+          inset: 0;
+          width: 1080px;
+          height: 1920px;
+        }
+        .s2-label {
+          position: absolute;
+          font-family: "JetBrains Mono", monospace;
+          font-size: 26px;
+          line-height: 1.4;
+          letter-spacing: 0.08em;
+          color: #c9c2b8;
+          white-space: nowrap;
+        }
+        .s2-label b {
+          display: block;
+          font-weight: 700;
+          font-size: 30px;
+          color: #f1e6d9;
+        }
+        #s2-l-szx {
+          left: 96px;
+          top: 452px;
+        }
+        #s2-l-pap {
+          right: 96px;
+          top: 1336px;
+          text-align: right;
+        }
+        #s2-text {
+          position: absolute;
+          left: 84px;
+          top: 760px;
+        }
+        .s2-line {
+          display: block;
+          white-space: nowrap;
+        }
+        #s2-a,
+        #s2-b {
+          font-family: "Poppins Light", "Poppins", sans-serif;
+          font-weight: 300;
+          font-size: 78px;
+          line-height: 1.12;
+        }
+        #s2-a {
+          color: #f1e6d9;
+        }
+        #s2-b {
+          color: #b9b2a8;
+        }
+        #s2-c {
+          margin-top: 6px;
+          font-size: 128px;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: -0.045em;
+          color: #f1e6d9;
+        }
+        #s2-c span {
+          color: #f05a28;
+        }
+        #s2-giant {
+          position: absolute;
+          left: 0;
+          top: 1500px;
+          font-size: 196px;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: -0.05em;
+          color: #f1e6d9;
+          white-space: nowrap;
+        }
+        #s2-crow {
+          padding: 0 28px 12px 6px;
+          margin: 0 -28px -12px -6px;
+          position: absolute;
+          left: 84px;
+          top: 1404px;
+          font-family: "Caveat", cursive;
+          font-weight: 600;
+          font-size: 76px;
+          color: #f05a28;
+          white-space: nowrap;
+        }
+      </style>
+
+      <div id="s2-root" data-composition-id="s2-distance" data-width="1080" data-height="1920">
+        <svg id="s2-frames" viewBox="0 0 1080 1920">
+          <path id="s2-arch1" d="M120 1780 L120 520 A420 420 0 0 1 960 520 L960 1780" fill="none" stroke="rgba(241,230,217,0.16)" stroke-width="2" />
+          <path id="s2-arch2" d="M64 1850 L64 470 A476 476 0 0 1 1016 470 L1016 1850" fill="none" stroke="rgba(241,230,217,0.1)" stroke-width="2" />
+        </svg>
+        <svg id="s2-map" viewBox="0 0 1080 1920">
+          <path id="s2-route-ghost" d="M150 560 C 380 250, 1000 330, 1004 700 C 1008 980, 1020 1180, 930 1300" fill="none" stroke="rgba(241,230,217,0.22)" stroke-width="3" stroke-dasharray="4 14" stroke-linecap="round" />
+          <path id="s2-route" d="M150 560 C 380 250, 1000 330, 1004 700 C 1008 980, 1020 1180, 930 1300" fill="none" stroke="#F05A28" stroke-width="5" stroke-linecap="round" />
+          <circle id="s2-dot-a" cx="150" cy="560" r="12" fill="#F05A28" />
+          <circle id="s2-ping-a" cx="150" cy="560" r="12" fill="none" stroke="#F05A28" stroke-width="3" />
+          <circle id="s2-dot-b" cx="930" cy="1300" r="12" fill="#F1E6D9" />
+          <circle id="s2-ping-b" cx="930" cy="1300" r="12" fill="none" stroke="#F1E6D9" stroke-width="3" />
+          <circle id="s2-runner" cx="150" cy="560" r="9" fill="#F1E6D9" />
+        </svg>
+
+        <div class="s2-label" id="s2-l-szx"><b>SHENZHEN</b>22,54° N · 114,06° E</div>
+        <div class="s2-label" id="s2-l-pap"><b>PORT-AU-PRINCE</b>18,59° N · 72,31° O</div>
+
+        <div id="s2-text">
+          <span class="s2-line" id="s2-a">la distance</span>
+          <span class="s2-line" id="s2-b">n'est plus</span>
+          <span class="s2-line" id="s2-c">un <span>problème.</span></span>
+        </div>
+
+        <div id="s2-crow">à vol d'oiseau</div>
+        <div id="s2-giant">15 400 KM</div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          const BEAT = 0.6;
+          const D = 2.4;
+
+          tl.fromTo(["#s2-arch1", "#s2-arch2"], { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out", stagger: 0.08 }, 0);
+
+          // route Shenzhen -> Port-au-Prince : tracé + point qui la parcourt
+          const route = document.getElementById("s2-route");
+          const len = route.getTotalLength();
+          route.setAttribute("stroke-dasharray", String(len));
+          const runner = document.getElementById("s2-runner");
+          const prog = { p: 0 };
+          tl.fromTo(
+            prog,
+            { p: 0 },
+            {
+              p: 1,
+              duration: 1.95,
+              ease: "power2.inOut",
+              onUpdate: () => {
+                route.setAttribute("stroke-dashoffset", String(len * (1 - prog.p)));
+                const pt = route.getPointAtLength(len * prog.p);
+                runner.setAttribute("cx", pt.x.toFixed(1));
+                runner.setAttribute("cy", pt.y.toFixed(1));
+              },
+            },
+            0.1,
+          );
+          tl.fromTo("#s2-route-ghost", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "none" }, 0);
+          tl.fromTo("#s2-dot-a", { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.3, ease: "back.out(3)" }, 0.05);
+          tl.fromTo("#s2-ping-a", { scale: 1, opacity: 1, transformOrigin: "50% 50%" }, { scale: 4, opacity: 0, duration: 0.8, ease: "power2.out" }, 0.1);
+          tl.fromTo("#s2-dot-b", { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.3, ease: "back.out(3)" }, 2.0);
+          tl.fromTo("#s2-ping-b", { scale: 1, opacity: 1, transformOrigin: "50% 50%" }, { scale: 4, opacity: 0, duration: 0.6, ease: "power2.out" }, 2.02);
+          tl.fromTo("#s2-l-szx", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, 0.1);
+          tl.fromTo("#s2-l-pap", { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, 1.9);
+
+          // texte : trois entrées différentes sur la grille
+          tl.fromTo("#s2-a", { opacity: 0, filter: "blur(12px)", y: 30 }, { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.45, ease: "power3.out" }, 0.15);
+          tl.fromTo("#s2-b", { opacity: 0, x: -220 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, BEAT);
+          tl.fromTo("#s2-c", { opacity: 0, scale: 1.5, transformOrigin: "0% 60%" }, { opacity: 1, scale: 1, duration: 0.45, ease: "power4.out" }, 2 * BEAT);
+
+          // mot géant flou qui glisse et se met au point (profondeur de champ)
+          tl.fromTo("#s2-giant", { x: 520, filter: "blur(18px)", opacity: 0.25 }, { x: 40, filter: "blur(0px)", opacity: 1, duration: D - 0.2, ease: "power2.out" }, 0);
+          tl.fromTo("#s2-crow", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "power2.out" }, 2.5 * BEAT);
+
+          window.__timelines["s2-distance"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

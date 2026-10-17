@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s1-hook-template">
+      <style>
+        @font-face {
+          font-family: "Caveat";
+          src: url("assets/fonts/caveat-600.woff2") format("woff2");
+          font-weight: 600;
+        }
+        @font-face {
+          font-family: "Poppins Light";
+          src: url("assets/fonts/poppins-300.woff2") format("woff2");
+          font-weight: 300;
+        }
+        #s1-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 80% 60% at 50% 45%, #f8efe5 0%, #f1e6d9 60%, #e9dccc 100%);
+          color: #0a1628;
+          font-family: "Poppins", sans-serif;
+        }
+        #s1-world {
+          position: absolute;
+          inset: 0;
+          transform-origin: 50% 52%;
+        }
+        /* mot géant en contour derrière le sujet (réf. A « HE FIGHTS ») */
+        #s1-ghost {
+          position: absolute;
+          left: -40px;
+          top: 760px;
+          width: 1400px;
+          font-size: 380px;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: -0.04em;
+          color: transparent;
+          -webkit-text-stroke: 3px rgba(10, 22, 40, 0.3);
+          white-space: nowrap;
+        }
+        #s1-disc {
+          position: absolute;
+          left: 190px;
+          top: 650px;
+          width: 700px;
+          height: 700px;
+          border-radius: 50%;
+          background: radial-gradient(circle at 38% 32%, #ff7a48 0%, #f05a28 55%, #d9461a 100%);
+        }
+        #s1-ring {
+          position: absolute;
+          left: 150px;
+          top: 610px;
+          width: 780px;
+          height: 780px;
+          border-radius: 50%;
+          border: 2px dashed rgba(10, 22, 40, 0.35);
+        }
+        #s1-subject {
+          position: absolute;
+          left: 90px;
+          top: 640px;
+          width: 900px;
+          height: 740px;
+        }
+        #s1-subject img {
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          width: 900px;
+          filter: drop-shadow(0 34px 30px rgba(10, 22, 40, 0.35));
+        }
+        #s1-shadow {
+          position: absolute;
+          left: 220px;
+          top: 1338px;
+          width: 640px;
+          height: 46px;
+          border-radius: 50%;
+          background: radial-gradient(ellipse at center, rgba(10, 22, 40, 0.35) 0%, rgba(10, 22, 40, 0) 70%);
+        }
+        /* bloc titre */
+        #s1-comment {
+          font-family: "Poppins Light", "Poppins", sans-serif;
+          position: absolute;
+          left: 78px;
+          top: 300px;
+          font-size: 66px;
+          font-weight: 300;
+          letter-spacing: -0.01em;
+          color: #0a1628;
+        }
+        #s1-acheter {
+          position: absolute;
+          left: 62px;
+          top: 372px;
+          display: flex;
+          font-size: 178px;
+          font-weight: 900;
+          line-height: 0.95;
+          letter-spacing: -0.045em;
+          color: #dd4f1c;
+        }
+        .s1-mask {
+          display: block;
+          overflow: hidden;
+          padding: 0 4px 10px;
+        }
+        .s1-l {
+          display: block;
+        }
+        #s1-chine {
+          position: absolute;
+          left: 470px;
+          top: 548px;
+          display: flex;
+          align-items: center;
+          gap: 22px;
+        }
+        #s1-chine-word {
+          padding: 0 28px 12px 6px;
+          margin: 0 -28px -12px -6px;
+          font-family: "Caveat", cursive;
+          font-weight: 600;
+          font-size: 132px;
+          line-height: 1;
+          color: #0a1628;
+          transform: rotate(-5deg);
+        }
+        .s1-flag {
+          width: 92px;
+          height: 92px;
+          border-radius: 18px;
+          box-shadow: 0 10px 22px rgba(10, 22, 40, 0.25);
+        }
+        /* bas : depuis Haïti ? */
+        #s1-depuis {
+          position: absolute;
+          left: 78px;
+          top: 1352px;
+          display: flex;
+          align-items: baseline;
+          gap: 26px;
+          white-space: nowrap;
+        }
+        #s1-depuis-a {
+          font-family: "Poppins Light", "Poppins", sans-serif;
+          font-size: 72px;
+          font-weight: 300;
+          color: #0a1628;
+        }
+        #s1-haiti {
+          position: relative;
+          font-size: 118px;
+          font-weight: 900;
+          letter-spacing: -0.035em;
+          color: #0a1628;
+        }
+        #s1-circle {
+          position: absolute;
+          left: -36px;
+          top: -14px;
+          width: 420px;
+          height: 170px;
+          overflow: visible;
+        }
+        #s1-flag-ht {
+          align-self: center;
+        }
+        #s1-para {
+          position: absolute;
+          left: 78px;
+          top: 1528px;
+          width: 700px;
+          display: flex;
+          gap: 22px;
+          align-items: flex-start;
+        }
+        #s1-star {
+          flex: 0 0 auto;
+          width: 46px;
+          height: 46px;
+          margin-top: 4px;
+          border-radius: 50%;
+          background: #f05a28;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          font-size: 30px;
+          line-height: 1;
+        }
+        #s1-para-text {
+          font-size: 31px;
+          font-weight: 400;
+          line-height: 1.35;
+          color: #4f463d;
+        }
+        .s1-w {
+          display: inline-block;
+        }
+        /* métadonnées (réf. A) */
+        .s1-meta {
+          position: absolute;
+          font-family: "JetBrains Mono", monospace;
+          font-size: 24px;
+          line-height: 1.45;
+          letter-spacing: 0.04em;
+          color: #5c5248;
+          white-space: nowrap;
+        }
+        #s1-meta-l {
+          left: 64px;
+          top: 176px;
+        }
+        #s1-meta-r {
+          right: 64px;
+          top: 176px;
+          text-align: right;
+        }
+        .s1-bars {
+          display: inline-flex;
+          gap: 5px;
+          margin-left: 12px;
+          vertical-align: middle;
+        }
+        .s1-bars i {
+          display: block;
+          width: 8px;
+          height: 22px;
+          background: #0a1628;
+        }
+        #s1-rec {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          margin-right: 8px;
+          border-radius: 50%;
+          background: #f05a28;
+          vertical-align: middle;
+        }
+        #s1-barcode {
+          position: absolute;
+          left: 786px;
+          top: 286px;
+          width: 230px;
+          height: 62px;
+        }
+        #s1-barcode-txt {
+          position: absolute;
+          left: 504px;
+          top: 318px;
+          font-family: "JetBrains Mono", monospace;
+          font-size: 22px;
+          letter-spacing: 0.12em;
+          color: #5c5248;
+        }
+        #s1-rule {
+          position: absolute;
+          left: 64px;
+          right: 64px;
+          top: 260px;
+          height: 2px;
+          background: rgba(10, 22, 40, 0.3);
+          transform-origin: 0 50%;
+        }
+      </style>
+
+      <div id="s1-root" data-composition-id="s1-hook" data-width="1080" data-height="1920">
+        <div id="s1-world">
+          <div id="s1-ghost" data-layout-ignore aria-hidden="true">CHINE CHINE</div>
+          <div id="s1-ring"></div>
+          <div id="s1-disc"></div>
+          <div id="s1-shadow"></div>
+          <div id="s1-subject"><img src="assets/img/forklift.png" alt="Chariot élévateur portant un conteneur" /></div>
+
+          <div id="s1-rule"></div>
+          <div id="s1-comment">comment</div>
+          <div id="s1-acheter"></div>
+          <div id="s1-chine">
+            <div id="s1-chine-word">en Chine</div>
+            <img class="s1-flag" id="s1-flag-cn" src="assets/img/cn.svg" alt="" />
+          </div>
+
+          <div id="s1-depuis">
+            <span id="s1-depuis-a">depuis</span>
+            <span id="s1-haiti"
+              >Haïti ?<svg id="s1-circle" viewBox="0 0 420 170">
+                <path
+                  id="s1-circle-path"
+                  d="M60 96 C 40 40, 210 6, 330 22 C 420 34, 418 120, 330 146 C 230 172, 70 160, 34 116 C 14 92, 40 64, 96 50"
+                  fill="none"
+                  stroke="#F05A28"
+                  stroke-width="7"
+                  stroke-linecap="round"
+                /></svg
+            ></span>
+            <img class="s1-flag" id="s1-flag-ht" src="assets/img/ht.svg" alt="" />
+          </div>
+
+          <div id="s1-para">
+            <div id="s1-star">★</div>
+            <div id="s1-para-text"></div>
+          </div>
+
+          <div class="s1-meta" id="s1-meta-l">ISO 200 &nbsp; WB 5600K<br />1/60 &nbsp; F2.8 &nbsp; SZX → PAP</div>
+          <div class="s1-meta" id="s1-meta-r">
+            <span id="s1-rec"></span>REC <span id="s1-tc">00:00</span><br />CH1<span class="s1-bars" id="s1-ch1"></span><br />CH2<span class="s1-bars" id="s1-ch2"></span>
+          </div>
+          <svg id="s1-barcode" viewBox="0 0 230 82" preserveAspectRatio="none"></svg>
+          <div id="s1-barcode-txt">KV-2026 · 01/04</div>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          const BEAT = 0.6;
+          const D = 4.8;
+          // pseudo-aléatoire déterministe
+          let seed = 7;
+          const R = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+          // ACHETER lettre par lettre (masques)
+          const word = "ACHETER";
+          document.getElementById("s1-acheter").innerHTML = word
+            .split("")
+            .map((c, i) => `<span class="s1-mask"><span class="s1-l" id="s1-l${i}">${c}</span></span>`)
+            .join("");
+          // paragraphe mot par mot
+          const para = "Sans voyager. Sans carte bancaire étrangère. Juste ton téléphone.";
+          document.getElementById("s1-para-text").innerHTML = para
+            .split(" ")
+            .map((w, i) => `<span class="s1-w" id="s1-w${i}">${w}</span>`)
+            .join(" ");
+          const nWords = para.split(" ").length;
+          // niveaux CH1 / CH2
+          ["s1-ch1", "s1-ch2"].forEach((id) => {
+            document.getElementById(id).innerHTML = Array.from({ length: 8 }, (_, k) => `<i id="${id}-${k}"></i>`).join("");
+          });
+          // code-barres
+          let x = 0;
+          let bars = "";
+          while (x < 226) {
+            const w = 2 + Math.floor(R() * 4);
+            bars += `<rect x="${x}" y="0" width="${w}" height="82" fill="#0A1628"/>`;
+            x += w + 2 + Math.floor(R() * 4);
+          }
+          document.getElementById("s1-barcode").innerHTML = bars;
+
+          // --- fond / sujet ---------------------------------------------------
+          tl.fromTo("#s1-ghost", { x: 60, opacity: 0 }, { x: -120, opacity: 1, duration: D, ease: "none" }, 0);
+          tl.fromTo("#s1-disc", { scale: 0, rotation: -30 }, { scale: 1, rotation: 0, duration: 0.55, ease: "back.out(1.6)" }, 0.02);
+          tl.fromTo("#s1-ring", { scale: 0.6, opacity: 0, rotation: 0 }, { scale: 1, opacity: 1, rotation: 25, duration: 1.4, ease: "power3.out" }, 0.1);
+          tl.fromTo("#s1-ring", { rotation: 25 }, { rotation: 70, duration: D - 1.5, ease: "none", immediateRender: false }, 1.5);
+          tl.fromTo("#s1-subject", { y: 520, opacity: 0, rotation: -6 }, { y: 0, opacity: 1, rotation: 0, duration: 0.75, ease: "power4.out" }, 0.12);
+          tl.fromTo("#s1-shadow", { opacity: 0, scaleX: 0.3 }, { opacity: 1, scaleX: 1, duration: 0.6, ease: "power2.out" }, 0.4);
+          tl.fromTo("#s1-subject", { y: 0 }, { y: -14, duration: 1.2, ease: "sine.inOut", yoyo: true, repeat: 2, immediateRender: false }, 0.9);
+          // léger push-in de caméra, puis accélération avant la coupe
+          tl.fromTo("#s1-world", { scale: 1 }, { scale: 1.035, duration: 4.3, ease: "none" }, 0);
+          tl.fromTo("#s1-world", { scale: 1.035 }, { scale: 1.12, duration: 0.42, ease: "power3.in", immediateRender: false }, 4.38);
+
+          // --- titre ------------------------------------------------------------
+          tl.fromTo("#s1-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "expo.out" }, 0.15);
+          tl.fromTo("#s1-comment", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "circ.out" }, 0.3);
+          tl.fromTo(".s1-l", { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: "power4.out", stagger: 0.06 }, BEAT);
+          tl.fromTo("#s1-acheter", { x: 0 }, { x: 10, duration: 3.2, ease: "none" }, 1.2);
+          tl.fromTo("#s1-chine-word", { clipPath: "inset(0 100% 0 0)", y: 10 }, { clipPath: "inset(0 0% 0 0)", y: 0, duration: 0.65, ease: "power2.out" }, 1.5);
+          tl.fromTo("#s1-flag-cn", { scale: 0, rotation: -40 }, { scale: 1, rotation: 8, duration: 0.45, ease: "back.out(2.4)" }, 1.95);
+
+          // mesure 2 : depuis Haïti ?
+          tl.fromTo("#s1-depuis-a", { x: -260, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, 4 * BEAT);
+          tl.fromTo("#s1-haiti", { scale: 1.7, opacity: 0, filter: "blur(14px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power4.out" }, 4 * BEAT + 0.18);
+          tl.fromTo("#s1-flag-ht", { scale: 0, rotation: 40 }, { scale: 1, rotation: -8, duration: 0.45, ease: "back.out(2.4)" }, 4 * BEAT + 0.42);
+          const path = document.getElementById("s1-circle-path");
+          const len = 1040;
+          path.setAttribute("stroke-dasharray", String(len));
+          tl.fromTo(path, { attr: { "stroke-dashoffset": len } }, { attr: { "stroke-dashoffset": 0 }, duration: 0.55, ease: "power2.inOut" }, 5 * BEAT);
+
+          for (let i = 0; i < nWords; i++) {
+            tl.set("#s1-w" + i, { opacity: 0 }, 0);
+            tl.fromTo("#s1-w" + i, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 5.5 * BEAT + i * 0.045);
+          }
+          tl.fromTo("#s1-star", { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.4, ease: "back.out(2)" }, 5.4 * BEAT);
+
+          // --- métadonnées ------------------------------------------------------
+          tl.fromTo([".s1-meta", "#s1-barcode", "#s1-barcode-txt"], { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "none", stagger: 0.06 }, 0.2);
+          tl.fromTo("#s1-barcode", { scaleX: 0, transformOrigin: "100% 50%" }, { scaleX: 1, duration: 0.5, ease: "expo.out" }, 0.4);
+          tl.fromTo("#s1-rec", { opacity: 1 }, { opacity: 0.15, duration: 0.3, ease: "steps(1)", yoyo: true, repeat: 7 }, 0);
+          // niveaux qui bougent au rythme (états précalculés, un pas par demi-temps)
+          const steps = Math.floor(D / (BEAT / 2));
+          ["s1-ch1", "s1-ch2"].forEach((id, c) => {
+            for (let s = 0; s < steps; s++) {
+              const lvl = 2 + Math.floor(R() * 6) + (s % 2 === 0 ? 1 : 0);
+              for (let k = 0; k < 8; k++) {
+                tl.set(`#${id}-${k}`, { opacity: k < lvl ? 1 : 0.18 }, s * (BEAT / 2) + c * 0.05);
+              }
+            }
+          });
+
+          // compteur REC
+          const tc = document.getElementById("s1-tc");
+          const clock = { t: 0 };
+          tl.fromTo(clock, { t: 0 }, { t: D, duration: D, ease: "none", onUpdate: () => { const f = Math.floor(clock.t * 30) % 30; tc.textContent = "00:0" + Math.floor(clock.t) + ":" + String(f).padStart(2, "0"); } }, 0);
+
+          window.__timelines["s1-hook"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
