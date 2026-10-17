@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="assets/iso.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #0a1628;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0a1628;
+        font-family: "Poppins", sans-serif;
+      }
+      [data-composition-id="main"] > div[data-composition-src] {
+        position: absolute;
+        inset: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="27" data-width="1080" data-height="1920">
+      <!-- Scènes -->
+      <div id="el-a" data-composition-id="ka-app" data-composition-src="compositions/ka-app.html" data-start="0" data-duration="13.4" data-track-index="1" data-width="1080" data-height="1920"></div>
+      <div id="el-b" data-composition-id="kb-trajet" data-composition-src="compositions/kb-trajet.html" data-start="13.4" data-duration="6.2" data-track-index="1" data-width="1080" data-height="1920"></div>
+      <div id="el-c" data-composition-id="kc-livraison" data-composition-src="compositions/kc-livraison.html" data-start="19.6" data-duration="3.4" data-track-index="1" data-width="1080" data-height="1920"></div>
+      <div id="el-d" data-composition-id="kd-logo" data-composition-src="compositions/kd-logo.html" data-start="23" data-duration="4" data-track-index="1" data-width="1080" data-height="1920"></div>
+
+      <!-- Barre d'étapes + transitions -->
+      <div id="el-hud" data-composition-id="khud" data-composition-src="compositions/khud.html" data-start="0" data-duration="27" data-track-index="2" data-width="1080" data-height="1920"></div>
+
+      <!-- Voix off (Gemini 3.1 Flash TTS via FLORA, voix « Charon ») -->
+      <audio id="vo1" src="assets/vo/vo1.wav" data-start="0.1" data-duration="4.88" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo2" src="assets/vo/vo2.wav" data-start="4.55" data-duration="3.92" data-track-index="11" data-volume="1"></audio>
+      <audio id="vo3" src="assets/vo/vo3.wav" data-start="8.15" data-duration="5.12" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo4" src="assets/vo/vo4.wav" data-start="13.45" data-duration="6.12" data-track-index="11" data-volume="1"></audio>
+      <audio id="vo5" src="assets/vo/vo5.wav" data-start="19.6" data-duration="3.4" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo6" src="assets/vo/vo6.wav" data-start="23" data-duration="3.8" data-track-index="11" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

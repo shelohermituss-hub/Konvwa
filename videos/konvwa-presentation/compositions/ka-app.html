@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="ka-app-template">
+      <style>
+        #ka-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 80% 55% at 50% 62%, #1a3062 0%, #0a1628 72%);
+          color: #ffffff;
+          font-family: "Poppins", sans-serif;
+        }
+        #ka-world {
+          position: absolute;
+          inset: 0;
+          width: 1080px;
+          height: 1920px;
+        }
+        .ka-h {
+          position: absolute;
+          left: 70px;
+          right: 70px;
+          top: 300px;
+          text-align: center;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          text-shadow: 0 10px 40px rgba(4, 9, 22, 0.7);
+        }
+        .ka-line {
+          display: block;
+          font-size: 84px;
+          line-height: 1.04;
+          white-space: nowrap;
+        }
+        .ka-w {
+          display: inline-block;
+        }
+        .ka-o {
+          color: #f05a28;
+        }
+        #ka-h1b .ka-line {
+          font-size: 128px;
+          font-weight: 900;
+          color: #f05a28;
+        }
+        .ka-chip {
+          display: inline-block;
+          margin-top: 26px;
+          padding: 12px 34px;
+          border-radius: 999px;
+          font-size: 42px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        #ka-chip2 {
+          background: #3bd18a;
+          color: #0a1628;
+          text-shadow: none;
+        }
+        #ka-chip3 {
+          background: rgba(10, 22, 40, 0.92);
+          border: 3px solid #f05a28;
+        }
+      </style>
+
+      <div id="ka-root" data-composition-id="ka-app" data-width="1080" data-height="1920">
+        <svg id="ka-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-540 -960 1080 1920"></svg>
+        <div class="ka-h" id="ka-h1">
+          <span class="ka-line"><span class="ka-w" id="ka-w1">Un article sur</span></span>
+          <span class="ka-line"><span class="ka-w ka-o" id="ka-w2">Shein,</span> <span class="ka-w ka-o" id="ka-w3">Temu</span></span>
+          <span class="ka-line"><span class="ka-w" id="ka-w4">ou</span> <span class="ka-w ka-o" id="ka-w5">Alibaba</span> <span class="ka-w" id="ka-w6">?</span></span>
+        </div>
+        <div class="ka-h" id="ka-h1b"><span class="ka-line">Collez le lien.</span></div>
+        <div class="ka-h" id="ka-h2">
+          <span class="ka-line">Votre devis</span>
+          <span class="ka-line ka-o">en gourdes</span>
+          <span class="ka-chip" id="ka-chip2">sous 24 h</span>
+        </div>
+        <div class="ka-h" id="ka-h3">
+          <span class="ka-line">Payez avec</span>
+          <span class="ka-line ka-o" style="font-size: 76px">MonCash ou NatCash</span>
+          <span class="ka-chip" id="ka-chip3">Sans carte bancaire étrangère</span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const P = I.P;
+          const r1 = I.r1;
+          const C = I.C;
+          const tl = gsap.timeline({ paused: true });
+          const R = I.rng(2026);
+          const D = 13.4;
+          const OR = "#F05A28";
+          const NV = "#0A1628";
+          const CARD = "#13254C";
+          const MUTED = "#9FB0CC";
+          const T = (u, v, txt, size, weight, fill, extra) => `<text x="${u}" y="${v}" font-family="Poppins" font-size="${size}" font-weight="${weight}" fill="${fill}"${extra ? " " + extra : ""}>${txt}</text>`;
+
+          // ---------- décor : grille au sol + particules ----------
+          let w = I.defs("ka");
+          let grid = "";
+          for (let k = -9; k <= 9; k++) {
+            grid += I.line([P(k * 90, -900, 0), P(k * 90, 900, 0)], "#2A4A86", 1.2, 'opacity="0.35"');
+            grid += I.line([P(-900, k * 90, 0), P(900, k * 90, 0)], "#2A4A86", 1.2, 'opacity="0.35"');
+          }
+          w += `<g opacity="0.8">${grid}</g>`;
+          let dots = "";
+          for (let k = 0; k < 40; k++) dots += `<circle id="ka-pt${k}" r="${r1(2 + R() * 3)}" fill="${k % 3 ? "#F05A28" : "#FFFFFF"}" opacity="${(0.25 + R() * 0.4).toFixed(2)}"/>`;
+          w += `<g>${dots}</g>`;
+
+          // ---------- socle + téléphone ----------
+          let phone = "";
+          phone += I.box(-330, -250, -40, 660, 500, 40, "#16305E", { edgeW: 2 });
+          phone += I.line([P(-330, 250, 0), P(330, 250, 0), P(330, -250, 0)], OR, 3);
+          phone += `<ellipse cx="${r1(P(0, 0, 0)[0] - 60)}" cy="${r1(P(0, 0, 0)[1] + 60)}" rx="260" ry="90" fill="rgba(4,9,22,0.45)"/>`;
+          phone += I.box(-190, -14, 0, 380, 28, 760, "#1E2A44", { shadow: false, edgeW: 1.5 });
+          phone += I.quad("R", 190, -14, 14, 470, 560, "#141C30");
+          phone += I.quad("R", 190, -14, 14, 600, 640, "#141C30");
+
+          // écran (dessin 2D posé sur la face avant)
+          let scr = "";
+          scr += `<rect x="14" y="18" width="352" height="724" rx="30" fill="${NV}"/>`;
+          scr += `<rect x="160" y="32" width="60" height="12" rx="6" fill="#1E2A44"/>`;
+          // en-tête : logo trois colis + KONVWA
+          scr += `<rect x="34" y="78" width="16" height="11" rx="3" fill="#8B2200"/><rect x="46" y="70" width="16" height="11" rx="3" fill="#E53D15"/><rect x="58" y="62" width="16" height="11" rx="3" fill="#FF7252"/>`;
+          scr += T(84, 88, "KONVWA", 24, 900, "#FFFFFF", 'letter-spacing="1"');
+          scr += `<circle cx="336" cy="78" r="13" fill="${CARD}"/>`;
+          // P1 : lien
+          let p1 = "";
+          p1 += T(30, 150, "Nouvelle commande", 27, 700, "#FFFFFF");
+          p1 += T(30, 192, "Lien du produit", 16, 400, MUTED);
+          p1 += `<rect x="26" y="206" width="328" height="56" rx="16" fill="${CARD}" stroke="${OR}" stroke-width="2.5"/>`;
+          p1 += `<text id="ka-url" x="44" y="241" font-family="Poppins" font-size="17" font-weight="400" fill="#FFFFFF"> </text>`;
+          p1 += `<rect id="ka-caret" x="44" y="222" width="2.5" height="24" fill="${OR}"/>`;
+          [["Shein", 26, 74], ["Temu", 108, 70], ["Alibaba", 186, 88]].forEach(([n, x, wd]) => {
+            p1 += `<rect x="${x}" y="280" width="${wd}" height="32" rx="16" fill="${CARD}"/>` + T(x + wd / 2, 302, n, 15, 700, MUTED, 'text-anchor="middle"');
+          });
+          p1 += `<g id="ka-prod"><rect x="26" y="334" width="328" height="210" rx="20" fill="${CARD}"/>
+            <rect x="42" y="350" width="120" height="120" rx="14" fill="#F7EDE6"/>
+            <path d="M58,438 Q60,404 82,400 L104,398 Q114,382 128,388 Q140,396 146,422 L150,440 Q150,448 140,448 L64,448 Q56,448 58,438 Z" fill="${OR}"/>
+            <path d="M58,438 L150,440 L150,448 L60,448 Z" fill="#FFFFFF"/><path d="M90,404 l8,14 M102,400 l8,14 M114,394 l8,14" stroke="#FFFFFF" stroke-width="3"/>
+            ${T(176, 384, "Baskets de course", 18, 700, "#FFFFFF")}
+            ${T(176, 412, "Shein · Pointure 42", 14, 400, MUTED)}
+            <rect x="176" y="430" width="140" height="30" rx="15" fill="rgba(240,90,40,0.18)"/>${T(246, 451, "Devis en cours", 13, 700, OR, 'text-anchor="middle"')}
+            ${T(42, 516, "Quantité : 1", 15, 400, MUTED)}${T(338, 516, "Shenzhen", 15, 700, "#FFFFFF", 'text-anchor="end"')}</g>`;
+          p1 += `<g id="ka-send"><rect x="26" y="600" width="328" height="62" rx="18" fill="${OR}"/>${T(190, 640, "Envoyer la demande", 20, 700, "#FFFFFF", 'text-anchor="middle"')}</g>`;
+          // P2 : devis
+          let p2 = "";
+          p2 += T(30, 150, "Votre devis", 27, 700, "#FFFFFF");
+          p2 += `<rect x="26" y="176" width="328" height="320" rx="20" fill="${CARD}"/>`;
+          p2 += T(46, 228, "Produit", 17, 400, MUTED) + `<text id="ka-v1" x="334" y="228" text-anchor="end" font-family="Poppins" font-size="19" font-weight="700" fill="#FFFFFF">0 HTG</text>`;
+          p2 += T(46, 278, "Expédition", 17, 400, MUTED) + `<text id="ka-v2" x="334" y="278" text-anchor="end" font-family="Poppins" font-size="19" font-weight="700" fill="#FFFFFF">0 HTG</text>`;
+          p2 += `<rect x="46" y="304" width="288" height="2" fill="#2A3F6B"/>`;
+          p2 += T(46, 352, "Total", 21, 700, "#FFFFFF") + `<text id="ka-v3" x="334" y="358" text-anchor="end" font-family="Poppins" font-size="34" font-weight="900" fill="${OR}">0 HTG</text>`;
+          p2 += `<g id="ka-badge"><rect x="46" y="400" width="250" height="40" rx="20" fill="rgba(59,209,138,0.18)"/>${T(171, 427, "Devis reçu en 24 h", 16, 700, "#3BD18A", 'text-anchor="middle"')}</g>`;
+          p2 += `<g id="ka-accept"><rect x="26" y="600" width="328" height="62" rx="18" fill="${OR}"/>${T(190, 640, "Accepter le devis", 20, 700, "#FFFFFF", 'text-anchor="middle"')}</g>`;
+          // P3 : paiement
+          let p3 = "";
+          p3 += T(30, 150, "Paiement", 27, 700, "#FFFFFF");
+          p3 += T(30, 196, "Total à payer", 16, 400, MUTED);
+          p3 += T(30, 244, "4 350 HTG", 38, 900, OR);
+          [["ka-b1", "MonCash", "#E23D3D", 284], ["ka-b2", "NatCash", "#3D6FB6", 370]].forEach(([id, n, col, y]) => {
+            p3 += `<g id="${id}"><rect x="26" y="${y}" width="328" height="70" rx="20" fill="${CARD}" stroke="#2A3F6B" stroke-width="2"/><rect id="${id}-hl" x="26" y="${y}" width="328" height="70" rx="20" fill="none" stroke="${OR}" stroke-width="3" opacity="0"/><circle cx="66" cy="${y + 35}" r="17" fill="${col}"/>${T(98, y + 43, n, 22, 700, "#FFFFFF")}${T(334, y + 42, "›", 26, 700, MUTED, 'text-anchor="end"')}</g>`;
+          });
+          p3 += `<circle id="ka-tap" cx="200" cy="319" r="20" fill="#FFFFFF" opacity="0"/>`;
+          p3 += `<g id="ka-ok" opacity="0"><rect x="14" y="110" width="352" height="632" fill="${NV}"/><circle cx="190" cy="340" r="66" fill="#3BD18A"/><path d="M160,340 l22,22 l40,-46" fill="none" stroke="${NV}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>${T(190, 460, "Paiement confirmé", 26, 800, "#FFFFFF", 'text-anchor="middle"')}${T(190, 496, "4 350 HTG · MonCash", 17, 400, MUTED, 'text-anchor="middle"')}</g>`;
+          scr += `<g id="ka-p1">${p1}</g><g id="ka-p2" opacity="0">${p2}</g><g id="ka-p3" opacity="0">${p3}</g>`;
+          phone += `<g transform="${I.planeLeft(-190, 14, 760)}">${scr}</g>`;
+          w += `<g id="ka-phone">${phone}</g>`;
+
+          // ---------- accessoires flottants (positions écran) ----------
+          function floater(id, sx, sy, inner) {
+            return `<g transform="translate(${sx},${sy})"><g id="${id}-bob"><g id="${id}">${inner}</g></g></g>`;
+          }
+          function tile(name) {
+            return I.box(-66, -66, 0, 132, 132, 64, "#1B3263", { shadow: false }) + I.line([I.P(-66, 66, 64), I.P(66, 66, 64), I.P(66, -66, 64)], OR, 3) + `<g transform="${I.planeLeft(-66, 66, 64)}">${T(66, 42, name, 26, 800, "#FFFFFF", 'text-anchor="middle"')}</g>`;
+          }
+          w += floater("ka-t1", -345, -600, tile("Shein"));
+          w += floater("ka-t2", 352, -440, tile("Temu"));
+          w += floater("ka-t3", -345, -200, tile("Alibaba"));
+          // pièces en gourdes
+          let coins = "";
+          for (let k = 0; k < 9; k++) {
+            const z = k * 17;
+            coins += `<g id="ka-c${k}"><path d="M-73,${-z} L-73,${-z + 16} A73,42 0 0 0 73,${-z + 16} L73,${-z} Z" fill="#D9962B"/><ellipse cx="0" cy="${-z}" rx="73" ry="42" fill="#FFC24A"/><ellipse cx="0" cy="${-z}" rx="54" ry="31" fill="none" stroke="#E8A93A" stroke-width="3"/>${k === 8 ? `<text transform="matrix(${C},0.5,${-C},0.5,0,${-z + 9})" text-anchor="middle" font-family="Poppins" font-weight="900" font-size="34" fill="#6E3F08">HTG</text>` : ""}</g>`;
+          }
+          w += floater("ka-coins", 330, -20, coins);
+          // carte bancaire barrée
+          const card = I.box(-86, -56, 0, 172, 112, 9, "#3D6FB6", { shadow: false }) + I.quad("T", 9, -60, -30, -40, -14, "#FFC24A") + I.quad("T", 9, -86, 86, 14, 30, "#24467F");
+          w += floater("ka-card", -340, -300, card + `<circle cx="0" cy="-10" r="98" fill="none" stroke="#E23D3D" stroke-width="13"/><line x1="-68" y1="-80" x2="68" y2="60" stroke="#E23D3D" stroke-width="13" stroke-linecap="round"/>`);
+          // badge validé
+          w += floater("ka-check", 340, -620, `<ellipse cx="0" cy="14" rx="86" ry="50" fill="#22A06B"/><ellipse cx="0" cy="0" rx="86" ry="50" fill="#3BD18A"/><path d="M-34,-6 l24,22 l46,-40" fill="none" stroke="${NV}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>`);
+          // lien qui vole
+          w += `<g id="ka-link"><rect x="-150" y="-30" width="300" height="60" rx="30" fill="#FFFFFF"/><circle cx="-112" cy="0" r="20" fill="${OR}"/><path d="M-120,4 l16,-16 M-122,-4 a6,6 0 0 1 8,-8 M-102,4 a6,6 0 0 1 -8,8" stroke="#FFFFFF" stroke-width="3.5" fill="none" stroke-linecap="round"/>${T(-80, 9, "shein.com/p/…", 24, 700, NV)}</g>`;
+
+          const svg = document.getElementById("ka-world");
+          svg.innerHTML = w;
+
+          // ---------- caméra ----------
+          const rig = I.camera(svg, { x: 0, y: -520, s: 0.96 }, 1080, 1920);
+          const cam = rig.cam;
+          const z = { v: Math.log(0.94), x: 0, y: -515 };
+          const ap = () => ((cam.s = Math.exp(z.v)), (cam.x = z.x), (cam.y = z.y), rig.apply());
+          let prev = { v: Math.log(0.94), x: 0, y: -515 };
+          [
+            [{ v: Math.log(1.0), x: 0, y: -525 }, 0, 4.8, "sine.inOut"],
+            [{ v: Math.log(1.0), x: 40, y: -510 }, 4.8, 1.0, "power2.inOut"],
+            [{ v: Math.log(1.03), x: 30, y: -520 }, 5.8, 2.5, "sine.inOut"],
+            [{ v: Math.log(1.0), x: 0, y: -525 }, 8.3, 1.0, "power2.inOut"],
+            [{ v: Math.log(1.06), x: 0, y: -530 }, 10.9, 0.25, "power2.out"],
+            [{ v: Math.log(1.02), x: 0, y: -525 }, 11.15, 2.2, "sine.inOut"],
+          ].forEach(([to, at, dur, ease]) => {
+            tl.fromTo(z, Object.assign({}, prev), Object.assign({ duration: dur, ease, onUpdate: ap, immediateRender: at === 0 }, to), at);
+            prev = to;
+          });
+
+          // ---------- simulation (bobs, particules, saisie) ----------
+          const url = document.getElementById("ka-url");
+          const caret = document.getElementById("ka-caret");
+          const URL = "shein.com/p/baskets-course-42";
+          const bobIds = ["ka-t1", "ka-t2", "ka-t3", "ka-coins", "ka-card", "ka-check"].map((id) => document.getElementById(id + "-bob"));
+          const pts = [];
+          for (let k = 0; k < 40; k++) pts.push({ el: document.getElementById("ka-pt" + k), x: -560 + R() * 1120, y: -1300 + R() * 1500, v: 20 + R() * 40, ph: R() * 6 });
+          function sim(t) {
+            bobIds.forEach((el, k) => el.setAttribute("transform", `translate(0,${r1(Math.sin(t * 1.8 + k * 1.1) * 10)})`));
+            pts.forEach((p) => {
+              p.el.setAttribute("cx", r1(p.x + Math.sin(t + p.ph) * 14));
+              p.el.setAttribute("cy", r1(p.y - p.v * t));
+            });
+            const u = Math.max(0, Math.min(1, (t - 4.25) / 0.55));
+            const n = Math.round(u * URL.length);
+            url.textContent = n ? URL.slice(0, n) : " ";
+            caret.setAttribute("x", r1(44 + n * 9.3));
+            caret.setAttribute("opacity", t > 3.6 && t < 5.3 && Math.floor(t * 3) % 2 === 0 ? "1" : n > 0 && t < 5.3 ? "1" : "0");
+          }
+          const clk = { t: 0 };
+          tl.fromTo(clk, { t: 0 }, { t: D, duration: D, ease: "none", onUpdate: () => sim(clk.t) }, 0);
+
+          // ---------- P1 : entrée + plateformes + lien ----------
+          tl.fromTo("#ka-phone", { y: 260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }, 0.05);
+          tl.fromTo("#ka-w1", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.4);
+          [["#ka-w2", "#ka-t1", 1.2], ["#ka-w3", "#ka-t2", 1.9], ["#ka-w4", null, 2.45], ["#ka-w5", "#ka-t3", 2.6], ["#ka-w6", null, 3.0]].forEach(([word, tile, t0]) => {
+            tl.fromTo(word, { opacity: 0, scale: 1.5 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power4.out" }, t0);
+            if (tile) tl.fromTo(tile, { scale: 0, opacity: 0, transformOrigin: "50% 60%" }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.8)" }, t0);
+          });
+          tl.to("#ka-h1", { opacity: 0, y: -30, duration: 0.25, ease: "power2.in" }, 3.75);
+          tl.fromTo("#ka-h1b", { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.35, ease: "expo.out" }, 3.98);
+          tl.fromTo("#ka-link", { x: -345, y: -650, scale: 0.4, opacity: 0 }, { x: -345, y: -650, scale: 1, opacity: 1, duration: 0.25, ease: "back.out(2)" }, 3.85);
+          tl.to("#ka-link", { x: -12, y: -527, scale: 0.55, duration: 0.42, ease: "power3.inOut" }, 4.1);
+          tl.to("#ka-link", { opacity: 0, duration: 0.12 }, 4.48);
+          tl.fromTo("#ka-prod", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.6)" }, 4.75);
+          tl.fromTo("#ka-send", { scale: 1, transformOrigin: "50% 50%" }, { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1, ease: "power2.inOut" }, 5.05);
+          tl.to("#ka-h1b", { opacity: 0, y: -30, duration: 0.25, ease: "power2.in" }, 4.95);
+          tl.to("#ka-t1, #ka-t2, #ka-t3", { opacity: 0, scale: 0.6, duration: 0.3, ease: "power2.in", stagger: 0.05 }, 5.0);
+
+          // ---------- P2 : devis ----------
+          tl.to("#ka-p1", { opacity: 0, x: -60, duration: 0.25, ease: "power2.in" }, 5.25);
+          tl.fromTo("#ka-p2", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 5.4);
+          tl.fromTo("#ka-h2 .ka-line", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.12 }, 5.1);
+          const fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " HTG";
+          const vs = [["ka-v1", 3250, 5.6], ["ka-v2", 1100, 5.9], ["ka-v3", 4350, 6.2]];
+          vs.forEach(([id, val, t0]) => {
+            const el = document.getElementById(id);
+            const o = { v: 0 };
+            tl.fromTo(o, { v: 0 }, { v: val, duration: 0.8, ease: "power2.out", onUpdate: () => (el.textContent = fmt(o.v)) }, t0);
+          });
+          for (let k = 0; k < 9; k++) {
+            tl.fromTo("#ka-c" + k, { y: -260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.32, ease: "bounce.out" }, 5.55 + k * 0.11);
+          }
+          tl.fromTo("#ka-badge", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)" }, 7.15);
+          tl.fromTo("#ka-chip2", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 7.2);
+          tl.fromTo("#ka-accept", { scale: 1, transformOrigin: "50% 50%" }, { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1, ease: "power2.inOut" }, 7.95);
+          tl.to("#ka-h2", { opacity: 0, y: -30, duration: 0.25, ease: "power2.in" }, 8.05);
+
+          // ---------- P3 : paiement ----------
+          tl.to("#ka-coins", { x: -330, y: -480, scale: 0.15, opacity: 0, duration: 0.5, ease: "power3.in" }, 8.3);
+          tl.to("#ka-p2", { opacity: 0, x: -60, duration: 0.25, ease: "power2.in" }, 8.3);
+          tl.fromTo("#ka-p3", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 8.45);
+          tl.fromTo("#ka-h3 .ka-line", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.12 }, 8.35);
+          tl.fromTo("#ka-b1-hl", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 9.45);
+          tl.to("#ka-b1-hl", { opacity: 0, duration: 0.2 }, 10.15);
+          tl.fromTo("#ka-b2-hl", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 10.2);
+          tl.to("#ka-b2-hl", { opacity: 0, duration: 0.2 }, 10.7);
+          tl.fromTo("#ka-tap", { opacity: 0.7, scale: 0.3, transformOrigin: "50% 50%" }, { opacity: 0, scale: 3, duration: 0.45, ease: "power2.out" }, 10.75);
+          tl.fromTo("#ka-b1", { scale: 1, transformOrigin: "50% 50%" }, { scale: 0.95, duration: 0.1, yoyo: true, repeat: 1 }, 10.75);
+          tl.fromTo("#ka-ok", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 10.95);
+          tl.fromTo("#ka-check", { scale: 0, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2.2)" }, 10.95);
+          tl.fromTo("#ka-chip3", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 11.45);
+          tl.fromTo("#ka-card", { scale: 0, opacity: 0, rotation: -20, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, rotation: 0, duration: 0.5, ease: "back.out(1.8)" }, 11.5);
+
+          sim(0);
+          window.__timelines["ka-app"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

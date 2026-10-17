@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="khud-template">
+      <style>
+        #kh-root {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          font-family: "Poppins", sans-serif;
+          color: #ffffff;
+        }
+        #kh-top {
+          position: absolute;
+          left: 80px;
+          right: 80px;
+          top: 196px;
+        }
+        #kh-bars {
+          display: flex;
+          gap: 10px;
+        }
+        .kh-bar {
+          flex: 1;
+          height: 7px;
+          border-radius: 4px;
+          background: rgba(255, 255, 255, 0.22);
+          position: relative;
+          overflow: hidden;
+          display: block;
+        }
+        .kh-bar i {
+          position: absolute;
+          inset: 0;
+          background: #f05a28;
+          display: block;
+          transform-origin: 0 50%;
+        }
+        #kh-labels {
+          position: relative;
+          height: 40px;
+          margin-top: 18px;
+        }
+        .kh-lab {
+          position: absolute;
+          left: 0;
+          top: 0;
+          font-size: 26px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          white-space: nowrap;
+          text-shadow: 0 2px 12px rgba(4, 9, 22, 0.8);
+        }
+        .kh-lab b {
+          color: #f05a28;
+          margin-right: 14px;
+        }
+        #kh-wipe {
+          position: absolute;
+          inset: 0;
+          width: 1080px;
+          height: 1920px;
+        }
+      </style>
+
+      <div id="kh-root" data-composition-id="khud" data-width="1080" data-height="1920">
+        <div id="kh-top">
+          <div id="kh-bars">
+            <span class="kh-bar"><i id="kh-f1"></i></span><span class="kh-bar"><i id="kh-f2"></i></span><span class="kh-bar"><i id="kh-f3"></i></span><span class="kh-bar"><i id="kh-f4"></i></span><span class="kh-bar"><i id="kh-f5"></i></span>
+          </div>
+          <div id="kh-labels">
+            <div class="kh-lab" id="kh-l1"><b>01</b>LE LIEN</div>
+            <div class="kh-lab" id="kh-l2"><b>02</b>LE DEVIS</div>
+            <div class="kh-lab" id="kh-l3"><b>03</b>LE PAIEMENT</div>
+            <div class="kh-lab" id="kh-l4"><b>04</b>L'EXPÉDITION</div>
+            <div class="kh-lab" id="kh-l5"><b>05</b>LA LIVRAISON</div>
+          </div>
+        </div>
+        <svg id="kh-wipe" data-layout-allow-overflow data-layout-allow-overlap viewBox="0 0 1080 1920"></svg>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const tl = gsap.timeline({ paused: true });
+          const STEPS = [0, 4.8, 8.3, 13.4, 19.6, 23.0];
+          const CUTS = [13.4, 19.6, 23.0];
+
+          tl.fromTo("#kh-top", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.2);
+          for (let i = 0; i < 5; i++) {
+            const a = STEPS[i];
+            const b = STEPS[i + 1];
+            tl.fromTo("#kh-f" + (i + 1), { scaleX: 0 }, { scaleX: 1, duration: b - a, ease: "none" }, a);
+            tl.fromTo("#kh-l" + (i + 1), { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, a + (i === 0 ? 0.3 : 0.25));
+            tl.to("#kh-l" + (i + 1), { opacity: 0, y: -12, duration: 0.22, ease: "power2.in" }, b - 0.25);
+          }
+          tl.to("#kh-top", { opacity: 0, duration: 0.3, ease: "power2.in" }, 22.7);
+
+          // Transition : losanges isométriques orange et marine
+          const wipe = document.getElementById("kh-wipe");
+          const W = 150;
+          const H = W * Math.tan(Math.PI / 6);
+          const R = I.rng(1080);
+          let html = "";
+          const centers = [];
+          let n = 0;
+          for (let j = -1; j <= Math.ceil(1920 / (H / 2)) + 1; j++) {
+            for (let i = -1; i <= Math.ceil(1080 / W) + 1; i++) {
+              const cx = i * W + (j % 2 ? W / 2 : 0);
+              const cy = (j * H) / 2;
+              const roll = R();
+              const fill = roll < 0.16 ? "#F05A28" : roll < 0.3 ? "#13254C" : "#0A1628";
+              html += `<polygon id="kh-d${n}" points="${cx},${cy - H / 2 - 1} ${cx + W / 2 + 1},${cy} ${cx},${cy + H / 2 + 1} ${cx - W / 2 - 1},${cy}" fill="${fill}"/>`;
+              centers.push([cx, cy]);
+              n++;
+            }
+          }
+          wipe.innerHTML = html;
+          const diamonds = centers.map((_, k) => document.getElementById("kh-d" + k));
+          const delays = centers.map(([cx, cy]) => ((cx + (1920 - cy)) / 3000) * 0.26);
+          tl.set(diamonds, { scale: 0, svgOrigin: (k) => centers[k].join(" ") }, 0);
+          for (const cut of CUTS) {
+            tl.fromTo(diamonds, { scale: 0 }, { scale: 1, svgOrigin: (k) => centers[k].join(" "), duration: 0.2, ease: "power2.in", stagger: (k) => delays[k], immediateRender: false }, cut - 0.47);
+            tl.fromTo(diamonds, { scale: 1 }, { scale: 0, svgOrigin: (k) => centers[k].join(" "), duration: 0.22, ease: "power2.out", stagger: (k) => delays[k], immediateRender: false }, cut + 0.02);
+          }
+
+          window.__timelines["khud"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

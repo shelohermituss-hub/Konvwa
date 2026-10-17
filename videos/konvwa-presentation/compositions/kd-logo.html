@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="kd-logo-template">
+      <style>
+        #kd-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 70% 45% at 50% 42%, #1c3468 0%, #0a1628 74%);
+          color: #ffffff;
+          font-family: "Poppins", sans-serif;
+        }
+        #kd-glow {
+          position: absolute;
+          left: 140px;
+          top: 360px;
+          width: 800px;
+          height: 800px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(240, 90, 40, 0.42) 0%, rgba(240, 90, 40, 0) 65%);
+        }
+        #kd-world {
+          position: absolute;
+          inset: 0;
+          width: 1080px;
+          height: 1920px;
+        }
+        #kd-lock {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 960px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+        #kd-word {
+          display: flex;
+          font-size: 176px;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: 0.01em;
+          white-space: nowrap;
+        }
+        .kd-ch {
+          display: inline-block;
+        }
+        #kd-tag {
+          display: flex;
+          gap: 20px;
+          margin-top: 26px;
+          font-size: 68px;
+          font-weight: 700;
+          color: #f05a28;
+          white-space: nowrap;
+        }
+        .kd-tw {
+          display: inline-block;
+        }
+        #kd-url {
+          margin-top: 46px;
+          padding: 14px 40px;
+          border-radius: 999px;
+          background: #f05a28;
+          font-size: 44px;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+        }
+        #kd-sub {
+          margin-top: 30px;
+          font-size: 30px;
+          font-weight: 400;
+          letter-spacing: 0.06em;
+          color: #c9d3e3;
+          white-space: nowrap;
+        }
+      </style>
+
+      <div id="kd-root" data-composition-id="kd-logo" data-width="1080" data-height="1920">
+        <div id="kd-glow"></div>
+        <svg id="kd-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-540 -960 1080 1920"></svg>
+        <div id="kd-lock">
+          <div id="kd-word"><span class="kd-ch">K</span><span class="kd-ch">O</span><span class="kd-ch">N</span><span class="kd-ch">V</span><span class="kd-ch">W</span><span class="kd-ch">A</span></div>
+          <div id="kd-tag"><span class="kd-tw">L'import,</span><span class="kd-tw">enfin</span><span class="kd-tw">simple.</span></div>
+          <div id="kd-url">konvwa.shop</div>
+          <div id="kd-sub">Shein · Temu · Alibaba → Haïti</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const r1 = I.r1;
+          const tl = gsap.timeline({ paused: true });
+          const R = I.rng(7);
+
+          // trois colis du logo, en escalier (bas-gauche → haut-droite)
+          const cols = [
+            { c: "#8B2200", tape: "#6B1800" },
+            { c: "#E53D15", tape: "#C23010" },
+            { c: "#FF7252", tape: "#E05A3A" },
+          ];
+          function parcel(k) {
+            const s = 150;
+            const h = 104;
+            const sh = I.shade(cols[k].c);
+            let g = "";
+            if (k === 0) g += `<ellipse cx="-30" cy="${r1(s * 0.5 + 26)}" rx="150" ry="40" fill="rgba(4,9,22,0.35)" id="kd-sh${k}"/>`;
+            g += I.box(-s / 2, -s / 2, 0, s, s, h, sh, { shadow: false, edgeW: 2 });
+            // bandes du logo sur la face avant
+            for (let j = 0; j < 3; j++) g += I.quad("L", s / 2, -s / 2 + 28, s / 2 - 28, 26 + j * 20, 36 + j * 20, I.mix(cols[k].c, "#0A1628", 0.22));
+            g += I.quad("R", s / 2, -s / 2, -s / 2 + 22, 0, h, I.mix(cols[k].c, "#0A1628", 0.18));
+            g += I.quad("R", s / 2, s / 2 - 22, s / 2, 0, h, I.mix(cols[k].c, "#0A1628", 0.18));
+            g += I.quad("T", h, -s / 2, s / 2, -10, 10, I.mix(cols[k].c, "#FFFFFF", 0.32));
+            return g;
+          }
+          const pos = [
+            [-210, -210],
+            [0, -330],
+            [210, -450],
+          ];
+          let w = "";
+          let dots = "";
+          for (let k = 0; k < 30; k++) dots += `<circle id="kd-pt${k}" r="${r1(2 + R() * 3)}" fill="${k % 3 ? "#F05A28" : "#FFFFFF"}" opacity="${(0.3 + R() * 0.4).toFixed(2)}"/>`;
+          w += `<g>${dots}</g>`;
+          pos.forEach(([x, y], k) => {
+            w += `<g transform="translate(${x},${y})"><g id="kd-p${k}">${parcel(k)}</g></g>`;
+          });
+          const svg = document.getElementById("kd-world");
+          svg.innerHTML = w;
+
+          const pts = [];
+          for (let k = 0; k < 30; k++) pts.push({ el: document.getElementById("kd-pt" + k), x: -540 + R() * 1080, y: -900 + R() * 1400, v: 18 + R() * 30, ph: R() * 6 });
+          const clk = { t: 0 };
+          tl.fromTo(
+            clk,
+            { t: 0 },
+            {
+              t: 4,
+              duration: 4,
+              ease: "none",
+              onUpdate: () => {
+                pts.forEach((p) => {
+                  p.el.setAttribute("cx", r1(p.x + Math.sin(clk.t + p.ph) * 12));
+                  p.el.setAttribute("cy", r1(p.y - p.v * clk.t));
+                });
+              },
+            },
+            0,
+          );
+
+          // chute + rebond des colis, l'un après l'autre
+          [0, 1, 2].forEach((k) => {
+            const t0 = 0.05 + k * 0.13;
+            tl.fromTo("#kd-p" + k, { y: -700, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "bounce.out" }, t0);
+            if (k === 0) tl.fromTo("#kd-sh0", { opacity: 0, scale: 0.4, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out" }, t0);
+          });
+          tl.fromTo("#kd-world", { y: 0 }, { y: -10, duration: 1.4, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0.9);
+          tl.fromTo("#kd-glow", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 1.0, ease: "power2.out" }, 0.3);
+          tl.fromTo(".kd-ch", { opacity: 0, y: 80, rotationX: -70, transformPerspective: 700 }, { opacity: 1, y: 0, rotationX: 0, duration: 0.5, ease: "power4.out", stagger: 0.05 }, 0.3);
+          tl.fromTo(".kd-tw", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.25 }, 1.65);
+          tl.fromTo("#kd-url", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(2)" }, 2.55);
+          tl.fromTo("#kd-sub", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 2.85);
+
+          window.__timelines["kd-logo"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="kc-livraison-template">
+      <style>
+        #kc-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 85% 60% at 50% 58%, #1a3365 0%, #0a1628 74%);
+          color: #ffffff;
+          font-family: "Poppins", sans-serif;
+        }
+        #kc-world {
+          position: absolute;
+          inset: 0;
+          width: 1080px;
+          height: 1920px;
+        }
+        #kc-h {
+          position: absolute;
+          left: 60px;
+          right: 60px;
+          top: 300px;
+          text-align: center;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          text-shadow: 0 10px 40px rgba(4, 9, 22, 0.7);
+        }
+        .kc-line {
+          display: block;
+          font-size: 84px;
+          line-height: 1.04;
+          white-space: nowrap;
+        }
+        .kc-o {
+          color: #f05a28;
+        }
+        #kc-cities {
+          display: inline-block;
+          margin-top: 24px;
+          padding: 10px 28px;
+          border-radius: 999px;
+          background: rgba(10, 22, 40, 0.92);
+          border: 2px solid rgba(255, 255, 255, 0.25);
+          font-size: 30px;
+          font-weight: 700;
+          white-space: nowrap;
+          text-shadow: none;
+        }
+      </style>
+
+      <div id="kc-root" data-composition-id="kc-livraison" data-width="1080" data-height="1920">
+        <svg id="kc-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-540 -960 1080 1920"></svg>
+        <div id="kc-h">
+          <span class="kc-line" id="kc-l1">Retrait</span>
+          <span class="kc-line" id="kc-l2">ou livraison</span>
+          <span class="kc-line kc-o" id="kc-l3">à domicile</span>
+          <span id="kc-cities">Port-au-Prince · Pétion-Ville · Cap-Haïtien</span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const P = I.P;
+          const r1 = I.r1;
+          const C = I.C;
+          const S = I.S;
+          const tl = gsap.timeline({ paused: true });
+          const D = 3.4;
+          const OR = "#F05A28";
+
+          let w = I.defs("kc");
+          // quartier : îlot, route le long de x, trottoirs
+          w += I.island(-900, -520, 1800, 1040, 30, { top: "#3A4A6A", side: "#1E2E4E", depth: 200, lip: 5 });
+          w += I.quad("T", 0.5, -900, 900, -80, 80, "#28324A");
+          w += I.quad("T", 0.6, -900, 900, -84, -80, "#C9D3E3");
+          w += I.quad("T", 0.6, -900, 900, 80, 84, "#C9D3E3");
+          for (let k = -8; k < 9; k++) w += I.quad("T", 0.7, k * 100, k * 100 + 50, -4, 4, "#E6EDF7");
+
+          // point de retrait (côté nord de la route)
+          let shop = "";
+          shop += I.box(-420, -420, 0, 260, 230, 150, "#F4EFE6", { shadowLen: 40 });
+          shop += I.box(-420, -420, 150, 260, 230, 14, OR, { shadow: false });
+          for (let k = 0; k < 6; k++) shop += I.poly([I.P(-420 + k * 44, -190, 118), I.P(-398 + k * 44, -190, 118), I.P(-398 + k * 44, -150, 92), I.P(-420 + k * 44, -150, 92)], k % 2 ? "#FFFFFF" : OR);
+          shop += I.quad("L", -190, -380, -280, 0, 92, "#1B2438");
+          shop += `<g transform="${I.planeLeft(-420, -190, 150)}"><text x="130" y="-14" text-anchor="middle" font-family="Poppins" font-weight="900" font-size="30" fill="#FFFFFF">POINT RETRAIT</text></g>`;
+          shop += I.gift(-250, -170, 0, 44, OR, "#FFC24A", { h: 40, bow: false });
+          w += `<g id="kc-shop">${shop}</g>`;
+          // client qui repart avec son colis
+          const person = (shirt) => `<ellipse cx="0" cy="2" rx="16" ry="6" fill="rgba(4,9,22,0.3)"/><rect x="-9" y="-30" width="7" height="30" rx="3" fill="#2A3550"/><rect x="2" y="-30" width="7" height="30" rx="3" fill="#1E2840"/><path d="M-13,-28 Q-14,-62 0,-64 Q14,-62 13,-28 Z" fill="${shirt}"/><circle cx="0" cy="-76" r="12" fill="#8A5A3C"/><path d="M-12,-80 Q0,-94 12,-80 Z" fill="#2A1E1E"/>`;
+          {
+            const b = P(-170, -120, 0);
+            w += `<g transform="translate(${r1(b[0])},${r1(b[1])})"><g id="kc-cust">${person("#3D6FB6")}<rect x="8" y="-58" width="24" height="22" rx="3" fill="${OR}"/><rect x="18" y="-58" width="4" height="22" fill="#FFC24A"/></g></g>`;
+          }
+
+          // maison (côté sud de la route)
+          const house = I.house({ x: 300, y: -400, w: 230, d: 210, h: 140, rh: 70, wall: "#2BB3A8", roof: "#E85D4A", trim: "#B83A5E", door: true, wreath: false, chimney: false, winL: 3, winR: 2, seed: 5 });
+          w += house.svg;
+          // palmier
+          {
+            const b = P(600, -130, 0);
+            w += `<path d="M${r1(b[0])},${r1(b[1])} q10,-70 -6,-140" stroke="#8A5A3C" stroke-width="11" fill="none" stroke-linecap="round"/>`;
+            const tp = [b[0] - 6, b[1] - 140];
+            [[-60, -6], [60, -12], [-40, 34], [44, 30], [0, -44]].forEach(([dx, dy], k) => {
+              w += `<path d="M${r1(tp[0])},${r1(tp[1])} q${r1(dx * 0.6)},${r1(dy * 0.6 - 22)} ${dx},${dy}" stroke="${k % 2 ? "#2F8F6B" : "#3BA57D"}" stroke-width="15" fill="none" stroke-linecap="round"/>`;
+            });
+          }
+          // colis qui saute jusqu'à la porte + badge
+          w += `<g id="kc-pkg">${I.gift(-22, -22, 0, 44, OR, "#FFC24A", { h: 40, bow: false, shadow: false })}</g>`;
+          const door = P(415, -170, 0);
+          w += `<g transform="translate(${r1(door[0] + 10)},${r1(door[1] - 150)})"><g id="kc-ok"><circle r="40" fill="#3BD18A" stroke="#0A1628" stroke-width="5"/><path d="M-18,0 l12,12 l24,-26" fill="none" stroke="#0A1628" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g></g>`;
+
+          // scooter de livraison (profil, avance vers +x = bas-droite)
+          const scooter = `<g>
+              <circle cx="-38" cy="-16" r="16" fill="#1B2438"/><circle cx="-38" cy="-16" r="7" fill="#9FB0CC"/>
+              <circle cx="40" cy="-16" r="16" fill="#1B2438"/><circle cx="40" cy="-16" r="7" fill="#9FB0CC"/>
+              <path d="M-56,-30 L20,-30 Q34,-30 40,-44 L50,-74 L58,-74" fill="none" stroke="${OR}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M-60,-30 Q-60,-52 -30,-52 L10,-52 L14,-30 Z" fill="${OR}"/>
+              <rect x="-74" y="-92" width="44" height="40" rx="5" fill="#F4EFE6"/><rect x="-74" y="-80" width="44" height="7" fill="${OR}"/>
+              <path d="M-14,-52 L-6,-96 L14,-96 L18,-52 Z" fill="#3D6FB6"/>
+              <circle cx="4" cy="-110" r="15" fill="${OR}"/><rect x="6" y="-114" width="12" height="8" rx="3" fill="#1B2438"/>
+              <path d="M10,-86 L42,-72" stroke="#3D6FB6" stroke-width="8" stroke-linecap="round"/>
+            </g>`;
+          w += `<g id="kc-moto">${scooter}</g>`;
+
+          const svg = document.getElementById("kc-world");
+          svg.innerHTML = w;
+
+          // ---------- simulation ----------
+          const moto = document.getElementById("kc-moto");
+          const pkg = document.getElementById("kc-pkg");
+          const ok = document.getElementById("kc-ok");
+          const cust = document.getElementById("kc-cust");
+          const clamp = (v) => Math.max(0, Math.min(1, v));
+          const eIO = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
+          const backOut = (x) => 1 + 2.7 * Math.pow(x - 1, 3) + 1.7 * Math.pow(x - 1, 2);
+          const MX0 = -520,
+            MX1 = 380,
+            MY = 40;
+          function sim(t) {
+            const u = eIO(clamp((t - 0.7) / 1.5));
+            const mx = MX0 + (MX1 - MX0) * u;
+            const m = P(mx, MY, 0);
+            const bob = u > 0 && u < 1 ? Math.sin(t * 30) * 1.5 : 0;
+            moto.setAttribute("transform", `translate(${r1(m[0])},${r1(m[1] + bob)}) matrix(${C},${S},0,1,0,0)`);
+            // colis : sur le porte-bagages puis saut jusqu'à la porte
+            const j = clamp((t - 2.25) / 0.4);
+            const from = P(mx - 52, MY, 70);
+            const to = P(415, -160, 0);
+            const px = from[0] + (to[0] - from[0]) * j;
+            const py = from[1] + (to[1] - from[1]) * j - Math.sin(j * Math.PI) * 80;
+            pkg.setAttribute("transform", `translate(${r1(px)},${r1(py)})`);
+            pkg.setAttribute("opacity", t < 0.7 ? "0" : "1");
+            const b = clamp((t - 2.7) / 0.35);
+            ok.setAttribute("transform", `scale(${b > 0 ? backOut(b).toFixed(3) : 0})`);
+            const c = clamp((t - 0.35) / 1.2);
+            cust.setAttribute("transform", `translate(${r1(c * 70 * C)},${r1(c * 70 * S + Math.abs(Math.sin(t * 9)) * -3 * (c > 0 && c < 1 ? 1 : 0))})`);
+          }
+          const clk = { t: 0 };
+          tl.fromTo(clk, { t: 0 }, { t: D, duration: D, ease: "none", onUpdate: () => sim(clk.t) }, 0);
+
+          // ---------- caméra : point de retrait → maison ----------
+          const rig = I.camera(svg, { x: -60, y: -330, s: 1.12 }, 1080, 1920);
+          const cam = rig.cam;
+          const z = { v: Math.log(1.12), x: -60, y: -330 };
+          const ap = () => ((cam.s = Math.exp(z.v)), (cam.x = z.x), (cam.y = z.y), rig.apply());
+          tl.fromTo(z, { v: Math.log(1.12), x: -60, y: -330 }, { v: Math.log(1.08), x: -40, y: -320, duration: 0.9, ease: "sine.inOut", onUpdate: ap }, 0);
+          tl.fromTo(z, { v: Math.log(1.08), x: -40, y: -320 }, { v: Math.log(1.12), x: 330, y: -120, duration: 1.4, ease: "power2.inOut", onUpdate: ap, immediateRender: false }, 0.9);
+          tl.fromTo(z, { v: Math.log(1.12), x: 330, y: -120 }, { v: Math.log(1.18), x: 350, y: -120, duration: 1.1, ease: "sine.inOut", onUpdate: ap, immediateRender: false }, 2.3);
+
+          // ---------- textes ----------
+          tl.fromTo("#kc-l1", { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.35, ease: "expo.out" }, 0.28);
+          tl.fromTo("#kc-l2", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 1.12);
+          tl.fromTo("#kc-l3", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 1.4);
+          tl.fromTo("#kc-cities", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 2.0);
+
+          sim(0);
+          window.__timelines["kc-livraison"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

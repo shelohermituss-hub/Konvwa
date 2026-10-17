@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="kb-trajet-template">
+      <style>
+        #kb-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 85% 60% at 50% 58%, #183360 0%, #0a1628 74%);
+          color: #ffffff;
+          font-family: "Poppins", sans-serif;
+        }
+        #kb-world {
+          position: absolute;
+          inset: 0;
+          width: 1080px;
+          height: 1920px;
+        }
+        .kb-h {
+          position: absolute;
+          left: 60px;
+          right: 60px;
+          top: 300px;
+          text-align: center;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          text-shadow: 0 10px 40px rgba(4, 9, 22, 0.7);
+        }
+        .kb-line {
+          display: block;
+          font-size: 84px;
+          line-height: 1.04;
+          white-space: nowrap;
+        }
+        .kb-o {
+          color: #f05a28;
+        }
+        #kb-chips {
+          display: flex;
+          justify-content: center;
+          gap: 22px;
+          margin-top: 26px;
+        }
+        .kb-chip {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 12px 30px 12px 14px;
+          border-radius: 999px;
+          background: rgba(10, 22, 40, 0.92);
+          border: 3px solid #f05a28;
+          font-size: 40px;
+          font-weight: 700;
+          white-space: nowrap;
+          text-shadow: none;
+        }
+        .kb-chip i {
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          background: #f05a28;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .kb-chip svg {
+          width: 34px;
+          height: 34px;
+          display: block;
+        }
+        .kb-anchor {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 0;
+          height: 0;
+        }
+        .kb-pos {
+          position: absolute;
+          left: -260px;
+          bottom: 0;
+          width: 520px;
+          display: flex;
+          justify-content: center;
+        }
+        .kb-tag {
+          padding: 10px 24px;
+          border-radius: 999px;
+          background: #0a1628;
+          border: 2px solid rgba(255, 255, 255, 0.25);
+          font-size: 30px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          white-space: nowrap;
+          box-shadow: 0 12px 30px rgba(4, 9, 22, 0.5);
+        }
+        .kb-tag b {
+          color: #f05a28;
+          font-weight: 800;
+        }
+      </style>
+
+      <div id="kb-root" data-composition-id="kb-trajet" data-width="1080" data-height="1920">
+        <svg id="kb-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-540 -960 1080 1920"></svg>
+        <div class="kb-anchor" id="kb-a1"><div class="kb-pos"><div class="kb-tag" id="kb-tag1"><b>CHINE</b> · Shenzhen</div></div></div>
+        <div class="kb-anchor" id="kb-a2"><div class="kb-pos"><div class="kb-tag" id="kb-tag2"><b>USA</b> · Orlando</div></div></div>
+        <div class="kb-anchor" id="kb-a3"><div class="kb-pos"><div class="kb-tag" id="kb-tag3"><b>HAÏTI</b></div></div></div>
+        <div class="kb-h" id="kb-h1">
+          <span class="kb-line">Nos entrepôts</span>
+          <span class="kb-line kb-o" style="font-size: 76px">en Chine et aux USA</span>
+        </div>
+        <div class="kb-h" id="kb-h2">
+          <span class="kb-line">Direction <span class="kb-o">Haïti</span></span>
+          <div id="kb-chips">
+            <div class="kb-chip" id="kb-c1"><i><svg viewBox="0 0 34 34"><path d="M4,20 L30,20 L26,28 L8,28 Z M10,20 L10,12 L22,12 L22,20 M15,12 L15,6" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" /></svg></i>Bateau</div>
+            <div class="kb-chip" id="kb-c2"><i><svg viewBox="0 0 34 34"><path d="M4,19 L30,13 L30,17 L18,20 L14,30 L11,30 L12,21 L6,22 L4,26 L2,26 Z" fill="#FFFFFF" /></svg></i>Avion</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const P = I.P;
+          const r1 = I.r1;
+          const C = I.C;
+          const tl = gsap.timeline({ paused: true });
+          const R = I.rng(509);
+          const D = 6.2;
+          const OR = "#F05A28";
+
+          const at = (sx, sy, inner, id) => `<g transform="translate(${sx},${sy})"><g${id ? ` id="${id}"` : ""}>${inner}</g></g>`;
+
+          let w = I.defs("kb");
+          // océan
+          const S = 760;
+          w += I.box(-S, -S, -60, 2 * S, 2 * S, 60, "#123A6B", { shadow: false, edgeW: 2 });
+          let waves = "";
+          for (let k = 0; k < 46; k++) {
+            const [x, y] = [-S + 40 + R() * (2 * S - 80), -S + 40 + R() * (2 * S - 80)];
+            const p = P(x, y, 0.5);
+            waves += `<path id="kb-wv${k}" d="M${r1(p[0] - 18)},${r1(p[1])} q9,-6 18,0 t18,0" fill="none" stroke="#5FA0E0" stroke-width="3" stroke-linecap="round" opacity="0.5"/>`;
+          }
+          w += `<g>${waves}</g>`;
+
+          // îlots + entrepôts
+          function warehouse(color) {
+            let s = I.island(-150, -120, 300, 240, 26, { top: "#3A4A6A", side: "#1E2E4E", depth: 90, lip: 4 });
+            s += I.box(-110, -80, 0, 220, 150, 110, color, { shadowLen: 30 });
+            s += I.quad("L", 70, -70, 90, 0, 70, "#1B2438");
+            for (let k = 0; k < 5; k++) s += I.quad("L", 70, -70 + k * 32, -68 + k * 32, 0, 70, "#2A3550");
+            s += I.quad("R", 110, -60, -20, 60, 90, "#FFC24A");
+            s += I.box(-110, -80, 110, 220, 150, 10, "#2A3550", { shadow: false });
+            [[-40, 110], [10, 110]].forEach(([x, y]) => (s += I.box(x, y - 10, 0, 34, 34, 30, OR, { edgeW: 1 }) + I.quad("T", 30, x + 14, x + 20, y - 10, y + 24, "#FFC24A")));
+            return s;
+          }
+          const pCN = [-250, -470];
+          const pUS = [260, -300];
+          const pHT = [10, 400];
+          w += at(pCN[0], pCN[1], warehouse("#C23010"), "kb-wcn");
+          w += at(pUS[0], pUS[1], warehouse("#3D6FB6"), "kb-wus");
+
+          // île d'Haïti
+          let ht = I.island(-230, -170, 460, 340, 34, { top: "#2F8F6B", side: "#1D5A45", depth: 120, lip: 8 });
+          ht += I.quad("T", 0.5, -230, 230, 140, 170, "#E8D9BF");
+          ht += I.quad("T", 0.5, 200, 230, -170, 170, "#E8D9BF");
+          ht += I.box(-40, -60, 0, 130, 100, 70, "#F4EFE6", { shadowLen: 26 }) + I.box(-40, -60, 70, 130, 100, 14, OR, { shadow: false });
+          ht += I.quad("L", 40, 0, 40, 0, 48, "#1B2438");
+          ht += `<g transform="${I.planeLeft(-40, 40, 70)}"><text x="65" y="-22" text-anchor="middle" font-family="Poppins" font-weight="900" font-size="22" fill="#FFFFFF">KONVWA</text></g>`;
+          // drapeau
+          {
+            const b = P(-150, 60, 0);
+            ht += `<line x1="${r1(b[0])}" y1="${r1(b[1])}" x2="${r1(b[0])}" y2="${r1(b[1] - 130)}" stroke="#E6EDF7" stroke-width="5"/><g transform="translate(${r1(b[0] + 3)},${r1(b[1] - 128)}) skewY(-12)"><rect width="70" height="24" fill="#00209F"/><rect y="24" width="70" height="24" fill="#D21034"/><rect x="26" y="17" width="18" height="14" fill="#FFFFFF"/></g>`;
+          }
+          // palmiers
+          [[-170, -110], [150, -120], [170, 90], [-120, 130]].forEach(([x, y]) => {
+            const b = P(x, y, 0);
+            ht += `<path d="M${r1(b[0])},${r1(b[1])} q8,-50 -4,-96" stroke="#8A5A3C" stroke-width="9" fill="none" stroke-linecap="round"/>`;
+            const tp = [b[0] - 4, b[1] - 96];
+            [[-46, -6], [46, -10], [-30, 26], [34, 24], [0, -34]].forEach(([dx, dy], k) => {
+              ht += `<path d="M${r1(tp[0])},${r1(tp[1])} q${r1(dx * 0.6)},${r1(dy * 0.6 - 18)} ${dx},${dy}" stroke="${k % 2 ? "#2F8F6B" : "#3BA57D"}" stroke-width="12" fill="none" stroke-linecap="round"/>`;
+            });
+          });
+          w += at(pHT[0], pHT[1], ht, "kb-ht");
+
+          // routes
+          const seaPath = `M${pCN[0] + 60},${pCN[1] + 90} C${pCN[0] - 120},${pCN[1] + 380} ${pHT[0] - 420},${pHT[1] - 300} ${pHT[0] - 330},${pHT[1] - 170}`;
+          const airPath = `M${pUS[0] + 10},${pUS[1] - 60} C${pUS[0] + 120},${pUS[1] + 120} ${pHT[0] + 360},${pHT[1] - 380} ${pHT[0] + 230},${pHT[1] - 120}`;
+          w += `<path id="kb-sea" d="${seaPath}" fill="none" stroke="${OR}" stroke-width="7" stroke-linecap="round" opacity="0.9"/>`;
+          w += `<path id="kb-air" d="${airPath}" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 16" opacity="0.9"/>`;
+
+          // cargo (proue vers le bas-droite)
+          let ship = "";
+          ship += `<ellipse cx="-10" cy="16" rx="120" ry="34" fill="#0B2A52" opacity="0.6"/>`;
+          ship += I.poly([P(-110, -40, 0), P(90, -40, 0), P(130, 0, 0), P(90, 40, 0), P(-110, 40, 0)], "#0E1D3D");
+          ship += I.poly([P(-110, 40, 0), P(90, 40, 0), P(90, 40, 34), P(-110, 40, 34)], "#1B2A48");
+          ship += I.poly([P(90, 40, 0), P(130, 0, 0), P(130, 0, 34), P(90, 40, 34)], "#24365C");
+          ship += I.poly([P(-110, -40, 34), P(90, -40, 34), P(130, 0, 34), P(90, 40, 34), P(-110, 40, 34)], "#2E4470");
+          ship += I.quad("L", 40, -110, 130, 30, 34, "#C23010");
+          const cols = ["#8B2200", "#E53D15", "#FF7252", "#E53D15", "#8B2200", "#FF7252"];
+          let k = 0;
+          for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) ship += I.box(-60 + i * 44, -32 + j * 34, 34, 40, 30, 26, cols[k++], { shadow: false, edgeW: 1 });
+          ship += I.box(-104, -30, 34, 30, 60, 52, "#E6EDF7", { shadow: false }) + I.quad("L", 30, -100, -78, 66, 78, "#1B2438");
+          w += `<g id="kb-ship">${ship}</g>`;
+          // avion (vers le bas-droite, en altitude)
+          let plane = "";
+          plane += `<g id="kb-pshadow"><ellipse cx="0" cy="210" rx="70" ry="18" fill="#0B2A52" opacity="0.55"/></g>`;
+          plane += I.poly([P(-90, -10, 0), P(90, -10, 0), P(110, 0, 0), P(90, 10, 0), P(-90, 10, 0)], "#F4F7FB");
+          plane += I.poly([P(-10, -110, 0), P(30, -110, 0), P(40, 0, 0), P(30, 110, 0), P(-10, 110, 0), P(-30, 0, 0)], "#DCE6F2");
+          plane += I.poly([P(-90, -10, 0), P(-70, -10, 0), P(-70, -10, 40), P(-90, -10, 46)], OR);
+          plane += I.poly([P(-100, -40, 0), P(-75, -40, 0), P(-70, 40, 0), P(-100, 40, 0)], "#DCE6F2");
+          plane += I.line([P(-60, 10, 0), P(80, 10, 0)], OR, 3);
+          w += `<g id="kb-plane">${plane}</g>`;
+
+          const svg = document.getElementById("kb-world");
+          svg.innerHTML = w;
+
+          // tracés
+          const sea = document.getElementById("kb-sea");
+          const air = document.getElementById("kb-air");
+          const LS = sea.getTotalLength();
+          const LA = air.getTotalLength();
+          sea.setAttribute("stroke-dasharray", `${r1(LS)} ${r1(LS)}`);
+          const seaPts = [],
+            airPts = [];
+          for (let i = 0; i <= 200; i++) {
+            const a = sea.getPointAtLength((i / 200) * LS);
+            const b = air.getPointAtLength((i / 200) * LA);
+            seaPts.push([a.x, a.y]);
+            airPts.push([b.x, b.y]);
+          }
+
+          // ---------- caméra : gros plan entrepôts → plan large de la route ----------
+          const rig = I.camera(svg, { x: 0, y: -390, s: 1.45 }, 1080, 1920);
+          const cam = rig.cam;
+          rig.anchor(document.getElementById("kb-a1"), pCN[0], pCN[1] - 210);
+          rig.anchor(document.getElementById("kb-a2"), pUS[0], pUS[1] - 210);
+          rig.anchor(document.getElementById("kb-a3"), pHT[0] - 20, pHT[1] - 260);
+          const z = { v: Math.log(1.45), x: 0, y: -390 };
+          const ap = () => ((cam.s = Math.exp(z.v)), (cam.x = z.x), (cam.y = z.y), rig.apply());
+          tl.fromTo(z, { v: Math.log(1.45), x: 0, y: -390 }, { v: Math.log(1.36), x: 0, y: -380, duration: 2.5, ease: "sine.inOut", onUpdate: ap }, 0);
+          tl.fromTo(z, { v: Math.log(1.36), x: 0, y: -380 }, { v: Math.log(0.86), x: 0, y: -190, duration: 1.9, ease: "power2.inOut", onUpdate: ap, immediateRender: false }, 2.5);
+          tl.fromTo(z, { v: Math.log(0.86), x: 0, y: -190 }, { v: Math.log(0.9), x: 0, y: -170, duration: 1.8, ease: "sine.inOut", onUpdate: ap, immediateRender: false }, 4.4);
+
+          // ---------- simulation : vagues, cargo, avion ----------
+          const wv = [];
+          for (let k = 0; k < 46; k++) wv.push(document.getElementById("kb-wv" + k));
+          const shipEl = document.getElementById("kb-ship");
+          const planeEl = document.getElementById("kb-plane");
+          const pick = (arr, u) => arr[Math.max(0, Math.min(200, Math.round(u * 200)))];
+          function sim(t) {
+            wv.forEach((el, k) => el.setAttribute("transform", `translate(${r1(Math.sin(t * 1.5 + k) * 8)},0)`));
+            const us = Math.max(0, Math.min(1, (t - 2.7) / 3.3));
+            const sp = pick(seaPts, gsap.parseEase("sine.inOut")(us));
+            shipEl.setAttribute("transform", `translate(${r1(sp[0])},${r1(sp[1] + Math.sin(t * 3) * 3)})`);
+            sea.setAttribute("stroke-dashoffset", r1(LS * (1 - Math.max(0, Math.min(1, (t - 2.6) / 1.4)))));
+            shipEl.setAttribute("opacity", Math.max(0, Math.min(1, (t - 2.6) / 0.3)).toFixed(2));
+            planeEl.setAttribute("opacity", Math.max(0, Math.min(1, (t - 3.3) / 0.3)).toFixed(2));
+            const ua = Math.max(0, Math.min(1, (t - 3.4) / 2.6));
+            const pp = pick(airPts, gsap.parseEase("power1.inOut")(ua));
+            planeEl.setAttribute("transform", `translate(${r1(pp[0])},${r1(pp[1] - 160)})`);
+          }
+          const clk = { t: 0 };
+          tl.fromTo(clk, { t: 0 }, { t: D, duration: D, ease: "none", onUpdate: () => sim(clk.t) }, 0);
+
+          // ---------- apparitions ----------
+          tl.fromTo("#kb-wcn", { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "back.out(1.5)" }, 0.1);
+          tl.fromTo("#kb-wus", { y: 120, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "back.out(1.5)" }, 0.25);
+          tl.fromTo("#kb-tag1", { opacity: 0, y: 20, scale: 0.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(2)" }, 1.3);
+          tl.fromTo("#kb-tag2", { opacity: 0, y: 20, scale: 0.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(2)" }, 1.55);
+          tl.fromTo("#kb-h1 .kb-line", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.12 }, 0.35);
+          tl.to("#kb-h1", { opacity: 0, y: -30, duration: 0.25, ease: "power2.in" }, 2.55);
+          tl.to(["#kb-tag1", "#kb-tag2"], { opacity: 0, duration: 0.25, ease: "power2.in" }, 2.5);
+          tl.fromTo("#kb-ht", { y: 160, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "back.out(1.4)" }, 2.7);
+          tl.fromTo("#kb-tag3", { opacity: 0, y: 20, scale: 0.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(2)" }, 3.5);
+          tl.fromTo("#kb-h2 .kb-line", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 2.85);
+          tl.fromTo("#kb-c1", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 4.5);
+          tl.fromTo("#kb-c2", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 5.2);
+          tl.fromTo("#kb-air", { opacity: 0 }, { opacity: 0.9, duration: 0.4 }, 3.3);
+
+          sim(0);
+          window.__timelines["kb-trajet"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
