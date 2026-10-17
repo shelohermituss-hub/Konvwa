@@ -9,6 +9,7 @@ const LOGOS: Array<{ test: RegExp; src: string; name: string }> = [
   { test: /ebay/i, src: '/brands/ebay.jpg', name: 'eBay' },
   { test: /aliexpress/i, src: '/brands/aliexpress.png', name: 'AliExpress' },
   { test: /southood/i, src: '/brands/southood.png', name: 'Southood' },
+  { test: /neewer/i, src: '/brands/neewer.png', name: 'Neewer' },
   { test: /muscle\s*(&|and)\s*strength/i, src: '/brands/muscle-strength.png', name: 'Muscle & Strength' },
 ]
 

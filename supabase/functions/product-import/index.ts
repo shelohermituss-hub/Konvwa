@@ -1,7 +1,7 @@
-// Admin tool: paste a product link (Amazon, Walmart, eBay, AliExpress, Shein, Alibaba/1688, Temu, Southood, Muscle & Strength) -> product sheet data, variants and package.
+// Admin tool: paste a product link (Amazon, Walmart, eBay, AliExpress, Shein, Alibaba/1688, Temu, Southood, Neewer, Muscle & Strength) -> product sheet data, variants and package.
 // Page reading: Firecrawl (REST). Text work: OpenRouter. Secrets (Edge Function secrets): FIRECRAWL_API_KEY, OPENROUTER_API_KEY, OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { alibabaGalleryImages, ebayGalleryImages, findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, type Platform, type ProductTarget } from './platforms.ts'
+import { alibabaGalleryImages, ebayGalleryImages, findVideoUrl, parseProductUrl, platformImages, platformImageUrl, platformVideoUrl, productSlug, SHOP_HOSTS, type Platform, type ProductTarget } from './platforms.ts'
 import { amazonGalleryImages } from './amazon.ts'
 import { normalizeVariants } from './variants.ts'
 import { cartDiscountedPrice, promoTiers } from './promos.ts'
@@ -237,15 +237,19 @@ async function storeImage(admin: ReturnType<typeof createClient>, userId: string
   }
 }
 
-/** Southood is a Shopify store: variants, prices and pictures come from the product's `.js` JSON, the extra options from the page source. */
-async function readSouthood(productUrl: string): Promise<{ variants: ReturnType<typeof parseShopifyProduct>['variants']; images: string[]; price_usd: number | null; discount_pct: number | null; groups: ShopGroup[] } | null> {
+/**
+ * Shopify stores (Southood, Neewer): variants, prices and pictures come from the product's `.js` JSON.
+ * Southood's extra options (lenses, power, cases) are read from the page source; the other shops have none.
+ */
+async function readShop(productUrl: string, shopHost: string, withOptions: boolean): Promise<{ variants: ReturnType<typeof parseShopifyProduct>['variants']; images: string[]; price_usd: number | null; discount_pct: number | null; groups: ShopGroup[] } | null> {
   const base = productUrl.split(/[?#]/)[0]
   const get = (u: string) => fetch(u, { signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'Mozilla/5.0', Accept: '*/*' } })
-  const [js, page] = await Promise.all([get(`${base}.js`), get(base)])
-  if (!js.ok || new URL(js.url).hostname.replace(/^www\./, '') !== 'southoodeyewear.com') return null
+  const sameShop = (u: string) => new URL(u).hostname.replace(/^www\./, '') === shopHost.replace(/^www\./, '')
+  const [js, page] = await Promise.all([get(`${base}.js`), withOptions ? get(base) : Promise.resolve(null)])
+  if (!js.ok || !sameShop(js.url)) return null
   const shop = parseShopifyProduct(await js.json())
-  const html = page.ok && new URL(page.url).hostname.replace(/^www\./, '') === 'southoodeyewear.com' ? (await page.text()).slice(0, 4_000_000) : ''
-  return { variants: shop.variants, images: shop.images, price_usd: shop.price_usd, discount_pct: discountFrom(shop.price_usd, shop.compare_usd), groups: southoodGroups(extractBcpo(html)) }
+  const html = page && page.ok && sameShop(page.url) ? (await page.text()).slice(0, 4_000_000) : ''
+  return { variants: shop.variants, images: shop.images, price_usd: shop.price_usd, discount_pct: discountFrom(shop.price_usd, shop.compare_usd), groups: withOptions ? southoodGroups(extractBcpo(html)) : [] }
 }
 
 /** Copies the product video into our bucket (mp4 / webm, up to 30 MB); null when it cannot be read or is too big. */
@@ -302,7 +306,7 @@ Deno.serve(async (req) => {
     if (!firecrawlKey) return json({ error: 'Outil non configuré : ajoutez le secret FIRECRAWL_API_KEY dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
 
     let target = typeof body.url === 'string' && body.url.length <= 2000 ? parseProductUrl(body.url.trim()) : null
-    if (!target) return json({ error: 'Lien non pris en charge : collez un lien de produit Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu, Southood ou Muscle & Strength.' }, 400)
+    if (!target) return json({ error: 'Lien non pris en charge : collez un lien de produit Amazon, Walmart, eBay, AliExpress, Shein, Alibaba, Temu, Southood, Neewer ou Muscle & Strength.' }, 400)
     // a share link: its HTTP redirects are followed first; when they lead nowhere (some apps redirect with JavaScript), the page itself is read and the address it ends on is used
     const shortLink = target.short ? target : null
     if (shortLink) {
@@ -385,8 +389,9 @@ Deno.serve(async (req) => {
     const { data: rateRows } = await admin.from('app_settings').select('key, value').in('key', ['eur_to_usd_rate', 'cny_to_usd_rate'])
     const rateOf = (k: string, fallback: number) => { const v = Number(rateRows?.find((r: { key: string; value: string }) => r.key === k)?.value); return v > 0 ? v : fallback }
     const rates = { EUR: rateOf('eur_to_usd_rate', 1.08), CNY: rateOf('cny_to_usd_rate', 0.14) }
-    const shop = platform.id === 'southood' ? await readSouthood(target.url).catch((e) => { console.error('[product-import] southood', e); return null }) : null
-    if (platform.id === 'southood' && !shop) warnings.push('shop_data_missing')
+    const shopHost = SHOP_HOSTS[platform.id]
+    const shop = shopHost ? await readShop(target.url, shopHost, platform.id === 'southood').catch((e) => { console.error('[product-import] shop', platform.id, e); return null }) : null
+    if (shopHost && !shop) warnings.push('shop_data_missing')
     const fallbackCurrency = platform.currency
     // wholesale ladder: the first range is the minimum order and the base price, the next ranges are the price tiers
     // the quantity ladder and the minimum order are a wholesale thing (Alibaba): on a retail page "Buy 2 for $X" is an offer, not a minimum order
@@ -406,7 +411,7 @@ Deno.serve(async (req) => {
       image: (raw) => platformImageUrl(platform.id, raw),
       price: (p, c) => priceToUsd(p, c || scraped.currency || fallbackCurrency, rates).usd,
     })
-    // Southood: the shop's own variant list (exact colours, prices and pictures) replaces the page reading
+    // Shopify shops (Southood, Neewer): the shop's own variant list (exact colours, prices and pictures) replaces the page reading
     const rows = shop && shop.variants.length > 0 ? shop.variants.map((v) => ({ ...v, image: platformImageUrl(platform.id, v.image) })) : normalized.rows
     if (normalized.truncated && rows === normalized.rows) warnings.push('variants_truncated')
     if (rows.length > 0 && rows.every((v) => v.price_usd === null)) warnings.push('variant_prices_missing')

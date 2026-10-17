@@ -167,6 +167,27 @@ describe('Southood (online shop)', () => {
   })
 })
 
+describe('Neewer (online shop)', () => {
+  it('reads a product page on neewer.com or www, directly or through a collection, and drops tracking', () => {
+    expect(parseProductUrl('https://neewer.com/products/neewer-dm04-usb-xlr-rgb-dynamic-microphone-66610458?variant=1&utm_source=x')).toMatchObject({ platform: { id: 'neewer', country: 'US' }, id: 'neewer-dm04-usb-xlr-rgb-dynamic-microphone-66610458', url: 'https://neewer.com/products/neewer-dm04-usb-xlr-rgb-dynamic-microphone-66610458' })
+    expect(parseProductUrl('https://www.neewer.com/collections/microphones/products/Neewer-DM04/')).toMatchObject({ id: 'neewer-dm04', url: 'https://neewer.com/products/neewer-dm04' })
+  })
+  it('does not take a collection or home page for a product', () => {
+    expect(parseProductUrl('https://neewer.com/')?.id).toBeNull()
+    expect(parseProductUrl('https://neewer.com/collections/microphones')?.id).toBeNull()
+  })
+  it('refuses look-alike hosts and plain http', () => {
+    expect(parseProductUrl('https://neewer.com.evil.test/products/x')).toBeNull()
+    expect(parseProductUrl('https://evilneewer.com/products/x')).toBeNull()
+    expect(parseProductUrl('http://neewer.com/products/x')).toBeNull()
+  })
+  it('accepts its pictures from the Shopify CDN and its own host only, at full size', () => {
+    expect(platformImageUrl('neewer', '//cdn.shopify.com/s/files/1/0225/2960/5706/files/1_9bc8debd.jpg?v=1792136037')).toBe('https://cdn.shopify.com/s/files/1/0225/2960/5706/files/1_9bc8debd.jpg')
+    expect(platformImageUrl('neewer', 'https://neewer.com/cdn/shop/files/a_800x.png?v=2')).toBe('https://neewer.com/cdn/shop/files/a.png')
+    expect(platformImageUrl('neewer', 'https://evil.test/x.jpg')).toBeNull()
+  })
+})
+
 describe('alibabaGalleryImages', () => {
   it('reads the gallery entries first, then other product pictures, only from Alibaba hosts', () => {
     const html = '<img src="//sc04.alicdn.com/kf/Hother1.jpg"> {"fullPathImageURI":"https:\\/\\/sc04.alicdn.com\\/kf\\/Hmain.jpg_220x220.jpg"} <img src="https://evil.example/kf/x.jpg">'
