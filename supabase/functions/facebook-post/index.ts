@@ -151,7 +151,12 @@ async function publishInstagram(igId: string, token: string, images: string[], m
     creation = String(r.data.id)
   }
   if (!(await ready(creation))) return { ok: false, error: 'Instagram n\'a pas pu traiter la publication (images refusées ou trop lent). Réessayez.' }
-  const pub = await graph(`/${igId}/media_publish`, { creation_id: creation, access_token: token })
+  // right after "FINISHED" Instagram can still answer "Media ID is not available" (9007 / 2207027): the publication is simply retried a few seconds later
+  let pub = await graph(`/${igId}/media_publish`, { creation_id: creation, access_token: token })
+  for (let n = 0; n < 6 && !pub.ok && (pub.code === 9007 || /not (?:available|ready)/i.test(pub.message)); n++) {
+    await new Promise((r) => setTimeout(r, 4000))
+    pub = await graph(`/${igId}/media_publish`, { creation_id: creation, access_token: token })
+  }
   if (!pub.ok) return fail(pub)
   const id = String(pub.data.id)
   const res = await fetch(`${GRAPH}/${id}?${new URLSearchParams({ fields: 'permalink', access_token: token })}`, { signal: AbortSignal.timeout(15000) }).catch(() => null)
