@@ -82,6 +82,15 @@ async function graph(path: string, params: Record<string, string>, method: 'POST
   console.error('[facebook-post] graph', path, err.code, String(err.message ?? '').slice(0, 200))
   return { ok: false, code: Number(err.code ?? 0), message: String(err.message ?? 'Facebook indisponible') }
 }
+/**
+ * Posting "as the page" needs the Page's own access token. A token generated for a person (or a system user) is turned into the page's token
+ * through the Graph API; a token that already is the page's keeps working as it is.
+ */
+async function pageToken(pageId: string, token: string): Promise<string> {
+  const res = await fetch(`${GRAPH}/${pageId}?${new URLSearchParams({ fields: 'access_token', access_token: token })}`, { signal: AbortSignal.timeout(20000) }).catch(() => null)
+  const data = await res?.json().catch(() => null) as { access_token?: unknown } | null
+  return res?.ok && typeof data?.access_token === 'string' && data.access_token ? data.access_token : token
+}
 const fbMessage = (code: number, message: string) => {
   const base = code === 190 ? 'Le jeton de la page Facebook est expiré ou invalide : générez-en un nouveau.'
     : code === 200 || code === 10 || code === 283 ? 'Facebook refuse la publication : permission manquante pour ce jeton sur cette page.'
@@ -110,8 +119,10 @@ Deno.serve(async (req) => {
     if (allowed === false) return json({ error: 'Trop de publications, réessayez dans quelques minutes.' }, 429)
 
     const pageId = Deno.env.get('FACEBOOK_PAGE_ID')
-    const token = Deno.env.get('FACEBOOK_PAGE_TOKEN')
-    if (!pageId || !token) return json({ error: 'Facebook n\'est pas configuré : ajoutez les secrets FACEBOOK_PAGE_ID et FACEBOOK_PAGE_TOKEN dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
+    const configured = Deno.env.get('FACEBOOK_PAGE_TOKEN')
+    if (!pageId || !configured) return json({ error: 'Facebook n\'est pas configuré : ajoutez les secrets FACEBOOK_PAGE_ID et FACEBOOK_PAGE_TOKEN dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
+
+    const token = await pageToken(pageId, configured)
 
     const body = await req.json().catch(() => ({})) as { action?: unknown; product_id?: unknown; images?: unknown; post_id?: unknown }
 
