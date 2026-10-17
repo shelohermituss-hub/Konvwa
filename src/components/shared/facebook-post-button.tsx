@@ -6,7 +6,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { CARD_STYLES, renderProductCard } from '@/lib/facebook-card'
-import { deleteFacebookPost, postProductToSocial, type SocialPost, type SocialTarget } from '@/lib/facebook-api'
+import { deleteFacebookPost, mirrorImages, postProductToSocial, type SocialPost, type SocialTarget } from '@/lib/facebook-api'
 import { discountPct, strikePrice } from '@/lib/product-pricing'
 import { tr } from '@/lib/i18n'
 
@@ -39,8 +39,13 @@ export function FacebookPostButton({ product }: Props) {
     try {
       setStep(tr('Création du visuel…'))
       const pct = discountPct(product)
-      const photos = product.images.filter((u) => OURS.test(u))
-      if (photos.length === 0) throw new Error(tr('Ajoutez au moins une photo du produit enregistrée sur KONVWA.'))
+      // supplier pictures that are not stored on KONVWA yet are copied first (the visual is drawn from them)
+      const wanted = product.images.filter((u) => /^https:\/\//.test(u)).slice(0, 4)
+      const foreign = wanted.filter((u) => !OURS.test(u))
+      let copies: Array<string | null> = []
+      if (foreign.length > 0) { setStep(tr('Copie des photos…')); copies = await mirrorImages(foreign).catch(() => []) }
+      const photos = wanted.map((u) => (OURS.test(u) ? u : copies[foreign.indexOf(u)] ?? null)).filter((u): u is string => !!u)
+      if (photos.length === 0) throw new Error(tr('Aucune photo du produit n\'a pu être utilisée. Vérifiez que ses photos s\'affichent bien.'))
       const card = await renderProductCard({
         name: product.name, priceHtg: product.price_htg, strikeHtg: pct ? strikePrice(product.price_htg, pct) : null, discountPct: pct || null,
         images: photos, deliveryMin: product.delivery_days_min, deliveryMax: product.delivery_days_max, verified: product.supplier_verified,

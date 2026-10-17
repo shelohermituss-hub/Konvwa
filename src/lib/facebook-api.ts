@@ -28,3 +28,6 @@ export interface SocialPost {
 export const postProductToSocial = (productId: string, images: string[], targets: SocialTarget[]) => call<SocialPost>({ product_id: productId, images, targets })
 
 export const deleteFacebookPost = (postId: string) => call<{ deleted: true }>({ action: 'delete', post_id: postId })
+
+/** Copies supplier pictures (Amazon, Alibaba…) into KONVWA's storage; the result keeps the order, `null` for a picture that could not be copied. */
+export const mirrorImages = async (urls: string[]) => (await call<{ urls: Array<string | null> }>({ action: 'mirror', urls })).urls

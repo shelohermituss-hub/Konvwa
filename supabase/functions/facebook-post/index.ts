@@ -159,6 +159,30 @@ async function publishInstagram(igId: string, token: string, images: string[], m
   return { ok: true, id, url: typeof d?.permalink === 'string' ? d.permalink : null }
 }
 
+/** Supplier picture hosts whose photos can be copied into our storage (the same shops the product import reads). */
+const MIRROR_HOSTS = /(?:^|\.)(?:media-amazon\.com|ssl-images-amazon\.com|images-amazon\.com|alicdn\.com|ltwebstatic\.com|kwcdn\.com|walmartimages\.com|ebayimg\.com|shopify\.com|muscleandstrength\.com)$/i
+
+/** Copies one supplier picture into our public bucket (https only, no redirect, 4 MB, JPEG / PNG / WebP by its own bytes); null when it cannot. */
+async function mirrorImage(admin: ReturnType<typeof createClient>, userId: string, raw: unknown, i: number): Promise<string | null> {
+  try {
+    if (typeof raw !== 'string' || raw.length > 600) return null
+    const url = new URL(raw)
+    if (url.protocol !== 'https:' || url.username || url.password || (url.port && url.port !== '443') || !MIRROR_HOSTS.test(url.hostname)) return null
+    const res = await fetch(url, { signal: AbortSignal.timeout(12000), redirect: 'error', headers: { 'User-Agent': 'Mozilla/5.0' } })
+    if (!res.ok) return null
+    const bytes = new Uint8Array(await res.arrayBuffer())
+    if (bytes.length < 500 || bytes.length > 4_000_000) return null
+    const type = bytes[0] === 0xff && bytes[1] === 0xd8 ? 'image/jpeg' : bytes[0] === 0x89 && bytes[1] === 0x50 ? 'image/png'
+      : String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) === 'RIFF' && String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]) === 'WEBP' ? 'image/webp' : ''
+    if (!type) return null
+    const path = `${userId}/fb-src-${Date.now()}-${i}.${type === 'image/jpeg' ? 'jpg' : type === 'image/png' ? 'png' : 'webp'}`
+    const { error } = await admin.storage.from('product-images').upload(path, bytes, { contentType: type, upsert: false })
+    return error ? null : admin.storage.from('product-images').getPublicUrl(path).data.publicUrl
+  } catch {
+    return null
+  }
+}
+
 const fbMessage = (code: number, message: string) => {
   const base = code === 190 ? 'Le jeton de la page Facebook est expiré ou invalide : générez-en un nouveau.'
     : code === 200 || code === 10 || code === 283 ? 'Facebook refuse la publication : permission manquante pour ce jeton sur cette page.'
@@ -183,16 +207,22 @@ Deno.serve(async (req) => {
     const { data: isStaff } = await asUser.rpc('is_admin')
     if (isStaff !== true) return json({ error: 'Accès réservé à l\'équipe.' }, 403)
 
-    const { data: allowed } = await admin.rpc('check_rate_limit', { p_key: `facebook-post:${user.id}`, p_max: 30, p_window_seconds: 3600 })
+    const { data: allowed } = await admin.rpc('check_rate_limit', { p_key: `facebook-post:${user.id}`, p_max: 90, p_window_seconds: 3600 })
     if (allowed === false) return json({ error: 'Trop de publications, réessayez dans quelques minutes.' }, 429)
+
+    const body = await req.json().catch(() => ({})) as { action?: unknown; product_id?: unknown; images?: unknown; post_id?: unknown; targets?: unknown; urls?: unknown }
+
+    // copy supplier pictures into our storage, so that the visual can be drawn from them and the networks can fetch them
+    if (body.action === 'mirror') {
+      const list = (Array.isArray(body.urls) ? body.urls : []).slice(0, 4)
+      return json({ urls: await Promise.all(list.map((u, i) => mirrorImage(admin, user.id, u, i))) })
+    }
 
     const pageId = Deno.env.get('FACEBOOK_PAGE_ID')
     const configured = Deno.env.get('FACEBOOK_PAGE_TOKEN')
     if (!pageId || !configured) return json({ error: 'Facebook n\'est pas configuré : ajoutez les secrets FACEBOOK_PAGE_ID et FACEBOOK_PAGE_TOKEN dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
 
     const { token, why } = await pageToken(pageId, configured)
-
-    const body = await req.json().catch(() => ({})) as { action?: unknown; product_id?: unknown; images?: unknown; post_id?: unknown; targets?: unknown }
 
     // delete a post of this page (undo)
     if (body.action === 'delete') {

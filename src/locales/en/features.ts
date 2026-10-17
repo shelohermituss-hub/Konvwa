@@ -1228,6 +1228,8 @@ export const FEATURES_EN: Record<string, string> = {
   "Voir sur Instagram": "View on Instagram",
   "Publié sur Instagram": "Posted on Instagram",
   "Instagram ne permet pas de supprimer une publication depuis le site : supprimez-la dans l'application.": "Instagram does not allow deleting a post from the site: delete it in the app.",
+  "Copie des photos…": "Copying photos…",
+  "Aucune photo du produit n'a pu être utilisée. Vérifiez que ses photos s'affichent bien.": "No product photo could be used. Check that its photos display correctly.",
   "Aucune photo exploitable": "No usable photo",
   "Produits tendance": "Trending products",
   "Tendances du moment": "Trending now",
