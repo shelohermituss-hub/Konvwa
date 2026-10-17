@@ -1214,7 +1214,6 @@ export const FEATURES_EN: Record<string, string> = {
   "Style : au hasard": "Style: random",
   "Style": "Style",
   "Studio": "Studio",
-  "Cercle": "Circle",
   "Bandeau": "Banner",
   "Cadre": "Frame",
   "Publication…": "Posting…",

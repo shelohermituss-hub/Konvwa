@@ -18,11 +18,11 @@ export interface CardInput {
   priceUsd: number | null
   /** The platform the product comes from (Amazon, Alibaba…), shown as a badge. */
   source: string | null
-  /** Layout 0-3; random when omitted. */
+  /** Layout 0-2; random when omitted. */
   style?: number
 }
 
-export const CARD_STYLES = ['Studio', 'Cercle', 'Bandeau', 'Cadre'] as const
+export const CARD_STYLES = ['Studio', 'Bandeau', 'Cadre'] as const
 export const CARD_W = 1080
 export const CARD_H = 1350
 
@@ -276,41 +276,7 @@ function studio(c: Ctx, i: CardInput, main: Pic | null, thumbs: Pic[]) {
   contactBand(c, 1215)
 }
 
-// ── Layout 2: Cercle ─────────────────────────────────────────────────────────────────────────────────────────
-function cercle(c: Ctx, i: CardInput, main: Pic | null, thumbs: Pic[]) {
-  c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H)
-  c.fillStyle = '#fff1ea'; c.beginPath(); c.arc(720, 820, 470, 0, Math.PI * 2); c.fill()
-  c.fillStyle = '#ffe3d7'; c.beginPath(); c.arc(720, 820, 340, 0, Math.PI * 2); c.fill()
-  logo(c, 60, 56, 'left', 54, i.source)
-  text(c, headLabel(i).toUpperCase(), 60, 262, `700 34px ${FONT}`, ORANGE, 'left')
-  const t = fit(c, i.name, 960, 3, 84, 48)
-  t.lines.forEach((l, n) => text(c, l, 60, 340 + n * t.size * 1.08, `800 ${t.size}px ${FONT}`, INK, 'left'))
-  if (main) contain(c, main, 400, 520, 640, 640, true)
-  if (i.discountPct) discountBadge(c, 960, 560, 70, i.discountPct)
-  // left column: price and chips
-  let y = 640
-  if (i.strikeHtg) {
-    c.font = `500 30px ${FONT}`; const s = htg(i.strikeHtg); const sw = c.measureText(s).width
-    text(c, s, 60, y, `500 30px ${FONT}`, MUTED, 'left')
-    c.strokeStyle = MUTED; c.lineWidth = 2.5; c.beginPath(); c.moveTo(60, y - 10); c.lineTo(60 + sw, y - 10); c.stroke()
-    y += 62
-  } else y += 20
-  text(c, htg(i.priceHtg).replace(' HTG', ''), 60, y, `800 76px ${FONT}`, ORANGE, 'left')
-  text(c, 'HTG', 60, y + 44, `700 34px ${FONT}`, INK, 'left')
-  if (i.priceUsd) { text(c, `≈ ${usd(i.priceUsd)}`, 60, y + 84, `700 30px ${FONT}`, MUTED, 'left'); y += 40 }
-  y += 100
-  features(i).forEach((f) => {
-    c.font = `600 24px ${FONT}`; const w = Math.min(330, c.measureText(f).width + 36)
-    c.fillStyle = '#f1f3f6'; rr(c, 60, y, w, 50, 25); c.fill()
-    text(c, f, 60 + w / 2, y + 33, `600 24px ${FONT}`, INK, 'center')
-    y += 62
-  })
-  thumbsRow(c, thumbs, 60, y + 10, 96, 12, 'row')
-  c.fillStyle = INK; rr(c, 60, 1240, W - 120, 74, 37); c.fill()
-  text(c, tr('Commandez sur konvwa.shop'), W / 2, 1288, `700 32px ${FONT}`, '#fff', 'center')
-}
-
-// ── Layout 3: Bandeau ────────────────────────────────────────────────────────────────────────────────────────
+// ── Layout 2: Bandeau ────────────────────────────────────────────────────────────────────────────────────────
 function bandeau(c: Ctx, i: CardInput, main: Pic | null, thumbs: Pic[]) {
   lightBackground(c, '#f2f4f7')
   c.fillStyle = ORANGE
@@ -332,7 +298,7 @@ function bandeau(c: Ctx, i: CardInput, main: Pic | null, thumbs: Pic[]) {
   chips(c, features(i), W / 2, 1254, 940, 'center', '#fff', INK, '#d4d9e0')
 }
 
-// ── Layout 4: Cadre ──────────────────────────────────────────────────────────────────────────────────────────
+// ── Layout 3: Cadre ──────────────────────────────────────────────────────────────────────────────────────────
 function cadre(c: Ctx, i: CardInput, main: Pic | null, thumbs: Pic[]) {
   c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H)
   const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#fff7f3'); g.addColorStop(0.5, '#ffffff'); g.addColorStop(1, '#f3f5f8')
@@ -362,9 +328,9 @@ function cadre(c: Ctx, i: CardInput, main: Pic | null, thumbs: Pic[]) {
   text(c, 'konvwa.shop', W / 2, 1282, `700 28px ${FONT}`, MUTED, 'center')
 }
 
-const LAYOUTS = [studio, cercle, bandeau, cadre]
+const LAYOUTS = [studio, bandeau, cadre]
 
-/** Draws the poster of `i` with the layout `style` (0-3, random when omitted). `labels` translates the fixed texts; `family` is the font stack. */
+/** Draws the poster of `i` with the layout `style` (0-2, random when omitted). `labels` translates the fixed texts; `family` is the font stack. */
 export function drawPoster(c: Ctx, i: CardInput, main: Pic | null, thumbs: Pic[], opts: { tr?: (s: string) => string; family?: string } = {}) {
   tr = opts.tr ?? ((s) => s)
   FONT = opts.family ?? 'Poppins, system-ui, sans-serif'
