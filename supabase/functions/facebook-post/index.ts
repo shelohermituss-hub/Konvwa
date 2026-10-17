@@ -82,11 +82,14 @@ async function graph(path: string, params: Record<string, string>, method: 'POST
   console.error('[facebook-post] graph', path, err.code, String(err.message ?? '').slice(0, 200))
   return { ok: false, code: Number(err.code ?? 0), message: String(err.message ?? 'Facebook indisponible') }
 }
-const fbMessage = (code: number, message: string) =>
-  code === 190 ? 'Le jeton de la page Facebook est expiré ou invalide : générez-en un nouveau.'
-    : code === 200 || code === 10 || code === 283 ? 'Facebook refuse la publication : le jeton n\'a pas la permission « pages_manage_posts » sur cette page.'
+const fbMessage = (code: number, message: string) => {
+  const base = code === 190 ? 'Le jeton de la page Facebook est expiré ou invalide : générez-en un nouveau.'
+    : code === 200 || code === 10 || code === 283 ? 'Facebook refuse la publication : permission manquante pour ce jeton sur cette page.'
     : code === 368 || code === 1404006 ? 'Facebook bloque temporairement les publications de la page. Réessayez plus tard.'
-    : `Facebook a refusé la publication : ${message.slice(0, 160)}`
+    : 'Facebook a refusé la publication.'
+  // Facebook's own explanation (never contains the token) tells which permission or page is at fault
+  return `${base} [Facebook ${code || '?'} : ${message.replace(/\s+/g, ' ').slice(0, 220)}]`
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
