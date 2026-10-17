@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEPARTMENTS, discoverUrl, extractCandidates } from './discover.ts'
+import { DEPARTMENTS, discoverUrl, extractCandidates, isKnown, knownPattern, neewerCandidates } from './discover.ts'
 
 describe('discoverUrl', () => {
   it('builds the ranking address from the fixed lists only', () => {
@@ -18,6 +18,64 @@ describe('discoverUrl', () => {
     expect(discoverUrl('alibaba', 'anything else')).toBeNull()
     expect(discoverUrl('amazon_search', 'smartphone unlocked')).toBe('https://www.amazon.com/s?k=smartphone%20unlocked&rh=p_72%3A1248879011&s=exact-aware-popularity-rank')
     expect(discoverUrl('amazon_search', 'x&y=1')).toBeNull()
+  })
+})
+
+describe('Muscle & Strength and Neewer sources', () => {
+  it('builds their addresses from the fixed lists only', () => {
+    expect(discoverUrl('muscle_strength', '')).toBe('https://www.muscleandstrength.com/store/top-sellers')
+    expect(discoverUrl('muscle_strength', 'best-creatine')).toBe('https://www.muscleandstrength.com/store/best-creatine')
+    expect(discoverUrl('muscle_strength', '../admin')).toBeNull()
+    expect(discoverUrl('neewer', '')).toBe('https://neewer.com/collections/top-daily-seller/products.json?limit=60')
+    expect(discoverUrl('neewer', 'new-releases')).toBe('https://neewer.com/collections/new-releases/products.json?limit=60')
+    expect(discoverUrl('neewer', 'x/../../admin')).toBeNull()
+    expect(discoverUrl('neewer', 'constructor')).toBeNull()
+  })
+
+  it('takes Muscle & Strength product pages only (not categories, reviews or other sites)', () => {
+    const links = [
+      'https://www.muscleandstrength.com/store/nutrex-creatine-monohydrate.html?CAWELAID=1',
+      'https://www.muscleandstrength.com/store/nutrex-creatine-monohydrate.html',
+      'https://muscleandstrength.com/store/Optimum-Micronized-Creatine-Powder.html',
+      'https://www.muscleandstrength.com/store/category/protein.html',
+      'https://www.muscleandstrength.com/store/reviews/brands/muscle-strength/top-seller-stack.html',
+      'https://www.muscleandstrength.com/store/top-sellers',
+      'https://evil.example/store/fake.html',
+    ]
+    const c = extractCandidates(links, '')
+    expect(c.map((x) => x.asin)).toEqual(['nutrex-creatine-monohydrate', 'optimum-micronized-creatine-powder'])
+    expect(c[0]).toMatchObject({ platform: 'muscle_strength', url: 'https://www.muscleandstrength.com/store/nutrex-creatine-monohydrate.html', rank: 1 })
+  })
+
+  it('reads a Neewer collection: in stock only, lowest price in stock, shop order, https pictures', () => {
+    const products = [
+      { handle: 'neewer-ring-light', title: 'NEEWER Ring Light', images: [{ src: '//cdn.shopify.com/s/files/1/a.jpg?v=1' }], variants: [{ price: '25.99', available: true }, { price: '19.99', available: true }, { price: '9.99', available: false }] },
+      { handle: 'sold-out', title: 'Sold out', images: [], variants: [{ price: '5.00', available: false }] },
+      { handle: 'Bad Handle', title: 'x', variants: [{ price: '5.00', available: true }] },
+      { handle: 'neewer-mic', title: 'NEEWER Mic', images: [], variants: [{ price: '69.99', available: true }] },
+      null,
+    ]
+    const c = neewerCandidates(products)
+    expect(c.map((x) => x.asin)).toEqual(['neewer-ring-light', 'neewer-mic'])
+    expect(c[0]).toMatchObject({ platform: 'neewer', url: 'https://neewer.com/products/neewer-ring-light', title: 'NEEWER Ring Light', image: 'https://cdn.shopify.com/s/files/1/a.jpg?v=1', price_usd: 19.99, rank: 1, rating: null })
+    expect(c[1]).toMatchObject({ image: null, price_usd: 69.99, rank: 2 })
+    expect(neewerCandidates(undefined)).toEqual([])
+  })
+
+  it('recognises a product already in the shop by its address, without confusing a longer name', () => {
+    const [ms] = extractCandidates(['https://www.muscleandstrength.com/store/mutant-whey.html'], '')
+    expect(isKnown('https://www.muscleandstrength.com/store/mutant-whey.html', ms)).toBe(true)
+    expect(isKnown('https://muscleandstrength.com/store/MUTANT-WHEY.html', ms)).toBe(true)
+    expect(isKnown('https://www.muscleandstrength.com/store/mutant-whey-isolate.html', ms)).toBe(false)
+    expect(knownPattern(ms)).toBe('%/store/mutant-whey.html')
+    const [nw] = neewerCandidates([{ handle: 'neewer-dm04', title: 'DM04', variants: [{ price: '1', available: true }] }])
+    expect(isKnown('https://neewer.com/products/neewer-dm04', nw)).toBe(true)
+    expect(isKnown('https://neewer.com/products/neewer-dm04-pro', nw)).toBe(false)
+    expect(knownPattern(nw)).toBe('%/products/neewer-dm04')
+    const [am] = extractCandidates(['https://www.amazon.com/x/dp/B0AAAAAAA1'], '')
+    expect(isKnown('https://www.amazon.com/dp/B0AAAAAAA1', am)).toBe(true)
+    expect(knownPattern(am)).toBe('%B0AAAAAAA1%')
+    expect(isKnown(null, am)).toBe(false)
   })
 })
 

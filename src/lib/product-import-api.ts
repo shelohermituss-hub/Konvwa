@@ -101,9 +101,9 @@ export async function estimateShipping(args: {
 }
 
 export interface DiscoveredProduct {
-  /** Amazon ASIN or Alibaba product number. */
+  /** Amazon ASIN, Alibaba product number, Muscle & Strength page name or Neewer handle. */
   asin: string
-  platform: 'amazon' | 'alibaba'
+  platform: 'amazon' | 'alibaba' | 'muscle_strength' | 'neewer'
   url: string
   title: string | null
   image: string | null
@@ -113,7 +113,7 @@ export interface DiscoveredProduct {
   rank: number
 }
 
-/** Trending / best-selling Amazon (or popular Alibaba) products not yet in the shop (admin-only `product-discover` Edge Function): up to 20 candidates. */
+/** Trending / best-selling products (Amazon, Alibaba, Muscle & Strength, Neewer) not yet in the shop (admin-only `product-discover` Edge Function): up to 20 candidates. */
 export async function discoverAmazonProducts(args: { source: string; department: string; count: number }): Promise<{ candidates: DiscoveredProduct[]; skipped_existing: number; total_found: number }> {
   const { data, error } = await supabase.functions.invoke('product-discover', { body: args })
   if (error) {

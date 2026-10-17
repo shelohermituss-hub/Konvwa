@@ -10,7 +10,12 @@ import { discoverAmazonProducts, type DiscoveredProduct } from '@/lib/product-im
 import { importAndSave, loadImportRates, runPool } from '@/lib/bulk-import'
 import { tr } from '@/lib/i18n'
 
-const SOURCES: Array<[string, string]> = [['movers', 'Amazon : tendances du moment'], ['bestsellers', 'Amazon : meilleures ventes'], ['new', 'Amazon : nouveautés populaires'], ['amazon_search', 'Amazon : catégorie précise (les mieux notés)'], ['alibaba', 'Alibaba : catégorie précise']]
+const SOURCES: Array<[string, string]> = [['movers', 'Amazon : tendances du moment'], ['bestsellers', 'Amazon : meilleures ventes'], ['new', 'Amazon : nouveautés populaires'], ['amazon_search', 'Amazon : catégorie précise (les mieux notés)'], ['alibaba', 'Alibaba : catégorie précise'], ['muscle_strength', 'Muscle & Strength : classements'], ['neewer', 'Neewer : produits tendance']]
+/** Ranking lists of the two shops that have their own (same lists as the `product-discover` function; '' = the first one). */
+const SHOP_LISTS: Record<string, Array<[string, string]>> = {
+  muscle_strength: [['', 'Top 50 des ventes'], ['best-protein-supplements', 'Protéines'], ['best-pre-workouts', 'Pré-workout'], ['best-creatine', 'Créatine'], ['best-bcaas', 'BCAA'], ['best-weight-gainers', 'Prise de masse'], ['best-protein-bars', 'Barres protéinées'], ['best-womens', 'Pour les femmes']],
+  neewer: [['', 'Top ventes du jour'], ['best-selling', 'Meilleures ventes'], ['top-50-products', 'Top produits'], ['hot-sale-1', 'Promos du moment'], ['new-releases', 'Nouveautés'], ['featured-products', 'Produits vedettes']],
+}
 const DEPARTMENTS: Array<[string, string]> = [
   ['', 'Tous les rayons'], ['electronics', 'Électronique'], ['beauty', 'Beauté'], ['hpc', 'Santé et soins personnels'], ['home-garden', 'Maison et jardin'],
   ['kitchen', 'Cuisine'], ['sporting-goods', 'Sports et plein air'], ['toys-and-games', 'Jouets et jeux'], ['fashion', 'Mode'], ['automotive', 'Auto et moto'],
@@ -45,7 +50,7 @@ function Thumb({ src, small }: { src: string | null; small?: boolean }) {
 }
 
 /**
- * Admin: finds 20 trending / well-rated Amazon products by itself (Amazon's public rankings), then imports them all at once as hidden drafts
+ * Admin: finds 20 trending / well-rated products by itself (Amazon's public rankings, Alibaba, Muscle & Strength's and Neewer's best sellers), then imports them all at once as hidden drafts
  * (same reading, translation and pricing as the single-link import). Nothing is shown to customers until the team publishes them.
  */
 export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
@@ -125,7 +130,7 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
       <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Flame className="h-5 w-5 text-primary" />{tr('Produits tendance')}</DialogTitle>
-          <DialogDescription>{tr('Trouve jusqu\'à 20 produits populaires et bien notés sur Amazon.com ou Alibaba, sans que vous fournissiez de lien, puis les importe d\'un coup (fiche, photos, variantes, avis, colis) en brouillons masqués. Vous relisez puis publiez.')}</DialogDescription>
+          <DialogDescription>{tr('Trouve jusqu\'à 20 produits populaires sur Amazon.com, Alibaba, Muscle & Strength ou Neewer, sans que vous fournissiez de lien, puis les importe d\'un coup (fiche, photos, variantes, avis, colis) en brouillons masqués. Vous relisez puis publiez.')}</DialogDescription>
         </DialogHeader>
 
         {!started && (
@@ -138,7 +143,7 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
                 </NativeSelect>
               </label>
               <label className="space-y-1 text-sm font-semibold">
-                {source === 'alibaba' || source === 'amazon_search' ? tr('Catégorie') : tr('Rayon')}
+                {source === 'alibaba' || source === 'amazon_search' ? tr('Catégorie') : SHOP_LISTS[source] ? tr('Liste') : tr('Rayon')}
                 <NativeSelect value={department} onChange={(e) => setDepartment(e.target.value)} disabled={busy} className="w-full">
                   {source === 'alibaba' || source === 'amazon_search'
                     ? <>
@@ -147,7 +152,7 @@ export function ProductDiscoverDialog({ open, onClose, onDone }: { open: boolean
                           <NativeSelectOptGroup key={g} label={tr(g)}>{items.map(([v, l]) => <NativeSelectOption key={v} value={v}>{tr(l)}</NativeSelectOption>)}</NativeSelectOptGroup>
                         ))}
                       </>
-                    : DEPARTMENTS.map(([v, l]) => <NativeSelectOption key={v || 'all'} value={v}>{tr(l)}</NativeSelectOption>)}
+                    : (SHOP_LISTS[source] ?? DEPARTMENTS).map(([v, l]) => <NativeSelectOption key={v || 'all'} value={v}>{tr(l)}</NativeSelectOption>)}
                 </NativeSelect>
               </label>
             </div>

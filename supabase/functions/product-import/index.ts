@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
     const variantsOnly = body.variants_only === true
     const { data: allowed } = await admin.rpc('check_rate_limit', variantsOnly
       ? { p_key: `product-import-variants:${user.id}`, p_max: 200, p_window_seconds: 3600 }
-      : { p_key: `product-import:${user.id}`, p_max: 30, p_window_seconds: 3600 })
+      : { p_key: `product-import:${user.id}`, p_max: 120, p_window_seconds: 3600 })
     if (allowed === false) return json({ error: 'Trop d\'imports, réessayez dans quelques minutes.' }, 429)
 
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')

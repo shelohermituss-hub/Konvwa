@@ -1,4 +1,5 @@
-// Finds trending / best-selling Amazon products from Amazon's public ranking pages. Pure helpers (no Deno API): unit-tested with vitest.
+// Finds trending / best-selling products: Amazon's public ranking pages, Alibaba searches, Muscle & Strength's "best of" pages and Neewer's own
+// best-seller collections. Pure helpers (no Deno API): unit-tested with vitest.
 // Only addresses built here are ever fetched (a fixed list of sources and departments), never an address typed by the user.
 
 export const SOURCES = {
@@ -134,7 +135,31 @@ export const DEPARTMENTS: Record<string, string> = {
   industrial: 'Industrie et sciences',
 }
 
+/** Muscle & Strength ranking pages of the store ('' = the top 50): the id is the page's address. */
+export const MS_PAGES: Record<string, string> = {
+  '': 'Top 50 des ventes',
+  'best-protein-supplements': 'Protéines',
+  'best-pre-workouts': 'Pré-workout',
+  'best-creatine': 'Créatine',
+  'best-bcaas': 'BCAA',
+  'best-weight-gainers': 'Prise de masse',
+  'best-protein-bars': 'Barres protéinées',
+  'best-womens': 'Pour les femmes',
+}
+
+/** Neewer collections kept by the shop itself ('' = its daily top sellers): the id is the collection's handle. */
+export const NEEWER_COLLECTIONS: Record<string, string> = {
+  '': 'Top ventes du jour',
+  'best-selling': 'Meilleures ventes',
+  'top-50-products': 'Top produits',
+  'hot-sale-1': 'Promos du moment',
+  'new-releases': 'Nouveautés',
+  'featured-products': 'Produits vedettes',
+}
+
 export function discoverUrl(source: string, department: string): string | null {
+  if (source === 'muscle_strength') return Object.hasOwn(MS_PAGES, department) ? `https://www.muscleandstrength.com/store/${department || 'top-sellers'}` : null
+  if (source === 'neewer') return Object.hasOwn(NEEWER_COLLECTIONS, department) ? `https://neewer.com/collections/${department || 'top-daily-seller'}/products.json?limit=60` : null
   if (source === 'alibaba' || source === 'amazon_search') {
     if (!Object.hasOwn(SEARCH_TOPICS, department)) return null
     if (source === 'alibaba') return `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(department || 'hot selling products')}&IndexArea=product_en&tab=all&viewtype=G`
@@ -147,9 +172,9 @@ export function discoverUrl(source: string, department: string): string | null {
 }
 
 export interface Candidate {
-  /** Amazon ASIN, or Alibaba product number: the key used to avoid proposing a product that is already in the shop. */
+  /** Amazon ASIN, Alibaba product number, Muscle & Strength page name or Neewer handle: the key used to avoid proposing a product that is already in the shop. */
   asin: string
-  platform: 'amazon' | 'alibaba'
+  platform: 'amazon' | 'alibaba' | 'muscle_strength' | 'neewer'
   /** Tracking-free product page. */
   url: string
   title: string | null
@@ -166,6 +191,7 @@ export interface Structured { url?: unknown; title?: unknown; image_url?: unknow
 
 const AMAZON_ID = /\/(?:dp|gp\/product)\/([A-Z0-9]{10})(?=[/?#]|$)/
 const ALIBABA_ID = /^(?:https?:)?\/\/(?:[a-z]{2,10}\.)?alibaba\.com\/product-detail\/[^?#]*?_(\d{8,})\.html/i
+const MS_ID = /^https?:\/\/(?:www\.)?muscleandstrength\.com\/store\/([a-z0-9][a-z0-9-]*)\.html$/i
 const MIN_RATING = 4.0
 
 function productRef(raw: string): { id: string; platform: Candidate['platform']; url: string } | null {
@@ -174,6 +200,9 @@ function productRef(raw: string): { id: string; platform: Candidate['platform'];
   if (am) return { id: am, platform: 'amazon', url: `https://www.amazon.com/dp/${am}` }
   const al = ALIBABA_ID.exec(clean)?.[1]
   if (al) return { id: al, platform: 'alibaba', url: clean.startsWith('//') ? `https:${clean}` : clean.replace(/^http:/, 'https:') }
+  // a product page of the store is /store/<name>.html; categories, brands and reviews have more path segments
+  const ms = MS_ID.exec(clean)?.[1]?.toLowerCase()
+  if (ms) return { id: ms, platform: 'muscle_strength', url: `https://www.muscleandstrength.com/store/${ms}.html` }
   return null
 }
 
@@ -256,4 +285,39 @@ function titleBefore(text: string, at: number): string | null {
   if (start < 0 || open - start > 400 || text[start - 1] === '!') return null // an image's alt text is not a title
   const label = text.slice(start + 1, open).replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\s+/g, ' ').trim()
   return label.length >= 8 && !/^(?:\d+(?:\.\d)? out of)/i.test(label) ? label.slice(0, 200) : null
+}
+
+/**
+ * Neewer (Shopify): the products of one of its collections (`/collections/<handle>/products.json`), in the shop's own order.
+ * Products with no variant in stock are dropped; the price is the lowest one of the variants in stock.
+ */
+export function neewerCandidates(raw: unknown, max = 60): Candidate[] {
+  const out: Candidate[] = []
+  for (const item of Array.isArray(raw) ? raw : []) {
+    const p = (item ?? {}) as Record<string, unknown>
+    const handle = typeof p.handle === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(p.handle) ? p.handle : null
+    const inStock = (Array.isArray(p.variants) ? p.variants : []).filter((v) => (v as Record<string, unknown> | null)?.available === true)
+    if (!handle || inStock.length === 0) continue
+    const prices = inStock.map((v) => num((v as Record<string, unknown>).price)).filter((n): n is number => n !== null)
+    const first = Array.isArray(p.images) ? (p.images[0] as Record<string, unknown> | undefined) : undefined
+    out.push({
+      asin: handle, platform: 'neewer', url: `https://neewer.com/products/${handle}`,
+      title: str(p.title, 200), image: imageUrl(first?.src), rating: null, reviews: null,
+      price_usd: prices.length ? Math.min(...prices) : null, rank: out.length + 1,
+    })
+    if (out.length >= max) break
+  }
+  return out
+}
+
+/** SQL `ilike` pattern that finds the shop product coming from this candidate (by its source address). A shorter name must not match a longer one (mutant-whey / mutant-whey-isolate). */
+export function knownPattern(c: Candidate): string {
+  return c.platform === 'muscle_strength' ? `%/store/${c.asin}.html` : c.platform === 'neewer' ? `%/products/${c.asin}` : `%${c.asin}%`
+}
+
+/** Is this source address the one of the candidate? (same rule as `knownPattern`) */
+export function isKnown(sourceUrl: string | null, c: Candidate): boolean {
+  if (!sourceUrl) return false
+  const u = sourceUrl.toLowerCase()
+  return c.platform === 'muscle_strength' ? u.endsWith(`/store/${c.asin}.html`) : c.platform === 'neewer' ? u.endsWith(`/products/${c.asin}`) : sourceUrl.includes(c.asin)
 }
