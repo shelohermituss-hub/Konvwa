@@ -24,10 +24,20 @@ function strike(price: number, pct: number | null): number | null {
   return old > price ? old : price + 5
 }
 const htg = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} HTG`
+const usd = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
 
 interface Product {
   id: string; name: string; description: string | null; brand: string | null; price_htg: number; discount_pct: number | null
-  delivery_days_min: number | null; delivery_days_max: number | null; supplier_verified: boolean | null; active: boolean
+  delivery_days_min: number | null; delivery_days_max: number | null; supplier_verified: boolean | null; supplier_name: string | null; active: boolean
+}
+
+const PRODUCT_FIELDS = 'id, name, description, brand, price_htg, discount_pct, delivery_days_min, delivery_days_max, supplier_verified, supplier_name, active'
+
+/** The shop's exchange rate (HTG per USD), as shown on the site. */
+async function usdRate(admin: ReturnType<typeof createClient>): Promise<number> {
+  const { data } = await admin.from('app_settings').select('value').eq('key', 'usd_to_htg_rate').maybeSingle()
+  const n = Number(data?.value)
+  return Number.isFinite(n) && n > 0 ? n : 140
 }
 
 /** The caption's opening line and selling points, written from the product's facts only. Null when the AI is unavailable. */
@@ -62,13 +72,15 @@ async function writeCopy(p: Product): Promise<{ hook: string; bullets: string[] 
   } catch { return null }
 }
 
-function caption(p: Product, copy: { hook: string; bullets: string[] } | null, instagram = false): string {
+function caption(p: Product, copy: { hook: string; bullets: string[] } | null, rate: number, instagram = false): string {
   const old = strike(p.price_htg, p.discount_pct)
   const lines = [copy?.hook ?? `🔥 ${p.name}`, '']
   if (copy?.bullets.length) lines.push(...copy.bullets.map((b) => `✅ ${b}`), '')
-  lines.push(old ? `💰 ${htg(p.price_htg)} (au lieu de ${htg(old)}, -${p.discount_pct}%)` : `💰 ${htg(p.price_htg)}`)
+  const dollars = `≈ ${usd(p.price_htg / rate)}`
+  lines.push(old ? `💰 ${htg(p.price_htg)} (${dollars}) · au lieu de ${htg(old)}, -${p.discount_pct}%` : `💰 ${htg(p.price_htg)} (${dollars})`)
   if (p.delivery_days_min && p.delivery_days_max) lines.push(`🚚 Livraison estimée : ${p.delivery_days_min}-${p.delivery_days_max} jours`)
   if (p.supplier_verified) lines.push('✔️ Fournisseur vérifié')
+  if (p.supplier_name) lines.push(`🛒 Source : ${p.supplier_name}`)
   lines.push('💳 Paiement MonCash / NatCash', '', instagram ? `👉 Commandez sur konvwa.shop (lien dans la bio) : ${SITE.replace('https://', '')}/products/${p.id}` : `👉 Commandez ici : ${SITE}/products/${p.id}`, '', '#Haiti #KONVWA #Importation #ShoppingHaiti')
   return lines.join('\n')
 }
@@ -235,6 +247,18 @@ Deno.serve(async (req) => {
       return json({ urls: await Promise.all(list.map((u, i) => mirrorImage(admin, user.id, u, i))) })
     }
 
+    // the caption alone (for the "download the poster and copy the caption" button: WhatsApp channel, TikTok…)
+    if (body.action === 'caption') {
+      const id = String(body.product_id ?? '')
+      if (!UUID.test(id)) return json({ error: 'Produit inconnu.' }, 400)
+      const { data: row } = await admin.from('products').select(PRODUCT_FIELDS).eq('id', id).maybeSingle()
+      if (!row) return json({ error: 'Produit introuvable.' }, 404)
+      const prod = row as Product
+      if (!prod.active) return json({ error: 'Publiez d\'abord le produit sur le site : le lien de la légende mènerait à une page introuvable.', code: 'inactive' }, 409)
+      const text = caption(prod, await writeCopy(prod), await usdRate(admin))
+      return json({ caption: text })
+    }
+
     const pageId = Deno.env.get('FACEBOOK_PAGE_ID')
     const configured = Deno.env.get('FACEBOOK_PAGE_TOKEN')
     if (!pageId || !configured) return json({ error: 'Facebook n\'est pas configuré : ajoutez les secrets FACEBOOK_PAGE_ID et FACEBOOK_PAGE_TOKEN dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
@@ -254,7 +278,7 @@ Deno.serve(async (req) => {
     const targets = new Set((Array.isArray(body.targets) ? body.targets : ['facebook']).filter((t): t is string => t === 'facebook' || t === 'instagram'))
     if (targets.size === 0) return json({ error: 'Choisissez Facebook et/ou Instagram.' }, 400)
     const { data: p } = await admin.from('products')
-      .select('id, name, description, brand, price_htg, discount_pct, delivery_days_min, delivery_days_max, supplier_verified, active').eq('id', productId).maybeSingle()
+      .select(PRODUCT_FIELDS).eq('id', productId).maybeSingle()
     if (!p) return json({ error: 'Produit introuvable.' }, 404)
     const product = p as Product
     if (!product.active) return json({ error: 'Publiez d\'abord le produit sur le site : le lien de la publication mènerait à une page introuvable.', code: 'inactive' }, 409)
@@ -265,7 +289,7 @@ Deno.serve(async (req) => {
     const images = (Array.isArray(body.images) ? body.images : []).filter((u): u is string => typeof u === 'string' && u.startsWith(prefix) && u.length < 600 && !u.includes('..')).slice(0, MAX_PHOTOS)
     if (images.length === 0) return json({ error: 'Aucune image à publier.' }, 400)
 
-    const copy = await writeCopy(product)
+    const [copy, rate] = [await writeCopy(product), await usdRate(admin)]
     const errors: { facebook?: string; instagram?: string } = {}
     const out: Record<string, unknown> = { ai: !!copy }
 
@@ -279,7 +303,7 @@ Deno.serve(async (req) => {
         else if (ids.length === 0) { failure = fbMessage(r.code, r.message) + why; break }
       }
       if (ids.length > 0) {
-        const message = caption(product, copy)
+        const message = caption(product, copy, rate)
         const params: Record<string, string> = { message, access_token: token }
         ids.forEach((id, i) => { params[`attached_media[${i}]`] = JSON.stringify({ media_fbid: id }) })
         const post = await graph(`/${pageId}/feed`, params)
@@ -295,7 +319,7 @@ Deno.serve(async (req) => {
       const account = await instagramAccount(pageId, token)
       if ('error' in account) errors.instagram = account.error
       else {
-        const r = await publishInstagram(account.id, token, images, caption(product, copy, true))
+        const r = await publishInstagram(account.id, token, images, caption(product, copy, rate, true))
         if (r.ok) out.instagram = { id: r.id, url: r.url }
         else errors.instagram = r.error + (/\[Instagram (?:10|200) /.test(r.error) ? await tokenScopes(configured) : '')
       }
@@ -303,7 +327,7 @@ Deno.serve(async (req) => {
 
     const done = !!out.post_id || !!out.instagram
     if (!done) return json({ error: Object.values(errors).join(' — ') || 'Publication impossible.', errors }, 502)
-    if (!out.caption) out.caption = caption(product, copy)
+    if (!out.caption) out.caption = caption(product, copy, rate)
     return json({ ...out, errors })
   } catch (e) {
     console.error('[facebook-post]', e)

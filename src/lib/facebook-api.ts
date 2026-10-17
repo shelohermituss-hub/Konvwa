@@ -31,3 +31,6 @@ export const deleteFacebookPost = (postId: string) => call<{ deleted: true }>({ 
 
 /** Copies supplier pictures (Amazon, Alibaba…) into KONVWA's storage; the result keeps the order, `null` for a picture that could not be copied. */
 export const mirrorImages = async (urls: string[]) => (await call<{ urls: Array<string | null> }>({ action: 'mirror', urls })).urls
+
+/** The caption written for a product (same text as the posts), to paste where the site cannot post by itself (WhatsApp channel, TikTok…). */
+export const getProductCaption = async (productId: string) => (await call<{ caption: string }>({ action: 'caption', product_id: productId })).caption

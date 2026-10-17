@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { ExternalLink, Loader2, Trash2 } from 'lucide-react'
+import { Copy, Download, ExternalLink, Loader2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
 import { CARD_STYLES, renderProductCard } from '@/lib/facebook-card'
-import { deleteFacebookPost, mirrorImages, postProductToSocial, type SocialPost, type SocialTarget } from '@/lib/facebook-api'
+import { deleteFacebookPost, getProductCaption, mirrorImages, postProductToSocial, type SocialPost, type SocialTarget } from '@/lib/facebook-api'
 import { discountPct, strikePrice } from '@/lib/product-pricing'
+import { toDisplay } from '@/lib/currency'
 import { tr } from '@/lib/i18n'
 
 /** Only pictures stored by us can be drawn on the card (CORS) and sent to Facebook / Instagram. */
@@ -19,6 +20,7 @@ interface Props {
   product: {
     id: string; name: string; price_htg: number; discount_pct?: number | null; images: string[]
     delivery_days_min: number | null; delivery_days_max: number | null; supplier_verified: boolean; active: boolean
+    supplier_name?: string | null
   }
 }
 
@@ -30,27 +32,35 @@ export function FacebookPostButton({ product }: Props) {
   const [posted, setPosted] = useState<SocialPost | null>(null)
   const [removing, setRemoving] = useState(false)
   const [style, setStyle] = useState('auto')
+  const [captionText, setCaptionText] = useState<string | null>(null)
   const [targets, setTargets] = useState<Record<SocialTarget, boolean>>({ facebook: true, instagram: true })
   const chosen = (Object.keys(targets) as SocialTarget[]).filter((t) => targets[t])
+
+  /** The visual card of the saved product (supplier pictures are copied onto KONVWA first) and the pictures it was drawn from. */
+  async function buildCard(): Promise<{ card: Blob; photos: string[] }> {
+    const pct = discountPct(product)
+    // supplier pictures that are not stored on KONVWA yet are copied first (the visual is drawn from them)
+    const wanted = product.images.filter((u) => /^https:\/\//.test(u)).slice(0, 4)
+    const foreign = wanted.filter((u) => !OURS.test(u))
+    let copies: Array<string | null> = []
+    if (foreign.length > 0) { setStep(tr('Copie des photos…')); copies = await mirrorImages(foreign).catch(() => []) }
+    const photos = wanted.map((u) => (OURS.test(u) ? u : copies[foreign.indexOf(u)] ?? null)).filter((u): u is string => !!u)
+    if (photos.length === 0) throw new Error(tr('Aucune photo du produit n\'a pu être utilisée. Vérifiez que ses photos s\'affichent bien.'))
+    setStep(tr('Création du visuel…'))
+    const card = await renderProductCard({
+      name: product.name, priceHtg: product.price_htg, strikeHtg: pct ? strikePrice(product.price_htg, pct) : null, discountPct: pct || null,
+      images: photos, deliveryMin: product.delivery_days_min, deliveryMax: product.delivery_days_max, verified: product.supplier_verified,
+      priceUsd: toDisplay(product.price_htg, 'USD'), source: product.supplier_name?.trim() || null,
+      style: style === 'auto' ? undefined : Number(style),
+    })
+    return { card, photos }
+  }
 
   async function run() {
     if (!user || chosen.length === 0) return
     setBusy(true); setPosted(null)
     try {
-      setStep(tr('Création du visuel…'))
-      const pct = discountPct(product)
-      // supplier pictures that are not stored on KONVWA yet are copied first (the visual is drawn from them)
-      const wanted = product.images.filter((u) => /^https:\/\//.test(u)).slice(0, 4)
-      const foreign = wanted.filter((u) => !OURS.test(u))
-      let copies: Array<string | null> = []
-      if (foreign.length > 0) { setStep(tr('Copie des photos…')); copies = await mirrorImages(foreign).catch(() => []) }
-      const photos = wanted.map((u) => (OURS.test(u) ? u : copies[foreign.indexOf(u)] ?? null)).filter((u): u is string => !!u)
-      if (photos.length === 0) throw new Error(tr('Aucune photo du produit n\'a pu être utilisée. Vérifiez que ses photos s\'affichent bien.'))
-      const card = await renderProductCard({
-        name: product.name, priceHtg: product.price_htg, strikeHtg: pct ? strikePrice(product.price_htg, pct) : null, discountPct: pct || null,
-        images: photos, deliveryMin: product.delivery_days_min, deliveryMax: product.delivery_days_max, verified: product.supplier_verified,
-        style: style === 'auto' ? undefined : Number(style),
-      })
+      const { card, photos } = await buildCard()
       const path = `${user.id}/fb-card-${Date.now()}.jpg`
       const { error: upErr } = await supabase.storage.from('product-images').upload(path, card, { contentType: 'image/jpeg', upsert: false })
       if (upErr) throw new Error(upErr.message)
@@ -67,6 +77,33 @@ export function FacebookPostButton({ product }: Props) {
     } finally {
       setBusy(false); setStep('')
     }
+  }
+
+  /** For the networks the site cannot post to (WhatsApp channel, TikTok…): downloads the visual and copies the caption. */
+  async function download() {
+    setBusy(true)
+    try {
+      const { card } = await buildCard()
+      setStep(tr('Rédaction de la légende…'))
+      const text = await getProductCaption(product.id)
+      const url = URL.createObjectURL(card)
+      const a = document.createElement('a')
+      a.href = url; a.download = `konvwa-${product.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'produit'}.jpg`
+      document.body.appendChild(a); a.click(); a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+      setCaptionText(text)
+      const copied = await navigator.clipboard.writeText(text).then(() => true, () => false)
+      toast.success(copied ? tr('Affiche téléchargée, légende copiée.') : tr('Affiche téléchargée. Cliquez sur « Copier la légende ».'))
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : tr('Erreur réseau'), { duration: 15000 })
+    } finally {
+      setBusy(false); setStep('')
+    }
+  }
+
+  async function copyCaption() {
+    const ok = await navigator.clipboard.writeText(captionText ?? posted?.caption ?? '').then(() => true, () => false)
+    toast[ok ? 'success' : 'error'](ok ? tr('Légende copiée.') : tr('Copie impossible : sélectionnez le texte à la main.'))
   }
 
   async function undo() {
@@ -107,6 +144,9 @@ export function FacebookPostButton({ product }: Props) {
         <Button type="button" size="sm" onClick={() => void run()} disabled={busy || !product.active || chosen.length === 0} className="gap-1.5 rounded-xl bg-[#1877F2] text-white hover:bg-[#1668d6]">
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? step : tr('Publier')}
         </Button>
+        <Button type="button" size="sm" variant="outline" onClick={() => void download()} disabled={busy || !product.active} className="gap-1.5 rounded-xl">
+          <Download className="h-4 w-4" />{tr('Télécharger l\'affiche + légende')}
+        </Button>
         {posted?.url && (
           <>
             <a href={posted.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
@@ -122,7 +162,12 @@ export function FacebookPostButton({ product }: Props) {
           : <span className="text-sm font-medium text-emerald-700">{tr('Publié sur Instagram')}</span>)}
       </div>
       {posted?.instagram && <p className="text-xs text-muted-foreground">{tr('Instagram ne permet pas de supprimer une publication depuis le site : supprimez-la dans l\'application.')}</p>}
-      {posted && <p className="whitespace-pre-line rounded-xl bg-white p-2.5 text-xs text-muted-foreground">{posted.caption}</p>}
+      {(captionText ?? posted?.caption) && (
+        <div className="space-y-1.5">
+          <p className="whitespace-pre-line rounded-xl bg-white p-2.5 text-xs text-muted-foreground">{captionText ?? posted?.caption}</p>
+          <Button type="button" size="sm" variant="outline" onClick={() => void copyCaption()} className="gap-1.5 rounded-xl"><Copy className="h-4 w-4" />{tr('Copier la légende')}</Button>
+        </div>
+      )}
     </div>
   )
 }

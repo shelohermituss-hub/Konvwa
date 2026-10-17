@@ -13,6 +13,10 @@ export interface CardInput {
   deliveryMin: number | null
   deliveryMax: number | null
   verified: boolean
+  /** The selling price in US dollars (converted with the site's rate), shown next to the gourde price. */
+  priceUsd: number | null
+  /** The platform the product comes from (Amazon, Alibaba…), shown as a badge. */
+  source: string | null
   /** Layout 0-3; random when omitted. */
   style?: number
 }
@@ -28,6 +32,7 @@ const NAVY = '#0A1628'
 const FONT = 'Poppins, system-ui, sans-serif'
 
 const htg = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} HTG`
+const usd = (n: number) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
@@ -106,7 +111,7 @@ function crates(c: Ctx, x: number, y: number, h: number): number {
 }
 
 /** Logo: the crates icon + the wordmark, centred on `x` or starting at it, with the shop's tagline under it. */
-function logo(c: Ctx, x: number, y: number, align: 'center' | 'left', size = 52) {
+function logo(c: Ctx, x: number, y: number, align: 'center' | 'left', size = 52, source: string | null = null) {
   const ih = Math.round(size * 1.45)
   const fs = Math.round(size * 0.92)
   c.font = `800 ${fs}px ${FONT}`
@@ -116,7 +121,20 @@ function logo(c: Ctx, x: number, y: number, align: 'center' | 'left', size = 52)
   const x0 = align === 'center' ? x - total / 2 : x
   crates(c, x0, y, ih)
   text(c, 'KONVWA', x0 + iw + 16, y + ih * 0.78, `800 ${fs}px ${FONT}`, INK, 'left')
+  if (source) { sourcePill(c, align === 'center' ? x : x0, y + ih + 8, align, source); return }
   text(c, tr('IMPORTATION HAÏTI'), align === 'center' ? x : x0, y + ih + 28, `600 17px ${FONT}`, MUTED, align === 'center' ? 'center' : 'left')
+}
+
+/** "Source : Amazon" badge, under the logo. */
+function sourcePill(c: Ctx, x: number, y: number, align: 'center' | 'left', source: string) {
+  const label = `${tr('Source')} : ${source}`
+  c.font = `700 22px ${FONT}`
+  const w = c.measureText(label).width + 58; const h = 38
+  const x0 = align === 'center' ? x - w / 2 : x
+  c.fillStyle = '#ffffff'; rr(c, x0, y, w, h, 19); c.fill()
+  c.strokeStyle = 'rgba(20,24,31,0.18)'; c.lineWidth = 2; rr(c, x0, y, w, h, 19); c.stroke()
+  c.fillStyle = ORANGE; c.beginPath(); c.arc(x0 + 20, y + h / 2, 6, 0, Math.PI * 2); c.fill()
+  text(c, label, x0 + 36, y + 27, `700 22px ${FONT}`, INK, 'left')
 }
 
 function discountBadge(c: Ctx, cx: number, cy: number, r: number, pct: number) {
@@ -221,7 +239,7 @@ const headLabel = (i: CardInput) => (i.discountPct ? `${tr('Promo')} -${i.discou
 // ── Layout 1: Studio (the model) ─────────────────────────────────────────────────────────────────────────────
 function studio(c: Ctx, i: CardInput, main: HTMLImageElement | null, thumbs: HTMLImageElement[]) {
   lightBackground(c); decor(c)
-  logo(c, W / 2, 56, 'center', 54)
+  logo(c, W / 2, 56, 'center', 54, i.source)
   text(c, headLabel(i), W / 2, 252, `700 54px ${FONT}`, INK, 'center')
   const t = fit(c, i.name, 940, 2, 96, 52)
   t.lines.forEach((l, n) => text(c, l, W / 2, 340 + n * t.size * 1.04, `800 ${t.size}px ${FONT}`, INK, 'center'))
@@ -241,13 +259,15 @@ function studio(c: Ctx, i: CardInput, main: HTMLImageElement | null, thumbs: HTM
   if (i.discountPct) discountBadge(c, 930, top + 70, 72, i.discountPct)
   thumbsRow(c, thumbs, 60, bottom - 3 * 108, 98, 10, 'col')
   const pw = (() => { c.font = `800 52px ${FONT}`; return c.measureText(htg(i.priceHtg)).width + 56 })()
+  const ph = i.priceUsd ? 118 : 84
   c.save(); c.shadowColor = 'rgba(240,90,40,0.3)'; c.shadowBlur = 22; c.shadowOffsetY = 8
-  c.fillStyle = ORANGE; rr(c, W - 60 - pw, bottom - 84, pw, 84, 42); c.fill(); c.restore()
-  text(c, htg(i.priceHtg), W - 60 - pw / 2, bottom - 26, `800 52px ${FONT}`, '#fff', 'center')
+  c.fillStyle = ORANGE; rr(c, W - 60 - pw, bottom - ph, pw, ph, 42); c.fill(); c.restore()
+  text(c, htg(i.priceHtg), W - 60 - pw / 2, bottom - ph + 58, `800 52px ${FONT}`, '#fff', 'center')
+  if (i.priceUsd) text(c, `≈ ${usd(i.priceUsd)}`, W - 60 - pw / 2, bottom - 18, `600 27px ${FONT}`, 'rgba(255,255,255,0.92)', 'center')
   if (i.strikeHtg) {
     c.font = `500 28px ${FONT}`; const s = htg(i.strikeHtg); const sw = c.measureText(s).width
-    text(c, s, W - 60 - pw / 2, bottom - 100, `500 28px ${FONT}`, MUTED, 'center')
-    c.strokeStyle = MUTED; c.lineWidth = 2.5; c.beginPath(); c.moveTo(W - 60 - pw / 2 - sw / 2, bottom - 109); c.lineTo(W - 60 - pw / 2 + sw / 2, bottom - 109); c.stroke()
+    text(c, s, W - 60 - pw / 2, bottom - ph - 16, `500 28px ${FONT}`, MUTED, 'center')
+    c.strokeStyle = MUTED; c.lineWidth = 2.5; c.beginPath(); c.moveTo(W - 60 - pw / 2 - sw / 2, bottom - ph - 25); c.lineTo(W - 60 - pw / 2 + sw / 2, bottom - ph - 25); c.stroke()
   }
   contactBand(c, 1215)
 }
@@ -257,9 +277,7 @@ function cercle(c: Ctx, i: CardInput, main: HTMLImageElement | null, thumbs: HTM
   c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H)
   c.fillStyle = '#fff1ea'; c.beginPath(); c.arc(720, 820, 470, 0, Math.PI * 2); c.fill()
   c.fillStyle = '#ffe3d7'; c.beginPath(); c.arc(720, 820, 340, 0, Math.PI * 2); c.fill()
-  c.fillStyle = 'rgba(240,90,40,0.18)'
-  for (let a = 0; a < 5; a++) for (let b = 0; b < 4; b++) { c.beginPath(); c.arc(70 + a * 26, 1010 + b * 26, 4, 0, Math.PI * 2); c.fill() }
-  logo(c, 60, 56, 'left', 54)
+  logo(c, 60, 56, 'left', 54, i.source)
   text(c, headLabel(i).toUpperCase(), 60, 262, `700 34px ${FONT}`, ORANGE, 'left')
   const t = fit(c, i.name, 960, 3, 84, 48)
   t.lines.forEach((l, n) => text(c, l, 60, 340 + n * t.size * 1.08, `800 ${t.size}px ${FONT}`, INK, 'left'))
@@ -275,6 +293,7 @@ function cercle(c: Ctx, i: CardInput, main: HTMLImageElement | null, thumbs: HTM
   } else y += 20
   text(c, htg(i.priceHtg).replace(' HTG', ''), 60, y, `800 76px ${FONT}`, ORANGE, 'left')
   text(c, 'HTG', 60, y + 44, `700 34px ${FONT}`, INK, 'left')
+  if (i.priceUsd) { text(c, `≈ ${usd(i.priceUsd)}`, 60, y + 84, `700 30px ${FONT}`, MUTED, 'left'); y += 40 }
   y += 100
   features(i).forEach((f) => {
     c.font = `600 24px ${FONT}`; const w = Math.min(330, c.measureText(f).width + 36)
@@ -293,7 +312,7 @@ function bandeau(c: Ctx, i: CardInput, main: HTMLImageElement | null, thumbs: HT
   c.fillStyle = ORANGE
   c.beginPath(); c.moveTo(0, 560); c.lineTo(W, 380); c.lineTo(W, 900); c.lineTo(0, 1090); c.closePath(); c.fill()
   c.fillStyle = 'rgba(255,255,255,0.16)'; c.beginPath(); c.moveTo(0, 640); c.lineTo(W, 460); c.lineTo(W, 520); c.lineTo(0, 700); c.closePath(); c.fill()
-  logo(c, W / 2, 50, 'center', 50)
+  logo(c, W / 2, 50, 'center', 50, i.source)
   text(c, headLabel(i), W / 2, 232, `700 40px ${FONT}`, ORANGE, 'center')
   const t = fit(c, i.name, 940, 2, 80, 46)
   t.lines.forEach((l, n) => text(c, l, W / 2, 312 + n * t.size * 1.06, `800 ${t.size}px ${FONT}`, INK, 'center'))
@@ -304,8 +323,9 @@ function bandeau(c: Ctx, i: CardInput, main: HTMLImageElement | null, thumbs: HT
   if (main) { c.save(); rr(c, 120, cy, 840, ch, 44); c.clip(); contain(c, main, 150, cy + 30, 780, ch - 60); c.restore() }
   if (i.discountPct) discountBadge(c, 130, cy + 10, 70, i.discountPct)
   if (thumbs.length) thumbsRow(c, thumbs, W / 2 - (thumbs.length * 84 + (thumbs.length - 1) * 14) / 2, cy + ch + 20, 84, 14, 'row')
-  price(c, i, W / 2, 1200, 'center', 74, ORANGE)
-  chips(c, features(i), W / 2, 1236, 940, 'center', '#fff', INK, '#d4d9e0')
+  price(c, i, W / 2, 1190, 'center', 74, ORANGE)
+  if (i.priceUsd) text(c, `≈ ${usd(i.priceUsd)}`, W / 2, 1230, `700 30px ${FONT}`, MUTED, 'center')
+  chips(c, features(i), W / 2, 1254, 940, 'center', '#fff', INK, '#d4d9e0')
 }
 
 // ── Layout 4: Cadre ──────────────────────────────────────────────────────────────────────────────────────────
@@ -315,14 +335,14 @@ function cadre(c: Ctx, i: CardInput, main: HTMLImageElement | null, thumbs: HTML
   c.fillStyle = g; c.fillRect(0, 0, W, H)
   c.strokeStyle = ORANGE; c.lineWidth = 10; rr(c, 30, 30, W - 60, H - 60, 56); c.stroke()
   c.strokeStyle = 'rgba(240,90,40,0.25)'; c.lineWidth = 3; rr(c, 54, 54, W - 108, H - 108, 40); c.stroke()
-  logo(c, W / 2, 82, 'center', 50)
+  logo(c, W / 2, 82, 'center', 50, i.source)
   const t = fit(c, i.name, 880, 2, 72, 44)
   t.lines.forEach((l, n) => text(c, l, W / 2, 262 + n * t.size * 1.06, `800 ${t.size}px ${FONT}`, INK, 'center'))
   const top = 262 + (t.lines.length - 1) * t.size * 1.06 + 36
-  if (main) contain(c, main, 130, top, 820, 950 - top, true)
+  if (main) contain(c, main, 130, top, 820, 930 - top, true)
   if (i.discountPct) discountBadge(c, 900, top + 60, 66, i.discountPct)
-  if (thumbs.length) thumbsRow(c, thumbs, W / 2 - (thumbs.length * 84 + (thumbs.length - 1) * 12) / 2, 962, 84, 12, 'row')
-  const py = 1150
+  if (thumbs.length) thumbsRow(c, thumbs, W / 2 - (thumbs.length * 84 + (thumbs.length - 1) * 12) / 2, 944, 84, 12, 'row')
+  const py = 1122
   c.font = `800 62px ${FONT}`
   const tw = c.measureText(htg(i.priceHtg)).width + 70
   c.fillStyle = NAVY; rr(c, W / 2 - tw / 2 - (i.strikeHtg ? 120 : 0), py - 76, tw, 96, 48); c.fill()
@@ -333,8 +353,9 @@ function cadre(c: Ctx, i: CardInput, main: HTMLImageElement | null, thumbs: HTML
     text(c, s, sx, py - 14, `500 34px ${FONT}`, MUTED, 'left')
     c.strokeStyle = MUTED; c.lineWidth = 3; c.beginPath(); c.moveTo(sx, py - 26); c.lineTo(sx + sw, py - 26); c.stroke()
   }
-  chips(c, features(i), W / 2, 1180, 900, 'center', '#fff', INK, '#cfd5dd')
-  text(c, 'konvwa.shop', W / 2, 1272, `700 28px ${FONT}`, MUTED, 'center')
+  if (i.priceUsd) text(c, `≈ ${usd(i.priceUsd)}`, W / 2 - (i.strikeHtg ? 120 : 0), py + 40, `700 28px ${FONT}`, MUTED, 'center')
+  chips(c, features(i), W / 2, 1172 + (i.priceUsd ? 22 : 8), 900, 'center', '#fff', INK, '#cfd5dd')
+  text(c, 'konvwa.shop', W / 2, 1282, `700 28px ${FONT}`, MUTED, 'center')
 }
 
 const LAYOUTS = [studio, cercle, bandeau, cadre]
