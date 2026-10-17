@@ -362,8 +362,8 @@
           tl.fromTo("#s1-shadow", { opacity: 0, scaleX: 0.3 }, { opacity: 1, scaleX: 1, duration: 0.6, ease: "power2.out" }, 0.4);
           tl.fromTo("#s1-subject", { y: 0 }, { y: -14, duration: 1.2, ease: "sine.inOut", yoyo: true, repeat: 2, immediateRender: false }, 0.9);
           // léger push-in de caméra, puis accélération avant la coupe
-          tl.fromTo("#s1-world", { scale: 1 }, { scale: 1.035, duration: 4.3, ease: "none" }, 0);
-          tl.fromTo("#s1-world", { scale: 1.035 }, { scale: 1.12, duration: 0.42, ease: "power3.in", immediateRender: false }, 4.38);
+          tl.fromTo("#s1-world", { scale: 1 }, { scale: 1.035, duration: D - 0.5, ease: "none" }, 0);
+          tl.fromTo("#s1-world", { scale: 1.035 }, { scale: 1.12, duration: 0.42, ease: "power3.in", immediateRender: false }, D - 0.42);
 
           // --- titre ------------------------------------------------------------
           tl.fromTo("#s1-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "expo.out" }, 0.15);
