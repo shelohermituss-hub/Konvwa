@@ -180,7 +180,7 @@
         (() => {
           const tl = gsap.timeline({ paused: true });
           const BEAT = 0.6;
-          const D = 3.6;
+          const D = 4.2;
           const steps = ["Entrepôt en Chine", "Expédié", "Transit maritime", "Arrivé en Haïti", "Livraison"];
           const track = document.getElementById("s5-track");
           track.insertAdjacentHTML(
@@ -203,22 +203,22 @@
           tl.fromTo("#s5-plane", { x: 0, y: 0 }, { x: 70, y: -26, duration: D - 0.75, ease: "none", immediateRender: false }, 0.75);
 
           tl.fromTo("#s5-step", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "none" }, 0.1);
-          tl.fromTo("#s5-title", { opacity: 0, y: 70, rotation: 3 }, { opacity: 1, y: 0, rotation: 0, duration: 0.45, ease: "circ.out" }, 0.15);
-          tl.fromTo("#s5-sub", { clipPath: "inset(0 100% 0 0)", rotation: -5 }, { clipPath: "inset(0 0% 0 0)", rotation: -5, duration: 0.5, ease: "power2.out" }, BEAT);
+          tl.fromTo("#s5-title", { opacity: 0, y: 70, rotation: 3 }, { opacity: 1, y: 0, rotation: 0, duration: 0.45, ease: "circ.out" }, 0.9);
+          tl.fromTo("#s5-sub", { clipPath: "inset(0 100% 0 0)", rotation: -5 }, { clipPath: "inset(0 0% 0 0)", rotation: -5, duration: 0.5, ease: "power2.out" }, 1.5);
 
           // étapes du suivi qui s'allument une par une
-          tl.fromTo(".s5-row", { opacity: 0, x: -50 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out", stagger: 0.07 }, 1.0);
+          tl.fromTo(".s5-row", { opacity: 0, x: -50 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out", stagger: 0.07 }, 1.85);
           steps.forEach((_, k) => {
             tl.set([`#s5-d${k}`, `#s5-t${k}`], { opacity: 0 }, 0);
           });
           tl.fromTo("#s5-rail-fill", { scaleY: 0 }, { scaleY: 0, duration: 0.01, ease: "none" }, 0);
-          const on = [1.5, 1.5 + BEAT, 1.5 + 2 * BEAT, 1.5 + 3 * BEAT];
+          const on = [2.3, 2.75, 3.2, 3.65];
           on.forEach((t0, k) => {
             tl.fromTo(`#s5-d${k}`, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(3)" }, t0);
             tl.fromTo(`#s5-t${k}`, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, t0);
             tl.fromTo("#s5-rail-fill", { scaleY: k / 4 }, { scaleY: Math.min(1, (k + 0.75) / 4), duration: 0.45, ease: "power2.out", immediateRender: false }, t0);
           });
-          tl.fromTo("#s5-foot", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 2.2);
+          tl.fromTo("#s5-foot", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 2.6);
 
           window.__timelines["s5-expedie"] = tl;
         })();

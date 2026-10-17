@@ -134,10 +134,10 @@
           tl.fromTo("#s7-glow", { scale: 1 }, { scale: 1.08, duration: 1.4, ease: "sine.inOut", yoyo: true, repeat: 2, immediateRender: false }, 1.0);
           tl.fromTo("#s7-crates", { opacity: 0, y: -60, scale: 0.6 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.8)" }, 0.05);
           tl.fromTo("#s7-a", { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.45, ease: "power3.out" }, 0.25);
-          tl.fromTo(".s7-ch", { opacity: 0, y: 90, filter: "blur(16px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power4.out", stagger: 0.06 }, BEAT);
-          tl.fromTo("#s7-script", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.7, ease: "power2.out" }, 3 * BEAT);
-          tl.fromTo("#s7-pill", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2.2)" }, 4 * BEAT);
-          tl.fromTo("#s7-pays", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "none" }, 4.6 * BEAT);
+          tl.fromTo(".s7-ch", { opacity: 0, y: 90, filter: "blur(16px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power4.out", stagger: 0.05 }, 0.35);
+          tl.fromTo("#s7-script", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 1.4, ease: "power1.inOut" }, 1.45);
+          tl.fromTo("#s7-pill", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2.2)" }, 3.1);
+          tl.fromTo("#s7-pays", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "none" }, 3.4);
           tl.fromTo("#s7-lock", { scale: 1 }, { scale: 1.03, duration: D - 3.2, ease: "none" }, 3.2);
           tl.fromTo("#s7-fade", { opacity: 0 }, { opacity: 1, duration: 0.7, ease: "power1.in" }, D - 0.7);
 

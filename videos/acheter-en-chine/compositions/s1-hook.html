@@ -321,7 +321,7 @@
         (() => {
           const tl = gsap.timeline({ paused: true });
           const BEAT = 0.6;
-          const D = 4.8;
+          const D = 6.0;
           // pseudo-aléatoire déterministe
           let seed = 7;
           const R = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -367,26 +367,26 @@
 
           // --- titre ------------------------------------------------------------
           tl.fromTo("#s1-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "expo.out" }, 0.15);
-          tl.fromTo("#s1-comment", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "circ.out" }, 0.3);
-          tl.fromTo(".s1-l", { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: "power4.out", stagger: 0.06 }, BEAT);
+          tl.fromTo("#s1-comment", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "circ.out" }, 0.08);
+          tl.fromTo(".s1-l", { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: "power4.out", stagger: 0.06 }, 0.32);
           tl.fromTo("#s1-acheter", { x: 0 }, { x: 10, duration: 3.2, ease: "none" }, 1.2);
-          tl.fromTo("#s1-chine-word", { clipPath: "inset(0 100% 0 0)", y: 10 }, { clipPath: "inset(0 0% 0 0)", y: 0, duration: 0.65, ease: "power2.out" }, 1.5);
-          tl.fromTo("#s1-flag-cn", { scale: 0, rotation: -40 }, { scale: 1, rotation: 8, duration: 0.45, ease: "back.out(2.4)" }, 1.95);
+          tl.fromTo("#s1-chine-word", { clipPath: "inset(0 100% 0 0)", y: 10 }, { clipPath: "inset(0 0% 0 0)", y: 0, duration: 0.6, ease: "power2.out" }, 1.0);
+          tl.fromTo("#s1-flag-cn", { scale: 0, rotation: -40 }, { scale: 1, rotation: 8, duration: 0.45, ease: "back.out(2.4)" }, 1.4);
 
           // mesure 2 : depuis Haïti ?
-          tl.fromTo("#s1-depuis-a", { x: -260, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, 4 * BEAT);
-          tl.fromTo("#s1-haiti", { scale: 1.7, opacity: 0, filter: "blur(14px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power4.out" }, 4 * BEAT + 0.18);
-          tl.fromTo("#s1-flag-ht", { scale: 0, rotation: 40 }, { scale: 1, rotation: -8, duration: 0.45, ease: "back.out(2.4)" }, 4 * BEAT + 0.42);
+          tl.fromTo("#s1-depuis-a", { x: -260, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, 1.62);
+          tl.fromTo("#s1-haiti", { scale: 1.7, opacity: 0, filter: "blur(14px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power4.out" }, 1.82);
+          tl.fromTo("#s1-flag-ht", { scale: 0, rotation: 40 }, { scale: 1, rotation: -8, duration: 0.45, ease: "back.out(2.4)" }, 2.08);
           const path = document.getElementById("s1-circle-path");
           const len = 1040;
           path.setAttribute("stroke-dasharray", String(len));
-          tl.fromTo(path, { attr: { "stroke-dashoffset": len } }, { attr: { "stroke-dashoffset": 0 }, duration: 0.55, ease: "power2.inOut" }, 5 * BEAT);
+          tl.fromTo(path, { attr: { "stroke-dashoffset": len } }, { attr: { "stroke-dashoffset": 0 }, duration: 0.55, ease: "power2.inOut" }, 2.3);
 
           for (let i = 0; i < nWords; i++) {
             tl.set("#s1-w" + i, { opacity: 0 }, 0);
-            tl.fromTo("#s1-w" + i, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 5.5 * BEAT + i * 0.045);
+            tl.fromTo("#s1-w" + i, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 3.15 + i * 0.16);
           }
-          tl.fromTo("#s1-star", { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.4, ease: "back.out(2)" }, 5.4 * BEAT);
+          tl.fromTo("#s1-star", { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.4, ease: "back.out(2)" }, 3.05);
 
           // --- métadonnées ------------------------------------------------------
           tl.fromTo([".s1-meta", "#s1-barcode", "#s1-barcode-txt"], { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "none", stagger: 0.06 }, 0.2);

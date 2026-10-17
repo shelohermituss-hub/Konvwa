@@ -6,8 +6,9 @@ message: "Acheter en Chine depuis Haïti, c'est 4 étapes avec KONVWA : choisis,
 destination: tiktok-reels-shorts
 aspect: 1080x1920
 language: fr
-length: 24s
-angle: affiche éditoriale animée (motion design), typographie cinétique calée sur le beat, sans voix off
+length: 29s
+angle: affiche éditoriale animée (motion design), typographie cinétique calée sur le beat et la voix off
+voice: Algieba
 ---
 
 ## Intent
@@ -48,7 +49,12 @@ l'environnement (signalé à l'utilisateur).
 - Musique : beat original composé pour la vidéo (100 BPM, la mineur, synthèse
   numpy, `assets/music/beat.mp3`) — les bibliothèques musicales sont inaccessibles.
 - Effets sonores : bibliothèque déjà utilisée par `konvwa-pub` (Pixabay + ElevenLabs).
-- Pas de voix off (les deux références sont portées par le texte et la musique).
+- Voix off ajoutée à la demande : Google Gemini 3.1 Flash TTS via FLORA, voix « Algieba »
+  (celle de `konvwa-pub`), français, tutoiement comme le texte à l'écran ; 7 répliques
+  (une par scène), silences retirés, tempo ×1,1, -16 LUFS. Projet FLORA
+  « KONVWA — voix off « Acheter en Chine depuis Haïti » ». Fichiers récupérés via le
+  stockage public de FLORA sur storage.googleapis.com (media.flora.ai est bloqué ici).
+- Musique recomposée à la nouvelle longueur (29,2 s) et creusée sous la voix (carve).
 
 ## Notes
 

@@ -222,21 +222,21 @@
         (() => {
           const tl = gsap.timeline({ paused: true });
           const BEAT = 0.6;
-          const D = 3.6;
+          const D = 4.2;
 
           tl.fromTo("#s3-paper", { scaleX: 0, transformOrigin: "0% 50%", rotation: -7 }, { scaleX: 1, rotation: -7, duration: 0.55, ease: "expo.out" }, 0);
           tl.fromTo("#s3-paper", { y: 0 }, { y: -18, duration: D - 0.6, ease: "none", immediateRender: false }, 0.6);
           tl.fromTo("#s3-num", { opacity: 0, x: -120 }, { opacity: 1, x: 0, duration: 0.45, ease: "expo.out" }, 0.02);
           tl.fromTo("#s3-step", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "none" }, 0.15);
-          tl.fromTo("#s3-title", { opacity: 0, y: 90, rotation: 4 }, { opacity: 1, y: 0, rotation: 0, duration: 0.5, ease: "circ.out" }, 0.08);
-          tl.fromTo("#s3-sub", { clipPath: "inset(0 100% 0 0)", rotation: -4 }, { clipPath: "inset(0 0% 0 0)", rotation: -4, duration: 0.55, ease: "power2.out" }, BEAT);
+          tl.fromTo("#s3-title", { opacity: 0, y: 90, rotation: 4 }, { opacity: 1, y: 0, rotation: 0, duration: 0.5, ease: "circ.out" }, 0.98);
+          tl.fromTo("#s3-sub", { clipPath: "inset(0 100% 0 0)", rotation: -4 }, { clipPath: "inset(0 0% 0 0)", rotation: -4, duration: 0.55, ease: "power2.out" }, 1.45);
 
           // cadre qui s'accroche de travers puis se pose
           tl.fromTo("#s3-frame-wrap", { y: -900, rotation: -14 }, { y: 0, rotation: 3, duration: 0.7, ease: "back.out(1.3)" }, 0.12);
           tl.fromTo("#s3-frame-wrap", { rotation: 3 }, { rotation: 1.5, duration: 1.4, ease: "sine.inOut", yoyo: true, repeat: 1, immediateRender: false }, 0.9);
 
           // trois produits réels qui se remplacent au temps
-          const swaps = [0.45, 0.45 + 2 * BEAT, 0.45 + 4 * BEAT];
+          const swaps = [0.45, 1.85, 3.05];
           [0, 1, 2].forEach((k) => {
             const t0 = swaps[k];
             tl.set([`#s3-p${k}`, `#s3-n${k}`, `#s3-r${k}`, `#s3-m${k}`], { opacity: 0 }, 0);
@@ -250,7 +250,7 @@
               tl.to([`#s3-n${k}`, `#s3-r${k}`, `#s3-m${k}`], { opacity: 0, duration: 0.12, ease: "none" }, t1);
             }
           });
-          tl.fromTo("#s3-caption", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 3 * BEAT);
+          tl.fromTo("#s3-caption", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 2.9);
 
           window.__timelines["s3-choisis"] = tl;
         })();
