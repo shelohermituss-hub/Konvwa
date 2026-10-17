@@ -4,7 +4,8 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
-import { renderProductCard } from '@/lib/facebook-card'
+import { CARD_STYLES, renderProductCard } from '@/lib/facebook-card'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { deleteFacebookPost, postProductToFacebook, type FacebookPost } from '@/lib/facebook-api'
 import { discountPct, strikePrice } from '@/lib/product-pricing'
 import { tr } from '@/lib/i18n'
@@ -26,6 +27,7 @@ export function FacebookPostButton({ product }: Props) {
   const [step, setStep] = useState('')
   const [posted, setPosted] = useState<FacebookPost | null>(null)
   const [removing, setRemoving] = useState(false)
+  const [style, setStyle] = useState('auto')
 
   async function run() {
     if (!user) return
@@ -38,6 +40,7 @@ export function FacebookPostButton({ product }: Props) {
       const card = await renderProductCard({
         name: product.name, priceHtg: product.price_htg, strikeHtg: pct ? strikePrice(product.price_htg, pct) : null, discountPct: pct || null,
         images: photos, deliveryMin: product.delivery_days_min, deliveryMax: product.delivery_days_max, verified: product.supplier_verified,
+        style: style === 'auto' ? undefined : Number(style),
       })
       const path = `${user.id}/fb-card-${Date.now()}.png`
       const { error: upErr } = await supabase.storage.from('product-images').upload(path, card, { contentType: 'image/png', upsert: false })
@@ -77,6 +80,10 @@ export function FacebookPostButton({ product }: Props) {
           : tr('Publiez d\'abord le produit sur le site : le lien de la publication doit mener à une page visible.')}
       </p>
       <div className="flex flex-wrap items-center gap-2">
+        <NativeSelect value={style} onChange={(e) => setStyle(e.target.value)} disabled={busy} size="sm" aria-label={tr('Style du visuel')}>
+          <NativeSelectOption value="auto">{tr('Style : au hasard')}</NativeSelectOption>
+          {CARD_STYLES.map((n, k) => <NativeSelectOption key={n} value={String(k)}>{tr('Style')} : {tr(n)}</NativeSelectOption>)}
+        </NativeSelect>
         <Button type="button" size="sm" onClick={() => void run()} disabled={busy || !product.active} className="gap-1.5 rounded-xl bg-[#1877F2] text-white hover:bg-[#1668d6]">
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? step : tr('Publier sur Facebook')}
         </Button>
