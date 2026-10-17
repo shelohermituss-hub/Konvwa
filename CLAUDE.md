@@ -65,6 +65,17 @@ Pour une tâche non triviale, suivre le cycle et charger le skill de la phase :
 
 Méta : `/using-agent-skills` explique comment choisir ; `/context-engineering`, `/source-driven-development`, `/constraint-driven-development`, `/doubt-driven-development` pour les sessions longues ou les décisions risquées.
 
+### HyperFrames (HeyGen) — vidéos en HTML
+
+Les 21 skills publiés de [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) (Apache-2.0, copiés depuis `main` @ `b18b3e9`) sont versionnés dans `.claude/skills/`. Ils produisent des compositions HTML/GSAP rendues en MP4 via le CLI `npx hyperframes` (Node + Chrome/FFmpeg requis au rendu).
+
+- **Point d'entrée obligatoire** : `/hyperframes` pour toute vidéo, animation ou motion graphic ; il choisit le workflow.
+- Workflows : `/product-launch-video` (promo à partir d'une URL ou d'un brief), `/motion-graphics` (< 30 s, titres, chiffres, logo), `/faceless-explainer`, `/general-video`, `/slideshow`, `/music-to-video`, `/talking-head-recut`, `/embedded-captions`, `/pr-to-video`, `/figma`, `/remotion-to-hyperframes`. `/brag` et `/brag-slim` restent pour les vidéos de lancement de l'app.
+- Domaines : `/hyperframes-core` (contrat de composition), `/hyperframes-animation`, `/hyperframes-keyframes`, `/hyperframes-creative`, `/hyperframes-audio`, `/hyperframes-registry`, `/hyperframes-studio`, `/hyperframes-cli`, `/media-use` (musique, SFX, voix, images).
+- Les vidéos KONVWA suivent la marque : français, orange `#F05A28` sur `#0A1628`, Poppins, prix en HTG.
+- Les projets vidéo vivent hors de `src/` (ex. `videos/<nom>/`) ; les rendus `.mp4` ne sont pas commités.
+- Mise à jour : re-copier `skills/` depuis le dépôt amont (ou `npx hyperframes skills update`) et changer le commit ci-dessus.
+
 ### Précédence en cas de conflit
 
 1. Règles « Sécurité et données » et conventions du projet (ce fichier) — toujours prioritaires.
