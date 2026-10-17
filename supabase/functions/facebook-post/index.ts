@@ -159,6 +159,18 @@ async function publishInstagram(igId: string, token: string, images: string[], m
   return { ok: true, id, url: typeof d?.permalink === 'string' ? d.permalink : null }
 }
 
+/** What the configured token was granted (names only, never the token), to explain a refusal. */
+async function tokenScopes(token: string): Promise<string> {
+  const res = await fetch(`${GRAPH}/me/permissions?${new URLSearchParams({ access_token: token })}`, { signal: AbortSignal.timeout(15000) }).catch(() => null)
+  const d = await res?.json().catch(() => null) as { data?: Array<{ permission?: string; status?: string }>; error?: { message?: string } } | null
+  if (!res?.ok || !Array.isArray(d?.data)) return ' Permissions du jeton illisibles.'
+  const granted = d.data.filter((x) => x.status === 'granted').map((x) => String(x.permission))
+  const missing = ['instagram_basic', 'instagram_content_publish', 'pages_read_engagement', 'pages_show_list', 'pages_manage_posts'].filter((n) => !granted.includes(n))
+  return missing.length > 0
+    ? ` Permissions manquantes sur le jeton : ${missing.join(', ')}. (Accordées : ${granted.join(', ') || 'aucune'}.)`
+    : ' Le jeton a toutes les permissions : le blocage vient de l\'application Meta (cas d\'usage Instagram non ajouté, ou compte Instagram non attribué à l\'utilisateur système).'
+}
+
 /** Supplier picture hosts whose photos can be copied into our storage (the same shops the product import reads). */
 const MIRROR_HOSTS = /(?:^|\.)(?:media-amazon\.com|ssl-images-amazon\.com|images-amazon\.com|alicdn\.com|ltwebstatic\.com|kwcdn\.com|walmartimages\.com|ebayimg\.com|shopify\.com|muscleandstrength\.com)$/i
 
@@ -280,7 +292,7 @@ Deno.serve(async (req) => {
       else {
         const r = await publishInstagram(account.id, token, images, caption(product, copy, true))
         if (r.ok) out.instagram = { id: r.id, url: r.url }
-        else errors.instagram = r.error
+        else errors.instagram = r.error + (/\[Instagram (?:10|200) /.test(r.error) ? await tokenScopes(configured) : '')
       }
     }
 
