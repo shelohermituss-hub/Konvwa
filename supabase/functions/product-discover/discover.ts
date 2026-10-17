@@ -1,6 +1,6 @@
 // Finds trending / best-selling products: Amazon's public ranking pages, Alibaba searches, Muscle & Strength's "best of" pages and Neewer's own
 // best-seller collections. Pure helpers (no Deno API): unit-tested with vitest.
-// Only addresses built here are ever fetched (a fixed list of sources and departments), never an address typed by the user.
+// Only addresses built here are fetched: a fixed list of sources and departments, or a Neewer collection handle (letters, digits and dashes only), never a free address.
 
 export const SOURCES = {
   movers: { label: 'Tendances du moment', path: 'gp/movers-and-shakers' },
