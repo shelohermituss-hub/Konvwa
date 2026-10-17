@@ -754,3 +754,44 @@ html, body, #root {
 /* hides the scrollbar of horizontal chip rows (they stay scrollable by swipe) */
 .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
+
+/* ============================================================
+   WHATSAPP CHANNEL BUBBLE (bottom right, until the first click)
+   ============================================================ */
+
+.kv-wa-dock { bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
+/* above the app's bottom bar on mobile (it is hidden from lg up) */
+body:has(nav.fixed.bottom-0) .kv-wa-dock { bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { body:has(nav.fixed.bottom-0) .kv-wa-dock { bottom: 1.5rem; } }
+/* above the sticky "add to cart / pay" bars (more specific: wins over the rules above) */
+body:has(.fixed.bottom-0.z-\[60\]) .kv-wa-dock { bottom: calc(7.5rem + env(safe-area-inset-bottom)); }
+
+@keyframes kvWaIn {
+  from { opacity: 0; transform: scale(0.9) translateY(8px); }
+}
+@keyframes kvWaHintIn {
+  from { opacity: 0; transform: scale(0.95) translateY(4px); }
+}
+/* a ring that leaves the bubble a few times, then stops: noticed without nagging */
+@keyframes kvWaRing {
+  0%   { opacity: 0.45; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+/* backwards (not both): once in, :active scale feedback must own the transform again */
+.kv-wa-bubble { animation: kvWaIn 320ms cubic-bezier(0.23, 1, 0.32, 1) 400ms backwards; -webkit-tap-highlight-color: transparent; }
+.kv-wa-bubble::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 9999px;
+  background: #25d366;
+  opacity: 0;
+  animation: kvWaRing 1.6s cubic-bezier(0.23, 1, 0.32, 1) 2.2s 3;
+}
+.kv-wa-hint { transform-origin: bottom right; animation: kvWaHintIn 200ms cubic-bezier(0.23, 1, 0.32, 1) backwards; }
+@media (hover: hover) and (pointer: fine) { .kv-wa-bubble:hover { transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) {
+  .kv-wa-bubble, .kv-wa-hint { animation: none; }
+  .kv-wa-bubble::before { animation: none; }
+}

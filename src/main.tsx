@@ -11,6 +11,7 @@ import { CartProvider } from "@/lib/cart-context"
 import { Toaster, toast } from "sonner"
 import { trServer, tr, LANG } from "@/lib/i18n"
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt"
+import { WhatsAppChannelBubble } from "@/components/shared/whatsapp-channel-bubble"
 import { AuthErrorToast } from "@/components/shared/auth-error-toast"
 import { StepUpProvider } from '@/lib/step-up'
 import { WishlistProvider } from '@/lib/wishlist-context'
@@ -78,6 +79,7 @@ createRoot(document.getElementById("root")!).render(
               <RouterProvider router={router} />
               <Toaster richColors position="top-center" />
               <PwaInstallPrompt />
+              <WhatsAppChannelBubble />
               <AuthErrorToast />
               <UpdateBanner />
               <OfflineBanner />
