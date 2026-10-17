@@ -10,8 +10,8 @@
           position: absolute;
           inset: 0;
           overflow: hidden;
-          background: radial-gradient(ellipse 80% 55% at 50% 62%, #1a3062 0%, #0a1628 72%);
-          color: #ffffff;
+          background: radial-gradient(ellipse 80% 55% at 50% 62%, #ffffff 0%, #f7f1eb 72%);
+          color: #0a1628;
           font-family: "Poppins", sans-serif;
         }
         #ka-fx {
@@ -35,7 +35,6 @@
           line-height: 1.02;
           letter-spacing: -0.02em;
           white-space: nowrap;
-          text-shadow: 0 10px 40px rgba(4, 9, 22, 0.6);
         }
         .ka-cap-t b {
           color: #f05a28;
@@ -46,8 +45,9 @@
           margin-top: 20px;
           padding: 10px 28px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.1);
-          border: 2px solid rgba(255, 255, 255, 0.28);
+          background: #ffffff;
+          border: 2px solid #e8dfd7;
+          box-shadow: 0 8px 20px rgba(10, 22, 40, 0.06);
           font-size: 32px;
           font-weight: 700;
           white-space: nowrap;
@@ -61,8 +61,9 @@
         .ka-pay {
           padding: 12px 28px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.1);
-          border: 3px solid rgba(255, 255, 255, 0.25);
+          background: #ffffff;
+          border: 3px solid #e8dfd7;
+          color: #0a1628;
           font-size: 34px;
           font-weight: 700;
           white-space: nowrap;
@@ -80,7 +81,7 @@
           inset: 0;
           border-radius: 84px;
           background: #0b0f17;
-          box-shadow: 0 60px 120px rgba(2, 6, 18, 0.7), inset 0 0 0 3px #2a3448;
+          box-shadow: 0 50px 110px rgba(10, 22, 40, 0.28), inset 0 0 0 3px #2a3448;
         }
         #ka-screen {
           position: absolute;
@@ -475,15 +476,17 @@
         }
         .ka-img {
           height: 186px;
-          background: #f7f3ef;
+          background: #ffffff;
+          border-bottom: 2px solid #f1ede9;
           display: flex;
           align-items: center;
           justify-content: center;
           position: relative;
         }
-        .ka-img svg {
-          width: 150px;
-          height: 150px;
+        .ka-img img {
+          width: 170px;
+          height: 170px;
+          object-fit: contain;
           display: block;
         }
         .ka-ved {
@@ -688,9 +691,13 @@
           height: 92px;
           border-radius: 18px;
         }
-        .ka-sum .ka-img svg {
-          width: 78px;
-          height: 78px;
+        .ka-sum .ka-img {
+          border: 2px solid #f1ede9;
+          flex: none;
+        }
+        .ka-sum .ka-img img {
+          width: 84px;
+          height: 84px;
         }
         .ka-pm {
           display: grid;
@@ -832,6 +839,58 @@
           box-shadow: 0 6px 20px rgba(2, 6, 18, 0.35);
           opacity: 0;
         }
+        .ka-tile {
+          position: absolute;
+          width: 200px;
+          height: 236px;
+          border-radius: 32px;
+          background: #ffffff;
+          border: 2px solid #efe7e0;
+          box-shadow: 0 24px 50px rgba(10, 22, 40, 0.14);
+          opacity: 0;
+        }
+        .ka-tile img {
+          position: absolute;
+          left: 20px;
+          top: 14px;
+          width: 160px;
+          height: 160px;
+          object-fit: contain;
+          display: block;
+        }
+        .ka-tile span {
+          position: absolute;
+          left: 50%;
+          bottom: 16px;
+          transform: translateX(-50%);
+          padding: 6px 16px;
+          border-radius: 999px;
+          background: #0a1628;
+          color: #ffffff;
+          font-size: 21px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        #ka-fly {
+          position: absolute;
+          left: -56px;
+          top: -56px;
+          width: 112px;
+          height: 112px;
+          border-radius: 50%;
+          background: #ffffff;
+          border: 4px solid #e8501f;
+          box-shadow: 0 14px 30px rgba(10, 22, 40, 0.2);
+          opacity: 0;
+        }
+        #ka-fly img {
+          position: absolute;
+          inset: 10px;
+          width: 84px;
+          height: 84px;
+          object-fit: contain;
+          display: block;
+        }
         #ka-orange {
           position: absolute;
           inset: 0;
@@ -842,6 +901,9 @@
       <div id="ka-root" data-composition-id="kp-app" data-width="1080" data-height="1920">
         <svg id="ka-fx" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="0 0 1080 1920"></svg>
 
+        <div class="ka-tile" id="ka-t1" style="left: 36px; top: 700px"><img src="assets/products/ja3-lny.jpg" alt="Nike Ja 3" /><span>27 085 HTG</span></div>
+        <div class="ka-tile" id="ka-t2" style="left: 46px; top: 1200px"><img src="assets/products/afnan.jpg" alt="Parfum Afnan 9 PM" /><span>8 000 HTG</span></div>
+        <div class="ka-tile" id="ka-t3" style="left: 846px; top: 1250px"><img src="assets/products/anua.jpg" alt="Sérum ANUA" /><span>3 520 HTG</span></div>
         <div class="ka-cap" id="ka-c1"><span class="ka-cap-t">Achetez <b>à l'unité</b></span><span class="ka-cap-s">Boutique USA · livré en Haïti</span></div>
         <div class="ka-cap" id="ka-c2"><span class="ka-cap-t">…ou <b>en gros</b></span><span class="ka-cap-s">Sourcing Chine · prix revendeur</span></div>
         <div class="ka-cap" id="ka-c3"><span class="ka-cap-t">Déjà un <b>fournisseur</b> ?</span></div>
@@ -897,24 +959,24 @@
               </div>
               <div class="ka-grid" id="ka-retail">
                 <div class="ka-prod" id="ka-pr1">
-                  <div class="ka-img"><span class="ka-ved">Vedette</span><i data-art="casque"></i></div>
+                  <div class="ka-img"><span class="ka-ved">Vedette</span><img src="assets/products/powerbeats.jpg" alt="Powerbeats Pro 2" /></div>
                   <span class="ka-add" id="ka-add" data-ic="plus"></span>
-                  <div class="ka-pi"><div class="ka-pn">Casque sans fil Bluetooth</div><div class="ka-pp">4 850 <small>HTG · MOQ : 1</small></div><div class="ka-ver">✓ Vérifié · US</div><div class="ka-liv">Livré en Haïti</div></div>
+                  <div class="ka-pi"><div class="ka-pn">Écouteurs Powerbeats Pro 2</div><div class="ka-pp">28 975 <small>HTG</small></div><div class="ka-ver">✓ Vérifié · US</div><div class="ka-liv">Livré en Haïti</div></div>
                 </div>
                 <div class="ka-prod">
-                  <div class="ka-img"><i data-art="basket"></i></div>
-                  <div class="ka-pi"><div class="ka-pn">Baskets de course</div><div class="ka-pp">7 200 <small>HTG · MOQ : 1</small></div><div class="ka-ver">✓ Vérifié · US</div><div class="ka-liv">Livré en Haïti</div></div>
+                  <div class="ka-img"><img src="assets/products/cerave.jpg" alt="Kit de soins CeraVe" /></div>
+                  <div class="ka-pi"><div class="ka-pn">Kit de soins visage CeraVe</div><div class="ka-pp">8 050 <small>HTG</small></div><div class="ka-ver">✓ Vérifié · US</div><div class="ka-liv">Livré en Haïti</div></div>
                 </div>
               </div>
               <div class="ka-grid" id="ka-whole">
                 <div class="ka-prod">
-                  <div class="ka-img"><span class="ka-ved">Vedette</span><i data-art="serum"></i></div>
-                  <div class="ka-step"><span>−</span><span id="ka-qty">10</span><span>+</span></div>
-                  <div class="ka-pi"><div class="ka-pn">Sérum visage éclat (lot)</div><div class="ka-pp">310 <small>HTG/u · MOQ : 50</small></div><span class="ka-rev">Prix revendeur</span><div class="ka-liv">Livré en Haïti</div></div>
+                  <div class="ka-img"><span class="ka-ved">Vedette</span><img src="assets/products/brosse.jpg" alt="Brosse à dents électrique" /></div>
+                  <div class="ka-step"><span>−</span><span id="ka-qty">24</span><span>+</span></div>
+                  <div class="ka-pi"><div class="ka-pn">Brosse à dents électrique</div><div class="ka-pp"><span id="ka-wp">3 535</span> <small>HTG/u</small></div><span class="ka-rev">Prix revendeur</span><div class="ka-liv">MOQ : 24 unités</div></div>
                 </div>
                 <div class="ka-prod">
-                  <div class="ka-img"><i data-art="levres"></i></div>
-                  <div class="ka-pi"><div class="ka-pn">Rouge à lèvres mat (lot)</div><div class="ka-pp">95 <small>HTG/u · MOQ : 100</small></div><span class="ka-rev">Prix revendeur</span><div class="ka-liv">Livré en Haïti</div></div>
+                  <div class="ka-img"><img src="assets/products/r36s.jpg" alt="Console R36s Pro" /></div>
+                  <div class="ka-pi"><div class="ka-pn">Console rétro R36s Pro</div><div class="ka-pp">2 705 <small>HTG/u</small></div><span class="ka-rev">Prix revendeur</span><div class="ka-liv">MOQ : 25 unités</div></div>
                 </div>
               </div>
               <div class="ka-toast" id="ka-toast1"><i data-ic="check-w"></i>Ajouté au panier</div>
@@ -940,7 +1002,7 @@
             <!-- Paiement -->
             <div class="ka-scr" id="ka-pay">
               <div class="ka-h1">Paiement</div>
-              <div class="ka-card ka-sum"><div class="ka-img"><i data-art="casque"></i></div><div><b style="font-size: 21px">Casque sans fil</b><div class="ka-mut" style="font-size: 16px">+ frais d'expédition</div><div style="font-size: 30px; font-weight: 900; margin-top: 4px">6 380 <span style="font-size: 16px">HTG</span></div></div></div>
+              <div class="ka-card ka-sum"><div class="ka-img"><img src="assets/products/powerbeats.jpg" alt="" /></div><div><b style="font-size: 21px">Powerbeats Pro 2</b><div class="ka-mut" style="font-size: 16px">Livré en Haïti</div><div style="font-size: 30px; font-weight: 900; margin-top: 4px">28 975 <span style="font-size: 16px">HTG</span></div></div></div>
               <div style="font-size: 21px; font-weight: 700; margin-top: 26px">Moyen de paiement</div>
               <div class="ka-pm">
                 <div class="ka-pmi"><i style="background: #e2231a">MonCash</i>MonCash</div>
@@ -948,7 +1010,7 @@
                 <div class="ka-pmi"><i style="background: #0b1630" data-ic="wallet-w"></i>Portefeuille</div>
                 <i id="ka-ring"></i>
               </div>
-              <div class="ka-btn ka-or" id="ka-paybtn" style="height: 76px; margin-top: 30px">Payer 6 380 HTG</div>
+              <div class="ka-btn ka-or" id="ka-paybtn" style="height: 76px; margin-top: 30px">Payer 28 975 HTG</div>
               <div id="ka-ok"><i data-ic="check-big"></i><div style="font-size: 30px; font-weight: 900">Paiement confirmé</div><div class="ka-mut" style="font-size: 19px">Reçu envoyé · suivi activé</div></div>
             </div>
 
@@ -970,6 +1032,7 @@
             <div id="ka-touch"></div>
           </div>
         </div>
+        <div id="ka-fly"><img src="assets/products/powerbeats.jpg" alt="" /></div>
         <div id="ka-orange"></div>
       </div>
 
@@ -1008,14 +1071,6 @@
           root.querySelectorAll("[data-ic]").forEach((el) => {
             el.insertAdjacentHTML("afterbegin", IC[el.getAttribute("data-ic")] || "");
           });
-          // illustrations produits
-          const ART = {
-            casque: `<svg viewBox="0 0 150 150"><path d="M30,86 Q30,30 75,30 Q120,30 120,86" fill="none" stroke="#1B2438" stroke-width="12" stroke-linecap="round"/><rect x="18" y="80" width="34" height="50" rx="14" fill="#E8501F"/><rect x="98" y="80" width="34" height="50" rx="14" fill="#E8501F"/><rect x="26" y="88" width="14" height="34" rx="7" fill="#FF7252"/><rect x="110" y="88" width="14" height="34" rx="7" fill="#FF7252"/></svg>`,
-            basket: `<svg viewBox="0 0 150 150"><path d="M16,104 Q18,70 46,66 L74,62 Q88,40 106,48 Q122,58 128,92 L132,106 Q132,116 120,116 L26,116 Q14,116 16,104 Z" fill="#3D6FB6"/><path d="M16,104 L132,106 L132,116 L20,116 Z" fill="#FFFFFF"/><path d="M60,68 l10,18 M76,62 l10,18 M92,56 l10,18" stroke="#FFFFFF" stroke-width="4"/></svg>`,
-            serum: `<svg viewBox="0 0 150 150"><rect x="48" y="58" width="54" height="74" rx="14" fill="#F2B79A"/><rect x="48" y="84" width="54" height="30" fill="#FFFFFF" opacity="0.85"/><rect x="62" y="40" width="26" height="20" rx="4" fill="#1B2438"/><path d="M66,40 Q66,16 75,16 Q84,16 84,40 Z" fill="#E8501F"/><text x="75" y="104" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="12" fill="#B4532E">SÉRUM</text></svg>`,
-            levres: `<svg viewBox="0 0 150 150"><rect x="52" y="74" width="46" height="60" rx="8" fill="#1B2438"/><rect x="52" y="74" width="46" height="12" fill="#C99A2E"/><path d="M58,74 L58,40 Q58,26 75,22 L92,34 L92,74 Z" fill="#C2185B"/><rect x="56" y="64" width="38" height="12" fill="#D4AF37"/></svg>`,
-          };
-          root.querySelectorAll("[data-art]").forEach((el) => el.insertAdjacentHTML("afterbegin", ART[el.getAttribute("data-art")]));
           // art de la bannière promo : trois colis iso
           {
             let s = "";
@@ -1038,8 +1093,7 @@
           // ---------- calque d'effets (hors téléphone) ----------
           let fx = "";
           // panier flottant
-          fx += `<g transform="translate(950,860)"><g id="ka-fcart"><circle r="66" fill="#FFFFFF"/><g transform="translate(-30,-30) scale(2.5)">${IC.cart.replace('stroke="#0B1220"', 'stroke="#E8501F"').replace("<svg ", "<svg width='24' height='24' ")}</g><circle cx="44" cy="-44" r="24" fill="#E8501F"/><text id="ka-fcn" x="44" y="-36" text-anchor="middle" font-family="Poppins" font-weight="900" font-size="24" fill="#fff">2</text></g></g>`;
-          fx += `<g id="ka-fly"><circle r="54" fill="#F7F3EF"/><g transform="translate(-45,-45) scale(0.6)">${ART.casque.replace("<svg ", "<svg width='150' height='150' ")}</g></g>`;
+          fx += `<g transform="translate(950,860)"><g id="ka-fcart"><circle r="66" fill="#FFFFFF" stroke="#E8DFD7" stroke-width="3"/><g transform="translate(-30,-30) scale(2.5)">${IC.cart.replace('stroke="#0B1220"', 'stroke="#E8501F"').replace("<svg ", "<svg width='24' height='24' ")}</g><circle cx="44" cy="-44" r="24" fill="#E8501F"/><text id="ka-fcn" x="44" y="-36" text-anchor="middle" font-family="Poppins" font-weight="900" font-size="24" fill="#fff">2</text></g></g>`;
           // pile de cartons (gros)
           let stack = "";
           for (let k = 0; k < 6; k++) {
@@ -1048,16 +1102,16 @@
             const lvl = Math.floor(k / 2);
             stack += `<g id="ka-ct${k}"><g transform="translate(${x * I.C},${x * 0.5 - lvl * 64})">${I.box(-34, -34, 0, 68, 68, 64, col, { shadow: false })}${I.quad("T", 64, -34, 34, -5, 5, I.mix(col, "#FFFFFF", 0.35))}</g></g>`;
           }
-          fx += `<g transform="translate(150,1420)"><ellipse cx="0" cy="40" rx="120" ry="34" fill="rgba(4,9,22,0.4)" id="ka-stsh"/>${stack}<g id="ka-x50"><rect x="-70" y="-300" width="140" height="64" rx="32" fill="#E8501F"/><text x="0" y="-256" text-anchor="middle" font-family="Poppins" font-weight="900" font-size="34" fill="#fff">× 50</text></g></g>`;
+          fx += `<g transform="translate(150,1420)"><ellipse cx="0" cy="40" rx="120" ry="34" fill="rgba(10,22,40,0.14)" id="ka-stsh"/>${stack}<g id="ka-x50"><rect x="-70" y="-300" width="140" height="64" rx="32" fill="#E8501F"/><text x="0" y="-256" text-anchor="middle" font-family="Poppins" font-weight="900" font-size="34" fill="#fff">× 100</text></g></g>`;
           // fournisseur → entrepôt
           const factory = `<g>${I.box(-70, -50, 0, 140, 100, 70, "#5B6B8C", { shadow: false })}${I.box(30, -40, 70, 26, 26, 60, "#7A88A8", { shadow: false })}${I.quad("L", 50, -60, 60, 10, 40, "#1B2438")}</g>`;
           const wh = `<g>${I.box(-80, -60, 0, 160, 120, 80, "#F4EFE6", { shadow: false })}${I.box(-80, -60, 80, 160, 120, 12, "#E8501F", { shadow: false })}${I.quad("L", 60, -30, 30, 0, 56, "#1B2438")}<g transform="${I.planeLeft(-80, 60, 92)}"><text x="80" y="-14" text-anchor="middle" font-family="Poppins" font-weight="900" font-size="22" fill="#fff">KONVWA</text></g></g>`;
           fx += `<g id="ka-flow">`;
-          fx += `<g transform="translate(170,760)"><g id="ka-fac">${factory}<rect x="-110" y="-180" width="220" height="50" rx="25" fill="#0A1628" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><text x="0" y="-146" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="24" fill="#fff">Fournisseur</text></g></g>`;
+          fx += `<g transform="translate(170,760)"><g id="ka-fac">${factory}<rect x="-110" y="-180" width="220" height="50" rx="25" fill="#0A1628"/><text x="0" y="-146" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="24" fill="#fff">Fournisseur</text></g></g>`;
           fx += `<path id="ka-route" d="M170,800 C60,960 280,1080 170,1250" fill="none" stroke="#F05A28" stroke-width="6" stroke-dasharray="4 16" stroke-linecap="round"/>`;
           fx += `<g transform="translate(170,1320)"><g id="ka-whs">${wh}<rect x="-140" y="74" width="280" height="50" rx="25" fill="#F05A28"/><text x="0" y="108" text-anchor="middle" font-family="Poppins" font-weight="900" font-size="24" fill="#fff">Entrepôt KONVWA</text></g></g>`;
           fx += `<g id="ka-truck"><rect x="-40" y="-34" width="56" height="40" rx="6" fill="#E8501F"/><path d="M16,-24 L34,-24 L44,-8 L44,6 L16,6 Z" fill="#0A1628"/><circle cx="-24" cy="8" r="9" fill="#1B2438"/><circle cx="30" cy="8" r="9" fill="#1B2438"/><rect x="-34" y="-28" width="16" height="12" fill="#FFC24A"/></g>`;
-          fx += `<g id="ka-label"><rect x="-96" y="-30" width="192" height="60" rx="16" fill="#FFFFFF"/><text x="0" y="8" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="22" fill="#0B1220">KV-2048</text></g>`;
+          fx += `<g id="ka-label"><rect x="-96" y="-30" width="192" height="60" rx="16" fill="#FFFFFF" stroke="#E8501F" stroke-width="3"/><text x="0" y="8" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="22" fill="#0B1220">KV-2048</text></g>`;
           fx += `</g>`;
           document.getElementById("ka-fx").innerHTML = fx;
 
@@ -1092,6 +1146,11 @@
           go("#ka-home", "#ka-prods", 0.62);
           tl.set("#ka-whole", { opacity: 0 }, 0);
           tl.set("#ka-seg2", { opacity: 0 }, 0);
+          [["#ka-t1", -1, 0.72, -6], ["#ka-t2", -1, 0.86, 5], ["#ka-t3", 1, 1.0, -4]].forEach(([sel, side, t0, rot]) => {
+            tl.fromTo(sel, { opacity: 0, x: side * 160, scale: 0.6, rotation: rot * 3 }, { opacity: 1, x: 0, scale: 1, rotation: rot, duration: 0.45, ease: "back.out(1.6)" }, t0);
+            tl.to(sel, { y: -14, duration: 0.9, ease: "sine.inOut", yoyo: true, repeat: 1 }, t0 + 0.45);
+            tl.to(sel, { opacity: 0, x: side * 120, scale: 0.8, duration: 0.25, ease: "power2.in" }, 2.3);
+          });
           tap(217, 565, 1.25);
           tl.fromTo("#ka-add", { scale: 1 }, { scale: 0.85, duration: 0.08, yoyo: true, repeat: 1 }, 1.25);
           tl.fromTo("#ka-cartn", { scale: 1 }, { scale: 1.6, duration: 0.12, yoyo: true, repeat: 1, ease: "power2.out" }, 1.45);
@@ -1118,8 +1177,25 @@
           tl.to("#ka-retail", { opacity: 0, y: 30, duration: 0.2 }, 2.65);
           tl.fromTo("#ka-whole", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out", immediateRender: false }, 2.75);
           const qty = document.getElementById("ka-qty");
-          const q = { v: 10 };
-          tl.fromTo(q, { v: 10 }, { v: 50, duration: 0.9, ease: "power2.out", onUpdate: () => (qty.textContent = String(Math.round(q.v))) }, 2.95);
+          const wp = document.getElementById("ka-wp");
+          const q = { v: 24 };
+          tl.fromTo(
+            q,
+            { v: 24 },
+            {
+              v: 100,
+              duration: 0.9,
+              ease: "power2.out",
+              onUpdate: () => {
+                const n = Math.round(q.v);
+                qty.textContent = String(n);
+                // palier réel du catalogue : 100 unités et plus → 2 605 HTG/u
+                wp.textContent = n >= 100 ? "2 605" : "3 535";
+              },
+            },
+            2.95,
+          );
+          tl.fromTo("#ka-wp", { color: "#0A1628" }, { color: "#15803D", duration: 0.2 }, 3.85);
           for (let k = 0; k < 6; k++) tl.fromTo("#ka-ct" + k, { y: -500, opacity: 0 }, { y: 0, opacity: 1, duration: 0.32, ease: "bounce.out" }, 3.0 + k * 0.13);
           tl.fromTo("#ka-stsh", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 3.0);
           tl.fromTo("#ka-x50", { scale: 0, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2)" }, 3.85);
@@ -1195,7 +1271,7 @@
           tl.fromTo("#ka-pays", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35 }, 9.6);
           const PMX = [0, 163, 326];
           [["#ka-p1", 9.8, 0], ["#ka-p2", 11.2, 1], ["#ka-p3", 12.05, 2]].forEach(([chip, t0, k]) => {
-            tl.to(chip, { opacity: 1, backgroundColor: "#F05A28", borderColor: "#F05A28", scale: 1.08, duration: 0.2, ease: "power2.out" }, t0);
+            tl.to(chip, { opacity: 1, backgroundColor: "#F05A28", borderColor: "#F05A28", color: "#FFFFFF", scale: 1.08, duration: 0.2, ease: "power2.out" }, t0);
             tl.to(chip, { scale: 1, duration: 0.2 }, t0 + 0.2);
             tl.to("#ka-ring", { opacity: 1, x: PMX[k], duration: k === 0 ? 0.01 : 0.25, ease: "power3.inOut" }, t0);
             tap(101 + PMX[k], 498, t0);

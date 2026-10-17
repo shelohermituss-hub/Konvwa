@@ -21,11 +21,16 @@ demander une expédition depuis son propre fournisseur (adresse des
 entrepôts), payer (MonCash, NatCash, portefeuille) et suivre chaque étape
 jusqu'en Haïti. Les captures App Store fournies servent de référence
 visuelle (UI claire, cartes blanches, orange KONVWA, Poppins), pas de modèle
-à recopier.
+à recopier. Thème clair sur toute la vidéo (fond crème `#F7F1EB`, texte marine
+`#0A1628`, accents orange), à la demande du client.
 
 ## Assets
 
 - Captures App Store (référence UI uniquement, non intégrées à la vidéo).
+- `assets/products/` : vraies photos de produits du catalogue KONVWA (table
+  `products`, bucket public `product-images`, relevé du 17/10/2026), recadrées en
+  carré 600 px. Prix affichés = `price_htg` du catalogue à cette date (palier
+  100 u. pour la brosse à dents).
 
 ## Customizations
 
@@ -35,5 +40,5 @@ visuelle (UI claire, cartes blanches, orange KONVWA, Poppins), pas de modèle
 ## Notes
 
 - Faits tirés du code de l'app : boutique USA par unité, sourcing gros Chine avec MOQ, espace revendeur, adresses d'entrepôts (Shenzhen/Foshan, Orlando), devis d'expédition sous 24 h sans paiement préalable, paiement portefeuille/MonCash/NatCash, suivi Payé → Entrepôt → Expédié → Transit maritime → Arrivé en Haïti → Livraison.
-- Interface recréée en HTML (pas de captures d'écran) ; produits dessinés en vecteur ; aucun logo tiers dessiné (noms en texte) ; prénom fictif ; montants d'exemple en HTG.
+- Interface recréée en HTML (pas de captures d'écran) ; produits = photos réelles du catalogue (les marques visibles sur les produits sont celles vendues sur la plateforme) ; prénom fictif.
 - Format vertical, zones de sécurité TikTok/Reels respectées.

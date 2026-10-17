@@ -10,8 +10,8 @@
           position: absolute;
           inset: 0;
           overflow: hidden;
-          background: radial-gradient(ellipse 85% 55% at 50% 45%, #1a3062 0%, #0a1628 72%);
-          color: #ffffff;
+          background: radial-gradient(ellipse 85% 55% at 50% 45%, #ffffff 0%, #f7f1eb 72%);
+          color: #0a1628;
           font-family: "Poppins", sans-serif;
         }
         #ki-world {
@@ -37,22 +37,43 @@
           padding: 48px 46px;
           border-radius: 40px;
           background: #ffffff;
-          color: #0b1220;
-          box-shadow: 0 30px 70px rgba(4, 9, 22, 0.55);
+          color: #0a1628;
+          border: 2px solid #efe7e0;
+          box-shadow: 0 30px 70px rgba(10, 22, 40, 0.12);
         }
         .ki-ic {
           width: 150px;
           height: 150px;
           border-radius: 38px;
-          background: #fde9e1;
+          background: #ffffff;
+          border: 2px solid #f1e9e2;
+          flex: none;
+          position: relative;
+        }
+        .ki-ic img {
+          position: absolute;
+          inset: 2px;
+          width: 142px;
+          height: 142px;
+          object-fit: contain;
+          display: block;
+        }
+        .ki-bd {
+          position: absolute;
+          right: -14px;
+          bottom: -14px;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: #f05a28;
+          border: 4px solid #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
-          flex: none;
         }
-        .ki-ic svg {
-          width: 80px;
-          height: 80px;
+        .ki-bd svg {
+          width: 28px;
+          height: 28px;
           display: block;
         }
         .ki-t {
@@ -91,8 +112,9 @@
         .ki-chip {
           padding: 12px 26px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.1);
-          border: 2px solid rgba(255, 255, 255, 0.28);
+          background: #ffffff;
+          border: 2px solid #e8dfd7;
+          box-shadow: 0 8px 20px rgba(10, 22, 40, 0.06);
           font-size: 30px;
           font-weight: 700;
           white-space: nowrap;
@@ -149,13 +171,38 @@
         .ki-tag {
           padding: 10px 26px;
           border-radius: 999px;
-          background: #0a1628;
+          background: #ffffff;
           border: 3px solid #f05a28;
           font-size: 32px;
           font-weight: 900;
           letter-spacing: 0.04em;
           white-space: nowrap;
-          box-shadow: 0 12px 30px rgba(4, 9, 22, 0.5);
+          box-shadow: 0 12px 30px rgba(10, 22, 40, 0.14);
+        }
+        #ki-bubs {
+          position: absolute;
+          inset: 0;
+        }
+        .ki-bub {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 112px;
+          height: 112px;
+          border-radius: 50%;
+          background: #ffffff;
+          border: 5px solid #f05a28;
+          box-shadow: 0 14px 30px rgba(10, 22, 40, 0.18);
+          overflow: hidden;
+          opacity: 0;
+        }
+        .ki-bub img {
+          position: absolute;
+          inset: 8px;
+          width: 86px;
+          height: 86px;
+          object-fit: contain;
+          display: block;
         }
         #ki-flash {
           position: absolute;
@@ -169,15 +216,15 @@
         <div id="ki-q">Pour <span>qui</span> ?</div>
         <div id="ki-cards">
           <div class="ki-card" id="ki-c1">
-            <i class="ki-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#F05A28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg></i>
+            <i class="ki-ic"><img src="assets/products/powerbeats.jpg" alt="Écouteurs Powerbeats Pro 2" /><span class="ki-bd"><svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg></span></i>
             <div><div class="ki-t">Particulier</div><div class="ki-s">Vos achats perso et en famille</div></div>
           </div>
           <div class="ki-card" id="ki-c2">
-            <i class="ki-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#F05A28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" /><path d="M2 7h20" /><path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7" /></svg></i>
+            <i class="ki-ic"><img src="assets/products/r36s.jpg" alt="Console R36s Pro" /><span class="ki-bd"><svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" /><path d="M2 7h20" /><path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7" /></svg></span></i>
             <div><div class="ki-t">Revendeur</div><div class="ki-s">Du stock pour votre boutique</div></div>
           </div>
           <div class="ki-card" id="ki-c3">
-            <i class="ki-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#F05A28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /><rect width="20" height="14" x="2" y="6" rx="2" /></svg></i>
+            <i class="ki-ic"><img src="assets/products/compteur.jpg" alt="Compteur de billets ST-900" /><span class="ki-bd"><svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /><rect width="20" height="14" x="2" y="6" rx="2" /></svg></span></i>
             <div><div class="ki-t">Entrepreneur</div><div class="ki-s">Importez pour votre entreprise</div></div>
           </div>
         </div>
@@ -185,6 +232,12 @@
         <div id="ki-brand">
           <div id="ki-logo"><svg id="ki-mark" viewBox="0 0 110 72"><rect x="0" y="42" width="40" height="24" rx="6" fill="#8B2200" /><rect x="34" y="26" width="40" height="24" rx="6" fill="#E53D15" /><rect x="68" y="10" width="40" height="24" rx="6" fill="#FF7252" /></svg><span id="ki-word">KONVWA</span></div>
           <div id="ki-sub"><b>Chine</b> &amp; <b>USA</b> → Haïti</div>
+        </div>
+        <div id="ki-bubs" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="ki-bub" id="ki-b0"><img src="assets/products/r36s.jpg" alt="" /></div>
+          <div class="ki-bub" id="ki-b1"><img src="assets/products/brosse.jpg" alt="" /></div>
+          <div class="ki-bub" id="ki-b2" style="border-color: #0a1628"><img src="assets/products/ja3-lny.jpg" alt="" /></div>
+          <div class="ki-bub" id="ki-b3" style="border-color: #0a1628"><img src="assets/products/cerave.jpg" alt="" /></div>
         </div>
         <div class="ki-anchor" id="ki-a1"><div class="ki-pos"><div class="ki-tag" id="ki-t1">CHINE</div></div></div>
         <div class="ki-anchor" id="ki-a2"><div class="ki-pos"><div class="ki-tag" id="ki-t2">USA</div></div></div>
@@ -247,15 +300,14 @@
           const A2 = arc(US, HT, 40);
           let w = I.defs("ki");
           w += `<g id="ki-map">`;
-          w += I.box(-M, -M, -40, H + 2 * M, W + 2 * M, 40, "#14284F", { edgeW: 2 });
+          w += I.box(-M, -M, -40, H + 2 * M, W + 2 * M, 40, "#E9E0D6", { edgeW: 2 });
           w += `<g transform="matrix(${I.C},${-I.S},${I.C},${I.S},${r1(o[0])},${r1(o[1])})">
-            <rect width="${W}" height="${r1(H)}" fill="#0F2148"/>
-            <g fill="#3E68AE">${dots}</g>
+            <rect width="${W}" height="${r1(H)}" fill="#FFFFFF"/>
+            <g fill="#B7C3D6">${dots}</g>
             <path id="ki-r1" d="${A1.d}" fill="none" stroke="#F05A28" stroke-width="6" stroke-linecap="round"/>
-            <path id="ki-r2" d="${A2.d}" fill="none" stroke="#FFC24A" stroke-width="6" stroke-linecap="round"/>
-            ${[CN, US, HT].map((c, k) => `<circle cx="${r1(c.u)}" cy="${r1(c.v)}" r="${k === 2 ? 16 : 12}" fill="${k === 2 ? "#F05A28" : "#FFFFFF"}"/>`).join("")}
+            <path id="ki-r2" d="${A2.d}" fill="none" stroke="#0A1628" stroke-width="6" stroke-linecap="round"/>
+            ${[CN, US, HT].map((c, k) => `<circle cx="${r1(c.u)}" cy="${r1(c.v)}" r="${k === 2 ? 16 : 12}" fill="${k === 2 ? "#F05A28" : "#0A1628"}"/>`).join("")}
           </g>`;
-          for (let k = 0; k < 3; k++) w += `<g id="ki-par${k}">${I.gift(-14, -14, 0, 28, ["#E53D15", "#FF7252", "#E53D15"][k], "#FFC24A", { h: 24, bow: false, shadow: false })}</g>`;
           w += `</g>`;
           const svg = document.getElementById("ki-world");
           svg.innerHTML = w;
@@ -270,7 +322,9 @@
           const L2 = r2El.getTotalLength();
           r1El.setAttribute("stroke-dasharray", `${r1(L1)} ${r1(L1)}`);
           r2El.setAttribute("stroke-dasharray", `${r1(L2)} ${r1(L2)}`);
-          const pars = [0, 1, 2].map((k) => document.getElementById("ki-par" + k));
+          const bubs = [0, 1, 2, 3].map((k) => document.getElementById("ki-b" + k));
+          const mapEl = document.getElementById("ki-map");
+          const bw = [null, null, null, null];
           const clamp = (x) => Math.max(0, Math.min(1, x));
           const eio = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
 
@@ -284,7 +338,18 @@
           rig.anchor(document.getElementById("ki-a2"), P2[0] - 120, P2[1] - 50);
           rig.anchor(document.getElementById("ki-a3"), P3[0] + 70, P3[1] + 110);
           const z = { v: Math.log(0.8), x: -300, y: 150 };
-          const ap = () => ((cam.s = Math.exp(z.v)), (cam.x = z.x), (cam.y = z.y), rig.apply());
+          // bulles produits : position monde → écran avec la caméra courante
+          function placeB() {
+            const my = Number(gsap.getProperty(mapEl, "y")) || 0;
+            bw.forEach((b, k) => {
+              if (!b) return;
+              const sx = (b[0] - cam.x) * cam.s + 540;
+              const sy = (b[1] + my - cam.y) * cam.s + 960;
+              bubs[k].style.transform = `translate(${r1(sx - 56)}px, ${r1(sy - 56)}px) scale(${b[3].toFixed(3)})`;
+              bubs[k].style.opacity = b[2];
+            });
+          }
+          const ap = () => ((cam.s = Math.exp(z.v)), (cam.x = z.x), (cam.y = z.y), rig.apply(), placeB());
           tl.fromTo(z, { v: Math.log(0.8), x: -300, y: 150 }, { v: Math.log(0.84), x: -290, y: 140, duration: 3.4, ease: "sine.inOut", onUpdate: ap }, 4.3);
           tl.fromTo(z, { v: Math.log(0.84), x: -290, y: 140 }, { v: Math.log(3.2), x: P3[0], y: P3[1], duration: 0.6, ease: "power3.in", onUpdate: ap, immediateRender: false }, 7.7);
 
@@ -294,17 +359,20 @@
             r1El.setAttribute("stroke-dashoffset", r1(L1 * (1 - eio(d1))));
             r2El.setAttribute("stroke-dashoffset", r1(L2 * (1 - eio(d2))));
             const legs = [
-              [A1, 4.6, 2.4],
-              [A1, 5.0, 2.4],
-              [A2, 6.0, 1.4],
+              [A1, 4.55, 1.9],
+              [A1, 5.25, 1.9],
+              [A2, 5.9, 0.9],
+              [A2, 6.45, 0.95],
             ];
             legs.forEach(([A, t0, dur], k) => {
               const u = clamp((t - t0) / dur);
               const q = quad(A, eio(u));
-              const p = MS(q.u, q.v, 3 + Math.sin(u * Math.PI) * 90);
-              pars[k].setAttribute("transform", `translate(${r1(p[0])},${r1(p[1])})`);
-              pars[k].setAttribute("opacity", u > 0 && u < 1 ? "1" : "0");
+              const p = MS(q.u, q.v, 3 + Math.sin(u * Math.PI) * 110);
+              // pop au départ, se fond dans Haïti à l'arrivée
+              const sc = eio(Math.min(clamp(u / 0.12), clamp((1 - u) / 0.2)));
+              bw[k] = [p[0], p[1], u > 0 && u < 1 ? "1" : "0", sc];
             });
+            placeB();
           }
           const clk = { t: 0 };
           tl.fromTo(clk, { t: 0 }, { t: 8.3, duration: 8.3, ease: "none", onUpdate: () => sim(clk.t) }, 0);
