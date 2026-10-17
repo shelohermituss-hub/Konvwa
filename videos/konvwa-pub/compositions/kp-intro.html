@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="kp-intro-template">
+      <style>
+        #ki-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: radial-gradient(ellipse 85% 55% at 50% 45%, #1a3062 0%, #0a1628 72%);
+          color: #ffffff;
+          font-family: "Poppins", sans-serif;
+        }
+        #ki-world {
+          position: absolute;
+          inset: 0;
+          width: 1080px;
+          height: 1920px;
+        }
+        #ki-cards {
+          position: absolute;
+          left: 110px;
+          right: 110px;
+          top: 600px;
+          display: flex;
+          flex-direction: column;
+          gap: 56px;
+          perspective: 1400px;
+        }
+        .ki-card {
+          display: flex;
+          align-items: center;
+          gap: 34px;
+          padding: 48px 46px;
+          border-radius: 40px;
+          background: #ffffff;
+          color: #0b1220;
+          box-shadow: 0 30px 70px rgba(4, 9, 22, 0.55);
+        }
+        .ki-ic {
+          width: 150px;
+          height: 150px;
+          border-radius: 38px;
+          background: #fde9e1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: none;
+        }
+        .ki-ic svg {
+          width: 80px;
+          height: 80px;
+          display: block;
+        }
+        .ki-t {
+          font-size: 70px;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: -0.02em;
+        }
+        .ki-s {
+          font-size: 34px;
+          color: #5b6474;
+          margin-top: 12px;
+        }
+        #ki-q {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 300px;
+          text-align: center;
+          font-size: 88px;
+          font-weight: 900;
+          letter-spacing: -0.02em;
+        }
+        #ki-q span {
+          color: #f05a28;
+        }
+        #ki-chips {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 250px;
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+        }
+        .ki-chip {
+          padding: 12px 26px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 2px solid rgba(255, 255, 255, 0.28);
+          font-size: 30px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        #ki-brand {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 380px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        #ki-logo {
+          display: flex;
+          align-items: center;
+          gap: 26px;
+        }
+        #ki-mark {
+          width: 170px;
+          height: 112px;
+          display: block;
+        }
+        #ki-word {
+          font-size: 120px;
+          font-weight: 900;
+          letter-spacing: 0.01em;
+          line-height: 1;
+        }
+        #ki-sub {
+          margin-top: 22px;
+          font-size: 46px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        #ki-sub b {
+          color: #f05a28;
+        }
+        .ki-anchor {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 0;
+          height: 0;
+        }
+        .ki-pos {
+          position: absolute;
+          left: -200px;
+          bottom: 0;
+          width: 400px;
+          display: flex;
+          justify-content: center;
+        }
+        .ki-tag {
+          padding: 10px 26px;
+          border-radius: 999px;
+          background: #0a1628;
+          border: 3px solid #f05a28;
+          font-size: 32px;
+          font-weight: 900;
+          letter-spacing: 0.04em;
+          white-space: nowrap;
+          box-shadow: 0 12px 30px rgba(4, 9, 22, 0.5);
+        }
+        #ki-flash {
+          position: absolute;
+          inset: 0;
+          background: #f05a28;
+        }
+      </style>
+
+      <div id="ki-root" data-composition-id="kp-intro" data-width="1080" data-height="1920">
+        <svg id="ki-world" data-layout-allow-overlap data-layout-allow-occlusion data-layout-allow-overflow viewBox="-540 -960 1080 1920"></svg>
+        <div id="ki-q">Pour <span>qui</span> ?</div>
+        <div id="ki-cards">
+          <div class="ki-card" id="ki-c1">
+            <i class="ki-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#F05A28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg></i>
+            <div><div class="ki-t">Particulier</div><div class="ki-s">Vos achats perso et en famille</div></div>
+          </div>
+          <div class="ki-card" id="ki-c2">
+            <i class="ki-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#F05A28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" /><path d="M2 7h20" /><path d="M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7" /></svg></i>
+            <div><div class="ki-t">Revendeur</div><div class="ki-s">Du stock pour votre boutique</div></div>
+          </div>
+          <div class="ki-card" id="ki-c3">
+            <i class="ki-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#F05A28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /><rect width="20" height="14" x="2" y="6" rx="2" /></svg></i>
+            <div><div class="ki-t">Entrepreneur</div><div class="ki-s">Importez pour votre entreprise</div></div>
+          </div>
+        </div>
+        <div id="ki-chips"><span class="ki-chip">Particuliers</span><span class="ki-chip">Revendeurs</span><span class="ki-chip">Entreprises</span></div>
+        <div id="ki-brand">
+          <div id="ki-logo"><svg id="ki-mark" viewBox="0 0 110 72"><rect x="0" y="42" width="40" height="24" rx="6" fill="#8B2200" /><rect x="34" y="26" width="40" height="24" rx="6" fill="#E53D15" /><rect x="68" y="10" width="40" height="24" rx="6" fill="#FF7252" /></svg><span id="ki-word">KONVWA</span></div>
+          <div id="ki-sub"><b>Chine</b> &amp; <b>USA</b> → Haïti</div>
+        </div>
+        <div class="ki-anchor" id="ki-a1"><div class="ki-pos"><div class="ki-tag" id="ki-t1">CHINE</div></div></div>
+        <div class="ki-anchor" id="ki-a2"><div class="ki-pos"><div class="ki-tag" id="ki-t2">USA</div></div></div>
+        <div class="ki-anchor" id="ki-a3"><div class="ki-pos"><div class="ki-tag" id="ki-t3" style="background: #f05a28">HAÏTI</div></div></div>
+        <div id="ki-flash"></div>
+      </div>
+
+      <script>
+        (function () {
+          const I = window.ISO;
+          const P = I.P;
+          const r1 = I.r1;
+          const tl = gsap.timeline({ paused: true });
+          const R = I.rng(51);
+
+          // ---------- carte du monde en points, posée en isométrique ----------
+          const W = 1120;
+          const LAT0 = 80,
+            LAT1 = -60;
+          const H = (W * (LAT0 - LAT1)) / 360;
+          const U = (lon) => ((lon + 180) / 360) * W;
+          const Vv = (lat) => ((LAT0 - lat) / (LAT0 - LAT1)) * H;
+          const land = [
+            [[-168,65],[-160,71],[-140,70],[-120,70],[-95,72],[-80,73],[-70,66],[-62,58],[-56,52],[-66,45],[-70,42],[-76,35],[-81,31],[-80,26],[-82,25],[-84,30],[-90,29],[-97,27],[-97,22],[-92,18],[-87,21],[-88,16],[-84,11],[-79,9],[-80,7],[-84,9],[-90,13],[-96,16],[-105,20],[-110,24],[-112,30],[-117,32],[-120,35],[-124,40],[-124,46],[-127,50],[-134,57],[-142,60],[-152,59],[-158,56],[-165,60]],
+            [[-55,60],[-45,60],[-38,65],[-22,70],[-20,76],[-18,80],[-35,80],[-60,80],[-72,78],[-66,76],[-58,72],[-52,66]],
+            [[-80,8],[-72,12],[-62,10],[-52,5],[-50,0],[-44,-2],[-35,-6],[-38,-14],[-40,-22],[-48,-26],[-53,-34],[-58,-38],[-63,-41],[-66,-46],[-69,-52],[-74,-53],[-75,-46],[-73,-38],[-71,-30],[-70,-18],[-76,-14],[-81,-6],[-80,0],[-78,3]],
+            [[-10,36],[-9,43],[-2,44],[-4,48],[2,51],[8,54],[8,57],[5,62],[14,67],[22,70],[32,70],[42,67],[55,69],[70,73],[80,73],[100,77],[115,74],[130,72],[142,72],[160,70],[170,70],[180,66],[178,62],[165,60],[160,53],[156,51],[150,58],[140,54],[140,48],[132,43],[128,38],[126,34],[120,30],[121,24],[115,22],[108,21],[106,16],[109,12],[104,9],[101,3],[103,1],[98,8],[98,15],[94,17],[92,22],[88,22],[80,15],[78,8],[73,16],[72,21],[67,25],[62,25],[57,26],[56,24],[59,22],[52,17],[44,12],[43,16],[39,22],[35,28],[34,31],[36,36],[30,36],[27,37],[26,40],[23,40],[22,37],[18,40],[16,38],[12,44],[8,44],[3,43],[0,39],[-6,36]],
+            [[-17,21],[-16,12],[-12,7],[-8,4],[-2,5],[5,6],[9,4],[10,-2],[13,-9],[12,-17],[15,-26],[18,-34],[22,-34],[27,-33],[32,-28],[35,-22],[40,-15],[40,-10],[39,-4],[43,2],[48,6],[51,12],[44,11],[42,13],[38,18],[34,26],[32,31],[25,32],[20,31],[11,33],[10,37],[3,37],[-5,36],[-10,30],[-14,26]],
+            [[113,-22],[114,-34],[118,-35],[124,-33],[131,-31],[138,-35],[141,-38],[147,-38],[150,-37],[153,-32],[153,-25],[146,-19],[142,-11],[136,-12],[131,-12],[126,-14],[122,-18]],
+            [[-5,50],[1,51],[2,53],[-1,55],[-2,58],[-6,58],[-5,55],[-3,54]],
+            [[130,31],[135,34],[140,35],[142,40],[141,45],[139,40],[135,35]],
+            [[109,1],[117,7],[119,1],[116,-4],[110,-3]],
+            [[131,-1],[141,-3],[150,-10],[141,-9],[137,-5]],
+            [[-75,20],[-72,20],[-68,18.5],[-70,18],[-74,18]],
+            [[-85,22],[-80,23],[-74,20],[-78,20],[-84,21]],
+          ].map((p) => p.map(([lo, la]) => [U(lo), Vv(Math.min(la, LAT0))]));
+          function inside(px, py, poly) {
+            let c = false;
+            for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+              const [xi, yi] = poly[i];
+              const [xj, yj] = poly[j];
+              if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) c = !c;
+            }
+            return c;
+          }
+          let dots = "";
+          for (let v = 4.5; v < H; v += 9) for (let u = 4.5; u < W; u += 9) if (land.some((p) => inside(u, v, p))) dots += `<circle cx="${r1(u)}" cy="${r1(v)}" r="3.1"/>`;
+          const MS = (u, v, zz) => P(v, W - u, zz || 0);
+          const o = MS(0, 0, 3);
+          const M = 46;
+          const CN = { u: U(114), v: Vv(22.5) };
+          const US = { u: U(-81.4), v: Vv(28.5) };
+          const HT = { u: U(-72.3), v: Vv(18.5) };
+          const arc = (a, b, lift) => {
+            const cx = (a.u + b.u) / 2;
+            const cy = Math.min(a.v, b.v) - lift;
+            return { d: `M${r1(a.u)},${r1(a.v)} Q${r1(cx)},${r1(cy)} ${r1(b.u)},${r1(b.v)}`, a, b, c: { u: cx, v: cy } };
+          };
+          const A1 = arc(CN, HT, 150);
+          const A2 = arc(US, HT, 40);
+          let w = I.defs("ki");
+          w += `<g id="ki-map">`;
+          w += I.box(-M, -M, -40, H + 2 * M, W + 2 * M, 40, "#14284F", { edgeW: 2 });
+          w += `<g transform="matrix(${I.C},${-I.S},${I.C},${I.S},${r1(o[0])},${r1(o[1])})">
+            <rect width="${W}" height="${r1(H)}" fill="#0F2148"/>
+            <g fill="#3E68AE">${dots}</g>
+            <path id="ki-r1" d="${A1.d}" fill="none" stroke="#F05A28" stroke-width="6" stroke-linecap="round"/>
+            <path id="ki-r2" d="${A2.d}" fill="none" stroke="#FFC24A" stroke-width="6" stroke-linecap="round"/>
+            ${[CN, US, HT].map((c, k) => `<circle cx="${r1(c.u)}" cy="${r1(c.v)}" r="${k === 2 ? 16 : 12}" fill="${k === 2 ? "#F05A28" : "#FFFFFF"}"/>`).join("")}
+          </g>`;
+          for (let k = 0; k < 3; k++) w += `<g id="ki-par${k}">${I.gift(-14, -14, 0, 28, ["#E53D15", "#FF7252", "#E53D15"][k], "#FFC24A", { h: 24, bow: false, shadow: false })}</g>`;
+          w += `</g>`;
+          const svg = document.getElementById("ki-world");
+          svg.innerHTML = w;
+
+          const quad = (A, t) => {
+            const mt = 1 - t;
+            return { u: mt * mt * A.a.u + 2 * mt * t * A.c.u + t * t * A.b.u, v: mt * mt * A.a.v + 2 * mt * t * A.c.v + t * t * A.b.v };
+          };
+          const r1El = document.getElementById("ki-r1");
+          const r2El = document.getElementById("ki-r2");
+          const L1 = r1El.getTotalLength();
+          const L2 = r2El.getTotalLength();
+          r1El.setAttribute("stroke-dasharray", `${r1(L1)} ${r1(L1)}`);
+          r2El.setAttribute("stroke-dasharray", `${r1(L2)} ${r1(L2)}`);
+          const pars = [0, 1, 2].map((k) => document.getElementById("ki-par" + k));
+          const clamp = (x) => Math.max(0, Math.min(1, x));
+          const eio = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
+
+          // ---------- caméra ----------
+          const rig = I.camera(svg, { x: -300, y: 150, s: 0.8 }, 1080, 1920);
+          const cam = rig.cam;
+          const P1 = MS(CN.u, CN.v, 3);
+          const P2 = MS(US.u, US.v, 3);
+          const P3 = MS(HT.u, HT.v, 3);
+          rig.anchor(document.getElementById("ki-a1"), P1[0], P1[1] - 40);
+          rig.anchor(document.getElementById("ki-a2"), P2[0] - 120, P2[1] - 50);
+          rig.anchor(document.getElementById("ki-a3"), P3[0] + 70, P3[1] + 110);
+          const z = { v: Math.log(0.8), x: -300, y: 150 };
+          const ap = () => ((cam.s = Math.exp(z.v)), (cam.x = z.x), (cam.y = z.y), rig.apply());
+          tl.fromTo(z, { v: Math.log(0.8), x: -300, y: 150 }, { v: Math.log(0.84), x: -290, y: 140, duration: 3.4, ease: "sine.inOut", onUpdate: ap }, 4.3);
+          tl.fromTo(z, { v: Math.log(0.84), x: -290, y: 140 }, { v: Math.log(3.2), x: P3[0], y: P3[1], duration: 0.6, ease: "power3.in", onUpdate: ap, immediateRender: false }, 7.7);
+
+          function sim(t) {
+            const d1 = clamp((t - 4.6) / 1.6);
+            const d2 = clamp((t - 5.9) / 1.1);
+            r1El.setAttribute("stroke-dashoffset", r1(L1 * (1 - eio(d1))));
+            r2El.setAttribute("stroke-dashoffset", r1(L2 * (1 - eio(d2))));
+            const legs = [
+              [A1, 4.6, 2.4],
+              [A1, 5.0, 2.4],
+              [A2, 6.0, 1.4],
+            ];
+            legs.forEach(([A, t0, dur], k) => {
+              const u = clamp((t - t0) / dur);
+              const q = quad(A, eio(u));
+              const p = MS(q.u, q.v, 3 + Math.sin(u * Math.PI) * 90);
+              pars[k].setAttribute("transform", `translate(${r1(p[0])},${r1(p[1])})`);
+              pars[k].setAttribute("opacity", u > 0 && u < 1 ? "1" : "0");
+            });
+          }
+          const clk = { t: 0 };
+          tl.fromTo(clk, { t: 0 }, { t: 8.3, duration: 8.3, ease: "none", onUpdate: () => sim(clk.t) }, 0);
+
+          // ---------- Phase 1 : pour qui ? ----------
+          tl.fromTo("#ki-q", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.15);
+          [["#ki-c1", -1, 0.38], ["#ki-c2", 1, 1.5], ["#ki-c3", -1, 2.5]].forEach(([sel, side, t0]) => {
+            tl.fromTo(sel, { opacity: 0, x: side * 520, rotationY: side * -35, transformPerspective: 1400 }, { opacity: 1, x: 0, rotationY: 0, duration: 0.5, ease: "power4.out" }, t0);
+          });
+          // les cartes se rangent en pastilles
+          tl.to("#ki-q", { opacity: 0, y: -40, duration: 0.3, ease: "power2.in" }, 3.4);
+          tl.to(".ki-card", { opacity: 0, scale: 0.6, y: -260, duration: 0.4, ease: "power3.in", stagger: 0.05 }, 3.4);
+          tl.fromTo(".ki-chip", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.35, ease: "back.out(2)", stagger: 0.07 }, 3.7);
+
+          // ---------- Phase 2 : KONVWA + carte ----------
+          tl.fromTo("#ki-mark", { opacity: 0, scale: 0.3, rotation: -20 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.45, ease: "back.out(2.2)" }, 3.72);
+          tl.fromTo("#ki-word", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, 3.82);
+          tl.fromTo("#ki-sub", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 5.6);
+          tl.fromTo("#ki-map", { opacity: 0, y: 220 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 4.3);
+          tl.fromTo("#ki-t1", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)" }, 5.65);
+          tl.fromTo("#ki-t2", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)" }, 6.3);
+          tl.fromTo("#ki-t3", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)" }, 7.15);
+          // sortie : on plonge sur Haïti
+          tl.to(["#ki-brand", "#ki-chips"], { opacity: 0, y: -60, duration: 0.3, ease: "power2.in" }, 7.75);
+          tl.to(["#ki-t1", "#ki-t2", "#ki-t3"], { opacity: 0, duration: 0.2 }, 7.8);
+          tl.fromTo("#ki-flash", { opacity: 0 }, { opacity: 1, duration: 0.18, ease: "power2.in" }, 8.12);
+
+          sim(0);
+          window.__timelines["kp-intro"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
