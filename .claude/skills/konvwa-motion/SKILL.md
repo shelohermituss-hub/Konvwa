@@ -26,7 +26,7 @@ Commande : `node videos/_engine/bin/motion.mjs <commande> <projet>` (alias `E` c
 
 ## Règles de marque
 
-Français, vouvoiement. **Fond blanc** en thème clair (ou marine `#0A1628`) ; l'orange `#F05A28` dans le texte et ce qui agit, pas en halos dans les coins, Poppins, prix en HTG, paiements MonCash / NatCash. Photos produit réelles (bibliothèque `library/products/` ou images du catalogue copiées dans `assets/`), jamais d'illustrations génériques. Ne pas inventer de prix, de délai ni de chiffre : s'ils ne viennent pas de l'utilisateur ou du catalogue, rester qualitatif.
+Français, vouvoiement (voix de synthèse en français uniquement : le créole par TTS a été testé et refusé, voir `videos/demo-creole/README.md`). **Fond blanc** en thème clair (ou marine `#0A1628`) ; l'orange `#F05A28` dans le texte et ce qui agit, pas en halos dans les coins, Poppins, prix en HTG, paiements MonCash / NatCash. Photos produit réelles (bibliothèque `library/products/` ou images du catalogue copiées dans `assets/`), jamais d'illustrations génériques. Ne pas inventer de prix, de délai ni de chiffre : s'ils ne viennent pas de l'utilisateur ou du catalogue, rester qualitatif.
 
 ## Pièges connus
 

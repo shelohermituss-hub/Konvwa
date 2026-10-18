@@ -1,5 +1,7 @@
 # Démo voix en créole haïtien
 
+**Verdict du client : aucune des trois voix n'est bonne. Les vidéos restent en français.** Ne pas reproposer le créole par synthèse vocale ; seule piste restante, une vraie voix haïtienne enregistrée (ou clonée à partir d'un enregistrement), si le client le demande.
+
 Test du 18/10/2026 : même texte, trois voix (FLORA). Les MP3 ne sont pas versionnés.
 
 | Fichier | Modèle | Voix | Réglage | Durée | Coût |
