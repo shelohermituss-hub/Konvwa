@@ -5,14 +5,11 @@ import { Button } from '@/components/ui/button'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase'
-import { CARD_STYLES, renderProductCard } from '@/lib/facebook-card'
-import { deleteFacebookPost, getProductCaption, mirrorImages, postProductToSocial, type SocialPost, type SocialTarget } from '@/lib/facebook-api'
-import { discountPct, strikePrice } from '@/lib/product-pricing'
-import { toDisplay } from '@/lib/currency'
+import { CARD_STYLES } from '@/lib/facebook-card'
+import { deleteFacebookPost, getProductCaption, postProductToSocial, type SocialPost, type SocialTarget } from '@/lib/facebook-api'
+import { buildProductCard, cardFileName } from '@/lib/product-card'
 import { tr } from '@/lib/i18n'
 
-/** Only pictures stored by us can be drawn on the card (CORS) and sent to Facebook / Instagram. */
-const OURS = /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/product-images\//
 /** Instagram takes JPEG only: the product photos that are not JPEG stay on Facebook only. */
 const JPEG = /\.jpe?g$/i
 
@@ -36,25 +33,7 @@ export function FacebookPostButton({ product }: Props) {
   const [targets, setTargets] = useState<Record<SocialTarget, boolean>>({ facebook: true, instagram: true })
   const chosen = (Object.keys(targets) as SocialTarget[]).filter((t) => targets[t])
 
-  /** The visual card of the saved product (supplier pictures are copied onto KONVWA first) and the pictures it was drawn from. */
-  async function buildCard(): Promise<{ card: Blob; photos: string[] }> {
-    const pct = discountPct(product)
-    // supplier pictures that are not stored on KONVWA yet are copied first (the visual is drawn from them)
-    const wanted = product.images.filter((u) => /^https:\/\//.test(u)).slice(0, 4)
-    const foreign = wanted.filter((u) => !OURS.test(u))
-    let copies: Array<string | null> = []
-    if (foreign.length > 0) { setStep(tr('Copie des photos…')); copies = await mirrorImages(foreign).catch(() => []) }
-    const photos = wanted.map((u) => (OURS.test(u) ? u : copies[foreign.indexOf(u)] ?? null)).filter((u): u is string => !!u)
-    if (photos.length === 0) throw new Error(tr('Aucune photo du produit n\'a pu être utilisée. Vérifiez que ses photos s\'affichent bien.'))
-    setStep(tr('Création du visuel…'))
-    const card = await renderProductCard({
-      name: product.name, priceHtg: product.price_htg, strikeHtg: pct ? strikePrice(product.price_htg, pct) : null, discountPct: pct || null,
-      images: photos, deliveryMin: product.delivery_days_min, deliveryMax: product.delivery_days_max, verified: product.supplier_verified,
-      priceUsd: toDisplay(product.price_htg, 'USD'), source: product.supplier_name?.trim() || null,
-      style: style === 'auto' ? undefined : Number(style),
-    })
-    return { card, photos }
-  }
+  const buildCard = () => buildProductCard(product, { style: style === 'auto' ? undefined : Number(style), onStep: setStep })
 
   async function run() {
     if (!user || chosen.length === 0) return
@@ -88,7 +67,7 @@ export function FacebookPostButton({ product }: Props) {
       const text = await getProductCaption(product.id)
       const url = URL.createObjectURL(card)
       const a = document.createElement('a')
-      a.href = url; a.download = `konvwa-${product.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'produit'}.jpg`
+      a.href = url; a.download = cardFileName(product.name)
       document.body.appendChild(a); a.click(); a.remove()
       setTimeout(() => URL.revokeObjectURL(url), 10000)
       setCaptionText(text)

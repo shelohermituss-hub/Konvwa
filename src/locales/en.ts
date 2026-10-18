@@ -7,6 +7,7 @@ import { SERVER_EN } from './en/server.ts'
 import { DATA_EN } from './en/data.ts'
 import { SECURITY_EN } from './en/security.ts'
 import { FEATURES_EN } from './en/features.ts'
+import { SOCIAL_EN } from './en/social.ts'
 
 export const EN: Record<string, string> = {
   ...PUBLIC_EN,
@@ -17,4 +18,5 @@ export const EN: Record<string, string> = {
   ...DATA_EN,
   ...SECURITY_EN,
   ...FEATURES_EN,
+  ...SOCIAL_EN,
 }

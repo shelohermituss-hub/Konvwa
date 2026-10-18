@@ -1,10 +1,12 @@
 // Admin tool (and the daily job: action `autopost`, header x-cron-secret): publishes a product on the shop's Facebook Page and/or the linked Instagram account in one go: a rich post (visual card + product photos) with a written caption and the product link.
 // The product's name, price and delivery come from the database, never from the browser. The caption's hook and bullet points are written by the AI from the product's own facts.
 // The daily job (see the migration social_autopost) draws the poster on the server (render.ts) and posts it; every poster posted is recorded in `social_posts`.
+// The editorial calendar (migration social_calendar) is posted the same way (action `calendar_post`): an information poster written by the admin, recorded in `social_calendar`.
 // Secrets (Edge Function secrets): FACEBOOK_PAGE_ID, FACEBOOK_PAGE_TOKEN (access token with pages_manage_posts, pages_read_engagement, pages_show_list and, for Instagram, instagram_basic + instagram_content_publish),
 // INSTAGRAM_ACCOUNT_ID (optional: found from the Page otherwise), OPENROUTER_API_KEY (optional), OPENROUTER_MODEL (optional).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { renderPosterJpeg } from './render.ts'
+import { assetById } from './assets.ts'
+import { renderInfoPosterJpeg, renderPosterJpeg } from './render.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -228,10 +230,10 @@ const MAX_PER_PUBLISH = 4
 type Targets = Set<string>
 interface Published { out: Record<string, unknown>; errors: { facebook?: string; instagram?: string } }
 
-/** Posts `images` (our own public pictures, the poster first) with the product's caption on Facebook and/or Instagram. */
-async function publish(pageId: string, token: string, why: string, configured: string, product: Product, images: string[], targets: Targets, rate: number, copy: { hook: string; bullets: string[] } | null): Promise<Published> {
+/** Posts `images` (our own public pictures, the poster first) with the given texts on Facebook and/or Instagram. */
+async function publishText(pageId: string, token: string, why: string, configured: string, images: string[], targets: Targets, text: { facebook: string; instagram: string }): Promise<Published> {
   const errors: { facebook?: string; instagram?: string } = {}
-  const out: Record<string, unknown> = { ai: !!copy }
+  const out: Record<string, unknown> = {}
 
   if (targets.has('facebook')) {
     // pictures are uploaded unpublished, then attached to one post
@@ -243,13 +245,12 @@ async function publish(pageId: string, token: string, why: string, configured: s
       else if (ids.length === 0) { failure = fbMessage(r.code, r.message) + why; break }
     }
     if (ids.length > 0) {
-      const message = caption(product, copy, rate)
-      const params: Record<string, string> = { message, access_token: token }
+      const params: Record<string, string> = { message: text.facebook, access_token: token }
       ids.forEach((id, i) => { params[`attached_media[${i}]`] = JSON.stringify({ media_fbid: id }) })
       const post = await graph(`/${pageId}/feed`, params)
       if (post.ok) {
         const postId = String(post.data.id)
-        Object.assign(out, { post_id: postId, url: `https://www.facebook.com/${postId}`, caption: message, photos: ids.length })
+        Object.assign(out, { post_id: postId, url: `https://www.facebook.com/${postId}`, caption: text.facebook, photos: ids.length })
       } else failure = fbMessage(post.code, post.message) + why
     }
     if (failure) errors.facebook = failure
@@ -259,13 +260,20 @@ async function publish(pageId: string, token: string, why: string, configured: s
     const account = await instagramAccount(pageId, token)
     if ('error' in account) errors.instagram = account.error
     else {
-      const r = await publishInstagram(account.id, token, images, caption(product, copy, rate, true))
+      const r = await publishInstagram(account.id, token, images, text.instagram)
       if (r.ok) out.instagram = { id: r.id, url: r.url }
       else errors.instagram = r.error + (/\[Instagram (?:10|200) /.test(r.error) ? await tokenScopes(configured) : '')
     }
   }
-  if (!out.caption) out.caption = caption(product, copy, rate)
+  if (!out.caption) out.caption = text.facebook
   return { out, errors }
+}
+
+/** Posts a product's pictures with its caption (written from the product's facts) on Facebook and/or Instagram. */
+async function publish(pageId: string, token: string, why: string, configured: string, product: Product, images: string[], targets: Targets, rate: number, copy: { hook: string; bullets: string[] } | null): Promise<Published> {
+  const done = await publishText(pageId, token, why, configured, images, targets, { facebook: caption(product, copy, rate), instagram: caption(product, copy, rate, true) })
+  done.out.ai = !!copy
+  return done
 }
 
 /** Day in Haiti (yyyy-mm-dd): the daily budget of the automatic posts is counted on it. */
@@ -332,6 +340,64 @@ async function autopost(admin: ReturnType<typeof createClient>, supaUrl: string,
   }
 }
 
+interface CalendarRow {
+  id: string; kind: string; layout: string; asset: string | null; badge: string | null; headline: string; subline: string | null; bullets: string[]; caption: string; targets: string[]; status: string
+}
+
+/** One poster of the editorial calendar (already marked 'posting' by the database): draws it, posts it and records the result on its row. */
+async function calendarPost(admin: ReturnType<typeof createClient>, id: string): Promise<Response> {
+  const finish = async (fields: Record<string, unknown>) => {
+    const { error } = await admin.from('social_calendar').update({ ...fields, updated_at: new Date().toISOString() }).eq('id', id).eq('status', 'posting')
+    if (error) console.error('[facebook-post] social_calendar', error.message)
+  }
+  const fail = async (message: string, status = 200) => {
+    await finish({ status: 'failed', error: message.slice(0, 1500) })
+    return json({ posted: false, error: message }, status)
+  }
+  try {
+    if (!UUID.test(id)) return json({ error: 'Affiche inconnue.' }, 400)
+    const { data } = await admin.from('social_calendar').select('id, kind, layout, asset, badge, headline, subline, bullets, caption, targets, status').eq('id', id).maybeSingle()
+    const row = data as CalendarRow | null
+    if (!row || row.status !== 'posting') return json({ posted: false, error: 'Affiche introuvable ou déjà traitée.' })
+    const pageId = Deno.env.get('FACEBOOK_PAGE_ID')
+    const configured = Deno.env.get('FACEBOOK_PAGE_TOKEN')
+    if (!pageId || !configured) return await fail('Facebook n\'est pas configuré (secrets FACEBOOK_PAGE_ID / FACEBOOK_PAGE_TOKEN).')
+
+    // the stock photo is served by the site itself (public/social-assets); without it the poster is drawn over a plain gradient
+    const asset = assetById(row.asset)
+    let photo: Uint8Array | null = null
+    if (asset) {
+      const res = await fetch(`${SITE}/social-assets/${asset.id}.jpg`, { signal: AbortSignal.timeout(20000) }).catch(() => null)
+      if (res?.ok) photo = new Uint8Array(await res.arrayBuffer())
+      else console.warn(`[facebook-post] photo ${asset.id}: ${res?.status ?? 'unreachable'}`)
+    }
+    const jpeg = await renderInfoPosterJpeg({
+      layout: row.layout === 'studio' ? 'studio' : 'photo', badge: row.badge, headline: row.headline, subline: row.subline,
+      bullets: Array.isArray(row.bullets) ? row.bullets : [], numbered: row.kind === 'explainer', focus: asset?.focus, bg: asset?.bg ?? null,
+    }, photo)
+    const path = `calendar/${id}-${Date.now()}.jpg`
+    const { error: upErr } = await admin.storage.from('product-images').upload(path, jpeg, { contentType: 'image/jpeg', upsert: false })
+    if (upErr) return await fail(`Envoi de l'affiche impossible : ${upErr.message}`)
+    const cardUrl = admin.storage.from('product-images').getPublicUrl(path).data.publicUrl
+
+    const { token, why } = await pageToken(pageId, configured)
+    const targets = new Set((Array.isArray(row.targets) ? row.targets : []).filter((t) => t === 'facebook' || t === 'instagram'))
+    if (targets.size === 0) return await fail('Aucun réseau choisi pour cette affiche.')
+    const done = await publishText(pageId, token, why, configured, [cardUrl], targets, { facebook: row.caption, instagram: row.caption })
+    const posted = !!done.out.post_id || !!done.out.instagram
+    const error = Object.values(done.errors).filter(Boolean).join(' | ').slice(0, 1500) || null
+    await finish({
+      status: posted ? 'posted' : 'failed', error,
+      facebook_post_id: typeof done.out.post_id === 'string' ? done.out.post_id : null,
+      instagram_media_id: (done.out.instagram as { id?: string } | undefined)?.id ?? null,
+    })
+    return json({ posted, errors: done.errors })
+  } catch (e) {
+    console.error('[facebook-post] calendar_post', e)
+    return await fail(`Erreur interne : ${e instanceof Error ? e.message : String(e)}`.slice(0, 300), 500)
+  }
+}
+
 /** Constant-time comparison of two secrets. */
 function sameSecret(a: string, b: string): boolean {
   if (a.length !== b.length) return false
@@ -351,9 +417,10 @@ Deno.serve(async (req) => {
     if (cron) {
       const { data: s } = await admin.from('app_settings').select('value').eq('key', 'auto_post_secret').maybeSingle()
       if (!s?.value || !sameSecret(cron, String(s.value))) return json({ error: 'Unauthorized' }, 401)
-      const job = await req.json().catch(() => ({})) as { action?: unknown; product_id?: unknown }
-      if (job.action !== 'autopost') return json({ error: 'Action inconnue.' }, 400)
-      return await autopost(admin, supaUrl, String(job.product_id ?? ''))
+      const job = await req.json().catch(() => ({})) as { action?: unknown; product_id?: unknown; id?: unknown }
+      if (job.action === 'autopost') return await autopost(admin, supaUrl, String(job.product_id ?? ''))
+      if (job.action === 'calendar_post') return await calendarPost(admin, String(job.id ?? ''))
+      return json({ error: 'Action inconnue.' }, 400)
     }
 
     const authHeader = req.headers.get('Authorization')

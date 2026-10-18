@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Pencil, Trash2, Package, Loader2, ToggleLeft, ToggleRight, Search, Star, Sparkles, Flame } from 'lucide-react'
+import { Plus, Pencil, Trash2, Package, Loader2, ToggleLeft, ToggleRight, Search, Star, Sparkles, Flame, X, Eye, EyeOff, PackageX, PackageCheck, Tag } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { ProductHealth } from '@/components/shared/product-health'
 import { cn } from '@/lib/utils'
 import { normalizeTiers, type PriceTier } from '@/lib/product-pricing'
 import { ProductImportDialog } from '@/components/shared/product-import-dialog'
@@ -15,7 +20,6 @@ import { ExportCsvButton } from '@/components/shared/export-csv-button'
 import { VariantsBackfill } from '@/components/shared/variants-backfill'
 import { ProductLinkImport } from '@/components/shared/product-link-import'
 import { ProductDiscoverDialog } from '@/components/shared/product-discover-dialog'
-import { AutoPostPanel } from '@/components/shared/auto-post-panel'
 import { CutoutTool } from '@/components/shared/cutout-tool'
 import { FacebookPostButton } from '@/components/shared/facebook-post-button'
 import { OptionsEditor, loadOptionGroups, optionGroupsError, saveOptionGroups, type OptionGroupRow } from '@/components/shared/options-editor'
@@ -132,11 +136,39 @@ const emptyDraft = (): ProductDraft => ({
 const lines = (raw: string) => raw.split('\n').map(l => l.trim()).filter(Boolean)
 const numOrNull = (raw: string) => (raw === '' ? null : Number(raw))
 
+const PAGE_SIZE = 50
+type StatusFilter = 'all' | 'active' | 'inactive' | 'out_of_stock' | 'featured' | 'discount' | 'no_image'
+type SortKey = 'recent' | 'oldest' | 'name' | 'price_asc' | 'price_desc' | 'sold'
+const PLATFORMS: Array<[string, () => string]> = [['alibaba', () => 'Alibaba'], ['shein', () => 'Shein'], ['temu', () => 'Temu'], ['amazon', () => 'Amazon'], ['other', () => tr('Autre lien')], ['manual', () => tr('Saisi à la main')]]
+
+/** Where a product comes from, read from its supplier link. */
+function platformOf(p: { source_url?: string | null }): string {
+  const u = (p.source_url ?? '').toLowerCase()
+  if (!u) return 'manual'
+  if (u.includes('alibaba.com')) return 'alibaba'
+  if (u.includes('shein.')) return 'shein'
+  if (u.includes('temu.')) return 'temu'
+  if (u.includes('amazon.')) return 'amazon'
+  return 'other'
+}
+const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+
 export function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [itemTypes, setItemTypes] = useState<{ slug: string; label: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [tab, setTab] = useState<'catalog' | 'health'>('catalog')
+  const [fCategory, setFCategory] = useState('')
+  const [fStatus, setFStatus] = useState<StatusFilter>('all')
+  const [fType, setFType] = useState<'' | 'retail' | 'wholesale'>('')
+  const [fSource, setFSource] = useState('')
+  const [sort, setSort] = useState<SortKey>('recent')
+  const [page, setPage] = useState(0)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const [bulkCategory, setBulkCategory] = useState('')
+  const [bulkDelete, setBulkDelete] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
   const [importOpen, setImportOpen] = useState(false)
@@ -493,17 +525,78 @@ export function AdminProductsPage() {
     load()
   }
 
-  const filtered = products.filter(p =>
-    !search ||
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.category ?? '').toLowerCase().includes(search.toLowerCase()) ||
-    (p.supplier_name ?? '').toLowerCase().includes(search.toLowerCase())
-  )
+  const categories = [...new Set(products.map((p) => p.category?.trim()).filter((c): c is string => !!c))].sort((x, y) => x.localeCompare(y, LOCALE_TAG))
+  const noCategory = products.filter((p) => !p.category?.trim()).length
+  const words = norm(search).split(/\s+/).filter(Boolean)
+  const filtered = products
+    .filter((p) => {
+      const hay = norm(`${p.name} ${p.category ?? ''} ${p.supplier_name ?? ''} ${p.brand ?? ''}`)
+      if (!words.every((w) => hay.includes(w))) return false
+      if (fCategory === '__none' ? !!p.category?.trim() : fCategory && (p.category ?? '').trim() !== fCategory) return false
+      if (fType && (p.sale_type ?? 'retail') !== fType) return false
+      if (fSource && platformOf(p) !== fSource) return false
+      switch (fStatus) {
+        case 'active': return p.active
+        case 'inactive': return !p.active
+        case 'out_of_stock': return !p.stock_available
+        case 'featured': return p.featured
+        case 'discount': return (p.discount_pct ?? 0) > 0
+        case 'no_image': return p.images.length === 0
+        default: return true
+      }
+    })
+    .sort((x, y) => {
+      switch (sort) {
+        case 'oldest': return x.created_at.localeCompare(y.created_at)
+        case 'name': return x.name.localeCompare(y.name, LOCALE_TAG)
+        case 'price_asc': return x.price_htg - y.price_htg
+        case 'price_desc': return y.price_htg - x.price_htg
+        case 'sold': return (y.sold_count ?? 0) - (x.sold_count ?? 0)
+        default: return y.created_at.localeCompare(x.created_at)
+      }
+    })
+  const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, pages - 1)
+  const shown = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
+  const filtering = !!search || !!fCategory || fStatus !== 'all' || !!fType || !!fSource
+  const allShownSelected = shown.length > 0 && shown.every((p) => selected.has(p.id))
+  const resetFilters = () => { setSearch(''); setFCategory(''); setFStatus('all'); setFType(''); setFSource(''); setPage(0) }
+  const toggleOne = (id: string) => setSelected((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else n.add(id); return n })
+  const toggleShown = () => setSelected((cur) => { const n = new Set(cur); for (const p of shown) { if (allShownSelected) n.delete(p.id); else n.add(p.id) } return n })
+
+  /** A change applied to every selected product, 100 at a time. */
+  async function bulk(patch: Record<string, unknown>, done: string) {
+    const ids = [...selected]
+    if (ids.length === 0) return
+    setBulkBusy(true)
+    let error: string | null = null
+    for (let i = 0; i < ids.length && !error; i += 100) {
+      const r = await supabase.from('products').update(patch).in('id', ids.slice(i, i + 100))
+      error = r.error?.message ?? null
+    }
+    setBulkBusy(false)
+    if (error) { toast.error(error); await load(); return }
+    toast.success(done)
+    await load()
+  }
+
+  async function bulkRemove() {
+    const ids = [...selected]
+    setBulkBusy(true)
+    let error: string | null = null
+    for (let i = 0; i < ids.length && !error; i += 100) {
+      const r = await supabase.from('products').delete().in('id', ids.slice(i, i + 100))
+      error = r.error?.message ?? null
+    }
+    setBulkBusy(false); setBulkDelete(false)
+    if (error) toast.error(tr('Suppression impossible : {0}', error))
+    else { toast.success(tr('{0} produits supprimés.', ids.length)); setSelected(new Set()) }
+    await load()
+  }
 
   return (
     <div className="space-y-6">
       <PriceReviews onChanged={() => void load()} />
-      <AutoPostPanel />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -541,16 +634,76 @@ export function AdminProductsPage() {
       <VariantsBackfill open={backfillOpen} onClose={() => setBackfillOpen(false)} onDone={() => void load()} />
       <ProductImportDialog open={importOpen} onClose={() => setImportOpen(false)} onDone={() => void load()} />
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder={tr('Rechercher...')}
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-9"
-        />
+      <Tabs value={tab} onValueChange={(v) => setTab(v as 'catalog' | 'health')}>
+        <TabsList>
+          <TabsTrigger value="catalog">{tr('Catalogue')}</TabsTrigger>
+          <TabsTrigger value="health">{tr('Contrôle qualité')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="catalog" className="space-y-4 pt-2">
+      {/* Search, filters and sort */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-full max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder={tr('Rechercher...')} value={search} onChange={e => { setSearch(e.target.value); setPage(0) }} className="pl-9" aria-label={tr('Rechercher...')} />
+          </div>
+          <NativeSelect value={fCategory} onChange={(e) => { setFCategory(e.target.value); setPage(0) }} size="sm" aria-label={tr('Catégorie')}>
+            <NativeSelectOption value="">{tr('Toutes les catégories')}</NativeSelectOption>
+            {noCategory > 0 && <NativeSelectOption value="__none">{tr('Sans catégorie')} ({noCategory})</NativeSelectOption>}
+            {categories.map((c) => <NativeSelectOption key={c} value={c}>{c}</NativeSelectOption>)}
+          </NativeSelect>
+          <NativeSelect value={fStatus} onChange={(e) => { setFStatus(e.target.value as StatusFilter); setPage(0) }} size="sm" aria-label={tr('Statut')}>
+            <NativeSelectOption value="all">{tr('Tous les statuts')}</NativeSelectOption>
+            <NativeSelectOption value="active">{tr('Visibles')}</NativeSelectOption>
+            <NativeSelectOption value="inactive">{tr('Masqués')}</NativeSelectOption>
+            <NativeSelectOption value="out_of_stock">{tr('En rupture')}</NativeSelectOption>
+            <NativeSelectOption value="featured">{tr('En vedette')}</NativeSelectOption>
+            <NativeSelectOption value="discount">{tr('En promotion')}</NativeSelectOption>
+            <NativeSelectOption value="no_image">{tr('Sans photo')}</NativeSelectOption>
+          </NativeSelect>
+          <NativeSelect value={fType} onChange={(e) => { setFType(e.target.value as '' | 'retail' | 'wholesale'); setPage(0) }} size="sm" aria-label={tr('Type de vente')}>
+            <NativeSelectOption value="">{tr('Boutique et gros')}</NativeSelectOption>
+            <NativeSelectOption value="retail">{tr('Boutique')}</NativeSelectOption>
+            <NativeSelectOption value="wholesale">{tr('Sourcing gros')}</NativeSelectOption>
+          </NativeSelect>
+          <NativeSelect value={fSource} onChange={(e) => { setFSource(e.target.value); setPage(0) }} size="sm" aria-label={tr('Origine')}>
+            <NativeSelectOption value="">{tr('Toutes les origines')}</NativeSelectOption>
+            {PLATFORMS.map(([id, label]) => <NativeSelectOption key={id} value={id}>{label()}</NativeSelectOption>)}
+          </NativeSelect>
+          <NativeSelect value={sort} onChange={(e) => setSort(e.target.value as SortKey)} size="sm" aria-label={tr('Trier par')}>
+            <NativeSelectOption value="recent">{tr('Plus récents')}</NativeSelectOption>
+            <NativeSelectOption value="oldest">{tr('Plus anciens')}</NativeSelectOption>
+            <NativeSelectOption value="name">{tr('Nom A → Z')}</NativeSelectOption>
+            <NativeSelectOption value="price_asc">{tr('Prix croissant')}</NativeSelectOption>
+            <NativeSelectOption value="price_desc">{tr('Prix décroissant')}</NativeSelectOption>
+            <NativeSelectOption value="sold">{tr('Plus vendus')}</NativeSelectOption>
+          </NativeSelect>
+          {filtering && <Button type="button" variant="ghost" size="sm" onClick={resetFilters} className="gap-1 rounded-xl text-muted-foreground"><X className="h-3.5 w-3.5" />{tr('Effacer les filtres')}</Button>}
+        </div>
+        <p className="text-xs text-muted-foreground">{filtering ? tr('{0} produit(s) sur {1}', filtered.length, products.length) : tr('{0} produit(s)', products.length)}</p>
       </div>
+
+      {/* Bulk actions */}
+      {selected.size > 0 && (
+        <div className="sticky top-2 z-10 flex flex-wrap items-center gap-2 rounded-2xl border border-primary/20 bg-white p-3 shadow-md" role="region" aria-label={tr('Actions sur la sélection')}>
+          <span className="text-sm font-semibold">{tr('{0} sélectionné(s)', selected.size)}</span>
+          {selected.size < filtered.length && <button type="button" onClick={() => setSelected(new Set(filtered.map((p) => p.id)))} className="text-xs font-medium text-primary hover:underline">{tr('Sélectionner les {0} résultats', filtered.length)}</button>}
+          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+            <Button type="button" size="sm" variant="outline" disabled={bulkBusy} onClick={() => void bulk({ active: true }, tr('Produits rendus visibles.'))} className="gap-1.5 rounded-xl"><Eye className="h-3.5 w-3.5" />{tr('Afficher')}</Button>
+            <Button type="button" size="sm" variant="outline" disabled={bulkBusy} onClick={() => void bulk({ active: false }, tr('Produits masqués.'))} className="gap-1.5 rounded-xl"><EyeOff className="h-3.5 w-3.5" />{tr('Masquer')}</Button>
+            <Button type="button" size="sm" variant="outline" disabled={bulkBusy} onClick={() => void bulk({ stock_available: true }, tr('Produits remis en stock.'))} className="gap-1.5 rounded-xl"><PackageCheck className="h-3.5 w-3.5" />{tr('En stock')}</Button>
+            <Button type="button" size="sm" variant="outline" disabled={bulkBusy} onClick={() => void bulk({ stock_available: false }, tr('Produits marqués en rupture.'))} className="gap-1.5 rounded-xl"><PackageX className="h-3.5 w-3.5" />{tr('Rupture')}</Button>
+            <Button type="button" size="sm" variant="outline" disabled={bulkBusy} onClick={() => void bulk({ featured: true }, tr('Produits mis en vedette.'))} className="gap-1.5 rounded-xl"><Star className="h-3.5 w-3.5" />{tr('Vedette')}</Button>
+            <NativeSelect value={bulkCategory} onChange={(e) => setBulkCategory(e.target.value)} size="sm" aria-label={tr('Changer de catégorie')} disabled={bulkBusy}>
+              <NativeSelectOption value="">{tr('Changer de catégorie…')}</NativeSelectOption>
+              {categories.map((c) => <NativeSelectOption key={c} value={c}>{c}</NativeSelectOption>)}
+            </NativeSelect>
+            <Button type="button" size="sm" disabled={bulkBusy || !bulkCategory} onClick={() => { void bulk({ category: bulkCategory }, tr('Catégorie changée.')); setBulkCategory('') }} className="gap-1.5 rounded-xl"><Tag className="h-3.5 w-3.5" />{tr('Appliquer')}</Button>
+            <Button type="button" size="sm" variant="outline" disabled={bulkBusy} onClick={() => setBulkDelete(true)} className="gap-1.5 rounded-xl text-destructive"><Trash2 className="h-3.5 w-3.5" />{tr('Supprimer')}</Button>
+            <Button type="button" size="icon" variant="ghost" onClick={() => setSelected(new Set())} className="h-8 w-8 rounded-xl" aria-label={tr('Désélectionner')}><X className="h-4 w-4" /></Button>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -563,7 +716,7 @@ export function AdminProductsPage() {
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
             <Package className="h-10 w-10 text-muted-foreground/30" />
             <p className="text-sm text-muted-foreground">
-              {search ? tr('Aucun résultat') : tr('Aucun produit. Commencez par en ajouter un.')}
+              {filtering ? tr('Aucun résultat') : tr('Aucun produit. Commencez par en ajouter un.')}
             </p>
           </div>
         ) : (
@@ -571,6 +724,7 @@ export function AdminProductsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/60">
+                  <th className="w-10 px-4 py-3"><Checkbox checked={allShownSelected} onCheckedChange={toggleShown} aria-label={tr('Tout sélectionner')} /></th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('Produit')}</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('Prix HTG')}</th>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">{tr('MOQ')}</th>
@@ -580,8 +734,9 @@ export function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filtered.map(p => (
-                  <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
+                {shown.map(p => (
+                  <tr key={p.id} className={cn('hover:bg-gray-50/50 transition-colors', selected.has(p.id) && 'bg-primary/5')}>
+                    <td className="px-4 py-3"><Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggleOne(p.id)} aria-label={tr('Sélectionner {0}', p.name)} /></td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
@@ -638,7 +793,34 @@ export function AdminProductsPage() {
             </table>
           </div>
         )}
+        {pages > 1 && (
+          <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 text-sm">
+            <span className="text-muted-foreground">{tr('Page {0} sur {1}', safePage + 1, pages)}</span>
+            <div className="flex gap-2">
+              <Button type="button" size="sm" variant="outline" disabled={safePage === 0} onClick={() => setPage(safePage - 1)} className="rounded-xl">{tr('Précédent')}</Button>
+              <Button type="button" size="sm" variant="outline" disabled={safePage >= pages - 1} onClick={() => setPage(safePage + 1)} className="rounded-xl">{tr('Suivant')}</Button>
+            </div>
+          </div>
+        )}
       </div>
+
+      <AlertDialog open={bulkDelete} onOpenChange={setBulkDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tr('Supprimer {0} produit(s) ?', selected.size)}</AlertDialogTitle>
+            <AlertDialogDescription>{tr('Cette action est définitive. Un produit déjà commandé ne peut pas être supprimé : masquez-le plutôt.')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tr('Annuler')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void bulkRemove()} className="bg-destructive text-white hover:bg-destructive/90">{tr('Supprimer')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+        </TabsContent>
+        <TabsContent value="health" className="pt-2">
+          <ProductHealth products={products} onChanged={() => void load()} onEdit={(id) => { const p = products.find((x) => x.id === id); if (p) openEdit(p) }} />
+        </TabsContent>
+      </Tabs>
 
       {/* Add/Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={open => { if (!open) closeDialog() }}>

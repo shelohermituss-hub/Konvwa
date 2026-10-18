@@ -6,7 +6,8 @@ import path from 'node:path'
 
 const ROOT = new URL('../../src/', import.meta.url).pathname
 const SKIP_DIRS = new Set(['ui', 'locales'])
-const SKIP_FILES = new Set(['locales/en.ts', 'lib/i18n.ts', 'lib/i18n-context.tsx', 'lib/supabase.ts', 'types/index.ts'])
+// social-templates.ts: the French wording of the shop's own social posts (posted in French, for the Haitian audience), not interface text
+const SKIP_FILES = new Set(['lib/social-templates.ts', 'locales/en.ts', 'lib/i18n.ts', 'lib/i18n-context.tsx', 'lib/supabase.ts', 'types/index.ts'])
 const TEXT_ATTRS = new Set(['placeholder', 'title', 'alt', 'aria-label', 'label', 'description', 'content', 'helperText', 'subtitle', 'emptyText'])
 const SKIP_ATTRS = new Set(['className', 'class', 'style', 'key', 'id', 'to', 'href', 'src', 'type', 'name', 'value', 'htmlFor', 'variant', 'size', 'side', 'align', 'role', 'inputMode', 'accept', 'autoComplete', 'target', 'rel', 'viewBox', 'd', 'fill', 'stroke', 'points', 'xmlns', 'loading', 'width', 'height', 'cx', 'cy', 'r', 'x', 'y', 'transform', 'strokeLinecap', 'strokeLinejoin', 'pattern', 'lang'])
 const NON_TEXT_CALLS = new Set([

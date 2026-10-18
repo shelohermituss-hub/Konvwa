@@ -64,6 +64,7 @@ const AdminDeliveryOptionsPage = page(() => import('@/pages/admin/delivery-optio
 const AdminShippingConfigPage = page(() => import('@/pages/admin/shipping-config'), 'AdminShippingConfigPage')
 const AdminShippingRequestsPage = page(() => import('@/pages/admin/shipping-requests'), 'AdminShippingRequestsPage')
 const AdminProductsPage = page(() => import('@/pages/admin/products'), 'AdminProductsPage')
+const AdminSocialPage = page(() => import('@/pages/admin/social'), 'AdminSocialPage')
 const AdminNotificationsPage = page(() => import('@/pages/admin/notifications'), 'AdminNotificationsPage')
 const AdminAuditLogsPage = page(() => import('@/pages/admin/audit-logs'), 'AdminAuditLogsPage')
 const AdminKycPage = page(() => import('@/pages/admin/kyc'), 'AdminKycPage')
@@ -182,6 +183,7 @@ export const router = createBrowserRouter([
       { path: 'analytics', element: <AdminDashboard /> },
       { path: 'products', element: <AdminProductsPage /> },
       { path: 'ads', element: <AdminAdsPage /> },
+      { path: 'social', element: <AdminSocialPage /> },
       { path: 'product-orders', element: <AdminProductOrdersPage /> },
       { path: 'delivery-options', element: <AdminDeliveryOptionsPage /> },
       { path: 'shipping-config', element: <AdminShippingConfigPage /> },

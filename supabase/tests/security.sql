@@ -1030,5 +1030,65 @@ DO $$ DECLARE pid uuid; adm uuid := (SELECT admin_id FROM ctx); cl uuid := (SELE
   ASSERT (SELECT status FROM social_posts WHERE product_id = pid) = 'posted', 'a posted poster was touched';
 END $$;
 
+-- social calendar: read and written by the team only, and only up to 'proposed' / 'approved' / 'rejected' (the rest belongs to the job); the job functions are not callable by clients
+DO $$ DECLARE adm uuid := (SELECT admin_id FROM ctx); cl uuid := (SELECT client_a FROM ctx); n integer; cid uuid; r text; v text; BEGIN
+  INSERT INTO social_calendar (kind, headline, caption, scheduled_at, status, created_by) VALUES ('news', 'Test poster', 'Test caption', now() + interval '2 days', 'approved', adm) RETURNING id INTO cid;
+  PERFORM pg_temp.as_user(cl);
+  SELECT count(*) INTO n FROM social_calendar;
+  ASSERT n = 0, 'a client can read the social calendar';
+  BEGIN INSERT INTO social_calendar (kind, headline, caption, scheduled_at, status) VALUES ('news', 'Client poster', 'x y z', now(), 'approved'); ASSERT false, 'a client can write the social calendar'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM public.admin_social_publish_now(cid); ASSERT false, 'a client can publish a calendar poster'; EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN PERFORM public.admin_set_autopost_schedule(ARRAY['08:00']); ASSERT false, 'a client can change the poster times'; EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN PERFORM public.social_calendar_tick(); ASSERT false, 'a client can run the calendar job'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM public.social_calendar_send(cid); ASSERT false, 'a client can call the calendar sender'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM public.autopost_slots(); ASSERT false, 'a client can read the poster slots function'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  SELECT count(*) INTO n FROM social_calendar;
+  ASSERT n >= 1, 'the team cannot read the social calendar';
+  INSERT INTO social_calendar (kind, headline, caption, scheduled_at, status) VALUES ('event', 'Team poster', 'Team caption', now() + interval '3 days', 'proposed');
+  BEGIN INSERT INTO social_calendar (kind, headline, caption, scheduled_at, status) VALUES ('event', 'Fake poster', 'Fake caption', now(), 'posted'); ASSERT false, 'the team can insert a poster already posted'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN UPDATE social_calendar SET status = 'posted' WHERE id = cid; ASSERT false, 'the team can mark a poster as posted by hand'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN INSERT INTO social_calendar (kind, headline, caption, scheduled_at, targets) VALUES ('event', 'Bad network', 'Bad caption', now(), ARRAY['tiktok']); ASSERT false, 'an unknown network was accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+  BEGIN INSERT INTO social_calendar (kind, headline, caption, scheduled_at, asset) VALUES ('event', 'Bad photo', 'Bad caption', now(), '../../etc/passwd'); ASSERT false, 'an unsafe photo id was accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+  BEGIN INSERT INTO social_calendar (kind, headline, caption, scheduled_at, layout) VALUES ('event', 'Bad layout', 'Bad caption', now(), 'flat'); ASSERT false, 'an unknown layout was accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+  UPDATE social_calendar SET status = 'rejected' WHERE id = cid;
+  ASSERT (SELECT status FROM social_calendar WHERE id = cid) = 'rejected', 'the team cannot reject a poster';
+  UPDATE social_calendar SET status = 'approved' WHERE id = cid;
+  -- the poster times: validated, sorted, without duplicates
+  v := public.admin_set_autopost_schedule(ARRAY['18:30', '07:00', '07:00', ' 12:00 ']);
+  ASSERT v = '07:00,12:00,18:30', 'the poster times were not cleaned: ' || v;
+  BEGIN PERFORM public.admin_set_autopost_schedule(ARRAY['25:00']); ASSERT false, 'an impossible time was accepted'; EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN PERFORM public.admin_set_autopost_schedule(ARRAY[]::text[]); ASSERT false, 'an empty schedule was accepted'; EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN PERFORM public.admin_set_autopost_schedule(ARRAY['00:00','01:00','02:00','03:00','04:00','05:00','06:00','07:00','08:00','09:00','10:00','11:00','12:00']); ASSERT false, 'more than 12 posters a day were accepted'; EXCEPTION WHEN raise_exception THEN NULL; END;
+  RESET ROLE;
+  ASSERT public.autopost_slots() = ARRAY['07:00', '12:00', '18:30'], 'the slots function does not follow the setting';
+
+  -- the job: a poster due goes to "posting", a future one waits, one that is more than a day late fails; a posted poster cannot be published again
+  UPDATE social_calendar SET status = 'rejected' WHERE status = 'approved';
+  INSERT INTO social_calendar (kind, headline, caption, scheduled_at, status) VALUES ('news', 'Due poster', 'Due caption', now() - interval '5 minutes', 'approved') RETURNING id INTO cid;
+  INSERT INTO social_calendar (kind, headline, caption, scheduled_at, status) VALUES ('news', 'Future poster', 'Future caption', now() + interval '2 days', 'approved');
+  INSERT INTO social_calendar (kind, headline, caption, scheduled_at, status) VALUES ('news', 'Late poster', 'Late caption', now() - interval '3 days', 'approved');
+  r := public.social_calendar_tick();
+  ASSERT r = '1', 'the calendar job started ' || r || ' posters instead of 1';
+  ASSERT (SELECT status FROM social_calendar WHERE id = cid) = 'posting', 'a due poster was not started';
+  ASSERT (SELECT count(*) FROM social_calendar WHERE headline = 'Future poster' AND status = 'approved') = 1, 'a future poster was started';
+  ASSERT (SELECT status FROM social_calendar WHERE headline = 'Late poster') = 'failed', 'a poster a day late was not stopped';
+  UPDATE social_calendar SET status = 'posted' WHERE id = cid;
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  ASSERT public.admin_social_publish_now(cid) = 'unavailable', 'a posted poster can be published again';
+  BEGIN UPDATE social_calendar SET headline = 'Edited after posting' WHERE id = cid; ASSERT (SELECT headline FROM social_calendar WHERE id = cid) = 'Due poster', 'a posted poster was edited'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+
+  -- the product posters follow the times: nothing before the first time of the day
+  UPDATE app_settings SET value = 'true' WHERE key = 'auto_post_enabled';
+  UPDATE app_settings SET value = '23:59' WHERE key = 'auto_post_times';
+  UPDATE social_posts SET status = 'posted' WHERE source = 'auto' AND status = 'pending';
+  ASSERT public.autopost_tick() = 'too_early', 'a product poster was posted before its time';
+  UPDATE app_settings SET value = '00:00' WHERE key = 'auto_post_times';
+  ASSERT public.autopost_tick() IN ('done_today', 'sent'), 'a product poster was not due after its time';
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;

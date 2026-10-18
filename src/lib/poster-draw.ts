@@ -115,7 +115,7 @@ function crates(c: Ctx, x: number, y: number, h: number): number {
 }
 
 /** Logo: the crates icon + the wordmark, centred on `x` or starting at it, with the shop's tagline under it. */
-function logo(c: Ctx, x: number, y: number, align: 'center' | 'left', size = 52, source: string | null = null) {
+function logo(c: Ctx, x: number, y: number, align: 'center' | 'left', size = 52, source: string | null = null, ink = INK, sub = MUTED) {
   const ih = Math.round(size * 1.45)
   const fs = Math.round(size * 0.92)
   c.font = `800 ${fs}px ${FONT}`
@@ -124,9 +124,9 @@ function logo(c: Ctx, x: number, y: number, align: 'center' | 'left', size = 52,
   const total = iw + 16 + tw
   const x0 = align === 'center' ? x - total / 2 : x
   crates(c, x0, y, ih)
-  text(c, 'KONVWA', x0 + iw + 16, y + ih * 0.78, `800 ${fs}px ${FONT}`, INK, 'left')
+  text(c, 'KONVWA', x0 + iw + 16, y + ih * 0.78, `800 ${fs}px ${FONT}`, ink, 'left')
   if (source) { sourcePill(c, align === 'center' ? x : x0, y + ih + 8, align, source); return }
-  text(c, tr('IMPORTATION HAÏTI'), align === 'center' ? x : x0, y + ih + 28, `600 17px ${FONT}`, MUTED, align === 'center' ? 'center' : 'left')
+  text(c, tr('IMPORTATION HAÏTI'), align === 'center' ? x : x0, y + ih + 28, `600 17px ${FONT}`, sub, align === 'center' ? 'center' : 'left')
 }
 
 /** "Source : Amazon" badge, under the logo. */
@@ -336,4 +336,271 @@ export function drawPoster(c: Ctx, i: CardInput, main: Pic | null, thumbs: Pic[]
   FONT = opts.family ?? 'Poppins, system-ui, sans-serif'
   const style = i.style !== undefined && i.style >= 0 && i.style < LAYOUTS.length ? i.style : Math.floor(Math.random() * LAYOUTS.length)
   LAYOUTS[style](c, i, main, thumbs)
+}
+
+// ── Information posters: an event, an explainer, a piece of news or a promo (no product, only words and a stock photo) ────────────────────────
+export const INFO_LAYOUTS = ['photo', 'studio'] as const
+export type InfoLayout = (typeof INFO_LAYOUTS)[number]
+
+export interface InfoInput {
+  /** `photo`: a photo at the top that melts into a white poster; `studio`: a product photo on a light background. */
+  layout: InfoLayout
+  /** Small label in a pill ("ÉVÉNEMENT · 18 MAI"). */
+  badge: string | null
+  /** The title; the words between *stars* are drawn in orange. */
+  headline: string
+  subline: string | null
+  /** Up to 4 short lines: numbered steps for an explainer, ticks for the other kinds. */
+  bullets: string[]
+  /** Numbered steps (explainer) instead of ticks. */
+  numbered: boolean
+  /** Where the subject of the photo is (0-1), so that the crop keeps it. */
+  focus?: { x: number; y: number }
+  /** Studio photos: the colour of the photo's own background, which the poster continues around it. */
+  bg?: string | null
+}
+
+const LIGHT = '#f4f2ee'
+
+/** A word of a title: the pieces of it and whether each is an accent (orange) one. */
+type Unit = Array<{ t: string; a: boolean }>
+
+/**
+ * The words of a title, `Joyeux *Noël* !` giving Joyeux, Noël (accent) and `!`. A word cut by an accent mark (`l’*Indépendance*`) stays one word,
+ * and a lone punctuation mark (`!`, `?`, `:`…) sticks to the word before it, so that a line never starts with one.
+ */
+function marked(s: string): Unit[] {
+  const units: Unit[] = []
+  let open = false // the last character seen was not a space: the next piece continues the last word
+  s.split('*').forEach((seg, n) => {
+    for (const tok of seg.split(/(\s+)/)) {
+      if (tok === '') continue
+      if (/^\s+$/.test(tok)) { open = false; continue }
+      if (open && units.length) units[units.length - 1].push({ t: tok, a: n % 2 === 1 })
+      else units.push([{ t: tok, a: n % 2 === 1 }])
+      open = true
+    }
+  })
+  const out: Unit[] = []
+  for (const u of units) {
+    const word = u.map((p) => p.t).join('')
+    if (out.length && /^[!?:;,.»)]+$/.test(word)) out[out.length - 1].push(...u.map((p) => ({ t: p.t, a: out[out.length - 1][out[out.length - 1].length - 1].a })))
+    else out.push(u)
+  }
+  return out
+}
+const unitText = (u: Unit) => u.map((p) => p.t).join('')
+
+/** The picture filling a box (cropped around the point `fx`, `fy` of the subject, 0-1). */
+function cover(c: Ctx, img: Pic, x: number, y: number, w: number, h: number, fx = 0.5, fy = 0.5) {
+  const s = Math.max(w / img.naturalWidth, h / img.naturalHeight)
+  const dw = img.naturalWidth * s; const dh = img.naturalHeight * s
+  c.save()
+  c.beginPath(); c.rect(x, y, w, h); c.clip()
+  c.drawImage(img as unknown as CanvasImageSource, x + (w - dw) * fx, y + (h - dh) * fy, dw, dh)
+  c.restore()
+}
+
+function vgrad(c: Ctx, y0: number, y1: number, stops: Array<[number, string]>) {
+  const g = c.createLinearGradient(0, y0, 0, y1)
+  for (const [at, col] of stops) g.addColorStop(at, col)
+  c.fillStyle = g; c.fillRect(0, y0, W, y1 - y0)
+}
+
+/** The tick drawn in front of a bullet of a non-numbered poster. */
+function tick(c: Ctx, cx: number, cy: number, color: string, k = 1) {
+  c.strokeStyle = color; c.lineWidth = 6 * k; c.lineCap = 'round'; c.lineJoin = 'round'
+  c.beginPath(); c.moveTo(cx - 10 * k, cy + 1 * k); c.lineTo(cx - 3 * k, cy + 8 * k); c.lineTo(cx + 11 * k, cy - 8 * k); c.stroke()
+}
+
+/** Fits the title (accent pieces kept) and draws it from the top `y`; returns the y under it. */
+function title(c: Ctx, words: Unit[], x: number, y: number, width: number, maxLines: number, start: number, min: number, ink: string, accent: string): number {
+  const f = fit(c, words.map(unitText).join(' '), width, maxLines, start, min, 800)
+  const font = `800 ${f.size}px ${FONT}`
+  let n = 0
+  f.lines.forEach((line, li) => {
+    c.font = font
+    let cx = x
+    const sp = c.measureText(' ').width
+    for (const w of line.split(' ')) {
+      const u = words[n++]
+      if (u && unitText(u) === w) {
+        for (const p of u) { text(c, p.t, cx, y + f.size * 0.9 + li * f.size * 1.04, font, p.a ? accent : ink, 'left'); cx += c.measureText(p.t).width }
+      } else { text(c, w, cx, y + f.size * 0.9 + li * f.size * 1.04, font, ink, 'left'); cx += c.measureText(w).width }
+      cx += sp
+    }
+  })
+  return y + f.lines.length * f.size * 1.04
+}
+
+function subline(c: Ctx, s: string, x: number, y: number, width: number, maxLines: number, color: string, start = 36): number {
+  const f = fit(c, s, width, maxLines, start, 26, 500)
+  f.lines.forEach((l, n) => text(c, l, x, y + f.size * 0.95 + n * f.size * 1.3, `500 ${f.size}px ${FONT}`, color, 'left'))
+  return y + f.lines.length * f.size * 1.3
+}
+
+/** One bullet as a white pill with a round orange mark (the tick, or its number). */
+function bulletPill(c: Ctx, s: string, n: number, numbered: boolean, x: number, y: number, h: number, maxW: number, ink: string, line: string): number {
+  const size = h >= 72 ? 31 : 27
+  c.font = `700 ${size}px ${FONT}`
+  const tw = Math.min(c.measureText(s).width, maxW - h - 36)
+  const w = h + tw + 36
+  c.fillStyle = '#ffffff'; rr(c, x, y, w, h, h / 2); c.fill()
+  c.strokeStyle = line; c.lineWidth = 2; rr(c, x, y, w, h, h / 2); c.stroke()
+  const r = h / 2 - 9
+  c.fillStyle = ORANGE; c.beginPath(); c.arc(x + h / 2, y + h / 2, r, 0, Math.PI * 2); c.fill()
+  if (numbered) text(c, String(n + 1), x + h / 2, y + h / 2 + size * 0.36, `800 ${size}px ${FONT}`, '#ffffff', 'center')
+  else tick(c, x + h / 2, y + h / 2, '#ffffff', h / 76)
+  const t = fit(c, s, maxW - h - 36, 1, size, 22, 700)
+  text(c, t.lines[0] ?? s, x + h + 6, y + h / 2 + t.size * 0.35, `700 ${t.size}px ${FONT}`, ink, 'left')
+  return w
+}
+
+/** The bottom bar: where to order and how to pay, with the button. */
+function ctaBar(c: Ctx, dark: boolean) {
+  const y = 1166; const h = 124
+  c.fillStyle = 'rgba(0,0,0,0.22)'; rr(c, 52, y + 8, W - 104, h, h / 2); c.fill()
+  c.fillStyle = dark ? NAVY : '#ffffff'; rr(c, 48, y, W - 96, h, h / 2); c.fill()
+  c.fillStyle = ORANGE; c.beginPath(); c.arc(48 + h / 2, y + h / 2, 38, 0, Math.PI * 2); c.fill()
+  // a globe: circle, meridian and equator
+  c.strokeStyle = '#ffffff'; c.lineWidth = 4; c.lineCap = 'round'
+  const gx = 48 + h / 2; const gy = y + h / 2
+  c.beginPath(); c.arc(gx, gy, 18, 0, Math.PI * 2); c.stroke()
+  c.beginPath(); c.ellipse(gx, gy, 8, 18, 0, 0, Math.PI * 2); c.stroke()
+  c.beginPath(); c.moveTo(gx - 18, gy); c.lineTo(gx + 18, gy); c.stroke()
+  text(c, 'konvwa.shop', 48 + h + 6, y + 60, `800 44px ${FONT}`, dark ? '#ffffff' : NAVY, 'left')
+  text(c, 'MonCash · NatCash', 48 + h + 6, y + 94, `600 24px ${FONT}`, dark ? 'rgba(255,255,255,0.7)' : MUTED, 'left')
+  const label = tr('Commander')
+  c.font = `800 32px ${FONT}`
+  const tw = c.measureText(label).width
+  const bw = 34 + tw + 16 + 24 + 30
+  const bx = W - 48 - 24 - bw
+  c.fillStyle = ORANGE; rr(c, bx, y + 24, bw, h - 48, (h - 48) / 2); c.fill()
+  text(c, label, bx + 34, y + h / 2 + 11, `800 32px ${FONT}`, '#ffffff', 'left')
+  // the arrow
+  const ax = bx + 34 + tw + 16
+  c.strokeStyle = '#ffffff'; c.lineWidth = 5; c.lineCap = 'round'; c.lineJoin = 'round'
+  c.beginPath(); c.moveTo(ax, y + h / 2); c.lineTo(ax + 22, y + h / 2); c.moveTo(ax + 12, y + h / 2 - 10); c.lineTo(ax + 22, y + h / 2); c.lineTo(ax + 12, y + h / 2 + 10); c.stroke()
+}
+
+function badgePill(c: Ctx, label: string, right: number, y: number, fill: string, ink: string) {
+  c.font = `800 26px ${FONT}`
+  const w = c.measureText(label).width + 56
+  c.fillStyle = fill; rr(c, right - w, y, w, 54, 27); c.fill()
+  text(c, label, right - w / 2, y + 36, `800 26px ${FONT}`, ink, 'center')
+}
+
+/** A thin orange wave, the poster's signature. */
+function swoosh(c: Ctx, y: number) {
+  c.fillStyle = ORANGE
+  c.beginPath(); c.moveTo(0, y + 30); c.bezierCurveTo(300, y - 30, 700, y + 70, W, y - 10); c.lineTo(W, y + 8); c.bezierCurveTo(700, y + 88, 300, y - 10, 0, y + 50); c.closePath(); c.fill()
+}
+
+function photoPoster(c: Ctx, i: InfoInput, photo: Pic | null) {
+  c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H)
+
+  // the text block grows upwards from the bar; the photo above it melts into the white where the text starts
+  const X = 64; const TW = W - 128
+  const bullets = i.bullets.filter((b) => b.trim()).slice(0, 4)
+  const words = marked(i.headline)
+  const sub = i.subline?.trim() ?? ''
+  const PILL = bullets.length > 3 ? 68 : 76; const GAP = 12
+  const bulletsH = bullets.length ? bullets.length * PILL + (bullets.length - 1) * GAP : 0
+  const maxLines = bullets.length ? 2 : 4
+  const start = bullets.length ? 96 : 128
+  const hf = fit(c, words.map(unitText).join(' '), TW, maxLines, start, 56, 800)
+  const sf = sub ? fit(c, sub, TW, bullets.length ? 2 : 3, 36, 26, 500) : null
+  const headH = hf.lines.length * hf.size * 1.04
+  const subH = sf ? sf.lines.length * sf.size * 1.3 : 0
+  const total = headH + (sf ? 22 + subH : 0) + (bulletsH ? 30 + bulletsH : 0)
+  const top = Math.max(300, 1110 - total)
+
+  const PH = Math.min(1010, top + 90)
+  if (photo) {
+    cover(c, photo, 0, 0, W, PH, i.focus?.x ?? 0.5, i.focus?.y ?? 0.4)
+    vgrad(c, Math.max(0, PH - 380), PH, [[0, 'rgba(255,255,255,0)'], [0.55, 'rgba(255,255,255,0.86)'], [1, '#ffffff']])
+  } else {
+    const glow = c.createRadialGradient(W - 140, 240, 20, W - 140, 240, 760); glow.addColorStop(0, 'rgba(240,90,40,0.28)'); glow.addColorStop(1, 'rgba(240,90,40,0)')
+    c.fillStyle = glow; c.fillRect(0, 0, W, H)
+    c.strokeStyle = 'rgba(10,22,40,0.06)'; c.lineWidth = 3
+    for (const r of [330, 250]) { c.beginPath(); c.arc(W - 40, 280, r, 0, Math.PI * 2); c.stroke() }
+  }
+
+  // the logo on a white plate, so that it reads over any photo
+  c.font = `800 46px ${FONT}`
+  const plate = 110 + 16 + c.measureText('KONVWA').width + 56
+  c.fillStyle = 'rgba(255,255,255,0.93)'; rr(c, 36, 34, plate, 112, 30); c.fill()
+  logo(c, 62, 46, 'left', 50, null, NAVY, MUTED)
+  const badge = i.badge?.trim() ? i.badge.trim().toUpperCase() : null
+  if (badge) badgePill(c, badge, W - 56, 62, ORANGE, '#ffffff')
+
+  let y = top
+  swoosh(c, y - 46)
+  y = title(c, words, X, y, TW, maxLines, start, 56, NAVY, ORANGE)
+  if (sf) y = subline(c, sub, X, y + 22, TW, bullets.length ? 2 : 3, MUTED)
+  if (bullets.length) {
+    y += 30
+    bullets.forEach((b, n) => { bulletPill(c, b, n, i.numbered, X, y + n * (PILL + GAP), PILL, TW, NAVY, 'rgba(10,22,40,0.14)') })
+  }
+  ctaBar(c, true)
+}
+
+function studioPoster(c: Ctx, i: InfoInput, photo: Pic | null) {
+  const bg = i.bg && /^#[0-9a-f]{6}$/i.test(i.bg) ? i.bg : LIGHT
+  c.fillStyle = bg; c.fillRect(0, 0, W, H)
+  const BY = 96; const BH = 730
+  if (photo) {
+    // the photo is shown whole, and its edges melt into the poster's background (the same colour as the photo's own)
+    const k = Math.min(W / photo.naturalWidth, BH / photo.naturalHeight)
+    const dw = photo.naturalWidth * k; const dh = photo.naturalHeight * k
+    const dx = (W - dw) / 2; const dy = BY + (BH - dh) / 2
+    c.drawImage(photo as unknown as CanvasImageSource, dx, dy, dw, dh)
+    const F = 150
+    const fade = (x0: number, y0: number, x1: number, y1: number, rx: number, ry: number, rw: number, rh: number) => {
+      const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, bg); g.addColorStop(1, `${bg}00`)
+      c.fillStyle = g; c.fillRect(rx, ry, rw, rh)
+    }
+    if (dx > 2) { fade(dx - 1, 0, dx + F, 0, dx - 1, dy, F + 1, dh); fade(dx + dw + 1, 0, dx + dw - F, 0, dx + dw - F, dy, F + 1, dh) }
+    fade(0, dy - 1, 0, dy + F, dx, dy - 1, dw, F + 1)
+    fade(0, dy + dh + 1, 0, dy + dh - F, dx, dy + dh - F, dw, F + 1)
+  } else {
+    const glow = c.createRadialGradient(W / 2, 400, 20, W / 2, 400, 520); glow.addColorStop(0, 'rgba(240,90,40,0.35)'); glow.addColorStop(1, 'rgba(240,90,40,0)')
+    c.fillStyle = glow; c.fillRect(0, 0, W, BY + BH)
+  }
+  logo(c, 56, 48, 'left', 50, null, NAVY, MUTED)
+  const badge = i.badge?.trim() ? i.badge.trim().toUpperCase() : null
+  if (badge) badgePill(c, badge, W - 56, 62, NAVY, '#ffffff')
+
+  const X = 64; const TW = W - 128
+  const words = marked(i.headline)
+  const bullets = i.bullets.filter((b) => b.trim()).slice(0, 3)
+  const hf = fit(c, words.map(unitText).join(' '), TW, 2, 92, 52, 800)
+  const sub = i.subline?.trim() ?? ''
+  const sf = sub ? fit(c, sub, TW, bullets.length ? 1 : 2, 34, 26, 500) : null
+  const total = hf.lines.length * hf.size * 1.04 + (sf ? 18 + sf.lines.length * sf.size * 1.3 : 0) + (bullets.length ? 24 + 62 : 0)
+  let y = Math.max(BY + BH - 80, 1110 - total)
+  y = title(c, words, X, y, TW, 2, 92, 52, NAVY, ORANGE)
+  if (sf) y = subline(c, sub, X, y + 18, TW, bullets.length ? 1 : 2, MUTED, 34)
+  if (bullets.length) {
+    y += 24
+    let x = X
+    // only the bullets that fit on the line, whole
+    for (const [n, b] of bullets.entries()) {
+      c.font = `700 27px ${FONT}`
+      const w = 62 + c.measureText(b).width + 36
+      if (x + w > W - 64) break
+      bulletPill(c, b, n, i.numbered, x, y, 62, w, NAVY, 'rgba(10,22,40,0.14)')
+      x += w + 12
+    }
+  }
+  swoosh(c, 1128)
+  ctaBar(c, true)
+}
+
+/** Draws an information poster over the stock photo `photo` (null: a plain gradient). */
+export function drawInfoPoster(c: Ctx, i: InfoInput, photo: Pic | null, opts: { tr?: (s: string) => string; family?: string } = {}) {
+  tr = opts.tr ?? ((s) => s)
+  FONT = opts.family ?? 'Poppins, system-ui, sans-serif'
+  if (i.layout === 'studio') studioPoster(c, i, photo)
+  else photoPoster(c, i, photo)
 }
