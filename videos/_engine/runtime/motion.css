@@ -146,3 +146,22 @@
 .mo-tone-accent { --bg: var(--brand); --bg2: var(--brand); --ink: #fff; --mute: rgba(255, 255, 255, 0.88); --accent: #fff; --atext: var(--navy); --card: #fff; --line: rgba(255, 255, 255, 0.4); --dot: rgba(255, 255, 255, 0.22); --ghost: rgba(255, 255, 255, 0.16); --shade: rgba(10, 22, 40, 0.1); --a12: rgba(255, 255, 255, 0.16); --a25: rgba(255, 255, 255, 0.3); --a45: rgba(255, 255, 255, 0.5); --flash: #fff; }
 .mo-tone-accent .mo-a { background: linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32)) no-repeat 0 92% / 0% 36%; }
 .mo-tone-accent .mo-glow { opacity: 0.2 !important; }
+
+/* ---------- depth: cut-outs, decor, carried objects, collage, photo ---------- */
+.mo-cutout { pointer-events: none; }
+.mo-cutimg { display: block; width: 100%; height: auto; object-fit: contain; position: relative; }
+.mo-cutjpg { mix-blend-mode: multiply; }
+.mo-dark .mo-cutjpg .mo-cutimg { background: #fff; border-radius: 40px; padding: 18px; }
+.mo-dark .mo-cutjpg { mix-blend-mode: normal; }
+.mo-sticker { border: 10px solid #fff; border-radius: 26px; box-shadow: 0 10px 30px rgba(10, 22, 40, 0.18); }
+.mo-cutshadow { position: absolute; left: 14%; width: 72%; bottom: -4%; height: 14%; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(10, 22, 40, 0.75) 0%, rgba(10, 22, 40, 0) 70%); filter: blur(10px); pointer-events: none; }
+.mo-carry { pointer-events: none; }
+.mo-carryshadow { border-radius: 50%; background: radial-gradient(ellipse at center, rgba(10, 22, 40, 0.35) 0%, rgba(10, 22, 40, 0) 70%); filter: blur(14px); pointer-events: none; }
+.mo-bigdisc { border-radius: 50%; background: var(--accent); box-shadow: 0 60px 140px var(--a45); }
+.mo-ondisc .mo-h1 { color: #fff; }
+.mo-photo { overflow: hidden; }
+.mo-photo-img { width: 100%; height: 100%; object-fit: cover; }
+.mo-photo-shade { background: linear-gradient(180deg, rgba(10, 22, 40, 0) 38%, rgba(10, 22, 40, 0.55) 62%, rgba(10, 22, 40, 0.88) 100%); pointer-events: none; }
+.mo-onphoto { color: #fff; text-shadow: 0 6px 30px rgba(10, 22, 40, 0.45); }
+.mo-onphoto .mo-a { color: var(--brand); background: none; }
+.mo-onphoto-cap { color: #fff; opacity: 0.9; }

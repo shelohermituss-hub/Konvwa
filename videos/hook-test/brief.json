@@ -1,0 +1,60 @@
+{
+  "name": "hook-test",
+  "title": "Test du moteur : hook en profondeur avec de vraies images",
+  "format": "9:16",
+  "theme": "light",
+  "brand": "konvwa",
+  "seed": 7,
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy"
+  },
+  "scenes": [
+    {
+      "type": "hook.collage",
+      "text": "Achetez partout.|Recevez en *Haïti*.",
+      "vo": "Achetez partout. Recevez en Haïti.",
+      "items": [
+        "lib:flags/chine.png",
+        "lib:illustrations/cliente-sacs.png",
+        "lib:illustrations/colis.png",
+        "lib:illustrations/bateau.png",
+        "lib:flags/usa.png",
+        "lib:illustrations/telephone.png"
+      ],
+      "carry": "lib:illustrations/avion.png"
+    },
+    {
+      "type": "scene.photo",
+      "image": "lib:photos/rue-telephone.jpg",
+      "kicker": "Depuis votre téléphone",
+      "text": "Commandez en *deux minutes*",
+      "vo": "Commandez en deux minutes, depuis votre téléphone.",
+      "decor": [
+        {
+          "src": "lib:flags/haiti.png",
+          "x": 0.82,
+          "y": 0.14,
+          "depth": 0.8,
+          "size": 0.26,
+          "rot": 8
+        }
+      ]
+    },
+    {
+      "type": "scene.collage",
+      "text": "Le prix final, *en gourdes*",
+      "vo": "Le prix final, en gourdes.",
+      "items": [
+        "lib:products/powerbeats.jpg",
+        "lib:products/cerave.jpg",
+        "lib:illustrations/carte-haiti.png",
+        "lib:products/r36s.jpg"
+      ]
+    },
+    {
+      "type": "scene.end"
+    }
+  ]
+}

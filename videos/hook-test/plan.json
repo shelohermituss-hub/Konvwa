@@ -1,0 +1,37 @@
+{
+  "name": "hook-test",
+  "format": "9:16",
+  "total": 11.09,
+  "scenes": [
+    {
+      "id": "s01",
+      "type": "hook.collage",
+      "start": 0,
+      "dur": 2.81,
+      "transition": null
+    },
+    {
+      "id": "s02",
+      "type": "scene.photo",
+      "start": 2.39,
+      "dur": 3.89,
+      "transition": "whip"
+    },
+    {
+      "id": "s03",
+      "type": "scene.collage",
+      "start": 5.82,
+      "dur": 3.22,
+      "transition": "up"
+    },
+    {
+      "id": "s04",
+      "type": "scene.end",
+      "start": 8.49,
+      "dur": 2.6,
+      "transition": "circle"
+    }
+  ],
+  "sfx": 19,
+  "hookEnd": 2.81
+}

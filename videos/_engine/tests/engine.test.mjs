@@ -221,3 +221,48 @@ describe('real assets (pixabay + library)', () => {
     try { expect(() => cutout(f)).toThrow(/rembg introuvable/) } finally { if (old === undefined) delete process.env.REMBG; else process.env.REMBG = old }
   })
 })
+
+describe('depth: cut-outs, decor, carried objects', () => {
+  const env = { W: 1080, H: 1920, seed: 7, dur: 3 }
+  it('places items on the slots, nearer = bigger, flags as stickers, entering from their own edge', () => {
+    const its = M.placeItems(['lib:flags/haiti.png', { src: 'lib:x.png', depth: 0.1 }, { src: 'lib:y.png', x: 0.9, y: 0.9, size: 0.3 }], env, M.DECOR_SLOTS, [0.16, 0.2])
+    expect(its[0]).toMatchObject({ sticker: true, dx: -1, dy: -1 })
+    expect(its[1].size).toBeLessThan(M.placeItems(['lib:x.png'], env, [[0.5, 0.5, 1]], [0.16, 0.2])[0].size)
+    expect(its[2]).toMatchObject({ size: 324, dx: 1, dy: 1 })
+    expect(M.placeItems(Array(9).fill('lib:a.png'), env, M.COLLAGE_SLOTS, [0.2, 0.2])).toHaveLength(M.COLLAGE_SLOTS.length)
+  })
+  it('lists the images of decor, items and carry, but not the text items of chips', () => {
+    expect(M.depthRefs({ decor: ['lib:a.png', { src: 'lib:b.jpg' }], items: ['Shein', 'lib:c.png'], carry: 'lib:d.png' })).toEqual(['lib:a.png', 'lib:b.jpg', 'lib:c.png', 'lib:d.png'])
+    const brief = { ...demo().brief, scenes: [...demo().brief.scenes] }
+    brief.scenes[1] = { ...brief.scenes[1], decor: ['lib:illustrations/absent.png'] }
+    expect(validateBrief(brief, exists).errors.join('\n')).toMatch(/absent\.png/)
+  })
+  it('flies the carried object on one continuous path shared by the two scenes', () => {
+    const a = M.carryAt(0, 1080, 1920)
+    const z = M.carryAt(1, 1080, 1920)
+    expect(a.x).toBeLessThan(0)
+    expect(z.x).toBeGreaterThan(1080)
+    const mid = M.carryAt(0.5, 1080, 1920)
+    expect(mid.s).toBeGreaterThan(a.s)
+    // the next scene picks the flight up where the previous one is when it gets covered (end minus the transition)
+    const e = { ...env, transOut: { kind: 'whip', dur: 0.42 } }
+    const uCovered = (e.dur - e.transOut.dur - M.carryStart(e)) / M.CARRY.span
+    expect(uCovered).toBeCloseTo(M.CARRY.lead / M.CARRY.span, 6)
+    expect(M.depthSfx({ carry: 'lib:a.png', decor: ['lib:b.png'] }, e).map((x) => x.cue)).toEqual(['whoosh', 'whooshBig'])
+  })
+  it('hands the carried object to the next scene and copies every depth image into the project', () => {
+    const { brief, brand } = loadBrief({ name: 'carry-test', voice: { mode: 'music' }, scenes: [
+      { type: 'hook.collage', text: 'Achetez *partout*', items: ['lib:products/cerave.jpg'], carry: 'lib:products/r36s.jpg' },
+      { type: 'scene.photo', text: 'Une *photo*', image: 'lib:products/anua.jpg', decor: ['lib:products/cosrx.jpg'] },
+      { type: 'scene.end' },
+    ] })
+    expect(validateBrief(brief, exists).errors).toEqual([])
+    const tl = schedule(brief, {})
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'carry-'))
+    emitProject({ brief, brand, tl, voDur: {}, projectDir: dir })
+    const s2 = fs.readFileSync(path.join(dir, 'compositions/s02.html'), 'utf8')
+    expect(s2).toContain('"carryIn":"assets/lib/products/r36s.jpg"')
+    for (const f of ['cerave.jpg', 'r36s.jpg', 'anua.jpg', 'cosrx.jpg']) expect(fs.existsSync(path.join(dir, 'assets/lib/products', f)), f).toBe(true)
+    expect(placeSfx(brief, tl).some((e) => e.file === 'whoosh.mp3')).toBe(true)
+  })
+})

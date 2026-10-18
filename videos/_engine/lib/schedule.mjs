@@ -81,7 +81,7 @@ export function placeSfx(brief, tl) {
   for (const sc of tl.scenes) {
     const cues = []
     if (sc.env.transIn) { const c = M.TRANSITIONS[sc.env.transIn.kind].sfx; if (c) cues.push({ t: 0.0, cue: c }) }
-    cues.push(...sc.def.sfx(sc.spec, sc.env), ...(sc.spec.sfx || []))
+    cues.push(...sc.def.sfx(sc.spec, sc.env), ...M.depthSfx(sc.spec, sc.env), ...(sc.spec.sfx || []))
     for (const c of cues) {
       const def = M.CUES[c.cue]
       if (!def) throw new Error(`${sc.id} : son inconnu "${c.cue}" (disponibles : ${Object.keys(M.CUES).join(', ')})`)

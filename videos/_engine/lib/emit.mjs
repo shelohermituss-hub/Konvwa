@@ -43,10 +43,11 @@ export function resolveSpec(spec, copies) {
   return walk(spec)
 }
 
-function sceneHtml(sc, spec) {
+function sceneHtml(sc, spec, prev) {
   const id = sc.id
   const { W, H } = sc.env
-  const env = { ...sc.env }
+  // the object the previous scene throws across (`carry`) lands in this one
+  const env = { ...sc.env, ...(prev && prev.carry ? { carryIn: prev.carry } : {}) }
   return `<!doctype html>
 <html lang="fr">
   <head>
@@ -112,7 +113,7 @@ export function emitProject({ brief, brand, tl, voDur, projectDir }) {
   }
 
   // ----- scenes -----
-  tl.scenes.forEach((sc, i) => write(path.join(projectDir, 'compositions', `${sc.id}.html`), sceneHtml(sc, specs[i])))
+  tl.scenes.forEach((sc, i) => write(path.join(projectDir, 'compositions', `${sc.id}.html`), sceneHtml(sc, specs[i], specs[i - 1])))
 
   const hosts = tl.scenes
     .map((sc) => `      <div id="el-${sc.id}" class="clip" data-composition-id="${sc.id}" data-composition-src="compositions/${sc.id}.html" data-start="${sc.start}" data-duration="${sc.dur}" data-track-index="${1 + (sc.i % 2)}" data-width="${tl.W}" data-height="${tl.H}" style="z-index:${sc.i + 1}"></div>`)

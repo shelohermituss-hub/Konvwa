@@ -50,7 +50,7 @@ export function loadBrief(input) {
 
 /** Image fields of a scene (they have to exist on disk). */
 export function imageRefs(spec) {
-  return [spec.image, spec.image2, ...(Array.isArray(spec.images) ? spec.images : [])].filter(Boolean)
+  return [spec.image, spec.image2, ...(Array.isArray(spec.images) ? spec.images : []), ...M.depthRefs(spec)].filter(Boolean)
 }
 
 const MARKUP = /[*_|]/g
@@ -108,7 +108,7 @@ export function validateBrief(brief, exists = () => true) {
     const text = first.text || ''
     if (plainLen(text) > H.charsMax) E(0, `hook trop long : ${plainLen(text)} caractères (max ${H.charsMax}) — il doit se lire d’un coup d’œil`)
     if (text && M.wordCount(text) > H.wordsMax) E(0, `hook trop long : ${M.wordCount(text)} mots (max ${H.wordsMax})`)
-    if (['hook.statement', 'hook.question'].includes(first.type) && M.accentIndex(text) < 0) W(0, 'mettez le mot-clé du hook entre *étoiles* : c’est lui qui reçoit la couleur et le coup de son')
+    if (['hook.statement', 'hook.question', 'hook.collage'].includes(first.type) && M.accentIndex(text) < 0) W(0, 'mettez le mot-clé du hook entre *étoiles* : c’est lui qui reçoit la couleur et le coup de son')
     if (brief.voice.mode === 'vo') {
       if (!first.vo) E(0, 'le hook doit être parlé dès les premières images (`vo`)')
       else if (estimateVo(first.vo) > H.maxDur - 0.45) E(0, `phrase de hook trop longue à dire (~${estimateVo(first.vo)} s) : 3 secondes au total, visez ≤ ${M.r2(H.maxDur - 0.45)} s (≈ ${Math.floor((H.maxDur - 0.45) * 2.7)} mots)`)

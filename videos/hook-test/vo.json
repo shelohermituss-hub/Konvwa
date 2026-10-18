@@ -1,0 +1,42 @@
+{
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy",
+    "direction": "énergie, un rythme rapide et le sourire dans la voix",
+    "language": "fr-FR",
+    "model": "t2a-gemini-3-1-flash-tts"
+  },
+  "lines": [
+    {
+      "id": "s01",
+      "scene": 1,
+      "type": "hook.collage",
+      "text": "Achetez partout. Recevez en Haïti.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Achetez partout. Recevez en Haïti.",
+      "file": "assets/vo/s01.wav",
+      "estimatedSeconds": 2.09,
+      "measured": false
+    },
+    {
+      "id": "s02",
+      "scene": 2,
+      "type": "scene.photo",
+      "text": "Commandez en deux minutes, depuis votre téléphone.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Commandez en deux minutes, depuis votre téléphone.",
+      "file": "assets/vo/s02.wav",
+      "estimatedSeconds": 2.83,
+      "measured": false
+    },
+    {
+      "id": "s03",
+      "scene": 3,
+      "type": "scene.collage",
+      "text": "Le prix final, en gourdes.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Le prix final, en gourdes.",
+      "file": "assets/vo/s03.wav",
+      "estimatedSeconds": 2.09,
+      "measured": false
+    }
+  ]
+}

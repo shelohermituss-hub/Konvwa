@@ -7,7 +7,7 @@
   const blur = (n) => 'blur(' + n + 'px)'
 
   /** Purely decorative layers (glows, rings, ghosts…): allowed to bleed past the frame and sit behind other things. */
-  M.DECO = '.mo-glow,.mo-rings,.mo-ringwave,.mo-halo,.mo-dotring,.mo-ribbon,.mo-dapple,.mo-pcircle,.mo-pdot,.mo-pxcell,.mo-scan,.mo-ghost,.mo-glyph,.mo-dots,.mo-lines,.mo-pillglow,.mo-disc,.mo-flash,.mo-sq,.mo-hex'
+  M.DECO = '.mo-glow,.mo-rings,.mo-ringwave,.mo-halo,.mo-dotring,.mo-ribbon,.mo-dapple,.mo-pcircle,.mo-pdot,.mo-pxcell,.mo-scan,.mo-ghost,.mo-glyph,.mo-dots,.mo-lines,.mo-pillglow,.mo-disc,.mo-flash,.mo-sq,.mo-hex,.mo-cutout,.mo-carry,.mo-carryshadow,.mo-bigdisc,.mo-photo,.mo-photo-shade'
 
   M.TRANSITIONS = {
     cut: { dur: 0, sfx: null, in() {}, out() {} },
@@ -71,6 +71,10 @@
       voAt(d) { return env.vo ? env.vo.start : d == null ? 0.2 : d },
     }
     def.build(ctx)
+    // depth features any scene can have: floating decor, an object thrown into the next scene, the one caught from the previous scene
+    if (spec.decor && spec.decor.length) M.decor(ctx, spec.decor)
+    if (spec.carry) M.carry(ctx, spec.carry, 0, env.dur)
+    if (env.carryIn) { const u0 = M.CARRY.lead / M.CARRY.span; M.carry(ctx, env.carryIn, u0, (1 - u0) * M.CARRY.span) }
     // Transitions put two scenes on screen at once and the designs layer shapes behind text on purpose: tell the layout checker.
     stage.setAttribute('data-layout-allow-overlap', '')
     stage.setAttribute('data-layout-allow-occlusion', '')

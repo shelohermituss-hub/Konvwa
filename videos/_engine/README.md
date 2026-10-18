@@ -68,7 +68,16 @@ node $E assets cutout videos/_engine/library/products/cerave.jpg     # → cerav
 
 Champs communs à toutes les scènes : `type`, `vo`, `transition` (cut · whip · up · circle · scale · flash · fade), `theme`, `tone` (`"accent"` = scène plein orange), `tail` (secondes de respiration après la voix), `dur` (forcer la durée), `sfx` (`[{ "t": 0.4, "cue": "pop" }]` pour ajouter un son). Les champs propres à chaque type sont listés par `node $E types`. Les images : `"lib:products/cerave.jpg"` (bibliothèque partagée `library/`) ou un chemin dans le projet (`assets/…`).
 
-Un exemple complet est dans `examples/demo.brief.json` (6 scènes, 22 s).
+Un exemple complet est dans `examples/demo.brief.json` (6 scènes, 22 s) ; `videos/hook-test/brief.json` montre les vraies images en profondeur.
+
+### Profondeur et vraies images
+
+Deux champs valables dans **toutes** les scènes :
+
+- `decor` : objets détourés qui flottent sur plusieurs plans (parallaxe). `["lib:flags/haiti.png", …]` (placés seuls sur les bords) ou `{ "src", "x", "y", "depth": 0–1, "size": fraction de la largeur, "rot" }`. `depth` < 0,5 = derrière le contenu, un peu flou ; ≥ 0,5 = devant, plus gros, bouge plus. Les drapeaux (`flags/`) prennent un style d'autocollant.
+- `carry` : un objet (`"lib:illustrations/avion.png"`) qui traverse l'écran de cette scène **jusque dans la suivante**, pendant la transition : il vit sur la racine de la composition, pas sur la scène, donc la transition ne le déforme pas ; les deux scènes calculent le même vol (`M.carryAt`).
+
+Types qui reposent sur de vraies images : `hook.collage` / `scene.collage` (`text` + `items` : objets détourés autour d'un grand disque orange, texte blanc, mot-clé marine ; tout saute au mot-clé) et `scene.photo` (`image` plein cadre en zoom lent, `text` blanc en bas, `kicker?`, `focus?` = `object-position`). Les objets ont un **calque d'ombre séparé** (jamais de `filter` animé sur l'élément qui porte l'ombre). Les JPG à fond blanc (photos produit) se fondent dans un fond clair.
 
 ## Comment le moteur décide
 
@@ -84,10 +93,10 @@ Un exemple complet est dans `examples/demo.brief.json` (6 scènes, 22 s).
 videos/_engine/
   bin/motion.mjs      la commande
   lib/                brief (validation) · schedule (calendrier, sons, loi des 3 s) · emit (projet HyperFrames) · qa · ref · media · assets + pixabay (assets réels)
-  runtime/            ce qui tourne dans le navigateur ET dans Node : core (règles, markup, mise en page) · dom · fx · mount (transitions) · hooks · scenes · motion.css
+  runtime/            ce qui tourne dans le navigateur ET dans Node : core (règles, markup, mise en page) · dom · fx · mount (transitions) · hooks · scenes · depth (détourés, decor, carry, collage, photo) · motion.css
   brands/             konvwa.json (couleurs, thèmes, voix, slogan) + logo
   sfx/                15 sons + CREDITS.md
-  library/            images partagées (produits, illustrations…) : "lib:products/…" + CREDITS.md
+  library/            images partagées : products/ · illustrations/ (PNG détourés) · flags/ · photos/ — "lib:…" + CREDITS.md
   references/         planches et chiffres des vidéos de référence
   examples/           briefs d'exemple
   docs/               REFERENCES.md (ADN de style) · HOOKS.md (les 3 premières secondes)

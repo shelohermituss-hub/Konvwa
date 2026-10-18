@@ -15,7 +15,7 @@ Sur TikTok, Reels et Shorts, la décision de rester ou de glisser se prend en mo
 | 7 | Un mot-clé en couleur | `*mot*` dans le texte (statement, question) | `check` (avertissement) |
 | 8 | Il accroche plus que la suite | énergie visuelle du hook ≥ 90 % de celle du corps | `qa` |
 
-## Les 8 hooks
+## Les 9 hooks
 
 | Type | Look | Quand l'utiliser | Champs |
 |---|---|---|---|
@@ -26,6 +26,7 @@ Sur TikTok, Reels et Shorts, la décision de rester ou de glisser se prend en mo
 | `hook.poster` | Affiche éditoriale (photo en noir et blanc, cercle d'accent, micro-typo) | marque premium, produit qui a du style | `image`, `text`, `ghost?`, `micro?` |
 | `hook.pulse` | Pulsation → pilule d'interface avec icône | fonctionnalité de l'app, notification | `text`, `icon?`, `sub?` |
 | `hook.pixel` | Texte qui se forme en carrés pixel, fond marine, lueur | technologie, nouveauté | `text`, `sub?` |
+| `hook.collage` | Grand disque orange qui claque, **vrais objets détourés** (drapeaux, avion, colis, cliente…) qui jaillissent des bords en profondeur, phrase blanche au centre ; tout saute sur le mot-clé. Avec `carry`, un objet traverse vers la scène suivante | import, origine des produits, promesse visuelle — **le plus proche des références** | `text`, `items` (2 à 6 images), `sub?`, `carry?` |
 | `hook.logo` | Logo qui claque sur l'orange puis bascule | notoriété de marque, lancement | `text?` (slogan) |
 
 ## Écrire un bon hook (en français, vouvoiement)

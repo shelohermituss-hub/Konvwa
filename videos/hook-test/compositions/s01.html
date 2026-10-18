@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s01-template">
+      <style>
+        .mo-stage { font-family: "Poppins", sans-serif; }
+        .mo-s { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost { font-family: "Archivo Black", "Poppins", sans-serif; }
+      </style>
+      <div class="mo" id="s01-root" data-composition-id="s01" data-width="1080" data-height="1920"></div>
+      <script>
+        (function () {
+          var M = window.MOTION;
+          var spec = {"type":"hook.collage","text":"Achetez partout.|Recevez en *Haïti*.","vo":"Achetez partout. Recevez en Haïti.","items":["assets/lib/flags/chine.png","assets/lib/illustrations/cliente-sacs.png","assets/lib/illustrations/colis.png","assets/lib/illustrations/bateau.png","assets/lib/flags/usa.png","assets/lib/illustrations/telephone.png"],"carry":"assets/lib/illustrations/avion.png"};
+          var env = {"id":"s01","W":1080,"H":1920,"safe":{"t":250,"b":440,"l":70,"r":70},"dur":2.81,"seed":7,"theme":"light","vo":{"start":0.12,"dur":2.09},"transIn":null,"transOut":{"kind":"whip","dur":0.42}};
+          env.brand = M.brand;
+          env.pal = M.pals[env.theme];
+          var root = document.getElementById("s01-root");
+          var tl = gsap.timeline({ paused: true });
+          M.mount(root, tl, spec, env);
+          window.__timelines = window.__timelines || {};
+          window.__timelines["s01"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
