@@ -1,0 +1,118 @@
+{
+  "name": "avant-apres",
+  "title": "Avant / Après KONVWA — acheter à l'étranger depuis Haïti",
+  "format": "9:16",
+  "theme": "light",
+  "brand": "konvwa",
+  "seed": 31,
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy"
+  },
+  "scenes": [
+    {
+      "type": "hook.split",
+      "left": "Avant",
+      "right": "Avec *KONVWA*",
+      "sub": "Acheter à l'étranger",
+      "vo": "Avant. Et avec KONVWA."
+    },
+    {
+      "type": "scene.split",
+      "left": {
+        "image": "lib:people/avant-papiers.png",
+        "text": "Carte étrangère, transferts, frais"
+      },
+      "right": {
+        "screen": "lib:app/recharge-moncash.png",
+        "tap": [
+          0.29,
+          0.365
+        ],
+        "text": "Payez par *MonCash*"
+      },
+      "transition": "up",
+      "vo": "Plus besoin de carte étrangère. Vous payez par MonCash."
+    },
+    {
+      "type": "scene.split",
+      "left": {
+        "bubbles": [
+          "Tu peux me l'acheter ?",
+          "Envoie d'abord l'argent",
+          "Il arrive quand ?",
+          "Encore des frais ?"
+        ],
+        "text": "Des intermédiaires partout"
+      },
+      "right": {
+        "screen": "lib:app/demande-devis.png",
+        "tap": [
+          0.5,
+          0.23
+        ],
+        "text": "Collez le *lien*, c'est tout"
+      },
+      "transition": "whip",
+      "vo": "Plus d'intermédiaires. Vous collez le lien, on s'occupe du reste."
+    },
+    {
+      "type": "scene.split",
+      "left": {
+        "image": "lib:illustrations/colis.png",
+        "size": 0.8,
+        "text": "Il est où, mon colis ?"
+      },
+      "right": {
+        "screen": "lib:app/suivi-commande.png",
+        "scroll": 16,
+        "text": "Suivi à *chaque étape*"
+      },
+      "transition": "up",
+      "vo": "Et vous suivez votre colis à chaque étape."
+    },
+    {
+      "type": "scene.end",
+      "decor": [
+        {
+          "src": "lib:people/apres-telephone.png",
+          "x": 0.8,
+          "y": 0.86,
+          "depth": 1,
+          "size": 0.38,
+          "rot": 4
+        }
+      ],
+      "vo": "KONVWA. Achetez, nous livrons.",
+      "tail": 0.5
+    }
+  ],
+  "needs": [
+    {
+      "file": "lib:app/recharge-moncash.png",
+      "what": "Capture : recharge du portefeuille (MonCash)",
+      "format": "PNG natif"
+    },
+    {
+      "file": "lib:app/demande-devis.png",
+      "what": "Capture : coller le lien d'un produit",
+      "format": "PNG natif"
+    },
+    {
+      "file": "lib:app/suivi-commande.png",
+      "what": "Capture : suivi d'une commande",
+      "format": "PNG natif"
+    },
+    {
+      "file": "lib:people/avant-papiers.png",
+      "what": "Personne stressée (Pixabay 5875816), détourée",
+      "format": "PNG transparent"
+    },
+    {
+      "file": "lib:people/apres-telephone.png",
+      "what": "Personne souriante avec son téléphone (Pixabay 3247586), détourée",
+      "format": "PNG transparent"
+    }
+  ]
+}

@@ -366,4 +366,166 @@
       })
     },
   })
+
+  // ---------- « Avant / Après » : l'écran coupé en deux ----------
+  /** Grey "before" half on the left, the orange cut line, and the two small labels. Returns the layers so a scene can animate them. */
+  function splitFrame(c, o) {
+    const { stage, tl, env } = c
+    const half = env.W / 2
+    const left = h.box(stage, 'mo-split-left', { left: 0, top: 0, width: half, height: env.H })
+    const line = h.box(stage, 'mo-split-line', { left: half - 5, top: 0, width: 10, height: env.H })
+    line.style.zIndex = '9'
+    const tags = []
+    if (o.tags !== false) {
+      const a = h.box(stage, 'mo-split-tag mo-split-tag-before', { left: 0, width: half, top: env.safe.t - 40 })
+      a.textContent = o.before || 'Avant'
+      const b = h.box(stage, 'mo-split-tag mo-split-tag-after', { left: half, width: half, top: env.safe.t - 40 })
+      b.textContent = o.after || 'Avec KONVWA'
+      tags.push(a, b)
+    }
+    return { left, line, tags, half }
+  }
+  /** The "before" side never sits still: a nervous little shake. */
+  const jitter = (tl, el, from, to) => {
+    const n = Math.max(1, Math.round((to - from) / 0.5))
+    for (let i = 0; i < n; i++) {
+      const t = from + i * 0.5
+      tl.to(el, { x: i % 2 ? 5 : -5, rotation: i % 2 ? 0.6 : -0.6, duration: 0.05, ease: 'none' }, t)
+      tl.to(el, { x: 0, rotation: 0, duration: 0.08, ease: 'none' }, t + 0.05)
+    }
+  }
+
+  M.register('hook.split', {
+    kind: 'hook', label: 'Une ligne orange coupe l’écran en deux : « AVANT » gris qui tremble à gauche, « AVEC KONVWA » net à droite', min: 2.8, max: 3.0, words: [1, 7], needs: ['left', 'right'],
+    sfx: () => [{ t: 0.0, cue: 'whooshBig' }, { t: 0.3, cue: 'impact' }, { t: 0.62, cue: 'glitch' }, { t: 0.95, cue: 'pop' }],
+    legible: () => 1.4,
+    build(c) {
+      const { stage, tl, env, fx, spec } = c
+      const f = splitFrame(c, { tags: false })
+      tl.fromTo(f.line, { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power4.out', transformOrigin: '50% 0%' }, 0)
+      tl.fromTo(f.left, { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: 'expo.out', transformOrigin: '100% 50%' }, 0.28)
+      const word = (markup, x, cls, at) => {
+        const lay = M.layout(markup, f.half - 70, { max: 140, min: 64, factor: 0.8, maxLines: 3 })
+        const t = h.text(stage, lay.markup, 'mo-split-word ' + cls, { left: x + 35, width: f.half - 70, top: Math.round(c.cy - lay.lines * lay.size * 0.55), fontSize: lay.size })
+        t.box.style.position = 'absolute'
+        t.box.style.zIndex = '4'
+        fx.text(tl, t.words, t.words.map((_, i) => at + i * 0.12), 'letters')
+        return t
+      }
+      const a = word(spec.left, 0, 'mo-split-before', 0.35)
+      const b = word(spec.right, f.half, 'mo-split-after', 0.75)
+      // the cut lands with a white flash and a punch-in of the whole frame
+      const flash = h.box(stage, 'mo-flash', { left: 0, top: 0, width: env.W, height: env.H })
+      flash.style.cssText += ';background:#fff;z-index:20'
+      tl.fromTo(flash, { opacity: 0.9 }, { opacity: 0, duration: 0.35, ease: 'power2.out' }, 0.28)
+      tl.fromTo(stage, { scale: 1.08 }, { scale: 1, duration: 0.5, ease: 'power3.out' }, 0.28)
+      tl.to(stage, { scale: 1.05, duration: Math.max(0.5, c.dur - 0.9), ease: 'none' }, 0.85)
+      // the old way glitches non-stop, the new one beats
+      for (let t = 0.9, i = 0; t < c.dur - 0.1; t += 0.18, i++) {
+        tl.to(a.box, { x: [34, -26, 18, -40][i % 4], skewX: i % 2 ? 12 : -12, opacity: i % 3 === 2 ? 0.45 : 1, duration: 0.05, ease: 'none' }, t)
+        tl.to(a.box, { x: 0, skewX: 0, opacity: 1, duration: 0.06, ease: 'none' }, t + 0.06)
+      }
+      for (let t = 1.1; t < c.dur - 0.3; t += 0.42) {
+        tl.to(b.box, { scale: 1.16, rotation: -3, duration: 0.1, ease: 'power2.out' }, t)
+        tl.to(b.box, { scale: 1, rotation: 0, duration: 0.28, ease: 'back.out(2.4)' }, t + 0.1)
+      }
+      // second hit when the tick lands
+      tl.to(stage, { x: -18, duration: 0.04, ease: 'none' }, 1.1)
+      tl.to(stage, { x: 12, duration: 0.05, ease: 'none' }, 1.14)
+      tl.to(stage, { x: 0, duration: 0.14, ease: 'power2.out' }, 1.19)
+      // a red cross over the old way, an orange tick on the new one
+      const mk = (x, cls, icon, at) => {
+        const b = h.box(stage, 'mo-split-badge ' + cls, { left: Math.round(x - 75), top: Math.round(c.cy + 230), width: 150, height: 150 }, h.icon(icon, 84, '#fff', 3.2))
+        tl.fromTo(b, { opacity: 0, scale: 0.2, rotation: -40 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.45, ease: 'back.out(2.6)' }, at)
+        tl.to(b, { rotation: cls === 'mo-split-bad' ? -25 : 25, scale: 1.12, duration: 0.35, ease: 'sine.inOut', yoyo: true, repeat: Math.max(1, Math.round((c.dur - at - 0.5) / 0.35)) }, at + 0.5)
+      }
+      mk(f.half / 2, 'mo-split-bad', 'x', 0.62)
+      mk(f.half * 1.5, 'mo-split-good', 'check', 0.95)
+      if (spec.sub) {
+        const s = h.text(stage, spec.sub, 'mo-sub mo-center-text mo-split-banner', { left: Math.round(c.cx - 330), width: 660, top: env.safe.t, fontSize: 50 })
+        s.box.style.position = 'absolute'
+        s.box.style.zIndex = '10'
+        fx.text(tl, s.words, c.times(spec.sub, { start: 0.1, cap: 0.5 }), 'mask')
+      }
+    },
+  })
+
+  /** One side's content: a phone showing a real screen, a cut-out, chat bubbles or an icon, with a caption under it. */
+  function splitSide(c, side, it, cx, at) {
+    const { stage, tl, env, fx } = c
+    const before = side === 'before'
+    const colW = env.W / 2 - 60
+    let bottom = Math.round(env.H * 0.66)
+    if (it.screen) {
+      const pw = Math.round(colW * 0.98)
+      const ph = Math.round(pw * 1.85)
+      const phone = h.box(stage, 'mo-phone', { left: Math.round(cx - pw / 2), top: Math.round(env.H * 0.47 - ph / 2), width: pw, height: ph })
+      const img = h.el('img', 'mo-phone-screen', '', phone)
+      img.src = it.screen
+      phone.style.zIndex = '3'
+      tl.fromTo(phone, { opacity: 0, y: 180, rotation: before ? -8 : 8, scale: 0.85 }, { opacity: 1, y: 0, rotation: 0, scale: 1, duration: 0.6, ease: 'back.out(1.5)' }, at)
+      if (it.scroll) tl.fromTo(img, { yPercent: 0 }, { yPercent: -it.scroll, duration: Math.max(0.6, c.dur - at - 1.0), ease: 'power1.inOut', immediateRender: false }, at + 0.7)
+      if (it.tap) {
+        const tx = Math.round(cx - pw / 2 + it.tap[0] * pw)
+        const ty = Math.round(env.H * 0.47 - ph / 2 + it.tap[1] * ph)
+        const cur = h.cursor(stage, 70)
+        cur.style.zIndex = '8'
+        fx.pointer(tl, cur, [{ x: tx + 120, y: ty + 260, t: at + 0.6 }, { x: tx, y: ty, t: at + 1.1, tap: true }])
+        fx.ripple(stage, tl, tx, ty, at + 1.1, env.pal.accent).style.zIndex = '7'
+      }
+      bottom = Math.round(env.H * 0.47 + ph / 2 + 30)
+    } else if (it.image) {
+      const o = h.cutout(stage, { src: it.image, x: cx / env.W, y: 0.46, depth: 0.9, size: Math.round(colW * (it.size || 0.95)), rot: 0, sticker: false, outline: !before, dx: before ? -1 : 1, dy: 1 }, env)
+      if (before) o.img.classList.add('mo-desat')
+      o.wrap.style.zIndex = '3'
+      tl.fromTo(o.wrap, { opacity: 0, y: 160, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.5)' }, at)
+      if (before) jitter(tl, o.img, at + 0.7, c.dur)
+      else tl.to(o.img, { y: -14, duration: 1, ease: 'sine.inOut', yoyo: true, repeat: Math.max(0, Math.ceil((c.dur - at - 0.7) / 1) - 1) }, at + 0.7)
+    } else if (it.bubbles) {
+      const col = h.box(stage, 'mo-bubbles', { left: Math.round(cx - colW / 2), width: colW, top: Math.round(env.H * 0.24) })
+      col.style.zIndex = '3'
+      it.bubbles.slice(0, 4).forEach((txt, i) => {
+        const b = h.el('div', 'mo-bubble' + (i % 2 ? ' mo-bubble-r' : ''), '', col)
+        b.textContent = String(txt).replace(/ ([?!:;])/g, '\u00a0$1') // French spacing: the mark never starts a line
+        tl.fromTo(b, { opacity: 0, scale: 0.6, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'back.out(2.2)' }, at + i * 0.35)
+      })
+      jitter(tl, col, at + 0.5, c.dur)
+    } else {
+      const b = h.box(stage, 'mo-split-badge ' + (before ? 'mo-split-bad' : 'mo-split-good'), { left: Math.round(cx - 110), top: Math.round(env.H * 0.4), width: 220, height: 220 }, h.icon(it.icon || (before ? 'x' : 'check'), 120, '#fff', 3))
+      tl.fromTo(b, { opacity: 0, scale: 0.2 }, { opacity: 1, scale: 1, duration: 0.45, ease: 'back.out(2.6)' }, at)
+    }
+    if (it.text) {
+      const lay = M.layout(it.text, colW, { max: 66, min: 40, maxLines: 3 })
+      const t = h.text(stage, lay.markup, 'mo-split-caption ' + (before ? 'mo-split-before' : 'mo-split-after'), { left: Math.round(cx - colW / 2), width: colW, top: Math.max(bottom, Math.round(env.H * 0.7)), fontSize: lay.size })
+      t.box.style.position = 'absolute'
+      t.box.style.zIndex = '5'
+      fx.text(tl, t.words, t.words.map((_, i) => at + 0.3 + i * 0.07), before ? 'type' : 'mask')
+      if (before) {
+        const strike = h.box(stage, 'mo-split-strike', { left: Math.round(cx - colW / 2), width: colW, top: Math.max(bottom, Math.round(env.H * 0.7)) + Math.round(lay.size * 0.55), height: 8 })
+        strike.style.zIndex = '6'
+        // crossing the words out is the point
+        strike.setAttribute('data-layout-allow-occlusion', '')
+        for (const e of [t.box, ...t.box.querySelectorAll('*')]) e.setAttribute('data-layout-allow-occlusion', '')
+        tl.fromTo(strike, { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: 'power3.out', transformOrigin: '0% 50%' }, M.splitTimes(c.env).after - 0.15)
+      } else fx.mark(tl, t.words, at + 0.6, 0.4)
+    }
+  }
+  /** The old way appears first, the new one at the middle of the voice. */
+  M.splitTimes = function (env) {
+    const start = env.vo ? env.vo.start : 0.3
+    const dur = env.vo ? env.vo.dur : 3
+    return { before: M.r2(start), after: M.r2(start + dur * 0.45) }
+  }
+  M.register('scene.split', {
+    kind: 'scene', label: 'Écran coupé en deux : l’ancienne galère à gauche (gris, ça tremble, barré), KONVWA à droite (vraie capture d’app dans un téléphone, image ou icône)', min: 3.0, max: 6.5, words: [0, 12], needs: ['left', 'right'],
+    sfx: (spec, env) => { const t = M.splitTimes(env); return [{ t: t.before, cue: 'glitch' }, { t: M.r2(t.after - 0.15), cue: 'whoosh' }, { t: t.after, cue: 'pop' }, ...(spec.right && spec.right.tap ? [{ t: M.r2(t.after + 1.1), cue: 'click' }] : [])] },
+    build(c) {
+      const { tl, env } = c
+      const f = splitFrame(c, { before: c.spec.before, after: c.spec.after })
+      f.tags.forEach((el, i) => tl.fromTo(el, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.35, ease: 'expo.out' }, 0.05 + i * 0.1))
+      const t = M.splitTimes(env)
+      splitSide(c, 'before', c.spec.left, f.half / 2, t.before)
+      splitSide(c, 'after', c.spec.right, f.half * 1.5, t.after)
+    },
+  })
 })(typeof window !== 'undefined' ? window : globalThis)

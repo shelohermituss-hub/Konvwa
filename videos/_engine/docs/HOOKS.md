@@ -15,11 +15,12 @@ Sur TikTok, Reels et Shorts, la décision de rester ou de glisser se prend en mo
 | 7 | Un mot-clé en couleur | `*mot*` dans le texte (statement, question) | `check` (avertissement) |
 | 8 | Il accroche plus que la suite | énergie visuelle du hook ≥ 90 % de celle du corps | `qa` |
 
-## Les 10 hooks
+## Les 11 hooks
 
 | Type | Look | Quand l'utiliser | Champs |
 |---|---|---|---|
 | `hook.impact` | **Typo cinétique** sur fond blanc : chaque bloc (séparé par `|`) claque plein cadre en arrivant de derrière la caméra, l'écran tremble, le mot-clé `*orange*` éclate (traits d'impact), puis tout se range en titre géant en capitales | **par défaut** : chiffres, alertes, listes (« 4 \| \*arnaques\* \| à éviter \| en Chine ») | `text` (2 à 5 blocs), `sub?` |
+| `hook.split` | Une ligne orange coupe l'écran en deux : « AVANT » gris qui tremble avec une croix, « AVEC *KONVWA* » net avec une coche | comparatifs avant / après, nous / les autres | `left`, `right`, `sub?` |
 | `hook.statement` | Gros mots qui jaillissent, mot-clé en couleur avec marqueur, glyphes qui s'envolent. Avec `"tone": "accent"` : plein orange, texte blanc, mot-clé marine — **le plus percutant** | promesse, affirmation, contraste (« Achetez *partout*. Recevez en Haïti. ») | `text`, `sub?`, `glyphs?`, `tone?`, `bg?` |
 | `hook.question` | Question qui se retourne mot par mot | douleur, curiosité (« Vous payez *trop cher* ? ») | `text` |
 | `hook.number` | Chiffre géant qui monte | preuve, économie, délai (« 12 500 HTG économisés ») | `value`, `prefix?`, `suffix?`, `text?` |

@@ -1,0 +1,62 @@
+{
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy",
+    "direction": "énergie, un rythme rapide et le sourire dans la voix",
+    "language": "fr-FR",
+    "model": "t2a-gemini-3-1-flash-tts"
+  },
+  "lines": [
+    {
+      "id": "s01",
+      "scene": 1,
+      "type": "hook.split",
+      "text": "Avant. Et avec KONVWA.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Avant. Et avec KONVWA.",
+      "file": "assets/vo/s01.wav",
+      "estimatedSeconds": 1.97,
+      "measured": true
+    },
+    {
+      "id": "s02",
+      "scene": 2,
+      "type": "scene.split",
+      "text": "Plus besoin de carte étrangère. Vous payez par MonCash.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Plus besoin de carte étrangère. Vous payez par MonCash.",
+      "file": "assets/vo/s02.wav",
+      "estimatedSeconds": 2.92,
+      "measured": true
+    },
+    {
+      "id": "s03",
+      "scene": 3,
+      "type": "scene.split",
+      "text": "Plus d'intermédiaires. Vous collez le lien, on s'occupe du reste.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Plus d'intermédiaires. Vous collez le lien, on s'occupe du reste.",
+      "file": "assets/vo/s03.wav",
+      "estimatedSeconds": 3.39,
+      "measured": true
+    },
+    {
+      "id": "s04",
+      "scene": 4,
+      "type": "scene.split",
+      "text": "Et vous suivez votre colis à chaque étape.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Et vous suivez votre colis à chaque étape.",
+      "file": "assets/vo/s04.wav",
+      "estimatedSeconds": 2.28,
+      "measured": true
+    },
+    {
+      "id": "s05",
+      "scene": 5,
+      "type": "scene.end",
+      "text": "KONVWA. Achetez, nous livrons.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : KONVWA. Achetez, nous livrons.",
+      "file": "assets/vo/s05.wav",
+      "estimatedSeconds": 2.25,
+      "measured": true
+    }
+  ]
+}

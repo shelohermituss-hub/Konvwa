@@ -1,0 +1,44 @@
+{
+  "name": "avant-apres",
+  "format": "9:16",
+  "total": 15.99,
+  "scenes": [
+    {
+      "id": "s01",
+      "type": "hook.split",
+      "start": 0,
+      "dur": 2.8,
+      "transition": null
+    },
+    {
+      "id": "s02",
+      "type": "scene.split",
+      "start": 2.34,
+      "dur": 3.97,
+      "transition": "up"
+    },
+    {
+      "id": "s03",
+      "type": "scene.split",
+      "start": 5.89,
+      "dur": 4.45,
+      "transition": "whip"
+    },
+    {
+      "id": "s04",
+      "type": "scene.split",
+      "start": 9.88,
+      "dur": 3.41,
+      "transition": "up"
+    },
+    {
+      "id": "s05",
+      "type": "scene.end",
+      "start": 12.74,
+      "dur": 3.25,
+      "transition": "circle"
+    }
+  ],
+  "sfx": 23,
+  "hookEnd": 2.8
+}

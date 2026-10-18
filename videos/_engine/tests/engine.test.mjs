@@ -353,3 +353,18 @@ describe('« Devinez le prix » series', () => {
     expect(r.errors.join()).toMatch(/absent\.png/)
   })
 })
+
+describe('« Avant / Après » split screen', () => {
+  it('shows the old way first and the new way at the middle of the voice', () => {
+    expect(M.splitTimes({ vo: { start: 0.4, dur: 3 } })).toEqual({ before: 0.4, after: 1.75 })
+    const cues = M.catalog['scene.split'].sfx({ left: {}, right: { tap: [0.5, 0.5] } }, { vo: { start: 0.4, dur: 3 } }).map((x) => x.cue)
+    expect(cues).toEqual(['glitch', 'whoosh', 'pop', 'click'])
+  })
+  it('validates both sides and checks the screens and images they show', () => {
+    const base = demo().brief
+    const ok = { ...base, scenes: [{ type: 'hook.split', left: 'Avant', right: 'Avec *KONVWA*', vo: 'Avant. Et avec KONVWA.' }, { type: 'scene.split', left: { bubbles: ['Il arrive quand ?'], text: 'Avant' }, right: { image: 'lib:products/cerave.jpg', text: 'Après' }, vo: 'Une phrase.' }, base.scenes.at(-1)] }
+    expect(validateBrief(ok, exists).errors).toEqual([])
+    const bad = { ...ok, scenes: [ok.scenes[0], { type: 'scene.split', left: { text: 'a' }, right: { screen: 'lib:app/absent.png' }, vo: 'x' }, ok.scenes[2]] }
+    expect(validateBrief(bad, exists).errors.join()).toMatch(/absent\.png/)
+  })
+})

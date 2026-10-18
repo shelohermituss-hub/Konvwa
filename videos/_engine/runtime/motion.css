@@ -217,3 +217,28 @@
 .mo-confetti { border-radius: 4px; pointer-events: none; }
 .mo-pricenote { font-size: 46px; font-weight: 700; color: var(--ink); }
 .mo-pricedate { font-size: 30px; font-weight: 500; color: var(--mute); }
+
+/* ---------- « Avant / Après » ---------- */
+.mo-split-left { background: #E9EAEE; pointer-events: none; }
+.mo-split-line { background: var(--brand); box-shadow: 0 0 30px var(--a45); pointer-events: none; }
+.mo-split-tag { text-align: center; font-size: 34px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; z-index: 10; }
+.mo-split-tag-before { color: #5F6571; }
+.mo-split-tag-after { color: var(--brand); }
+.mo-split-word { font-family: "Poppins", sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: -0.03em; line-height: 0.95; }
+.mo-split-before { color: #646A76; }
+.mo-split-after { color: var(--ink); }
+.mo-split-after .mo-a { color: var(--brand); }
+.mo-split-word.mo-split-after .mo-a { background: none; }
+.mo-split-badge { display: flex; align-items: center; justify-content: center; border-radius: 50%; z-index: 6; }
+.mo-split-bad { background: #9AA0AA; }
+.mo-split-good { background: var(--brand); box-shadow: 0 20px 50px var(--a45); }
+.mo-split-caption { font-weight: 800; line-height: 1.12; }
+.mo-split-caption.mo-split-before { font-weight: 700; }
+.mo-split-strike { background: #D92D20; border-radius: 8px; pointer-events: none; }
+.mo-desat { filter: grayscale(1) contrast(1.05) brightness(0.95); }
+.mo-phone { border-radius: 48px; border: 12px solid var(--ink); background: #fff; overflow: hidden; box-shadow: 0 40px 90px rgba(10, 22, 40, 0.28); }
+.mo-phone-screen { display: block; width: 100%; height: auto; }
+.mo-bubbles { display: flex; flex-direction: column; gap: 22px; pointer-events: none; }
+.mo-bubble { align-self: flex-start; max-width: 92%; padding: 20px 26px; border-radius: 30px 30px 30px 8px; background: #fff; color: #4A505C; font-size: 36px; font-weight: 600; line-height: 1.15; box-shadow: 0 10px 24px rgba(10, 22, 40, 0.1); }
+.mo-bubble-r { align-self: flex-end; border-radius: 30px 30px 8px 30px; background: #D5D8DE; }
+.mo-split-banner { background: #fff; border-radius: 999px; padding: 16px 34px; box-shadow: 0 16px 40px rgba(10, 22, 40, 0.14); color: var(--ink); font-weight: 700; }
