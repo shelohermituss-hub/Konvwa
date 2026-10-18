@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="assets/engine/core.js"></script>
+    <script src="assets/engine/dom.js"></script>
+    <script src="assets/engine/fx.js"></script>
+    <script src="assets/engine/mount.js"></script>
+    <script src="assets/engine/hooks.js"></script>
+    <script src="assets/engine/scenes.js"></script>
+    <script src="assets/engine/depth.js"></script>
+    <script>
+      window.MOTION.brand = {"name":"KONVWA","handle":"konvwa.shop","tagline":"Achetez, nous livrons.","cta":"Téléchargez l'app","audience":"Particuliers · Revendeurs · Entreprises","logo":"\u003csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 110 72\" fill=\"none\"> \u003crect x=\"1\" y=\"45\" width=\"40\" height=\"24\" rx=\"6\" fill=\"black\" opacity=\"0.08\"/> \u003crect x=\"35\" y=\"29\" width=\"40\" height=\"24\" rx=\"6\" fill=\"black\" opacity=\"0.08\"/> \u003crect x=\"69\" y=\"13\" width=\"40\" height=\"24\" rx=\"6\" fill=\"black\" opacity=\"0.08\"/> \u003crect x=\"0\" y=\"42\" width=\"40\" height=\"24\" rx=\"6\" fill=\"#8B2200\"/> \u003crect x=\"0\" y=\"42\" width=\"9\" height=\"24\" rx=\"6\" fill=\"#6B1800\"/> \u003crect x=\"31\" y=\"42\" width=\"9\" height=\"24\" rx=\"6\" fill=\"#6B1800\"/> \u003crect x=\"9\" y=\"48\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"#7A1E00\"/> \u003crect x=\"9\" y=\"52.5\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"#7A1E00\"/> \u003crect x=\"9\" y=\"57\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"#7A1E00\"/> \u003crect x=\"34\" y=\"26\" width=\"40\" height=\"24\" rx=\"6\" fill=\"#E53D15\"/> \u003crect x=\"34\" y=\"26\" width=\"9\" height=\"24\" rx=\"6\" fill=\"#C23010\"/> \u003crect x=\"65\" y=\"26\" width=\"9\" height=\"24\" rx=\"6\" fill=\"#C23010\"/> \u003crect x=\"43\" y=\"32\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"#CC3510\"/> \u003crect x=\"43\" y=\"36.5\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"#CC3510\"/> \u003crect x=\"43\" y=\"41\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"#CC3510\"/> \u003crect x=\"68\" y=\"10\" width=\"40\" height=\"24\" rx=\"6\" fill=\"#FF7252\"/> \u003crect x=\"68\" y=\"10\" width=\"9\" height=\"24\" rx=\"6\" fill=\"#E05A3A\"/> \u003crect x=\"99\" y=\"10\" width=\"9\" height=\"24\" rx=\"6\" fill=\"#E05A3A\"/> \u003crect x=\"77\" y=\"16\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"#EE6040\"/> \u003crect x=\"77\" y=\"20.5\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"#EE6040\"/> \u003crect x=\"77\" y=\"25\" width=\"22\" height=\"2.5\" rx=\"1.2\" fill=\"#EE6040\"/> \u003c/svg>"};
+      window.MOTION.pals = {"light":{"bg":"#F7F1EB","bg2":"#EFE7E0","ink":"#0A1628","mute":"#5B6474","card":"#FFFFFF","line":"#E6DDD4","accent":"#F05A28","accent2":"#FF7252"},"dark":{"bg":"#0A1628","bg2":"#0F1F38","ink":"#FFFFFF","mute":"#9AA7BD","card":"#12233F","line":"#25406A","accent":"#F05A28","accent2":"#FF7252"}};
+    </script>
+    <style>
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #F7F1EB; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #F7F1EB; font-family: "Poppins", sans-serif; }
+      [data-composition-id="main"] > div[data-composition-src] { position: absolute; inset: 0; }
+      .mo{--brand:#F05A28;--accent:#F05A28;--accent2:#FF7252;--navy:#0A1628;--a12:rgba(240,90,40,0.12);--a25:rgba(240,90,40,0.25);--a45:rgba(240,90,40,0.45)}
+      .mo-light{--bg:#F7F1EB;--bg2:#EFE7E0;--ink:#0A1628;--mute:#5B6474;--card:#FFFFFF;--line:#E6DDD4;--dot:rgba(10,22,40,0.10);--shade:rgba(10,22,40,0.055);--ghost:rgba(10,22,40,0.07);--flash:#FFFFFF;--atext:#DF4F1F}
+      .mo-dark{--bg:#0A1628;--bg2:#0F1F38;--ink:#FFFFFF;--mute:#9AA7BD;--card:#12233F;--line:#25406A;--dot:rgba(255,255,255,0.10);--shade:rgba(255,255,255,0.05);--ghost:rgba(255,255,255,0.07);--flash:#F05A28;--atext:#F05A28}
+      /* KONVWA motion engine — static styles for every scene type.
+       * Colours come from CSS variables that the brand kit writes (see lib/emit.mjs): --bg --bg2 --ink --mute --accent --accent2 --card --line
+       * and the translucent accents --a12 --a25 --a45. Fonts are named here so the renderer embeds them (never set a font only from script). */
+
+      .mo, .mo * { box-sizing: border-box; margin: 0; padding: 0; }
+      .mo { position: absolute; inset: 0; overflow: hidden; font-family: "Poppins", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+      .mo img { display: block; }
+      .mo-stage { position: absolute; inset: 0; overflow: hidden; background: var(--bg); color: var(--ink); }
+      .mo-abs { position: absolute; }
+      .mo-ic { display: block; flex: none; }
+
+      /* ---------- text ---------- */
+      .mo-center { display: flex; align-items: center; justify-content: center; }
+      .mo-stack { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; width: 100%; text-align: center; }
+      .mo-text { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; column-gap: 0.26em; row-gap: 0.06em; text-align: center; line-height: 1.04; font-weight: 800; letter-spacing: -0.02em; max-width: 100%; }
+      .mo-h1 { color: var(--ink); }
+      .mo-head { position: absolute; }
+      .mo-w { display: inline-block; white-space: nowrap; }
+      .mo-br { flex-basis: 100%; height: 0; }
+      .mo-a { color: var(--atext); padding: 0 0.06em; margin: 0 -0.06em; background: linear-gradient(var(--a25), var(--a25)) no-repeat 0 92% / 0% 36%; }
+      .mo-s { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-weight: 600; letter-spacing: -0.01em; }
+      .mo-sub { font-weight: 500; color: var(--mute); letter-spacing: -0.005em; line-height: 1.16; }
+      .mo-tag { font-weight: 700; color: var(--atext); }
+      .mo-center-text { text-align: center; justify-content: center; }
+      .mo-letters { flex-direction: column; flex-wrap: nowrap; align-items: center; justify-content: center; }
+      .mo-line { display: flex; justify-content: center; white-space: nowrap; }
+      .mo-ch { display: inline-block; white-space: pre; }
+      .mo-sp { width: 0.28em; }
+      .mo-cap { font-weight: 600; font-size: 34px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--atext); }
+      .mo-glyph { position: absolute; color: var(--atext); line-height: 1; pointer-events: none; opacity: 0; font-weight: 800; }
+      .mo-brandname { display: flex; justify-content: center; font-weight: 900; letter-spacing: 0.03em; line-height: 1; white-space: nowrap; color: #fff; }
+      .mo-brandname.mo-ink { color: var(--ink); }
+      .mo-handle { font-size: 46px; font-weight: 600; color: var(--mute); letter-spacing: 0.04em; }
+      .mo-logo { display: block; }
+      .mo-logo svg { display: block; width: 100%; height: 100%; }
+
+      /* ---------- backgrounds ---------- */
+      .mo-glow { border-radius: 50%; pointer-events: none; }
+      .mo-rings { pointer-events: none; }
+      .mo-dots { background-image: radial-gradient(var(--dot) 3px, transparent 3.5px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse at 50% 46%, #000 12%, transparent 74%); mask-image: radial-gradient(ellipse at 50% 46%, #000 12%, transparent 74%); pointer-events: none; }
+      .mo-dapple { border-radius: 50%; background: radial-gradient(circle, var(--shade) 0%, transparent 66%); pointer-events: none; }
+      .mo-onaccent { background: var(--accent); }
+      .mo-poster { background: var(--bg2); }
+
+      /* ---------- hook.statement / ring waves ---------- */
+      .mo-ringwave { border: 5px solid var(--accent); border-radius: 50%; pointer-events: none; opacity: 0; }
+
+      /* ---------- hook.pulse ---------- */
+      .mo-halo { border-radius: 50%; background: radial-gradient(circle, var(--accent) 0%, var(--a25) 34%, transparent 64%); pointer-events: none; }
+      .mo-pill { border-radius: 999px; background: var(--accent); color: #fff; overflow: hidden; box-shadow: 0 30px 80px var(--a45); }
+      .mo-pillglow { border-radius: 999px; background: var(--accent); filter: blur(70px); pointer-events: none; }
+      .mo-pill-ic { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255, 255, 255, 0.22); }
+      .mo-pilltext { flex-wrap: nowrap; justify-content: flex-start; align-items: center; text-align: left; color: #fff; font-weight: 700; letter-spacing: -0.01em; }
+      .mo-pilltext .mo-a { color: #fff; background: none; }
+
+      /* ---------- hook.pixel ---------- */
+      .mo-px { font-weight: 900; color: var(--ink); letter-spacing: -0.01em; }
+      .mo-pxcell { background: var(--accent); opacity: 0; pointer-events: none; }
+      .mo-scan { background: linear-gradient(90deg, transparent 0%, var(--a45) 50%, transparent 100%); pointer-events: none; }
+
+      /* ---------- hook.logo ---------- */
+      .mo-layer { overflow: hidden; }
+      .mo-flip { background: var(--navy); overflow: hidden; }
+      .mo-flip .mo-brandname { color: #fff; }
+      .mo-white .mo-logo svg { filter: brightness(0) invert(1); }
+
+      /* ---------- hook.product ---------- */
+      .mo-ribbon { pointer-events: none; }
+      .mo-dotring { border: 7px dotted var(--accent); border-radius: 50%; pointer-events: none; }
+      .mo-dotring-thin { border: 3px dashed var(--ink); opacity: 0.5; }
+      .mo-prod { object-fit: contain; mix-blend-mode: multiply; }
+      .mo-dark .mo-prod { mix-blend-mode: normal; background: #fff; border-radius: 56px; padding: 22px; }
+      .mo-kicker { font-weight: 500; color: var(--mute); letter-spacing: 0.01em; max-width: 940px; justify-content: flex-start; text-align: left; line-height: 1.1; }
+      .mo-caps { font-family: "Archivo Black", "Poppins", sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.96; color: var(--ink); max-width: 940px; justify-content: flex-start; text-align: left; }
+      .mo-kicker[style*="right"], .mo-caps[style*="right"] { justify-content: flex-end; text-align: right; }
+
+      /* ---------- hook.poster ---------- */
+      .mo-pcircle { border-radius: 50%; background: var(--accent); }
+      .mo-pdot { border-radius: 50%; background: var(--ink); }
+      .mo-ghost { font-family: "Archivo Black", "Poppins", sans-serif; font-weight: 400; color: var(--ghost); text-transform: uppercase; text-align: center; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; pointer-events: none; }
+      .mo-ghost2 { -webkit-text-stroke: 2px var(--line); }
+      .mo-cut { object-fit: contain; filter: grayscale(1) contrast(1.08); mix-blend-mode: multiply; }
+      .mo-poster-text { color: var(--ink); text-shadow: 0 4px 30px var(--bg2); }
+      .mo-micro { font-size: 25px; line-height: 1.5; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); font-weight: 500; }
+      .mo-micro b { display: block; font-weight: 700; }
+      .mo-qr i { position: absolute; width: 8px; height: 8px; background: var(--ink); }
+      .mo-barcode i { position: absolute; top: 0; bottom: 0; background: var(--ink); }
+
+      /* ---------- numbers ---------- */
+      .mo-disc { border-radius: 50%; background: var(--card); box-shadow: 0 50px 120px var(--a25); border: 3px solid var(--line); }
+      .mo-bignum { display: flex; align-items: baseline; justify-content: center; font-weight: 900; line-height: 1; letter-spacing: -0.04em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .mo-numval { color: var(--atext); }
+      .mo-numpre, .mo-numsuf { color: var(--ink); font-weight: 800; letter-spacing: -0.02em; margin: 0 0.04em; }
+      .mo-flip3d { perspective: 900px; }
+      .mo-flip3d .mo-w { backface-visibility: hidden; }
+
+      /* ---------- scene.kinetic / chips / callouts ---------- */
+      .mo-badge { display: flex; align-items: center; justify-content: center; width: 150px; height: 150px; border-radius: 46px; background: var(--accent); box-shadow: 0 22px 54px var(--a45); }
+      .mo-chipwrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+      .mo-chip { display: flex; align-items: center; gap: 26px; padding: 26px 56px 26px 28px; border-radius: 999px; border: 3px solid var(--line); background: var(--card); color: var(--ink); font-size: 64px; font-weight: 700; white-space: nowrap; box-shadow: 0 16px 40px rgba(10, 22, 40, 0.07); }
+      .mo-chip-ic { display: flex; align-items: center; justify-content: center; width: 84px; height: 84px; border-radius: 50%; background: var(--a12); color: inherit; flex: none; font-style: normal; }
+      .mo-lines { pointer-events: none; }
+      .mo-hex { filter: drop-shadow(0 30px 50px var(--a25)); }
+      .mo-hexic { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+      .mo-label { font-size: 52px; font-weight: 700; line-height: 1.1; color: var(--ink); width: max-content; letter-spacing: -0.01em; }
+
+      /* ---------- scene.product ---------- */
+      .mo-tile { background: var(--card); border-radius: 46px; padding: 26px; box-shadow: 0 34px 80px rgba(10, 22, 40, 0.18); border: 2px solid var(--line); }
+      .mo-tile-img { width: 100%; height: 100%; object-fit: contain; border-radius: 26px; }
+      .mo-price { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); background: var(--accent); color: #fff; font-weight: 800; font-size: 46px; padding: 10px 32px; border-radius: 999px; white-space: nowrap; box-shadow: 0 14px 34px var(--a45); }
+
+      /* ---------- scene.ui ---------- */
+      .mo-uicol { display: flex; flex-direction: column; gap: 30px; }
+      .mo-toast { display: flex; align-items: center; gap: 28px; padding: 28px 36px; border-radius: 38px; background: var(--ink); color: var(--bg); font-size: 46px; font-weight: 600; box-shadow: 0 26px 60px rgba(10, 22, 40, 0.25); line-height: 1.15; }
+      .mo-toast i { display: flex; align-items: center; justify-content: center; width: 78px; height: 78px; border-radius: 50%; background: var(--accent); flex: none; }
+      .mo-uicard { display: flex; align-items: center; gap: 28px; padding: 30px 36px; border-radius: 38px; background: var(--card); border: 2px solid var(--line); box-shadow: 0 26px 64px rgba(10, 22, 40, 0.13); }
+      .mo-uicard i { display: flex; align-items: center; justify-content: center; width: 92px; height: 92px; border-radius: 28px; background: var(--a12); flex: none; }
+      .mo-uicard div { flex: 1; min-width: 0; }
+      .mo-uicard b { display: block; font-size: 44px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+      .mo-uicard em { display: block; font-style: normal; font-size: 30px; color: var(--mute); margin-top: 4px; }
+      .mo-uicard strong { font-size: 48px; font-weight: 800; color: var(--atext); white-space: nowrap; }
+      .mo-btn { text-align: center; padding: 36px 20px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 800; font-size: 52px; box-shadow: 0 24px 56px var(--a45); }
+      .mo-cursor { pointer-events: none; filter: drop-shadow(0 8px 14px rgba(10, 22, 40, 0.3)); z-index: 5; }
+      .mo-ripple { border: 6px solid var(--accent); border-radius: 50%; pointer-events: none; }
+
+      /* ---------- scene.route ---------- */
+      .mo-node { display: flex; flex-direction: column; align-items: center; text-align: center; }
+      .mo-node-c { display: flex; align-items: center; justify-content: center; width: 200px; height: 200px; flex: none; border-radius: 50%; background: var(--card); border: 5px solid var(--accent); box-shadow: 0 24px 60px var(--a25); }
+      .mo-node-l { margin-top: 18px; font-weight: 800; font-size: 46px; color: var(--ink); white-space: nowrap; }
+      .mo-parcel { display: flex; align-items: center; justify-content: center; border-radius: 34px; background: var(--accent); box-shadow: 0 16px 40px var(--a45); z-index: 3; }
+      .mo-badge2 { text-align: center; padding: 22px 30px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 700; font-size: 46px; }
+
+      /* ---------- scene.steps ---------- */
+      .mo-step { display: flex; align-items: center; gap: 36px; }
+      .mo-stepn { display: flex; align-items: center; justify-content: center; width: 122px; height: 122px; border-radius: 50%; flex: none; font-size: 62px; font-weight: 800; background: var(--card); border: 5px solid var(--accent); color: var(--ink); }
+      .mo-stept { min-width: 0; }
+      .mo-stept b { display: block; font-size: 56px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+      .mo-stept em { display: block; font-style: normal; font-size: 34px; color: var(--mute); margin-top: 6px; }
+      .mo-stepline { background: var(--accent); border-radius: 3px; }
+
+      /* ---------- scene.ghost / scene.end ---------- */
+      .mo-sq { background: var(--accent); border-radius: 20px; }
+      .mo-cta { text-align: center; padding: 36px 20px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 800; font-size: 52px; box-shadow: 0 26px 64px var(--a45); }
+
+      /* ---------- tone: the whole scene on the brand colour (strongest hook look) ---------- */
+      .mo-tone-accent { --bg: var(--brand); --bg2: var(--brand); --ink: #fff; --mute: rgba(255, 255, 255, 0.88); --accent: #fff; --atext: var(--navy); --card: #fff; --line: rgba(255, 255, 255, 0.4); --dot: rgba(255, 255, 255, 0.22); --ghost: rgba(255, 255, 255, 0.16); --shade: rgba(10, 22, 40, 0.1); --a12: rgba(255, 255, 255, 0.16); --a25: rgba(255, 255, 255, 0.3); --a45: rgba(255, 255, 255, 0.5); --flash: #fff; }
+      .mo-tone-accent .mo-a { background: linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32)) no-repeat 0 92% / 0% 36%; }
+      .mo-tone-accent .mo-glow { opacity: 0.2 !important; }
+
+      /* ---------- depth: cut-outs, decor, carried objects, collage, photo ---------- */
+      .mo-cutout { pointer-events: none; }
+      .mo-cutimg { display: block; width: 100%; height: auto; object-fit: contain; position: relative; }
+      .mo-cutjpg { mix-blend-mode: multiply; }
+      .mo-dark .mo-cutjpg .mo-cutimg { background: #fff; border-radius: 40px; padding: 18px; }
+      .mo-dark .mo-cutjpg { mix-blend-mode: normal; }
+      .mo-sticker { border: 10px solid #fff; border-radius: 26px; box-shadow: 0 10px 30px rgba(10, 22, 40, 0.18); }
+      .mo-cutshadow { position: absolute; left: 14%; width: 72%; bottom: -4%; height: 14%; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(10, 22, 40, 0.75) 0%, rgba(10, 22, 40, 0) 70%); filter: blur(10px); pointer-events: none; }
+      .mo-carry { pointer-events: none; }
+      .mo-carryshadow { border-radius: 50%; background: radial-gradient(ellipse at center, rgba(10, 22, 40, 0.35) 0%, rgba(10, 22, 40, 0) 70%); filter: blur(14px); pointer-events: none; }
+      .mo-bigdisc { border-radius: 50%; background: var(--accent); box-shadow: 0 60px 140px var(--a45); }
+      .mo-ondisc .mo-h1 { color: #fff; }
+      .mo-photo { overflow: hidden; }
+      .mo-photo-img { width: 100%; height: 100%; object-fit: cover; }
+      .mo-photo-shade { background: linear-gradient(180deg, rgba(10, 22, 40, 0) 38%, rgba(10, 22, 40, 0.55) 62%, rgba(10, 22, 40, 0.88) 100%); pointer-events: none; }
+      .mo-onphoto { color: #fff; text-shadow: 0 6px 30px rgba(10, 22, 40, 0.45); }
+      .mo-onphoto .mo-a { color: var(--brand); background: none; }
+      .mo-onphoto-cap { color: #fff; opacity: 0.9; }
+
+      /* ---------- scene.versus / scene.trio / gobo / alert toasts ---------- */
+      .mo-gobo { pointer-events: none; opacity: 0.13; filter: blur(9px); }
+      .mo-vscol { display: flex; flex-direction: column; align-items: stretch; gap: 26px; }
+      .mo-vs { position: relative; display: flex; align-items: center; gap: 30px; padding: 34px 38px; border-radius: 42px; background: var(--card); border: 3px solid var(--line); box-shadow: 0 30px 70px rgba(10, 22, 40, 0.14); overflow: hidden; }
+      .mo-vs-ic { display: flex; align-items: center; justify-content: center; width: 110px; height: 110px; border-radius: 50%; flex: none; }
+      .mo-vs-bad .mo-vs-ic { background: #D92D20; }
+      .mo-vs-good { border-color: var(--accent); box-shadow: 0 34px 80px var(--a25); }
+      .mo-vs-good .mo-vs-ic { background: var(--accent); }
+      .mo-vs-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+      .mo-vs-t { justify-content: flex-start; text-align: left; font-size: 60px; font-weight: 800; line-height: 1.1; color: var(--ink); }
+      .mo-vs-bad .mo-vs-t { color: var(--mute); font-weight: 700; }
+      .mo-vs-sub { font-size: 32px; font-weight: 500; color: var(--mute); line-height: 1.2; }
+      .mo-vs-logos { display: flex; gap: 18px; align-items: center; }
+      .mo-vs-logos img { height: 120px; width: auto; max-width: 240px; object-fit: contain; border-radius: 16px; }
+      .mo-vs-strike { position: absolute; left: 150px; right: 36px; top: 50%; height: 9px; margin-top: -4px; border-radius: 9px; background: #D92D20; }
+      .mo-vs-arrow { align-self: center; transform: rotate(90deg); display: flex; }
+      .mo-trio-kicker { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-weight: 500; font-size: 58px; color: var(--mute); }
+      .mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.98; color: var(--ink); }
+      .mo-med { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--card); box-shadow: 0 26px 60px rgba(10, 22, 40, 0.16); overflow: hidden; }
+      .mo-med-img { width: 72%; height: 72%; object-fit: contain; }
+      .mo-medring { pointer-events: none; }
+      .mo-med-label { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 46px; font-weight: 500; color: var(--ink); line-height: 1.1; }
+      .mo-toast.mo-danger { background: #D92D20; color: #fff; }
+      .mo-toast.mo-danger i { background: rgba(255, 255, 255, 0.22); }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="35.52" data-width="1080" data-height="1920">
+      <div id="el-s01" class="clip" data-composition-id="s01" data-composition-src="compositions/s01.html" data-start="0" data-duration="2.8" data-track-index="1" data-width="1080" data-height="1920" style="z-index:1"></div>
+      <div id="el-s02" class="clip" data-composition-id="s02" data-composition-src="compositions/s02.html" data-start="2.38" data-duration="5.16" data-track-index="2" data-width="1080" data-height="1920" style="z-index:2"></div>
+      <div id="el-s03" class="clip" data-composition-id="s03" data-composition-src="compositions/s03.html" data-start="7.08" data-duration="4.94" data-track-index="1" data-width="1080" data-height="1920" style="z-index:3"></div>
+      <div id="el-s04" class="clip" data-composition-id="s04" data-composition-src="compositions/s04.html" data-start="11.56" data-duration="5.11" data-track-index="2" data-width="1080" data-height="1920" style="z-index:4"></div>
+      <div id="el-s05" class="clip" data-composition-id="s05" data-composition-src="compositions/s05.html" data-start="16.12" data-duration="5.01" data-track-index="1" data-width="1080" data-height="1920" style="z-index:5"></div>
+      <div id="el-s06" class="clip" data-composition-id="s06" data-composition-src="compositions/s06.html" data-start="20.71" data-duration="5.61" data-track-index="2" data-width="1080" data-height="1920" style="z-index:6"></div>
+      <div id="el-s07" class="clip" data-composition-id="s07" data-composition-src="compositions/s07.html" data-start="25.86" data-duration="4.16" data-track-index="1" data-width="1080" data-height="1920" style="z-index:7"></div>
+      <div id="el-s08" class="clip" data-composition-id="s08" data-composition-src="compositions/s08.html" data-start="29.52" data-duration="2.96" data-track-index="2" data-width="1080" data-height="1920" style="z-index:8"></div>
+      <div id="el-s09" class="clip" data-composition-id="s09" data-composition-src="compositions/s09.html" data-start="31.93" data-duration="3.59" data-track-index="1" data-width="1080" data-height="1920" style="z-index:9"></div>
+
+      <!-- Voix off : Algieba (fr-FR) -->
+      <audio id="vo-s01" src="assets/vo/s01.wav" data-start="0.12" data-duration="1.68" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-s02" src="assets/vo/s02.wav" data-start="2.81" data-duration="4.1" data-track-index="11" data-volume="1"></audio>
+      <audio id="vo-s03" src="assets/vo/s03.wav" data-start="7.53" data-duration="3.86" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-s04" src="assets/vo/s04.wav" data-start="12.01" data-duration="3.98" data-track-index="11" data-volume="1"></audio>
+      <audio id="vo-s05" src="assets/vo/s05.wav" data-start="16.62" data-duration="3.91" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-s06" src="assets/vo/s06.wav" data-start="21.14" data-duration="4.55" data-track-index="11" data-volume="1"></audio>
+      <audio id="vo-s07" src="assets/vo/s07.wav" data-start="26.31" data-duration="3.06" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-s08" src="assets/vo/s08.wav" data-start="30" data-duration="1.8" data-track-index="11" data-volume="1"></audio>
+      <audio id="vo-s09" src="assets/vo/s09.wav" data-start="32.43" data-duration="2.19" data-track-index="10" data-volume="1"></audio>
+
+      <!-- Effets sonores : placés automatiquement depuis les scènes (sfx/CREDITS.md) -->
+      <audio id="sfx01" src="assets/sfx/whoosh-short.mp3" data-start="0.02" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx02" src="assets/sfx/impact-bass-1.mp3" data-start="0.22" data-duration="2.12" data-track-index="21" data-volume="0.5"></audio>
+      <audio id="sfx03" src="assets/sfx/pop.mp3" data-start="0.24" data-duration="0.72" data-track-index="22" data-volume="0.36"></audio>
+      <audio id="sfx04" src="assets/sfx/whoosh-short.mp3" data-start="2.38" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx05" src="assets/sfx/pop.mp3" data-start="3.08" data-duration="0.72" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sfx06" src="assets/sfx/notification.mp3" data-start="4.33" data-duration="2.46" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx07" src="assets/sfx/glitch-3.mp3" data-start="5.57" data-duration="1" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sfx08" src="assets/sfx/whoosh-short.mp3" data-start="7.08" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx09" src="assets/sfx/whoosh-short.mp3" data-start="7.78" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx10" src="assets/sfx/glitch-3.mp3" data-start="8.33" data-duration="1" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sfx11" src="assets/sfx/pop.mp3" data-start="9.83" data-duration="0.72" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sfx12" src="assets/sfx/chime.mp3" data-start="9.98" data-duration="2.54" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sfx13" src="assets/sfx/whoosh-short.mp3" data-start="11.56" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx14" src="assets/sfx/whoosh-short.mp3" data-start="12.26" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx15" src="assets/sfx/glitch-3.mp3" data-start="12.81" data-duration="1" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sfx16" src="assets/sfx/pop.mp3" data-start="14.37" data-duration="0.72" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sfx17" src="assets/sfx/chime.mp3" data-start="14.52" data-duration="2.54" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sfx18" src="assets/sfx/whoosh.mp3" data-start="16.12" data-duration="0.57" data-track-index="20" data-volume="0.42"></audio>
+      <audio id="sfx19" src="assets/sfx/whoosh-short.mp3" data-start="16.16" data-duration="0.57" data-track-index="22" data-volume="0.34"></audio>
+      <audio id="sfx20" src="assets/sfx/pop.mp3" data-start="16.87" data-duration="0.72" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sfx21" src="assets/sfx/notification.mp3" data-start="18.06" data-duration="2.46" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx22" src="assets/sfx/pop.mp3" data-start="19.25" data-duration="0.72" data-track-index="21" data-volume="0.36"></audio>
+      <audio id="sfx23" src="assets/sfx/click.mp3" data-start="19.8" data-duration="0.37" data-track-index="22" data-volume="0.46"></audio>
+      <audio id="sfx24" src="assets/sfx/chime.mp3" data-start="19.95" data-duration="2.54" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sfx25" src="assets/sfx/whoosh-short.mp3" data-start="20.71" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx26" src="assets/sfx/whoosh-short.mp3" data-start="21.39" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx27" src="assets/sfx/glitch-3.mp3" data-start="21.94" data-duration="1" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sfx28" src="assets/sfx/pop.mp3" data-start="23.83" data-duration="0.72" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sfx29" src="assets/sfx/chime.mp3" data-start="23.98" data-duration="2.54" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sfx30" src="assets/sfx/whoosh-short.mp3" data-start="25.86" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx31" src="assets/sfx/pop.mp3" data-start="26.16" data-duration="0.72" data-track-index="22" data-volume="0.36"></audio>
+      <audio id="sfx32" src="assets/sfx/whoosh-short.mp3" data-start="26.56" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sfx33" src="assets/sfx/pop.mp3" data-start="27.91" data-duration="0.72" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sfx34" src="assets/sfx/chime.mp3" data-start="28.06" data-duration="2.54" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sfx35" src="assets/sfx/whoosh.mp3" data-start="29.52" data-duration="0.57" data-track-index="20" data-volume="0.42"></audio>
+      <audio id="sfx36" src="assets/sfx/whoosh-short.mp3" data-start="29.62" data-duration="0.57" data-track-index="22" data-volume="0.34"></audio>
+      <audio id="sfx37" src="assets/sfx/pop.mp3" data-start="30.25" data-duration="0.72" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sfx38" src="assets/sfx/pop.mp3" data-start="30.59" data-duration="0.72" data-track-index="22" data-volume="0.36"></audio>
+      <audio id="sfx39" src="assets/sfx/pop.mp3" data-start="30.94" data-duration="0.72" data-track-index="21" data-volume="0.36"></audio>
+      <audio id="sfx40" src="assets/sfx/pop.mp3" data-start="31.28" data-duration="0.72" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sfx41" src="assets/sfx/whoosh.mp3" data-start="31.93" data-duration="0.57" data-track-index="21" data-volume="0.42"></audio>
+      <audio id="sfx42" src="assets/sfx/impact-bass-1.mp3" data-start="32.03" data-duration="2.12" data-track-index="20" data-volume="0.5"></audio>
+      <audio id="sfx43" src="assets/sfx/pop.mp3" data-start="32.83" data-duration="0.72" data-track-index="21" data-volume="0.36"></audio>
+      <audio id="sfx44" src="assets/sfx/chime.mp3" data-start="33.13" data-duration="2.39" data-track-index="22" data-volume="0.4"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

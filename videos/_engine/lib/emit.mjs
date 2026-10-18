@@ -57,8 +57,8 @@ function sceneHtml(sc, spec, prev) {
     <template id="${id}-template">
       <style>
         .mo-stage { font-family: "Poppins", sans-serif; }
-        .mo-s { font-family: "Playfair Display", serif; font-style: italic; }
-        .mo-caps, .mo-ghost { font-family: "Archivo Black", "Poppins", sans-serif; }
+        .mo-s, .mo-trio-kicker, .mo-med-label { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost, .mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; }
       </style>
       <div class="mo" id="${id}-root" data-composition-id="${id}" data-width="${W}" data-height="${H}"></div>
       <script>

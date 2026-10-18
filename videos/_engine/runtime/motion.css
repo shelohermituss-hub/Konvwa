@@ -165,3 +165,28 @@
 .mo-onphoto { color: #fff; text-shadow: 0 6px 30px rgba(10, 22, 40, 0.45); }
 .mo-onphoto .mo-a { color: var(--brand); background: none; }
 .mo-onphoto-cap { color: #fff; opacity: 0.9; }
+
+/* ---------- scene.versus / scene.trio / gobo / alert toasts ---------- */
+.mo-gobo { pointer-events: none; opacity: 0.13; filter: blur(9px); }
+.mo-vscol { display: flex; flex-direction: column; align-items: stretch; gap: 26px; }
+.mo-vs { position: relative; display: flex; align-items: center; gap: 30px; padding: 34px 38px; border-radius: 42px; background: var(--card); border: 3px solid var(--line); box-shadow: 0 30px 70px rgba(10, 22, 40, 0.14); overflow: hidden; }
+.mo-vs-ic { display: flex; align-items: center; justify-content: center; width: 110px; height: 110px; border-radius: 50%; flex: none; }
+.mo-vs-bad .mo-vs-ic { background: #D92D20; }
+.mo-vs-good { border-color: var(--accent); box-shadow: 0 34px 80px var(--a25); }
+.mo-vs-good .mo-vs-ic { background: var(--accent); }
+.mo-vs-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.mo-vs-t { justify-content: flex-start; text-align: left; font-size: 60px; font-weight: 800; line-height: 1.1; color: var(--ink); }
+.mo-vs-bad .mo-vs-t { color: var(--mute); font-weight: 700; }
+.mo-vs-sub { font-size: 32px; font-weight: 500; color: var(--mute); line-height: 1.2; }
+.mo-vs-logos { display: flex; gap: 18px; align-items: center; }
+.mo-vs-logos img { height: 120px; width: auto; max-width: 240px; object-fit: contain; border-radius: 16px; }
+.mo-vs-strike { position: absolute; left: 150px; right: 36px; top: 50%; height: 9px; margin-top: -4px; border-radius: 9px; background: #D92D20; }
+.mo-vs-arrow { align-self: center; transform: rotate(90deg); display: flex; }
+.mo-trio-kicker { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-weight: 500; font-size: 58px; color: var(--mute); }
+.mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.98; color: var(--ink); }
+.mo-med { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--card); box-shadow: 0 26px 60px rgba(10, 22, 40, 0.16); overflow: hidden; }
+.mo-med-img { width: 72%; height: 72%; object-fit: contain; }
+.mo-medring { pointer-events: none; }
+.mo-med-label { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 46px; font-weight: 500; color: var(--ink); line-height: 1.1; }
+.mo-toast.mo-danger { background: #D92D20; color: #fff; }
+.mo-toast.mo-danger i { background: rgba(255, 255, 255, 0.22); }

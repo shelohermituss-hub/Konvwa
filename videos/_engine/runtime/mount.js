@@ -7,7 +7,7 @@
   const blur = (n) => 'blur(' + n + 'px)'
 
   /** Purely decorative layers (glows, rings, ghosts…): allowed to bleed past the frame and sit behind other things. */
-  M.DECO = '.mo-glow,.mo-rings,.mo-ringwave,.mo-halo,.mo-dotring,.mo-ribbon,.mo-dapple,.mo-pcircle,.mo-pdot,.mo-pxcell,.mo-scan,.mo-ghost,.mo-glyph,.mo-dots,.mo-lines,.mo-pillglow,.mo-disc,.mo-flash,.mo-sq,.mo-hex,.mo-cutout,.mo-carry,.mo-carryshadow,.mo-bigdisc,.mo-photo,.mo-photo-shade'
+  M.DECO = '.mo-glow,.mo-rings,.mo-ringwave,.mo-halo,.mo-dotring,.mo-ribbon,.mo-dapple,.mo-pcircle,.mo-pdot,.mo-pxcell,.mo-scan,.mo-ghost,.mo-glyph,.mo-dots,.mo-lines,.mo-pillglow,.mo-disc,.mo-flash,.mo-sq,.mo-hex,.mo-cutout,.mo-carry,.mo-carryshadow,.mo-bigdisc,.mo-photo,.mo-photo-shade,.mo-gobo,.mo-medring'
 
   M.TRANSITIONS = {
     cut: { dur: 0, sfx: null, in() {}, out() {} },

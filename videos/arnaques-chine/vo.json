@@ -1,0 +1,102 @@
+{
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy",
+    "direction": "énergie, un rythme rapide et le sourire dans la voix",
+    "language": "fr-FR",
+    "model": "t2a-gemini-3-1-flash-tts"
+  },
+  "lines": [
+    {
+      "id": "s01",
+      "scene": 1,
+      "type": "hook.statement",
+      "text": "4 arnaques à éviter en Chine.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : 4 arnaques à éviter en Chine.",
+      "file": "assets/vo/s01.wav",
+      "estimatedSeconds": 1.68,
+      "measured": true
+    },
+    {
+      "id": "s02",
+      "scene": 2,
+      "type": "scene.ui",
+      "text": "Un prix trop beau. Vous payez. Et le vendeur disparaît.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Un prix trop beau. Vous payez. Et le vendeur disparaît.",
+      "file": "assets/vo/s02.wav",
+      "estimatedSeconds": 4.1,
+      "measured": true
+    },
+    {
+      "id": "s03",
+      "scene": 3,
+      "type": "scene.versus",
+      "text": "Avec KONVWA, c’est nous qui achetons, auprès de fournisseurs vérifiés.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Avec KONVWA, c’est nous qui achetons, auprès de fournisseurs vérifiés.",
+      "file": "assets/vo/s03.wav",
+      "estimatedSeconds": 3.86,
+      "measured": true
+    },
+    {
+      "id": "s04",
+      "scene": 4,
+      "type": "scene.versus",
+      "text": "Jamais de virement au vendeur. Vous payez par MonCash ou NatCash.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Jamais de virement au vendeur. Vous payez par MonCash ou NatCash.",
+      "file": "assets/vo/s04.wav",
+      "estimatedSeconds": 3.98,
+      "measured": true
+    },
+    {
+      "id": "s05",
+      "scene": 5,
+      "type": "scene.ui",
+      "text": "Produit différent des photos ? Signalez-le avec photos depuis le Support.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Produit différent des photos ? Signalez-le avec photos depuis le Support.",
+      "file": "assets/vo/s05.wav",
+      "estimatedSeconds": 3.91,
+      "measured": true
+    },
+    {
+      "id": "s06",
+      "scene": 6,
+      "type": "scene.versus",
+      "text": "Plus de frais cachés. Votre devis inclut tout, douane comprise, en gourdes.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Plus de frais cachés. Votre devis inclut tout, douane comprise, en gourdes.",
+      "file": "assets/vo/s06.wav",
+      "estimatedSeconds": 4.55,
+      "measured": true
+    },
+    {
+      "id": "s07",
+      "scene": 7,
+      "type": "scene.route",
+      "text": "Et vous suivez votre colis à chaque étape, jusqu’en Haïti.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Et vous suivez votre colis à chaque étape, jusqu’en Haïti.",
+      "file": "assets/vo/s07.wav",
+      "estimatedSeconds": 3.06,
+      "measured": true
+    },
+    {
+      "id": "s08",
+      "scene": 8,
+      "type": "scene.trio",
+      "text": "Achetez en Chine, sans risque.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Achetez en Chine, sans risque.",
+      "file": "assets/vo/s08.wav",
+      "estimatedSeconds": 1.8,
+      "measured": true
+    },
+    {
+      "id": "s09",
+      "scene": 9,
+      "type": "scene.end",
+      "text": "KONVWA. Achetez, nous livrons.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : KONVWA. Achetez, nous livrons.",
+      "file": "assets/vo/s09.wav",
+      "estimatedSeconds": 2.19,
+      "measured": true
+    }
+  ]
+}

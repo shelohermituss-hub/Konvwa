@@ -1,0 +1,247 @@
+{
+  "name": "arnaques-chine",
+  "title": "4 arnaques à éviter quand on achète en Chine, et comment KONVWA vous en protège",
+  "format": "9:16",
+  "theme": "light",
+  "brand": "konvwa",
+  "seed": 11,
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy"
+  },
+  "scenes": [
+    {
+      "type": "hook.statement",
+      "tone": "accent",
+      "text": "4 *arnaques*|à éviter en Chine",
+      "glyphs": [
+        "!",
+        "✕"
+      ],
+      "vo": "4 arnaques à éviter en Chine."
+    },
+    {
+      "type": "scene.ui",
+      "text": "Le *faux* fournisseur",
+      "items": [
+        {
+          "kind": "card",
+          "icon": "store",
+          "title": "Prix imbattable",
+          "sub": "Fournisseur inconnu",
+          "value": "−70 %"
+        },
+        {
+          "kind": "toast",
+          "icon": "check",
+          "title": "Paiement envoyé"
+        },
+        {
+          "kind": "toast",
+          "icon": "alert",
+          "title": "Vendeur introuvable",
+          "tone": "danger"
+        }
+      ],
+      "cursor": false,
+      "vo": "Un prix trop beau. Vous payez. Et le vendeur disparaît.",
+      "kicker": "Arnaque n° 1",
+      "decor": [
+        {
+          "src": "lib:site/entrepot.png",
+          "x": 0.7,
+          "y": 0.84,
+          "depth": 0.85,
+          "size": 0.5,
+          "rot": -4
+        }
+      ]
+    },
+    {
+      "type": "scene.versus",
+      "kicker": "La solution",
+      "bad": {
+        "text": "Payer un vendeur inconnu"
+      },
+      "good": {
+        "text": "KONVWA achète pour vous chez des fournisseurs *vérifiés*",
+        "images": [
+          "lib:site/verified.png"
+        ]
+      },
+      "vo": "Avec KONVWA, c’est nous qui achetons, auprès de fournisseurs vérifiés.",
+      "decor": [
+        {
+          "src": "lib:site/chariot.webp",
+          "x": 0.68,
+          "y": 0.83,
+          "depth": 0.9,
+          "size": 0.62,
+          "rot": -4
+        }
+      ]
+    },
+    {
+      "type": "scene.versus",
+      "kicker": "Arnaque n° 2",
+      "bad": {
+        "text": "Virement direct au vendeur"
+      },
+      "good": {
+        "text": "Vous payez *en Haïti*",
+        "sub": "MonCash ou NatCash, sans carte étrangère",
+        "images": [
+          "lib:site/moncash.jpg",
+          "lib:site/natcash.png"
+        ]
+      },
+      "transition": "up",
+      "vo": "Jamais de virement au vendeur. Vous payez par MonCash ou NatCash.",
+      "decor": [
+        {
+          "src": "lib:illustrations/telephone.png",
+          "x": 0.72,
+          "y": 0.82,
+          "depth": 0.9,
+          "size": 0.36,
+          "rot": 12
+        },
+        {
+          "src": "lib:flags/haiti.png",
+          "x": 0.22,
+          "y": 0.86,
+          "depth": 0.6,
+          "size": 0.26,
+          "rot": -8
+        }
+      ]
+    },
+    {
+      "type": "scene.ui",
+      "text": "Reçu ≠ *photo* ?",
+      "items": [
+        {
+          "kind": "card",
+          "icon": "camera",
+          "title": "Produit non conforme",
+          "sub": "Réclamation avec photos"
+        },
+        {
+          "kind": "toast",
+          "icon": "wallet",
+          "title": "Remboursement en crédit portefeuille"
+        },
+        {
+          "kind": "button",
+          "title": "Signaler un problème"
+        }
+      ],
+      "vo": "Produit différent des photos ? Signalez-le avec photos depuis le Support.",
+      "kicker": "Arnaque n° 3",
+      "decor": [
+        {
+          "src": "lib:illustrations/cliente-sacs.png",
+          "x": 0.74,
+          "y": 0.84,
+          "depth": 0.9,
+          "size": 0.42,
+          "rot": 0
+        }
+      ]
+    },
+    {
+      "type": "scene.versus",
+      "kicker": "Arnaque n° 4",
+      "bad": {
+        "text": "Frais cachés, douane surprise"
+      },
+      "good": {
+        "text": "Devis *tout inclus*",
+        "sub": "Produit, service, expédition, douane, livraison : ligne par ligne, en HTG",
+        "images": [
+          "lib:site/carton.jpg"
+        ]
+      },
+      "vo": "Plus de frais cachés. Votre devis inclut tout, douane comprise, en gourdes.",
+      "decor": [
+        {
+          "src": "lib:site/carton.jpg",
+          "x": 0.7,
+          "y": 0.83,
+          "depth": 0.9,
+          "size": 0.46,
+          "rot": 6
+        },
+        {
+          "src": "lib:site/conteneur.png",
+          "x": 0.2,
+          "y": 0.88,
+          "depth": 0.5,
+          "size": 0.3,
+          "rot": -10
+        }
+      ]
+    },
+    {
+      "type": "scene.route",
+      "text": "Suivi *à chaque étape*",
+      "from": {
+        "label": "Chine",
+        "icon": "globe"
+      },
+      "to": {
+        "label": "Haïti",
+        "icon": "pin"
+      },
+      "badge": "Dédouanement inclus",
+      "vo": "Et vous suivez votre colis à chaque étape, jusqu’en Haïti.",
+      "decor": [
+        {
+          "src": "lib:site/conteneur.png",
+          "x": 0.84,
+          "y": 0.36,
+          "depth": 0.7,
+          "size": 0.26,
+          "rot": -8
+        },
+        {
+          "src": "lib:site/avion-cargo.jpg",
+          "x": 0.74,
+          "y": 0.91,
+          "depth": 0.85,
+          "size": 0.38,
+          "rot": -6
+        }
+      ]
+    },
+    {
+      "type": "scene.trio",
+      "kicker": "achetez en Chine,",
+      "text": "sans risque",
+      "items": [
+        {
+          "image": "lib:site/verified.png",
+          "label": "Vérifié"
+        },
+        {
+          "image": "lib:site/moncash.jpg",
+          "label": "Payé en Haïti"
+        },
+        {
+          "image": "lib:site/carton.jpg",
+          "label": "Tout inclus"
+        },
+        {
+          "image": "lib:site/conteneur.png",
+          "label": "Suivi"
+        }
+      ],
+      "vo": "Achetez en Chine, sans risque."
+    },
+    {
+      "type": "scene.end",
+      "vo": "KONVWA. Achetez, nous livrons."
+    }
+  ]
+}

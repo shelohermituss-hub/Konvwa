@@ -35,6 +35,10 @@
     sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>',
     lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
     gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+    receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
   }
   M.ICONS = ICONS
 
@@ -99,6 +103,21 @@
     const W = env.W
     const H = env.H
     const R = M.rng(env.seed + 7)
+    if (kind === 'gobo') {
+      // light through leaves (reference G): sharp petals in two corners and soft blurred dapples, all on the ink colour
+      const petals = (n, len, wid) => Array.from({ length: n }, (_, i) => '<ellipse cx="0" cy="' + -len / 2 + '" rx="' + wid + '" ry="' + len / 2 + '" transform="rotate(' + Math.round((360 / n) * i + R() * 14) + ')"/>').join('')
+      const leaf = (x, y, s, rot) => {
+        const e = h.box(stage, 'mo-gobo', { left: Math.round(x - s / 2), top: Math.round(y - s / 2), width: s, height: s })
+        e.innerHTML = '<svg viewBox="-100 -100 200 200" width="' + s + '" height="' + s + '"><g fill="var(--ink)" transform="rotate(' + rot + ')">' + petals(7, 96, 17) + '</g></svg>'
+        return e
+      }
+      out.push(leaf(W * 0.95, H * 0.05, W * 0.7, 10), leaf(W * 0.05, H * 0.95, W * 0.78, -20), leaf(W * 0.02, H * 0.3, W * 0.42, 40))
+      for (let i = 0; i < 3; i++) {
+        const d = Math.round(W * (0.5 + R() * 0.4))
+        const e = h.box(stage, 'mo-dapple', { left: Math.round(W * (0.1 + R() * 0.6) - d / 2), top: Math.round(H * (0.15 + R() * 0.7) - d / 2), width: d, height: d })
+        out.push(e)
+      }
+    }
     if (kind === 'dots') {
       out.push(h.box(stage, 'mo-dots', { left: 0, top: 0, width: W, height: H }))
     }

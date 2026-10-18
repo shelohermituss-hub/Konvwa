@@ -1,0 +1,72 @@
+{
+  "name": "arnaques-chine",
+  "format": "9:16",
+  "total": 35.52,
+  "scenes": [
+    {
+      "id": "s01",
+      "type": "hook.statement",
+      "start": 0,
+      "dur": 2.8,
+      "transition": null
+    },
+    {
+      "id": "s02",
+      "type": "scene.ui",
+      "start": 2.38,
+      "dur": 5.16,
+      "transition": "whip"
+    },
+    {
+      "id": "s03",
+      "type": "scene.versus",
+      "start": 7.08,
+      "dur": 4.94,
+      "transition": "up"
+    },
+    {
+      "id": "s04",
+      "type": "scene.versus",
+      "start": 11.56,
+      "dur": 5.11,
+      "transition": "up"
+    },
+    {
+      "id": "s05",
+      "type": "scene.ui",
+      "start": 16.12,
+      "dur": 5.01,
+      "transition": "circle"
+    },
+    {
+      "id": "s06",
+      "type": "scene.versus",
+      "start": 20.71,
+      "dur": 5.61,
+      "transition": "whip"
+    },
+    {
+      "id": "s07",
+      "type": "scene.route",
+      "start": 25.86,
+      "dur": 4.16,
+      "transition": "up"
+    },
+    {
+      "id": "s08",
+      "type": "scene.trio",
+      "start": 29.52,
+      "dur": 2.96,
+      "transition": "scale"
+    },
+    {
+      "id": "s09",
+      "type": "scene.end",
+      "start": 31.93,
+      "dur": 3.59,
+      "transition": "circle"
+    }
+  ],
+  "sfx": 44,
+  "hookEnd": 2.8
+}

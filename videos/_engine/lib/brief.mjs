@@ -11,7 +11,7 @@ export const VOICE_STYLES = {
   premium: 'une voix posée, chaleureuse et sûre d’elle',
   urgent: 'urgence et enthousiasme, comme une vente flash',
   friendly: 'chaleur et naturel, comme un ami qui donne un bon plan',
-  story: 'le ton d’un conteur : intrigant, puis rassurant',
+  story: 'le ton d’un conteur, intrigant puis rassurant',
 }
 
 /** The exact prompt sent to the text-to-speech model for one line. */

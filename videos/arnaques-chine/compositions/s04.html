@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s04-template">
+      <style>
+        .mo-stage { font-family: "Poppins", sans-serif; }
+        .mo-s, .mo-trio-kicker, .mo-med-label { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost, .mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; }
+      </style>
+      <div class="mo" id="s04-root" data-composition-id="s04" data-width="1080" data-height="1920"></div>
+      <script>
+        (function () {
+          var M = window.MOTION;
+          var spec = {"type":"scene.versus","kicker":"Arnaque n° 2","bad":{"text":"Virement direct au vendeur"},"good":{"text":"Vous payez *en Haïti*","sub":"MonCash ou NatCash, sans carte étrangère","images":["assets/lib/site/moncash.jpg","assets/lib/site/natcash.png"]},"transition":"up","vo":"Jamais de virement au vendeur. Vous payez par MonCash ou NatCash.","decor":[{"src":"assets/lib/illustrations/telephone.png","x":0.72,"y":0.82,"depth":0.9,"size":0.36,"rot":12},{"src":"assets/lib/flags/haiti.png","x":0.22,"y":0.86,"depth":0.6,"size":0.26,"rot":-8}]};
+          var env = {"id":"s04","W":1080,"H":1920,"safe":{"t":250,"b":440,"l":70,"r":70},"dur":5.11,"seed":62,"theme":"light","vo":{"start":0.45,"dur":3.98},"transIn":{"kind":"up","dur":0.46},"transOut":{"kind":"circle","dur":0.55}};
+          env.brand = M.brand;
+          env.pal = M.pals[env.theme];
+          var root = document.getElementById("s04-root");
+          var tl = gsap.timeline({ paused: true });
+          M.mount(root, tl, spec, env);
+          window.__timelines = window.__timelines || {};
+          window.__timelines["s04"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

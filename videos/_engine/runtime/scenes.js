@@ -215,15 +215,17 @@
     sfx: (spec, env) => {
       const its = spec.items || []
       const t = spreadPure(env, its.length, 0.7, 0.55)
-      return its.map((it, i) => ({ t: t[i], cue: it.kind === 'toast' ? 'notify' : 'pop' })).concat(its.some((i) => i.kind === 'button') ? [{ t: M.r2(t[t.length - 1] + 0.55), cue: 'click' }, { t: M.r2(t[t.length - 1] + 0.7), cue: 'chime' }] : [])
+      return its.map((it, i) => ({ t: t[i], cue: it.tone === 'danger' ? 'glitch' : it.kind === 'toast' ? 'notify' : 'pop' })).concat(its.some((i) => i.kind === 'button') ? [{ t: M.r2(t[t.length - 1] + 0.55), cue: 'click' }, { t: M.r2(t[t.length - 1] + 0.7), cue: 'chime' }] : [])
     },
     build(c) {
       const { stage, tl, env, h, fx, spec } = c
-      h.bg(stage, env, 'glow', env.theme)
-      const head = spec.text ? heading(c, spec.text, { top: env.safe.t, size: 112 }) : null
+      h.bg(stage, env, spec.bg || 'glow', env.theme)
+      const kh = spec.kicker ? 70 : 0
+      if (spec.kicker) { const k = h.box(stage, 'mo-cap mo-center-text', { left: env.safe.l, width: c.maxW, top: env.safe.t }); k.textContent = spec.kicker; fx.fadeUp(tl, k, 0.05, { y: 18, dur: 0.4 }) }
+      const head = spec.text ? heading(c, spec.text, { top: env.safe.t + kh, size: 112 }) : null
       const items = spec.items.slice(0, 5)
       const times = spread(c, items.length, 0.7, 0.55)
-      const col = h.box(stage, 'mo-uicol', { left: env.safe.l, width: c.maxW, top: head ? env.safe.t + head.height + 90 : env.safe.t + 140 })
+      const col = h.box(stage, 'mo-uicol', { left: env.safe.l, width: c.maxW, top: head ? env.safe.t + kh + head.height + 90 : env.safe.t + kh + 140 })
       let btn = null
       const free = (env.H - env.safe.b) - parseFloat(col.style.top)
       items.forEach((it, i) => {
@@ -241,7 +243,9 @@
           el.querySelector('em').textContent = it.sub || ''
           el.querySelector('strong').textContent = it.value || ''
         }
+        if (it.tone === 'danger') el.classList.add('mo-danger')
         fx.pop(tl, el, times[i], { from: 0.7, y: 70, dur: 0.55 })
+        if (it.tone === 'danger') { tl.to(el, { x: -18, duration: 0.05 }, times[i] + 0.45); tl.to(el, { x: 14, duration: 0.06 }, times[i] + 0.5); tl.to(el, { x: 0, duration: 0.2, ease: E.spring }, times[i] + 0.56) }
       })
       col.style.top = Math.round(parseFloat(col.style.top) + Math.max(0, (free - col.offsetHeight) / 2 - 30)) + 'px'
       if (btn && spec.cursor !== false) {
@@ -356,6 +360,101 @@
       fx.reveal(tl, t.words, times, { y: 50, blur: 18, dur: 0.6 })
       const ai = M.accentIndex(spec.text)
       if (ai >= 0) { const w = t.words[ai]; w.style.position = 'relative'; fx.mark(tl, t.words, times[ai] + 0.2, 0.45) }
+    },
+  })
+
+  // ============ scene.versus — the trap gets crossed out, the answer lands under it ============
+  /** Moments of a versus scene: trap in, trap crossed out, answer in. */
+  const versusTimes = (env) => { const t = spreadPure(env, 2, 0.35, 1.0); return { bad: t[0], cross: M.r2(t[0] + 0.55), good: t[1] } }
+  M.register('scene.versus', {
+    kind: 'scene', label: 'Le piège (barré, en rouge) puis la solution (coche orange, logos) juste dessous', min: 3.0, max: 7, words: [0, 8], needs: ['bad', 'good'],
+    sfx: (spec, env) => { const t = versusTimes(env); return [{ t: t.bad, cue: 'whoosh' }, { t: t.cross, cue: 'glitch' }, { t: t.good, cue: 'pop' }, { t: M.r2(t.good + 0.15), cue: 'chime' }] },
+    build(c) {
+      const { stage, tl, env, h, fx, spec } = c
+      h.bg(stage, env, spec.bg || 'gobo', env.theme).forEach((d, i) => fx.drift(tl, [d], 0, c.dur, 30 + i * 12, env.seed + i))
+      const head = spec.text ? heading(c, spec.text, { top: env.safe.t + (spec.kicker ? 70 : 0), size: 104 }) : null
+      if (spec.kicker) { const k = h.box(stage, 'mo-cap mo-center-text', { left: env.safe.l, width: c.maxW, top: env.safe.t }); k.textContent = spec.kicker; fx.fadeUp(tl, k, 0.05, { y: 18, dur: 0.4 }) }
+      const t = versusTimes(env)
+      const top = head ? env.safe.t + (spec.kicker ? 70 : 0) + head.height + 90 : env.safe.t + 160
+      const col = h.box(stage, 'mo-vscol', { left: env.safe.l, width: c.maxW, top })
+      const card = (side, it) => {
+        const el = h.el('div', 'mo-vs mo-vs-' + side, '', col)
+        el.innerHTML = '<i class="mo-vs-ic">' + h.icon(it.icon || (side === 'bad' ? 'x' : 'check'), 64, '#fff', 3) + '</i><div class="mo-vs-body"></div>'
+        const body = el.querySelector('.mo-vs-body')
+        h.text(body, it.text, 'mo-vs-t', {})
+        if (it.sub) { const s = h.el('div', 'mo-vs-sub', '', body); s.textContent = it.sub }
+        const imgs = it.images || (it.image ? [it.image] : [])
+        if (imgs.length) { const row = h.el('div', 'mo-vs-logos', '', body); imgs.slice(0, 3).forEach((src) => { const im = h.el('img', '', '', row); im.src = src }) }
+        return el
+      }
+      const bad = card('bad', spec.bad)
+      const vsTag = h.el('div', 'mo-vs-arrow', h.icon('arrow', 64, 'var(--accent)', 3), col)
+      const good = card('good', spec.good)
+      fx.slideIn(tl, bad, t.bad, { x: -160, dur: 0.6 })
+      // crossed out: a red bar sweeps over the trap, the card shakes and fades back
+      const strike = h.el('div', 'mo-vs-strike', '', bad)
+      tl.fromTo(strike, { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: 'power3.out', transformOrigin: '0% 50%' }, t.cross)
+      tl.to(bad, { x: -16, duration: 0.05 }, t.cross + 0.05)
+      tl.to(bad, { x: 12, duration: 0.06 }, t.cross + 0.1)
+      tl.to(bad, { x: 0, duration: 0.2, ease: E.spring }, t.cross + 0.16)
+      tl.to(bad, { opacity: 0.55, scale: 0.95, duration: 0.4, ease: 'power2.out' }, t.cross + 0.4)
+      fx.pop(tl, vsTag, t.good - 0.25, { from: 0.3, dur: 0.4 })
+      tl.fromTo(good, { opacity: 0, y: 120, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.65, ease: E.springHard }, t.good)
+      const gw = good.querySelectorAll('.mo-vs-logos img')
+      gw.forEach((im, i) => fx.pop(tl, im, t.good + 0.35 + i * 0.12, { from: 0.4, dur: 0.45 }))
+      fx.mark(tl, good.querySelectorAll('.mo-w').length ? Array.from(good.querySelectorAll('.mo-w')) : [], t.good + 0.5, 0.45)
+      const ring = h.box(good, 'mo-ringwave', { left: 20, top: 20, width: 110, height: 110 })
+      fx.wave(tl, ring, t.good + 0.2, { to: 3, dur: 0.8 })
+      // the pair sits in the middle of the free space, not glued under the title
+      const free = env.H - env.safe.b - top
+      col.style.top = Math.round(top + Math.max(0, (free - col.offsetHeight) / 2 - 40)) + 'px'
+      fx.breathe(tl, col, 0.3, c.dur, 1.025)
+    },
+  })
+
+  // ============ scene.trio — medallions in dotted rings with italic labels (reference G) ============
+  M.register('scene.trio', {
+    kind: 'scene', label: 'Petit texte serif italique + titre en capitales, 2 à 4 médaillons cerclés de pointillés qui s’allument un par un', min: 2.8, max: 7, words: [0, 6], needs: ['items'],
+    sfx: (spec, env) => [{ t: 0.1, cue: 'whoosh' }, ...spreadPure(env, Math.min(4, (spec.items || []).length), 0.6, 0.45).map((t) => ({ t, cue: 'pop' }))],
+    build(c) {
+      const { stage, tl, env, h, fx, spec } = c
+      h.bg(stage, env, spec.bg || 'gobo', env.theme).forEach((d, i) => fx.drift(tl, [d], 0, c.dur, 30 + i * 12, env.seed + i))
+      const items = spec.items.slice(0, 4)
+      const n = items.length
+      // 2 or 3 in a row (like the reference); 4 go on a 2 × 2 grid so each medallion stays big
+      const cols = n === 4 ? 2 : n
+      const rows = Math.ceil(n / cols)
+      const GAP = n === 4 ? 90 : 30
+      const D = Math.min(n === 4 ? 300 : 320, Math.floor((c.maxW - (cols - 1) * GAP) / cols))
+      const rowH = D + 130
+      const blockH = 330 + rows * rowH
+      const titleTop = Math.round(c.cy - blockH / 2 + 40)
+      if (spec.kicker) { const k = h.box(stage, 'mo-trio-kicker mo-center-text', { left: env.safe.l, width: c.maxW, top: titleTop - 80 }); k.textContent = spec.kicker; fx.fadeUp(tl, k, 0.05, { y: 20, dur: 0.5 }) }
+      if (spec.text) {
+        const lay = M.layout(spec.text, c.maxW, { max: 130, min: 70, maxLines: 2 })
+        const t = h.text(stage, lay.markup, 'mo-trio-title', { left: env.safe.l, width: c.maxW, top: titleTop, fontSize: lay.size })
+        t.box.style.position = 'absolute'
+        fx.reveal(tl, t.words, c.times(spec.text, { start: 0.2, cap: 0.6, pace: 0.14 }), { y: 40, blur: 14, dur: 0.5 })
+      }
+      const times = spread(c, n, 0.6, 0.45)
+      const rowW = cols * D + (cols - 1) * GAP
+      items.forEach((raw, i) => {
+        const it = typeof raw === 'string' ? { image: raw } : raw
+        const x = Math.round(c.cx - rowW / 2 + (i % cols) * (D + GAP))
+        const y = Math.round(titleTop + 330 + Math.floor(i / cols) * rowH)
+        const med = h.box(stage, 'mo-med', { left: x, top: y, width: D, height: D })
+        const ring = h.box(stage, 'mo-medring', { left: x - 16, top: y - 16, width: D + 32, height: D + 32 })
+        ring.innerHTML = '<svg viewBox="0 0 100 100" width="' + (D + 32) + '" height="' + (D + 32) + '"><circle cx="50" cy="50" r="48" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-dasharray="1.2 2.6" stroke-linecap="round"/></svg>'
+        if (it.image) { const im = h.el('img', 'mo-med-img', '', med); im.src = it.image } else med.innerHTML = h.icon(it.icon || 'check', Math.round(D * 0.42), 'var(--accent)', 2)
+        tl.fromTo(med, { opacity: 0, scale: 0.4, y: 60 }, { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: E.springHard }, times[i])
+        tl.fromTo(ring, { opacity: 0, rotation: -90, scale: 0.7 }, { opacity: 1, rotation: 0, scale: 1, duration: 0.8, ease: E.outX }, times[i] + 0.05)
+        tl.to(ring, { rotation: 60, duration: Math.max(0.5, c.dur - times[i] - 0.85), ease: 'none' }, times[i] + 0.85)
+        if (it.label) {
+          const lab = h.box(stage, 'mo-med-label mo-center-text', { left: x - 20, width: D + 40, top: y + D + 34 })
+          lab.textContent = it.label
+          fx.fadeUp(tl, lab, times[i] + 0.25, { y: 16, dur: 0.45 })
+        }
+      })
     },
   })
 

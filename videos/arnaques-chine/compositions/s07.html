@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s07-template">
+      <style>
+        .mo-stage { font-family: "Poppins", sans-serif; }
+        .mo-s, .mo-trio-kicker, .mo-med-label { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost, .mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; }
+      </style>
+      <div class="mo" id="s07-root" data-composition-id="s07" data-width="1080" data-height="1920"></div>
+      <script>
+        (function () {
+          var M = window.MOTION;
+          var spec = {"type":"scene.route","text":"Suivi *à chaque étape*","from":{"label":"Chine","icon":"globe"},"to":{"label":"Haïti","icon":"pin"},"badge":"Dédouanement inclus","vo":"Et vous suivez votre colis à chaque étape, jusqu’en Haïti.","decor":[{"src":"assets/lib/site/conteneur.png","x":0.84,"y":0.36,"depth":0.7,"size":0.26,"rot":-8},{"src":"assets/lib/site/avion-cargo.jpg","x":0.74,"y":0.91,"depth":0.85,"size":0.38,"rot":-6}]};
+          var env = {"id":"s07","W":1080,"H":1920,"safe":{"t":250,"b":440,"l":70,"r":70},"dur":4.16,"seed":113,"theme":"light","vo":{"start":0.45,"dur":3.06},"transIn":{"kind":"up","dur":0.46},"transOut":{"kind":"scale","dur":0.5}};
+          env.brand = M.brand;
+          env.pal = M.pals[env.theme];
+          var root = document.getElementById("s07-root");
+          var tl = gsap.timeline({ paused: true });
+          M.mount(root, tl, spec, env);
+          window.__timelines = window.__timelines || {};
+          window.__timelines["s07"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

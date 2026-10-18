@@ -10,6 +10,8 @@ Six vidéos de motion design fournies par le client ont servi de base. Les planc
 | D `ref-d-after-effects` | 9:16 | 7 s | 0 | Canette en vol avec ombre portée, ruban bleu qui balaie, titre en capitales + petit texte serif italique, cercle pointillé autour du produit suivant | `hook.product` |
 | E `ref-e-motion-anim` | 9:16 | 10 s | 0 | Texte qui se forme à partir de carrés pixel, lueur violette ; cartes d'interface qui glissent | `hook.pixel`, `scene.ui` |
 | F `ref-f-paypal` | 1:1 | 12 s | 5 | Logo qui claque sur la couleur de marque puis bascule (blanc → couleur) en icône d'app ; mots qui s'enchaînent | `hook.logo`, `hook.question` |
+| G `ref-g-recreate-ae` | 9:16 | 7 s | 0 | Canette en vol avec ombre, ruban bleu, « wacth how » serif italique au-dessus de RED BULL en capitales ; fond gris doux traversé d'**ombres de feuillage** (gobo) ; rangée de bols dans des **cercles pointillés** qui s'allument un par un, légendes serif italique | `scene.trio`, fond `gobo`, `hook.product` |
+| H `ref-h-vid-1017` | 1:1 | 16 s | 2 | Pulsation verte → widget sombre à halo ; liste de choix iOS avec icônes et curseur qui tape ; tracé sinueux suivi par un véhicule ; pilule « Help is on the way » | `hook.pulse`, `scene.ui` (et `tone: "danger"`), `scene.route` |
 
 ## Ce qu'elles ont toutes en commun
 

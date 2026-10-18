@@ -3,7 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { ENGINE, M, RUNTIME_FILES } from '../lib/runtime.mjs'
-import { estimateVo, loadBrief, validateBrief } from '../lib/brief.mjs'
+import { estimateVo, loadBrief, validateBrief, VOICE_STYLES, voicePrompt } from '../lib/brief.mjs'
 import { hookReport, placeSfx, schedule } from '../lib/schedule.mjs'
 import { emitProject } from '../lib/emit.mjs'
 import * as pixabay from '../lib/pixabay.mjs'
@@ -264,5 +264,37 @@ describe('depth: cut-outs, decor, carried objects', () => {
     expect(s2).toContain('"carryIn":"assets/lib/products/r36s.jpg"')
     for (const f of ['cerave.jpg', 'r36s.jpg', 'anua.jpg', 'cosrx.jpg']) expect(fs.existsSync(path.join(dir, 'assets/lib/products', f)), f).toBe(true)
     expect(placeSfx(brief, tl).some((e) => e.file === 'whoosh.mp3')).toBe(true)
+  })
+})
+
+describe('scam explainer kit: versus, trio, voice styles', () => {
+  it('never puts a colon in a voice style (the model would read the direction aloud)', () => {
+    for (const [k, v] of Object.entries(VOICE_STYLES)) expect(v, k).not.toMatch(/:/)
+    const { brief } = loadBrief({ name: 'x', voice: { style: 'story' }, scenes: [] })
+    expect(voicePrompt(brief, 'Bonjour.').split(':')).toHaveLength(2)
+  })
+  it('crosses the trap out before the answer lands, with a sound on each gesture', () => {
+    const env = { W: 1080, H: 1920, dur: 5, vo: { start: 0.45, dur: 4 } }
+    const cues = M.catalog['scene.versus'].sfx({ bad: { text: 'a' }, good: { text: 'b' } }, env)
+    const at = Object.fromEntries(cues.map((c) => [c.cue, c.t]))
+    expect(at.whoosh).toBeLessThan(at.glitch)
+    expect(at.glitch).toBeLessThan(at.pop)
+    expect(at.chime).toBeGreaterThan(at.pop)
+  })
+  it('validates and builds a brief that uses versus, trio, danger toasts and the gobo light', () => {
+    const { brief, brand } = loadBrief({ name: 'scam-kit', voice: { mode: 'none' }, scenes: [
+      { type: 'hook.statement', tone: 'accent', text: '4 *arnaques*' },
+      { type: 'scene.ui', kicker: 'Arnaque n° 1', items: [{ kind: 'toast', title: 'Vendeur introuvable', tone: 'danger' }] },
+      { type: 'scene.versus', bad: { text: 'Virement' }, good: { text: 'MonCash', images: ['lib:products/cerave.jpg'] } },
+      { type: 'scene.trio', kicker: 'achetez,', text: 'sans risque', items: [{ image: 'lib:products/r36s.jpg', label: 'Suivi' }, { icon: 'check', label: 'Vérifié' }] },
+      { type: 'scene.end' },
+    ] })
+    expect(validateBrief(brief, exists).errors).toEqual([])
+    const tl = schedule(brief, {})
+    expect(placeSfx(brief, tl).some((e) => e.file === 'glitch-3.mp3')).toBe(true)
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scam-'))
+    emitProject({ brief, brand, tl, voDur: {}, projectDir: dir })
+    expect(fs.existsSync(path.join(dir, 'assets/lib/products/r36s.jpg'))).toBe(true)
+    expect(validateBrief({ ...brief, scenes: [brief.scenes[0], { type: 'scene.versus', bad: { text: 'a' } }, brief.scenes[4]] }, exists).errors.join()).toMatch(/good/)
   })
 })

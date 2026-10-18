@@ -14,3 +14,7 @@ Pixabay : [licence Pixabay](https://pixabay.com/service/license-summary/) (usage
 - `lib:illustrations/carte-haiti.png` — pixabay vector 5323242 — https://pixabay.com/vectors/haiti-flag-map-borders-country-5323242/ — par [GDJ](https://pixabay.com/users/1086657/)
 - `lib:photos/rue-telephone.jpg` — pixabay photo 7862413 — https://pixabay.com/photos/woman-shopping-market-lifestyle-7862413/ — par [thangshooter](https://pixabay.com/users/2412149/)
 - `lib:illustrations/cliente-sacs.png` — pixabay photo 2115218 (détourée avec rembg) — https://pixabay.com/photos/shopping-purchase-young-woman-2115218/ — par [AllClear55](https://pixabay.com/users/1703624/)
+
+## Visuels du site KONVWA (`public/`)
+
+Propriété de KONVWA, copiés depuis le site (konvwa.shop) : `lib:site/avion-cargo.jpg`, `carton.jpg`, `chariot.webp`, `conteneur.png`, `entrepot.png`, `verified.png`, `moncash.jpg`, `natcash.png` (logos MonCash et NatCash : moyens de paiement acceptés, utilisés comme sur le site).
