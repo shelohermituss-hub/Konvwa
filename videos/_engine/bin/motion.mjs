@@ -201,6 +201,7 @@ const COMMANDS = {
    * assets search <source> "<requête>" [--type=photo|illustration|vector|video] [--orientation=portrait|landscape|any] [--n=10]
    * assets get <source> <id> --to=library/<dossier>/<nom> [--type=…]   → lib:<dossier>/<nom>.<ext>, crédit dans library/CREDITS.md
    * assets cutout <fichier> [sortie.png]                                → détourage local (rembg)
+   * assets need <projet>                                                → les visuels que le brief demande au client (✓ reçus / ✗ manquants)
    */
   assets() {
     const [sub, ...a] = args
@@ -218,6 +219,17 @@ const COMMANDS = {
         if (!src || !id || !flags.to) die('Usage : assets get <source> <id> --to=library/<dossier>/<nom> [--type=photo|illustration|vector|video]')
         const r = getAsset(path.join(ENGINE, 'library'), src, id, { type, to: String(flags.to) })
         log(`✓ ${r.ref}  ${r.item.width}×${r.item.height}  par ${r.item.author}  (crédit ajouté à library/CREDITS.md)`)
+      } else if (sub === 'need') {
+        // the visuals a brief asks the client for: "needs": [{ "file": "lib:…" | "assets/…", "what": "…", "format": "…" }]
+        const pdir = projectDir(a[0])
+        const { brief } = loadBrief(path.join(pdir, 'brief.json'))
+        const has = existsFor(pdir)
+        const needs = brief.needs || []
+        if (!needs.length) die('Aucun besoin listé : ajoutez "needs": [{ "file", "what", "format" }] au brief.')
+        log(`Visuels à fournir pour ${path.basename(pdir)} :\n`)
+        let missing = 0
+        needs.forEach((x, i) => { const ok = has(x.file); if (!ok) missing++; log(`${ok ? '✓' : '✗'} ${String(i + 1).padStart(2)}. ${x.what}\n      → ${x.file}${x.format ? '   (' + x.format + ')' : ''}`) })
+        log(missing ? `\n${missing} visuel(s) manquant(s) sur ${needs.length}.` : `\nTout est là (${needs.length}).`)
       } else if (sub === 'cutout') {
         if (!a[0]) die('Usage : assets cutout <fichier> [sortie.png]')
         log(`✓ ${path.relative(process.cwd(), cutout(path.resolve(a[0]), a[1] && path.resolve(a[1])))}`)
@@ -240,7 +252,7 @@ const COMMANDS = {
 
 const fn = COMMANDS[cmd]
 if (!fn) {
-  log(`KONVWA motion engine\n\nCommandes :\n  types                  les scènes, transitions, sons et formats disponibles\n  new <nom> [--example=demo]   crée videos/<nom>/brief.json\n  check <projet>         valide le brief et affiche le calendrier + la loi des 3 secondes\n  vo <projet>            liste les voix à générer et celles déjà présentes\n  vo-save <projet> s01=<url> …   enregistre les voix générées (silences coupés)\n  build <projet>         génère le projet HyperFrames (image calée sur la voix, sons placés)\n  lint <projet>          hyperframes check\n  snap <projet> [--at=0.15,0.6,…]   captures aux instants donnés\n  render <projet> [--quality=looks|draft|delivery]\n  qa <projet> [rendu.mp4]   contrôle du rendu (format, son, énergie du hook…)\n  assets search pixabay "<requête>" [--type=photo|illustration|vector|video] [--orientation=portrait]   cherche des assets réels\n  assets get pixabay <id> --to=library/<dossier>/<nom> [--type=…]   télécharge (crédit dans library/CREDITS.md)\n  assets cutout <fichier> [sortie.png]   détoure (rembg, local)\n  ref <video…>           analyse une vidéo de référence (coupes, son, planches)\n  hf <projet> <args…>    passe la main au CLI hyperframes`)
+  log(`KONVWA motion engine\n\nCommandes :\n  types                  les scènes, transitions, sons et formats disponibles\n  new <nom> [--example=demo]   crée videos/<nom>/brief.json\n  check <projet>         valide le brief et affiche le calendrier + la loi des 3 secondes\n  vo <projet>            liste les voix à générer et celles déjà présentes\n  vo-save <projet> s01=<url> …   enregistre les voix générées (silences coupés)\n  build <projet>         génère le projet HyperFrames (image calée sur la voix, sons placés)\n  lint <projet>          hyperframes check\n  snap <projet> [--at=0.15,0.6,…]   captures aux instants donnés\n  render <projet> [--quality=looks|draft|delivery]\n  qa <projet> [rendu.mp4]   contrôle du rendu (format, son, énergie du hook…)\n  assets search pixabay "<requête>" [--type=photo|illustration|vector|video] [--orientation=portrait]   cherche des assets réels\n  assets get pixabay <id> --to=library/<dossier>/<nom> [--type=…]   télécharge (crédit dans library/CREDITS.md)\n  assets cutout <fichier> [sortie.png]   détoure (rembg, local)\n  assets need <projet>   liste des visuels à demander au client (cochée)\n  ref <video…>           analyse une vidéo de référence (coupes, son, planches)\n  hf <projet> <args…>    passe la main au CLI hyperframes`)
   process.exit(cmd ? 1 : 0)
 }
 fn()

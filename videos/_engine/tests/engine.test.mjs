@@ -298,3 +298,35 @@ describe('scam explainer kit: versus, trio, voice styles', () => {
     expect(validateBrief({ ...brief, scenes: [brief.scenes[0], { type: 'scene.versus', bad: { text: 'a' } }, brief.scenes[4]] }, exists).errors.join()).toMatch(/good/)
   })
 })
+
+describe('white light theme, kinetic hook, typographic entrances, client asset list', () => {
+  it('keeps the light page white (orange is for text and actions)', () => {
+    const { brand } = demo()
+    expect(brand.themes.light.bg.toUpperCase()).toBe('#FFFFFF')
+    expect(M.PAL.bg.toUpperCase()).toBe('#FFFFFF')
+  })
+  it('hook.impact obeys the 3-second law: a sound at 0, the title readable before 1.6 s', () => {
+    const def = M.catalog['hook.impact']
+    for (const text of ['4|*arnaques*|à éviter|en Chine', 'Stop.|*Arnaque*', 'Achetez|partout|recevez|en *Haïti*|vite']) {
+      expect(def.legible({ text })).toBeLessThanOrEqual(M.HOOK.legibleBy)
+      expect(def.sfx({ text })[0].t).toBeLessThan(M.HOOK.firstEventMax)
+    }
+    expect(def.sfx({ text: '4|*arnaques*' }).map((x) => x.cue)).toContain('impact')
+  })
+  it('accepts the known text animations and refuses the others', () => {
+    const base = demo().brief
+    const ok = { ...base, scenes: base.scenes.map((s, i) => (i === 1 ? { ...s, anim: 'letters' } : s)) }
+    expect(validateBrief(ok, exists).errors).toEqual([])
+    const bad = { ...base, scenes: base.scenes.map((s, i) => (i === 1 ? { ...s, anim: 'wobble' } : s)) }
+    expect(validateBrief(bad, exists).errors.join()).toMatch(/anim inconnue/)
+    expect(M.TEXT_ANIMS).toEqual(expect.arrayContaining(['rise', 'mask', 'letters', 'pop', 'type']))
+  })
+  it('lists the visuals asked to the client: missing ones warn, malformed ones fail', () => {
+    const base = demo().brief
+    const r = validateBrief({ ...base, needs: [{ file: 'lib:illustrations/absent.png', what: 'Colis 3D' }, { file: 'lib:products/cerave.jpg', what: 'CeraVe' }] }, exists)
+    expect(r.errors).toEqual([])
+    expect(r.warnings.join()).toMatch(/Colis 3D/)
+    expect(r.warnings.join()).not.toMatch(/CeraVe/)
+    expect(validateBrief({ ...base, needs: [{ file: 'lib:x.png' }] }, exists).errors.join()).toMatch(/needs/)
+  })
+})

@@ -190,3 +190,13 @@
 .mo-med-label { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 46px; font-weight: 500; color: var(--ink); line-height: 1.1; }
 .mo-toast.mo-danger { background: #D92D20; color: #fff; }
 .mo-toast.mo-danger i { background: rgba(255, 255, 255, 0.22); }
+
+/* ---------- typographic entrances (fx.text) ---------- */
+.mo-masked { overflow: hidden; vertical-align: bottom; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.mo-in { display: inline-block; }
+
+/* ---------- hook.impact ---------- */
+.mo-impact-cam { pointer-events: none; }
+.mo-impact { font-family: "Poppins", sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: -0.035em; line-height: 0.95; color: var(--ink); }
+.mo-impact .mo-a { color: var(--brand); }
+.mo-burst { border-radius: 10px; background: var(--brand); pointer-events: none; }

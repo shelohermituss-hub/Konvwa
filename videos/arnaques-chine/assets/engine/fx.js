@@ -16,6 +16,42 @@
       tl.fromTo(el, from, to, times[i])
     })
   }
+  /** Splits each word span into letter spans (once) and returns them per word. The accent colour and the marker stay on the word. */
+  fx.chars = function (words) {
+    return words.map((w) => {
+      if (w._chars) return w._chars
+      const t = w.textContent
+      w.textContent = ''
+      w._chars = Array.from(t).map((ch) => { const s = M.h.el('span', 'mo-ch', '', w); s.textContent = ch; return s })
+      return w._chars
+    })
+  }
+  /** Puts the word's text in an inner span that can slide inside the word, which then acts as a mask. */
+  const inner = (w) => { if (!w._in) { const t = w.textContent; w.textContent = ''; w._in = M.h.el('span', 'mo-in', '', w); w._in.textContent = t; w.classList.add('mo-masked') } return w._in }
+  /**
+   * Typographic entrances for a line of words, each word at times[i]. kind:
+   *   rise    up + de-blur, word by word (the default everywhere it was used before)
+   *   mask    each word slides up out of an invisible slot: editorial, very clean
+   *   letters letters flip in one after another (3D), word by word
+   *   pop     words punch in big and settle with a small tilt: loud
+   *   type    letters appear one by one, like typing
+   */
+  fx.text = function (tl, words, times, kind, o) {
+    const p = Object.assign({ dur: 0.55 }, o)
+    if (kind === 'mask') {
+      words.forEach((w, i) => tl.fromTo(inner(w), { yPercent: 110, rotation: 4 }, { yPercent: 0, rotation: 0, duration: p.dur, ease: 'expo.out' }, times[i]))
+    } else if (kind === 'letters') {
+      fx.chars(words).forEach((chs, i) => chs.forEach((ch, j) => tl.fromTo(ch, { opacity: 0, yPercent: 70, rotationX: -95, transformPerspective: 700 }, { opacity: 1, yPercent: 0, rotationX: 0, duration: 0.5, ease: 'back.out(2)' }, times[i] + j * 0.028)))
+    } else if (kind === 'pop') {
+      words.forEach((w, i) => tl.fromTo(w, { opacity: 0, scale: 2.3, rotation: i % 2 ? 7 : -7, filter: blur(12) }, { opacity: 1, scale: 1, rotation: 0, filter: blur(0), duration: 0.42, ease: 'back.out(2.2)' }, times[i]))
+    } else if (kind === 'type') {
+      fx.chars(words).forEach((chs, i) => chs.forEach((ch, j) => tl.fromTo(ch, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: 'none' }, times[i] + j * 0.035)))
+    } else {
+      fx.reveal(tl, words, times, Object.assign({ y: 46, blur: 16, dur: p.dur }, o))
+    }
+  }
+  M.TEXT_ANIMS = ['rise', 'mask', 'letters', 'pop', 'type']
+
   /** Hard entrance: big and blurry, lands with a hit. */
   fx.slam = function (tl, el, at, o) {
     const p = Object.assign({ from: 1.45, blur: 18, dur: 0.5, ease: E.outX, rot: 0 }, o)

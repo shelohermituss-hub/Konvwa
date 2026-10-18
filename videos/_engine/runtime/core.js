@@ -196,7 +196,7 @@
     voStartMax: 0.35,    // the voice starts at once
   }
   /** Fallback palette (the brand kit supplies the real one through env.pal): colours that GSAP has to tween must be real values, never var(). */
-  M.PAL = { bg: '#F7F1EB', bg2: '#EFE7E0', ink: '#0A1628', mute: '#5B6474', accent: '#F05A28', accent2: '#FF7252', card: '#FFFFFF', line: '#E6DDD4' }
+  M.PAL = { bg: '#FFFFFF', bg2: '#F4F5F7', ink: '#0A1628', mute: '#5B6474', accent: '#F05A28', accent2: '#FF7252', card: '#FFFFFF', line: '#E8E9EC' }
   M.PACE = { wordsPerSec: [2.2, 3.4], voEstimate: 2.7, sceneAvg: [1.8, 5.2], maxScene: 7.5 }
   M.LIMITS = { minTotal: 6, maxTotal: 75, sameTypeInRow: 2 }
 

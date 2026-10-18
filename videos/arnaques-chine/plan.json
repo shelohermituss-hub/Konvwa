@@ -5,7 +5,7 @@
   "scenes": [
     {
       "id": "s01",
-      "type": "hook.statement",
+      "type": "hook.impact",
       "start": 0,
       "dur": 2.8,
       "transition": null
@@ -67,6 +67,6 @@
       "transition": "circle"
     }
   ],
-  "sfx": 44,
+  "sfx": 47,
   "hookEnd": 2.8
 }

@@ -43,6 +43,7 @@ export function loadBrief(input) {
     music: raw.music || null,
     sfx: { level: 1, ...(raw.sfx || {}) },
     scenes: (raw.scenes || []).map((s) => ({ ...s })),
+    needs: Array.isArray(raw.needs) ? raw.needs : [],
   }
   brief.voice.direction = brief.voice.direction || VOICE_STYLES[brief.voice.style] || VOICE_STYLES.punchy
   return { brief, brand }
@@ -91,6 +92,7 @@ export function validateBrief(brief, exists = () => true) {
     }
     if (s.transition && !M.TRANSITIONS[s.transition]) E(i, `transition inconnue "${s.transition}" (${Object.keys(M.TRANSITIONS).join(', ')})`)
     if (s.theme && !['light', 'dark'].includes(s.theme)) E(i, 'theme de scène : "light" ou "dark"')
+    if (s.anim && !M.TEXT_ANIMS.includes(s.anim)) E(i, `anim inconnue "${s.anim}" (${M.TEXT_ANIMS.join(', ')})`)
     for (const ref of imageRefs(s)) if (!exists(ref)) E(i, `image introuvable : ${ref}`)
     if (s.text) {
       const n = M.wordCount(s.text)
@@ -100,6 +102,12 @@ export function validateBrief(brief, exists = () => true) {
     if (s.vo && estimateVo(s.vo) > def.max) W(i, `la phrase parlée dure ~${estimateVo(s.vo)} s, plus que le maximum de ${s.type} (${def.max} s) : coupez-la en deux scènes`)
   })
 
+  // ----- visuals asked to the client -----
+  for (const x of brief.needs || []) {
+    if (!x || typeof x.file !== 'string' || !x.what) E(null, 'needs : chaque entrée a un "file" (lib:… ou assets/…) et un "what" (description)')
+    else if (!exists(x.file)) W(null, `visuel attendu du client : ${x.what} → ${x.file} (« assets need » pour la liste)`)
+  }
+
   // ----- the 3-second law -----
   const first = scenes[0]
   const H = M.HOOK
@@ -108,7 +116,7 @@ export function validateBrief(brief, exists = () => true) {
     const text = first.text || ''
     if (plainLen(text) > H.charsMax) E(0, `hook trop long : ${plainLen(text)} caractères (max ${H.charsMax}) — il doit se lire d’un coup d’œil`)
     if (text && M.wordCount(text) > H.wordsMax) E(0, `hook trop long : ${M.wordCount(text)} mots (max ${H.wordsMax})`)
-    if (['hook.statement', 'hook.question', 'hook.collage'].includes(first.type) && M.accentIndex(text) < 0) W(0, 'mettez le mot-clé du hook entre *étoiles* : c’est lui qui reçoit la couleur et le coup de son')
+    if (['hook.statement', 'hook.question', 'hook.collage', 'hook.impact'].includes(first.type) && M.accentIndex(text) < 0) W(0, 'mettez le mot-clé du hook entre *étoiles* : c’est lui qui reçoit la couleur et le coup de son')
     if (brief.voice.mode === 'vo') {
       if (!first.vo) E(0, 'le hook doit être parlé dès les premières images (`vo`)')
       else if (estimateVo(first.vo) > H.maxDur - 0.45) E(0, `phrase de hook trop longue à dire (~${estimateVo(first.vo)} s) : 3 secondes au total, visez ≤ ${M.r2(H.maxDur - 0.45)} s (≈ ${Math.floor((H.maxDur - 0.45) * 2.7)} mots)`)

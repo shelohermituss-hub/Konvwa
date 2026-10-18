@@ -156,7 +156,7 @@
     const lay = M.layout(spec.text, c.maxW - 120, { max: hook ? 150 : 128, min: 66, maxLines: 4 })
     const t = h.text(stack, lay.markup, 'mo-h1', { fontSize: lay.size })
     const times = hook ? c.times(spec.text, { start: 0.22, cap: 0.95, pace: 0.16 }) : c.times(spec.text, { cap: 1.4, pace: 0.18 })
-    fx.reveal(tl, t.words, times, { y: 50, blur: 16, dur: 0.55 })
+    fx.text(tl, t.words, times, spec.anim || (hook ? 'pop' : 'mask'), { y: 50, blur: 16, dur: 0.55 })
     const ai = M.accentIndex(spec.text)
     if (ai >= 0) {
       const ta = times[ai]
@@ -219,7 +219,7 @@
       t.box.style.justifyContent = 'flex-start'
       t.box.style.textAlign = 'left'
       const times = c.times(spec.text, { cap: 1.4, pace: 0.18 })
-      fx.reveal(tl, t.words, times, { y: 50, blur: 16, dur: 0.55 })
+      fx.text(tl, t.words, times, spec.anim || 'mask', { y: 50, blur: 16, dur: 0.55 })
       fx.mark(tl, t.words, (times[Math.max(0, M.accentIndex(spec.text))] || 0.4) + 0.2, 0.45)
       if (spec.kicker) {
         const k = h.box(stage, 'mo-cap mo-onphoto-cap', { left: env.safe.l, top: Math.round(bottom - lay.lines * lay.size * 1.06 - 70) })

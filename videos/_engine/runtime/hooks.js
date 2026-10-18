@@ -59,6 +59,76 @@
     },
   })
 
+  // ============ hook.impact — kinetic typography: each block of words slams full-frame, the screen shakes, then everything stacks into the title ============
+  /** Blocks of the hook (`|` separates them) and the second each one lands. */
+  const impactBeats = (spec) => String(spec.text || '').split('|').map((s) => s.trim()).filter(Boolean)
+  const impactTimes = (n) => { const step = Math.min(0.42, 1.15 / Math.max(1, n)); return Array.from({ length: n }, (_, i) => M.r2(i * step)) }
+  const impactStack = (n) => { const t = impactTimes(n); return M.r2(t[n - 1] + 0.34) }
+  M.register('hook.impact', {
+    kind: 'hook', label: 'Typo cinétique : chaque bloc de mots claque plein cadre (l’écran tremble), mot-clé orange, puis tout se range en titre', min: 2.8, max: 3.0, words: [1, 7], needs: ['text'],
+    sfx(spec) {
+      const beats = impactBeats(spec)
+      const t = impactTimes(beats.length)
+      const ai = beats.findIndex((b) => /\*/.test(b))
+      return [{ t: 0.0, cue: 'whooshBig' }, ...t.map((x, i) => ({ t: M.r2(x + 0.1), cue: i === 0 ? 'impact2' : i === ai ? 'impact' : 'pop' })), { t: M.r2(impactStack(beats.length) - 0.05), cue: 'whoosh' }]
+    },
+    legible: (spec) => M.r2(impactStack(impactBeats(spec).length) + 0.3),
+    build(c) {
+      const { stage, tl, env, h, fx, spec } = c
+      h.bg(stage, env, spec.bg || 'dots', env.theme)
+      const cam = h.box(stage, 'mo-impact-cam', { left: 0, top: 0, width: env.W, height: env.H })
+      const beats = impactBeats(spec)
+      const n = beats.length
+      const times = impactTimes(n)
+      const tStack = impactStack(n)
+      // final title: one block per line, as big as the width allows, stacked around the centre
+      const lays = beats.map((b) => M.layout(b, c.maxW, { max: 340, min: 84, factor: 0.72, maxLines: 1 }))
+      const heights = lays.map((l) => Math.round(l.lines * l.size * 1.02))
+      const gap = 34 // room for capital accents (À, É)
+      let y = Math.round(c.cy - (heights.reduce((a, x) => a + x, 0) + gap * (n - 1)) / 2)
+      const blocks = lays.map((lay, i) => {
+        const t = h.text(cam, lay.markup, 'mo-impact', { left: env.safe.l, width: c.maxW, top: y, fontSize: lay.size })
+        t.box.style.position = 'absolute'
+        const dy = Math.round(c.cy - (y + heights[i] / 2))
+        y += heights[i] + gap
+        // how big it may land in the middle: almost the full width, never more than 1.6× its final size
+        const big = Math.min(1.6, (env.W * 0.96) / Math.max(1, M.plain(beats[i]).length * 0.72 * lay.size))
+        return { t, dy, big, accent: /\*/.test(beats[i]) }
+      })
+      blocks.forEach((b, i) => {
+        const el = b.t.box
+        const at = times[i]
+        // slam: from behind the camera, blurred, to a bigger-than-final size in the middle of the frame
+        tl.fromTo(el, { opacity: 0, scale: 4.2, y: b.dy, rotation: i % 2 ? 4 : -4, filter: 'blur(26px)' }, { opacity: 1, scale: Math.max(1, b.big), y: b.dy, rotation: 0, filter: 'blur(0px)', duration: 0.2, ease: 'expo.out' }, at)
+        // the camera takes the hit
+        const k = b.accent ? 1.6 : 1
+        tl.to(cam, { x: -16 * k, y: 10 * k, duration: 0.04, ease: 'none' }, at + 0.17)
+        tl.to(cam, { x: 10 * k, y: -7 * k, duration: 0.05, ease: 'none' }, at + 0.21)
+        tl.to(cam, { x: 0, y: 0, duration: 0.14, ease: 'power2.out' }, at + 0.26)
+        if (b.accent) {
+          // impact lines bursting out of the key word
+          for (let j = 0; j < 12; j++) {
+            const a = (j / 12) * 360 + (j % 2 ? 9 : 0)
+            const ln = h.box(cam, 'mo-burst', { left: c.cx, top: c.cy - 5, width: 150 + (j % 3) * 50, height: 10 })
+            g.gsap.set(ln, { rotation: a, transformOrigin: '0% 50%', x: 0 })
+            tl.fromTo(ln, { opacity: 1, scaleX: 0, x: 120 }, { opacity: 0, scaleX: 1, x: 330, duration: 0.45, ease: 'power3.out' }, at + 0.14)
+          }
+        }
+        // make room for the next block, then come back into the title
+        if (i < n - 1) tl.to(el, { opacity: 0, scale: 0.7, filter: 'blur(10px)', duration: 0.12, ease: 'power2.in' }, times[i + 1] - 0.04)
+        tl.to(el, { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)', duration: 0.34, ease: 'power4.out' }, tStack + (i < n - 1 ? i * 0.05 : 0))
+      })
+      tl.to(cam, { scale: 1.06, duration: Math.max(0.3, c.dur - tStack - 0.3), ease: 'none' }, tStack + 0.3)
+      const accentWords = blocks.flatMap((b) => b.t.words)
+      fx.mark(tl, accentWords, tStack + 0.35, 0.4)
+      if (spec.sub) {
+        const s = h.text(stage, spec.sub, 'mo-sub mo-center-text', { left: env.safe.l, width: c.maxW, top: y + 30, fontSize: 58 })
+        s.box.style.position = 'absolute'
+        fx.text(tl, s.words, c.times(spec.sub, { start: tStack + 0.35, cap: 0.4 }), 'mask')
+      }
+    },
+  })
+
   // ============ hook.pulse — a radial pulse collapses into a dot that morphs into a pill (UI-style) ============
   M.register('hook.pulse', {
     kind: 'hook', label: 'Pulsation radiale qui devient une pilule (style interface iOS) avec le message', min: 2.8, max: 3.0, words: [1, 5], needs: ['text'],

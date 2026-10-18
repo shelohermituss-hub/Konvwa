@@ -13,14 +13,14 @@
   "navy": "#0A1628",
   "themes": {
     "light": {
-      "bg": "#F7F1EB",
-      "bg2": "#EFE7E0",
+      "bg": "#FFFFFF",
+      "bg2": "#F4F5F7",
       "ink": "#0A1628",
       "mute": "#5B6474",
       "card": "#FFFFFF",
-      "line": "#E6DDD4",
-      "dot": "rgba(10,22,40,0.10)",
-      "shade": "rgba(10,22,40,0.055)",
+      "line": "#E8E9EC",
+      "dot": "rgba(10,22,40,0.07)",
+      "shade": "rgba(10,22,40,0.045)",
       "ghost": "rgba(10,22,40,0.07)",
       "flash": "#FFFFFF",
       "atext": "#DF4F1F"

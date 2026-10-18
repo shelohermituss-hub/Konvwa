@@ -97,9 +97,15 @@
     return { box, chars }
   }
 
-  /** Decorative background layers. Returns the elements so a scene can animate them. kinds: plain | glow | rings | dots */
+  /**
+   * Decorative background layers. Returns the elements so a scene can animate them. kinds: plain | glow | rings | dots | gobo
+   * On a light page the background stays white: no orange glow in the corners, rings in a faint ink. The brand colour is kept for the text
+   * and the elements that act (accent words, buttons, checks). Dark pages and the full-orange tone keep their glows.
+   */
   h.bg = function (stage, env, kind, tone) {
     const out = []
+    const plainLight = tone !== 'dark' && !stage.classList.contains('mo-tone-accent')
+    if (plainLight && kind === 'glow') return out
     const W = env.W
     const H = env.H
     const R = M.rng(env.seed + 7)
@@ -121,7 +127,7 @@
     if (kind === 'dots') {
       out.push(h.box(stage, 'mo-dots', { left: 0, top: 0, width: W, height: H }))
     }
-    if (kind === 'glow' || kind === 'rings') {
+    if ((kind === 'glow' || kind === 'rings') && !plainLight) {
       const blobs = [
         { x: 0.3 + R() * 0.15, y: 0.34 + R() * 0.1, s: 0.95, c: 'var(--accent)', a: 0.17 },
         { x: 0.74 + R() * 0.1, y: 0.66 + R() * 0.1, s: 0.8, c: 'var(--accent2)', a: 0.13 },
@@ -142,7 +148,7 @@
         { cx: W * 1.0, cy: H * 0.9, r: W * 0.4 },
         { cx: W * 0.96, cy: H * 0.18, r: W * 0.18 },
       ]
-      svg.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" fill="none">' + arcs.map((a) => '<circle cx="' + Math.round(a.cx) + '" cy="' + Math.round(a.cy) + '" r="' + Math.round(a.r) + '" stroke="var(--accent)" stroke-opacity="0.34" stroke-width="3"/>').join('') + '</svg>'
+      svg.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" fill="none">' + arcs.map((a) => '<circle cx="' + Math.round(a.cx) + '" cy="' + Math.round(a.cy) + '" r="' + Math.round(a.r) + '" stroke="' + (plainLight ? 'var(--ink)' : 'var(--accent)') + '" stroke-opacity="' + (plainLight ? 0.07 : 0.34) + '" stroke-width="3"/>').join('') + '</svg>'
       out.push(svg)
     }
     return out

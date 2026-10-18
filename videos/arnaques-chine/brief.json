@@ -12,13 +12,8 @@
   },
   "scenes": [
     {
-      "type": "hook.statement",
-      "tone": "accent",
-      "text": "4 *arnaques*|à éviter en Chine",
-      "glyphs": [
-        "!",
-        "✕"
-      ],
+      "type": "hook.impact",
+      "text": "4|*arnaques*|à éviter|en Chine",
       "vo": "4 arnaques à éviter en Chine."
     },
     {
@@ -242,6 +237,48 @@
     {
       "type": "scene.end",
       "vo": "KONVWA. Achetez, nous livrons."
+    }
+  ],
+  "needs": [
+    {
+      "file": "lib:people/client-telephone-inquiet.png",
+      "what": "Client·e haïtien·ne qui regarde son téléphone, inquiet·e (le vendeur a disparu)",
+      "format": "PNG transparent ≥ 1500 px"
+    },
+    {
+      "file": "lib:people/cliente-colis-souriante.png",
+      "what": "Cliente haïtienne qui ouvre un colis, souriante (fin rassurante)",
+      "format": "PNG transparent ≥ 1500 px"
+    },
+    {
+      "file": "lib:app/devis-detaille.png",
+      "what": "Capture de l'app : un devis avec ses lignes (produit, service, expédition, douane, livraison)",
+      "format": "PNG, résolution native"
+    },
+    {
+      "file": "lib:app/portefeuille-moncash.png",
+      "what": "Capture de l'app : portefeuille + recharge MonCash / NatCash",
+      "format": "PNG, résolution native"
+    },
+    {
+      "file": "lib:app/suivi-commande.png",
+      "what": "Capture de l'app : suivi d'une commande (étapes jusqu'en Haïti)",
+      "format": "PNG, résolution native"
+    },
+    {
+      "file": "lib:app/reclamation-support.png",
+      "what": "Capture de l'app : réclamation Support avec photos",
+      "format": "PNG, résolution native"
+    },
+    {
+      "file": "lib:illustrations/carton-konvwa.png",
+      "what": "Carton KONVWA (scotch + logo), fermé et ouvert",
+      "format": "PNG transparent, 3D ou illustration"
+    },
+    {
+      "file": "lib:brand/logo-konvwa-blanc.svg",
+      "what": "Logo KONVWA version blanche",
+      "format": "SVG"
     }
   ]
 }

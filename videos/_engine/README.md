@@ -66,7 +66,11 @@ node $E assets cutout videos/_engine/library/products/cerave.jpg     # → cerav
 }
 ```
 
-Champs communs à toutes les scènes : `type`, `vo`, `transition` (cut · whip · up · circle · scale · flash · fade), `theme`, `tone` (`"accent"` = scène plein orange), `tail` (secondes de respiration après la voix), `dur` (forcer la durée), `sfx` (`[{ "t": 0.4, "cue": "pop" }]` pour ajouter un son). Les champs propres à chaque type sont listés par `node $E types`. Les images : `"lib:products/cerave.jpg"` (bibliothèque partagée `library/`) ou un chemin dans le projet (`assets/…`).
+Champs communs à toutes les scènes : `type`, `vo`, `anim` (entrée du texte : `mask` · `letters` · `pop` · `type` · `rise` ; chaque type a déjà la sienne), `transition` (cut · whip · up · circle · scale · flash · fade), `theme`, `tone` (`"accent"` = scène plein orange), `tail` (secondes de respiration après la voix), `dur` (forcer la durée), `sfx` (`[{ "t": 0.4, "cue": "pop" }]` pour ajouter un son). Les champs propres à chaque type sont listés par `node $E types`. Les images : `"lib:products/cerave.jpg"` (bibliothèque partagée `library/`) ou un chemin dans le projet (`assets/…`).
+
+**Thème clair = page blanche.** L'orange de la marque va dans le texte (mot-clé, chiffres, kicker) et dans ce qui agit (boutons, coches, traits d'impact), jamais en halos dans les coins.
+
+**Visuels à demander au client** : `"needs": [{ "file": "lib:people/cliente-colis.png", "what": "Cliente haïtienne qui ouvre un colis, souriante", "format": "PNG transparent ≥ 1500 px" }]` dans le brief ; `node $E assets need <projet>` affiche la liste cochée. La bibliothèque de base à constituer est décrite dans `docs/ASSETS.md`.
 
 Un exemple complet est dans `examples/demo.brief.json` (6 scènes, 22 s) ; `videos/hook-test/brief.json` montre les vraies images en profondeur.
 

@@ -11,7 +11,7 @@
     {
       "id": "s01",
       "scene": 1,
-      "type": "hook.statement",
+      "type": "hook.impact",
       "text": "4 arnaques à éviter en Chine.",
       "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : 4 arnaques à éviter en Chine.",
       "file": "assets/vo/s01.wav",

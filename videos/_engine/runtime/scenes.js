@@ -16,7 +16,7 @@
     t.box.style.position = 'absolute'
     if (p.align === 'left') t.box.style.justifyContent = 'flex-start', t.box.style.textAlign = 'left'
     const times = c.times(markup, { start: p.start, cap: p.max, pace: 0.16 })
-    fx.reveal(tl, t.words, times, { y: 44, blur: 14, dur: 0.55 })
+    fx.text(tl, t.words, times, c.spec.anim || 'mask', { y: 44, blur: 14, dur: 0.55 })
     const ai = M.accentIndex(markup)
     if (ai >= 0) {
       const w = t.words[ai]
@@ -65,7 +65,7 @@
       const size = lay.size
       const t = h.text(stack, lay.markup, 'mo-h1', { fontSize: size })
       const times = c.times(spec.text, { cap: 2.4, pace: 0.2 })
-      fx.reveal(tl, t.words, times, { y: 48, blur: 16, dur: 0.58 })
+      fx.text(tl, t.words, times, spec.anim || 'letters', { y: 48, blur: 16, dur: 0.58 })
       const ai = M.accentIndex(spec.text)
       if (ai >= 0) {
         const w = t.words[ai]
@@ -434,7 +434,7 @@
         const lay = M.layout(spec.text, c.maxW, { max: 130, min: 70, maxLines: 2 })
         const t = h.text(stage, lay.markup, 'mo-trio-title', { left: env.safe.l, width: c.maxW, top: titleTop, fontSize: lay.size })
         t.box.style.position = 'absolute'
-        fx.reveal(tl, t.words, c.times(spec.text, { start: 0.2, cap: 0.6, pace: 0.14 }), { y: 40, blur: 14, dur: 0.5 })
+        fx.text(tl, t.words, c.times(spec.text, { start: 0.2, cap: 0.6, pace: 0.14 }), spec.anim || 'letters', { y: 40, blur: 14, dur: 0.5 })
       }
       const times = spread(c, n, 0.6, 0.45)
       const rowW = cols * D + (cols - 1) * GAP
