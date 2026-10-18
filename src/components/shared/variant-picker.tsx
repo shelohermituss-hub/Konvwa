@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { choose, optionsAt, partsOf, resolve, type DimVariant, type Dimensions } from '@/lib/variant-dimensions'
+import { choose, initialChoice, optionsAt, partsOf, resolve, type DimVariant, type Dimensions } from '@/lib/variant-dimensions'
 import { cn } from '@/lib/utils'
 import { tr } from '@/lib/i18n'
 
@@ -19,7 +19,7 @@ interface Props<T extends DimVariant> {
  * with only the values that exist after what was chosen. Out-of-stock values stay visible but cannot be picked.
  */
 export function VariantPicker<T extends DimVariant>({ dims, chosenId, onPick, onPreview, priceOf }: Props<T>) {
-  const [sel, setSel] = useState<string[]>(() => partsOf(dims, chosenId))
+  const [sel, setSel] = useState<string[]>(() => (chosenId ? partsOf(dims, chosenId) : initialChoice(dims)))
   // a variant chosen elsewhere (a card of the feed, the gallery) is reflected here
   useEffect(() => {
     if (chosenId && resolve(dims, sel)?.id !== chosenId) setSel(partsOf(dims, chosenId))
@@ -34,12 +34,14 @@ export function VariantPicker<T extends DimVariant>({ dims, chosenId, onPick, on
     else if (image) onPreview(image)
   }
 
-  const shown = dims.names.filter((_, i) => i === 0 || sel.length >= i)
-  const missing = dims.names[sel.length] ?? null
+  const nameOf = (i: number) => dims.names[i] || tr('Option {0}', i + 1)
+  const shown = dims.names.map((_, i) => i).filter((i) => i === 0 || sel.length >= i)
+  const missing = sel.length < dims.names.length ? nameOf(sel.length) : null
 
   return (
     <div className="space-y-3">
-      {shown.map((name, i) => {
+      {shown.map((i) => {
+        const name = nameOf(i)
         const options = optionsAt(dims, sel, i)
         const last = i === dims.names.length - 1
         const prices = last ? new Set(options.map((o) => priceOf(o.variant))) : new Set<string>()

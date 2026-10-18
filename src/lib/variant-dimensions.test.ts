@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { choose, optionsAt, partsOf, resolve, splitVariants, type DimVariant } from './variant-dimensions'
+import { choose, flatHeading, initialChoice, optionsAt, partsOf, resolve, splitVariants, type DimVariant } from './variant-dimensions'
 
 const v = (id: string, label: string, over: Partial<DimVariant & { label: string }> = {}) => ({ id, label, group_name: 'COULEUR / TAILLE', stock_available: true, image: null as string | null, ...over })
 const ring = [
@@ -14,11 +14,12 @@ describe('splitVariants', () => {
   })
   it('gives up (flat list) when the variants are not one complete choice each', () => {
     expect(splitVariants([v('1', 'Noir'), v('2', 'Rose')], (x) => x.label)).toBeNull()
-    expect(splitVariants([v('1', 'Noir / 7', { group_name: 'COULEUR' }), v('2', 'Rose / 7', { group_name: 'COULEUR' })], (x) => x.label)).toBeNull()
+    expect(splitVariants([v('1', 'Noir / 7', { group_name: null }), v('2', 'Rose / 7', { group_name: null })], (x) => x.label)?.names).toEqual(['', ''])
+    expect(splitVariants([v('1', 'Noir / 7', { group_name: 'COULEUR' }), v('2', 'Rose / 7', { group_name: 'COULEUR' })], (x) => x.label)?.names).toEqual(['', ''])
     expect(splitVariants([v('1', 'Noir / 7'), v('2', 'Rose / 7', { group_name: 'AUTRE / TAILLE' })], (x) => x.label)).toBeNull()
     expect(splitVariants([v('1', 'Noir / 7'), v('2', 'Noir / 7')], (x) => x.label)).toBeNull()
     expect(splitVariants([v('1', 'Noir / 7')], (x) => x.label)).toBeNull()
-    expect(splitVariants([v('1', 'Noir / 7 / L'), v('2', 'Rose / 7 / L')], (x) => x.label)).toBeNull()
+    expect(splitVariants([v('1', 'Noir / 7'), v('2', 'Rose')], (x) => x.label)).toBeNull()
   })
 })
 
@@ -41,14 +42,42 @@ describe('choose and resolve', () => {
     expect(resolve(dims, ['Noir'])).toBeNull()
     expect(resolve(dims, ['Noir', 'Taille 8'])?.id).toBe('2')
   })
-  it('keeps the size when changing the colour if it exists, drops it otherwise', () => {
+  it('keeps the size when changing the colour if it exists, otherwise picks the only one left or drops it', () => {
     expect(choose(dims, ['Noir', 'Taille 8'], 0, 'Rose')).toEqual(['Rose', 'Taille 8'])
-    expect(choose(dims, ['Noir', 'Taille 8'], 0, 'Blanc')).toEqual(['Blanc'])
+    expect(choose(dims, ['Noir', 'Taille 8'], 0, 'Blanc')).toEqual(['Blanc', 'Taille 7'])
     expect(choose(dims, ['Noir', 'Taille 7'], 0, 'Rose')).toEqual(['Rose'])
     expect(choose(dims, [], 0, 'Noir')).toEqual(['Noir'])
   })
   it('knows the choices of a variant', () => {
     expect(partsOf(dims, '4')).toEqual(['Rose', 'Taille 8'])
     expect(partsOf(dims, null)).toEqual([])
+  })
+})
+
+describe('other shapes of variants', () => {
+  it('splits three dimensions, naming the ones the group does not name with an empty name', () => {
+    const three = [v('1', 'Minuit / 16GB / 512GB'), v('2', 'Argent / 16GB / 512GB'), v('3', 'Argent / 32GB / 1TB')]
+    const d = splitVariants(three, (x) => x.label)!
+    expect(d.names).toEqual(['COULEUR', 'TAILLE', ''])
+    expect(optionsAt(d, ['Argent'], 1).map((o) => o.value)).toEqual(['16GB', '32GB'])
+    const free = splitVariants([v('1', 'A / x', { group_name: null }), v('2', 'B / x', { group_name: null })], (x) => x.label)!
+    expect(free.names).toEqual(['', ''])
+  })
+  it('chooses by itself a dimension that has one single value', () => {
+    const d = splitVariants([v('1', 'Noir / 7'), v('2', 'Noir / 8'), v('3', 'Rose / 7')], (x) => x.label)!
+    expect(choose(d, [], 0, 'Rose')).toEqual(['Rose', '7'])
+    expect(resolve(d, choose(d, [], 0, 'Rose'))?.id).toBe('3')
+    expect(choose(d, [], 0, 'Noir')).toEqual(['Noir'])
+    const one = splitVariants([v('1', 'Noir / 7'), v('2', 'Rose / 7')], (x) => x.label)!
+    expect(initialChoice(one)).toEqual([])
+    const same = splitVariants([v('1', 'Standard / 7'), v('2', 'Standard / 8')], (x) => x.label)!
+    expect(initialChoice(same)).toEqual(['Standard'])
+  })
+  it('heads a single list of sizes "Taille" and a single list of colours "Couleur"', () => {
+    expect(flatHeading('Couleur / Taille', ['1 Pack', '4 Pack'], 'Options')).toBe('Taille')
+    expect(flatHeading('Couleur / Taille', ['5,07 fl.oz (1 unité)'], 'Options')).toBe('Taille')
+    expect(flatHeading('Couleur / Taille', ['Gris', 'Noir'], 'Options')).toBe('Couleur')
+    expect(flatHeading('Options', ['Black', 'Silver'], 'Options')).toBe('Options')
+    expect(flatHeading(null, ['60 VCaps'], 'Options')).toBe('Options')
   })
 })

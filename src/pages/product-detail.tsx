@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
 import { VariantPicker } from '@/components/shared/variant-picker'
-import { splitVariants } from '@/lib/variant-dimensions'
+import { flatHeading, splitVariants } from '@/lib/variant-dimensions'
 import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, CATALOG_GUEST_CARD_SELECT, CATALOG_GUEST_DETAIL_SELECT, guestProduct, expandVariants, productPath, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 import { bestOffer, discountPct, strikePrice, effectiveUnitPrice, formatHtg, lineTotal, offerLabel, tierRows, variantUnitPrice } from '@/lib/product-pricing'
@@ -469,10 +469,10 @@ export function ProductDetailPage() {
                 {groups.map((g) => (
                   <div key={g.name || 'options'}>
                     <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {g.name || tr('Options')}
+                      {flatHeading(g.name, g.items.map(variantLabel), tr('Options'))}
                       {chosen && g.items.some((v) => v.id === chosen.id) && <span className="ml-1.5 normal-case text-foreground">· {variantLabel(chosen)}</span>}
                     </p>
-                    <div role="radiogroup" aria-label={g.name || tr('Options')} className="flex flex-wrap gap-2">
+                    <div role="radiogroup" aria-label={flatHeading(g.name, g.items.map(variantLabel), tr('Options'))} className="flex flex-wrap gap-2">
                       {g.items.map((v) => {
                         const on = v.id === variantId
                         return (
