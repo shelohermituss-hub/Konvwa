@@ -11,6 +11,8 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useCart } from '@/lib/cart-context'
 import { useI18n } from '@/lib/i18n-context'
+import { VariantPicker } from '@/components/shared/variant-picker'
+import { splitVariants } from '@/lib/variant-dimensions'
 import { CATALOG_CARD_SELECT, CATALOG_DETAIL_SELECT, CATALOG_GUEST_CARD_SELECT, CATALOG_GUEST_DETAIL_SELECT, guestProduct, expandVariants, productPath, localizeProduct, resellerPriced, sortVariants, variantLabel, type CatalogProduct, type ProductVariant } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth-context'
 import { bestOffer, discountPct, strikePrice, effectiveUnitPrice, formatHtg, lineTotal, offerLabel, tierRows, variantUnitPrice } from '@/lib/product-pricing'
@@ -242,6 +244,8 @@ export function ProductDetailPage() {
     else acc.push({ name, items: [v] })
     return acc
   }, [])
+  // colour / size products: the dimensions are chosen one after the other instead of listing every combination
+  const dims = splitVariants(variants, variantLabel)
   const rows = tierRows(product).map((r) => (priced ? { ...r, price: variantUnitPrice(product, priced, r.from) } : r))
   const supplement = optionsSupplement(optionGroups, picked)
   // what is already in the cart for this product under another choice: the minimum and the quantity tiers count all of it
@@ -452,6 +456,16 @@ export function ProductDetailPage() {
             {/* Variants: size, colour… each with its own regular price and photo */}
             {variants.length > 0 && (
               <div id="section-variants" className="mt-3 space-y-3 scroll-mt-28">
+                {dims ? (
+                  <VariantPicker
+                    dims={dims}
+                    chosenId={variantId}
+                    onPick={(v) => pickVariant(v, gallery)}
+                    onPreview={(img) => { const at = gallery.indexOf(img); if (at >= 0) goToImage(at) }}
+                    priceOf={(v) => `${formatHtg(variantUnitPrice(product, v, quantity))} ${currencyLabel()}`}
+                  />
+                ) : (
+                  <>
                 {groups.map((g) => (
                   <div key={g.name || 'options'}>
                     <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -488,7 +502,9 @@ export function ProductDetailPage() {
                     </div>
                   </div>
                 ))}
-                {!chosen && <p className="text-sm text-muted-foreground">{tr('Choisissez une option pour continuer.')}</p>}
+                  </>
+                )}
+                {!chosen && !dims && <p className="text-sm text-muted-foreground">{tr('Choisissez une option pour continuer.')}</p>}
               </div>
             )}
 

@@ -559,4 +559,5 @@ export const CLIENT_EN: Record<string, string> = {
   ' (estimé)': ' (estimated)',
   'KONVWA-DEVIS-{0}.pdf': 'KONVWA-QUOTE-{0}.pdf',
   'KONVWA-EXPEDITION-{0}.pdf': 'KONVWA-SHIPMENT-{0}.pdf',
+  'Choisissez : {0}': 'Choose: {0}',
 }
