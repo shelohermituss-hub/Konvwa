@@ -51,7 +51,7 @@ export function loadBrief(input) {
 
 /** Image fields of a scene (they have to exist on disk). */
 export function imageRefs(spec) {
-  return [spec.image, spec.image2, ...(Array.isArray(spec.images) ? spec.images : []), ...M.depthRefs(spec)].filter(Boolean)
+  return [spec.image, spec.image2, ...(Array.isArray(spec.images) ? spec.images : []), ...(Array.isArray(spec.reactions) ? spec.reactions : []), ...M.depthRefs(spec)].filter(Boolean)
 }
 
 const MARKUP = /[*_|]/g

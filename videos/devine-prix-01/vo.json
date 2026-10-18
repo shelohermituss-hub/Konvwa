@@ -1,0 +1,62 @@
+{
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy",
+    "direction": "énergie, un rythme rapide et le sourire dans la voix",
+    "language": "fr-FR",
+    "model": "t2a-gemini-3-1-flash-tts"
+  },
+  "lines": [
+    {
+      "id": "s01",
+      "scene": 1,
+      "type": "hook.impact",
+      "text": "Devinez le prix !",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Devinez le prix !",
+      "file": "assets/vo/s01.wav",
+      "estimatedSeconds": 0.96,
+      "measured": true
+    },
+    {
+      "id": "s02",
+      "scene": 2,
+      "type": "scene.guess",
+      "text": "Combien en gourdes, à votre avis ?",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Combien en gourdes, à votre avis ?",
+      "file": "assets/vo/s02.wav",
+      "estimatedSeconds": 1.79,
+      "measured": true
+    },
+    {
+      "id": "s03",
+      "scene": 3,
+      "type": "scene.countdown",
+      "text": "Trois. Deux. Un.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Trois. Deux. Un.",
+      "file": "assets/vo/s03.wav",
+      "estimatedSeconds": 2.01,
+      "measured": true
+    },
+    {
+      "id": "s04",
+      "scene": 4,
+      "type": "scene.reveal",
+      "text": "Trois mille sept cent trente-cinq gourdes ! Livraison en plus.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Trois mille sept cent trente-cinq gourdes ! Livraison en plus.",
+      "file": "assets/vo/s04.wav",
+      "estimatedSeconds": 3.41,
+      "measured": true
+    },
+    {
+      "id": "s05",
+      "scene": 5,
+      "type": "scene.end",
+      "text": "Vous aviez dit combien ? En commentaire !",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Vous aviez dit combien ? En commentaire !",
+      "file": "assets/vo/s05.wav",
+      "estimatedSeconds": 1.99,
+      "measured": true
+    }
+  ]
+}

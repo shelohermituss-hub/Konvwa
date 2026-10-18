@@ -1,0 +1,44 @@
+{
+  "name": "devine-prix-01",
+  "format": "9:16",
+  "total": 14.76,
+  "scenes": [
+    {
+      "id": "s01",
+      "type": "hook.impact",
+      "start": 0,
+      "dur": 2.8,
+      "transition": null
+    },
+    {
+      "id": "s02",
+      "type": "scene.guess",
+      "start": 2.34,
+      "dur": 2.89,
+      "transition": "up"
+    },
+    {
+      "id": "s03",
+      "type": "scene.countdown",
+      "start": 4.73,
+      "dur": 3.06,
+      "transition": "scale"
+    },
+    {
+      "id": "s04",
+      "type": "scene.reveal",
+      "start": 7.43,
+      "dur": 4.49,
+      "transition": "flash"
+    },
+    {
+      "id": "s05",
+      "type": "scene.end",
+      "start": 11.37,
+      "dur": 3.39,
+      "transition": "circle"
+    }
+  ],
+  "sfx": 25,
+  "hookEnd": 2.8
+}

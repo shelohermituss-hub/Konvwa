@@ -200,3 +200,20 @@
 .mo-impact { font-family: "Poppins", sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: -0.035em; line-height: 0.95; color: var(--ink); }
 .mo-impact .mo-a { color: var(--brand); }
 .mo-burst { border-radius: 10px; background: var(--brand); pointer-events: none; }
+
+/* ---------- « Devinez le prix » ---------- */
+.mo-outline { filter: drop-shadow(7px 0 0 #fff) drop-shadow(-7px 0 0 #fff) drop-shadow(0 7px 0 #fff) drop-shadow(0 -7px 0 #fff) drop-shadow(0 18px 26px rgba(10, 22, 40, 0.25)); }
+.mo-qmark { font-family: "Poppins", sans-serif; font-weight: 900; color: var(--brand); line-height: 1; text-align: center; pointer-events: none; }
+.mo-comment { display: flex; align-items: center; gap: 22px; padding: 26px 34px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 42px; font-weight: 700; box-shadow: 0 24px 60px rgba(10, 22, 40, 0.25); }
+.mo-comment i { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 50%; background: var(--brand); flex: none; }
+.mo-pricetag { font-family: "Poppins", sans-serif; font-weight: 900; font-size: 120px; color: var(--ink); line-height: 1; }
+.mo-pricetag b { font-weight: 800; font-size: 64px; color: var(--mute); }
+.mo-blurprice { display: inline-block; color: var(--brand); filter: blur(10px); }
+.mo-cdring { pointer-events: none; }
+.mo-cdnum { font-family: "Poppins", sans-serif; font-weight: 900; color: var(--ink); line-height: 1.1; pointer-events: none; }
+.mo-cdlast { color: var(--brand); }
+.mo-bigprice { font-family: "Poppins", sans-serif; font-weight: 900; letter-spacing: -0.03em; color: var(--brand); line-height: 1; white-space: nowrap; }
+.mo-pricecur { font-weight: 800; color: var(--ink); letter-spacing: 0; }
+.mo-confetti { border-radius: 4px; pointer-events: none; }
+.mo-pricenote { font-size: 46px; font-weight: 700; color: var(--ink); }
+.mo-pricedate { font-size: 30px; font-weight: 500; color: var(--mute); }

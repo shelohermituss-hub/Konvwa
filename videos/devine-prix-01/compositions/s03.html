@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s03-template">
+      <style>
+        .mo-stage { font-family: "Poppins", sans-serif; }
+        .mo-s, .mo-trio-kicker, .mo-med-label { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost, .mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; }
+      </style>
+      <div class="mo" id="s03-root" data-composition-id="s03" data-width="1080" data-height="1920"></div>
+      <script>
+        (function () {
+          var M = window.MOTION;
+          var spec = {"type":"scene.countdown","image":"assets/lib/products/creatine-muscletech.png","transition":"scale","vo":"Trois. Deux. Un."};
+          var env = {"id":"s03","W":1080,"H":1920,"safe":{"t":250,"b":440,"l":70,"r":70},"dur":3.06,"seed":55,"theme":"light","vo":{"start":0.48,"dur":2.01},"transIn":{"kind":"scale","dur":0.5},"transOut":{"kind":"flash","dur":0.36}};
+          env.brand = M.brand;
+          env.pal = M.pals[env.theme];
+          var root = document.getElementById("s03-root");
+          var tl = gsap.timeline({ paused: true });
+          M.mount(root, tl, spec, env);
+          window.__timelines = window.__timelines || {};
+          window.__timelines["s03"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

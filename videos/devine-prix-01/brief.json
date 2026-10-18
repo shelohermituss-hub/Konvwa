@@ -1,0 +1,89 @@
+{
+  "name": "devine-prix-01",
+  "title": "Devinez le prix — épisode 1 : Créatine MuscleTech (80 portions)",
+  "format": "9:16",
+  "theme": "light",
+  "brand": "konvwa",
+  "seed": 21,
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy"
+  },
+  "scenes": [
+    {
+      "type": "hook.impact",
+      "text": "Devinez|le *prix*",
+      "vo": "Devinez le prix !"
+    },
+    {
+      "type": "scene.guess",
+      "image": "lib:products/creatine-muscletech.png",
+      "kicker": "MuscleTech · 80 portions",
+      "text": "Créatine *Platinum*",
+      "sticker": "Votre prix en commentaire",
+      "decor": [
+        {
+          "src": "lib:people/reaction-sceptique.png",
+          "x": 0.8,
+          "y": 0.7,
+          "depth": 1,
+          "size": 0.32,
+          "rot": 7
+        }
+      ],
+      "transition": "up",
+      "vo": "Combien en gourdes, à votre avis ?"
+    },
+    {
+      "type": "scene.countdown",
+      "image": "lib:products/creatine-muscletech.png",
+      "transition": "scale",
+      "vo": "Trois. Deux. Un."
+    },
+    {
+      "type": "scene.reveal",
+      "image": "lib:products/creatine-muscletech.png",
+      "kicker": "Prix KONVWA",
+      "price": 3735,
+      "currency": "HTG",
+      "note": "Prix du produit · livraison en plus",
+      "date": "Prix au 18/10/2026",
+      "reactions": [
+        "lib:people/reaction-choc.png",
+        "lib:people/reaction-rire.png"
+      ],
+      "transition": "flash",
+      "vo": "Trois mille sept cent trente-cinq gourdes ! Livraison en plus."
+    },
+    {
+      "type": "scene.end",
+      "text": "Vous aviez dit combien ?",
+      "cta": "Répondez en commentaire",
+      "audience": "Devinez le prix · épisode 1",
+      "vo": "Vous aviez dit combien ? En commentaire !"
+    }
+  ],
+  "needs": [
+    {
+      "file": "lib:products/creatine-muscletech.png",
+      "what": "Créatine MuscleTech 80 portions, détourée (catalogue)",
+      "format": "PNG transparent"
+    },
+    {
+      "file": "lib:people/reaction-sceptique.png",
+      "what": "Visage sceptique (fourni)",
+      "format": "PNG détouré"
+    },
+    {
+      "file": "lib:people/reaction-choc.png",
+      "what": "Visage choqué (fourni)",
+      "format": "PNG détouré"
+    },
+    {
+      "file": "lib:people/reaction-rire.png",
+      "what": "Visage qui rit (fourni)",
+      "format": "PNG détouré"
+    }
+  ]
+}

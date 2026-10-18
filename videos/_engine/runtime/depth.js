@@ -31,7 +31,7 @@
       const rot = it.rot != null ? it.rot : Math.round((R() - 0.5) * 24)
       const dx = x < 0.5 ? -1 : 1
       const dy = y < 0.5 ? -1 : 1
-      return { src: it.src, x, y, depth, size, rot, sticker: !!it.sticker || /(^|[:/])flags\//.test(it.src || ''), dx, dy }
+      return { src: it.src, x, y, depth, size, rot, sticker: !!it.sticker || /(^|[:/])flags\//.test(it.src || ''), outline: !!it.outline || /(^|[:/])people\//.test(it.src || ''), dx, dy }
     })
   }
   /** Every image path a spec references through decor / items / carry (for validation and copying). */
@@ -72,7 +72,7 @@
     const shadow = h.el('div', 'mo-cutshadow', '', wrap)
     shadow.style.opacity = String(0.22 + 0.3 * it.depth)
     // tall objects never grow past the slot
-    const img = h.el('img', 'mo-cutimg' + (it.sticker ? ' mo-sticker' : ''), '', wrap)
+    const img = h.el('img', 'mo-cutimg' + (it.sticker ? ' mo-sticker' : '') + (it.outline ? ' mo-outline' : ''), '', wrap)
     img.src = it.src
     img.style.maxHeight = Math.round(it.size * 1.15) + 'px'
     if (it.depth < 0.3) img.style.filter = blur(Math.round((0.3 - it.depth) * 12))
@@ -226,6 +226,144 @@
         k.textContent = spec.kicker
         fx.fadeUp(tl, k, 0.1, { y: 20, dur: 0.45 })
       }
+    },
+  })
+
+  // ---------- « Devinez le prix » : produit → compte à rebours → révélation ----------
+  /** Product on centre stage, one floating object (a "card" item). */
+  const product = (c, src, x, y, size) => h.cutout(c.stage, { src, x, y, depth: 0.9, size: Math.round(c.env.W * size), rot: 0, sticker: false, outline: false, dx: 0, dy: 1 }, c.env)
+  const fmtPrice = (n) => Math.round(n).toLocaleString('fr-FR').replace(/\s/g, ' ')
+
+  M.register('scene.guess', {
+    kind: 'scene', label: 'Devinez le prix : le produit en grand, son nom, des « ? » qui surgissent, autocollant « votre prix en commentaire »', min: 2.4, max: 6, words: [0, 8], needs: ['image'],
+    sfx: () => [{ t: 0.05, cue: 'whooshBig' }, { t: 0.6, cue: 'pop' }, { t: 0.95, cue: 'ping' }, { t: 1.5, cue: 'pop' }],
+    build(c) {
+      const { stage, tl, env, fx, spec } = c
+      h.bg(stage, env, spec.bg || 'dots', env.theme)
+      if (spec.kicker) { const k = h.box(stage, 'mo-cap mo-center-text', { left: env.safe.l, width: c.maxW, top: env.safe.t }); k.textContent = spec.kicker; fx.fadeUp(tl, k, 0.05, { y: 18, dur: 0.4 }) }
+      if (spec.text) {
+        const lay = M.layout(spec.text, c.maxW, { max: 92, min: 56, maxLines: 2 })
+        const t = h.text(stage, lay.markup, 'mo-h1', { left: env.safe.l, width: c.maxW, top: env.safe.t + 60, fontSize: lay.size })
+        t.box.style.position = 'absolute'
+        fx.text(tl, t.words, c.times(spec.text, { start: 0.15, cap: 0.6, pace: 0.12 }), spec.anim || 'mask')
+      }
+      const p = product(c, spec.image, 0.5, 0.53, spec.size || 0.6)
+      p.wrap.style.zIndex = '3'
+      tl.fromTo(p.wrap, { y: env.H * 0.45, rotation: -14, scale: 0.6, opacity: 0 }, { y: 0, rotation: 0, scale: 1, opacity: 1, duration: 0.75, ease: 'back.out(1.6)' }, 0.05)
+      tl.to(p.img, { y: -22, rotation: 2.5, duration: 1.1, ease: 'sine.inOut', yoyo: true, repeat: Math.max(0, Math.ceil((c.dur - 0.8) / 1.1) - 1) }, 0.8)
+      // question marks bursting around the product
+      const R = M.rng(env.seed + 3)
+      const spots = [[0.16, 0.36, -18], [0.84, 0.32, 16], [0.12, 0.66, 10], [0.88, 0.62, -12]]
+      spots.forEach(([x, y, r], i) => {
+        const q = h.box(stage, 'mo-qmark', { left: Math.round(x * env.W) - 80, top: Math.round(y * env.H) - 110, width: 160, fontSize: Math.round(170 + R() * 80) })
+        q.textContent = '?'
+        tl.fromTo(q, { opacity: 0, scale: 0.2, rotation: r * 3 }, { opacity: 1, scale: 1, rotation: r, duration: 0.45, ease: 'back.out(2.4)' }, 0.85 + i * 0.09)
+        tl.to(q, { y: -18, duration: 0.6, ease: 'sine.inOut', yoyo: true, repeat: Math.max(0, Math.ceil((c.dur - 1.4) / 0.6) - 1) }, 1.35 + i * 0.09)
+      })
+      if (spec.sticker) {
+        const st = h.box(stage, 'mo-comment', { left: env.safe.l + 40, width: c.maxW - 80, top: env.H - env.safe.b - 150 }, '<i>' + h.icon('user', 44, '#fff', 2.4) + '</i><span></span>')
+        st.querySelector('span').textContent = spec.sticker
+        st.style.zIndex = '8' // above the near decor (z 6)
+        tl.fromTo(st, { opacity: 0, y: 80, scale: 0.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(2)' }, 1.45)
+        tl.to(st, { rotation: -2.5, duration: 0.12, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 2.0)
+      }
+    },
+  })
+
+  /** Seconds at which each number of the countdown lands: on the words of the voice when there is one. */
+  M.countdownTimes = function (env, n) {
+    const start = env.vo ? env.vo.start : 0.25
+    const span = env.vo ? env.vo.dur * 0.9 : n * 0.75
+    return Array.from({ length: n }, (_, i) => M.r2(start + (i * span) / n))
+  }
+  M.register('scene.countdown', {
+    kind: 'scene', label: 'Compte à rebours géant 3-2-1 (calé sur la voix) sous le produit, prix caché « ??? HTG » qui tremble', min: 2.2, max: 4.5, words: [0, 4], needs: ['image'],
+    sfx: (spec, env) => [{ t: 0.0, cue: 'riser' }, ...M.countdownTimes(env, spec.from || 3).map((t) => ({ t, cue: 'tick' }))],
+    build(c) {
+      const { stage, tl, env, spec } = c
+      h.bg(stage, env, 'dots', env.theme)
+      const n = spec.from || 3
+      const times = M.countdownTimes(env, n)
+      const p = product(c, spec.image, 0.5, 0.27, 0.36)
+      tl.fromTo(p.wrap, { scale: 1.3, y: env.H * 0.18, opacity: 0.6 }, { scale: 1, y: 0, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0)
+      tl.to(p.img, { rotation: 3, duration: 0.09, yoyo: true, repeat: Math.max(1, Math.round((c.dur - 0.5) / 0.09)), ease: 'sine.inOut' }, 0.5)
+      const tag = h.box(stage, 'mo-pricetag mo-center-text', { left: c.cx - 300, width: 600, top: Math.round(env.H * 0.45) })
+      tag.innerHTML = '<span class="mo-blurprice">??? </span><b>' + (spec.currency || 'HTG') + '</b>'
+      tl.fromTo(tag, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' }, 0.25)
+      const ringD = 560
+      const ring = h.box(stage, 'mo-cdring', { left: c.cx - ringD / 2, top: Math.round(env.H * 0.71) - ringD / 2, width: ringD, height: ringD })
+      ring.innerHTML = '<svg viewBox="0 0 100 100" width="' + ringD + '" height="' + ringD + '"><circle cx="50" cy="50" r="46" fill="none" stroke="var(--line)" stroke-width="3"/><circle class="arc" cx="50" cy="50" r="46" fill="none" stroke="var(--brand)" stroke-width="3.4" stroke-linecap="round" transform="rotate(-90 50 50)"/></svg>'
+      const arc = ring.querySelector('.arc')
+      const L = 2 * Math.PI * 46
+      arc.style.strokeDasharray = L + ' ' + L
+      tl.fromTo(arc, { strokeDashoffset: L }, { strokeDashoffset: 0, duration: Math.max(0.5, c.dur - times[0]), ease: 'none' }, times[0])
+      for (let i = 0; i < n; i++) {
+        const d = h.box(stage, 'mo-cdnum mo-center-text', { left: c.cx - 300, width: 600, top: Math.round(env.H * 0.71) - 220, fontSize: 400 })
+        d.textContent = String(n - i)
+        if (i === n - 1) d.classList.add('mo-cdlast')
+        tl.fromTo(d, { opacity: 0, scale: 2.6, filter: 'blur(18px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, times[i])
+        tl.to(stage, { x: i % 2 ? 12 : -12, duration: 0.04 }, times[i] + 0.18)
+        tl.to(stage, { x: 0, duration: 0.12, ease: 'power2.out' }, times[i] + 0.22)
+        if (i < n - 1) tl.to(d, { opacity: 0, scale: 0.5, filter: 'blur(8px)', duration: 0.14, ease: 'power2.in' }, times[i + 1] - 0.06)
+      }
+    },
+  })
+
+  M.register('scene.reveal', {
+    kind: 'scene', label: 'Révélation du prix : il défile et se fige, confettis, visages qui réagissent, mention « livraison en plus »', min: 2.6, max: 6, words: [0, 8], needs: ['image', 'price'],
+    sfx: () => [{ t: 0.0, cue: 'whoosh' }, { t: 0.15, cue: 'type' }, { t: 1.05, cue: 'impact' }, { t: 1.1, cue: 'chime' }, { t: 1.3, cue: 'pop' }, { t: 1.55, cue: 'pop' }],
+    build(c) {
+      const { stage, tl, env, fx, spec } = c
+      h.bg(stage, env, 'dots', env.theme)
+      const p = product(c, spec.image, 0.5, 0.25, 0.34)
+      tl.fromTo(p.wrap, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'expo.out' }, 0)
+      tl.to(p.wrap, { scale: 1.12, duration: 0.12, ease: 'power2.out' }, 1.05)
+      tl.to(p.wrap, { scale: 1, duration: 0.5, ease: 'back.out(2)' }, 1.17)
+      if (spec.kicker) { const k = h.box(stage, 'mo-cap mo-center-text', { left: env.safe.l, width: c.maxW, top: Math.round(env.H * 0.43) }); k.textContent = spec.kicker; fx.fadeUp(tl, k, 0.1, { y: 16, dur: 0.4 }) }
+      const total = fmtPrice(spec.price).length + 0.6 * String(spec.currency || 'HTG').length
+      const size = M.clamp(Math.round(c.maxW / (total * 0.6)), 120, 260)
+      const box = h.box(stage, 'mo-bigprice mo-center-text', { left: 0, width: env.W, top: Math.round(env.H * 0.47), fontSize: size })
+      const val = h.el('span', 'mo-numval', '0', box)
+      h.el('span', 'mo-pricecur', ' ' + (spec.currency || 'HTG'), box).style.fontSize = Math.round(size * 0.42) + 'px'
+      tl.fromTo(box, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'expo.out' }, 0.1)
+      fx.count(tl, val, 0, spec.price, 0.15, 0.9, fmtPrice, 'power4.out')
+      tl.to(box, { scale: 1.12, duration: 0.1, ease: 'power2.out' }, 1.05)
+      tl.to(box, { scale: 1, duration: 0.45, ease: 'back.out(2.4)' }, 1.15)
+      // confetti in the brand colours, burst from the price then falling
+      const R = M.rng(env.seed + 9)
+      const cols = [env.pal.accent, env.pal.accent2, env.pal.ink, '#FFB020']
+      const py = Math.round(env.H * 0.47 + size * 0.5)
+      for (let i = 0; i < 40; i++) {
+        const w = 14 + Math.round(R() * 14)
+        const pc = h.box(stage, 'mo-confetti', { left: c.cx - w / 2, top: py, width: w, height: Math.round(w * (1.4 + R())) })
+        pc.style.background = cols[i % cols.length]
+        const a = R() * Math.PI * 2
+        const dist = 260 + R() * 420
+        const dx = Math.cos(a) * dist
+        const dy = Math.sin(a) * dist * 0.7 - 260
+        tl.fromTo(pc, { x: 0, y: 0, scale: 0, rotation: 0, opacity: 1 }, { x: dx, y: dy, scale: 1, rotation: R() * 360, duration: 0.5, ease: 'power3.out' }, 1.05)
+        tl.to(pc, { y: dy + env.H * 0.55, x: dx * 1.15, rotation: R() * 900, opacity: 0, duration: 1.6 + R() * 0.6, ease: 'power1.in' }, 1.55)
+      }
+      if (spec.note) {
+        const n = h.box(stage, 'mo-pricenote mo-center-text', { left: env.safe.l, width: c.maxW, top: Math.round(env.H * 0.47 + size * 1.15) })
+        n.textContent = spec.note
+        fx.fadeUp(tl, n, 1.4, { y: 20, dur: 0.45 })
+      }
+      if (spec.date) {
+        const d = h.box(stage, 'mo-pricedate mo-center-text', { left: env.safe.l, width: c.maxW, top: Math.round(env.H * 0.47 + size * 1.15) + 70 })
+        d.textContent = spec.date
+        fx.fadeUp(tl, d, 1.6, { y: 12, dur: 0.4 })
+      }
+      // faces that react: they jump in from the bottom corners on the hit
+      const faces = (spec.reactions || []).slice(0, 2)
+      faces.forEach((src, i) => {
+        const left = i === 0
+        const it = { src, x: left ? 0.2 : 0.8, y: 0.86, depth: 1, size: Math.round(env.W * 0.38), rot: left ? -8 : 8, sticker: false, outline: true, dx: left ? -1 : 1, dy: 1 }
+        const o = h.cutout(stage, it, env)
+        o.wrap.style.zIndex = '6'
+        tl.fromTo(o.wrap, { y: env.H * 0.3, rotation: it.rot * 3, opacity: 0 }, { y: 0, rotation: it.rot, opacity: 1, duration: 0.5, ease: 'back.out(1.8)' }, 1.25 + i * 0.25)
+        tl.to(o.img, { rotation: left ? -4 : 4, y: -10, duration: 0.16, yoyo: true, repeat: Math.max(1, Math.round((c.dur - 1.9) / 0.16)), ease: 'sine.inOut' }, 1.75 + i * 0.25)
+      })
     },
   })
 })(typeof window !== 'undefined' ? window : globalThis)

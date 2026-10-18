@@ -18,3 +18,8 @@ Pixabay : [licence Pixabay](https://pixabay.com/service/license-summary/) (usage
 ## Visuels du site KONVWA (`public/`)
 
 Propriété de KONVWA, copiés depuis le site (konvwa.shop) : `lib:site/avion-cargo.jpg`, `carton.jpg`, `chariot.webp`, `conteneur.png`, `entrepot.png`, `verified.png`, `moncash.jpg`, `natcash.png` (logos MonCash et NatCash : moyens de paiement acceptés, utilisés comme sur le site).
+
+## Fournis par le client
+
+- `lib:products/creatine-muscletech.png` — photo du catalogue KONVWA (MuscleTech Platinum Creatine, 80 portions), détourée avec rembg.
+- `lib:people/reaction-choc.png`, `reaction-sceptique.png`, `reaction-rire.png` — images de réaction fournies par le client le 18/10/2026, détourées avec rembg. Ce sont des visages de personnalités publiques (mèmes) : droits à vérifier avant toute diffusion sponsorisée.

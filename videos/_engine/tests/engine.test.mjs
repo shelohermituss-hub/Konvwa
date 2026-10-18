@@ -330,3 +330,26 @@ describe('white light theme, kinetic hook, typographic entrances, client asset l
     expect(validateBrief({ ...base, needs: [{ file: 'lib:x.png' }] }, exists).errors.join()).toMatch(/needs/)
   })
 })
+
+describe('« Devinez le prix » series', () => {
+  it('lands the countdown numbers on the words of the voice', () => {
+    expect(M.countdownTimes({ vo: { start: 0.5, dur: 2 } }, 3)).toEqual([0.5, 1.1, 1.7])
+    expect(M.countdownTimes({}, 3)).toEqual([0.25, 1, 1.75])
+    expect(M.catalog['scene.countdown'].sfx({}, { vo: { start: 0.5, dur: 2 } }).filter((x) => x.cue === 'tick')).toHaveLength(3)
+  })
+  it('the series template is a valid 15 s brief with a price, a delivery note and reaction faces', () => {
+    const { brief } = loadBrief(path.join(ENGINE, 'examples/devine-prix.brief.json'))
+    const reveal = brief.scenes.find((s) => s.type === 'scene.reveal')
+    expect(reveal.price).toBeGreaterThan(0)
+    expect(reveal.note).toMatch(/livraison en plus/)
+    expect(validateBrief(brief, (ref) => fs.existsSync(path.join(ENGINE, 'library', ref.slice(4)))).errors).toEqual([])
+    const tl = schedule(brief, {})
+    expect(tl.total).toBeLessThanOrEqual(18)
+  })
+  it('requires a price to reveal and checks the reaction images exist', () => {
+    const base = demo().brief
+    const r = validateBrief({ ...base, scenes: [base.scenes[0], { type: 'scene.reveal', image: 'lib:products/cerave.jpg', reactions: ['lib:people/absent.png'] }, base.scenes.at(-1)] }, exists)
+    expect(r.errors.join()).toMatch(/price/)
+    expect(r.errors.join()).toMatch(/absent\.png/)
+  })
+})
