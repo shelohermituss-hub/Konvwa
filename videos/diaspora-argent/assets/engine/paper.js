@@ -29,9 +29,10 @@
     let k = 0
     return ls.map((l) => {
       const n = Math.max(1, M.wordCount(l.t))
-      const t = { at: wt[k] != null ? wt[k] : 0.2, end: wt[Math.min(wt.length - 1, k + n - 1)] != null ? wt[Math.min(wt.length - 1, k + n - 1)] : 0.2 }
+      const at = wt[Math.min(wt.length - 1, k)]
+      const end = wt[Math.min(wt.length - 1, k + n - 1)]
       k += n
-      return t
+      return { at, end }
     })
   }
   /** Letter rhythm of one line: when its first letter starts (after the bar opens), the gap between letters, when it is fully readable. */
