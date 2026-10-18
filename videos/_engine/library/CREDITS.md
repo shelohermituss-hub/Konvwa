@@ -26,3 +26,10 @@ Propriété de KONVWA, copiés depuis le site (konvwa.shop) : `lib:site/avion-ca
 - `lib:app/recharge-moncash.png`, `suivi-commande.png`, `demande-devis.png` — captures d'écran de l'app KONVWA fournies par le client le 18/10/2026.
 - `lib:photos/avant-papiers.jpg` — pixabay photo 5875816 — https://pixabay.com/photos/man-writing-african-african-man-5875816/ — par [anhvanyds](https://pixabay.com/users/19721150/)
 - `lib:photos/apres-telephone.jpg` — pixabay photo 3247586 — https://pixabay.com/photos/african-kenyan-adult-man-outdoors-3247586/ — par [artsysolomon](https://pixabay.com/users/6715447/)
+- `lib:illustrations/billets-usd.png` — pixabay photo 69528 — https://pixabay.com/photos/one-usa-banknote-business-money-69528/ — par [PublicDomainPictures](https://pixabay.com/users/14/) (détourée avec rembg)
+- `lib:illustrations/billets-eventail.png` — pixabay photo 3259363 — https://pixabay.com/photos/dollar-money-bucks-rupee-cash-3259363/ — par [PublicDomainPNG](https://pixabay.com/users/7249387/)
+- `lib:illustrations/telephone-main.png` — pixabay photo 1283938 — https://pixabay.com/photos/samsung-smartphone-hand-holding-1283938/ — par [Pexels](https://pixabay.com/users/2286921/) (détourée avec rembg)
+- `lib:illustrations/feuille-palmier.png` — pixabay illustration 4211167 — https://pixabay.com/illustrations/palm-leaf-green-botany-tropical-4211167/ — par [studio2013](https://pixabay.com/users/12500903/) (détourée avec rembg)
+- `lib:illustrations/tirelire.png` — pixabay photo 970340 — https://pixabay.com/photos/piggy-bank-money-savings-financial-970340/ — par [ClickerHappy](https://pixabay.com/users/324082/) (détourée avec rembg)
+- `lib:people/famille-haitienne.png` — Unsplash FWX91ORBR6E — https://unsplash.com/photos/FWX91ORBR6E — par [Lawrence Crayton](https://unsplash.com/@lawrencecrayton) (licence Unsplash), détourée avec rembg
+- `lib:people/commercante-fruits.png` — Unsplash 7hMq8FLMtBM (« Haitian woman selling fruit at a market ») — https://unsplash.com/photos/7hMq8FLMtBM — par [Heather Suggitt](https://unsplash.com/@hsuggitt) (licence Unsplash), détourée avec rembg

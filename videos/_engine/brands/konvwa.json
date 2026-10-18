@@ -11,6 +11,7 @@
   "accent": "#F05A28",
   "accent2": "#FF7252",
   "navy": "#0A1628",
+  "shades": { "deep": "#C23010", "darker": "#8B2200", "darkest": "#6B1800", "light": "#FF7252" },
   "themes": {
     "light": {
       "bg": "#FFFFFF",

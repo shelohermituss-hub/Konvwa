@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s02-template">
+      <style>
+        .mo-stage { font-family: "Poppins", sans-serif; }
+        .mo-s, .mo-trio-kicker, .mo-med-label { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost, .mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; }
+      </style>
+      <div class="mo" id="s02-root" data-composition-id="s02" data-width="1080" data-height="1920"></div>
+      <script>
+        (function () {
+          var M = window.MOTION;
+          var spec = {"type":"scene.deck","transition":"cut","lines":[{"t":"Mais où va","s":64},{"t":"cet *argent* ?","s":124,"c":"accent","circle":true}],"at":{"x":0.5,"y":0.17,"align":"center"},"deck":{"y":0.6,"items":[{"label":"Frais","icon":"percent"},{"label":"Famille","icon":"home"},{"label":"Commerce","icon":"store"},{"label":"Épargne","icon":"piggy"}]},"objects":[{"src":"assets/lib/illustrations/feuille-palmier.png","x":0.97,"y":0.13,"w":0.75,"rot":205,"from":"top","dof":5,"at":0.03},{"src":"assets/lib/illustrations/feuille-palmier.png","x":0.03,"y":0.9,"w":0.8,"rot":25,"from":"left","dof":6,"at":0.08}],"vo":"Mais où va cet argent ?","tail":1};
+          var env = {"id":"s02","W":1080,"H":1920,"safe":{"t":250,"b":440,"l":70,"r":70},"dur":2.87,"seed":28,"theme":"light","vo":{"start":0.2,"dur":1.67},"transIn":null,"transOut":null};
+          env.brand = M.brand;
+          env.pal = M.pals[env.theme];
+          var root = document.getElementById("s02-root");
+          var tl = gsap.timeline({ paused: true });
+          M.mount(root, tl, spec, env);
+          window.__timelines = window.__timelines || {};
+          window.__timelines["s02"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

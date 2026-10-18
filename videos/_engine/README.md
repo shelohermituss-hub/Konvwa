@@ -89,6 +89,14 @@ Pour une vidéo de prévention (piège → solution) : `scene.versus` (`bad: {te
 
 Types qui reposent sur de vraies images : `hook.collage` / `scene.collage` (`text` + `items` : objets détourés autour d'un grand disque orange, texte blanc, mot-clé marine ; tout saute au mot-clé) et `scene.photo` (`image` plein cadre en zoom lent, `text` blanc en bas, `kicker?`, `focus?` = `object-position`). Les objets ont un **calque d'ombre séparé** (jamais de `filter` animé sur l'élément qui porte l'ombre). Les JPG à fond blanc (photos produit) se fondent dans un fond clair.
 
+### Pack « papier quadrillé » (référence I)
+
+Pour copier le style « pub d'agence » : papier gris clair quadrillé, logo fixe en haut à gauche, texte = voix, lettre par lettre, **coupes franches** (`"transition": "cut"` sur chaque scène : le fond ne change jamais, la coupe ne se voit pas). Palette : nuances d'orange de la marque (`shades` dans `brands/konvwa.json` → `--deep`, `--darker`…) et encre noire, jamais de marine. Exemple complet : `videos/diaspora-argent/brief.json`.
+
+- `lines` (toutes les scènes du pack) : lignes empilées de tailles mêlées. Une chaîne = petite ligne noire ; un objet `{ t, s: xs|s|m|l|xl|px, c: ink|accent|deep|light|white, i (gras italique), bar (barre orange qui naît d'un carré, "deep" = orange profond), circle (cercle tracé à la main autour du mot *accent*), arrow: down|up, outline (contour seul), align: right|center, dx }`. `at: { x, y, align: left|center }` place le bloc ; `span` (0–1) = part de la voix sur laquelle les lignes s'écrivent (défaut 0,8).
+- `objects` : photos détourées lancées avec flou de mouvement et longue ombre douce : `{ src, x, y, w, rot, from: right|left|top|bottom|none|[x, y], at, dur, dof (flou de profondeur, px), back, duo: orange|deep|light (bichromie), flip, move: { at, x, y, s, rot, fade, dur } }`.
+- `hook.paper` (lignes + objets, code-barres éditorial), `scene.paper` (lignes + objets), `scene.chart` (`chart`: carte orange, courbe qui descend), `scene.deck` (`deck.items` `{ label, icon }` : la pile ralentit puis s'ouvre — 2-3 cartes en éventail, 4 en grille — après le cercle), `scene.rise` (`image` en bichromie qui monte du bas, `rise: { w, x, duo, bottom }`, `icons` autour), `scene.frame` (`frame: { image, y, h, scale, focus, pill: { text, icon } }` : la personne sort d'une carte orange), `scene.button` (`button: { text, icon, sub, y }` : bouton qui naît d'un carré, texte tapé), `scene.contact` (fin : logo, `text` avec `|`, `cta`, `pills`, puis retour à la page vide pour boucler sur le hook).
+
 ## Comment le moteur décide
 
 - **La voix mène l'image.** Durée d'une scène = début de voix + durée *mesurée* de la voix + respiration + chevauchement de la transition suivante. Les mots du texte apparaissent répartis sur la voix (`M.timesFor`). Changer une phrase change automatiquement le montage.
@@ -103,7 +111,7 @@ Types qui reposent sur de vraies images : `hook.collage` / `scene.collage` (`tex
 videos/_engine/
   bin/motion.mjs      la commande
   lib/                brief (validation) · schedule (calendrier, sons, loi des 3 s) · emit (projet HyperFrames) · qa · ref · media · assets + pixabay (assets réels)
-  runtime/            ce qui tourne dans le navigateur ET dans Node : core (règles, markup, mise en page) · dom · fx · mount (transitions) · hooks · scenes · depth (détourés, decor, carry, collage, photo) · motion.css
+  runtime/            ce qui tourne dans le navigateur ET dans Node : core (règles, markup, mise en page) · dom · fx · mount (transitions) · hooks · scenes · depth (détourés, decor, carry, collage, photo) · paper (pack « papier quadrillé ») · motion.css
   brands/             konvwa.json (couleurs, thèmes, voix, slogan) + logo
   sfx/                15 sons + CREDITS.md
   library/            images partagées : products/ · illustrations/ (PNG détourés) · flags/ · photos/ — "lib:…" + CREDITS.md
@@ -115,7 +123,7 @@ videos/_engine/
 
 ## Ajouter…
 
-- **Une scène** : `M.register('scene.mon-type', { kind, label, min, max, words, needs, sfx(spec, env), build(ctx) })` dans `runtime/scenes.js` (ou `hooks.js`). `build` ne touche qu'à `ctx.stage` et `ctx.tl` (un `<div>` et une timeline GSAP en pause) ; règle d'or : un élément = *un* `fromTo` d'entrée, tout le reste en `to`. Ajouter les classes dans `runtime/motion.css` (polices nommées explicitement). Un hook déclare aussi `legible(spec, env)`.
+- **Une scène** : `M.register('scene.mon-type', { kind, label, min, max, words, needs, sfx(spec, env), build(ctx) })` dans `runtime/scenes.js` (ou `hooks.js`, ou `paper.js` pour le pack « papier quadrillé »). `build` ne touche qu'à `ctx.stage` et `ctx.tl` (un `<div>` et une timeline GSAP en pause) ; règle d'or : un élément = *un* `fromTo` d'entrée, tout le reste en `to`. Ajouter les classes dans `runtime/motion.css` (polices nommées explicitement). Un hook déclare aussi `legible(spec, env)`.
 - **Une marque** : copier `brands/konvwa.json` et son logo SVG, `"brand": "<id>"` dans le brief.
 - **Un son** : fichier dans `sfx/`, entrée dans `M.CUES` (`core.js`) avec `vol`, `dur`, `max`.
 - **Une référence** : `node $E ref video.mp4 --name=ref-g-xxx`, puis la décrire dans `docs/REFERENCES.md`.

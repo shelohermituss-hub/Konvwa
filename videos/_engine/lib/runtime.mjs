@@ -4,7 +4,7 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 export const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-export const RUNTIME_FILES = ['core.js', 'dom.js', 'fx.js', 'mount.js', 'hooks.js', 'scenes.js', 'depth.js']
+export const RUNTIME_FILES = ['core.js', 'dom.js', 'fx.js', 'mount.js', 'hooks.js', 'scenes.js', 'depth.js', 'paper.js']
 
 for (const f of RUNTIME_FILES) await import(pathToFileURL(path.join(ENGINE, 'runtime', f)).href)
 

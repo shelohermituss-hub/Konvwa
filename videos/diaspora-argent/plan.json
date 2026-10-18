@@ -1,0 +1,65 @@
+{
+  "name": "diaspora-argent",
+  "format": "9:16",
+  "total": 23.5,
+  "scenes": [
+    {
+      "id": "s01",
+      "type": "hook.paper",
+      "start": 0,
+      "dur": 2.8,
+      "transition": null
+    },
+    {
+      "id": "s02",
+      "type": "scene.deck",
+      "start": 2.8,
+      "dur": 2.87,
+      "transition": null
+    },
+    {
+      "id": "s03",
+      "type": "scene.chart",
+      "start": 5.67,
+      "dur": 2.09,
+      "transition": null
+    },
+    {
+      "id": "s04",
+      "type": "scene.rise",
+      "start": 7.76,
+      "dur": 2.86,
+      "transition": null
+    },
+    {
+      "id": "s05",
+      "type": "scene.frame",
+      "start": 10.62,
+      "dur": 3.07,
+      "transition": null
+    },
+    {
+      "id": "s06",
+      "type": "scene.rise",
+      "start": 13.69,
+      "dur": 3.57,
+      "transition": null
+    },
+    {
+      "id": "s07",
+      "type": "scene.button",
+      "start": 17.26,
+      "dur": 3.44,
+      "transition": null
+    },
+    {
+      "id": "s08",
+      "type": "scene.contact",
+      "start": 20.7,
+      "dur": 2.8,
+      "transition": null
+    }
+  ],
+  "sfx": 33,
+  "hookEnd": 2.8
+}

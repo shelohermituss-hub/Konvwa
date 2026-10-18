@@ -368,3 +368,39 @@ describe('« Avant / Après » split screen', () => {
     expect(validateBrief(bad, exists).errors.join()).toMatch(/absent\.png/)
   })
 })
+
+describe('« papier quadrillé » pack', () => {
+  const env = { vo: { start: 0.2, dur: 2 }, theme: 'light' }
+  const lines = ['Mais où va', { t: 'cet *argent* ?', s: 'l', circle: true }]
+  it('starts each line on its first word, in order, within the voice', () => {
+    const t = M.paperTimes({ lines }, env, false)
+    expect(t).toHaveLength(2)
+    expect(t[0].at).toBe(0.2)
+    expect(t[1].at).toBeGreaterThan(t[0].end)
+    expect(t[1].end).toBeLessThanOrEqual(0.2 + 2 * 0.8)
+    // `span` keeps the lines on the first part of the voice
+    expect(M.paperTimes({ lines, span: 0.4 }, env, false)[1].end).toBeLessThan(t[1].end)
+  })
+  it('opens the deck after the circle is drawn, and the hook is readable in time', () => {
+    const spec = { lines, deck: { items: [{ label: 'a' }, { label: 'b' }] } }
+    const cues = M.catalog['scene.deck'].sfx(spec, env)
+    const tick = cues.find((x) => x.cue === 'tick').t
+    expect(cues.find((x) => x.cue === 'whooshBig').t).toBeGreaterThan(tick + 0.3)
+    const hook = { lines: ['La diaspora envoie', { t: 'des MILLIARDS', bar: true }, 'chaque année'] }
+    expect(M.catalog['hook.paper'].legible(hook, { vo: { start: 0.12, dur: 2 } })).toBeLessThanOrEqual(M.HOOK.legibleBy)
+  })
+  it('validates the hook from its lines and checks the photos it throws in', () => {
+    const base = demo().brief
+    const hook = { type: 'hook.paper', lines: ['Un', { t: 'deux trois quatre', bar: true }, 'cinq six sept huit'], vo: 'Une phrase courte.' }
+    expect(validateBrief({ ...base, scenes: [hook, ...base.scenes.slice(1)] }, exists).errors.join()).toMatch(/hook trop long/)
+    const ok = { ...hook, lines: ['Un', { t: 'deux', bar: true }], objects: ['lib:illustrations/absent.png'], frame: { image: 'lib:people/absent2.png' } }
+    expect(M.paperRefs(ok)).toEqual(['lib:illustrations/absent.png', 'lib:people/absent2.png'])
+    const errs = validateBrief({ ...base, scenes: [ok, ...base.scenes.slice(1)] }, exists).errors.join()
+    expect(errs).toMatch(/absent\.png/)
+    expect(errs).not.toMatch(/hook trop long/)
+  })
+  it('the diaspora video brief is valid', () => {
+    const { brief } = loadBrief(path.join(ENGINE, '../diaspora-argent/brief.json'))
+    expect(validateBrief(brief, exists).errors).toEqual([])
+  })
+})

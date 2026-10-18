@@ -1,0 +1,336 @@
+{
+  "name": "diaspora-argent",
+  "title": "Où va l'argent de la diaspora ?",
+  "format": "9:16",
+  "theme": "light",
+  "brand": "konvwa",
+  "seed": 11,
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy"
+  },
+  "sfx": {
+    "level": 1
+  },
+  "scenes": [
+    {
+      "type": "hook.paper",
+      "transition": "cut",
+      "lines": [
+        {
+          "t": "La diaspora envoie",
+          "s": 66
+        },
+        {
+          "t": "des MILLIARDS",
+          "s": 116,
+          "bar": true
+        },
+        {
+          "t": "chaque année",
+          "s": 56,
+          "align": "right"
+        }
+      ],
+      "at": {
+        "x": 0.075,
+        "y": 0.19
+      },
+      "objects": [
+        {
+          "src": "lib:illustrations/telephone-main.png",
+          "x": 0.3,
+          "y": 0.74,
+          "w": 0.86,
+          "rot": -6,
+          "from": "left",
+          "at": 0.0
+        },
+        {
+          "src": "lib:illustrations/billets-usd.png",
+          "x": 0.7,
+          "y": 0.55,
+          "w": 0.6,
+          "rot": 14,
+          "from": [
+            0.42,
+            0.66
+          ],
+          "at": 0.32,
+          "dur": 0.85
+        },
+        {
+          "src": "lib:illustrations/billets-eventail.png",
+          "x": 0.88,
+          "y": 0.88,
+          "w": 0.6,
+          "rot": -16,
+          "from": "right",
+          "at": 0.04,
+          "dof": 8
+        }
+      ],
+      "vo": "La diaspora envoie des milliards."
+    },
+    {
+      "type": "scene.deck",
+      "transition": "cut",
+      "lines": [
+        {
+          "t": "Mais où va",
+          "s": 64
+        },
+        {
+          "t": "cet *argent* ?",
+          "s": 124,
+          "c": "accent",
+          "circle": true
+        }
+      ],
+      "at": {
+        "x": 0.5,
+        "y": 0.17,
+        "align": "center"
+      },
+      "deck": {
+        "y": 0.6,
+        "items": [
+          {
+            "label": "Frais",
+            "icon": "percent"
+          },
+          {
+            "label": "Famille",
+            "icon": "home"
+          },
+          {
+            "label": "Commerce",
+            "icon": "store"
+          },
+          {
+            "label": "Épargne",
+            "icon": "piggy"
+          }
+        ]
+      },
+      "objects": [
+        {
+          "src": "lib:illustrations/feuille-palmier.png",
+          "x": 0.97,
+          "y": 0.13,
+          "w": 0.75,
+          "rot": 205,
+          "from": "top",
+          "dof": 5,
+          "at": 0.03
+        },
+        {
+          "src": "lib:illustrations/feuille-palmier.png",
+          "x": 0.03,
+          "y": 0.9,
+          "w": 0.8,
+          "rot": 25,
+          "from": "left",
+          "dof": 6,
+          "at": 0.08
+        }
+      ],
+      "vo": "Mais où va cet argent ?",
+      "tail": 1.0
+    },
+    {
+      "type": "scene.chart",
+      "transition": "cut",
+      "lines": [
+        {
+          "t": "Une partie",
+          "s": 60
+        },
+        {
+          "t": "part dans les frais",
+          "s": 92,
+          "c": "accent",
+          "arrow": "down"
+        }
+      ],
+      "at": {
+        "x": 0.075,
+        "y": 0.17
+      },
+      "chart": {
+        "y": 0.5,
+        "at": 0.1,
+        "draw": 1.0
+      },
+      "objects": [
+        {
+          "src": "lib:illustrations/billets-usd.png",
+          "x": 0.62,
+          "y": 0.85,
+          "w": 0.78,
+          "rot": -10,
+          "from": "bottom",
+          "at": 0.05,
+          "dof": 3,
+          "move": {
+            "at": 1.05,
+            "x": 0.6,
+            "y": 0.5,
+            "s": 0.25,
+            "rot": 20,
+            "fade": true,
+            "dur": 0.5
+          }
+        }
+      ],
+      "vo": "Une partie part dans les frais.",
+      "tail": 0.45
+    },
+    {
+      "type": "scene.rise",
+      "transition": "cut",
+      "lines": [
+        {
+          "t": "Une grande partie",
+          "s": 62
+        },
+        {
+          "t": "aide les",
+          "s": 76,
+          "c": "accent",
+          "i": true
+        },
+        {
+          "t": "familles",
+          "s": 156,
+          "c": "accent",
+          "i": true
+        }
+      ],
+      "image": "lib:people/famille-haitienne.png",
+      "rise": {
+        "w": 0.86,
+        "duo": "orange"
+      },
+      "icons": [
+        "cart",
+        "school",
+        "pill",
+        "home"
+      ],
+      "vo": "Une grande partie aide les familles.",
+      "tail": 0.7
+    },
+    {
+      "type": "scene.frame",
+      "transition": "cut",
+      "lines": [
+        {
+          "t": "Une autre partie fait vivre",
+          "s": 58
+        },
+        {
+          "t": "le commerce local",
+          "s": 104,
+          "c": "deep"
+        }
+      ],
+      "frame": {
+        "image": "lib:people/commercante-fruits.png",
+        "y": 0.63,
+        "h": 0.36,
+        "scale": 1.28,
+        "focus": 0.36,
+        "pill": {
+          "text": "Paiement reçu",
+          "icon": "check"
+        }
+      },
+      "vo": "Une autre partie fait vivre le commerce local.",
+      "tail": 0.45
+    },
+    {
+      "type": "scene.rise",
+      "transition": "cut",
+      "lines": [
+        {
+          "t": "Et parfois,",
+          "s": 112,
+          "c": "accent"
+        },
+        {
+          "t": "elle devient",
+          "s": 60
+        },
+        {
+          "t": "épargne ou business",
+          "s": 86,
+          "bar": true
+        }
+      ],
+      "image": "lib:illustrations/tirelire.png",
+      "rise": {
+        "w": 0.96,
+        "duo": "orange",
+        "bottom": 0.03,
+        "x": 0.6
+      },
+      "icons": [
+        "trend",
+        "store"
+      ],
+      "vo": "Et parfois, elle devient épargne… ou business.",
+      "tail": 0.45
+    },
+    {
+      "type": "scene.button",
+      "transition": "cut",
+      "lines": [
+        {
+          "t": "La vraie question :",
+          "s": 60
+        },
+        {
+          "t": "comment en garder plus ?",
+          "s": 86,
+          "c": "accent"
+        }
+      ],
+      "button": {
+        "text": "Suivez-nous",
+        "icon": "bell",
+        "sub": "pour découvrir la suite",
+        "y": 0.55
+      },
+      "vo": "Comment en garder plus ? Suivez-nous pour la suite.",
+      "span": 0.5,
+      "tail": 0.6
+    },
+    {
+      "type": "scene.contact",
+      "transition": "cut",
+      "text": "Achetez partout.|Recevez en Haïti.",
+      "cta": "konvwa.shop",
+      "pills": [
+        {
+          "text": "Paiement MonCash",
+          "icon": "wallet"
+        },
+        {
+          "text": "Paiement NatCash",
+          "icon": "card"
+        },
+        {
+          "text": "Livraison en Haïti",
+          "icon": "truck"
+        }
+      ],
+      "dur": 2.8
+    }
+  ],
+  "music": {
+    "file": "assets/music/bed.mp3",
+    "volume": 0.18
+  }
+}

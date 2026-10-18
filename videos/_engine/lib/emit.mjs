@@ -18,9 +18,9 @@ const json = (o) => JSON.stringify(o).replace(/</g, '\\u003c').replace(/[\u2028\
 const read = (f) => fs.readFileSync(f, 'utf8')
 const write = (f, s) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, s) }
 
-/** CSS variables of the brand: accent + translucent accents on `.mo`, one block per theme (`.mo-light`, `.mo-dark`). */
+/** CSS variables of the brand: accent + translucent accents + named orange shades (`--deep`…) on `.mo`, one block per theme (`.mo-light`, `.mo-dark`). */
 export function brandCss(brand) {
-  let css = `.mo{--brand:${brand.accent};--accent:${brand.accent};--accent2:${brand.accent2};--navy:${brand.navy};--a12:${rgba(brand.accent, 0.12)};--a25:${rgba(brand.accent, 0.25)};--a45:${rgba(brand.accent, 0.45)}}\n`
+  let css = `.mo{--brand:${brand.accent};--accent:${brand.accent};--accent2:${brand.accent2};--navy:${brand.navy};--a12:${rgba(brand.accent, 0.12)};--a25:${rgba(brand.accent, 0.25)};--a45:${rgba(brand.accent, 0.45)}${Object.entries(brand.shades || {}).map(([k, v]) => `;--${k}:${v}`).join('')}}\n`
   for (const [name, t] of Object.entries(brand.themes)) css += `.mo-${name}{${Object.entries(t).map(([k, v]) => `--${k}:${v}`).join(';')}}\n`
   return css
 }

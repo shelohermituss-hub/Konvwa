@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s06-template">
+      <style>
+        .mo-stage { font-family: "Poppins", sans-serif; }
+        .mo-s, .mo-trio-kicker, .mo-med-label { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost, .mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; }
+      </style>
+      <div class="mo" id="s06-root" data-composition-id="s06" data-width="1080" data-height="1920"></div>
+      <script>
+        (function () {
+          var M = window.MOTION;
+          var spec = {"type":"scene.rise","transition":"cut","lines":[{"t":"Et parfois,","s":112,"c":"accent"},{"t":"elle devient","s":60},{"t":"épargne ou business","s":86,"bar":true}],"image":"assets/lib/illustrations/tirelire.png","rise":{"w":0.96,"duo":"orange","bottom":0.03,"x":0.6},"icons":["trend","store"],"vo":"Et parfois, elle devient épargne… ou business.","tail":0.45};
+          var env = {"id":"s06","W":1080,"H":1920,"safe":{"t":250,"b":440,"l":70,"r":70},"dur":3.57,"seed":96,"theme":"light","vo":{"start":0.2,"dur":2.92},"transIn":null,"transOut":null};
+          env.brand = M.brand;
+          env.pal = M.pals[env.theme];
+          var root = document.getElementById("s06-root");
+          var tl = gsap.timeline({ paused: true });
+          M.mount(root, tl, spec, env);
+          window.__timelines = window.__timelines || {};
+          window.__timelines["s06"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

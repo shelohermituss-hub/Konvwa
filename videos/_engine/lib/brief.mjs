@@ -51,7 +51,7 @@ export function loadBrief(input) {
 
 /** Image fields of a scene (they have to exist on disk). */
 export function imageRefs(spec) {
-  return [spec.image, spec.image2, ...(Array.isArray(spec.images) ? spec.images : []), ...(Array.isArray(spec.reactions) ? spec.reactions : []), ...[spec.left, spec.right].flatMap((x) => (x && typeof x === 'object' ? [x.screen, x.image] : [])), ...M.depthRefs(spec)].filter(Boolean)
+  return [spec.image, spec.image2, ...(Array.isArray(spec.images) ? spec.images : []), ...(Array.isArray(spec.reactions) ? spec.reactions : []), ...[spec.left, spec.right].flatMap((x) => (x && typeof x === 'object' ? [x.screen, x.image] : [])), ...M.depthRefs(spec), ...M.paperRefs(spec)].filter(Boolean)
 }
 
 const MARKUP = /[*_|]/g
@@ -113,7 +113,7 @@ export function validateBrief(brief, exists = () => true) {
   const H = M.HOOK
   if (!M.isHook(first.type)) E(0, `la première scène doit être un hook (${M.types().filter(M.isHook).join(', ')}), pas "${first.type}"`)
   else {
-    const text = first.text || ''
+    const text = first.text || M.paperText(first.lines)
     if (plainLen(text) > H.charsMax) E(0, `hook trop long : ${plainLen(text)} caractères (max ${H.charsMax}) — il doit se lire d’un coup d’œil`)
     if (text && M.wordCount(text) > H.wordsMax) E(0, `hook trop long : ${M.wordCount(text)} mots (max ${H.wordsMax})`)
     if (['hook.statement', 'hook.question', 'hook.collage', 'hook.impact'].includes(first.type) && M.accentIndex(text) < 0) W(0, 'mettez le mot-clé du hook entre *étoiles* : c’est lui qui reçoit la couleur et le coup de son')

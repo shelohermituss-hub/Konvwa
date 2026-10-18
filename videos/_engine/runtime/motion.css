@@ -242,3 +242,84 @@
 .mo-bubble { align-self: flex-start; max-width: 92%; padding: 20px 26px; border-radius: 30px 30px 30px 8px; background: #fff; color: #4A505C; font-size: 36px; font-weight: 600; line-height: 1.15; box-shadow: 0 10px 24px rgba(10, 22, 40, 0.1); }
 .mo-bubble-r { align-self: flex-end; border-radius: 30px 30px 8px 30px; background: #D5D8DE; }
 .mo-split-banner { background: #fff; border-radius: 999px; padding: 16px 34px; box-shadow: 0 16px 40px rgba(10, 22, 40, 0.14); color: var(--ink); font-weight: 700; }
+
+/* ---------- « papier quadrillé » (reference I) : orange shades only, neutral black ink ---------- */
+/* --pa: the brand orange a touch deeper for text, so a large word keeps 3:1 on the grey paper */
+.mo-paper { --bg: #ECECEC; --ink: #161616; --mute: #6F6F6F; --pa: #E2501D; --atext: var(--pa); }
+.mo-pp-grid { z-index: 0; pointer-events: none; background-image: linear-gradient(rgba(255, 255, 255, 0.95) 2px, transparent 2px), linear-gradient(90deg, rgba(255, 255, 255, 0.95) 2px, transparent 2px); background-size: 54px 54px; background-position: 13px 13px; -webkit-mask-image: radial-gradient(ellipse at 50% 46%, #000 30%, rgba(0, 0, 0, 0.45) 85%); mask-image: radial-gradient(ellipse at 50% 46%, #000 30%, rgba(0, 0, 0, 0.45) 85%); }
+.mo-pp-vignette { z-index: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 48%, rgba(40, 20, 10, 0.07) 100%); }
+.mo-pp-mark { z-index: 30; display: flex; align-items: center; gap: 16px; }
+.mo-pp-logo { width: 104px; height: 68px; flex: none; }
+.mo-pp-logo svg { display: block; width: 100%; height: 100%; }
+.mo-pp-name { display: flex; flex-direction: column; line-height: 1; }
+.mo-pp-name b { font-weight: 800; font-size: 46px; letter-spacing: 0.03em; color: var(--deep, #C23010); }
+.mo-pp-name i { margin-top: 8px; padding-top: 7px; border-top: 2px solid rgba(22, 22, 22, 0.3); font-style: normal; font-weight: 600; font-size: 15px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+.mo-paper .mo-barcode { z-index: 30; opacity: 0.85; }
+
+.mo-pp-lines { z-index: 5; display: flex; flex-direction: column; row-gap: 0.04em; width: max-content; }
+.mo-pp-left { align-items: flex-start; }
+.mo-pp-center { align-items: center; }
+.mo-pp-line { position: relative; white-space: nowrap; line-height: 1.12; font-weight: 600; letter-spacing: -0.015em; }
+.mo-pp-txt { position: relative; z-index: 1; display: inline-flex; column-gap: 0.25em; }
+.mo-pp-w { position: relative; display: inline-flex; white-space: pre; }
+.mo-pp-ink { color: var(--ink); }
+.mo-pp-accent { color: var(--pa); font-weight: 700; }
+.mo-pp-deep { color: var(--deep, #C23010); font-weight: 700; }
+.mo-pp-light { color: var(--accent2); font-weight: 700; }
+.mo-pp-white { color: #fff; font-weight: 700; }
+.mo-pp-a { color: var(--pa); }
+.mo-pp-i { font-style: italic; font-weight: 800; letter-spacing: -0.025em; line-height: 1.02; }
+.mo-pp-outline { color: transparent; -webkit-text-stroke: 3px var(--accent2); font-weight: 600; }
+.mo-pp-barrow { padding: 0 0.32em; margin: 0.1em 0 0.14em; }
+.mo-pp-bar { position: absolute; left: 0; top: -0.03em; bottom: -0.03em; width: 100%; background: var(--accent); box-shadow: 0.22em 0.3em 0.55em rgba(90, 30, 0, 0.24); }
+.mo-pp-bar-deep { background: var(--deep, #C23010); }
+.mo-pp-circle { position: absolute; opacity: 0; left: -0.26em; right: -0.28em; top: -0.1em; bottom: -0.2em; pointer-events: none; }
+.mo-pp-circle svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.mo-pp-circle path { fill: none; stroke: var(--ink); stroke-width: 0.9; stroke-linecap: round; stroke-dasharray: 1 1; }
+.mo-pp-arrow { position: absolute; opacity: 0; left: calc(100% + 0.3em); top: 0.06em; width: 0.42em; height: 0.98em; pointer-events: none; }
+.mo-pp-arrow svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.mo-pp-arrow path { fill: none; stroke: var(--deep, #C23010); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1; }
+
+.mo-pp-obj { z-index: 6; pointer-events: none; }
+.mo-pp-back { z-index: 1; }
+.mo-pp-rise { z-index: 2; }
+.mo-pp-img { display: block; width: 100%; height: auto; }
+
+.mo-pp-chart { z-index: 3; border-radius: 16px; background: var(--accent); box-shadow: 34px 46px 64px rgba(90, 30, 0, 0.26); }
+.mo-pp-chart svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.mo-pp-axis, .mo-pp-curve { fill: none; stroke: #fff; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1; }
+.mo-pp-axis { stroke-width: 4; opacity: 0.9; }
+.mo-pp-curve { stroke-width: 8; }
+.mo-pp-head { fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+
+.mo-pp-deck { z-index: 3; }
+.mo-pp-card { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; border-radius: 30px; background: linear-gradient(160deg, #FAFAFA 0%, #E9E9E9 100%); border: 2px solid #fff; box-shadow: 16px 28px 48px rgba(50, 20, 6, 0.22); }
+.mo-pp-cardic { display: flex; align-items: center; justify-content: center; width: 124px; height: 124px; border-radius: 50%; background: var(--accent); box-shadow: 0 14px 28px var(--a45); }
+.mo-pp-brush { position: relative; padding: 10px 34px; color: #fff; font-weight: 700; font-size: 44px; white-space: nowrap; }
+.mo-pp-brush i { position: absolute; left: -6px; right: -6px; top: 2px; bottom: 2px; border-radius: 42% 58% 52% 48% / 62% 38% 62% 38%; background: var(--deep, #C23010); transform: skewX(-12deg) rotate(-2deg); }
+.mo-pp-brush span { position: relative; }
+
+.mo-pp-chip { z-index: 4; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #FAFAFA; color: var(--accent); border: 2px solid #fff; box-shadow: 14px 22px 36px rgba(60, 24, 6, 0.22); }
+
+.mo-pp-frame { z-index: 3; }
+.mo-pp-framebg { position: absolute; inset: 0; border-radius: 32px; background: linear-gradient(165deg, var(--accent) 0%, var(--deep, #C23010) 100%); box-shadow: 34px 46px 70px rgba(90, 30, 0, 0.26); }
+.mo-pp-framecut { position: absolute; inset: 0; clip-path: inset(-70% 0 0 0 round 0 0 32px 32px); }
+.mo-pp-frameimg { position: absolute; left: 50%; bottom: 0; width: auto; max-width: none; filter: drop-shadow(18px 24px 22px rgba(60, 14, 0, 0.35)); }
+.mo-pp-pill { z-index: 7; background: var(--ink); color: #fff; font-size: 40px; padding: 22px 34px 22px 22px; }
+
+.mo-pp-btn { z-index: 6; display: flex; align-items: center; gap: 30px; padding: 0 34px; overflow: hidden; white-space: nowrap; border-radius: 18px; background: var(--deep, #C23010); color: #fff; box-shadow: 30px 42px 64px rgba(90, 30, 0, 0.28); }
+.mo-pp-btnic { display: flex; flex: none; width: 64px; height: 64px; }
+.mo-pp-btntext { flex: none; font-size: 54px; font-weight: 600; letter-spacing: -0.01em; color: #fff; }
+.mo-pp-sub { z-index: 6; }
+.mo-pp-sub .mo-text { font-size: 42px; font-weight: 500; letter-spacing: 0; color: var(--deep, #C23010); align-items: flex-start; }
+
+.mo-pp-end { z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 46px; }
+.mo-pp-endlogo { display: flex; flex-direction: column; align-items: center; }
+.mo-pp-endlogo .mo-pp-logo { width: 250px; height: 164px; }
+.mo-pp-endlogo b { margin-top: 18px; font-weight: 800; font-size: 104px; line-height: 1; letter-spacing: 0.03em; color: var(--deep, #C23010); }
+.mo-pp-endlogo i { margin-top: 14px; padding-top: 12px; border-top: 2px solid rgba(22, 22, 22, 0.3); font-style: normal; font-weight: 600; font-size: 26px; letter-spacing: 0.2em; text-transform: uppercase; }
+.mo-pp-endcard { width: 780px; padding: 50px 44px; border-radius: 30px; background: var(--accent); color: #fff; font-size: 48px; font-weight: 600; line-height: 1.22; text-align: center; box-shadow: 30px 42px 64px rgba(90, 30, 0, 0.24); }
+.mo-pp-endpill { padding: 24px 58px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 42px; font-weight: 600; }
+.mo-pp-endbox { width: 780px; padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 22px; border-radius: 30px; background: var(--deep, #C23010); box-shadow: 30px 42px 64px rgba(90, 30, 0, 0.24); }
+.mo-pp-endbox span { display: flex; align-items: center; gap: 16px; padding: 14px 36px; border: 3px solid rgba(255, 255, 255, 0.85); border-radius: 999px; color: #fff; font-size: 40px; font-weight: 500; }
+.mo-pp-endbox em { font-style: normal; }

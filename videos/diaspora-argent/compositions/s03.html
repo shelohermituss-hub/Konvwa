@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s03-template">
+      <style>
+        .mo-stage { font-family: "Poppins", sans-serif; }
+        .mo-s, .mo-trio-kicker, .mo-med-label { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost, .mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; }
+      </style>
+      <div class="mo" id="s03-root" data-composition-id="s03" data-width="1080" data-height="1920"></div>
+      <script>
+        (function () {
+          var M = window.MOTION;
+          var spec = {"type":"scene.chart","transition":"cut","lines":[{"t":"Une partie","s":60},{"t":"part dans les frais","s":92,"c":"accent","arrow":"down"}],"at":{"x":0.075,"y":0.17},"chart":{"y":0.5,"at":0.1,"draw":1},"objects":[{"src":"assets/lib/illustrations/billets-usd.png","x":0.62,"y":0.85,"w":0.78,"rot":-10,"from":"bottom","at":0.05,"dof":3,"move":{"at":1.05,"x":0.6,"y":0.5,"s":0.25,"rot":20,"fade":true,"dur":0.5}}],"vo":"Une partie part dans les frais.","tail":0.45};
+          var env = {"id":"s03","W":1080,"H":1920,"safe":{"t":250,"b":440,"l":70,"r":70},"dur":2.09,"seed":45,"theme":"light","vo":{"start":0.2,"dur":1.44},"transIn":null,"transOut":null};
+          env.brand = M.brand;
+          env.pal = M.pals[env.theme];
+          var root = document.getElementById("s03-root");
+          var tl = gsap.timeline({ paused: true });
+          M.mount(root, tl, spec, env);
+          window.__timelines = window.__timelines || {};
+          window.__timelines["s03"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

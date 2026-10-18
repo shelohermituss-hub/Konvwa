@@ -1,0 +1,82 @@
+{
+  "voice": {
+    "mode": "vo",
+    "name": "Algieba",
+    "style": "punchy",
+    "direction": "énergie, un rythme rapide et le sourire dans la voix",
+    "language": "fr-FR",
+    "model": "t2a-gemini-3-1-flash-tts"
+  },
+  "lines": [
+    {
+      "id": "s01",
+      "scene": 1,
+      "type": "hook.paper",
+      "text": "La diaspora envoie des milliards.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : La diaspora envoie des milliards.",
+      "file": "assets/vo/s01.wav",
+      "estimatedSeconds": 2.31,
+      "measured": true
+    },
+    {
+      "id": "s02",
+      "scene": 2,
+      "type": "scene.deck",
+      "text": "Mais où va cet argent ?",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Mais où va cet argent ?",
+      "file": "assets/vo/s02.wav",
+      "estimatedSeconds": 1.67,
+      "measured": true
+    },
+    {
+      "id": "s03",
+      "scene": 3,
+      "type": "scene.chart",
+      "text": "Une partie part dans les frais.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Une partie part dans les frais.",
+      "file": "assets/vo/s03.wav",
+      "estimatedSeconds": 1.44,
+      "measured": true
+    },
+    {
+      "id": "s04",
+      "scene": 4,
+      "type": "scene.rise",
+      "text": "Une grande partie aide les familles.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Une grande partie aide les familles.",
+      "file": "assets/vo/s04.wav",
+      "estimatedSeconds": 1.96,
+      "measured": true
+    },
+    {
+      "id": "s05",
+      "scene": 5,
+      "type": "scene.frame",
+      "text": "Une autre partie fait vivre le commerce local.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Une autre partie fait vivre le commerce local.",
+      "file": "assets/vo/s05.wav",
+      "estimatedSeconds": 2.42,
+      "measured": true
+    },
+    {
+      "id": "s06",
+      "scene": 6,
+      "type": "scene.rise",
+      "text": "Et parfois, elle devient épargne… ou business.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Et parfois, elle devient épargne… ou business.",
+      "file": "assets/vo/s06.wav",
+      "estimatedSeconds": 2.92,
+      "measured": true
+    },
+    {
+      "id": "s07",
+      "scene": 7,
+      "type": "scene.button",
+      "text": "Comment en garder plus ? Suivez-nous pour la suite.",
+      "prompt": "Dis avec énergie, un rythme rapide et le sourire dans la voix : Comment en garder plus ? Suivez-nous pour la suite.",
+      "file": "assets/vo/s07.wav",
+      "estimatedSeconds": 2.64,
+      "measured": true
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template id="s01-template">
+      <style>
+        .mo-stage { font-family: "Poppins", sans-serif; }
+        .mo-s, .mo-trio-kicker, .mo-med-label { font-family: "Playfair Display", serif; font-style: italic; }
+        .mo-caps, .mo-ghost, .mo-trio-title { font-family: "Archivo Black", "Poppins", sans-serif; }
+      </style>
+      <div class="mo" id="s01-root" data-composition-id="s01" data-width="1080" data-height="1920"></div>
+      <script>
+        (function () {
+          var M = window.MOTION;
+          var spec = {"type":"hook.paper","transition":"cut","lines":[{"t":"La diaspora envoie","s":66},{"t":"des MILLIARDS","s":116,"bar":true},{"t":"chaque année","s":56,"align":"right"}],"at":{"x":0.075,"y":0.19},"objects":[{"src":"assets/lib/illustrations/telephone-main.png","x":0.3,"y":0.74,"w":0.86,"rot":-6,"from":"left","at":0},{"src":"assets/lib/illustrations/billets-usd.png","x":0.7,"y":0.55,"w":0.6,"rot":14,"from":[0.42,0.66],"at":0.32,"dur":0.85},{"src":"assets/lib/illustrations/billets-eventail.png","x":0.88,"y":0.88,"w":0.6,"rot":-16,"from":"right","at":0.04,"dof":8}],"vo":"La diaspora envoie des milliards."};
+          var env = {"id":"s01","W":1080,"H":1920,"safe":{"t":250,"b":440,"l":70,"r":70},"dur":2.8,"seed":11,"theme":"light","vo":{"start":0.12,"dur":2.31},"transIn":null,"transOut":null};
+          env.brand = M.brand;
+          env.pal = M.pals[env.theme];
+          var root = document.getElementById("s01-root");
+          var tl = gsap.timeline({ paused: true });
+          M.mount(root, tl, spec, env);
+          window.__timelines = window.__timelines || {};
+          window.__timelines["s01"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
