@@ -5,7 +5,7 @@ export type AssetLayout = 'photo' | 'studio'
 export interface SocialAsset {
   id: string
   label: string
-  /** The poster layouts the photo suits: `photo` is full-bleed under a dark gradient, `studio` is a product on a white background. */
+  /** The poster layouts the photo suits: `photo` is a photo that melts into the white poster, `studio` is a product on a light background. */
   layouts: AssetLayout[]
   /** Where the subject is (0-1), so that the crop keeps it. */
   focus: { x: number; y: number }

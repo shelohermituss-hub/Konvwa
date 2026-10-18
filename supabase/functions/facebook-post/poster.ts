@@ -401,6 +401,9 @@ function cover(c: Ctx, img: Pic, x: number, y: number, w: number, h: number, fx 
   c.restore()
 }
 
+/** `#rrggbb` as an rgba() colour (a transparent version of a colour, for a gradient). */
+const rgba = (hex: string, a: number) => `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},${a})`
+
 function vgrad(c: Ctx, y0: number, y1: number, stops: Array<[number, string]>) {
   const g = c.createLinearGradient(0, y0, 0, y1)
   for (const [at, col] of stops) g.addColorStop(at, col)
@@ -466,7 +469,7 @@ function ctaBar(c: Ctx, dark: boolean) {
   c.strokeStyle = '#ffffff'; c.lineWidth = 4; c.lineCap = 'round'
   const gx = 48 + h / 2; const gy = y + h / 2
   c.beginPath(); c.arc(gx, gy, 18, 0, Math.PI * 2); c.stroke()
-  c.beginPath(); c.ellipse(gx, gy, 8, 18, 0, 0, Math.PI * 2); c.stroke()
+  c.save(); c.translate(gx, gy); c.scale(8 / 18, 1); c.beginPath(); c.arc(0, 0, 18, 0, Math.PI * 2); c.restore(); c.stroke()
   c.beginPath(); c.moveTo(gx - 18, gy); c.lineTo(gx + 18, gy); c.stroke()
   text(c, 'konvwa.shop', 48 + h + 6, y + 60, `800 44px ${FONT}`, dark ? '#ffffff' : NAVY, 'left')
   text(c, 'MonCash · NatCash', 48 + h + 6, y + 94, `600 24px ${FONT}`, dark ? 'rgba(255,255,255,0.7)' : MUTED, 'left')
@@ -557,7 +560,7 @@ function studioPoster(c: Ctx, i: InfoInput, photo: Pic | null) {
     c.drawImage(photo as unknown as CanvasImageSource, dx, dy, dw, dh)
     const F = 150
     const fade = (x0: number, y0: number, x1: number, y1: number, rx: number, ry: number, rw: number, rh: number) => {
-      const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, bg); g.addColorStop(1, `${bg}00`)
+      const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, bg); g.addColorStop(1, rgba(bg, 0))
       c.fillStyle = g; c.fillRect(rx, ry, rw, rh)
     }
     if (dx > 2) { fade(dx - 1, 0, dx + F, 0, dx - 1, dy, F + 1, dh); fade(dx + dw + 1, 0, dx + dw - F, 0, dx + dw - F, dy, F + 1, dh) }
