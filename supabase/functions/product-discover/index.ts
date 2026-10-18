@@ -50,7 +50,8 @@ async function readPage(url: string, apiKey: string): Promise<Page | null> {
     const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, formats: a.formats, onlyMainContent: false, proxy: 'auto', timeout: 90000, ...(a.actions ? { actions: a.actions } : { waitFor: 3000 }) }),
+      // read as from the US in English: elsewhere Alibaba switches to a language site whose links have another shape
+      body: JSON.stringify({ url, formats: a.formats, onlyMainContent: false, proxy: 'auto', location: { country: 'US', languages: ['en-US'] }, timeout: 90000, ...(a.actions ? { actions: a.actions } : { waitFor: 3000 }) }),
       signal: AbortSignal.timeout(110000),
     }).catch(() => null)
     if (!res) continue
@@ -122,6 +123,7 @@ Deno.serve(async (req) => {
       for (const c of found) if (isKnown(k.source_url, c)) have.add(c.asin)
     }
     const fresh = found.filter((c) => !have.has(c.asin))
+    console.log('[product-discover]', body.source, String(body.department ?? ''), `found=${found.length} new=${fresh.length}`)
     return json({ candidates: fresh.slice(0, count), skipped_existing: found.length - fresh.length, total_found: found.length, page: url })
   } catch (e) {
     console.error('[product-discover]', e)

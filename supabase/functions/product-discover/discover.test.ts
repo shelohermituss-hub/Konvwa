@@ -132,6 +132,22 @@ describe('extractCandidates', () => {
     expect(c).toMatchObject({ platform: 'alibaba', asin: '1600123456789', url: 'https://www.alibaba.com/product-detail/Cool-Lamp_1600123456789.html' })
   })
 
+  it('understands the Alibaba language and mobile sites (other link shapes), read from the English page', () => {
+    const found = extractCandidates([
+      'https://french.alibaba.com/product-detail/lampe-led-1601924343010.html?spm=a2700',
+      '//spanish.alibaba.com/p-detail/Lampara-18-24V-1601926334207.html',
+      'https://m.alibaba.com/product/1601004103551/Some-Name.html',
+      'https://french.alibaba.com/product-detail/lampe-led-1601924343010.html',
+      'https://www.alibaba.com/showroom/led-lamp.html',
+      'https://alibaba.com.evil.test/product-detail/x_1600123456789.html',
+    ], '', 60, [])
+    expect(found.map((c) => [c.asin, c.url])).toEqual([
+      ['1601924343010', 'https://www.alibaba.com/product-detail/_1601924343010.html'],
+      ['1601926334207', 'https://www.alibaba.com/product-detail/_1601926334207.html'],
+      ['1601004103551', 'https://www.alibaba.com/product-detail/_1601004103551.html'],
+    ])
+  })
+
   it('survives a page without usable data', () => {
     expect(extractCandidates(undefined, undefined)).toEqual([])
     expect(extractCandidates(['https://www.amazon.com/x'], '')).toEqual([])

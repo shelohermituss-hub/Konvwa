@@ -229,7 +229,9 @@ export interface Candidate {
 export interface Structured { url?: unknown; title?: unknown; image_url?: unknown; price_usd?: unknown; rating?: unknown; reviews?: unknown }
 
 const AMAZON_ID = /\/(?:dp|gp\/product)\/([A-Z0-9]{10})(?=[/?#]|$)/
-const ALIBABA_ID = /^(?:https?:)?\/\/(?:[a-z]{2,10}\.)?alibaba\.com\/product-detail\/[^?#]*?_(\d{8,})\.html/i
+// www: /product-detail/Name_ID.html; the language sites (french., spanish., …): /product-detail/name-ID.html or /p-detail/…; mobile: /product/ID/…
+const ALIBABA_ID = /^(?:https?:)?\/\/(?:[a-z]{1,12}\.)?alibaba\.com\/(?:(?:product|p)-detail\/[^?#]*?[_-](\d{8,})\.html|product\/(\d{8,})(?:[/.]|$))/i
+const ALIBABA_WWW = /^https:\/\/www\.alibaba\.com\/product-detail\/[^?#]*_\d{8,}\.html$/i
 const MS_ID = /^https?:\/\/(?:www\.)?muscleandstrength\.com\/store\/([a-z0-9][a-z0-9-]*)\.html$/i
 const MIN_RATING = 4.0
 
@@ -237,8 +239,13 @@ function productRef(raw: string): { id: string; platform: Candidate['platform'];
   const clean = raw.split('?')[0].split('#')[0]
   const am = AMAZON_ID.exec(clean)?.[1]
   if (am) return { id: am, platform: 'amazon', url: `https://www.amazon.com/dp/${am}` }
-  const al = ALIBABA_ID.exec(clean)?.[1]
-  if (al) return { id: al, platform: 'alibaba', url: clean.startsWith('//') ? `https:${clean}` : clean.replace(/^http:/, 'https:') }
+  const alm = ALIBABA_ID.exec(clean)
+  const al = alm?.[1] ?? alm?.[2]
+  if (al) {
+    const url = clean.startsWith('//') ? `https:${clean}` : clean.replace(/^http:/, 'https:')
+    // a language or mobile page is imported from the English one (USD prices, same product number)
+    return { id: al, platform: 'alibaba', url: ALIBABA_WWW.test(url) ? url : `https://www.alibaba.com/product-detail/_${al}.html` }
+  }
   // a product page of the store is /store/<name>.html; categories, brands and reviews have more path segments
   const ms = MS_ID.exec(clean)?.[1]?.toLowerCase()
   if (ms) return { id: ms, platform: 'muscle_strength', url: `https://www.muscleandstrength.com/store/${ms}.html` }
