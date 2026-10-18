@@ -30,6 +30,10 @@ describe('optionsAt', () => {
     expect(colours.find((o) => o.value === 'Noir')?.image).toBe('n.jpg')
     expect(colours.every((o) => o.available)).toBe(true)
   })
+  it('takes the picture of a value from any of its variants, not only the first', () => {
+    const colours = optionsAt(splitVariants([v('1', 'Blanc / 7'), v('2', 'Blanc / 8', { image: 'b.jpg' }), v('3', 'Rose / 7'), v('4', 'Rose / 8', { image: 'r.jpg' })], (x) => x.label)!, [], 0)
+    expect(colours.map((o) => o.image)).toEqual(['b.jpg', 'r.jpg'])
+  })
   it('lists only the sizes that exist in the chosen colour, and marks the ones out of stock', () => {
     expect(optionsAt(dims, ['Blanc'], 1).map((o) => o.value)).toEqual(['Taille 7'])
     const rose = optionsAt(dims, ['Rose'], 1)

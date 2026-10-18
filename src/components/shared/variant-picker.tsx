@@ -31,7 +31,8 @@ export function VariantPicker<T extends DimVariant>({ dims, chosenId, onPick, on
     setSel(next)
     const v = resolve(dims, next)
     if (v) onPick(v)
-    else if (image) onPreview(image)
+    // the variant reached may have no picture of its own (only one size of a colour has it): the picture of the value just chosen is shown instead
+    if (!v?.image && image) onPreview(image)
   }
 
   const nameOf = (i: number) => dims.names[i] || tr('Option {0}', i + 1)
