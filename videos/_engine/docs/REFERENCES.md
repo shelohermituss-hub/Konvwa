@@ -12,6 +12,22 @@ Six vidéos de motion design fournies par le client ont servi de base. Les planc
 | F `ref-f-paypal` | 1:1 | 12 s | 5 | Logo qui claque sur la couleur de marque puis bascule (blanc → couleur) en icône d'app ; mots qui s'enchaînent | `hook.logo`, `hook.question` |
 | G `ref-g-recreate-ae` | 9:16 | 7 s | 0 | Canette en vol avec ombre, ruban bleu, « wacth how » serif italique au-dessus de RED BULL en capitales ; fond gris doux traversé d'**ombres de feuillage** (gobo) ; rangée de bols dans des **cercles pointillés** qui s'allument un par un, légendes serif italique | `scene.trio`, fond `gobo`, `hook.product` |
 | H `ref-h-vid-1017` | 1:1 | 16 s | 2 | Pulsation verte → widget sombre à halo ; liste de choix iOS avec icônes et curseur qui tape ; tracé sinueux suivi par un véhicule ; pilule « Help is on the way » | `hook.pulse`, `scene.ui` (et `tone: "danger"`), `scene.route` |
+| I `ref-i-diaspora` | 9:16 | 24,5 s | 5 | Pub d'agence (« Brands Tailer ») sur **papier quadrillé gris clair**, logo permanent en haut à gauche ; voix off rapide dès 0,2 s, texte = voix, lettre par lettre ; barre orange qui surligne, liasses de billets en vol, carte-graphique orange, détourés en bichromie, bouton marine qui naît d'un carré | à créer (pack « éditorial quadrillé », vidéo `diaspora-argent`) |
+
+### Réf. I en détail (vidéo « où va l'argent de la diaspora »)
+
+Plans (coupes à 3,4 · 9,0 · 10,8 · 12,1 · 14,2 s ; le fond ne change jamais, donc les coupes passent pour des enchaînements) :
+
+1. **0–3,4 s** « Your ad spend is going up, but the leads aren't coming in » — micro code-barres en haut à gauche ; « your » arrive lettre par lettre (chaque lettre floue → nette, de gauche à droite) ; un **petit carré orange naît puis s'étire en barre** (ombre portée longue), « Ads Spend » blanc se révèle dedans, « is going up » petit noir dessous à droite ; une **liasse de billets photo entre de la droite avec flou de mouvement** et se pose en biais, une autre floue au premier plan en bas à gauche (profondeur de champ). Puis compteur « Leads 8 % → 40 % » (chiffres qui roulent), **carte orange où une courbe blanche se dessine** jusqu'à une flèche, flèche rouge ↓ tracée à côté du chiffre, micro-texte « in the last 28 days ».
+2. **3,4–5,3 s** « It's not because your offer is weak » — **feuilles vertes floues** qui entrent dans deux coins ; petit noir + gros orange « your offer » avec **ellipse dessinée à la main** autour d'« offer » ; **pile de 3 cartes** qui s'évente en 3D (avatar + étiquette au pinceau bleu) ; « is weak » **géant en contour seul** (fantôme rosé) en bas.
+3. **5,3–9,0 s** « It's because your content strategy isn't built to stop the scroll » — texte seul : lignes empilées de tailles mixtes (petit noir / moyen orange / petit noir / orange), lettre par lettre au rythme de la voix, léger travelling.
+4. **9,0–10,8 s** « or hold attention » — statue détourée en **bichromie orange** qui monte du bas, téléphone en main ; « HOLD attention » gras italique orange.
+5. **10,8–12,1 s** « If you're a business owner » — **carré bleu arrondi d'où le personnage déborde par le haut** ; texte bleu petit + gras.
+6. **12,1–14,2 s** « struggling to attract quality leads » — homme de dos, mains sur la tête, **bichromie bordeaux** ; « Struggling » orange, « to » petit italique + « Attract », barre orange « quality leads ».
+7. **14,2–19,4 s** « DM help and I'll break down exactly what your content is missing » — **bouton bleu qui naît d'un carré**, s'allonge, icône de message, « DM "Help" » tapé ; sous-titre bleu lettre par lettre ; le bouton remonte doucement.
+8. **19,4–24,5 s** carte de fin sur blanc : logo en grand, carte bleue « Fill the form », pilule noire « Contact us today », carte orange avec 3 pilules en contour (téléphone, mail, site) ; tout arrive flou → net ; **fondu au noir** à la fin.
+
+ADN : fond gris clair (≈ `#ECECEC`) quadrillé blanc très doux + vignette ; palette orange (≈ celui de KONVWA), bleu roi, noir ; grotesque arrondie (proche de Poppins) en demi-gras, aucune capitale sauf l'emphase ; **ombre portée longue et douce vers le bas à droite** sous tout objet ; flou de mouvement sur chaque entrée ; aucune transition visible (coupe franche sur fond identique) ; voix ≈ 3 mots/s, musique continue, moyenne −12,9 dB. Transposition KONVWA : le bleu roi devient le marine `#0A1628`, le logo KONVWA prend la place du logo d'agence.
 
 ## Ce qu'elles ont toutes en commun
 
