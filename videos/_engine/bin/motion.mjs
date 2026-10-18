@@ -10,6 +10,7 @@ import { emitProject, HYPERFRAMES_VERSION } from '../lib/emit.mjs'
 import { duration, hasFfmpeg, run } from '../lib/media.mjs'
 import { qa, printChecks } from '../lib/qa.mjs'
 import { analyze } from '../lib/ref.mjs'
+import { cutout, getAsset, source } from '../lib/assets.mjs'
 
 const VIDEOS = path.resolve(ENGINE, '..')
 const [cmd, ...rest] = process.argv.slice(2)
@@ -196,6 +197,34 @@ const COMMANDS = {
     if (!printChecks(r.checks)) process.exit(1)
   },
 
+  /**
+   * assets search <source> "<requête>" [--type=photo|illustration|vector|video] [--orientation=portrait|landscape|any] [--n=10]
+   * assets get <source> <id> --to=library/<dossier>/<nom> [--type=…]   → lib:<dossier>/<nom>.<ext>, crédit dans library/CREDITS.md
+   * assets cutout <fichier> [sortie.png]                                → détourage local (rembg)
+   */
+  assets() {
+    const [sub, ...a] = args
+    const type = String(flags.type || 'photo')
+    try {
+      if (sub === 'search') {
+        const [src, ...q] = a
+        const items = source(src || '').search(q.join(' '), { type, orientation: String(flags.orientation || 'portrait') })
+        const n = Math.max(1, Math.min(50, Number(flags.n) || 10))
+        if (!items.length) die(`Aucun résultat pour « ${q.join(' ')} » (${type})`)
+        for (const x of items.slice(0, n)) log(`${String(x.id).padStart(10)}  ${x.ext}  ${`${x.width}×${x.height}`.padEnd(10)} ${x.tags.slice(0, 60).padEnd(60)}  ${x.page}`)
+        log(`\n${Math.min(n, items.length)}/${items.length} · puis : assets get ${src} <id> --type=${type} --to=library/<dossier>/<nom>`)
+      } else if (sub === 'get') {
+        const [src, id] = a
+        if (!src || !id || !flags.to) die('Usage : assets get <source> <id> --to=library/<dossier>/<nom> [--type=photo|illustration|vector|video]')
+        const r = getAsset(path.join(ENGINE, 'library'), src, id, { type, to: String(flags.to) })
+        log(`✓ ${r.ref}  ${r.item.width}×${r.item.height}  par ${r.item.author}  (crédit ajouté à library/CREDITS.md)`)
+      } else if (sub === 'cutout') {
+        if (!a[0]) die('Usage : assets cutout <fichier> [sortie.png]')
+        log(`✓ ${path.relative(process.cwd(), cutout(path.resolve(a[0]), a[1] && path.resolve(a[1])))}`)
+      } else die('Usage : assets search|get|cutout … (lancez la commande sans argument pour l’aide)')
+    } catch (e) { die('✗ ' + e.message) }
+  },
+
   ref() {
     if (!args.length) die('Usage : ref <video.mp4> [autres vidéos] [--name=dossier]')
     for (const [i, f] of args.entries()) {
@@ -211,7 +240,7 @@ const COMMANDS = {
 
 const fn = COMMANDS[cmd]
 if (!fn) {
-  log(`KONVWA motion engine\n\nCommandes :\n  types                  les scènes, transitions, sons et formats disponibles\n  new <nom> [--example=demo]   crée videos/<nom>/brief.json\n  check <projet>         valide le brief et affiche le calendrier + la loi des 3 secondes\n  vo <projet>            liste les voix à générer et celles déjà présentes\n  vo-save <projet> s01=<url> …   enregistre les voix générées (silences coupés)\n  build <projet>         génère le projet HyperFrames (image calée sur la voix, sons placés)\n  lint <projet>          hyperframes check\n  snap <projet> [--at=0.15,0.6,…]   captures aux instants donnés\n  render <projet> [--quality=looks|draft|delivery]\n  qa <projet> [rendu.mp4]   contrôle du rendu (format, son, énergie du hook…)\n  ref <video…>           analyse une vidéo de référence (coupes, son, planches)\n  hf <projet> <args…>    passe la main au CLI hyperframes`)
+  log(`KONVWA motion engine\n\nCommandes :\n  types                  les scènes, transitions, sons et formats disponibles\n  new <nom> [--example=demo]   crée videos/<nom>/brief.json\n  check <projet>         valide le brief et affiche le calendrier + la loi des 3 secondes\n  vo <projet>            liste les voix à générer et celles déjà présentes\n  vo-save <projet> s01=<url> …   enregistre les voix générées (silences coupés)\n  build <projet>         génère le projet HyperFrames (image calée sur la voix, sons placés)\n  lint <projet>          hyperframes check\n  snap <projet> [--at=0.15,0.6,…]   captures aux instants donnés\n  render <projet> [--quality=looks|draft|delivery]\n  qa <projet> [rendu.mp4]   contrôle du rendu (format, son, énergie du hook…)\n  assets search pixabay "<requête>" [--type=photo|illustration|vector|video] [--orientation=portrait]   cherche des assets réels\n  assets get pixabay <id> --to=library/<dossier>/<nom> [--type=…]   télécharge (crédit dans library/CREDITS.md)\n  assets cutout <fichier> [sortie.png]   détoure (rembg, local)\n  ref <video…>           analyse une vidéo de référence (coupes, son, planches)\n  hf <projet> <args…>    passe la main au CLI hyperframes`)
   process.exit(cmd ? 1 : 0)
 }
 fn()

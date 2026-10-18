@@ -6,6 +6,8 @@ import { ENGINE, M, RUNTIME_FILES } from '../lib/runtime.mjs'
 import { estimateVo, loadBrief, validateBrief } from '../lib/brief.mjs'
 import { hookReport, placeSfx, schedule } from '../lib/schedule.mjs'
 import { emitProject } from '../lib/emit.mjs'
+import * as pixabay from '../lib/pixabay.mjs'
+import { cutout, libraryTarget, recordCredit, source } from '../lib/assets.mjs'
 
 /** Source of a runtime file without its comments (a comment may talk about what the code must not do). */
 const code = (f) => fs.readFileSync(path.join(ENGINE, 'runtime', f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
@@ -166,5 +168,56 @@ describe('project generation', () => {
     expect(fs.existsSync(path.join(dir, 'assets/lib/products/powerbeats.jpg'))).toBe(true)
     expect(JSON.parse(fs.readFileSync(path.join(dir, 'vo.json'), 'utf8')).lines.length).toBe(6)
     fs.rmSync(dir, { recursive: true, force: true })
+  })
+})
+
+describe('real assets (pixabay + library)', () => {
+  const hit = (id, w, h, extra = {}) => ({ id, imageWidth: w, imageHeight: h, downloads: 10, largeImageURL: `https://x/${id}_1280.jpg`, pageURL: `https://pixabay.com/photos/${id}/`, user: 'u', user_id: 1, ...extra })
+  it('builds a safe search URL, maps portrait to the API orientation and looks up by id', () => {
+    const u = new URL(pixabay.searchUrl('K', 'delivery box', { type: 'illustration', orientation: 'portrait' }))
+    expect(Object.fromEntries(u.searchParams)).toMatchObject({ q: 'delivery box', safesearch: 'true', image_type: 'illustration', orientation: 'vertical' })
+    const v = new URL(pixabay.searchUrl('K', '', { type: 'video', id: 42 }))
+    expect(v.pathname).toBe('/api/videos/')
+    expect(v.searchParams.get('id')).toBe('42')
+    expect(v.searchParams.has('orientation')).toBe(false)
+    expect(() => pixabay.searchUrl('K', 'x', { type: 'music' })).toThrow()
+  })
+  it('reports the size of the 1280 px file actually downloaded and keeps PNG for vectors', () => {
+    expect(pixabay.normalize(hit(5, 3024, 4032))).toMatchObject({ ext: 'jpg', width: 960, height: 1280, author: 'u', authorUrl: 'https://pixabay.com/users/1/' })
+    expect(pixabay.normalize(hit(6, 1920, 1920, { type: 'vector/svg', largeImageURL: 'https://x/6_1280.png' }))).toMatchObject({ type: 'vector', ext: 'png', width: 1280 })
+    expect(pixabay.normalize({ id: 7, videos: { medium: { url: 'm.mp4', width: 1920, height: 1080 }, large: { url: 'l.mp4' } } }, 'video')).toMatchObject({ url: 'm.mp4', ext: 'mp4' })
+    expect(pixabay.normalize({ id: 8, videos: {} }, 'video')).toBeNull()
+  })
+  it('drops AI-generated and low-quality media and prefers portrait for a 9:16 frame', () => {
+    const items = [hit(1, 1600, 900), hit(2, 900, 1600), hit(3, 900, 1600, { isAiGenerated: true }), hit(4, 900, 1600, { isLowQuality: true })].map((h) => pixabay.normalize(h))
+    expect(pixabay.rank(items).map((x) => x.id)).toEqual([2, 1])
+    expect(pixabay.rank(items, { orientation: 'landscape' }).map((x) => x.id)).toEqual([1, 2])
+  })
+  it('refuses to run without a key or with a bad id', () => {
+    expect(() => pixabay.search('sea', { key: '' })).toThrow(/PIXABAY_API_KEY/)
+    expect(() => pixabay.byId('1;rm', { key: 'K' })).toThrow(/invalide/)
+  })
+  it('keeps downloads inside library/ with a lib: reference', () => {
+    expect(libraryTarget('/L', 'library/illustrations/colis', 'png')).toEqual({ file: path.join('/L', 'illustrations/colis.png'), ref: 'lib:illustrations/colis.png' })
+    for (const bad of ['../x', 'library/../x', '/etc/x', 'Photos/X', 'a b', '']) expect(() => libraryTarget('/L', bad, 'jpg')).toThrow(/destination/)
+    expect(() => source('pexels')).toThrow(/source inconnue/)
+  })
+  it('records one credit line per file, replacing an older one', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lib-'))
+    const item = { source: 'pixabay', type: 'vector', id: 1, page: 'https://p/1', author: 'a', authorUrl: 'https://u/1' }
+    recordCredit(dir, 'lib:x/colis.png', item)
+    recordCredit(dir, 'lib:x/colis.png', { ...item, id: 2, page: 'https://p/2' })
+    recordCredit(dir, 'lib:x/avion.png', item)
+    const lines = fs.readFileSync(path.join(dir, 'CREDITS.md'), 'utf8').split('\n').filter((l) => l.startsWith('- '))
+    expect(lines).toHaveLength(2)
+    expect(lines[0]).toContain('https://p/2')
+    expect(fs.readFileSync(path.join(dir, 'CREDITS.md'), 'utf8')).toMatch(/obligatoire\)\.\n\n- /)
+  })
+  it('says how to install rembg when it is missing', () => {
+    const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'cut-')), 'a.jpg')
+    fs.writeFileSync(f, 'x')
+    const old = process.env.REMBG
+    process.env.REMBG = '/nonexistent/rembg'
+    try { expect(() => cutout(f)).toThrow(/rembg introuvable/) } finally { if (old === undefined) delete process.env.REMBG; else process.env.REMBG = old }
   })
 })

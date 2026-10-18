@@ -29,6 +29,21 @@ node $E qa promo-livraison         # format, durée, niveau sonore, énergie du 
 
 Sans voix générées, `build` fonctionne quand même (durées estimées, brouillon muet) : on peut juger l'image avant de dépenser le moindre crédit de voix.
 
+## Assets réels (photos, illustrations, objets détourés)
+
+```bash
+node $E assets search pixabay "delivery box" --type=vector          # photo | illustration | vector | video ; --orientation=portrait (défaut) | landscape | any
+node $E assets get pixabay 7421938 --type=vector --to=library/illustrations/cartons   # → "lib:illustrations/cartons.png"
+node $E assets cutout videos/_engine/library/products/cerave.jpg     # → cerave-cutout.png (fond retiré, local, sans crédit)
+```
+
+- Clé : `PIXABAY_API_KEY` dans l'environnement (jamais dans le code ni dans le chat ; elle est masquée dans les messages d'erreur).
+- Les médias générés par IA ou marqués « basse qualité » sont écartés ; à orientation égale, les plus téléchargés d'abord.
+- Les vecteurs Pixabay arrivent en PNG transparent (1280 px) : déjà détourés. Photos en JPG 1280 px, vidéos en 1080p (lourdes : ne pas les committer sans raison).
+- Chaque `get` ajoute (ou remplace) sa ligne dans `library/CREDITS.md` : source, id, page, auteur.
+- `cutout` utilise [rembg](https://github.com/danielgatis/rembg) : `pip install "rembg[cpu,cli]"`, ou `REMBG=/chemin/vers/rembg`. Le premier appel télécharge le modèle (~170 Mo).
+- Unsplash passe par ses outils MCP (`search_photos`, `download_asset`) puis `cutout` ; Pexels attend une clé.
+
 ## Le brief
 
 ```jsonc
@@ -68,11 +83,11 @@ Un exemple complet est dans `examples/demo.brief.json` (6 scènes, 22 s).
 ```
 videos/_engine/
   bin/motion.mjs      la commande
-  lib/                brief (validation) · schedule (calendrier, sons, loi des 3 s) · emit (projet HyperFrames) · qa · ref · media
+  lib/                brief (validation) · schedule (calendrier, sons, loi des 3 s) · emit (projet HyperFrames) · qa · ref · media · assets + pixabay (assets réels)
   runtime/            ce qui tourne dans le navigateur ET dans Node : core (règles, markup, mise en page) · dom · fx · mount (transitions) · hooks · scenes · motion.css
   brands/             konvwa.json (couleurs, thèmes, voix, slogan) + logo
   sfx/                15 sons + CREDITS.md
-  library/            images partagées (produits) : "lib:products/…"
+  library/            images partagées (produits, illustrations…) : "lib:products/…" + CREDITS.md
   references/         planches et chiffres des vidéos de référence
   examples/           briefs d'exemple
   docs/               REFERENCES.md (ADN de style) · HOOKS.md (les 3 premières secondes)

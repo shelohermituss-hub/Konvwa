@@ -13,12 +13,12 @@ Conclusion : il faut **(1) des assets réels** et **(2) de nouvelles mises en sc
 | Source | Accès | Remarques |
 |---|---|---|
 | Unsplash (outils MCP `search_photos`, `search_illustrations`, `download_asset`) | ✓ testé, fichier réel téléchargé (2000×3000) | peu d'illustrations |
-| Pixabay | ✓ hôtes joignables (`pixabay.com/api`, `cdn.pixabay.com`) ; **clé requise** | variable d'environnement `PIXABAY_API_KEY` (la clé voyage dans l'URL `?key=`, donc **pas** un Network secret) ; photos, illustrations, vecteurs, vidéos ; licence gratuite, usage commercial |
+| Pixabay | ✓ **clé présente et testée** (photo, illustration, vecteur PNG transparent, vidéo) ; le CDN vidéo renvoie parfois 429 (géré par reprises) | variable d'environnement `PIXABAY_API_KEY` (la clé voyage dans l'URL `?key=`, donc **pas** un Network secret) ; photos, illustrations, vecteurs, vidéos ; licence gratuite, usage commercial |
 | Pexels | ✓ hôtes joignables (`api.pexels.com`, `images.pexels.com`) ; **clé requise** (le client n'y a pas encore accès) | variable `PEXELS_API_KEY`, ou Network secret : en-tête `Authorization`, préfixe vidé, hôte `api.pexels.com` |
 | Magnific / Freepik (outils MCP `stock_search`, `stock_download`, `images_remove_background`) | ✓ recherche testée (727 résultats « 3d delivery box ») | **40 crédits par téléchargement : demander l'accord du client avant** (proposé : jusqu'à 600 crédits) |
 | Génération d'images (FLORA, Higgsfield, Magnific) | disponible | pour des illustrations dans un style cohérent (3D, plat, autocollants) |
 | Catalogue KONVWA (Supabase) | disponible | vraies photos produit et prix ; JPG à fond blanc → détourer |
-| Détourage local | `pip install rembg` possible (PyPI et le modèle GitHub sont joignables) ; non installé ni testé | sans crédit |
+| Détourage local | ✓ `rembg[cpu,cli]` testé sur `products/cerave.jpg` (propre, ~90 s au premier appel le temps de charger le modèle) ; à installer par session | sans crédit |
 
 Règles : ne jamais demander au client de coller une clé dans le chat ; ne jamais afficher une clé ; vérifier sa présence avec `[ -n "$PIXABAY_API_KEY" ]` et tester par une recherche (`https://pixabay.com/api/?key=$PIXABAY_API_KEY&q=…&image_type=illustration`).
 
@@ -26,7 +26,7 @@ Le client peut aussi déposer ses propres fichiers dans la conversation (PNG tra
 
 ## À construire (dans cet ordre)
 
-1. **Commande `assets`** dans `bin/motion.mjs` : `assets search <pexels|pixabay|unsplash> "<requête>" [--type photo|illustration|vector|video] [--orientation portrait]`, `assets get <source> <id> --to library/<dossier>/<nom>`, `assets cutout <fichier>` (rembg), avec fichier de crédits `library/CREDITS.md`. `lib:` résout déjà `library/…` dans les briefs.
+1. ✓ **Fait (Pixabay + rembg)** — voir README « Assets réels ». Reste : Pexels quand une clé existera. Spécification d'origine — **commande `assets`** dans `bin/motion.mjs` : `assets search <pexels|pixabay|unsplash> "<requête>" [--type photo|illustration|vector|video] [--orientation portrait]`, `assets get <source> <id> --to library/<dossier>/<nom>`, `assets cutout <fichier>` (rembg), avec fichier de crédits `library/CREDITS.md`. `lib:` résout déjà `library/…` dans les briefs.
 2. **Nouvelles scènes / hooks** (voir `runtime/hooks.js`, `scenes.js`) :
    - `scene.photo` : photo plein cadre avec zoom lent + texte par-dessus ;
    - `scene.collage` : cutouts et illustrations en profondeur (parallaxe) autour d'un titre ;
