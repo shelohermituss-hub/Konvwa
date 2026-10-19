@@ -8,6 +8,7 @@ import { hookReport, placeSfx, schedule } from '../lib/schedule.mjs'
 import { emitProject } from '../lib/emit.mjs'
 import * as pixabay from '../lib/pixabay.mjs'
 import { cutout, libraryTarget, recordCredit, source } from '../lib/assets.mjs'
+import { findRef, formatCard, loadCatalog, nextNumber, refDir, unknownEngineNames } from '../lib/references.mjs'
 
 /** Source of a runtime file without its comments (a comment may talk about what the code must not do). */
 const code = (f) => fs.readFileSync(path.join(ENGINE, 'runtime', f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
@@ -366,5 +367,51 @@ describe('« Avant / Après » split screen', () => {
     expect(validateBrief(ok, exists).errors).toEqual([])
     const bad = { ...ok, scenes: [ok.scenes[0], { type: 'scene.split', left: { text: 'a' }, right: { screen: 'lib:app/absent.png' }, vo: 'x' }, ok.scenes[2]] }
     expect(validateBrief(bad, exists).errors.join()).toMatch(/absent\.png/)
+  })
+})
+
+describe('numbered reference catalogue', () => {
+  const catalog = loadCatalog(ENGINE)
+
+  it('numbers every reference once, from 1 without gaps, each with its contact sheets', () => {
+    expect(catalog.map((r) => r.n)).toEqual(catalog.map((_, i) => i + 1))
+    expect(new Set(catalog.map((r) => r.dir)).size).toBe(catalog.length)
+    for (const r of catalog) {
+      expect(r.dir.startsWith(String(r.n).padStart(2, '0') + '-')).toBe(true)
+      for (const f of ['hook.png', 'all.png', 'analysis.json', ...(r.timeline ? ['timeline.jpg'] : [])]) expect(fs.existsSync(path.join(ENGINE, 'references', r.dir, f))).toBe(true)
+      expect(r.dna.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('only cites hooks, scenes, transitions and backgrounds the engine knows', () => {
+    const known = { types: M.types(), transitions: Object.keys(M.TRANSITIONS), backgrounds: ['plain', 'glow', 'rings', 'dots', 'gobo'] }
+    for (const r of catalog) expect(unknownEngineNames(r, known)).toEqual([])
+    expect(unknownEngineNames({ engine: { hooks: ['hook.nope'], transitions: ['spin'] } }, known)).toEqual(['hook.nope', 'spin'])
+  })
+
+  it('finds a reference however it is written and gives new videos the next number', () => {
+    expect(findRef(catalog, 4)?.dir).toBe('04-produit-en-vol')
+    for (const x of ['4', 'n4', 'réf. 4', '#4']) expect(findRef(catalog, x)?.n).toBe(4)
+    expect(findRef(catalog, 99)).toBeNull()
+    expect(findRef(catalog, 'quatre')).toBeNull()
+    expect(nextNumber(catalog)).toBe(catalog.length + 1)
+    expect(nextNumber([])).toBe(1)
+    expect(refDir(7, 'Pub Été — Nike!')).toBe('07-pub-ete-nike')
+    expect(refDir(12, '')).toBe('12-reference')
+  })
+
+  it('prints a card with the DNA and the engine pieces to use', () => {
+    const card = formatCard(findRef(catalog, 4))
+    expect(card).toMatch(/^Référence n° 4 — /)
+    expect(card).toContain('timeline.jpg')
+    expect(card).toContain('hook.product')
+    expect(card).not.toMatch(/\n\n\n/)
+  })
+
+  it('lets a brief name the references it follows', () => {
+    expect(loadBrief({ name: 'x', scenes: [] }).brief.references).toEqual([])
+    expect(loadBrief({ name: 'x', reference: 4, scenes: [] }).brief.references).toEqual([4])
+    expect(loadBrief({ name: 'x', reference: [2, 4], scenes: [] }).brief.references).toEqual([2, 4])
+    expect(loadBrief(path.join(ENGINE, 'examples/devine-prix.brief.json')).brief.references).toEqual([4])
   })
 })

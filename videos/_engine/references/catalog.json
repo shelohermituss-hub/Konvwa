@@ -1,0 +1,197 @@
+[
+  {
+    "n": 1,
+    "dir": "01-pulse-interface",
+    "timeline": true,
+    "title": "Pulsation → interface iOS",
+    "look": "Fond blanc lumineux, une pulsation verte se contracte en point puis se déploie en widget sombre à halo bleu ; liste de choix iOS (« What's the emergency? ») avec icônes et curseur qui tape ; tracé sinueux bleu suivi par un véhicule ; pilule « Help is on the way 1:40 ».",
+    "dna": [
+      "Ouverture sur une forme qui respire (pulsation) avant le moindre mot",
+      "Interfaces réalistes : cartes arrondies, ombres douces, halo coloré derrière le widget",
+      "Une action à l'écran (le curseur choisit une option) raconte l'histoire sans voix",
+      "Un tracé qui se dessine et qu'un objet suit = le trajet, la livraison",
+      "Pilule de statut flottante pour conclure (temps restant, confirmation)"
+    ],
+    "engine": {
+      "hooks": [
+        "hook.pulse"
+      ],
+      "scenes": [
+        "scene.ui",
+        "scene.route"
+      ],
+      "transitions": [
+        "scale",
+        "circle"
+      ],
+      "backgrounds": [
+        "glow"
+      ]
+    },
+    "konvwa": "Suivi de commande, choix d'un mode de livraison, trajet Chine → Haïti, statut « colis en route »."
+  },
+  {
+    "n": 2,
+    "dir": "02-affiche-editoriale",
+    "title": "Affiche éditoriale noir et blanc",
+    "look": "Affiche de magazine : photo détourée en noir et blanc, grand disque ou carré rouge derrière, micro-typo en capitales, QR code, code-barres, mot géant en filigrane coupé par le bord ; passages sur fond noir avec la Terre, objets 3D chromés ; gros mots blancs qui arrivent un par un.",
+    "dna": [
+      "Photo réelle détourée en noir et blanc posée sur une grande forme de couleur unie",
+      "Détails éditoriaux minuscules (capitales espacées, numéros, codes) qui font « design »",
+      "Un mot géant en filigrane, plus grand que l'écran, derrière le sujet",
+      "Phrase découpée en deux tailles : petit mot de liaison au-dessus, mot fort énorme",
+      "Alternance fond clair / fond noir pour relancer l'attention"
+    ],
+    "engine": {
+      "hooks": [
+        "hook.poster",
+        "hook.collage"
+      ],
+      "scenes": [
+        "scene.ghost",
+        "scene.photo",
+        "scene.collage"
+      ],
+      "transitions": [
+        "cut",
+        "flash"
+      ],
+      "backgrounds": [
+        "plain"
+      ]
+    },
+    "konvwa": "Témoignage client, « avant / après », message de marque fort, portrait d'un revendeur."
+  },
+  {
+    "n": 3,
+    "dir": "03-mot-cle-couleur",
+    "title": "Phrase noire, mot-clé en couleur",
+    "look": "Fond blanc, phrase noire en grotesque, un seul mot-clé en vert avec des glyphes ($) qui s'envolent ; aiguille d'horloge géante qui balaie l'écran comme transition ; « every second » en serif italique ; avis clients en cartes ; hexagones-icônes reliés par des traits légendés ; pilules vertes et contour qui s'empilent.",
+    "dna": [
+      "Une phrase courte, un seul mot coloré (la couleur porte le sens)",
+      "Mélange grotesque + serif italique pour l'emphase",
+      "Un objet géant (aiguille) sert de transition entre deux idées",
+      "Schéma simple : icônes dans des formes, reliées à leur légende par un trait",
+      "Liste d'avantages en pilules pleines / contour qui arrivent une à une"
+    ],
+    "engine": {
+      "hooks": [
+        "hook.statement",
+        "hook.question"
+      ],
+      "scenes": [
+        "scene.callouts",
+        "scene.chips",
+        "scene.kinetic"
+      ],
+      "transitions": [
+        "whip",
+        "up"
+      ],
+      "backgrounds": [
+        "rings",
+        "plain"
+      ]
+    },
+    "konvwa": "Vidéo explicative calme : pourquoi passer par KONVWA, liste d'avantages, problèmes du client."
+  },
+  {
+    "n": 4,
+    "dir": "04-produit-en-vol",
+    "timeline": true,
+    "title": "Produit en vol, ombres de feuillage",
+    "look": "Fond gris doux traversé d'ombres de feuillage (gobo) ; canette qui tombe en flou puis se stabilise avec ombre portée ; ruban bleu qui balaie derrière ; « wacth how » en petit serif italique au-dessus de RED BULL en capitales ; produits concurrents dans un cercle pointillé ; rangée de bols dans des cercles pointillés qui s'allument un par un avec légendes serif italique.",
+    "dna": [
+      "Le produit réel, détouré, est la star : il entre en vol avec flou et ombre",
+      "Ambiance lumière naturelle : ombres de feuilles sur fond neutre",
+      "Duo typographique : petit serif italique + grand titre en capitales lourdes",
+      "Un ruban de couleur traverse l'écran et relie les plans",
+      "Comparaison ou composition : éléments dans des cercles pointillés qui s'allument tour à tour"
+    ],
+    "engine": {
+      "hooks": [
+        "hook.product"
+      ],
+      "scenes": [
+        "scene.product",
+        "scene.trio",
+        "scene.guess"
+      ],
+      "transitions": [
+        "whip",
+        "scale"
+      ],
+      "backgrounds": [
+        "gobo"
+      ]
+    },
+    "konvwa": "Mise en avant d'un produit du catalogue, « Devinez le prix », comparaison de produits, contenu d'un colis."
+  },
+  {
+    "n": 5,
+    "dir": "05-pixels-violet",
+    "title": "Pixels et lueur violette",
+    "look": "Fond nuit, le texte « hey » se forme à partir de carrés pixel violets ; mots qui arrivent un par un avec flou ; cartes d'interface en verre qui glissent ; bascule vers un fond blanc avec bande violette verticale et avatar 3D ; pilule « few spots left… » qui tourne dans un éclat ; bulle de message avec notification pour finir.",
+    "dna": [
+      "Le texte se construit devant nous (pixels, flou → net)",
+      "Une seule couleur d'accent lumineuse sur fond neutre",
+      "Cartes et pilules d'interface qui glissent, rebondissent légèrement",
+      "Bascule nette nuit → jour au milieu pour relancer",
+      "Fin sur un appel à l'action intime (message, notification)"
+    ],
+    "engine": {
+      "hooks": [
+        "hook.pixel",
+        "hook.impact"
+      ],
+      "scenes": [
+        "scene.ui",
+        "scene.chips",
+        "scene.end"
+      ],
+      "transitions": [
+        "flash",
+        "scale"
+      ],
+      "backgrounds": [
+        "glow",
+        "dots"
+      ]
+    },
+    "konvwa": "Annonce courte (nouvelle fonction, places limitées, promo), appel « écrivez-nous sur WhatsApp »."
+  },
+  {
+    "n": 6,
+    "dir": "06-logo-carte-monde",
+    "title": "Logo qui claque, carte du monde",
+    "look": "Logo qui claque sur la couleur de marque puis devient icône d'app sur fond blanc ; « send money fast » mot à mot avec curseur ; carte du monde noir et blanc, avatars ronds avec drapeau reliés par des pointillés bleus, caméra qui file d'un continent à l'autre ; iPhone avec notifications de paiement ; slogan final qui défile sur fond nuit bleu.",
+    "dna": [
+      "Le logo ouvre la vidéo, en grand, sur la couleur de marque",
+      "Phrase tapée mot à mot avec un curseur",
+      "Carte du monde : personnes (avatar + drapeau) reliées par des pointillés, la caméra voyage",
+      "Preuve concrète sur téléphone (notifications qui tombent)",
+      "Slogan final en une ligne, flou de mouvement"
+    ],
+    "engine": {
+      "hooks": [
+        "hook.logo",
+        "hook.question"
+      ],
+      "scenes": [
+        "scene.route",
+        "scene.ui",
+        "scene.kinetic",
+        "scene.end"
+      ],
+      "transitions": [
+        "whip",
+        "circle"
+      ],
+      "backgrounds": [
+        "plain",
+        "glow"
+      ]
+    },
+    "konvwa": "Présentation de la marque, paiement MonCash / NatCash, Chine → Haïti en carte, notifications de commande."
+  }
+]

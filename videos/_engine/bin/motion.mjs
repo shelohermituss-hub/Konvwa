@@ -10,6 +10,7 @@ import { emitProject, HYPERFRAMES_VERSION } from '../lib/emit.mjs'
 import { duration, hasFfmpeg, run } from '../lib/media.mjs'
 import { qa, printChecks } from '../lib/qa.mjs'
 import { analyze } from '../lib/ref.mjs'
+import { findRef, formatCard, formatLine, loadCatalog, newEntry, nextNumber, refDir, saveCatalog } from '../lib/references.mjs'
 import { cutout, getAsset, source } from '../lib/assets.mjs'
 
 const VIDEOS = path.resolve(ENGINE, '..')
@@ -49,6 +50,8 @@ function plan(dir) {
   const { brief, brand } = loadBrief(path.join(dir, 'brief.json'))
   brief.name = brief.name || path.basename(dir)
   const { errors, warnings } = validateBrief(brief, existsFor(dir))
+  const catalog = loadCatalog(ENGINE)
+  for (const x of brief.references) if (!findRef(catalog, x)) errors.push(`reference ${x} inconnue (numéros : ${catalog.map((r) => r.n).join(', ')} — « ref » pour la liste)`)
   const voDur = hasFfmpeg() ? measureVo(dir, brief.scenes.length) : {}
   let tl = null
   let sfx = []
@@ -68,6 +71,8 @@ function plan(dir) {
 function printPlan(p) {
   const { tl, sfx, brief, voDur } = p
   log(`\n${brief.name} — ${brief.format}, thème ${brief.theme}, voix ${brief.voice.mode === 'vo' ? brief.voice.name + ' (' + brief.voice.style + ')' : 'aucune (musique)'}`)
+  const refs = brief.references.map((x) => findRef(loadCatalog(ENGINE), x)).filter(Boolean)
+  if (refs.length) log(`Référence${refs.length > 1 ? 's' : ''} : ${refs.map((r) => `n° ${r.n} ${r.title}`).join(' · ')} (fiche : ref <n>)`)
   log('\n #   type              début   durée   transition   voix')
   for (const s of tl.scenes) {
     const v = s.vo ? `${s.env.vo.start.toFixed(2)} → ${(s.env.vo.start + s.env.vo.dur).toFixed(2)} (${s.vo.measured ? 'mesurée' : 'estimée'})` : '—'
@@ -237,22 +242,41 @@ const COMMANDS = {
     } catch (e) { die('✗ ' + e.message) }
   },
 
+  /** ref : liste numérotée · ref <n> : fiche d'une référence · ref add <video> [--name=slug] : analyse et donne le numéro suivant. */
   ref() {
-    if (!args.length) die('Usage : ref <video.mp4> [autres vidéos] [--name=dossier]')
-    for (const [i, f] of args.entries()) {
-      const name = (flags.name && args.length === 1 ? flags.name : path.basename(f).replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/gi, '-').toLowerCase().slice(0, 40)) + ''
-      const out = path.join(ENGINE, 'references', name || `ref-${i + 1}`)
+    const catalog = loadCatalog(ENGINE)
+    if (!args.length) {
+      log('Références (« utilise la référence n° X ») :\n')
+      catalog.forEach((r) => log(formatLine(r)))
+      log('\nFiche : ref <n> · ajouter une vidéo : ref add <video.mp4> --name=<nom-court>')
+      return
+    }
+    if (args[0] !== 'add') {
+      const r = findRef(catalog, args[0])
+      if (!r) die(`Référence ${args[0]} inconnue (numéros : ${catalog.map((x) => x.n).join(', ')})`)
+      log(formatCard(r))
+      return
+    }
+    const files = args.slice(1)
+    if (!files.length) die('Usage : ref add <video.mp4> [autres vidéos] [--name=nom-court]')
+    for (const f of files) {
+      const n = nextNumber(catalog)
+      const dir = refDir(n, flags.name && files.length === 1 ? flags.name : path.basename(f).replace(/\.[^.]+$/, ''))
+      const out = path.join(ENGINE, 'references', dir)
       const a = analyze(path.resolve(f), out)
-      log(`\n${a.file} → ${path.relative(process.cwd(), out)}\n  ${a.width}×${a.height} (${a.aspect}) · ${a.duration} s · ${a.fps} i/s · ${a.cuts.length} coupes (${a.cutsPer10s}/10 s, plan moyen ${a.avgShot} s) · ${a.hookCuts} dans les 3 premières secondes`)
+      catalog.push({ ...newEntry(n, dir, a), timeline: true })
+      saveCatalog(ENGINE, catalog)
+      log(`\nRéférence n° ${n} → references/${dir}/\n  ${a.width}×${a.height} (${a.aspect}) · ${a.duration} s · ${a.fps} i/s · ${a.cuts.length} coupes (${a.cutsPer10s}/10 s, plan moyen ${a.avgShot} s) · ${a.hookCuts} dans les 3 premières secondes`)
       if (a.audio) log(`  son : moyenne ${a.audio.mean} dB, crête ${a.audio.max} dB`)
-      log('  planches : hook.png (3 premières secondes) et all.png (vue d’ensemble)')
+      log('  planches : hook.png (3 premières secondes), all.png (vue d’ensemble), timeline.jpg (une image par demi-seconde)')
+      log('  à faire : regarder les planches, remplir title / look / dna / engine / konvwa dans references/catalog.json')
     }
   },
 }
 
 const fn = COMMANDS[cmd]
 if (!fn) {
-  log(`KONVWA motion engine\n\nCommandes :\n  types                  les scènes, transitions, sons et formats disponibles\n  new <nom> [--example=demo]   crée videos/<nom>/brief.json\n  check <projet>         valide le brief et affiche le calendrier + la loi des 3 secondes\n  vo <projet>            liste les voix à générer et celles déjà présentes\n  vo-save <projet> s01=<url> …   enregistre les voix générées (silences coupés)\n  build <projet>         génère le projet HyperFrames (image calée sur la voix, sons placés)\n  lint <projet>          hyperframes check\n  snap <projet> [--at=0.15,0.6,…]   captures aux instants donnés\n  render <projet> [--quality=looks|draft|delivery]\n  qa <projet> [rendu.mp4]   contrôle du rendu (format, son, énergie du hook…)\n  assets search pixabay "<requête>" [--type=photo|illustration|vector|video] [--orientation=portrait]   cherche des assets réels\n  assets get pixabay <id> --to=library/<dossier>/<nom> [--type=…]   télécharge (crédit dans library/CREDITS.md)\n  assets cutout <fichier> [sortie.png]   détoure (rembg, local)\n  assets need <projet>   liste des visuels à demander au client (cochée)\n  ref <video…>           analyse une vidéo de référence (coupes, son, planches)\n  hf <projet> <args…>    passe la main au CLI hyperframes`)
+  log(`KONVWA motion engine\n\nCommandes :\n  types                  les scènes, transitions, sons et formats disponibles\n  new <nom> [--example=demo]   crée videos/<nom>/brief.json\n  check <projet>         valide le brief et affiche le calendrier + la loi des 3 secondes\n  vo <projet>            liste les voix à générer et celles déjà présentes\n  vo-save <projet> s01=<url> …   enregistre les voix générées (silences coupés)\n  build <projet>         génère le projet HyperFrames (image calée sur la voix, sons placés)\n  lint <projet>          hyperframes check\n  snap <projet> [--at=0.15,0.6,…]   captures aux instants donnés\n  render <projet> [--quality=looks|draft|delivery]\n  qa <projet> [rendu.mp4]   contrôle du rendu (format, son, énergie du hook…)\n  assets search pixabay "<requête>" [--type=photo|illustration|vector|video] [--orientation=portrait]   cherche des assets réels\n  assets get pixabay <id> --to=library/<dossier>/<nom> [--type=…]   télécharge (crédit dans library/CREDITS.md)\n  assets cutout <fichier> [sortie.png]   détoure (rembg, local)\n  assets need <projet>   liste des visuels à demander au client (cochée)\n  ref [n]                références numérotées (sans argument : la liste ; avec un numéro : sa fiche)\n  ref add <video…> [--name=…]   ajoute une vidéo de référence (numéro suivant, planches, catalog.json)\n  hf <projet> <args…>    passe la main au CLI hyperframes`)
   process.exit(cmd ? 1 : 0)
 }
 fn()

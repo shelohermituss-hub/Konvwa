@@ -1,5 +1,5 @@
-// Reference analyser: drop a video you like into the engine and get what it is made of — length, cut rhythm, sound level, and two contact
-// sheets (the first 3 seconds frame by frame, and the whole video). The numbers feed docs/REFERENCES.md; the sheets are what a person (or
+// Reference analyser: drop a video you like into the engine and get what it is made of — length, cut rhythm, sound level, and three contact
+// sheets (the first 3 seconds frame by frame, the whole video, and a frame every half second so the motion can be studied without the video). The numbers feed docs/REFERENCES.md; the sheets are what a person (or
 // Claude) looks at to describe the style. Needs ffmpeg.
 import fs from 'node:fs'
 import path from 'node:path'
@@ -39,6 +39,7 @@ export function analyze(file, outDir) {
   }
   sheet(file, path.join(outDir, 'hook.png'), { from: 0, span: 3, step: 0.25, cols: 6, rows: 2 })
   sheet(file, path.join(outDir, 'all.png'), { step: Math.max(0.5, info.duration / frames), cols: 6, rows: 3 })
+  sheet(file, path.join(outDir, 'timeline.jpg'), { step: 0.5, cols: 8, rows: Math.ceil(info.duration / 0.5 / 8), width: 180 })
   fs.writeFileSync(path.join(outDir, 'analysis.json'), JSON.stringify(a, null, 2) + '\n')
   return a
 }

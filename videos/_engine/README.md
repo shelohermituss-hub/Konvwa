@@ -118,7 +118,7 @@ videos/_engine/
 - **Une scène** : `M.register('scene.mon-type', { kind, label, min, max, words, needs, sfx(spec, env), build(ctx) })` dans `runtime/scenes.js` (ou `hooks.js`). `build` ne touche qu'à `ctx.stage` et `ctx.tl` (un `<div>` et une timeline GSAP en pause) ; règle d'or : un élément = *un* `fromTo` d'entrée, tout le reste en `to`. Ajouter les classes dans `runtime/motion.css` (polices nommées explicitement). Un hook déclare aussi `legible(spec, env)`.
 - **Une marque** : copier `brands/konvwa.json` et son logo SVG, `"brand": "<id>"` dans le brief.
 - **Un son** : fichier dans `sfx/`, entrée dans `M.CUES` (`core.js`) avec `vol`, `dur`, `max`.
-- **Une référence** : `node $E ref video.mp4 --name=ref-g-xxx`, puis la décrire dans `docs/REFERENCES.md`.
+- **Une référence** : les vidéos du client sont numérotées (`node $E ref` pour la liste, `ref 4` pour une fiche). « Utilise la référence n° 4 » → `"reference": 4` dans le brief. Nouvelle vidéo : `node $E ref add video.mp4 --name=nom-court`, puis compléter sa fiche dans `references/catalog.json` (voir `docs/REFERENCES.md`).
 
 ## Limites connues
 

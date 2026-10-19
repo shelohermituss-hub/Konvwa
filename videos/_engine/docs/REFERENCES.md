@@ -1,17 +1,22 @@
 # Références de style — l'ADN des vidéos KONVWA
 
-Six vidéos de motion design fournies par le client ont servi de base. Les planches (`hook.png` = les 3 premières secondes image par image, `all.png` = vue d'ensemble) et les chiffres (`analysis.json`) sont dans `references/ref-*/`. Pour en ajouter une : `node videos/_engine/bin/motion.mjs ref <video.mp4> --name=ref-g-nom` puis décrire ce qu'on y voit ci-dessous.
+Les vidéos de motion design fournies par le client sont gardées dans un **catalogue numéroté**. Pour une nouvelle vidéo, il suffit de dire « utilise la référence n° 4 » (ou « réf. 2 et 4 ») : Claude lit la fiche, regarde les planches et applique l'ADN.
 
-| Réf. | Format | Durée | Coupes sèches | Ce que c'est | Hook du moteur qui s'en inspire |
-|---|---|---|---|---|---|
-| A `ref-a-tiktok-1` | 1:1 | 16 s | 2 | Pulsation verte qui se contracte en point, puis se déploie en widget d'interface (« ISS flyover ») avec halo bleu | `hook.pulse` |
-| B `ref-b-tiktok-2` | 9:16 | 19 s | 5 | Affiche éditoriale : photo détourée en noir et blanc, grand cercle rouge, micro-typo, QR, code-barres, mot géant en filigrane, gros mots blancs qui arrivent un par un | `hook.poster`, `scene.ghost` |
-| C `ref-c-tiktok-3` | 9:16 | 30 s | 1 | « Attention is expensive » : phrase noire, mot-clé en couleur avec glyphes ($) qui s'envolent ; aiguille d'horloge géante comme transition | `hook.statement`, `_serif italic_` |
-| D `ref-d-after-effects` | 9:16 | 7 s | 0 | Canette en vol avec ombre portée, ruban bleu qui balaie, titre en capitales + petit texte serif italique, cercle pointillé autour du produit suivant | `hook.product` |
-| E `ref-e-motion-anim` | 9:16 | 10 s | 0 | Texte qui se forme à partir de carrés pixel, lueur violette ; cartes d'interface qui glissent | `hook.pixel`, `scene.ui` |
-| F `ref-f-paypal` | 1:1 | 12 s | 5 | Logo qui claque sur la couleur de marque puis bascule (blanc → couleur) en icône d'app ; mots qui s'enchaînent | `hook.logo`, `hook.question` |
-| G `ref-g-recreate-ae` | 9:16 | 7 s | 0 | Canette en vol avec ombre, ruban bleu, « wacth how » serif italique au-dessus de RED BULL en capitales ; fond gris doux traversé d'**ombres de feuillage** (gobo) ; rangée de bols dans des **cercles pointillés** qui s'allument un par un, légendes serif italique | `scene.trio`, fond `gobo`, `hook.product` |
-| H `ref-h-vid-1017` | 1:1 | 16 s | 2 | Pulsation verte → widget sombre à halo ; liste de choix iOS avec icônes et curseur qui tape ; tracé sinueux suivi par un véhicule ; pilule « Help is on the way » | `hook.pulse`, `scene.ui` (et `tone: "danger"`), `scene.route` |
+- Catalogue : `references/catalog.json` (titre, description, ADN, pièces du moteur, usages KONVWA). **Un numéro donné ne change jamais**, une nouvelle vidéo prend le numéro suivant.
+- Planches : `references/<NN-nom>/` : `hook.png` (les 3 premières secondes, image par image), `all.png` (vue d'ensemble), `timeline.jpg` (une image toutes les 0,5 s, quand la vidéo source était disponible) et `analysis.json` (format, durée, coupes, son). Les vidéos sources ne sont pas versionnées (pas de `.mp4` dans le dépôt).
+- Commandes : `node videos/_engine/bin/motion.mjs ref` (la liste), `ref 4` (la fiche), `ref add <video.mp4> --name=<nom-court>` (ajoute la vidéo au numéro suivant, puis compléter sa fiche dans `catalog.json`).
+- Dans un brief : `"reference": 4` ou `"reference": [2, 4]` ; `check` refuse un numéro inconnu et rappelle la référence suivie.
+
+| N° | Dossier | Format | Durée | Coupes | Ce que c'est | Pièces du moteur |
+|---|---|---|---|---|---|---|
+| 1 | `01-pulse-interface` | 1:1 | 16 s | 2 | Pulsation verte → widget sombre à halo ; liste de choix iOS avec icônes et curseur qui tape ; tracé sinueux suivi par un véhicule ; pilule « Help is on the way » | `hook.pulse`, `scene.ui` (et `tone: "danger"`), `scene.route` |
+| 2 | `02-affiche-editoriale` | 9:16 | 19 s | 5 | Affiche éditoriale : photo détourée en noir et blanc, grand cercle rouge, micro-typo, QR, code-barres, mot géant en filigrane, gros mots blancs qui arrivent un par un | `hook.poster`, `hook.collage`, `scene.ghost`, `scene.photo` |
+| 3 | `03-mot-cle-couleur` | 9:16 | 30 s | 1 | « Attention is expensive » : phrase noire, mot-clé en couleur avec glyphes ($) qui s'envolent ; aiguille d'horloge géante comme transition ; hexagones légendés, pilules d'avantages | `hook.statement`, `_serif italic_`, `scene.callouts`, `scene.chips` |
+| 4 | `04-produit-en-vol` | 9:16 | 7 s | 0 | Canette en vol avec ombre, ruban bleu, « wacth how » serif italique au-dessus de RED BULL en capitales ; fond gris doux traversé d'**ombres de feuillage** (gobo) ; bols dans des **cercles pointillés** qui s'allument un par un | `hook.product`, `scene.trio`, `scene.guess`, fond `gobo` |
+| 5 | `05-pixels-violet` | 9:16 | 10 s | 0 | Texte qui se forme à partir de carrés pixel, lueur violette ; cartes d'interface qui glissent ; bascule nuit → jour ; pilule « few spots left… » | `hook.pixel`, `scene.ui`, `scene.chips` |
+| 6 | `06-logo-carte-monde` | 1:1 | 12 s | 5 | Logo qui claque sur la couleur de marque puis devient icône d'app ; mots tapés avec curseur ; carte du monde avec avatars et pointillés ; notifications sur iPhone | `hook.logo`, `hook.question`, `scene.route`, `scene.ui` |
+
+Les anciennes lettres A à F correspondent aux numéros 1 à 6. G et H étaient des doublons de D et A (mêmes fichiers) : ils sont fusionnés dans les n° 4 et 1.
 
 ## Ce qu'elles ont toutes en commun
 

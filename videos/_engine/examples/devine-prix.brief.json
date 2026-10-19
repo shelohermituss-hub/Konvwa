@@ -2,6 +2,7 @@
   "name": "devine-prix",
   "title": "Devinez le prix — modèle de série (remplacer produit, prix, date, épisode)",
   "format": "9:16",
+  "reference": 4,
   "theme": "light",
   "brand": "konvwa",
   "seed": 21,

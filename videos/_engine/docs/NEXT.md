@@ -4,7 +4,7 @@
 
 ## Constat du client (à ne pas perdre de vue)
 
-La démo `videos/motion-demo` (22 s) est jugée **plate** : presque que du texte et des formes, « sans vrai motion design ». Les six références (`references/ref-*/hook.png`, `all.png`) sont puissantes grâce à de **vraies images détourées empilées en profondeur** (photo N&B + grand cercle de couleur, canette en vol avec ombre, widgets d'interface, aiguille d'horloge géante comme transition…), des objets qui traversent l'écran d'une scène à l'autre et une typographie mêlée à l'image. Le client veut des vidéos « comme celles-là », avec de vraies illustrations et de vraies images.
+La démo `videos/motion-demo` (22 s) est jugée **plate** : presque que du texte et des formes, « sans vrai motion design ». Les six références (`references/NN-*/hook.png`, `all.png`) sont puissantes grâce à de **vraies images détourées empilées en profondeur** (photo N&B + grand cercle de couleur, canette en vol avec ombre, widgets d'interface, aiguille d'horloge géante comme transition…), des objets qui traversent l'écran d'une scène à l'autre et une typographie mêlée à l'image. Le client veut des vidéos « comme celles-là », avec de vraies illustrations et de vraies images.
 
 Conclusion : il faut **(1) des assets réels** et **(2) de nouvelles mises en scène dans le moteur** qui les exploitent. Les assets seuls ne suffisent pas.
 

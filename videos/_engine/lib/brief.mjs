@@ -44,6 +44,8 @@ export function loadBrief(input) {
     sfx: { level: 1, ...(raw.sfx || {}) },
     scenes: (raw.scenes || []).map((s) => ({ ...s })),
     needs: Array.isArray(raw.needs) ? raw.needs : [],
+    // Numbers from references/catalog.json whose DNA this video follows ("reference": 4 or [2, 4]).
+    references: [raw.reference ?? []].flat(),
   }
   brief.voice.direction = brief.voice.direction || VOICE_STYLES[brief.voice.style] || VOICE_STYLES.punchy
   return { brief, brand }
