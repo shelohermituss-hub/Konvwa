@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Rush « studio » — montage façon référence J</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Le rush du client (face caméra, sa voix d'origine) monté avec la grammaire de la référence J (_engine/references/ref-j-montage) :
+      recadrages sautés sur les mots (zoom 1 → 1,18), titre en haut au début et mot final en haut à la fin, sous-titres un mot fort à la
+      fois (petits mots au-dessus), mots-clés en italique dégradé lumineux, flash rouge, passage au noir où les mots arrivent seuls pendant
+      que la voix continue, insert qui monte du bas (détail du studio pris dans le même rush), flash blanc chaud avant la fin.
+      Étalonnage (chaud orange / bleu-vert, ombres écrasées, vignette, grain) fait une fois dans assets/clips (voir README.md).
+    -->
+    <style>
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #000; font-family: "Poppins", sans-serif; }
+      #cam { position: absolute; inset: 0; overflow: hidden; transform-origin: 50% 42%; }
+      #cam video { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      #black { position: absolute; inset: 0; background: #000; z-index: 5; opacity: 0; }
+
+      .cap { position: absolute; left: 40px; right: 40px; top: 1330px; display: flex; flex-direction: column; align-items: center; opacity: 0; z-index: 20; }
+      .cap.mid { top: 880px; }
+      .cap.up { top: 1130px; }
+      .cap .s { font-weight: 600; font-size: 42px; line-height: 1; color: #fff; letter-spacing: -0.01em; margin-bottom: -2px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 4px 18px rgba(0, 0, 0, 0.6); }
+      .cap .b { font-weight: 800; line-height: 1.02; color: #fff; letter-spacing: -0.035em; white-space: nowrap; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 8px 34px rgba(0, 0, 0, 0.5); }
+      /* the gradient sits on the innermost element, the glow on a parent that is never animated */
+      .gtext { font-style: italic; background: linear-gradient(180deg, #FFE6D2 0%, #FF8A4C 38%, #F05A28 62%, #C23010 100%); -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0 0.08em; }
+      .glow { filter: drop-shadow(0 0 22px rgba(240, 90, 40, 0.75)) drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5)); }
+      .cap .b.key { text-shadow: none; }
+
+      .title { position: absolute; left: 0; right: 0; top: 290px; display: flex; flex-direction: column; align-items: center; z-index: 22; }
+      .title .t1 { font-weight: 800; font-size: 50px; letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap; }
+      .title .t2 { font-weight: 900; font-size: 170px; line-height: 1.15; letter-spacing: -0.04em; text-transform: uppercase; white-space: nowrap; }
+      .title span { display: inline-block; padding: 0 0.02em 0 0; line-height: 1.15; }
+
+      .insert { position: absolute; left: 0; right: 0; top: 1312px; height: 608px; z-index: 14; overflow: hidden; border-top: 4px solid rgba(255, 255, 255, 0.85); box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.55); }
+      .insert video { position: absolute; left: 0; top: 0; width: 1080px; height: 608px; object-fit: cover; }
+
+      .flash { position: absolute; inset: 0; z-index: 40; opacity: 0; }
+      .flash.red { background: radial-gradient(ellipse at 50% 40%, rgba(255, 70, 30, 0.55) 0%, rgba(200, 20, 10, 0.92) 70%); mix-blend-mode: screen; }
+      .flash.warm { background: radial-gradient(ellipse at 40% 30%, #FFFFFF 0%, #FFE9B0 35%, #FFB347 75%, #F07A28 100%); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12.1" data-width="1080" data-height="1920">
+      <!-- the rush keeps its own sound: the person's real voice -->
+      <div id="cam"><video id="rush" class="clip" src="assets/clips/rush.mp4" playsinline data-has-audio="true" data-start="0" data-duration="12.1" data-track-index="1" data-volume="1"></video></div>
+      <div id="black"></div>
+      <div class="insert" id="insert"><video id="neon" class="clip" src="assets/clips/neon.mp4" muted playsinline data-start="7.1" data-media-start="7.1" data-duration="1.9" data-track-index="2"></video></div>
+
+      <div class="title glow" id="title"><div class="t1" id="t1"></div><div class="t2" id="t2"></div></div>
+      <div class="title glow" id="cta"><div class="t2" id="c2"></div></div>
+      <div id="caps"></div>
+
+      <div class="flash red" id="fl-red"></div>
+      <div class="flash warm" id="fl-warm"></div>
+
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="12.1" data-track-index="11" data-volume="0.07"></audio>
+      <audio id="sx1" src="assets/sfx/whoosh-short.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx2" src="assets/sfx/whoosh-short.mp3" data-start="1.26" data-duration="0.57" data-track-index="21" data-volume="0.26"></audio>
+      <audio id="sx3" src="assets/sfx/impact-bass-2.mp3" data-start="2.14" data-duration="1.2" data-track-index="22" data-volume="0.42"></audio>
+      <audio id="sx4" src="assets/sfx/glitch-3.mp3" data-start="2.14" data-duration="0.3" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx5" src="assets/sfx/whoosh-short.mp3" data-start="3.79" data-duration="0.57" data-track-index="20" data-volume="0.26"></audio>
+      <audio id="sx6" src="assets/sfx/impact-bass-1.mp3" data-start="4.48" data-duration="1.4" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx7" src="assets/sfx/whoosh-short.mp3" data-start="6.09" data-duration="0.57" data-track-index="22" data-volume="0.26"></audio>
+      <audio id="sx8" src="assets/sfx/whoosh.mp3" data-start="7.1" data-duration="0.57" data-track-index="20" data-volume="0.32"></audio>
+      <audio id="sx9" src="assets/sfx/pop.mp3" data-start="8.26" data-duration="0.72" data-track-index="23" data-volume="0.28"></audio>
+      <audio id="sx10" src="assets/sfx/riser.mp3" data-start="9.5" data-duration="0.5" data-track-index="21" data-volume="0.26"></audio>
+      <audio id="sx11" src="assets/sfx/whoosh.mp3" data-start="10.0" data-duration="0.57" data-track-index="22" data-volume="0.36"></audio>
+      <audio id="sx12" src="assets/sfx/impact-bass-2.mp3" data-start="10.18" data-duration="1.4" data-track-index="20" data-volume="0.38"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 12.1
+
+        // ---------- jump cuts: the framing jumps on the words (wide / tight), with a slow push in between ----------
+        const FRAMING = [[0, 1.0], [1.26, 1.18], [2.14, 1.0], [3.79, 1.14], [6.09, 1.0], [7.23, 1.2], [8.84, 1.06], [10.0, 1.0], [10.18, 1.22]]
+        FRAMING.forEach(([at, s], i) => {
+          const next = i + 1 < FRAMING.length ? FRAMING[i + 1][0] : END
+          tl.set('#cam', { scale: s, x: s > 1 ? (i % 2 ? -24 : 24) : 0 }, at)
+          tl.to('#cam', { scale: s + 0.035, duration: Math.max(0.1, next - at), ease: 'none' }, at)
+        })
+
+        // ---------- title at the start, last words big at the end ----------
+        const letters = (box, text) => Array.from(text).map((ch) => el('span', 'gtext', ch === ' ' ? ' ' : ch, box))
+        ;[...letters($('t1'), 'Yon'), ...letters($('t2'), 'Studio')].forEach((s, i) => tl.fromTo(s, { opacity: 0, y: -30, scale: 1.6, filter: blur(14) }, { opacity: 1, y: 0, scale: 1, filter: blur(0), duration: 0.32, ease: 'back.out(2)' }, 0.04 + i * 0.05))
+        tl.set('#title', { opacity: 0 }, 2.14)
+        gsap.set('#cta', { opacity: 0 })
+        tl.set('#cta', { opacity: 1 }, 10.18)
+        letters($('c2'), 'Tout bèl').forEach((s, i) => tl.fromTo(s, { opacity: 0, scale: 2.2, rotation: i % 2 ? 10 : -10, filter: blur(16) }, { opacity: 1, scale: 1, rotation: 0, filter: blur(0), duration: 0.36, ease: 'back.out(2.4)' }, 10.2 + i * 0.05))
+        tl.to('#c2', { scale: 1.05, duration: 0.45, ease: 'sine.inOut', yoyo: true, repeat: 3 }, 10.8)
+
+        // ---------- captions: one strong word at a time, little words above. DRAFT text, timed on the person's voice ----------
+        // [small words, strong word, start (s), style]
+        const CAPS = [
+          ['Nan', 'lojik', 0.0], ['', 'konsa', 1.26, 'key'], ['kòman', 'nou', 2.14], ['ki', 'pwodwi', 2.87], ['', 'di', 3.65], ['', 'pwense ?', 3.79],
+          ['', 'seksyon', 4.48, 'black'], ['', 'nou', 5.13, 'black'], ['', 'la a', 5.43, 'black key'],
+          ['me ki', 'nou', 5.9], ['', 'fè', 6.38], ['ti', 'yon', 6.67], ['', 'studio', 7.23, 'key'], ['ki', 'pèfòman', 7.8, 'key'],
+          ['pou', 'detay', 8.84], ['lè', 'tout', 9.61], ['', 'a bèl.', 10.18],
+        ]
+        const caps = $('caps')
+        CAPS.forEach(([small, big, at, style = ''], i) => {
+          const end = Math.min(i + 1 < CAPS.length ? CAPS[i + 1][2] : 11.3, END)
+          const black = style.includes('black')
+          const key = style.includes('key')
+          // above the insert while it is on screen
+          const up = at >= 7.1 && at < 8.7
+          const c = el('div', 'cap' + (black ? ' mid' : '') + (up ? ' up' : '') + (key ? ' glow' : ''), null, caps)
+          if (small) el('div', 's', small, c)
+          const b = el('div', 'b' + (key ? ' key' : ''), key ? null : big, c)
+          if (key) el('span', 'gtext', big, b)
+          b.style.fontSize = Math.round(Math.min(black && !key ? 80 : key ? 150 : 128, 1000 / (Array.from(big).length * 0.6))) + 'px'
+          tl.set(c, { opacity: 1 }, at)
+          tl.fromTo(b, { scale: key ? 1.7 : 1.3, filter: blur(key ? 16 : 10) }, { scale: 1, filter: blur(0), duration: key ? 0.26 : 0.16, ease: 'power3.out' }, at)
+          if (small) tl.fromTo(c.firstChild, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.14, ease: 'power2.out' }, at)
+          tl.set(c, { opacity: 0 }, end)
+        })
+
+        // ---------- red flash, the cut to black (the voice keeps going), the insert, the warm flash ----------
+        tl.fromTo('#fl-red', { opacity: 0.95 }, { opacity: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, 2.14)
+        tl.set('#black', { opacity: 1 }, 4.48)
+        tl.set('#black', { opacity: 0 }, 5.9)
+        tl.fromTo('#black', { x: 0 }, { x: 14, duration: 0.04, yoyo: true, repeat: 5, ease: 'none' }, 5.43)
+        tl.fromTo('#insert', { yPercent: 100 }, { yPercent: 0, duration: 0.4, ease: 'expo.out' }, 7.1)
+        tl.to('#insert', { yPercent: 100, duration: 0.3, ease: 'power3.in' }, 8.7)
+        tl.fromTo('#fl-warm', { opacity: 1 }, { opacity: 0, duration: 0.42, ease: 'power2.out', immediateRender: false }, 10.0)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
