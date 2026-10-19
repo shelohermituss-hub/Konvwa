@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>KONVWA — « Écrivez LIEN »</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Montage copié de la référence J (videos/_engine/references/ref-j-montage, docs/REFERENCES.md) : plans de 1 à 2,5 s coupés sec
+      avec un coup de zoom à chaque coupe, sous-titres mot par mot (petits mots de liaison au-dessus du mot fort), mots-clés en italique
+      dégradé orange lumineux, titre en haut au début et appel à l'action en haut à la fin, flash rouge, écran noir où les mots arrivent
+      seuls, panneau « avant / avec » qui descend, insert qui monte du bas, flash blanc chaud avant la fin. Étalonnage chaud orange /
+      ombres bleu-vert, vignette et grain : fait une fois pour toutes dans les clips (ffmpeg, voir README.md).
+    -->
+    <style>
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #000; font-family: "Poppins", sans-serif; }
+      .shot { position: absolute; inset: 0; overflow: hidden; }
+      .shot video { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      .layer { position: absolute; inset: 0; pointer-events: none; }
+      .black { background: #000; }
+
+      .cap { position: absolute; left: 40px; right: 40px; top: 1060px; display: flex; flex-direction: column; align-items: center; opacity: 0; z-index: 20; }
+      .cap.mid { top: 850px; }
+      .cap .s { font-weight: 600; font-size: 42px; line-height: 1; color: #fff; letter-spacing: -0.01em; margin-bottom: -2px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 4px 18px rgba(0, 0, 0, 0.6); }
+      .cap .b { font-weight: 800; line-height: 1.02; color: #fff; letter-spacing: -0.035em; white-space: nowrap; text-shadow: 0 8px 34px rgba(0, 0, 0, 0.5); }
+      /* the gradient sits on the innermost element (letters or word), the glow on a parent that is never animated */
+      .gtext { font-style: italic; background: linear-gradient(180deg, #FFE6D2 0%, #FF8A4C 38%, #F05A28 62%, #C23010 100%); -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0 0.08em; }
+      .glow { filter: drop-shadow(0 0 22px rgba(240, 90, 40, 0.75)) drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5)); }
+      .cap .b.key { text-shadow: none; }
+
+      .title { position: absolute; left: 0; right: 0; top: 300px; display: flex; flex-direction: column; align-items: center; z-index: 22; }
+      .title .t1 { font-weight: 800; font-size: 46px; letter-spacing: 0.02em; text-transform: uppercase; }
+      .title .t2 { font-weight: 900; font-size: 150px; line-height: 0.92; letter-spacing: -0.04em; text-transform: uppercase; font-style: normal; }
+      .title .t1, .title .t2 { white-space: nowrap; }
+      .title .t1 span, .title .t2 span { display: inline-block; padding: 0; }
+      .title .t2 span { padding-right: 0.02em; }
+
+      .panel { position: absolute; left: 0; right: 0; top: 0; height: 860px; z-index: 15; background: linear-gradient(180deg, #F4F4F4 0%, #E9E9E9 70%, rgba(233, 233, 233, 0) 100%); display: flex; justify-content: center; gap: 70px; padding-top: 250px; box-sizing: border-box; }
+      .card { width: 330px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+      .card b { font-weight: 700; font-size: 26px; letter-spacing: 0.22em; color: #161616; }
+      .card .frame { width: 330px; height: 470px; border-radius: 26px; overflow: hidden; background: #fff; box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28); border: 6px solid #161616; box-sizing: border-box; }
+      .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .card.before img { filter: grayscale(1) contrast(1.05) brightness(0.92); }
+      .card.after img { object-position: top; }
+      .card.after b { color: #E2501D; }
+
+      .insert { position: absolute; left: 0; right: 0; top: 1312px; height: 608px; z-index: 14; overflow: hidden; border-top: 4px solid rgba(255, 255, 255, 0.85); box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.55); }
+      .insert video { position: absolute; left: 0; top: 0; width: 1080px; height: 608px; object-fit: cover; }
+
+      .icon { position: absolute; left: 50%; top: 1250px; width: 150px; height: 150px; margin-left: -75px; border-radius: 34px; background: #fff; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 21; opacity: 0; }
+      .icon svg { width: 118px; height: 78px; }
+      .icon img { width: 100%; height: 100%; object-fit: cover; }
+
+      .flash { position: absolute; inset: 0; z-index: 40; opacity: 0; }
+      .flash.red { background: radial-gradient(ellipse at 50% 40%, rgba(255, 70, 30, 0.55) 0%, rgba(200, 20, 10, 0.92) 70%); mix-blend-mode: screen; }
+      .flash.warm { background: radial-gradient(ellipse at 40% 30%, #FFFFFF 0%, #FFE9B0 35%, #FFB347 75%, #F07A28 100%); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="13.1" data-width="1080" data-height="1920">
+      <!-- Plans (fichiers déjà recadrés en 9:16 et étalonnés). Le cadre .shot est animé (zooms), la vidéo porte le temps. -->
+      <div class="shot" id="w1"><video id="v1" class="clip" src="assets/clips/a1.mp4" muted playsinline data-start="0" data-duration="2.05" data-track-index="1"></video></div>
+      <div class="shot" id="w2"><video id="v2" class="clip" src="assets/clips/b1.mp4" muted playsinline data-start="2.05" data-duration="1.03" data-track-index="2"></video></div>
+      <div class="shot black" id="w3"></div>
+      <div class="shot" id="w4"><video id="v4" class="clip" src="assets/clips/c1.mp4" muted playsinline data-start="4.08" data-duration="1.17" data-track-index="1"></video></div>
+      <div class="shot" id="w5"><video id="v5" class="clip" src="assets/clips/a2.mp4" muted playsinline data-start="5.25" data-duration="2.67" data-track-index="2"></video></div>
+      <div class="shot" id="w6"><video id="v6" class="clip" src="assets/clips/d1.mp4" muted playsinline data-start="7.92" data-duration="2.43" data-track-index="1"></video></div>
+      <div class="shot" id="w7"><video id="v7" class="clip" src="assets/clips/b2.mp4" muted playsinline data-start="10.35" data-duration="2.75" data-track-index="2"></video></div>
+
+      <div class="insert" id="insert"><video id="vins" class="clip" src="assets/clips/ins1.mp4" muted playsinline data-start="5.9" data-duration="1.75" data-track-index="3"></video></div>
+
+      <div class="panel" id="panel">
+        <div class="card before"><b>AVANT</b><div class="frame"><img src="assets/img/avant-papiers.jpg" alt="" /></div></div>
+        <div class="card after"><b>AVEC KONVWA</b><div class="frame"><img src="assets/img/demande-devis.png" alt="" /></div></div>
+      </div>
+
+      <div class="title glow" id="title"><div class="t1" id="t1"></div><div class="t2" id="t2"></div></div>
+      <div class="title" id="cta"><div class="t1" id="c1" style="color: #fff">Écrivez en commentaire</div><div class="t2 glow" id="c2"></div></div>
+
+      <div class="icon" id="ic-k"><img src="assets/img/konvwa-logo.svg" alt="" style="object-fit: contain; padding: 26px; box-sizing: border-box" /></div>
+      <div class="icon" id="ic-m"><img src="assets/img/moncash.jpg" alt="" /></div>
+      <div id="caps"></div>
+
+      <div class="flash red" id="fl-red"></div>
+      <div class="flash warm" id="fl-warm"></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Puck » (fr-FR), texte KONVWA. Musique : ElevenLabs (projet diaspora-argent). Sons : videos/_engine/sfx. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.1" data-duration="12.5" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="13.1" data-track-index="11" data-volume="0.13"></audio>
+      <audio id="sx1" src="assets/sfx/whoosh-short.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sx2" src="assets/sfx/impact-bass-2.mp3" data-start="2.05" data-duration="1.2" data-track-index="21" data-volume="0.5"></audio>
+      <audio id="sx3" src="assets/sfx/glitch-3.mp3" data-start="2.05" data-duration="0.35" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx4" src="assets/sfx/whoosh.mp3" data-start="2.3" data-duration="0.57" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sx5" src="assets/sfx/click-soft.mp3" data-start="3.08" data-duration="0.37" data-track-index="22" data-volume="0.34"></audio>
+      <audio id="sx6" src="assets/sfx/impact-bass-1.mp3" data-start="3.28" data-duration="1.4" data-track-index="23" data-volume="0.5"></audio>
+      <audio id="sx7" src="assets/sfx/whoosh-short.mp3" data-start="4.08" data-duration="0.57" data-track-index="20" data-volume="0.34"></audio>
+      <audio id="sx8" src="assets/sfx/pop.mp3" data-start="4.22" data-duration="0.72" data-track-index="21" data-volume="0.36"></audio>
+      <audio id="sx9" src="assets/sfx/whoosh-short.mp3" data-start="5.25" data-duration="0.57" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx10" src="assets/sfx/whoosh.mp3" data-start="5.9" data-duration="0.57" data-track-index="20" data-volume="0.36"></audio>
+      <audio id="sx11" src="assets/sfx/whoosh-short.mp3" data-start="7.92" data-duration="0.57" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx12" src="assets/sfx/pop.mp3" data-start="9.76" data-duration="0.72" data-track-index="22" data-volume="0.36"></audio>
+      <audio id="sx13" src="assets/sfx/riser.mp3" data-start="9.9" data-duration="0.5" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx14" src="assets/sfx/whoosh.mp3" data-start="10.35" data-duration="0.57" data-track-index="20" data-volume="0.42"></audio>
+      <audio id="sx15" src="assets/sfx/impact-bass-2.mp3" data-start="10.79" data-duration="1.4" data-track-index="21" data-volume="0.46"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+
+        // ---------- shots: hard cut, a punch-in on the cut, a slow push while held ----------
+        const shots = [['w1', 0, 2.05], ['w2', 2.05, 3.08], ['w3', 3.08, 4.08], ['w4', 4.08, 5.25], ['w5', 5.25, 7.92], ['w6', 7.92, 10.35], ['w7', 10.35, 13.1]]
+        shots.forEach(([id, a, b], i) => {
+          const w = $(id)
+          gsap.set(w, { autoAlpha: 0, zIndex: 1 + i })
+          tl.set(w, { autoAlpha: 1 }, a)
+          if (b < 13.1) tl.set(w, { autoAlpha: 0 }, b)
+          if (id === 'w3') return
+          tl.fromTo(w, { scale: 1.16 }, { scale: 1.02, duration: 0.32, ease: 'expo.out' }, a)
+          tl.to(w, { scale: 1.08, duration: Math.max(0.2, b - a - 0.32), ease: 'none' }, a + 0.32)
+        })
+        // jump-zooms on the hard words (the reference punches in mid-shot)
+        const jump = (id, at, s) => { tl.to($(id), { scale: s, duration: 0.08, ease: 'power2.out' }, at); tl.to($(id), { scale: s + 0.03, duration: 0.6, ease: 'none' }, at + 0.08) }
+        jump('w1', 1.35, 1.22)
+        jump('w6', 8.69, 1.2)
+        jump('w7', 10.79, 1.2)
+
+        // ---------- top title (start) and call to action (end): letters pop in, dégradé orange ----------
+        const letters = (box, text) => Array.from(text).map((ch) => el('span', 'gtext', ch === ' ' ? '\u00a0' : ch, box))
+        const t1 = letters($('t1'), 'Pourquoi vous payez')
+        const t2 = letters($('t2'), 'trop cher')
+        ;[...t1, ...t2].forEach((s, i) => tl.fromTo(s, { opacity: 0, y: -30, scale: 1.6, filter: blur(14) }, { opacity: 1, y: 0, scale: 1, filter: blur(0), duration: 0.32, ease: 'back.out(2)' }, 0.04 + i * 0.03))
+        tl.to($('title'), { opacity: 0, duration: 0.01 }, 2.05)
+        gsap.set($('cta'), { opacity: 0 })
+        tl.set($('cta'), { opacity: 1 }, 10.79)
+        tl.fromTo($('c1'), { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.25, ease: 'power3.out' }, 10.79)
+        letters($('c2'), 'LIEN').forEach((s, i) => tl.fromTo(s, { opacity: 0, scale: 2.2, rotation: i % 2 ? 10 : -10, filter: blur(16) }, { opacity: 1, scale: 1, rotation: 0, filter: blur(0), duration: 0.36, ease: 'back.out(2.4)' }, 10.82 + i * 0.06))
+        tl.to($('c2'), { scale: 1.06, duration: 0.5, ease: 'sine.inOut', yoyo: true, repeat: 3 }, 11.4)
+
+        // ---------- captions: one strong word at a time, the little words above it ----------
+        // [small words, strong word, start (s), style]  — times = voice word timings + 0.1 s (the voice starts at 0.1 s)
+        const CAPS = [
+          ['Si vos', 'achats', 0.15], ['en', 'ligne', 0.61], ['vous', 'coûtent', 0.93], ['trop', 'cher', 1.35, 'key'],
+          ["c'est", 'peut-être', 1.89], ['que vous', 'passez', 2.43], ['', 'encore', 2.77],
+          ['', 'par', 3.08, 'black'], ['', 'des', 3.15, 'black'], ['', 'intermédiaires.', 3.28, 'black key'],
+          ['avec', 'KONVWA', 4.08, 'key'], ['vous', 'collez', 5.2], ['le', 'lien', 5.84], ['', 'Shein', 6.26], ['', 'Temu', 6.75], ['ou', 'Alibaba', 7.03],
+          ['vous', 'voyez', 7.82], ['le prix', 'final', 8.18], ['en', 'gourdes', 8.69, 'key'], ['et vous', 'payez', 9.07], ['par', 'MonCash', 9.66, 'key'],
+          ['', 'écrivez', 10.44], ['le', 'lien', 10.79], ['en', 'commentaire', 11.06], ['et je vous', 'envoie', 11.58], ['', "l'app.", 12.19],
+        ]
+        const caps = $('caps')
+        CAPS.forEach(([small, big, at, style = ''], i) => {
+          const end = i + 1 < CAPS.length ? CAPS[i + 1][2] : 13.1
+          const black = style.includes('black')
+          const key = style.includes('key')
+          const c = el('div', 'cap' + (black ? ' mid' : '') + (key ? ' glow' : ''), null, caps)
+          if (small) el('div', 's', small, c)
+          const b = el('div', 'b' + (key ? ' key' : ''), key ? null : big, c)
+          if (key) el('span', 'gtext', big, b)
+          const size = Math.round(Math.min(black && !key ? 70 : key ? 150 : 128, 1000 / (Array.from(big).length * 0.6)))
+          b.style.fontSize = size + 'px'
+          tl.set(c, { opacity: 1 }, at)
+          tl.fromTo(b, { scale: key ? 1.7 : 1.3, filter: blur(key ? 16 : 10) }, { scale: 1, filter: blur(0), duration: key ? 0.26 : 0.16, ease: 'power3.out' }, at)
+          if (small) tl.fromTo(c.firstChild, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.14, ease: 'power2.out' }, at)
+          tl.set(c, { opacity: 0 }, end)
+        })
+        // the black screen word lands with a shake
+        tl.fromTo('#w3', { x: 0 }, { x: 14, duration: 0.04, yoyo: true, repeat: 5, ease: 'none' }, 3.28)
+
+        // ---------- red flash on the first cut, warm white flash before the call to action ----------
+        tl.fromTo('#fl-red', { opacity: 0.95 }, { opacity: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, 2.05)
+        tl.fromTo('#fl-warm', { opacity: 1 }, { opacity: 0, duration: 0.42, ease: 'power2.out', immediateRender: false }, 10.35)
+
+        // ---------- « avant / avec KONVWA » panel drops from the top, gone on the cut to black ----------
+        tl.fromTo('#panel', { yPercent: -100 }, { yPercent: 0, duration: 0.42, ease: 'expo.out' }, 2.3)
+        tl.fromTo('.card.after', { scale: 0.9 }, { scale: 1.04, duration: 0.6, ease: 'back.out(1.6)' }, 2.6)
+        tl.set('#panel', { autoAlpha: 0 }, 3.08)
+
+        // ---------- insert slides up from the bottom (the reference's screen strip) ----------
+        tl.fromTo('#insert', { yPercent: 100 }, { yPercent: 0, duration: 0.4, ease: 'expo.out' }, 5.9)
+        tl.to('#insert', { yPercent: 100, duration: 0.3, ease: 'power3.in' }, 7.35)
+
+        // ---------- app icons pop under the strong word ----------
+        const pop = (id, a, b) => { tl.fromTo($(id), { opacity: 0, scale: 0.3, rotation: -18, y: 40 }, { opacity: 1, scale: 1, rotation: 0, y: 0, duration: 0.4, ease: 'back.out(2.2)' }, a); tl.set($(id), { opacity: 0 }, b) }
+        pop('ic-k', 4.2, 5.2)
+        pop('ic-m', 9.76, 10.35)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
