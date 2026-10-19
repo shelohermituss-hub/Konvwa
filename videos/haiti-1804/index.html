@@ -17,6 +17,9 @@
       #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #1A1A1A; }
       #world { position: absolute; inset: 0; }
       .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .top { position: absolute; left: 0; right: 0; top: 96px; display: flex; align-items: center; justify-content: center; gap: 16px; z-index: 30; }
+      .top img { width: 84px; height: 55px; }
+      .top b { font-weight: 800; font-size: 44px; letter-spacing: 0.04em; color: #C23010; }
       .mark { position: absolute; left: 0; right: 0; top: 1640px; text-align: center; font-weight: 700; font-size: 46px; letter-spacing: -0.01em; color: #848484; z-index: 30; }
 
       .block { position: absolute; left: 60px; right: 60px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
@@ -40,7 +43,9 @@
 
       .ring { width: 640px; height: 640px; border-radius: 50%; box-shadow: inset 0 0 0 64px #EFEFEF, inset 0 0 0 66px rgba(0, 0, 0, 0.05), 0 40px 80px rgba(0, 0, 0, 0.12), inset 0 20px 50px rgba(0, 0, 0, 0.06); background: radial-gradient(circle, #E9E9E9 52%, #F1F1F1 53%); }
       .orbit { position: absolute; inset: 0; }
-      .chip { position: absolute; padding: 12px 26px; border-radius: 999px; background: #fff; font-weight: 600; font-size: 32px; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); white-space: nowrap; }
+      .good { position: absolute; width: 220px; display: flex; flex-direction: column; align-items: center; }
+      .good img { height: 150px; width: auto; max-width: 210px; object-fit: contain; filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.18)); }
+      .chip { margin-top: -6px; padding: 10px 24px; border-radius: 999px; background: #fff; font-weight: 700; font-size: 30px; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); white-space: nowrap; }
       .center-year { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 120px; letter-spacing: -0.05em; }
 
       .bar { width: 760px; }
@@ -100,6 +105,7 @@
 
         <div id="blocks"></div>
       </div>
+      <div class="top"><img src="assets/img/konvwa-logo.svg" alt="" /><b>KONVWA</b></div>
       <div class="mark">konvwa.shop</div>
       <div id="veil"></div>
 
@@ -158,6 +164,9 @@
           { y: 520, lines: [[84, 84, 'm'], [85, 85, 'cta'], [86, 87, 's']] },
           { y: 470, lines: [[88, 89, 's'], [90, 90, 'b'], [92, 94, 's']] },
         ]
+        // the big, bold and italic words settle in KONVWA orange (a touch deeper than #F05A28 to keep 3:1 on the grey), the rest in ink
+        const ORANGE = '#E2501D'
+        const KEY = ['b', 'bi', 'mi', 'x', 'cta']
         const blocksBox = $('blocks')
         BLOCKS.forEach((B, bi) => {
           const first = B.lines[0][0]
@@ -181,7 +190,7 @@
               const w = el('span', 'w', WORDS[k], line)
               // each word lands blurred and pale, then settles in ink (reference K)
               tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 10, filter: blur(8) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.22, ease: 'power2.out' }, T[k])
-              tl.to(w, { color: '#1A1A1A', duration: 0.35, ease: 'power1.out' }, T[k] + 0.12)
+              tl.to(w, { color: KEY.includes(st) ? ORANGE : '#1A1A1A', duration: 0.35, ease: 'power1.out' }, T[k] + 0.12)
             }
           })
           if (end < END) tl.to(box, { autoAlpha: 0, filter: blur(10), y: -16, duration: 0.18, ease: 'power2.in' }, end - 0.18)
@@ -211,15 +220,20 @@
         hide(['#o-dess', '#o-napo', '#o-tile'], MORPHS[0])
 
         // 1791: the ring of riches turns slowly around the year
-        const goods = ['Sucre', 'Café', 'Indigo', 'Coton', 'Sucre', 'Café']
+        // the four riches (client's illustrations) sit on the ring and stay upright while it turns
+        const goods = [['Sucre', 'sucre'], ['Café', 'cafe'], ['Indigo', 'indigo'], ['Coton', 'coton']]
         const orbit = $('orbit')
-        goods.forEach((g, i) => {
-          const a = (i / goods.length) * Math.PI * 2
-          const c = el('div', 'chip', g, orbit)
-          c.style.left = Math.round(320 + Math.cos(a) * 290 - 60) + 'px'
-          c.style.top = Math.round(320 + Math.sin(a) * 290 - 28) + 'px'
-          tl.fromTo(c, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' }, T[18] + i * 0.12)
-          tl.to(c, { rotation: -40, duration: T[24] - T[18], ease: 'none' }, T[18])
+        goods.forEach(([g, f], i) => {
+          const a = -Math.PI / 2 + (i / goods.length) * Math.PI * 2
+          const c = el('div', 'good', null, orbit)
+          const img = el('img', '', null, c)
+          img.src = 'assets/img/' + f + '.png'
+          img.alt = ''
+          el('div', 'chip', g, c)
+          c.style.left = Math.round(320 + Math.cos(a) * 300 - 110) + 'px'
+          c.style.top = Math.round(320 + Math.sin(a) * 300 - 100) + 'px'
+          tl.fromTo(c, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.45, ease: 'back.out(2)' }, T[15] + i * 0.18)
+          tl.fromTo(c, { rotation: 0 }, { rotation: -40, duration: T[24] - T[13], ease: 'none', immediateRender: false }, T[13])
         })
         pop('#o-ring', MORPHS[0] + 0.05)
         tl.fromTo('#orbit', { rotation: 0 }, { rotation: 40, duration: T[24] - T[13], ease: 'none' }, T[13])
