@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Haïti 1804 — montage façon référence K</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Grammaire de la référence K (_engine/references/ref-k-histoire, docs/REFERENCES.md) : un seul plan continu sur fond gris clair,
+      aucune coupe sèche ; le texte = la voix, mot par mot (chaque mot arrive flou et gris clair puis se pose en noir), lignes empilées
+      de tailles et de graisses mêlées ; objets en noir et blanc posés avec une ombre douce (portraits tramés, cartes, anneau qui
+      tourne, barre de progression, listes à puces ✦ / ✕) ; la couleur seulement sur l'objet clé (le drapeau) ; changement de partie
+      par un flou plein cadre ; appel à commenter un mot, puis logo et « suivez » ; filigrane gris en bas.
+    -->
+    <style>
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #1A1A1A; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .mark { position: absolute; left: 0; right: 0; top: 1640px; text-align: center; font-weight: 700; font-size: 46px; letter-spacing: -0.01em; color: #848484; z-index: 30; }
+
+      .block { position: absolute; left: 60px; right: 60px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; }
+      .w { display: inline-block; }
+      .s { font-size: 48px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 66px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 112px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .bi { font-size: 106px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 64px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      .x { font-size: 250px; font-weight: 900; letter-spacing: -0.06em; line-height: 0.95; }
+      .cta { font-size: 120px; font-weight: 800; letter-spacing: 0.14em; }
+      .bullet { justify-content: flex-start; }
+      .bullet i { font-style: normal; display: inline-block; width: 1.1em; font-weight: 700; }
+
+      .obj { position: absolute; z-index: 10; }
+      .trame { width: 430px; filter: drop-shadow(10px 20px 18px rgba(0, 0, 0, 0.12)); }
+      .tile { width: 300px; height: 300px; border-radius: 52px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18), 0 2px 0 rgba(255, 255, 255, 0.9) inset; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      .tile img { width: 100%; height: 100%; object-fit: cover; }
+      .tile + .cap { margin-top: 18px; text-align: center; font-weight: 700; font-size: 34px; }
+
+      .ring { width: 640px; height: 640px; border-radius: 50%; box-shadow: inset 0 0 0 64px #EFEFEF, inset 0 0 0 66px rgba(0, 0, 0, 0.05), 0 40px 80px rgba(0, 0, 0, 0.12), inset 0 20px 50px rgba(0, 0, 0, 0.06); background: radial-gradient(circle, #E9E9E9 52%, #F1F1F1 53%); }
+      .orbit { position: absolute; inset: 0; }
+      .chip { position: absolute; padding: 12px 26px; border-radius: 999px; background: #fff; font-weight: 600; font-size: 32px; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); white-space: nowrap; }
+      .center-year { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 120px; letter-spacing: -0.05em; }
+
+      .bar { width: 760px; }
+      .bar .track { height: 26px; border-radius: 999px; border: 5px solid #1A1A1A; padding: 4px; box-sizing: border-box; }
+      .bar .fill { height: 100%; width: 0%; border-radius: 999px; background: #1A1A1A; }
+      .bar .ends { display: flex; justify-content: space-between; margin-top: 16px; font-weight: 700; font-size: 38px; }
+
+      .card { width: 440px; border-radius: 40px; background: #fff; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.16); padding: 34px 30px 30px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; text-align: center; }
+      .card .ph { width: 220px; height: 220px; border-radius: 50%; overflow: hidden; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18); }
+      .card .ph img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; filter: grayscale(1) contrast(1.08); }
+      .card b { margin-top: 22px; font-size: 38px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+      .card em { margin-top: 8px; font-style: normal; font-size: 24px; color: #777; }
+      .card .tags { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+      .card .tags span { font-size: 22px; font-weight: 600; padding: 6px 18px; border-radius: 999px; background: #F1F1F1; }
+      .card .btn { margin-top: 22px; width: 100%; padding: 16px 0; border-radius: 999px; background: #111; color: #fff; font-weight: 700; font-size: 26px; }
+      .link { position: absolute; height: 4px; background: #1A1A1A; z-index: 9; }
+
+      .paint { width: 940px; border-radius: 34px; overflow: hidden; background: #fff; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.18); }
+      .paint img { display: block; width: 100%; height: 600px; object-fit: cover; filter: grayscale(1) contrast(1.1); }
+      .paint div { padding: 22px 30px; display: flex; justify-content: space-between; align-items: baseline; }
+      .paint b { font-size: 38px; font-weight: 800; }
+      .paint em { font-style: normal; font-size: 22px; color: #888; }
+
+      .flag { width: 560px; height: 336px; border-radius: 38px; overflow: hidden; box-shadow: 0 40px 90px rgba(0, 0, 0, 0.22); }
+      .flag img { width: 100%; height: 100%; object-fit: cover; }
+      .logo { width: 360px; height: 236px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.2)); }
+      .logo img { width: 100%; height: 100%; }
+
+      #veil { position: absolute; inset: 0; background: #E7E7E7; opacity: 0; z-index: 40; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="43" data-width="1080" data-height="1920">
+      <div id="world">
+        <div class="grid" id="grid"></div>
+
+        <!-- hook: two halftone portraits reach for the flag tile (the reference's hands and folder) -->
+        <img class="obj trame" id="o-dess" src="assets/img/dessalines-trame.png" alt="" style="left: -70px; top: 900px" />
+        <img class="obj trame" id="o-napo" src="assets/img/napoleon-trame.png" alt="" style="left: 720px; top: 930px; transform: scaleX(-1)" />
+        <div class="obj" id="o-tile" style="left: 390px; top: 960px; display: flex; flex-direction: column; align-items: center">
+          <div class="tile"><img src="assets/img/drapeau.png" alt="" /></div>
+        </div>
+
+        <div class="obj" id="o-ring" style="left: 220px; top: 760px"><div class="ring"></div><div class="center-year">1791</div><div class="orbit" id="orbit"></div></div>
+
+        <div class="obj bar" id="o-bar" style="left: 160px; top: 900px"><div class="track"><div class="fill" id="fill"></div></div><div class="ends"><span>1791</span><span>1804</span></div></div>
+
+        <div class="obj card" id="c-tous" style="left: 320px; top: 360px"><div class="ph"><img src="assets/img/toussaint.jpg" alt="" /></div><b>Toussaint<br />Louverture</b><em>Chef de la révolution</em><div class="btn">Saint-Domingue</div></div>
+        <div class="obj card" id="c-napo" style="left: 320px; top: 360px"><div class="ph"><img src="assets/img/napoleon.jpg" alt="" /></div><b>Napoléon<br />Bonaparte</b><em>Premier consul de France</em><div class="btn">France</div></div>
+        <div class="obj card" id="c-dess" style="left: 320px; top: 360px"><div class="ph"><img src="assets/img/dessalines.jpg" alt="" /></div><b>Jean-Jacques<br />Dessalines</b><em>Général en chef</em><div class="btn">Armée indigène</div></div>
+        <div class="link" id="link1" style="left: 0; top: 640px; width: 0"></div>
+
+        <div class="obj paint" id="o-paint" style="left: 70px; top: 330px"><img src="assets/img/bataille.jpg" alt="" /><div><b>Vertières</b><em>Illustration : J. Suchodolski, 1845</em></div></div>
+
+        <div class="obj flag" id="o-flag" style="left: 260px; top: 760px"><img src="assets/img/drapeau.png" alt="" /></div>
+        <div class="obj logo" id="o-logo" style="left: 360px; top: 860px"><img src="assets/img/konvwa-logo.svg" alt="" /></div>
+
+        <div id="blocks"></div>
+      </div>
+      <div class="mark">konvwa.shop</div>
+      <div id="veil"></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), accélérée ×1,06. Musique : ElevenLabs via FLORA. Sons : videos/_engine/sfx. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="41.06" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="43" data-track-index="11" data-volume="0.16"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh-short.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/pop.mp3" data-start="0.3" data-duration="0.72" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx2" src="assets/sfx/whoosh.mp3" data-start="4.58" data-duration="0.57" data-track-index="22" data-volume="0.32"></audio>
+      <audio id="sx3" src="assets/sfx/whoosh.mp3" data-start="12.82" data-duration="0.57" data-track-index="23" data-volume="0.32"></audio>
+      <audio id="sx4" src="assets/sfx/whoosh.mp3" data-start="25.71" data-duration="0.57" data-track-index="20" data-volume="0.32"></audio>
+      <audio id="sx5" src="assets/sfx/whoosh.mp3" data-start="30.58" data-duration="0.57" data-track-index="21" data-volume="0.32"></audio>
+      <audio id="sx6" src="assets/sfx/whoosh.mp3" data-start="37.2" data-duration="0.57" data-track-index="22" data-volume="0.32"></audio>
+      <audio id="sx7" src="assets/sfx/pop.mp3" data-start="7.66" data-duration="0.72" data-track-index="23" data-volume="0.22"></audio>
+      <audio id="sx8" src="assets/sfx/click-soft.mp3" data-start="11.26" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx9" src="assets/sfx/pop.mp3" data-start="13.09" data-duration="0.72" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx10" src="assets/sfx/key-press.mp3" data-start="14.45" data-duration="0.43" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx11" src="assets/sfx/key-press.mp3" data-start="15.56" data-duration="0.43" data-track-index="23" data-volume="0.22"></audio>
+      <audio id="sx12" src="assets/sfx/key-press.mp3" data-start="16.06" data-duration="0.43" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx13" src="assets/sfx/whoosh-short.mp3" data-start="17.25" data-duration="0.57" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx14" src="assets/sfx/click-soft.mp3" data-start="21.97" data-duration="0.37" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx15" src="assets/sfx/whoosh-short.mp3" data-start="23.19" data-duration="0.57" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx16" src="assets/sfx/impact-bass-1.mp3" data-start="30.21" data-duration="2.1" data-track-index="20" data-volume="0.42"></audio>
+      <audio id="sx17" src="assets/sfx/riser.mp3" data-start="30.49" data-duration="0.9" data-track-index="24" data-volume="0.24"></audio>
+      <audio id="sx18" src="assets/sfx/impact-bass-2.mp3" data-start="31.87" data-duration="2.5" data-track-index="22" data-volume="0.5"></audio>
+      <audio id="sx19" src="assets/sfx/chime.mp3" data-start="31.97" data-duration="2.5" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx20" src="assets/sfx/pop.mp3" data-start="37.94" data-duration="0.72" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx21" src="assets/sfx/pop.mp3" data-start="39.47" data-duration="0.72" data-track-index="21" data-volume="0.3"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 43
+
+        // ---------- the voice: start of each spoken word (transcription of assets/vo/vo.wav before the ×1.06 speed-up) ----------
+        const RAW = [0, 0.4, 0.48, 0.96, 1.36, 1.6, 2.12, 2.27, 2.49, 3, 3.12, 3.77, 4.03, 5.04, 5.2, 6.36, 7.55, 7.75, 7.91, 8.47, 8.57, 9.07, 9.38, 9.54, 10.79, 10.84, 11.72, 11.76, 12.26, 12.95, 12.99, 13.74, 14.3, 15.1, 15.79, 16.28, 16.36, 16.46, 16.81, 16.94, 17.18, 18.18, 18.33, 19.36, 19.94, 20.49, 20.59, 21.06, 21.56, 21.91, 22.35, 22.47, 23.08, 23.62, 23.83, 24.48, 24.99, 26.16, 26.52, 27.01, 27.4, 27.55, 28.12, 28.59, 29.58, 29.67, 30.39, 30.89, 31.55, 31.81, 32.56, 32.7, 33.06, 33.57, 34.59, 35.06, 35.45, 36.59, 36.97, 37.34, 37.8, 38.31, 38.41, 38.56, 39.56, 40, 40.78, 40.91, 41.63, 41.83, 42.14, 42.46, 42.72, 42.97, 43.09]
+        const T = RAW.map((t) => Math.round((0.2 + t / 1.06) * 100) / 100)
+        const WORDS = ['Haïti', 'a', 'vaincu', "l'une", 'des', 'armées', 'les', 'plus', 'puissantes', 'du', 'monde.', 'Voici', 'comment.', 'En', '1791,', 'Saint-Domingue', 'est', 'la', 'colonie', 'la', 'plus', 'riche', 'de', 'France.', 'Cette', 'année-là,', 'des', 'milliers', "d'esclaves", 'se', 'soulèvent.', 'Toussaint', 'Louverture,', 'ancien', 'esclave,', 'prend', 'la', 'tête', 'de', 'la', 'révolution.', 'En', '1802,', 'Napoléon', 'envoie', 'une', 'immense', 'armée', 'pour', 'reprendre', 'la', 'colonie.', 'Toussaint', 'est', 'capturé.', 'Mais', 'Dessalines', 'continue', 'le', 'combat.', 'Le', '18', 'novembre', '1803,', 'à', 'Vertières,', "l'armée", 'française', 'est', 'battue.', 'Le', '1er', 'janvier', '1804,', 'Haïti', 'devient', 'indépendante,', 'la', 'première', 'république', 'noire', 'libre', 'du', 'monde.', 'Écrivez', '« 1804 »', 'en', 'commentaire', 'et', 'suivez', 'KONVWA', '', 'pour', 'la', 'suite.']
+
+        // ---------- blocks of stacked lines: [first word, last word, style, bullet?] per line; y = top of the block ----------
+        const BLOCKS = [
+          { y: 300, lines: [[0, 0, 'b'], [1, 4, 's'], [5, 7, 'm'], [8, 8, 'bi'], [9, 10, 's']] },
+          { y: 860, lines: [[11, 12, 'm']] },
+          { y: 300, lines: [[13, 13, 's'], [14, 14, 'b'], [15, 15, 'mi'], [16, 18, 's'], [19, 21, 'm'], [22, 23, 's']], until: 24 },
+          { y: 320, lines: [[24, 25, 's'], [26, 27, 'm'], [28, 28, 'bi'], [29, 30, 'm']] },
+          { y: 1060, lines: [[31, 32, 'm'], [33, 34, 's', '✦'], [35, 37, 's', '✦'], [38, 40, 's', '✦']], left: true },
+          { y: 1060, lines: [[41, 42, 'm'], [43, 43, 'bi'], [44, 47, 's'], [48, 51, 's']] },
+          { y: 1060, lines: [[52, 54, 's', '✕'], [55, 56, 'mi'], [57, 59, 'm']] },
+          { y: 1150, lines: [[60, 63, 'm'], [64, 65, 'mi'], [66, 69, 's']] },
+          { y: 230, lines: [[70, 72, 's'], [73, 73, 'x']], until: 84 },
+          { y: 1170, lines: [[74, 76, 'm'], [77, 78, 's'], [79, 81, 'mi'], [82, 83, 's']] },
+          { y: 520, lines: [[84, 84, 'm'], [85, 85, 'cta'], [86, 87, 's']] },
+          { y: 470, lines: [[88, 89, 's'], [90, 90, 'b'], [92, 94, 's']] },
+        ]
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const lastWord = B.lines[B.lines.length - 1][1]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = B.until != null ? T[B.until] - 0.08 : next ? T[next.lines[0][0]] - 0.08 : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          if (B.left) box.style.alignItems = 'flex-start'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, bullet]) => {
+            const line = el('div', 'line ' + st + (bullet ? ' bullet' : ''), null, box)
+            if (bullet) {
+              const ic = el('i', '', bullet, line)
+              tl.fromTo(ic, { opacity: 0, scale: 0.4, rotation: -40 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.3, ease: 'back.out(2)' }, T[a] - 0.04)
+            }
+            for (let k = a; k <= b; k++) {
+              if (!WORDS[k]) continue
+              const w = el('span', 'w', WORDS[k], line)
+              // each word lands blurred and pale, then settles in ink (reference K)
+              tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 10, filter: blur(8) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.22, ease: 'power2.out' }, T[k])
+              tl.to(w, { color: '#1A1A1A', duration: 0.35, ease: 'power1.out' }, T[k] + 0.12)
+            }
+          })
+          if (end < END) tl.to(box, { autoAlpha: 0, filter: blur(10), y: -16, duration: 0.18, ease: 'power2.in' }, end - 0.18)
+        })
+
+        // ---------- full-frame blur between parts (the reference never cuts) ----------
+        const morph = (at) => {
+          tl.to('#world', { filter: blur(28), duration: 0.22, ease: 'power2.in' }, at - 0.22)
+          tl.to('#veil', { opacity: 0.55, duration: 0.22, ease: 'power2.in' }, at - 0.22)
+          tl.to('#world', { filter: blur(0), duration: 0.32, ease: 'power2.out' }, at + 0.02)
+          tl.to('#veil', { opacity: 0, duration: 0.32, ease: 'power2.out' }, at + 0.02)
+        }
+        const MORPHS = [T[13] - 0.15, T[31] - 0.12, T[60] - 0.12, T[70] - 0.12, T[84] - 0.1]
+        MORPHS.forEach(morph)
+
+        const pop = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0.86, y: 60, filter: blur(14) }, o), { autoAlpha: 1, scale: 1, y: 0, x: 0, filter: blur(0), duration: 0.55, ease: 'expo.out' }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        gsap.set(['#o-dess', '#o-napo', '#o-tile', '#o-ring', '#o-bar', '#c-tous', '#c-napo', '#c-dess', '#o-paint', '#o-flag', '#o-logo'], { autoAlpha: 0 })
+
+        // hook: the two portraits slide in from the edges toward the flag tile
+        tl.fromTo('#o-dess', { autoAlpha: 0, x: -300 }, { autoAlpha: 1, x: 0, duration: 0.8, ease: 'expo.out' }, 0)
+        tl.fromTo('#o-napo', { autoAlpha: 0, x: 300 }, { autoAlpha: 1, x: 0, duration: 0.8, ease: 'expo.out' }, 0)
+        tl.to('#o-dess', { x: 26, duration: 3, ease: 'none' }, 0.8)
+        tl.to('#o-napo', { x: -26, duration: 3, ease: 'none' }, 0.8)
+        pop('#o-tile', 0.12, { scale: 0.5 })
+        tl.to('#grid', { opacity: 1, duration: 0.6 }, 0.1)
+        hide(['#o-dess', '#o-napo', '#o-tile'], MORPHS[0])
+
+        // 1791: the ring of riches turns slowly around the year
+        const goods = ['Sucre', 'Café', 'Indigo', 'Coton', 'Sucre', 'Café']
+        const orbit = $('orbit')
+        goods.forEach((g, i) => {
+          const a = (i / goods.length) * Math.PI * 2
+          const c = el('div', 'chip', g, orbit)
+          c.style.left = Math.round(320 + Math.cos(a) * 290 - 60) + 'px'
+          c.style.top = Math.round(320 + Math.sin(a) * 290 - 28) + 'px'
+          tl.fromTo(c, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' }, T[18] + i * 0.12)
+          tl.to(c, { rotation: -40, duration: T[24] - T[18], ease: 'none' }, T[18])
+        })
+        pop('#o-ring', MORPHS[0] + 0.05)
+        tl.fromTo('#orbit', { rotation: 0 }, { rotation: 40, duration: T[24] - T[13], ease: 'none' }, T[13])
+        hide('#o-ring', T[24] - 0.08)
+
+        // the uprising: a progress bar 1791 → 1804 starts to fill
+        pop('#o-bar', T[24])
+        tl.to('#fill', { width: '14%', duration: T[30] - T[24] + 0.4, ease: 'power2.out' }, T[26])
+        hide('#o-bar', MORPHS[1])
+
+        // the leaders: cards slide like a carousel, joined by a line
+        pop('#c-tous', MORPHS[1] + 0.04)
+        tl.to('#c-tous', { x: -560, duration: 0.6, ease: 'expo.inOut' }, T[41] - 0.1)
+        pop('#c-napo', T[42], { x: 560, scale: 1, y: 0 })
+        tl.fromTo('#link1', { width: 0 }, { width: 330, duration: 0.5, ease: 'power2.out', immediateRender: false }, T[42] + 0.2)
+        tl.to('#c-tous', { filter: 'grayscale(1) blur(6px)', opacity: 0.45, duration: 0.4 }, T[54])
+        tl.to('#c-napo', { x: 560, duration: 0.6, ease: 'expo.inOut' }, T[55] - 0.1)
+        tl.to('#link1', { width: 0, duration: 0.3 }, T[55] - 0.1)
+        tl.to('#c-tous', { x: -1100, duration: 0.6, ease: 'expo.inOut' }, T[55] - 0.1)
+        pop('#c-dess', T[56] - 0.1, { x: -560, scale: 1, y: 0 })
+        hide(['#c-tous', '#c-napo', '#c-dess', '#link1'], MORPHS[2])
+
+        // Vertières: the battle, in black and white
+        pop('#o-paint', MORPHS[2] + 0.04)
+        tl.to('#o-paint', { scale: 1.04, duration: T[70] - T[60], ease: 'none' }, MORPHS[2] + 0.6)
+        hide('#o-paint', MORPHS[3])
+
+        // 1804: the only colour of the film
+        pop('#o-flag', T[73] + 0.1, { scale: 0.5, rotation: -6 })
+        tl.to('#o-flag', { scale: 1.06, duration: T[84] - T[73], ease: 'none' }, T[73] + 0.7)
+        hide('#o-flag', MORPHS[4])
+
+        // call to action, then the brand
+        pop('#o-logo', T[88], { scale: 0.4, rotation: -10 })
+        tl.to('#o-logo', { y: -20, duration: END - T[88] - 0.6, ease: 'sine.inOut' }, T[88] + 0.6)
+
+        // slow camera push over the whole film
+        tl.fromTo('#world', { scale: 1 }, { scale: 1.035, duration: END, ease: 'none', immediateRender: false }, 0)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>

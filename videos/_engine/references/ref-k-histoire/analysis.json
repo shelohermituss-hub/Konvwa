@@ -1,0 +1,16 @@
+{
+  "file": "ref3.mp4",
+  "width": 720,
+  "height": 1280,
+  "fps": 30,
+  "duration": 95.85,
+  "aspect": "9:16",
+  "cuts": [],
+  "cutsPer10s": 0,
+  "hookCuts": 0,
+  "avgShot": 95.85,
+  "audio": {
+    "mean": -15.1,
+    "max": 0
+  }
+}
