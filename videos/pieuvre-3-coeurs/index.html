@@ -80,7 +80,7 @@
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="38" data-width="1080" data-height="1920">
+    <div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1080" data-height="1920">
       <div id="world">
         <div class="grid" id="grid"></div>
 
@@ -123,9 +123,6 @@
           <svg class="line" viewBox="0 0 640 140"><path id="ecg-path" d="" fill="none" stroke="#E2501D" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" /></svg>
         </div>
 
-        <!-- crawling: swimming wears it out -->
-        <div class="obj photo" id="o-crawl" style="left: 70px; top: 610px; width: 940px; height: 640px"><img id="crawl-img" src="assets/img/fond.jpg" alt="" /></div>
-        <div class="obj battery" id="o-bat" style="left: 690px; top: 1170px"><div class="cell" id="cells"><i></i><i></i><i></i><i></i></div><div class="nub"></div></div>
 
         <!-- two thirds of the neurons are in the arms -->
         <div class="obj donut" id="o-donut" style="left: 260px; top: 760px"><div class="hole"><b>2/3</b><span>des neurones</span></div></div>
@@ -145,48 +142,43 @@
       <div class="mark">konvwa.shop</div>
       <div id="veil"></div>
 
-      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), silences de début et de fin coupés. Musique : ElevenLabs via FLORA (coupée à 38 s, fondu). -->
-      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="34.77" data-track-index="10" data-volume="1"></audio>
-      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="38" data-track-index="11" data-volume="0.16"></audio>
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), silences coupés, une phrase retirée, pauses raccourcies, accélérée ×1,09. Musique : ElevenLabs via FLORA (coupée à 30 s, fondu). -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="28.09" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="30" data-track-index="11" data-volume="0.16"></audio>
       <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
       <audio id="sx0" src="assets/sfx/whoosh-short.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
       <audio id="sx1" src="assets/sfx/pop.mp3" data-start="1.33" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
       <audio id="sx2" src="assets/sfx/pop.mp3" data-start="1.49" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
       <audio id="sx3" src="assets/sfx/pop.mp3" data-start="1.65" data-duration="0.72" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx4" src="assets/sfx/heartbeat.wav" data-start="1.84" data-duration="0.9" data-track-index="23" data-volume="0.8"></audio>
-      <audio id="sx5" src="assets/sfx/whoosh.mp3" data-start="1.96" data-duration="0.57" data-track-index="24" data-volume="0.3"></audio>
-      <audio id="sx6" src="assets/sfx/click-soft.mp3" data-start="2.6" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx7" src="assets/sfx/heartbeat.wav" data-start="5.65" data-duration="0.9" data-track-index="20" data-volume="0.6"></audio>
-      <audio id="sx8" src="assets/sfx/whoosh.mp3" data-start="7.26" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx9" src="assets/sfx/sparkle.mp3" data-start="8.45" data-duration="1.8" data-track-index="20" data-volume="0.28"></audio>
-      <audio id="sx10" src="assets/sfx/pop.mp3" data-start="11.73" data-duration="0.72" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx11" src="assets/sfx/click.mp3" data-start="12.99" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx12" src="assets/sfx/whoosh.mp3" data-start="13.51" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx13" src="assets/sfx/ping.mp3" data-start="15.45" data-duration="1.32" data-track-index="20" data-volume="0.16"></audio>
-      <audio id="sx14" src="assets/sfx/ping.mp3" data-start="15.87" data-duration="1.32" data-track-index="21" data-volume="0.16"></audio>
-      <audio id="sx15" src="assets/sfx/ping.mp3" data-start="16.3" data-duration="1.32" data-track-index="22" data-volume="0.16"></audio>
-      <audio id="sx16" src="assets/sfx/flatline.wav" data-start="16.46" data-duration="1.8" data-track-index="23" data-volume="0.55"></audio>
-      <audio id="sx17" src="assets/sfx/whoosh.mp3" data-start="17.31" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx18" src="assets/sfx/pop.mp3" data-start="20.06" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx19" src="assets/sfx/key-press.mp3" data-start="20.57" data-duration="0.43" data-track-index="21" data-volume="0.25"></audio>
-      <audio id="sx20" src="assets/sfx/key-press.mp3" data-start="20.77" data-duration="0.43" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx21" src="assets/sfx/whoosh.mp3" data-start="20.95" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx22" src="assets/sfx/key-press.mp3" data-start="20.97" data-duration="0.43" data-track-index="23" data-volume="0.25"></audio>
-      <audio id="sx23" src="assets/sfx/riser.mp3" data-start="22.31" data-duration="0.9" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx24" src="assets/sfx/key-press.mp3" data-start="24.9" data-duration="0.43" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx25" src="assets/sfx/key-press.mp3" data-start="24.99" data-duration="0.43" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx26" src="assets/sfx/key-press.mp3" data-start="25.08" data-duration="0.43" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx27" src="assets/sfx/whoosh.mp3" data-start="25.52" data-duration="0.57" data-track-index="23" data-volume="0.3"></audio>
-      <audio id="sx28" src="assets/sfx/key-press.mp3" data-start="25.17" data-duration="0.43" data-track-index="24" data-volume="0.2"></audio>
-      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="26.93" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="27.57" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
-      <audio id="sx31" src="assets/sfx/pop.mp3" data-start="28.05" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx32" src="assets/sfx/impact-bass-1.mp3" data-start="28.72" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
-      <audio id="sx33" src="assets/sfx/whoosh.mp3" data-start="29.06" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx34" src="assets/sfx/impact-bass-2.mp3" data-start="29.9" data-duration="2.59" data-track-index="20" data-volume="0.45"></audio>
-      <audio id="sx35" src="assets/sfx/chime.mp3" data-start="30.0" data-duration="2.54" data-track-index="22" data-volume="0.28"></audio>
-      <audio id="sx36" src="assets/sfx/whoosh.mp3" data-start="31.7" data-duration="0.57" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx37" src="assets/sfx/pop.mp3" data-start="32.61" data-duration="0.72" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx4" src="assets/sfx/heartbeat.wav" data-start="1.96" data-duration="0.9" data-track-index="23" data-volume="0.8"></audio>
+      <audio id="sx5" src="assets/sfx/whoosh.mp3" data-start="2.16" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx6" src="assets/sfx/click-soft.mp3" data-start="2.8" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx7" src="assets/sfx/heartbeat.wav" data-start="5.46" data-duration="0.9" data-track-index="20" data-volume="0.6"></audio>
+      <audio id="sx8" src="assets/sfx/whoosh.mp3" data-start="6.5" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx9" src="assets/sfx/sparkle.mp3" data-start="7.62" data-duration="1.8" data-track-index="20" data-volume="0.28"></audio>
+      <audio id="sx10" src="assets/sfx/pop.mp3" data-start="10.55" data-duration="0.72" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx11" src="assets/sfx/click.mp3" data-start="11.62" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx12" src="assets/sfx/whoosh.mp3" data-start="11.76" data-duration="0.57" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx13" src="assets/sfx/ping.mp3" data-start="12.98" data-duration="1.32" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx14" src="assets/sfx/ping.mp3" data-start="13.63" data-duration="1.32" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx15" src="assets/sfx/ping.mp3" data-start="14.29" data-duration="1.32" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx16" src="assets/sfx/flatline.wav" data-start="14.52" data-duration="1.4" data-track-index="20" data-volume="0.55"></audio>
+      <audio id="sx17" src="assets/sfx/whoosh.mp3" data-start="15.7" data-duration="0.57" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx18" src="assets/sfx/riser.mp3" data-start="16.9" data-duration="0.9" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx19" src="assets/sfx/key-press.mp3" data-start="19.15" data-duration="0.43" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx20" src="assets/sfx/key-press.mp3" data-start="19.24" data-duration="0.43" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx21" src="assets/sfx/key-press.mp3" data-start="19.33" data-duration="0.43" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx22" src="assets/sfx/key-press.mp3" data-start="19.42" data-duration="0.43" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx23" src="assets/sfx/whoosh.mp3" data-start="19.58" data-duration="0.57" data-track-index="24" data-volume="0.3"></audio>
+      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="20.89" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx25" src="assets/sfx/pop.mp3" data-start="21.42" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx26" src="assets/sfx/pop.mp3" data-start="22.04" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx27" src="assets/sfx/impact-bass-1.mp3" data-start="22.5" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx28" src="assets/sfx/whoosh.mp3" data-start="22.6" data-duration="0.57" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx29" src="assets/sfx/impact-bass-2.mp3" data-start="23.63" data-duration="2.59" data-track-index="20" data-volume="0.45"></audio>
+      <audio id="sx30" src="assets/sfx/chime.mp3" data-start="23.73" data-duration="2.54" data-track-index="22" data-volume="0.28"></audio>
+      <audio id="sx31" src="assets/sfx/whoosh.mp3" data-start="25.35" data-duration="0.57" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="26.19" data-duration="0.72" data-track-index="21" data-volume="0.3"></audio>
     </div>
     <script>
       ;(function () {
@@ -194,10 +186,10 @@
         const $ = (id) => document.getElementById(id)
         const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
         const blur = (n) => 'blur(' + n + 'px)'
-        const END = 38
+        const END = 30
 
-        // ---------- the voice: start of each spoken word (transcription of assets/vo/vo.wav, which starts at 0.2 s) ----------
-        const RAW = [0, 0.243, 0.889, 1.132, 1.536, 2.102, 2.425, 2.991, 3.153, 3.476, 3.8, 4.042, 4.851, 5.012, 5.74, 6.089, 6.263, 6.699, 6.873, 7.396, 7.57, 7.744, 8.093, 8.354, 8.79, 8.964, 9.836, 10.62, 11.056, 11.23, 11.84, 12.049, 12.398, 12.537, 12.746, 13.095, 13.234, 13.653, 14.001, 14.141, 14.629, 14.977, 15.186, 15.535, 16.162, 16.72, 16.882, 17.449, 17.854, 18.503, 18.827, 19.394, 19.961, 20.366, 21.095, 21.501, 22.068, 22.311, 22.635, 23.04, 23.199, 23.437, 24.073, 24.391, 24.708, 24.947, 25.265, 25.662, 26.139, 26.456, 26.774, 27.41, 27.887, 28.045, 28.522, 28.84, 29.197, 29.696, 29.767, 29.91, 30.694, 30.837, 31.122, 31.836, 31.978, 32.406, 32.834, 33.12, 33.69, 34.047]
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s); words 47–53 were cut from the voice and are never shown ----------
+        const RAW = [0.0, 0.223, 0.816, 1.13, 1.66, 2.3, 2.577, 3.064, 3.203, 3.48, 3.758, 3.966, 4.661, 4.799, 5.425, 5.724, 5.874, 6.248, 6.398, 6.64, 6.735, 6.91, 7.26, 7.522, 7.96, 8.109, 8.857, 9.53, 9.904, 10.053, 10.576, 10.756, 11.055, 11.174, 11.354, 11.653, 11.739, 11.9, 12.229, 12.362, 12.824, 13.153, 13.351, 13.682, 14.275, 14.803, 14.957, 15.428, 15.478, 15.528, 15.578, 15.628, 15.678, 15.728, 15.84, 16.194, 16.689, 16.901, 17.184, 17.537, 17.676, 17.883, 18.438, 18.716, 18.992, 19.201, 19.478, 19.72, 20.153, 20.441, 20.73, 21.26, 21.88, 21.984, 22.297, 22.506, 22.74, 23.43, 23.66, 23.786, 24.478, 24.605, 24.856, 25.487, 25.612, 25.99, 26.383, 26.645, 27.168, 27.496]
         const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
         const WORDS = ['Les', 'pieuvres', 'ont', 'trois', 'cœurs.', 'Deux', 'pompent', 'le', 'sang', 'vers', 'les', 'branchies,', 'le', 'troisième', 'vers', 'le', 'reste', 'du', 'corps.', 'Et', 'ce', 'sang', 'est', 'bleu :', 'il', 'transporte', "l'oxygène", 'grâce', 'au', 'cuivre,', 'pas', 'grâce', 'au', 'fer', 'comme', 'le', 'nôtre.', 'Quand', 'la', 'pieuvre', 'nage,', 'son', 'cœur', 'principal', "s'arrête", 'de', 'battre.', 'Voilà', 'pourquoi', 'elle', 'préfère', 'ramper :', 'nager', "l'épuise.", 'Autre', 'secret :', 'les', 'deux', 'tiers', 'de', 'ses', 'neurones', 'sont', 'dans', 'ses', 'huit', 'bras.', 'Chaque', 'bras', 'peut', 'toucher,', 'goûter,', 'et', 'réagir', 'tout', 'seul.', 'Écrivez', '« 3 »', 'en', 'commentaire', 'si', 'vous', "l'ignoriez.", 'Et', 'suivez', 'KONVWA', 'pour', "d'autres", 'faits', 'étonnants.']
 
@@ -208,7 +200,6 @@
           { y: 250, lines: [[19, 22, 'm'], [23, 23, 'blue']], until: 37 },
           { y: 1200, lines: [[24, 26, 's'], [27, 29, 'mi'], [30, 36, 's', '✕']] },
           { y: 250, lines: [[37, 39, 's'], [40, 40, 'bi'], [41, 43, 's'], [44, 46, 'mi']] },
-          { y: 250, lines: [[47, 48, 's'], [49, 50, 's'], [51, 51, 'bi'], [52, 53, 'm']] },
           { y: 250, lines: [[54, 55, 'm'], [56, 58, 'b'], [59, 61, 's'], [62, 64, 's'], [65, 66, 'bi']] },
           { y: 290, lines: [[67, 69, 'm']], until: 76 },
           { y: 560, x: [600, 30], lines: [[70, 70, 'mi', '✦'], [71, 71, 'mi', '✦'], [72, 73, 'mi', '✦']], left: true, until: 76 },
@@ -254,7 +245,7 @@
           tl.to('#world', { filter: blur(0), duration: 0.32, ease: 'power2.out' }, at + 0.02)
           tl.to('#veil', { opacity: 0, duration: 0.32, ease: 'power2.out' }, at + 0.02)
         }
-        const MORPHS = [5, 19, 37, 47, 54, 67, 76, 83].map((k) => Math.round((T[k] - 0.12) * 100) / 100)
+        const MORPHS = [5, 19, 37, 54, 67, 76, 83].map((k) => Math.round((T[k] - 0.12) * 100) / 100)
         MORPHS.forEach(morph)
 
         const pop = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0.86, y: 60, filter: blur(14) }, o), { autoAlpha: 1, scale: 1, y: 0, x: 0, rotation: 0, filter: blur(0), duration: 0.55, ease: 'expo.out' }, at)
@@ -271,7 +262,7 @@
           const n = Math.max(0, Math.floor((to - from) / period) - 1)
           tl.fromTo(h, { scale: 1 }, { scale: 1.14, duration: period / 2, ease: 'sine.inOut', yoyo: true, repeat: n * 2 + 1, immediateRender: false }, from)
         }
-        gsap.set(['#o-hero', '#o-panel', '#o-blood', '#o-drop', '#t-cu', '#t-fe', '#o-swim', '#o-ecg', '#o-crawl', '#o-bat', '#o-donut', '#o-arm', '#o-hero2', '#o-logo'], { autoAlpha: 0 })
+        gsap.set(['#o-hero', '#o-panel', '#o-blood', '#o-drop', '#t-cu', '#t-fe', '#o-swim', '#o-ecg', '#o-donut', '#o-arm', '#o-hero2', '#o-logo'], { autoAlpha: 0 })
 
         // ---------- 1. hook: the octopus rises, then its three hearts pop one by one ----------
         tl.fromTo('#o-hero', { autoAlpha: 0, y: 260, rotation: -8, filter: blur(16) }, { autoAlpha: 1, y: 0, rotation: 0, filter: blur(0), duration: 0.9, ease: 'expo.out' }, 0)
@@ -323,17 +314,17 @@
         tl.fromTo('#o-swim', { autoAlpha: 0, x: -520, y: 360, rotation: -18, filter: blur(14) }, { autoAlpha: 1, x: 0, y: 0, rotation: 0, filter: blur(0), duration: 0.9, ease: 'expo.out' }, MORPHS[2] + 0.04)
         tl.to('#o-swim', { x: 50, y: -50, rotation: 3, duration: T[44] - MORPHS[2] - 0.9, ease: 'sine.inOut' }, MORPHS[2] + 0.94)
         tl.to('#o-swim', { y: 40, rotation: -4, filter: 'saturate(0.55)', duration: MORPHS[3] - T[44], ease: 'power1.out' }, T[44])
-        pop('#o-ecg', T[41] - 0.25)
+        pop('#o-ecg', MORPHS[2] + 0.3)
         const ecgHeart = heart($('ecg-heart'), 0, 0, 100, ORANGE)
         // three beats, then flat: 128 px per beat, peak at +86
         let d = 'M0 70'
         for (let i = 0; i < 3; i++) d += ' l40 0 l10 -10 l10 10 l8 0 l8 30 l10 -88 l10 78 l8 -20 l24 0'
         d += ' L640 70'
         $('ecg-path').setAttribute('d', d)
-        const E0 = T[41]
-        const E1 = T[44] + 0.1
+        const E0 = T[39]
+        const E1 = T[44] + 0.05
         tl.fromTo('#ecg-path', { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 40% 0 0)', duration: E1 - E0, ease: 'none' }, E0)
-        tl.to('#ecg-path', { clipPath: 'inset(0 0% 0 0)', duration: 1.6, ease: 'none' }, E1)
+        tl.to('#ecg-path', { clipPath: 'inset(0 0% 0 0)', duration: MORPHS[3] - E1 - 0.15, ease: 'none' }, E1)
         for (let i = 0; i < 3; i++) {
           const at = E0 + ((128 * i + 86) / 384) * (E1 - E0)
           tl.fromTo(ecgHeart, { scale: 1 }, { scale: 1.22, duration: 0.12, ease: 'power2.out', yoyo: true, repeat: 1, immediateRender: false }, at - 0.06)
@@ -342,19 +333,10 @@
         tl.to(ecgHeart, { filter: 'grayscale(1)', opacity: 0.55, scale: 0.92, duration: 0.3 }, E1)
         hide(['#o-swim', '#o-ecg'], MORPHS[3])
 
-        // ---------- 5. crawling on the bottom; swimming drains the battery ----------
-        pop('#o-crawl', MORPHS[3] + 0.04)
-        tl.fromTo('#crawl-img', { scale: 1.18, x: -30 }, { scale: 1.02, x: 30, duration: MORPHS[4] - MORPHS[3], ease: 'none' }, MORPHS[3])
-        pop('#o-bat', T[52] - 0.15, { scale: 0.6, rotation: 8 })
-        const cells = $('cells').querySelectorAll('i')
-        ;[3, 2, 1].forEach((c, i) => tl.to(cells[c], { opacity: 0, duration: 0.12 }, T[53] + i * 0.2))
-        tl.to(cells[0], { backgroundColor: '#C23010', opacity: 0.25, duration: 0.18, yoyo: true, repeat: 3, ease: 'none' }, T[53] + 0.65)
-        hide(['#o-crawl', '#o-bat'], MORPHS[4])
-
-        // ---------- 6. two thirds of the neurons: the ring fills, then the eight arms are counted ----------
-        pop('#o-donut', MORPHS[4] + 0.04)
+        // ---------- 5. two thirds of the neurons: the ring fills, then the eight arms are counted ----------
+        pop('#o-donut', MORPHS[3] + 0.04)
         tl.fromTo('#o-donut', { '--p': 0 }, { '--p': 66.7, duration: 1.3, ease: 'power2.inOut', immediateRender: false }, T[57])
-        tl.fromTo('#o-donut', { rotation: 0 }, { rotation: 12, duration: MORPHS[5] - MORPHS[4], ease: 'none', immediateRender: false }, MORPHS[4])
+        tl.fromTo('#o-donut', { rotation: 0 }, { rotation: 12, duration: MORPHS[4] - MORPHS[3], ease: 'none', immediateRender: false }, MORPHS[3])
         const arms = $('arms')
         for (let i = 0; i < 8; i++) {
           const a = -Math.PI / 2 + (i / 8) * Math.PI * 2
@@ -363,19 +345,19 @@
           c.style.top = Math.round(1040 + Math.sin(a) * 345 - 38) + 'px'
           gsap.set(c, { autoAlpha: 0 })
           tl.fromTo(c, { autoAlpha: 0, scale: 0.3 }, { autoAlpha: 1, scale: 1, duration: 0.28, ease: 'back.out(2.6)' }, T[65] - 0.25 + i * 0.045)
-          hide(c, MORPHS[5])
+          hide(c, MORPHS[4])
         }
-        hide('#o-donut', MORPHS[5])
+        hide('#o-donut', MORPHS[4])
 
-        // ---------- 7. the suckers: touch, taste, react ----------
-        pop('#o-arm', MORPHS[5] + 0.04, { x: -120, rotation: -4 })
-        tl.fromTo('#arm-img', { scale: 1.2 }, { scale: 1.02, duration: MORPHS[6] - MORPHS[5], ease: 'none' }, MORPHS[5])
+        // ---------- 6. the suckers: touch, taste, react ----------
+        pop('#o-arm', MORPHS[4] + 0.04, { x: -120, rotation: -4 })
+        tl.fromTo('#arm-img', { scale: 1.2 }, { scale: 1.02, duration: MORPHS[5] - MORPHS[4], ease: 'none' }, MORPHS[4])
         tl.to('#o-arm', { rotation: 2, duration: 0.25, ease: 'power2.out', yoyo: true, repeat: 1 }, T[74])
-        hide('#o-arm', MORPHS[6])
+        hide('#o-arm', MORPHS[5])
 
-        // ---------- 8. call to action (the octopus and its hearts come back), then the brand ----------
-        tl.fromTo('#o-hero2', { autoAlpha: 0, y: 300, filter: blur(14) }, { autoAlpha: 1, y: 0, filter: blur(0), duration: 0.8, ease: 'expo.out' }, MORPHS[6] + 0.04)
-        tl.to('#o-hero2', { y: -20, duration: MORPHS[7] - MORPHS[6] - 0.8, ease: 'sine.inOut' }, MORPHS[6] + 0.84)
+        // ---------- 7. call to action (the octopus and its hearts come back), then the brand ----------
+        tl.fromTo('#o-hero2', { autoAlpha: 0, y: 300, filter: blur(14) }, { autoAlpha: 1, y: 0, filter: blur(0), duration: 0.8, ease: 'expo.out' }, MORPHS[5] + 0.04)
+        tl.to('#o-hero2', { y: -20, duration: MORPHS[6] - MORPHS[5] - 0.8, ease: 'sine.inOut' }, MORPHS[5] + 0.84)
         const ctaHearts = $('cta-hearts')
         ;[[220, 880], [760, 780], [780, 1110]].forEach(([x, y], i) => {
           const h = heart(ctaHearts, x, y, 110, ORANGE, String(i + 1))
@@ -383,10 +365,10 @@
           h.querySelector('span').style.fontSize = '34px'
           gsap.set(h, { autoAlpha: 0 })
           tl.fromTo(h, { autoAlpha: 0, scale: 0.2 }, { autoAlpha: 1, scale: 1, duration: 0.4, ease: 'back.out(2.4)' }, T[77] + i * 0.12)
-          beat(h, T[77] + 0.5, MORPHS[7], 0.5)
-          hide(h, MORPHS[7])
+          beat(h, T[77] + 0.5, MORPHS[6], 0.5)
+          hide(h, MORPHS[6])
         })
-        hide('#o-hero2', MORPHS[7])
+        hide('#o-hero2', MORPHS[6])
         pop('#o-logo', T[85], { scale: 0.4, rotation: -10 })
         tl.to('#o-logo', { y: -20, duration: END - T[85] - 0.6, ease: 'sine.inOut' }, T[85] + 0.6)
 
