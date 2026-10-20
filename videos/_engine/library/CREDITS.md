@@ -33,3 +33,6 @@ Propriété de KONVWA, copiés depuis le site (konvwa.shop) : `lib:site/avion-ca
 - `lib:illustrations/tirelire.png` — pixabay photo 970340 — https://pixabay.com/photos/piggy-bank-money-savings-financial-970340/ — par [ClickerHappy](https://pixabay.com/users/324082/) (détourée avec rembg)
 - `lib:people/famille-haitienne.png` — Unsplash FWX91ORBR6E — https://unsplash.com/photos/FWX91ORBR6E — par [Lawrence Crayton](https://unsplash.com/@lawrencecrayton) (licence Unsplash), détourée avec rembg
 - `lib:people/commercante-fruits.png` — Unsplash 7hMq8FLMtBM (« Haitian woman selling fruit at a market ») — https://unsplash.com/photos/7hMq8FLMtBM — par [Heather Suggitt](https://unsplash.com/@hsuggitt) (licence Unsplash), détourée avec rembg
+- `lib:pieuvre/p3232758.jpg` — pixabay photo 3232758 — https://pixabay.com/photos/octopus-sea-life-underwater-ocean-3232758/ — par [ErikTanghe](https://pixabay.com/users/8013345/)
+- `lib:pieuvre/p1025738.jpg` — pixabay photo 1025738 — https://pixabay.com/photos/octopus-underwater-sea-creatures-1025738/ — par [jusch](https://pixabay.com/users/17627/)
+- `lib:pieuvre/i2373177.png` — pixabay illustration 2373177 — https://pixabay.com/illustrations/octopus-water-creature-illustrate-2373177/ — par [thisisprabha](https://pixabay.com/users/837282/)
