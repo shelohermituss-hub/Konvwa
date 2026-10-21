@@ -1,6 +1,6 @@
 # « Le premier champion olympique noir était haïtien » — Constantin Henriquez
 
-Composition HyperFrames écrite à la main (`index.html`), 9:16, 33 s. Grammaire de la référence K en version rapide (comme `drapeau-haiti-liechtenstein`) : plan continu sur fond gris clair, texte = voix mot par mot, onze parties courtes, flou plein cadre bref entre elles. Sans marque.
+Composition HyperFrames écrite à la main (`index.html`), 9:16, 37 s. Grammaire de la référence K : plan continu sur fond gris clair, texte = voix mot par mot, onze parties de 3 à 4 s, flou plein cadre entre elles. Vitesse ralentie à la demande du client (voix normale, pauses de 0,4 s). Sans marque.
 
 | Partie | Image / objet | Son |
 |---|---|---|
@@ -18,7 +18,7 @@ Composition HyperFrames écrite à la main (`index.html`), 9:16, 33 s. Grammaire
 
 - **Astuce commentaires** : question fermée en fin de vidéo (« Vous le connaissiez ? Répondez OUI ou NON en commentaire »). Répondre demande un seul mot, ce qui fait monter le nombre de commentaires. Aucun faux commentaire n'est affiché.
 - **Faits** : Constantin Henriquez, né à Port-au-Prince en 1880, champion olympique de rugby avec la France aux Jeux de Paris 1900 (victoires 27–17 contre l'Allemagne et 27–8 contre la Grande-Bretagne ; première apparition du rugby aux Jeux), considéré comme le premier athlète noir champion olympique. Jesse Owens : 4 médailles d'or à Berlin en 1936, soit 36 ans plus tard.
-- **Voix** : FLORA / Gemini TTS « Charon » (fr-FR), dates écrites en lettres dans le texte envoyé ; pauses raccourcies (gardées avant « Mais le premier » et avant la question), `atempo=1.06` → `assets/vo/vo.wav` (30,5 s). Alignement : `align_voice` (transcription alignée sur le texte, débuts de phrase recalés sur les silences).
+- **Voix** : FLORA / Gemini TTS « Charon » (fr-FR), dates écrites en lettres dans le texte envoyé ; vitesse normale (pas d'accélération), pauses ramenées à 0,4 s entre les phrases (0,6 s avant « Mais le premier », 0,55 s avant la question) → `assets/vo/vo.wav` (34,6 s). Alignement : `align_voice` (transcription alignée sur le texte, débuts de phrase recalés sur les silences).
 - **Musique** : ElevenLabs Music via FLORA (sans cuivres), coupures et retours mixés dans `assets/music/bed.mp3`.
 - **Sons sur mesure** (ElevenLabs Sound Effects via FLORA) : `sifflet.mp3`, `scratch.mp3`. Les autres viennent de `_engine/sfx`.
 - **Images** (Wikimedia Commons, photos de 1899-1900, domaine public) :

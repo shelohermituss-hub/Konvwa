@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <!--
       Grammaire de la référence K (_engine/references/ref-k-histoire) en version rapide : plan continu sur fond gris clair, texte = voix
-      mot par mot, onze parties courtes enchaînées par un flou plein cadre bref. Pas de marque. Fin pensée pour les commentaires : une
+      mot par mot, onze parties de 3 à 4 s enchaînées par un flou plein cadre. Pas de marque. Fin pensée pour les commentaires : une
       question fermée (OUI / NON), deux boutons qui pulsent et une flèche vers le bouton commentaire de TikTok (côté droit).
     -->
     <style>
@@ -80,7 +80,7 @@
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="32.9" data-width="1080" data-height="1920">
+    <div id="root" data-composition-id="main" data-start="0" data-duration="37.0" data-width="1080" data-height="1920">
       <div id="world">
         <div class="grid" id="grid"></div>
 
@@ -128,53 +128,53 @@
       </div>
       <div id="veil"></div>
 
-      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), pauses raccourcies, accélérée ×1,06. Musique : ElevenLabs via FLORA (coupure avant
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), vitesse normale, pauses ramenées à 0,4 s. Musique : ElevenLabs via FLORA (coupure avant
            « Mais le premier », retour sur « 36 ans »). Sons sur mesure (sifflet, scratch) : ElevenLabs Sound Effects via FLORA. -->
-      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="30.46" data-track-index="10" data-volume="1"></audio>
-      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="32.9" data-track-index="11" data-volume="0.18"></audio>
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="34.62" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="37.0" data-track-index="11" data-volume="0.18"></audio>
       <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
       <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.28"></audio>
       <audio id="sx1" src="assets/sfx/impact-bass-1.mp3" data-start="0.45" data-duration="2.12" data-track-index="21" data-volume="0.35"></audio>
-      <audio id="sx2" src="assets/sfx/sparkle.mp3" data-start="1.95" data-duration="1.8" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx3" src="assets/sfx/whoosh.mp3" data-start="2.0" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx4" src="assets/sfx/click.mp3" data-start="2.43" data-duration="0.37" data-track-index="23" data-volume="0.25"></audio>
-      <audio id="sx5" src="assets/sfx/whoosh.mp3" data-start="4.01" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx6" src="assets/sfx/pop.mp3" data-start="4.44" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
-      <audio id="sx7" src="assets/sfx/whoosh-short.mp3" data-start="5.59" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx8" src="assets/sfx/pop.mp3" data-start="6.68" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx9" src="assets/sfx/impact-bass-2.mp3" data-start="7.81" data-duration="2.59" data-track-index="20" data-volume="0.35"></audio>
-      <audio id="sx10" src="assets/sfx/whoosh.mp3" data-start="8.57" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx11" src="assets/sfx/sifflet.mp3" data-start="8.8" data-duration="1.04" data-track-index="22" data-volume="0.3"></audio>
-      <audio id="sx12" src="assets/sfx/impact-bass-1.mp3" data-start="9.35" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx13" src="assets/sfx/pop.mp3" data-start="10.08" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx14" src="assets/sfx/whoosh.mp3" data-start="10.9" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx15" src="assets/sfx/whoosh-short.mp3" data-start="11.33" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx16" src="assets/sfx/click.mp3" data-start="11.88" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx17" src="assets/sfx/pop.mp3" data-start="12.03" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
-      <audio id="sx18" src="assets/sfx/whoosh.mp3" data-start="12.52" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx19" src="assets/sfx/click-soft.mp3" data-start="13.26" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx20" src="assets/sfx/click-soft.mp3" data-start="14.36" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx21" src="assets/sfx/impact-bass-2.mp3" data-start="15.82" data-duration="2.59" data-track-index="20" data-volume="0.35"></audio>
-      <audio id="sx22" src="assets/sfx/chime.mp3" data-start="15.87" data-duration="2.54" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx23" src="assets/sfx/whoosh.mp3" data-start="16.27" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="17.34" data-duration="0.72" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx25" src="assets/sfx/pop.mp3" data-start="17.58" data-duration="0.72" data-track-index="23" data-volume="0.25"></audio>
-      <audio id="sx26" src="assets/sfx/whoosh.mp3" data-start="19.4" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx27" src="assets/sfx/riser.mp3" data-start="19.58" data-duration="1.0" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="20.92" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="21.9" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="22.02" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx31" src="assets/sfx/pop.mp3" data-start="22.14" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="22.26" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
-      <audio id="sx33" src="assets/sfx/scratch.mp3" data-start="23.52" data-duration="1.23" data-track-index="20" data-volume="0.4"></audio>
-      <audio id="sx34" src="assets/sfx/whoosh.mp3" data-start="23.73" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx35" src="assets/sfx/whoosh.mp3" data-start="26.06" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx36" src="assets/sfx/impact-bass-2.mp3" data-start="26.34" data-duration="2.59" data-track-index="21" data-volume="0.55"></audio>
-      <audio id="sx37" src="assets/sfx/whoosh.mp3" data-start="28.22" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx38" src="assets/sfx/pop.mp3" data-start="29.36" data-duration="0.72" data-track-index="20" data-volume="0.28"></audio>
-      <audio id="sx39" src="assets/sfx/pop.mp3" data-start="29.64" data-duration="0.72" data-track-index="21" data-volume="0.28"></audio>
-      <audio id="sx40" src="assets/sfx/click.mp3" data-start="29.85" data-duration="0.37" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx41" src="assets/sfx/notification.mp3" data-start="30.06" data-duration="1.2" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx2" src="assets/sfx/sparkle.mp3" data-start="2.06" data-duration="1.8" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx3" src="assets/sfx/whoosh.mp3" data-start="2.38" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx4" src="assets/sfx/click.mp3" data-start="2.81" data-duration="0.37" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx5" src="assets/sfx/whoosh.mp3" data-start="4.79" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx6" src="assets/sfx/pop.mp3" data-start="5.23" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx7" src="assets/sfx/whoosh-short.mp3" data-start="6.46" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx8" src="assets/sfx/pop.mp3" data-start="7.61" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx9" src="assets/sfx/impact-bass-2.mp3" data-start="8.79" data-duration="2.59" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx10" src="assets/sfx/whoosh.mp3" data-start="9.83" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx11" src="assets/sfx/sifflet.mp3" data-start="10.06" data-duration="1.04" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx12" src="assets/sfx/impact-bass-1.mp3" data-start="10.63" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx13" src="assets/sfx/pop.mp3" data-start="11.41" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx14" src="assets/sfx/whoosh.mp3" data-start="12.47" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx15" src="assets/sfx/whoosh-short.mp3" data-start="12.9" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx16" src="assets/sfx/click.mp3" data-start="13.45" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx17" src="assets/sfx/pop.mp3" data-start="13.6" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx18" src="assets/sfx/whoosh.mp3" data-start="14.39" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx19" src="assets/sfx/click-soft.mp3" data-start="15.17" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx20" src="assets/sfx/click-soft.mp3" data-start="16.34" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx21" src="assets/sfx/impact-bass-2.mp3" data-start="17.86" data-duration="2.59" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx22" src="assets/sfx/chime.mp3" data-start="17.91" data-duration="2.54" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx23" src="assets/sfx/whoosh.mp3" data-start="18.46" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="19.56" data-duration="0.72" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx25" src="assets/sfx/pop.mp3" data-start="19.83" data-duration="0.72" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx26" src="assets/sfx/whoosh.mp3" data-start="21.98" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx27" src="assets/sfx/riser.mp3" data-start="22.16" data-duration="1.0" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="23.57" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="24.61" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="24.73" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx31" src="assets/sfx/pop.mp3" data-start="24.85" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="24.97" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx33" src="assets/sfx/scratch.mp3" data-start="26.33" data-duration="1.23" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx34" src="assets/sfx/whoosh.mp3" data-start="26.67" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx35" src="assets/sfx/whoosh.mp3" data-start="29.68" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx36" src="assets/sfx/impact-bass-2.mp3" data-start="29.96" data-duration="2.59" data-track-index="21" data-volume="0.55"></audio>
+      <audio id="sx37" src="assets/sfx/whoosh.mp3" data-start="32.07" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx38" src="assets/sfx/pop.mp3" data-start="33.47" data-duration="0.72" data-track-index="20" data-volume="0.28"></audio>
+      <audio id="sx39" src="assets/sfx/pop.mp3" data-start="33.76" data-duration="0.72" data-track-index="21" data-volume="0.28"></audio>
+      <audio id="sx40" src="assets/sfx/click.mp3" data-start="33.98" data-duration="0.37" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx41" src="assets/sfx/notification.mp3" data-start="34.2" data-duration="1.2" data-track-index="20" data-volume="0.18"></audio>
     </div>
     <script>
       ;(function () {
@@ -182,13 +182,13 @@
         const $ = (id) => document.getElementById(id)
         const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
         const blur = (n) => 'blur(' + n + 'px)'
-        const END = 32.9
+        const END = 37.0
         const BLUE = '#00209F'
         const RED = '#D21034'
         const GOLD = '#8C6A00'
 
         // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
-        const RAW = [0.0, 0.111, 0.5, 0.945, 1.445, 1.668, 1.945, 2.084, 2.501, 3.002, 3.558, 4.089, 4.228, 4.286, 5.092, 5.207, 5.494, 5.609, 5.782, 5.897, 6.242, 6.53, 6.818, 7.336, 7.508, 7.739, 8.314, 8.429, 8.655, 8.938, 9.048, 9.491, 9.766, 9.876, 10.153, 10.319, 10.429, 10.983, 11.421, 11.616, 11.811, 12.202, 12.3, 12.598, 12.758, 13.108, 13.282, 13.98, 14.213, 14.329, 14.986, 15.319, 15.785, 16.354, 16.845, 17.3, 17.43, 17.885, 18.34, 18.6, 19.12, 19.484, 19.54, 19.725, 19.971, 20.28, 20.341, 20.773, 21.082, 21.389, 21.698, 21.759, 22.315, 22.561, 22.684, 23.115, 23.3, 23.814, 24.077, 24.24, 24.616, 25.277, 25.44, 26.135, 26.253, 26.571, 27.101, 27.632, 28.304, 28.402, 28.513, 28.984, 29.215, 29.38, 29.489, 29.654, 29.765]
+        const RAW = [0.0, 0.118, 0.53, 1.002, 1.532, 1.768, 2.062, 2.463, 2.905, 3.436, 4.025, 4.868, 5.016, 5.077, 5.931, 6.053, 6.358, 6.48, 6.663, 6.785, 7.151, 7.456, 7.761, 8.31, 8.493, 8.737, 9.347, 9.469, 9.913, 10.213, 10.33, 10.799, 11.091, 11.208, 11.501, 11.677, 11.794, 12.551, 13.015, 13.222, 13.429, 13.843, 13.947, 14.475, 14.645, 15.016, 15.201, 15.941, 16.188, 16.311, 17.007, 17.36, 17.854, 18.54, 19.061, 19.543, 19.681, 20.163, 20.645, 20.921, 21.472, 22.058, 22.118, 22.314, 22.575, 22.902, 22.967, 23.425, 23.752, 24.078, 24.405, 24.47, 25.059, 25.32, 25.451, 25.908, 26.104, 26.749, 27.027, 27.2, 27.795, 28.496, 28.669, 29.762, 29.887, 30.224, 30.786, 31.348, 32.15, 32.255, 32.372, 33.071, 33.316, 33.491, 33.607, 33.782, 33.899]
         const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
         const WORDS = ["Le", "premier", "champion", "olympique", "noir", "était", "haïtien.", "Il", "s'appelle", "Constantin", "Henriquez.", "Né", "à", "Port-au-Prince", "en", "1880,", "il", "vit", "en", "France", "quand", "Paris", "accueille", "les", "Jeux", "olympiques", "de", "1900.", "Pour", "la", "première", "fois,", "le", "rugby", "est", "au", "programme.", "Henriquez", "joue", "avec", "l'équipe", "de", "France.", "La", "France", "bat", "l'Allemagne,", "puis", "la", "Grande-Bretagne,", "et", "remporte", "l'or.", "Henriquez", "devient", "le", "premier", "athlète", "noir", "champion", "olympique.", "36", "ans", "plus", "tard,", "à", "Berlin,", "Jesse", "Owens", "gagne", "4", "médailles", "d'or", "et", "devient", "une", "légende.", "Mais", "le", "premier,", "c'était", "un", "Haïtien.", "36", "ans", "avant", "Jesse", "Owens.", "Vous", "le", "connaissiez ?", "Répondez", "OUI", "ou", "NON", "en", "commentaire."]
 
@@ -221,24 +221,24 @@
             const line = el('div', 'line ' + st, null, box)
             for (let k = a; k <= b; k++) {
               const w = el('span', 'w', WORDS[k], line)
-              tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 12, filter: blur(8) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
-              tl.to(w, { color: col || '#141414', duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+              tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 12, filter: blur(8) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.25, ease: 'power2.out' }, T[k])
+              tl.to(w, { color: col || '#141414', duration: 0.35, ease: 'power1.out' }, T[k] + 0.12)
             }
           })
-          if (end < END) tl.to(box, { autoAlpha: 0, filter: blur(10), y: -16, duration: 0.14, ease: 'power2.in' }, end - 0.14)
+          if (end < END) tl.to(box, { autoAlpha: 0, filter: blur(10), y: -16, duration: 0.18, ease: 'power2.in' }, end - 0.18)
         })
 
         // ---------- short full-frame blur between parts ----------
         const morph = (at) => {
-          tl.to('#world', { filter: blur(26), duration: 0.16, ease: 'power2.in' }, at - 0.16)
-          tl.to('#veil', { opacity: 0.5, duration: 0.16, ease: 'power2.in' }, at - 0.16)
-          tl.to('#world', { filter: blur(0), duration: 0.24, ease: 'power2.out' }, at + 0.02)
-          tl.to('#veil', { opacity: 0, duration: 0.24, ease: 'power2.out' }, at + 0.02)
+          tl.to('#world', { filter: blur(26), duration: 0.22, ease: 'power2.in' }, at - 0.22)
+          tl.to('#veil', { opacity: 0.5, duration: 0.22, ease: 'power2.in' }, at - 0.22)
+          tl.to('#world', { filter: blur(0), duration: 0.32, ease: 'power2.out' }, at + 0.02)
+          tl.to('#veil', { opacity: 0, duration: 0.32, ease: 'power2.out' }, at + 0.02)
         }
         const MORPHS = [7, 11, 28, 37, 43, 53, 61, 77, 83, 88].map((k) => Math.round((T[k] - 0.1) * 100) / 100)
         MORPHS.forEach(morph)
 
-        const pop = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0.84, y: 70, filter: blur(14) }, o), { autoAlpha: 1, scale: 1, y: 0, x: 0, rotation: 0, filter: blur(0), duration: 0.36, ease: 'expo.out' }, at)
+        const pop = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0.84, y: 70, filter: blur(14) }, o), { autoAlpha: 1, scale: 1, y: 0, x: 0, rotation: 0, filter: blur(0), duration: 0.5, ease: 'expo.out' }, at)
         const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
         gsap.set(['#o-medal', '#o-port', '#o-first', '#o-medal2', '#o-route', '#pin-ht', '#pin-fr', '#o-boat', '#o-jo', '#o-ball', '#o-1re', '#o-team', '#o-ring', '#o-name', '#sc-1', '#sc-2', '#o-medal3', '#o-tl', '#o-owens', '#o-port2', '#o-tl2', '#o-oui', '#o-non', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
         tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
@@ -274,7 +274,7 @@
 
         // ---------- 5. the team photo: zoom on Henriquez ----------
         pop('#o-team', MORPHS[3] + 0.02, { scale: 0.9 })
-        tl.fromTo('#team-img', { scale: 1 }, { scale: 2.2, duration: 0.6, ease: 'power3.inOut' }, MORPHS[3] + 0.25)
+        tl.fromTo('#team-img', { scale: 1 }, { scale: 2.2, duration: 0.8, ease: 'power3.inOut' }, MORPHS[3] + 0.3)
         tl.fromTo('#o-ring', { autoAlpha: 0, scale: 2 }, { autoAlpha: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, MORPHS[3] + 0.8)
         pop('#o-name', MORPHS[3] + 0.95, { scale: 0.5 })
         hide(['#o-team', '#o-ring', '#o-name'], MORPHS[4])
