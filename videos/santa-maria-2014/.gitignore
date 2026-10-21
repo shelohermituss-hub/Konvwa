@@ -1,0 +1,6 @@
+renders/
+*.mp4
+!assets/clips/*.mp4
+.hyperframes/
+.snap/
+snapshots/
