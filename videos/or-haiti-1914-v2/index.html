@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>L'or d'Haïti, décembre 1914 (v2)</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Version 2 de « L'or d'Haïti » : même voix, mêmes images, mouvement refait.
+      Chaque scène naît de la précédente : inondation de couleur qui part d'un objet et se rétracte dans le suivant,
+      iris d'appareil photo à 6 lames sur les photos d'époque, pages qui poussent, zooms de caméra sur les détails,
+      mots-clés qui montent d'une ligne de masque avec un rebond, apparitions en ressort depuis zéro.
+      Iris et inondations sont calculés à partir du temps (ctl(t)) : aucun état entre deux images.
+      Rendu en 120 i/s puis fusion de 2 sous-images → 60 i/s avec flou de mouvement ; son normalisé à −14 LUFS.
+    -->
+    <style>
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .series { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; z-index: 30; }
+      .series span { padding: 10px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: 0.08em; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
+      .w { display: inline-block; }
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      .x { font-size: 230px; font-weight: 900; letter-spacing: -0.06em; line-height: 0.95; }
+
+      .obj { position: absolute; z-index: 10; }
+      .tri { position: absolute; overflow: hidden; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); background: #d4d4d4; }
+      .tri i { position: absolute; top: 0; bottom: 0; width: 33.4%; display: flex; align-items: center; justify-content: center; color: #fff; font-style: normal; font-weight: 800; letter-spacing: 0.12em; writing-mode: vertical-rl; transform-origin: 50% 50%; }
+      .tri .wave, .rw .wave { position: absolute; inset: 0; background: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0.16) 70px, rgba(0, 0, 0, 0.14) 150px, rgba(255, 255, 255, 0) 220px); background-size: 440px 100%; mix-blend-mode: soft-light; }
+      .rw { position: absolute; overflow: hidden; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); }
+      .rw i { position: absolute; left: 0; right: 0; height: 50%; }
+      .cap { position: absolute; text-align: center; font-weight: 700; font-size: 42px; letter-spacing: -0.01em; }
+      .pole { position: absolute; width: 14px; border-radius: 7px; background: linear-gradient(90deg, #8a8a8a, #d9d9d9 45%, #7a7a7a); box-shadow: 6px 14px 20px rgba(0, 0, 0, 0.15); }
+      .pole::before { content: ""; position: absolute; left: -9px; top: -24px; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f1d77a, #b8901f); }
+
+      .sw { position: absolute; width: 360px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+      .sw .dot { width: 300px; height: 300px; border-radius: 50%; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25), inset 0 0 0 10px rgba(255, 255, 255, 0.85); }
+      .sw b { font-size: 46px; font-weight: 800; }
+      .sw code { font-family: "Poppins", sans-serif; font-size: 32px; font-weight: 600; color: #555; }
+      .lens { position: absolute; width: 360px; height: 360px; border-radius: 50%; border: 14px solid #141414; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
+      .lens::after { content: ""; position: absolute; left: 290px; top: 300px; width: 30px; height: 150px; border-radius: 14px; background: #141414; transform: rotate(-45deg); }
+
+      .photo { position: absolute; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip { position: absolute; white-space: nowrap; padding: 14px 28px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 36px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); display: flex; align-items: center; gap: 14px; }
+      .mini { position: relative; display: inline-block; width: 56px; height: 38px; border-radius: 6px; overflow: hidden; flex: none; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); }
+      .mini i { position: absolute; top: 0; bottom: 0; width: 34%; }
+      .badge { position: absolute; padding: 12px 34px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 46px; box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25); white-space: nowrap; }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #CE1126; border-radius: 22px; color: #CE1126; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.7); white-space: nowrap; }
+      .letter { position: absolute; width: 760px; height: 760px; border-radius: 24px; background: #fffdf7; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.18); padding: 56px 60px; box-sizing: border-box; }
+      .letter .hd { display: flex; align-items: center; gap: 22px; font-weight: 900; font-size: 64px; color: #2a6ebb; }
+      .letter .hd svg { width: 90px; height: 90px; }
+      .letter p { margin: 34px 0 0; font-size: 38px; line-height: 1.5; color: #333; }
+      .letter p b { color: #141414; }
+      .grid4 .card { position: absolute; width: 440px; border-radius: 26px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.16); overflow: hidden; }
+      .grid4 .card .fl { height: 290px; position: relative; }
+      .grid4 .card .fl img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .grid4 .card b { display: block; padding: 14px 22px; font-size: 36px; font-weight: 800; }
+      .ring { position: absolute; border-radius: 50%; border: 8px solid #CE1126; box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.7); }
+      .q { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: #141414; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 92px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+
+      .crate { position: absolute; border-radius: 10px; background: repeating-linear-gradient(180deg, #b98545 0px, #b98545 52px, #8a5a26 52px, #8a5a26 58px); box-shadow: 0 26px 50px rgba(0, 0, 0, 0.25), inset 0 0 0 10px #7a4d1e; display: flex; align-items: center; justify-content: center; }
+      .crate span { padding: 6px 22px; border: 6px solid rgba(40, 22, 6, 0.75); color: rgba(40, 22, 6, 0.8); font-weight: 900; font-size: 54px; letter-spacing: 0.12em; transform: rotate(-4deg); }
+      .num { position: absolute; left: 0; right: 0; text-align: center; font-weight: 900; font-size: 150px; letter-spacing: -0.04em; color: #A87900; font-variant-numeric: tabular-nums; }
+      .cal { position: absolute; width: 360px; height: 420px; border-radius: 30px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); overflow: hidden; text-align: center; }
+      .cal .top { height: 110px; background: #D21034; color: #fff; font-weight: 800; font-size: 40px; letter-spacing: 0.08em; display: flex; align-items: center; justify-content: center; }
+      .cal b { display: block; font-size: 230px; font-weight: 900; letter-spacing: -0.06em; line-height: 1.2; }
+      .bank { position: absolute; width: 470px; height: 560px; border-radius: 30px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); }
+      .bank svg { position: absolute; left: 45px; top: 40px; width: 380px; height: 330px; }
+      .bank b { position: absolute; left: 0; right: 0; top: 390px; text-align: center; font-size: 40px; font-weight: 900; letter-spacing: 0.06em; line-height: 1.15; }
+      .tbar { position: absolute; height: 30px; border-radius: 15px; background: #cfcfcf; overflow: hidden; }
+      .tbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #D21034; transform-origin: 0 50%; }
+      .tlab { position: absolute; font-weight: 800; font-size: 46px; }
+      .btn { position: absolute; width: 380px; height: 170px; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 96px; letter-spacing: 0.04em; box-shadow: 0 26px 50px rgba(0, 0, 0, 0.2); }
+      .gray img { filter: grayscale(1) contrast(1.1); }
+      .scene { position: absolute; inset: 0; }
+      #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
+      #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
+      #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
+      #veil { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="31.6" data-width="1080" data-height="1920">
+      <div id="world">
+        <div class="grid" id="grid"></div>
+
+        <!-- 1. hook: the Haitian flag, the gold is carried off -->
+        <div class="scene" id="s1">
+          <div class="obj" id="o-flag" style="left: 130px; top: 680px; width: 820px; height: 492px"><div class="rw" style="inset: 0; position: absolute"><img src="assets/img/drapeau-haiti.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block" /><div class="wave"></div></div></div>
+          <div class="obj" id="o-hole" style="left: 450px; top: 1040px; width: 540px; height: 360px; border: 6px dashed #9a9a9a; border-radius: 30px; box-sizing: border-box"></div>
+          <div class="photo obj" id="o-gold" style="left: 450px; top: 1040px; width: 540px; height: 360px"><img src="assets/img/or.jpg" alt="" /></div>
+        </div>
+        <!-- 2. 17 December 1914, the national bank -->
+        <div class="scene" id="s2">
+          <div class="cal obj" id="o-cal" style="left: 90px; top: 720px"><div class="top">DÉC. 1914</div><b>17</b></div>
+          <div class="bank obj" id="o-bank" style="left: 520px; top: 640px"><svg viewBox="0 0 380 330" fill="#2b2b2b"><path d="M190 10 L370 90 L10 90 Z" /><rect x="20" y="100" width="340" height="18" rx="3" /><rect x="45" y="130" width="34" height="140" rx="4" /><rect x="125" y="130" width="34" height="140" rx="4" /><rect x="221" y="130" width="34" height="140" rx="4" /><rect x="301" y="130" width="34" height="140" rx="4" /><rect x="20" y="280" width="340" height="18" rx="3" /><rect x="0" y="306" width="380" height="20" rx="3" /><circle cx="190" cy="62" r="16" fill="#E8B923" /></svg><b>BANQUE<br />NATIONALE</b></div>
+          <div class="chip obj" id="ch-pap" style="left: 560px; top: 1160px"><span class="mini"><i style="left: 0; width: 100%; height: 50%; background: #00209F"></i><i style="left: 0; top: 50%; width: 100%; height: 50%; background: #D21034"></i></span>Port-au-Prince</div>
+        </div>
+        <!-- 3. the crates and the amount -->
+        <div class="scene" id="s3">
+          <div class="crate" id="c1" style="left: 110px; top: 980px; width: 420px; height: 290px"><span>OR</span></div>
+          <div class="crate" id="c2" style="left: 550px; top: 980px; width: 420px; height: 290px"><span>OR</span></div>
+          <div class="crate" id="c3" style="left: 330px; top: 680px; width: 420px; height: 290px"><span>OR</span></div>
+          <div class="num" id="o-num" style="top: 1310px"><span id="amt">0</span> $</div>
+        </div>
+        <!-- 4. the Machias, then New York -->
+        <div class="scene" id="s4">
+          <div class="photo obj" id="o-mach" style="left: 70px; top: 700px; width: 940px; height: 620px"><img id="mach-img" src="assets/img/machias.jpg" alt="" style="transform-origin: 45% 62%" /></div>
+          <div class="chip obj" id="ch-mach" style="left: 110px; top: 1270px">USS Machias · canonnière</div>
+          <div class="badge obj" id="o-ny" style="left: 560px; top: 640px">➜ New York</div>
+        </div>
+        <!-- 5. National City Bank, Wall Street -->
+        <div class="scene" id="s5">
+          <div class="photo obj" id="o-ncb" style="left: 170px; top: 600px; width: 740px; height: 880px"><img id="ncb-img" src="assets/img/ncb.jpg" alt="" style="transform-origin: 60% 30%" /></div>
+          <div class="chip obj" id="ch-ncb" style="left: 200px; top: 1430px">National City Bank · Wall Street</div>
+          <div class="badge obj" id="o-citi" style="left: 600px; top: 560px">= Citibank</div>
+        </div>
+        <!-- 6. Haiti protests -->
+        <div class="scene" id="s6">
+          <div class="letter obj" id="o-letter" style="left: 160px; top: 660px"><div class="hd" style="color: #00209F"><span class="mini" style="width: 90px; height: 60px"><i style="left: 0; width: 100%; height: 50%; background: #00209F"></i><i style="left: 0; top: 50%; width: 100%; height: 50%; background: #D21034"></i></span>Haïti</div><p id="l1"><b>À :</b> Washington</p><p id="l2"><b>Objet :</b> l'or de la Banque nationale</p><p id="l3" style="color: #D21034; font-weight: 800">« Violation de notre souveraineté »</p></div>
+        </div>
+        <!-- 7. the gold never comes back -->
+        <div class="scene" id="s7">
+          <div class="photo obj" id="o-gone" style="left: 110px; top: 720px; width: 860px; height: 573px"><img src="assets/img/or-gris.jpg" alt="" /></div>
+          <div class="stamp obj" id="o-never" style="left: 170px; top: 900px">JAMAIS RENDU</div>
+        </div>
+        <!-- 8. seven months later: the occupation, 1915 to 1934 -->
+        <div class="scene" id="s8">
+          <div class="photo obj" id="o-mar" style="left: 70px; top: 640px; width: 940px; height: 620px"><img id="mar-img" src="assets/img/marines-pap.jpg" alt="" style="transform-origin: 55% 45%" /></div>
+          <div class="chip obj" id="ch-mar" style="left: 110px; top: 1210px">Marines américains · Port-au-Prince, 1915</div>
+          <div class="tlab obj" id="t15" style="left: 110px; top: 1330px">1915</div>
+          <div class="tlab obj" id="t34" style="left: 850px; top: 1330px">1934</div>
+          <div class="tbar obj" id="tbar" style="left: 110px; top: 1410px; width: 860px"><i id="tfill"></i></div>
+          <div class="badge obj" id="o-19" style="left: 400px; top: 1480px">19 ans</div>
+        </div>
+        <!-- 9. the verdict -->
+        <div class="scene" id="s9">
+          <div class="photo gray obj" id="o-bil" style="left: 70px; top: 700px; width: 940px; height: 660px"><img id="bil-img" src="assets/img/marines-cap.jpg" alt="" style="transform-origin: 50% 55%" /></div>
+          <div class="stamp obj" id="o-braq" style="left: 230px; top: 1260px">BRAQUAGE</div>
+        </div>
+        <!-- 10. the question -->
+        <div class="scene" id="s10">
+          <div class="btn obj" id="o-oui" style="left: 110px; top: 900px; background: #141414; color: #fff">OUI</div>
+          <div class="btn obj" id="o-non" style="left: 590px; top: 900px; background: #fff; color: #141414">NON</div>
+          <div class="bubble obj" id="o-bub" style="left: 470px; top: 1250px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1180px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </div>
+
+        <div id="flood"></div>
+        <div id="iris"></div>
+        <div id="blocks"></div>
+      </div>
+      <div class="series"><span>HISTOIRE D'HAÏTI · 1914</span></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), pauses raccourcies, silence avant « Bilan », accélérée ×1,1.
+           Musique : celle du style (ElevenLabs via FLORA), coupure au scratch et retour sur « braquage » mixés dans le fichier. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="29.87" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="31.6" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/whoosh-short.mp3" data-start="0.1" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx2" src="assets/sfx/whoosh-short.mp3" data-start="1.46" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx3" src="assets/sfx/impact-bass-1.mp3" data-start="1.92" data-duration="2.12" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx4" src="assets/sfx/whoosh.mp3" data-start="2.27" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx5" src="assets/sfx/whoosh-short.mp3" data-start="2.59" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx6" src="assets/sfx/pop.mp3" data-start="2.61" data-duration="0.72" data-track-index="23" data-volume="0.22"></audio>
+      <audio id="sx7" src="assets/sfx/pop.mp3" data-start="4.69" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx8" src="assets/sfx/pop.mp3" data-start="5.71" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx9" src="assets/sfx/whoosh.mp3" data-start="6.5" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx10" src="assets/sfx/impact-bass-1.mp3" data-start="7.23" data-duration="2.12" data-track-index="20" data-volume="0.24"></audio>
+      <audio id="sx11" src="assets/sfx/impact-bass-1.mp3" data-start="7.39" data-duration="2.12" data-track-index="21" data-volume="0.24"></audio>
+      <audio id="sx12" src="assets/sfx/impact-bass-1.mp3" data-start="7.55" data-duration="2.12" data-track-index="22" data-volume="0.24"></audio>
+      <audio id="sx13" src="assets/sfx/key-press.mp3" data-start="8.47" data-duration="0.43" data-track-index="23" data-volume="0.14"></audio>
+      <audio id="sx14" src="assets/sfx/key-press.mp3" data-start="8.59" data-duration="0.43" data-track-index="24" data-volume="0.14"></audio>
+      <audio id="sx15" src="assets/sfx/key-press.mp3" data-start="8.71" data-duration="0.43" data-track-index="25" data-volume="0.14"></audio>
+      <audio id="sx16" src="assets/sfx/key-press.mp3" data-start="8.83" data-duration="0.43" data-track-index="26" data-volume="0.14"></audio>
+      <audio id="sx17" src="assets/sfx/key-press.mp3" data-start="8.95" data-duration="0.43" data-track-index="23" data-volume="0.14"></audio>
+      <audio id="sx18" src="assets/sfx/key-press.mp3" data-start="9.07" data-duration="0.43" data-track-index="24" data-volume="0.14"></audio>
+      <audio id="sx19" src="assets/sfx/key-press.mp3" data-start="9.19" data-duration="0.43" data-track-index="25" data-volume="0.14"></audio>
+      <audio id="sx20" src="assets/sfx/sparkle.mp3" data-start="9.34" data-duration="1.8" data-track-index="26" data-volume="0.22"></audio>
+      <audio id="sx21" src="assets/sfx/chime.mp3" data-start="9.34" data-duration="2.54" data-track-index="27" data-volume="0.15"></audio>
+      <audio id="sx22" src="assets/sfx/whoosh-short.mp3" data-start="9.63" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx23" src="assets/sfx/click.mp3" data-start="9.89" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx24" src="assets/sfx/click-soft.mp3" data-start="10.01" data-duration="0.37" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx25" src="assets/sfx/pop.mp3" data-start="11.02" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx26" src="assets/sfx/whoosh-short.mp3" data-start="11.74" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx27" src="assets/sfx/whoosh.mp3" data-start="11.85" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx28" src="assets/sfx/whoosh-short.mp3" data-start="12.17" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="13.74" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="15.27" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx31" src="assets/sfx/whoosh.mp3" data-start="15.7" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx32" src="assets/sfx/key-press.mp3" data-start="16.27" data-duration="0.43" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx33" src="assets/sfx/key-press.mp3" data-start="16.76" data-duration="0.43" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx34" src="assets/sfx/key-press.mp3" data-start="16.93" data-duration="0.43" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx35" src="assets/sfx/whoosh.mp3" data-start="17.79" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx36" src="assets/sfx/whoosh-short.mp3" data-start="18.11" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx37" src="assets/sfx/impact-bass-2.mp3" data-start="18.86" data-duration="2.59" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx38" src="assets/sfx/click.mp3" data-start="18.88" data-duration="0.37" data-track-index="21" data-volume="0.28"></audio>
+      <audio id="sx39" src="assets/sfx/whoosh-short.mp3" data-start="19.17" data-duration="0.57" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx40" src="assets/sfx/click.mp3" data-start="19.43" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx41" src="assets/sfx/click-soft.mp3" data-start="19.55" data-duration="0.37" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx42" src="assets/sfx/pop.mp3" data-start="21.18" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx43" src="assets/sfx/riser.mp3" data-start="21.87" data-duration="0.69" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx44" src="assets/sfx/pop.mp3" data-start="22.41" data-duration="0.72" data-track-index="21" data-volume="0.28"></audio>
+      <audio id="sx45" src="assets/sfx/whoosh.mp3" data-start="22.74" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx46" src="assets/sfx/scratch.mp3" data-start="22.74" data-duration="1.23" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx47" src="assets/sfx/whoosh-short.mp3" data-start="24.03" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx48" src="assets/sfx/impact-bass-2.mp3" data-start="24.45" data-duration="2.59" data-track-index="21" data-volume="0.5"></audio>
+      <audio id="sx49" src="assets/sfx/click.mp3" data-start="24.47" data-duration="0.37" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx50" src="assets/sfx/whoosh.mp3" data-start="26.21" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx51" src="assets/sfx/pop.mp3" data-start="28.71" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx52" src="assets/sfx/pop.mp3" data-start="29.01" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx53" src="assets/sfx/pop.mp3" data-start="29.15" data-duration="0.72" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx54" src="assets/sfx/click.mp3" data-start="29.4" data-duration="0.37" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx55" src="assets/sfx/sparkle.mp3" data-start="29.5" data-duration="1.8" data-track-index="20" data-volume="0.2"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 31.6
+        const BLUE = '#00209F'
+        const RED = '#D21034'
+        const GOLD = '#A87900'
+        const INK = '#141414'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0.0, 0.172, 0.572, 1.143, 1.315, 1.715, 1.943, 2.492, 2.704, 2.825, 3.312, 3.615, 3.798, 4.224, 4.466, 4.588, 4.953, 5.5, 5.561, 6.551, 6.664, 6.783, 7.379, 7.617, 7.795, 8.271, 8.688, 9.045, 9.461, 9.58, 9.813, 10.374, 10.498, 10.872, 11.369, 11.618, 11.805, 12.072, 12.456, 12.727, 12.944, 13.052, 13.377, 13.487, 13.595, 14.083, 14.133, 14.382, 15.059, 15.168, 15.847, 16.066, 16.561, 16.726, 17.22, 17.33, 17.44, 18.013, 18.359, 18.535, 19.125, 19.349, 19.726, 20.098, 20.471, 21.028, 21.105, 21.346, 21.668, 21.768, 22.066, 22.164, 22.263, 22.461, 23.245, 23.971, 24.117, 24.549, 24.693, 25.269, 26.264, 26.386, 26.677, 27.469, 27.629, 27.788, 28.13, 28.592, 28.744, 28.895, 29.048, 29.2]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Des", "Marines", "américains", "ont", "emporté", "l'or", "d'Haïti.", "Le", "17", "décembre", "1914,", "ils", "entrent", "dans", "la", "Banque", "nationale,", "à", "Port-au-Prince.", "Ils", "en", "ressortent", "avec", "des", "caisses :", "environ", "500 000", "dollars", "en", "or.", "Direction :", "le", "navire", "Machias,", "puis", "New", "York.", "L'or", "finit", "dans", "le", "coffre", "de", "la", "National", "City", "Bank,", "l'ancêtre", "de", "Citibank.", "Haïti", "proteste :", "une", "violation", "de", "sa", "souveraineté.", "L'or", "ne", "revient", "pas.", "Sept", "mois", "plus", "tard,", "les", "Marines", "reviennent,", "pour", "occuper", "le", "pays", "19", "ans.", "Bilan :", "un", "braquage", "en", "uniforme", "officiel.", "Et", "vous,", "appelleriez-vous", "ça", "un", "vol ?", "Répondez", "OUI", "ou", "NON", "en", "commentaire."]
+        const SCRATCH = 22.76
+
+        // ---------- transitions: when each scene takes over, and how ----------
+        const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
+        const X = { s2: at(7), s3: at(19), s4: at(30), s5: at(37), s6: at(50), s7: at(57), s8: at(61), s9: Math.round((SCRATCH + 0.3) * 100) / 100, s10: at(80) }
+        const HOLD9 = T[75] - 0.14 - X.s9 // the black flood holds through the scratch silence, until « un braquage »
+        const FLOODS = [
+          { t: X.s2, a: [720, 1220], b: [270, 930], col: BLUE, hold: 0 },
+          { t: X.s5, a: [710, 675], b: [540, 1040], col: INK, hold: 0 },
+          { t: X.s7, a: [450, 1030], b: [540, 1006], col: RED, hold: 0 },
+          { t: X.s9, a: [490, 1515], b: [540, 1030], col: INK, hold: HOLD9 },
+        ]
+        const IRISES = [{ t: X.s4 }, { t: X.s8 }]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 220, lines: [[0, 2, 'm'], [3, 4, 's'], [5, 6, 'bi', GOLD]] },
+          { y: 200, lines: [[7, 9, 'm'], [10, 10, 'b', BLUE], [11, 16, 's'], [17, 18, 's']] },
+          { y: 200, lines: [[19, 21, 's'], [22, 25, 's'], [26, 26, 'b', GOLD], [27, 29, 'm', GOLD]] },
+          { y: 220, lines: [[30, 30, 'm'], [31, 33, 's'], [34, 36, 'm', BLUE]] },
+          { y: 200, lines: [[37, 41, 's'], [42, 43, 's'], [44, 46, 'm', BLUE], [47, 49, 's']] },
+          { y: 220, lines: [[50, 51, 'm'], [52, 53, 'mi', RED], [54, 56, 's']] },
+          { y: 260, lines: [[57, 58, 'bi', RED], [59, 60, 'bi', RED]] },
+          { y: 200, lines: [[61, 64, 's'], [65, 67, 'm'], [68, 71, 's'], [72, 73, 'b', RED]] },
+          { y: 260, lines: [[74, 74, 'm', '#fff'], [75, 76, 'bi', RED], [77, 79, 'mi', RED]] },
+          { y: 260, lines: [[80, 81, 's'], [82, 85, 'm'], [86, 86, 's'], [87, 89, 'm'], [90, 91, 's']] },
+        ]
+        const BIG = { b: 1, bi: 1, mi: 1, x: 1 }
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = next ? T[next.lines[0][0]] - 0.08 : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              if (BIG[st]) {
+                // key words rise out of their line, on a spring
+                tl.fromTo(w, { yPercent: 118, color: col || INK }, { yPercent: 0, duration: 0.42, ease: 'back.out(1.7)' }, T[k] - 0.03)
+              } else {
+                tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 14, filter: blur(6) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
+                tl.to(w, { color: col || INK, duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+              }
+            }
+          })
+          // exit: every word drops back into its line
+          if (end < END) {
+            tl.to(box.querySelectorAll('.w'), { yPercent: -125, duration: 0.18, ease: 'power3.in', stagger: 0.006 }, end - 0.2)
+            tl.set(box, { autoAlpha: 0 }, end)
+          }
+        })
+        // « Bilan : » is white on the black flood, and turns to ink as the flood contracts
+        tl.to(blocksBox.children[8].querySelector('.w'), { color: INK, duration: 0.2 }, X.s9 + HOLD9)
+
+        // ---------- flood + iris: pure functions of time ----------
+        const ease = { in: (p) => p * p * p, out: (p) => 1 - Math.pow(1 - p, 3), io: (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2) }
+        const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)))
+        const flood = $('flood')
+        const iris = $('iris')
+        const blades = []
+        for (let i = 0; i < 6; i++) blades.push(el('div', 'blade', null, iris))
+        const RMAX = 1250
+        function ctl(t) {
+          // colour flood: grows out of an object, covers the frame, contracts into the next scene's object
+          let r = 0, cx = 540, cy = 960, col = INK
+          for (const F of FLOODS) {
+            const g0 = F.t - 0.3, c0 = F.t + F.hold, c1 = c0 + 0.32
+            if (t >= g0 && t <= c1) {
+              col = F.col
+              if (t < F.t) { r = 2300 * ease.in(seg(t, g0, F.t)); cx = F.a[0]; cy = F.a[1] }
+              else if (t < c0) { r = 2300; cx = F.b[0]; cy = F.b[1] }
+              else { r = 2300 * (1 - ease.out(seg(t, c0, c1))); cx = F.b[0]; cy = F.b[1] }
+            }
+          }
+          flood.style.background = col
+          flood.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + cx + 'px ' + cy + 'px)'
+          // camera iris: six blades close over the old scene and open on a photo
+          let ap = RMAX
+          for (const I of IRISES) {
+            if (t >= I.t - 0.28 && t < I.t) ap = RMAX * (1 - ease.in(seg(t, I.t - 0.28, I.t)))
+            else if (t >= I.t && t <= I.t + 0.36) ap = RMAX * ease.out(seg(t, I.t + 0.02, I.t + 0.36))
+          }
+          iris.style.visibility = ap >= RMAX - 1 ? 'hidden' : 'inherit'
+          const twist = (1 - ap / RMAX) * 50
+          blades.forEach((b, i) => {
+            b.style.left = 540 - 1600 + 'px'
+            b.style.top = 960 - 3200 + 'px'
+            b.style.transform = 'rotate(' + (i * 60 + twist).toFixed(2) + 'deg) translateY(' + (-ap).toFixed(1) + 'px)'
+          })
+        }
+        const clock = { v: 0 }
+        tl.fromTo(clock, { v: 0 }, { v: END, duration: END, ease: 'none', immediateRender: false, onUpdate: () => ctl(clock.v) }, 0)
+        ctl(0)
+
+        // ---------- helpers ----------
+        const spring = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0 }, o), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.8)' }, at)
+        const stamp = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.4, rotation: 2 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.18, ease: 'power4.in' }, at)
+        const show = (sel, at) => tl.set(sel, { autoAlpha: 1 }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        const shake = (at) => tl.fromTo('#world', { x: 0 }, { x: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, at)
+        const cam = (sel, at, dur, scale, origin, ez) => tl.to(sel, { scale, transformOrigin: origin, duration: dur, ease: ez || 'power2.inOut' }, at)
+        // a photo that fills the frame behind the iris, then zooms out into its card
+        const unfold = (sel, at) => tl.fromTo(sel, { scale: 3.4 }, { scale: 1, duration: 0.55, ease: 'power3.inOut' }, at)
+        const kb = (sel, from, to, s0, s1) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: to - from, ease: 'none', immediateRender: false }, from)
+
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8', '#s9', '#s10']
+        gsap.set(SC.slice(1), { autoAlpha: 0 })
+        gsap.set(['#o-hole', '#ch-pap', '#o-bank', '#c1', '#c2', '#c3', '#o-num', '#ch-mach', '#o-ny', '#ch-ncb', '#o-citi', '#l1', '#l2', '#l3', '#o-never', '#ch-mar', '#t15', '#t34', '#tbar', '#o-19', '#o-braq', '#o-oui', '#o-non', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+        tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
+        // scenes covered by a flood or an iris swap while hidden
+        ;[['s1', 's2'], ['s4', 's5'], ['s6', 's7'], ['s3', 's4'], ['s7', 's8'], ['s8', 's9']].forEach(([a, b]) => { hide('#' + a, X[b]); show('#' + b, X[b]) })
+
+        // ---------- 1. hook: the flag, the gold, the gold is carried off on « emporté » ----------
+        spring('#o-flag', 0, { rotation: -10 })
+        tl.fromTo('#o-gold', { autoAlpha: 0, x: 520, rotation: 16 }, { autoAlpha: 1, x: 0, rotation: 4, duration: 0.5, ease: 'back.out(1.4)' }, 0.1)
+        show('#o-hole', T[4] - 0.05)
+        tl.to('#o-gold', { x: 980, y: -160, rotation: 30, duration: 0.42, ease: 'power3.in' }, T[4] - 0.05)
+        tl.fromTo('#o-hole', { scale: 1 }, { scale: 1.05, duration: 0.18, yoyo: true, repeat: 1, ease: 'sine.inOut', immediateRender: false }, T[5])
+        tl.fromTo('#o-flag .wave', { backgroundPosition: '0px 0px' }, { backgroundPosition: -Math.round(X.s2 * 320) + 'px 0px', duration: X.s2, ease: 'none', immediateRender: false }, 0)
+        cam('#s1', 0, X.s2, 1.08, '720px 1220px', 'power1.in')
+
+        // ---------- 2. the flood contracts into the calendar; the bank springs up; camera leans on it ----------
+        spring('#o-cal', X.s2 + 0.08, { rotation: -14 })
+        tl.to('#o-cal', { rotation: -4, duration: 0.4, ease: 'sine.out' }, X.s2 + 0.5)
+        spring('#o-bank', T[15] - 0.12, { x: 120, rotation: 8 })
+        spring('#ch-pap', T[18] - 0.05, { x: -40 })
+        cam('#s2', T[15] - 0.1, X.s3 - T[15], 1.1, '755px 920px', 'power2.out')
+        // page push up into the crates
+        tl.to('#s2', { y: -1920, duration: 0.4, ease: 'power3.inOut' }, X.s3 - 0.1)
+        show('#s3', X.s3 - 0.1)
+        tl.fromTo('#s3', { y: 1920 }, { y: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, X.s3 - 0.1)
+        hide('#s2', X.s3 + 0.3)
+
+        // ---------- 3. crates drop in, the amount counts up ----------
+        const drop0 = Math.max(T[21] - 0.25, X.s3 + 0.3)
+        ;['#c1', '#c2', '#c3'].forEach((c, i) => { show(c, drop0 + i * 0.16); tl.fromTo(c, { y: -1200, rotation: i === 1 ? 10 : -10 }, { y: 0, rotation: i === 2 ? -2 : 2, duration: 0.42, ease: 'bounce.out' }, drop0 + i * 0.16) })
+        spring('#o-num', T[25] - 0.08, {})
+        const amt = { v: 0 }
+        tl.fromTo(amt, { v: 0 }, { v: 500, duration: T[27] - T[25] + 0.1, ease: 'power2.out', immediateRender: false, onUpdate: () => { const k = Math.round(amt.v); $('amt').textContent = k ? k + ' 000' : '0' } }, T[25])
+        tl.fromTo('#o-num', { scale: 1 }, { scale: 1.16, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T[27] + 0.1)
+        ;['#c1', '#c2', '#c3'].forEach((c, i) => tl.fromTo(c, { scale: 1 }, { scale: 1.06, duration: 0.1, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T[27] + 0.1 + i * 0.05))
+        cam('#s3', X.s3 + 0.3, X.s4 - X.s3 - 0.3, 1.07, '540px 1100px', 'none')
+
+        // ---------- 4. iris opens on the Machias full-frame; it folds into a card; camera dives on the ship ----------
+        unfold('#o-mach', X.s4 + 0.3)
+        kb('#mach-img', X.s4, X.s5, 1.25, 1.05)
+        spring('#ch-mach', T[33] - 0.08, { x: -60 })
+        spring('#o-ny', T[35] - 0.08, { x: 160, rotation: 14 })
+        cam('#s4', T[35], X.s5 - T[35], 1.12, '710px 675px', 'power2.in')
+
+        // ---------- 5. the black flood leaves the « New York » badge and contracts into Wall Street ----------
+        spring('#o-ncb', X.s5 + 0.05, {})
+        tl.fromTo('#ncb-img', { scale: 1.3, yPercent: 8 }, { scale: 1.05, yPercent: -2, duration: X.s6 - X.s5, ease: 'power1.inOut', immediateRender: false }, X.s5)
+        spring('#ch-ncb', T[44] - 0.08, { x: -60 })
+        spring('#o-citi', T[49] - 0.12, { rotation: 14 })
+        // page push left into the letter
+        tl.to('#s5', { x: -1080, duration: 0.42, ease: 'power3.inOut' }, X.s6 - 0.22)
+        show('#s6', X.s6 - 0.22)
+        tl.fromTo('#s6', { x: 1080 }, { x: 0, duration: 0.42, ease: 'power3.inOut', immediateRender: false }, X.s6 - 0.22)
+        hide('#s5', X.s6 + 0.2)
+
+        // ---------- 6. the letter types itself; the camera lands on « violation » ----------
+        tl.fromTo('#o-letter', { rotation: 0 }, { rotation: -2, duration: 0.5, ease: 'back.out(2)', immediateRender: false }, X.s6 + 0.1)
+        ;[['#l1', T[51]], ['#l2', T[52]], ['#l3', T[53]]].forEach(([s, t0]) => tl.fromTo(s, { autoAlpha: 1, clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.3, ease: 'power2.out' }, t0))
+        cam('#s6', T[53] - 0.05, 0.6, 1.18, '450px 1030px', 'power3.out')
+
+        // ---------- 7. red flood out of « violation »; the gold, in black and white, never returns ----------
+        spring('#o-gone', X.s7 + 0.05, { rotation: -6 })
+        kb('#o-gone img', X.s7, X.s8, 1.15, 1.02)
+        stamp('#o-never', T[59] - 0.05, -8)
+        shake(T[59] + 0.13)
+
+        // ---------- 8. iris on the Marines, 1915; the occupation runs along the bar ----------
+        unfold('#o-mar', X.s8 + 0.3)
+        kb('#mar-img', X.s8, X.s9, 1.3, 1.05)
+        spring('#ch-mar', T[65] - 0.08, { x: -60 })
+        spring(['#t15', '#t34'], T[68] - 0.25, {})
+        tl.fromTo('#tbar', { autoAlpha: 1, scaleX: 0, transformOrigin: '0 50%' }, { scaleX: 1, duration: 0.3, ease: 'power3.out' }, T[68] - 0.2)
+        tl.fromTo('#tfill', { scaleX: 0 }, { scaleX: 1, duration: T[72] - T[68] + 0.1, ease: 'power1.inOut' }, T[68])
+        spring('#o-19', T[72] - 0.08, { rotation: -12 })
+        cam('#s8', T[72], 0.5, 1.1, '490px 1515px', 'power2.in')
+
+        // ---------- 9. black flood from « 19 ans », held through the scratch; it contracts on « un braquage » ----------
+        kb('#bil-img', X.s9, X.s10, 1.25, 1.05)
+        stamp('#o-braq', T[76] - 0.05, -7)
+        shake(T[76] + 0.13)
+        cam('#s9', T[76] + 0.1, X.s10 - T[76] - 0.1, 1.08, '540px 1300px', 'power1.out')
+        // page push up into the question
+        tl.to('#s9', { y: -1920, duration: 0.4, ease: 'power3.inOut' }, X.s10 - 0.1)
+        show('#s10', X.s10 - 0.1)
+        tl.fromTo('#s10', { y: 1920 }, { y: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, X.s10 - 0.1)
+        hide('#s9', X.s10 + 0.3)
+
+        // ---------- 10. OUI / NON, and where to answer ----------
+        spring('#o-oui', T[87] - 0.1, { rotation: -10 })
+        spring('#o-non', T[89] - 0.1, { rotation: 10 })
+        spring('#o-bub', T[90] - 0.12, {})
+        spring('#o-arrow', T[91] - 0.02, { rotation: -30 })
+        const left = END - T[91] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[91] + 0.5)
+        tl.to(['#o-oui', '#o-non'], { y: -10, duration: 0.5, yoyo: true, repeat: Math.max(1, Math.floor(left / 0.5)), ease: 'sine.inOut', stagger: 0.25 }, T[91] + 0.4)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
