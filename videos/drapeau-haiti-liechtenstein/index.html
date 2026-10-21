@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Haïti et le Liechtenstein avaient le même drapeau</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Grammaire de la référence K (_engine/references/ref-k-histoire) : un plan continu sur fond gris clair, texte = voix mot par mot
+      (gris flou → encre), lignes de tailles mêlées, objets posés avec une ombre douce, changement de partie par flou plein cadre.
+      Pas de marque : la couleur vient des drapeaux (bleu et rouge). Le rythme vient du son : la musique se coupe net (scratch avant
+      « Surprise », silence après « Et Haïti ? », retour en force sur « Pas nous »), roulement de tambour jusqu'à « 1936 ».
+    -->
+    <style>
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; }
+      .w { display: inline-block; }
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      .h { font-size: 170px; font-weight: 900; letter-spacing: -0.05em; line-height: 1; }
+      .x { font-size: 250px; font-weight: 900; letter-spacing: -0.06em; line-height: 0.95; }
+
+      .obj { position: absolute; z-index: 10; }
+      .flag { position: absolute; overflow: hidden; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); }
+      .flag .band { position: absolute; left: 0; right: 0; height: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; letter-spacing: 0.18em; }
+      .flag .top { top: 0; background: #00209F; }
+      .flag .bot { bottom: 0; background: #D21034; }
+      .flag .wave { position: absolute; inset: 0; background: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0.16) 70px, rgba(0, 0, 0, 0.14) 150px, rgba(255, 255, 255, 0) 220px); background-size: 440px 100%; mix-blend-mode: soft-light; }
+      .cap { position: absolute; text-align: center; font-weight: 700; font-size: 42px; letter-spacing: -0.01em; }
+      .pole { position: absolute; width: 14px; border-radius: 7px; background: linear-gradient(90deg, #8a8a8a, #d9d9d9 45%, #7a7a7a); box-shadow: 6px 14px 20px rgba(0, 0, 0, 0.15); }
+      .pole::before { content: ""; position: absolute; left: -9px; top: -24px; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f1d77a, #b8901f); }
+
+      .card { position: absolute; width: 440px; border-radius: 30px; overflow: hidden; background: #fff; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.2); }
+      .card .ph { width: 100%; height: 560px; overflow: hidden; }
+      .card .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .card .lab { display: flex; align-items: center; gap: 16px; padding: 22px 24px; font-weight: 700; font-size: 34px; }
+      .card .lab .mini { position: relative; width: 66px; height: 42px; border-radius: 6px; overflow: hidden; flex: none; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+      .card .lab .mini i { position: absolute; left: 0; right: 0; height: 50%; }
+      .card .lab small { display: block; font-size: 24px; font-weight: 600; color: #777; }
+
+      .torch { position: absolute; width: 860px; height: 560px; border-radius: 34px; overflow: hidden; background: #0b0b0b; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.25); }
+      .torch img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .torch b { position: absolute; left: 40px; top: 34px; color: #fff; font-size: 30px; font-weight: 700; letter-spacing: 0.3em; }
+      .torch em { position: absolute; left: 40px; bottom: 30px; color: rgba(255, 255, 255, 0.75); font-style: normal; font-size: 26px; letter-spacing: 0.08em; }
+
+      .eq { position: absolute; font-weight: 900; font-size: 150px; color: #141414; }
+      .stamp { position: absolute; padding: 10px 40px; border: 10px solid #D21034; border-radius: 22px; color: #D21034; font-weight: 900; font-size: 92px; letter-spacing: 0.06em; background: rgba(231, 231, 231, 0.6); }
+      .badge { position: absolute; padding: 12px 34px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 46px; box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25); }
+      .bubble { position: absolute; width: 150px; height: 150px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 100px; color: #00209F; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); }
+      .check { position: absolute; width: 150px; height: 150px; border-radius: 50%; background: #1B8F3A; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 92px; color: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22); }
+
+      .sub { position: absolute; width: 560px; height: 140px; border-radius: 999px; background: #D21034; color: #fff; display: flex; align-items: center; justify-content: center; gap: 22px; font-weight: 800; font-size: 54px; box-shadow: 0 26px 50px rgba(210, 16, 52, 0.35); }
+      .sub svg { width: 56px; height: 56px; }
+      .hand { position: absolute; width: 120px; height: 120px; }
+
+      #veil { position: absolute; inset: 0; background: #E7E7E7; opacity: 0; z-index: 40; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1080" data-height="1920">
+      <div id="world">
+        <div class="grid" id="grid"></div>
+
+        <!-- 1. two identical flags slide in and lay on top of each other -->
+        <div class="obj" id="o-pair"></div>
+        <!-- 2. the flag builds itself: blue on top, red below -->
+        <div class="obj" id="o-build"></div>
+        <!-- 3. one in the Caribbean, one in the Alps -->
+        <div class="card obj" id="c-ht" style="left: 60px; top: 620px"><div class="ph"><img id="ht-img" src="assets/img/haiti.jpg" alt="" style="object-position: 50% 60%" /></div><div class="lab"><span class="mini"><i style="top: 0; background: #00209F"></i><i style="bottom: 0; background: #D21034"></i></span><div>Haïti<small>Caraïbes</small></div></div></div>
+        <div class="card obj" id="c-li" style="left: 580px; top: 680px"><div class="ph"><img id="li-img" src="assets/img/vaduz.jpg" alt="" style="object-position: 50% 30%" /></div><div class="lab"><span class="mini"><i style="top: 0; background: #00209F"></i><i style="bottom: 0; background: #D21034"></i></span><div>Liechtenstein<small>Alpes</small></div></div></div>
+        <!-- 4. the 1936 Olympics -->
+        <div class="torch obj" id="o-torch" style="left: 110px; top: 760px"><img id="torch-img" src="assets/img/torche.jpg" alt="" style="object-position: 50% 50%" /><b>BERLIN</b><em>Jeux olympiques d'été</em></div>
+        <!-- 5. two flags raised side by side: identical -->
+        <div class="obj" id="o-poles"></div>
+        <div class="eq obj" id="o-eq" style="left: 500px; top: 700px">=</div>
+        <div class="stamp obj" id="o-stamp" style="left: 170px; top: 1010px">IDENTIQUES</div>
+        <!-- 6. 1937: the crown -->
+        <div class="obj" id="o-li"></div>
+        <div class="badge obj" id="o-1937" style="left: 760px; top: 690px">1937</div>
+        <img class="obj" id="o-crown" src="assets/img/couronne.png" alt="" style="left: 232px; top: 806px; width: 206px; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.3))" />
+        <!-- 7. Haïti: nothing changed -->
+        <div class="obj" id="o-ht"></div>
+        <div class="bubble obj" id="o-q" style="left: 850px; top: 650px">?</div>
+        <div class="check obj" id="o-ok" style="left: 850px; top: 650px">✓</div>
+        <!-- 8. subscribe -->
+        <div class="sub obj" id="o-sub" style="left: 260px; top: 1000px"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z" /></svg><span id="sub-txt">S'abonner</span></div>
+        <svg class="hand obj" id="o-hand" viewBox="0 0 24 24" style="left: 640px; top: 1080px"><path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74Zm9.84 4.63-4.54-2.26a1.3 1.3 0 0 0-.54-.11H13v-6a1.5 1.5 0 0 0-3 0v10.74l-3.43-.72a1.06 1.06 0 0 0-.97 1.78l4.07 4.07c.27.27.65.43 1.06.43h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.89-1.18Z" fill="#141414" stroke="#fff" stroke-width="0.6" /></svg>
+
+        <div id="blocks"></div>
+      </div>
+      <div id="veil"></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), longues pauses raccourcies. Musique : ElevenLabs via FLORA, coupures et retours
+           déjà mixés dans le fichier. Sons sur mesure (scratch, foule, roulement) : ElevenLabs Sound Effects via FLORA. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="27.96" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="30" data-track-index="11" data-volume="0.2"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx1" src="assets/sfx/whoosh-short.mp3" data-start="0.08" data-duration="0.57" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx2" src="assets/sfx/impact-bass-1.mp3" data-start="3.14" data-duration="2.12" data-track-index="20" data-volume="0.45"></audio>
+      <audio id="sx3" src="assets/sfx/whoosh.mp3" data-start="3.62" data-duration="0.57" data-track-index="21" data-volume="0.28"></audio>
+      <audio id="sx4" src="assets/sfx/pop.mp3" data-start="3.96" data-duration="0.72" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx5" src="assets/sfx/pop.mp3" data-start="4.89" data-duration="0.72" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx6" src="assets/sfx/whoosh.mp3" data-start="5.39" data-duration="0.57" data-track-index="20" data-volume="0.28"></audio>
+      <audio id="sx7" src="assets/sfx/whoosh-short.mp3" data-start="5.63" data-duration="0.57" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx8" src="assets/sfx/click.mp3" data-start="6.08" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx9" src="assets/sfx/whoosh-short.mp3" data-start="6.95" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx10" src="assets/sfx/click.mp3" data-start="7.4" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx11" src="assets/sfx/whoosh.mp3" data-start="9.89" data-duration="0.57" data-track-index="20" data-volume="0.28"></audio>
+      <audio id="sx12" src="assets/sfx/roulement.mp3" data-start="11.26" data-duration="1.6" data-track-index="20" data-volume="0.5"></audio>
+      <audio id="sx13" src="assets/sfx/impact-bass-2.mp3" data-start="12.68" data-duration="2.59" data-track-index="21" data-volume="0.5"></audio>
+      <audio id="sx14" src="assets/sfx/foule.mp3" data-start="12.68" data-duration="0.59" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx15" src="assets/sfx/scratch.mp3" data-start="13.07" data-duration="1.23" data-track-index="20" data-volume="0.55"></audio>
+      <audio id="sx16" src="assets/sfx/whoosh.mp3" data-start="13.49" data-duration="0.57" data-track-index="22" data-volume="0.28"></audio>
+      <audio id="sx17" src="assets/sfx/impact-bass-1.mp3" data-start="13.83" data-duration="2.12" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx18" src="assets/sfx/whoosh.mp3" data-start="14.59" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx19" src="assets/sfx/pop.mp3" data-start="15.03" data-duration="0.72" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx20" src="assets/sfx/impact-bass-2.mp3" data-start="15.87" data-duration="2.59" data-track-index="20" data-volume="0.55"></audio>
+      <audio id="sx21" src="assets/sfx/click.mp3" data-start="15.87" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx22" src="assets/sfx/whoosh.mp3" data-start="16.53" data-duration="0.57" data-track-index="21" data-volume="0.28"></audio>
+      <audio id="sx23" src="assets/sfx/pop.mp3" data-start="17.63" data-duration="0.72" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx24" src="assets/sfx/whoosh-short.mp3" data-start="20.33" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx25" src="assets/sfx/sparkle.mp3" data-start="20.73" data-duration="1.8" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx26" src="assets/sfx/chime.mp3" data-start="20.73" data-duration="2.54" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx27" src="assets/sfx/whoosh.mp3" data-start="21.34" data-duration="0.57" data-track-index="20" data-volume="0.28"></audio>
+      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="21.78" data-duration="0.72" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx29" src="assets/sfx/key-press.mp3" data-start="22.18" data-duration="0.43" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx30" src="assets/sfx/key-press.mp3" data-start="22.5" data-duration="0.43" data-track-index="24" data-volume="0.22"></audio>
+      <audio id="sx31" src="assets/sfx/key-press.mp3" data-start="22.82" data-duration="0.43" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="23.5" data-duration="0.72" data-track-index="20" data-volume="0.32"></audio>
+      <audio id="sx33" src="assets/sfx/impact-bass-2.mp3" data-start="26.57" data-duration="2.59" data-track-index="20" data-volume="0.6"></audio>
+      <audio id="sx34" src="assets/sfx/foule.mp3" data-start="26.62" data-duration="3.03" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx35" src="assets/sfx/whoosh.mp3" data-start="27.08" data-duration="0.57" data-track-index="22" data-volume="0.28"></audio>
+      <audio id="sx36" src="assets/sfx/pop.mp3" data-start="27.35" data-duration="0.72" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx37" src="assets/sfx/click.mp3" data-start="28.05" data-duration="0.37" data-track-index="22" data-volume="0.45"></audio>
+      <audio id="sx38" src="assets/sfx/sparkle.mp3" data-start="28.15" data-duration="1.8" data-track-index="23" data-volume="0.22"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 30
+        const BLUE = '#00209F'
+        const RED = '#D21034'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0, 0.72, 0.77, 0.82, 2.01, 2.513, 2.656, 2.944, 3.76, 3.833, 3.911, 4.69, 4.855, 4.921, 5.53, 5.58, 5.661, 5.783, 6.85, 7.302, 7.433, 7.691, 7.885, 8.55, 8.861, 9.004, 9.146, 10.03, 10.912, 11.303, 12.284, 12.48, 13.63, 14.49, 14.663, 14.831, 15.292, 15.522, 16.67, 17.43, 17.48, 18.75, 18.874, 19.676, 20.047, 20.233, 20.727, 20.912, 21.035, 21.48, 21.526, 21.827, 22.59, 22.92, 23.08, 23.3, 24.04, 24.3, 24.72, 24.85, 25.15, 25.33, 26.37, 26.5, 27.22, 27.6, 27.7, 27.8]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ['Haïti', 'et', 'le', 'Liechtenstein', 'avaient', 'le', 'même', 'drapeau.', 'Bleu', 'en', 'haut,', 'rouge', 'en', 'bas.', "L'un", 'dans', 'les', 'Caraïbes,', "l'autre", 'au', 'cœur', 'des', 'Alpes.', 'Personne', 'ne', 'le', 'remarque…', "jusqu'aux", 'Jeux', 'olympiques', 'de', '1936.', 'Surprise :', 'les', 'deux', 'drapeaux', 'sont', 'identiques !', 'Alors,', 'en', '1937,', 'le', 'Liechtenstein', 'ajoute', 'une', 'couronne', 'sur', 'le', 'sien.', 'Et', 'Haïti ?', '', 'Haïti', "n'a", 'rien', 'changé.', "C'est", "l'Europe", 'qui', 'a', 'dû', 'changer.', 'Pas', 'nous.', 'Abonnez-vous', 'pour', 'la', 'suite.']
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 220, lines: [[0, 2, 's'], [3, 3, 'b', BLUE], [4, 6, 's'], [7, 7, 'bi', RED]] },
+          { y: 300, lines: [[8, 10, 'mi', BLUE], [11, 13, 'mi', RED]] },
+          { y: 220, lines: [[14, 16, 's'], [17, 17, 'mi', BLUE], [18, 21, 's'], [22, 22, 'mi', RED]] },
+          { y: 240, lines: [[23, 26, 'm']] },
+          { y: 220, lines: [[27, 30, 's'], [31, 31, 'x', BLUE]] },
+          { y: 220, lines: [[32, 32, 'b', RED], [33, 35, 's'], [36, 37, 'm']] },
+          { y: 220, lines: [[38, 40, 'm'], [41, 43, 's'], [44, 45, 'bi', BLUE], [46, 48, 's']] },
+          { y: 300, lines: [[49, 50, 'm']] },
+          { y: 300, lines: [[52, 55, 'm']] },
+          { y: 260, lines: [[56, 57, 'm'], [58, 61, 's']], until: 64 },
+          { y: 1330, lines: [[62, 63, 'h', RED]] },
+          { y: 600, lines: [[64, 64, 'm'], [65, 67, 's']] },
+        ]
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = B.until != null ? T[B.until] - 0.08 : next ? T[next.lines[0][0]] - 0.08 : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            for (let k = a; k <= b; k++) {
+              if (!WORDS[k]) continue
+              const w = el('span', 'w', WORDS[k], line)
+              // each word lands blurred and pale, then settles (reference K)
+              tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 10, filter: blur(8) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.22, ease: 'power2.out' }, T[k])
+              tl.to(w, { color: col || '#141414', duration: 0.35, ease: 'power1.out' }, T[k] + 0.12)
+            }
+          })
+          if (end < END) tl.to(box, { autoAlpha: 0, filter: blur(10), y: -16, duration: 0.18, ease: 'power2.in' }, end - 0.18)
+        })
+
+        // ---------- full-frame blur between parts (the reference never cuts) ----------
+        const morph = (at) => {
+          tl.to('#world', { filter: blur(28), duration: 0.22, ease: 'power2.in' }, at - 0.22)
+          tl.to('#veil', { opacity: 0.55, duration: 0.22, ease: 'power2.in' }, at - 0.22)
+          tl.to('#world', { filter: blur(0), duration: 0.32, ease: 'power2.out' }, at + 0.02)
+          tl.to('#veil', { opacity: 0, duration: 0.32, ease: 'power2.out' }, at + 0.02)
+        }
+        const MORPHS = [8, 14, 27, 32, 38, 49, 64].map((k) => Math.round((T[k] - 0.12) * 100) / 100)
+        MORPHS.forEach(morph)
+
+        const pop = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0.86, y: 60, filter: blur(14) }, o), { autoAlpha: 1, scale: 1, y: 0, x: 0, rotation: 0, filter: blur(0), duration: 0.55, ease: 'expo.out' }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        // a drawn flag (blue over red) with a soft moving fold
+        const flag = (parent, x, y, w, h) => {
+          const f = el('div', 'flag', null, parent)
+          Object.assign(f.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' })
+          el('div', 'band top', null, f)
+          el('div', 'band bot', null, f)
+          el('div', 'wave', null, f)
+          return f
+        }
+        const wave = (f, from, to) => tl.fromTo(f.querySelector('.wave'), { backgroundPosition: '0px 0px' }, { backgroundPosition: -Math.round((to - from) * 260) + 'px 0px', duration: to - from, ease: 'none', immediateRender: false }, from)
+        const cap = (parent, txt, x, y, w) => { const c = el('div', 'cap', txt, parent); Object.assign(c.style, { left: x + 'px', top: y + 'px', width: w + 'px' }); return c }
+        gsap.set(['#o-pair', '#o-build', '#c-ht', '#c-li', '#o-torch', '#o-poles', '#o-eq', '#o-stamp', '#o-li', '#o-1937', '#o-crown', '#o-ht', '#o-q', '#o-ok', '#o-sub', '#o-hand'], { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.6 }, 0.1)
+
+        // ---------- 1. hook: Haïti's flag from the left, Liechtenstein's from the right; on "drapeau" they lie on top of each other ----------
+        const pair = $('o-pair')
+        tl.set(pair, { autoAlpha: 1 }, 0)
+        const fA = flag(pair, 110, 900, 400, 250)
+        const fB = flag(pair, 570, 900, 400, 250)
+        const cA = cap(pair, 'Haïti', 110, 1180, 400)
+        const cB = cap(pair, 'Liechtenstein', 570, 1180, 400)
+        tl.fromTo(fA, { x: -640, rotation: -14 }, { x: 0, rotation: -3, duration: 0.7, ease: 'expo.out' }, 0)
+        tl.fromTo(fB, { x: 640, rotation: 14 }, { x: 0, rotation: 3, duration: 0.7, ease: 'expo.out' }, 0.08)
+        tl.fromTo([cA, cB], { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.1 }, 0.5)
+        tl.to(fA, { x: 230, rotation: 0, duration: 0.35, ease: 'power3.in' }, T[7] - 0.35)
+        tl.to(fB, { x: -230, rotation: 0, duration: 0.35, ease: 'power3.in' }, T[7] - 0.35)
+        tl.to([cA, cB], { autoAlpha: 0, duration: 0.2 }, T[7] - 0.3)
+        tl.fromTo([fA, fB], { scale: 1 }, { scale: 1.12, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T[7])
+        wave(fA, 0, MORPHS[0])
+        wave(fB, 0, MORPHS[0])
+        hide(pair, MORPHS[0])
+
+        // ---------- 2. "blue on top, red below": the bands arrive one at a time ----------
+        const build = $('o-build')
+        const fC = flag(build, 130, 820, 820, 512)
+        fC.style.background = '#d4d4d4'
+        const topBand = fC.querySelector('.top')
+        const botBand = fC.querySelector('.bot')
+        topBand.textContent = 'BLEU'
+        botBand.textContent = 'ROUGE'
+        topBand.style.fontSize = botBand.style.fontSize = '64px'
+        tl.set(build, { autoAlpha: 1 }, MORPHS[0])
+        pop(fC, MORPHS[0] + 0.02, { scale: 0.9 })
+        tl.fromTo(topBand, { yPercent: -100 }, { yPercent: 0, duration: 0.45, ease: 'bounce.out' }, T[8])
+        tl.fromTo(botBand, { yPercent: 100 }, { yPercent: 0, duration: 0.45, ease: 'bounce.out' }, T[11])
+        wave(fC, MORPHS[0], MORPHS[1])
+        hide(build, MORPHS[1])
+
+        // ---------- 3. the Caribbean and the Alps; on "Personne ne le remarque…" the photos fade back ----------
+        pop('#c-ht', T[14] - 0.1, { x: -200, rotation: -12 })
+        tl.to('#c-ht', { rotation: -4, duration: 0.4, ease: 'power2.out' }, T[14] + 0.45)
+        pop('#c-li', T[18] - 0.1, { x: 200, rotation: 12 })
+        tl.to('#c-li', { rotation: 4, duration: 0.4, ease: 'power2.out' }, T[18] + 0.45)
+        tl.fromTo(['#ht-img', '#li-img'], { scale: 1.15 }, { scale: 1, duration: MORPHS[2] - MORPHS[1], ease: 'none' }, MORPHS[1])
+        tl.to(['#c-ht', '#c-li'], { filter: 'grayscale(1) blur(3px)', opacity: 0.5, scale: 0.94, duration: 0.6 }, T[23])
+        hide(['#c-ht', '#c-li'], MORPHS[2])
+
+        // ---------- 4. the 1936 Olympics (drum roll into "1936") ----------
+        pop('#o-torch', MORPHS[2] + 0.04)
+        tl.fromTo('#torch-img', { scale: 1.2, x: -30 }, { scale: 1.02, x: 20, duration: MORPHS[3] - MORPHS[2], ease: 'none' }, MORPHS[2])
+        tl.fromTo('#o-torch', { x: 0 }, { x: 8, duration: 0.05, yoyo: true, repeat: 9, ease: 'none', immediateRender: false }, T[31] - 0.05)
+        hide('#o-torch', MORPHS[3])
+
+        // ---------- 5. "Surprise": both flags go up their poles, "=", then the stamp ----------
+        const poles = $('o-poles')
+        tl.set(poles, { autoAlpha: 1 }, MORPHS[3])
+        const p1 = el('div', 'pole', null, poles)
+        Object.assign(p1.style, { left: '110px', top: '640px', height: '760px' })
+        const p2 = el('div', 'pole', null, poles)
+        Object.assign(p2.style, { left: '590px', top: '640px', height: '760px' })
+        const f1 = flag(poles, 124, 660, 380, 238)
+        const f2 = flag(poles, 604, 660, 380, 238)
+        f1.style.borderRadius = f2.style.borderRadius = '0 10px 10px 0'
+        const c1 = cap(poles, 'Haïti', 30, 1420, 380)
+        const c2 = cap(poles, 'Liechtenstein', 480, 1420, 520)
+        tl.fromTo([p1, p2], { scaleY: 0, transformOrigin: '50% 100%' }, { scaleY: 1, duration: 0.4, ease: 'expo.out', stagger: 0.08 }, MORPHS[3] + 0.02)
+        tl.fromTo(f1, { y: 560, autoAlpha: 1 }, { y: 0, autoAlpha: 1, duration: 0.9, ease: 'power3.out' }, T[33] - 0.1)
+        tl.fromTo(f2, { y: 560, autoAlpha: 1 }, { y: 0, autoAlpha: 1, duration: 0.9, ease: 'power3.out' }, T[33] + 0.05)
+        tl.fromTo([c1, c2], { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, T[33])
+        tl.fromTo('#o-eq', { autoAlpha: 0, scale: 0.2 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'back.out(3)' }, T[35])
+        tl.fromTo('#o-stamp', { autoAlpha: 0, scale: 2.6, rotation: -2 }, { autoAlpha: 1, scale: 1, rotation: -8, duration: 0.22, ease: 'power4.in' }, T[37] - 0.05)
+        tl.fromTo('#world', { x: 0 }, { x: 10, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, T[37] + 0.17)
+        wave(f1, MORPHS[3], MORPHS[4])
+        wave(f2, MORPHS[3], MORPHS[4])
+        hide(['#o-poles', '#o-eq', '#o-stamp'], MORPHS[4])
+
+        // ---------- 6. 1937: Liechtenstein adds a crown ----------
+        const liBox = $('o-li')
+        const fL = flag(liBox, 130, 760, 820, 512)
+        const cL = cap(liBox, 'Liechtenstein', 130, 1300, 820)
+        tl.set(liBox, { autoAlpha: 1 }, MORPHS[4])
+        pop(fL, MORPHS[4] + 0.02, { scale: 0.9 })
+        tl.fromTo(cL, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, MORPHS[4] + 0.3)
+        pop('#o-1937', T[40] - 0.05, { scale: 0.3, rotation: 12 })
+        tl.fromTo('#o-crown', { autoAlpha: 0, y: -620, rotation: -25, scale: 1.3 }, { autoAlpha: 1, y: 0, rotation: 0, scale: 1, duration: 0.7, ease: 'bounce.out' }, T[45] - 0.1)
+        wave(fL, MORPHS[4], MORPHS[5])
+        hide(['#o-li', '#o-1937', '#o-crown'], MORPHS[5])
+
+        // ---------- 7. Haïti changed nothing; the punchline ----------
+        const htBox = $('o-ht')
+        const fH = flag(htBox, 130, 760, 820, 512)
+        const cH = cap(htBox, 'Haïti', 130, 1300, 820)
+        tl.set(htBox, { autoAlpha: 1 }, MORPHS[5])
+        pop(fH, MORPHS[5] + 0.02, { scale: 0.9 })
+        tl.fromTo(cH, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, MORPHS[5] + 0.3)
+        pop('#o-q', T[50] + 0.05, { scale: 0.2, rotation: -20 })
+        tl.to('#o-q', { rotation: 10, duration: 0.3, yoyo: true, repeat: 3, ease: 'sine.inOut' }, T[50] + 0.6)
+        hide('#o-q', T[55])
+        pop('#o-ok', T[55], { scale: 0.2, rotation: -30 })
+        tl.to(cH, { autoAlpha: 0, duration: 0.2 }, T[62] - 0.2)
+        tl.to(fH, { scale: 1.08, rotation: -2, duration: 0.25, ease: 'back.out(3)' }, T[62])
+        tl.to('#o-ok', { autoAlpha: 0, duration: 0.2 }, T[62] - 0.2)
+        tl.fromTo('#world', { y: 0 }, { y: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, T[62] + 0.05)
+        wave(fH, MORPHS[5], MORPHS[6])
+        hide(['#o-ht', '#o-q', '#o-ok'], MORPHS[6])
+
+        // ---------- 8. subscribe: the button, a tap, "Abonné ✓" ----------
+        pop('#o-sub', MORPHS[6] + 0.04, { scale: 0.5 })
+        tl.fromTo('#o-hand', { autoAlpha: 0, x: 260, y: 300 }, { autoAlpha: 1, x: 0, y: 0, duration: 0.45, ease: 'power3.out' }, T[65] - 0.2)
+        tl.to('#o-hand', { scale: 0.85, duration: 0.08, yoyo: true, repeat: 1 }, T[66] + 0.15)
+        tl.to('#o-sub', { scale: 0.94, duration: 0.08, yoyo: true, repeat: 1 }, T[66] + 0.15)
+        tl.to('#o-sub', { backgroundColor: '#2b2b2b', boxShadow: '0 26px 50px rgba(0, 0, 0, 0.25)', duration: 0.2 }, T[66] + 0.25)
+        tl.set('#sub-txt', { textContent: 'Abonné ✓' }, T[66] + 0.25)
+
+        // slow camera push over the whole film
+        tl.fromTo('#world', { scale: 1 }, { scale: 1.035, duration: END, ease: 'none', immediateRender: false }, 0)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>

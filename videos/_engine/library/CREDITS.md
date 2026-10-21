@@ -36,3 +36,4 @@ Propriété de KONVWA, copiés depuis le site (konvwa.shop) : `lib:site/avion-ca
 - `lib:pieuvre/p3232758.jpg` — pixabay photo 3232758 — https://pixabay.com/photos/octopus-sea-life-underwater-ocean-3232758/ — par [ErikTanghe](https://pixabay.com/users/8013345/)
 - `lib:pieuvre/p1025738.jpg` — pixabay photo 1025738 — https://pixabay.com/photos/octopus-underwater-sea-creatures-1025738/ — par [jusch](https://pixabay.com/users/17627/)
 - `lib:pieuvre/i2373177.png` — pixabay illustration 2373177 — https://pixabay.com/illustrations/octopus-water-creature-illustrate-2373177/ — par [thisisprabha](https://pixabay.com/users/837282/)
+- `lib:pays/vaduz.jpg` — pixabay photo 7581523 — https://pixabay.com/photos/castle-fortress-liechtenstein-vaduz-7581523/ — par [Leonhard_Niederwimmer](https://pixabay.com/users/1131094/)
