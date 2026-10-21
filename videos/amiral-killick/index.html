@@ -8,8 +8,8 @@
     <!--
       Même grammaire que henriquez-1900 (référence K, version à vitesse normale) : plan continu sur fond gris clair, texte = voix mot
       par mot, objets posés avec une ombre douce (cartes photo, pastilles, tampons, carte dessinée), flou plein cadre entre les parties.
-      Sans marque. Les images sont des illustrations générées (Nano Banana 2.1 via FLORA), signalées « Illustration » ; l'amiral est
-      toujours de dos. Fin : question OUI / NON et flèche vers le bouton commentaire de TikTok.
+      Sans marque. Images réelles : photos de 1902 (Wikimedia Commons, prises depuis le Panther), portrait de Killick fourni par le client,
+      drapeau (Unsplash). Fin : question OUI / NON et flèche vers le bouton commentaire de TikTok.
     -->
     <style>
       html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
@@ -66,23 +66,23 @@
         <div class="grid" id="grid"></div>
 
         <!-- 1. the ship, then a burst on « sauter » -->
-        <div class="photo obj" id="o-ship" style="left: 140px; top: 700px; width: 800px; height: 600px"><img src="assets/img/navire.jpg" alt="" style="object-position: 50% 88%" /><em>Illustration</em></div>
+        <div class="photo obj" id="o-ship" style="left: 140px; top: 700px; width: 800px; height: 600px"><img src="assets/img/crete-fumee.jpg" alt="" style="object-position: 50% 60%" /><em>Crête-à-Pierrot, 1902</em></div>
         <svg class="burst obj" id="o-burst" viewBox="0 0 100 100" style="left: 560px; top: 600px"><path d="M50 2 L58 30 L84 12 L70 40 L98 46 L70 56 L88 84 L58 68 L52 98 L44 68 L16 86 L30 58 L2 50 L30 40 L14 14 L42 30 Z" fill="#FF8A2A" stroke="#D21034" stroke-width="3" /><path d="M50 22 L55 38 L70 30 L62 46 L78 52 L62 57 L70 72 L54 62 L50 78 L46 62 L30 72 L38 57 L22 50 L38 45 L30 30 L45 38 Z" fill="#FFD23F" /></svg>
         <!-- 2. September 1902, civil war -->
         <div class="cal obj" id="o-cal" style="left: 330px; top: 640px"><div class="top">SEPT.</div><b>1902</b></div>
-        <div class="chip obj" id="ch-firmin" style="left: 70px; top: 1200px">Camp Firmin</div>
+        <div class="chip obj" id="ch-firmin" style="left: 60px; top: 1200px"><img src="assets/img/firmin.jpg" alt="" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; object-position: 50% 20%" />Camp Firmin</div>
         <div class="vs obj" id="o-vs" style="left: 500px; top: 1190px">VS</div>
-        <div class="chip obj" id="ch-alexis" style="left: 620px; top: 1200px">Camp Nord Alexis</div>
+        <div class="chip obj" id="ch-alexis" style="left: 580px; top: 1200px"><img src="assets/img/nord-alexis.jpg" alt="" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; object-position: 50% 20%" />Camp Nord Alexis</div>
         <!-- 3. the admiral and his ship -->
-        <div class="card obj" id="c-killick" style="left: 70px; top: 620px; width: 440px"><div class="ph" style="height: 560px"><img src="assets/img/amiral.jpg" alt="" style="object-position: 40% 30%" /><em>Illustration</em></div><div class="lab">Hammerton Killick<small>Amiral haïtien</small></div></div>
-        <div class="card obj" id="c-ship" style="left: 570px; top: 620px; width: 440px"><div class="ph" style="height: 560px"><img src="assets/img/navire.jpg" alt="" style="object-position: 50% 92%" /><em>Illustration</em></div><div class="lab">Crête-à-Pierrot<small>Navire de guerre</small></div></div>
+        <div class="card obj" id="c-killick" style="left: 70px; top: 620px; width: 440px"><div class="ph" style="height: 560px"><img src="assets/img/killick.jpg" alt="" style="object-position: 50% 25%" /></div><div class="lab">Hammerton Killick<small>Amiral haïtien</small></div></div>
+        <div class="card obj" id="c-ship" style="left: 570px; top: 620px; width: 440px"><div class="ph" style="height: 560px"><img src="assets/img/crete-gonaives.jpg" alt="" style="object-position: 52% 60%" /></div><div class="lab">Crête-à-Pierrot<small>Navire de guerre</small></div></div>
         <div class="chip obj" id="ch-camp" style="left: 600px; top: 1300px"><span class="mini"><i style="top: 0; height: 50%; background: #00209F"></i><i style="bottom: 0; height: 50%; background: #D21034"></i></span>Camp Firmin</div>
         <!-- 4. the seized weapons -->
-        <div class="photo obj" id="o-armes" style="left: 70px; top: 680px; width: 940px; height: 620px"><img id="armes-img" src="assets/img/armes.jpg" alt="" style="object-position: 50% 60%" /><em>Illustration</em></div>
-        <div class="chip obj" id="ch-cargo" style="left: 110px; top: 620px"><span class="mini"><i style="top: 0; height: 34%; background: #111"></i><i style="top: 33%; height: 34%; background: #fff"></i><i style="bottom: 0; height: 34%; background: #D21034"></i></span>Cargo allemand</div>
+        <div class="card obj" id="o-armes" style="left: 70px; top: 680px; width: 940px; height: 620px"><svg id="armes-img" viewBox="0 0 940 620" style="position: absolute; inset: 0"><rect width="940" height="620" fill="#F4F1EA" /><g transform="translate(170 150)"><rect x="0" y="120" width="600" height="300" rx="10" fill="#A9743F" /><rect x="0" y="120" width="600" height="300" rx="10" fill="none" stroke="#6B4423" stroke-width="10" /><path d="M0 220 H600 M0 320 H600" stroke="#6B4423" stroke-width="8" /><path d="M20 140 L580 400 M580 140 L20 400" stroke="#8C5A2F" stroke-width="12" opacity="0.5" /><g fill="#2B2B2B"><rect x="40" y="40" width="520" height="22" rx="8" transform="rotate(-6 300 50)" /><rect x="60" y="70" width="500" height="22" rx="8" transform="rotate(-2 300 80)" /><rect x="30" y="98" width="530" height="22" rx="8" transform="rotate(3 300 108)" /></g><g fill="#7A4B22"><rect x="420" y="28" width="150" height="34" rx="12" transform="rotate(-6 300 50)" /><rect x="430" y="58" width="140" height="34" rx="12" transform="rotate(-2 300 80)" /><rect x="420" y="86" width="150" height="34" rx="12" transform="rotate(3 300 108)" /></g><text x="300" y="300" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="900" font-size="64" fill="#5A3519" letter-spacing="6">FUSILS</text></g></svg></div>
+        <div class="chip obj" id="ch-cargo" style="left: 110px; top: 620px"><span class="mini"><i style="top: 0; height: 34%; background: #111"></i><i style="top: 33%; height: 34%; background: #fff"></i><i style="bottom: 0; height: 34%; background: #D21034"></i></span>Markomannia · cargo allemand</div>
         <div class="stamp obj" id="o-saisies" style="left: 260px; top: 1250px">SAISIES</div>
         <!-- 5. the Panther -->
-        <div class="photo obj" id="o-panther" style="left: 70px; top: 640px; width: 940px; height: 680px"><img id="panther-img" src="assets/img/panther.jpg" alt="" style="object-position: 50% 35%" /><em>Illustration</em></div>
+        <div class="photo obj" id="o-panther" style="left: 70px; top: 640px; width: 940px; height: 680px"><img id="panther-img" src="assets/img/panther-1901.jpg" alt="" style="object-position: 50% 55%" /><em>SMS Panther</em></div>
         <div class="chip obj" id="ch-panther" style="left: 110px; top: 1270px"><span class="mini"><i style="top: 0; height: 34%; background: #111"></i><i style="top: 33%; height: 34%; background: #fff"></i><i style="bottom: 0; height: 34%; background: #D21034"></i></span>Canonnière allemande</div>
         <!-- 6. Gonaïves, the ultimatum -->
         <div class="map obj" id="o-map" style="left: 70px; top: 620px">
@@ -95,15 +95,15 @@
         <div class="badge obj" id="o-6sept" style="left: 720px; top: 580px">6 sept.</div>
         <div class="bubble obj" id="o-redd" style="left: 380px; top: 1320px">Reddition ?</div>
         <!-- 7. the crew leaves -->
-        <div class="photo obj" id="o-crew" style="left: 70px; top: 640px; width: 940px; height: 700px"><img id="crew-img" src="assets/img/equipage.jpg" alt="" style="object-position: 50% 70%" /><em>Illustration</em></div>
+        <div class="photo obj" id="o-crew" style="left: 70px; top: 640px; width: 940px; height: 700px"><img id="crew-img" src="assets/img/crete-gonaives.jpg" alt="" style="object-position: 48% 60%" /><em>Gonaïves, 6 septembre 1902</em><svg id="boats" viewBox="0 0 940 700" style="position: absolute; inset: 0"><g id="boat1"><path d="M0 0 h56 l-10 14 h-36 z" fill="#111" /><circle cx="18" cy="-6" r="6" fill="#111" /><circle cx="36" cy="-6" r="6" fill="#111" /></g><g id="boat2"><path d="M0 0 h56 l-10 14 h-36 z" fill="#111" /><circle cx="18" cy="-6" r="6" fill="#111" /><circle cx="36" cy="-6" r="6" fill="#111" /></g></svg></div>
         <div class="chip obj" id="ch-crew" style="left: 110px; top: 1290px">Équipage à terre</div>
         <!-- 8. alone on board -->
-        <div class="card obj" id="c-alone" style="left: 250px; top: 560px; width: 580px"><div class="ph" style="height: 760px"><img id="alone-img" src="assets/img/amiral.jpg" alt="" style="object-position: 50% 30%" /><em>Illustration</em></div><div class="lab">Seul à bord<small>6 septembre 1902</small></div></div>
+        <div class="card obj" id="c-alone" style="left: 250px; top: 560px; width: 580px"><div class="ph" style="height: 760px"><img id="alone-img" src="assets/img/killick.jpg" alt="" style="object-position: 50% 25%" /></div><div class="lab">Seul à bord<small>6 septembre 1902</small></div></div>
         <div id="glow"></div>
         <!-- 9. the explosion -->
-        <div class="photo obj" id="o-boom" style="left: 70px; top: 620px; width: 940px; height: 720px"><img id="boom-img" src="assets/img/explosion.jpg" alt="" style="object-position: 50% 40%" /><em>Illustration</em></div>
+        <div class="photo obj" id="o-boom" style="left: 70px; top: 620px; width: 940px; height: 720px"><img id="boom-img" src="assets/img/crete-coule.jpg" alt="" style="object-position: 45% 50%" /><em>6 septembre 1902</em><img id="wreck-img" src="assets/img/crete-epave.jpg" alt="" style="position: absolute; inset: 0; object-position: 40% 55%" /></div>
         <!-- 10. dawn -->
-        <div class="photo obj" id="o-dawn" style="left: 70px; top: 700px; width: 940px; height: 700px"><img id="dawn-img" src="assets/img/aube.jpg" alt="" style="object-position: 50% 75%" /><em>Illustration</em></div>
+        <div class="photo obj" id="o-dawn" style="left: 70px; top: 700px; width: 940px; height: 700px"><img id="dawn-img" src="assets/img/drapeau.jpg" alt="" style="object-position: 40% 50%" /></div>
         <!-- 11. the question -->
         <div class="yn obj" id="o-oui" style="left: 160px; top: 900px; background: #1B8F3A">OUI</div>
         <div class="yn obj" id="o-non" style="left: 590px; top: 900px; background: #D21034">NON</div>
@@ -279,6 +279,8 @@
         pop('#o-crew', MORPHS[5] + 0.02)
         drift('#crew-img', MORPHS[5], MORPHS[6], { scale: 1.12, x: 30 }, { scale: 1, x: -30 })
         pop('#ch-crew', T[65] - 0.05, { scale: 0.4 })
+        tl.fromTo('#boat1', { x: 560, y: 470 }, { x: 160, y: 430, duration: MORPHS[6] - T[62], ease: 'power1.inOut' }, T[62])
+        tl.fromTo('#boat2', { x: 600, y: 520 }, { x: 240, y: 480, duration: MORPHS[6] - T[62] - 0.3, ease: 'power1.inOut' }, T[62] + 0.3)
         hide(['#o-crew', '#ch-crew'], MORPHS[6])
 
         // 8. alone on board: slow push, then the fire glow on « il met le feu »
@@ -293,6 +295,7 @@
         drift('#boom-img', MORPHS[7], MORPHS[8], { scale: 1.2 }, { scale: 1 })
         tl.fromTo('#flash', { opacity: 1 }, { opacity: 0, duration: 0.6, ease: 'power2.out', immediateRender: false }, T[85] - 0.02)
         tl.fromTo('#world', { x: 0, y: 0 }, { x: 16, y: -10, duration: 0.05, yoyo: true, repeat: 11, ease: 'none', immediateRender: false }, T[85])
+        tl.fromTo('#wreck-img', { opacity: 0 }, { opacity: 1, duration: 0.6, ease: 'power1.inOut' }, T[86] - 0.2)
         hide('#o-boom', MORPHS[8])
 
         // 10. dawn: the flag on the sea
