@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Le premier champion olympique noir était haïtien</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Grammaire de la référence K (_engine/references/ref-k-histoire) en version rapide : plan continu sur fond gris clair, texte = voix
+      mot par mot, onze parties courtes enchaînées par un flou plein cadre bref. Pas de marque. Fin pensée pour les commentaires : une
+      question fermée (OUI / NON), deux boutons qui pulsent et une flèche vers le bouton commentaire de TikTok (côté droit).
+    -->
+    <style>
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; }
+      .w { display: inline-block; }
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .x { font-size: 250px; font-weight: 900; letter-spacing: -0.06em; line-height: 0.95; }
+
+      .obj { position: absolute; z-index: 10; }
+      .medal { position: absolute; width: 360px; height: 560px; }
+      .medal .rib { position: absolute; top: 0; width: 120px; height: 280px; }
+      .medal .disc { position: absolute; left: 30px; top: 230px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3b0 0%, #f2c94c 30%, #c99a1e 70%, #8a6410 100%); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25), inset 0 0 0 14px rgba(255, 255, 255, 0.25), inset 0 0 0 18px rgba(120, 85, 10, 0.35); display: flex; align-items: center; justify-content: center; flex-direction: column; color: #7a5608; font-weight: 900; }
+      .medal .disc b { font-size: 92px; letter-spacing: -0.03em; line-height: 1; }
+      .medal .disc small { font-size: 26px; letter-spacing: 0.25em; }
+
+      .portrait { position: absolute; width: 470px; border-radius: 30px; overflow: hidden; background: #fff; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.2); }
+      .portrait .ph { height: 560px; overflow: hidden; }
+      .portrait img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; filter: grayscale(1) contrast(1.05); }
+      .portrait .lab { padding: 20px 26px; font-weight: 800; font-size: 38px; line-height: 1.1; }
+      .portrait .lab small { display: block; font-size: 26px; font-weight: 600; color: #777; }
+      .mini { position: relative; display: inline-block; width: 60px; height: 38px; border-radius: 6px; overflow: hidden; vertical-align: middle; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); flex: none; }
+      .mini i { position: absolute; }
+
+      .pin { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+      .pin .dot { width: 46px; height: 46px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: #D21034; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25); }
+      .pin .tag { padding: 12px 24px; border-radius: 22px; background: #fff; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); font-weight: 800; font-size: 36px; display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+      .pin .tag small { font-weight: 700; color: #777; }
+      .route { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+      .badge { position: absolute; padding: 12px 34px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 44px; box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25); white-space: nowrap; }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #D21034; border-radius: 22px; color: #D21034; font-weight: 900; font-size: 80px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.6); white-space: nowrap; }
+
+      .photo { position: absolute; width: 940px; height: 560px; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .photo em { position: absolute; left: 24px; bottom: 18px; font-style: normal; font-size: 24px; color: #fff; background: rgba(0, 0, 0, 0.45); padding: 6px 14px; border-radius: 10px; }
+      .ring { position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 8px solid #F2C94C; box-shadow: 0 0 34px rgba(242, 201, 76, 0.9), inset 0 0 20px rgba(242, 201, 76, 0.5); }
+      .name { position: absolute; padding: 10px 24px; border-radius: 16px; background: #F2C94C; color: #141414; font-weight: 800; font-size: 34px; white-space: nowrap; }
+
+      .score { position: absolute; width: 940px; height: 150px; border-radius: 28px; background: #141414; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 36px; box-sizing: border-box; font-weight: 800; box-shadow: 0 26px 50px rgba(0, 0, 0, 0.25); }
+      .score span { font-size: 36px; letter-spacing: 0.04em; width: 300px; }
+      .score span:last-child { text-align: right; }
+      .score b { font-size: 76px; letter-spacing: 0.02em; color: #F2C94C; font-variant-numeric: tabular-nums; }
+
+      .tl { position: absolute; width: 860px; }
+      .tl .track { height: 22px; border-radius: 999px; background: #d0d0d0; overflow: hidden; }
+      .tl .fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00209F, #D21034); }
+      .tl .ends { display: flex; justify-content: space-between; margin-top: 14px; font-weight: 800; font-size: 40px; }
+      .tl .gap { position: absolute; left: 0; right: 0; top: -84px; text-align: center; font-weight: 900; font-size: 56px; color: #D21034; }
+
+      .owens { position: absolute; width: 860px; height: 380px; border-radius: 34px; background: #141414; color: #fff; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.25); }
+      .owens b { position: absolute; left: 44px; top: 40px; font-size: 64px; font-weight: 900; letter-spacing: -0.02em; }
+      .owens small { position: absolute; left: 46px; top: 124px; font-size: 30px; font-weight: 600; color: #bbb; }
+      .owens .ms { position: absolute; left: 44px; bottom: 40px; display: flex; gap: 26px; }
+      .gm { width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3b0 0%, #f2c94c 35%, #b8860b 100%); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35); display: flex; align-items: center; justify-content: center; color: #6b4b06; font-weight: 900; font-size: 44px; }
+
+      .yn { position: absolute; width: 330px; height: 170px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; box-shadow: 0 26px 50px rgba(0, 0, 0, 0.25); }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+
+      #veil { position: absolute; inset: 0; background: #E7E7E7; opacity: 0; z-index: 40; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="32.9" data-width="1080" data-height="1920">
+      <div id="world">
+        <div class="grid" id="grid"></div>
+
+        <!-- 1. a gold medal drops in -->
+        <div class="medal obj" id="o-medal" style="left: 360px; top: 680px">
+          <div class="rib" style="left: 60px; background: #00209F; transform: skewX(14deg)"></div>
+          <div class="rib" style="left: 180px; background: #D21034; transform: skewX(-14deg)"></div>
+          <div class="disc"><small>PARIS</small><b>1900</b><small>OR</small></div>
+        </div>
+        <!-- 2. & 7. the portrait -->
+        <div class="portrait obj" id="o-port" style="left: 305px; top: 640px"><div class="ph"><img src="assets/img/henriquez.jpg" alt="" /></div><div class="lab">Constantin Henriquez<small>Port-au-Prince, 1880</small></div></div>
+        <div class="badge obj" id="o-first" style="left: 700px; top: 600px">1er</div>
+        <div class="medal obj" id="o-medal2" style="left: 640px; top: 880px; transform-origin: 50% 0"><div class="rib" style="left: 60px; background: #00209F; transform: skewX(14deg)"></div><div class="rib" style="left: 180px; background: #D21034; transform: skewX(-14deg)"></div><div class="disc"><small>PARIS</small><b>1900</b><small>OR</small></div></div>
+        <!-- 3. from Port-au-Prince to Paris -->
+        <svg class="route obj" id="o-route" viewBox="0 0 1080 1920"><path id="route-path" d="M230 1220 C 330 760, 760 760, 850 1050" fill="none" stroke="#141414" stroke-width="7" stroke-dasharray="4 22" stroke-linecap="round" /></svg>
+        <div class="pin obj" id="pin-ht" style="left: 70px; top: 1230px"><div class="dot" style="background: #00209F"></div><div class="tag"><span class="mini"><i style="left: 0; right: 0; top: 0; height: 50%; background: #00209F"></i><i style="left: 0; right: 0; bottom: 0; height: 50%; background: #D21034"></i></span>Port-au-Prince <small>1880</small></div></div>
+        <div class="pin obj" id="pin-fr" style="left: 660px; top: 1060px"><div class="dot"></div><div class="tag"><span class="mini"><i style="left: 0; width: 34%; top: 0; bottom: 0; background: #002395"></i><i style="left: 33%; width: 34%; top: 0; bottom: 0; background: #fff"></i><i style="right: 0; width: 34%; top: 0; bottom: 0; background: #ED2939"></i></span>Paris <small>1900</small></div></div>
+        <svg class="obj" id="o-boat" viewBox="0 0 64 64" style="left: 0; top: 0; width: 90px; height: 90px"><path d="M8 40h48l-7 12H15z" fill="#141414" /><path d="M30 8v30H12z" fill="#D21034" /><path d="M34 14v24h16z" fill="#00209F" /></svg>
+        <div class="stamp obj" id="o-jo" style="left: 160px; top: 1500px">JEUX OLYMPIQUES</div>
+        <!-- 4. rugby is on the programme for the first time -->
+        <svg class="obj" id="o-ball" viewBox="0 0 200 130" style="left: 290px; top: 760px; width: 500px; height: 325px; filter: drop-shadow(0 30px 30px rgba(0, 0, 0, 0.25))"><ellipse cx="100" cy="65" rx="96" ry="60" fill="#8B4A1F" /><ellipse cx="80" cy="45" rx="50" ry="20" fill="#A65C2A" opacity="0.6" /><path d="M60 65h80" stroke="#fff" stroke-width="5" stroke-linecap="round" /><path d="M75 55v20M90 55v20M105 55v20M120 55v20" stroke="#fff" stroke-width="5" stroke-linecap="round" /><path d="M14 65 Q100 -10 186 65" stroke="#fff" stroke-width="3" fill="none" opacity="0.5" /><path d="M14 65 Q100 140 186 65" stroke="#fff" stroke-width="3" fill="none" opacity="0.5" /></svg>
+        <div class="stamp obj" id="o-1re" style="left: 250px; top: 1170px">1RE FOIS</div>
+        <!-- 5. the 1900 French team: zoom on Henriquez -->
+        <div class="photo obj" id="o-team" style="left: 70px; top: 700px"><img id="team-img" src="assets/img/equipe-1900.jpg" alt="" style="transform-origin: 18.9% 34.5%" /><em>Équipe de France de rugby, 1900</em></div>
+        <div class="ring obj" id="o-ring" style="left: 172px; top: 808px"></div>
+        <div class="name obj" id="o-name" style="left: 110px; top: 975px">Constantin Henriquez</div>
+        <!-- 6. the results -->
+        <div class="score obj" id="sc-1" style="left: 70px; top: 720px"><span>FRANCE</span><b>27 – 17</b><span>ALLEMAGNE</span></div>
+        <div class="score obj" id="sc-2" style="left: 70px; top: 900px"><span>FRANCE</span><b>27 – 8</b><span>GDE-BRETAGNE</span></div>
+        <div class="medal obj" id="o-medal3" style="left: 360px; top: 1060px; transform: scale(0.7); transform-origin: 50% 0"><div class="rib" style="left: 60px; background: #002395; transform: skewX(14deg)"></div><div class="rib" style="left: 180px; background: #ED2939; transform: skewX(-14deg)"></div><div class="disc"><small>RUGBY</small><b>OR</b><small>FRANCE</small></div></div>
+        <!-- 8. 36 years later -->
+        <div class="tl obj" id="o-tl" style="left: 110px; top: 760px"><div class="gap" id="tl-gap">+36 ans</div><div class="track"><div class="fill" id="tl-fill"></div></div><div class="ends"><span>1900</span><span>1936</span></div></div>
+        <div class="owens obj" id="o-owens" style="left: 110px; top: 960px"><b>Jesse Owens</b><small>États-Unis · Berlin 1936</small><div class="ms" id="ms"><div class="gm">1</div><div class="gm">2</div><div class="gm">3</div><div class="gm">4</div></div></div>
+        <!-- 9. but the first one was Haitian -->
+        <div class="portrait obj" id="o-port2" style="left: 305px; top: 640px"><div class="ph"><img src="assets/img/henriquez.jpg" alt="" /></div><div class="lab"><span class="mini" style="margin-right: 14px"><i style="left: 0; right: 0; top: 0; height: 50%; background: #00209F"></i><i style="left: 0; right: 0; bottom: 0; height: 50%; background: #D21034"></i></span>Haïtien<small>Champion olympique, 1900</small></div></div>
+        <!-- 10. 36 years before -->
+        <div class="tl obj" id="o-tl2" style="left: 110px; top: 1020px"><div class="track"><div class="fill" style="width: 100%"></div></div><div class="ends"><span>Henriquez · 1900</span><span>Owens · 1936</span></div></div>
+        <!-- 11. the question: OUI / NON, and where to comment -->
+        <div class="yn obj" id="o-oui" style="left: 160px; top: 860px; background: #1B8F3A">OUI</div>
+        <div class="yn obj" id="o-non" style="left: 590px; top: 860px; background: #D21034">NON</div>
+        <div class="bubble obj" id="o-bub" style="left: 470px; top: 1250px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+        <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1180px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+
+        <div id="blocks"></div>
+      </div>
+      <div id="veil"></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), pauses raccourcies, accélérée ×1,06. Musique : ElevenLabs via FLORA (coupure avant
+           « Mais le premier », retour sur « 36 ans »). Sons sur mesure (sifflet, scratch) : ElevenLabs Sound Effects via FLORA. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="30.46" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="32.9" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.28"></audio>
+      <audio id="sx1" src="assets/sfx/impact-bass-1.mp3" data-start="0.45" data-duration="2.12" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx2" src="assets/sfx/sparkle.mp3" data-start="1.95" data-duration="1.8" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx3" src="assets/sfx/whoosh.mp3" data-start="2.0" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx4" src="assets/sfx/click.mp3" data-start="2.43" data-duration="0.37" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx5" src="assets/sfx/whoosh.mp3" data-start="4.01" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx6" src="assets/sfx/pop.mp3" data-start="4.44" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx7" src="assets/sfx/whoosh-short.mp3" data-start="5.59" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx8" src="assets/sfx/pop.mp3" data-start="6.68" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx9" src="assets/sfx/impact-bass-2.mp3" data-start="7.81" data-duration="2.59" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx10" src="assets/sfx/whoosh.mp3" data-start="8.57" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx11" src="assets/sfx/sifflet.mp3" data-start="8.8" data-duration="1.04" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx12" src="assets/sfx/impact-bass-1.mp3" data-start="9.35" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx13" src="assets/sfx/pop.mp3" data-start="10.08" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx14" src="assets/sfx/whoosh.mp3" data-start="10.9" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx15" src="assets/sfx/whoosh-short.mp3" data-start="11.33" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx16" src="assets/sfx/click.mp3" data-start="11.88" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx17" src="assets/sfx/pop.mp3" data-start="12.03" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx18" src="assets/sfx/whoosh.mp3" data-start="12.52" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx19" src="assets/sfx/click-soft.mp3" data-start="13.26" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx20" src="assets/sfx/click-soft.mp3" data-start="14.36" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx21" src="assets/sfx/impact-bass-2.mp3" data-start="15.82" data-duration="2.59" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx22" src="assets/sfx/chime.mp3" data-start="15.87" data-duration="2.54" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx23" src="assets/sfx/whoosh.mp3" data-start="16.27" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="17.34" data-duration="0.72" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx25" src="assets/sfx/pop.mp3" data-start="17.58" data-duration="0.72" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx26" src="assets/sfx/whoosh.mp3" data-start="19.4" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx27" src="assets/sfx/riser.mp3" data-start="19.58" data-duration="1.0" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="20.92" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="21.9" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="22.02" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx31" src="assets/sfx/pop.mp3" data-start="22.14" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="22.26" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx33" src="assets/sfx/scratch.mp3" data-start="23.52" data-duration="1.23" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx34" src="assets/sfx/whoosh.mp3" data-start="23.73" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx35" src="assets/sfx/whoosh.mp3" data-start="26.06" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx36" src="assets/sfx/impact-bass-2.mp3" data-start="26.34" data-duration="2.59" data-track-index="21" data-volume="0.55"></audio>
+      <audio id="sx37" src="assets/sfx/whoosh.mp3" data-start="28.22" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx38" src="assets/sfx/pop.mp3" data-start="29.36" data-duration="0.72" data-track-index="20" data-volume="0.28"></audio>
+      <audio id="sx39" src="assets/sfx/pop.mp3" data-start="29.64" data-duration="0.72" data-track-index="21" data-volume="0.28"></audio>
+      <audio id="sx40" src="assets/sfx/click.mp3" data-start="29.85" data-duration="0.37" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx41" src="assets/sfx/notification.mp3" data-start="30.06" data-duration="1.2" data-track-index="23" data-volume="0.18"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 32.9
+        const BLUE = '#00209F'
+        const RED = '#D21034'
+        const GOLD = '#8C6A00'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0.0, 0.111, 0.5, 0.945, 1.445, 1.668, 1.945, 2.084, 2.501, 3.002, 3.558, 4.089, 4.228, 4.286, 5.092, 5.207, 5.494, 5.609, 5.782, 5.897, 6.242, 6.53, 6.818, 7.336, 7.508, 7.739, 8.314, 8.429, 8.655, 8.938, 9.048, 9.491, 9.766, 9.876, 10.153, 10.319, 10.429, 10.983, 11.421, 11.616, 11.811, 12.202, 12.3, 12.598, 12.758, 13.108, 13.282, 13.98, 14.213, 14.329, 14.986, 15.319, 15.785, 16.354, 16.845, 17.3, 17.43, 17.885, 18.34, 18.6, 19.12, 19.484, 19.54, 19.725, 19.971, 20.28, 20.341, 20.773, 21.082, 21.389, 21.698, 21.759, 22.315, 22.561, 22.684, 23.115, 23.3, 23.814, 24.077, 24.24, 24.616, 25.277, 25.44, 26.135, 26.253, 26.571, 27.101, 27.632, 28.304, 28.402, 28.513, 28.984, 29.215, 29.38, 29.489, 29.654, 29.765]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Le", "premier", "champion", "olympique", "noir", "était", "haïtien.", "Il", "s'appelle", "Constantin", "Henriquez.", "Né", "à", "Port-au-Prince", "en", "1880,", "il", "vit", "en", "France", "quand", "Paris", "accueille", "les", "Jeux", "olympiques", "de", "1900.", "Pour", "la", "première", "fois,", "le", "rugby", "est", "au", "programme.", "Henriquez", "joue", "avec", "l'équipe", "de", "France.", "La", "France", "bat", "l'Allemagne,", "puis", "la", "Grande-Bretagne,", "et", "remporte", "l'or.", "Henriquez", "devient", "le", "premier", "athlète", "noir", "champion", "olympique.", "36", "ans", "plus", "tard,", "à", "Berlin,", "Jesse", "Owens", "gagne", "4", "médailles", "d'or", "et", "devient", "une", "légende.", "Mais", "le", "premier,", "c'était", "un", "Haïtien.", "36", "ans", "avant", "Jesse", "Owens.", "Vous", "le", "connaissiez ?", "Répondez", "OUI", "ou", "NON", "en", "commentaire."]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 220, lines: [[0, 3, 's'], [4, 5, 'm'], [6, 6, 'bi', BLUE]] },
+          { y: 240, lines: [[7, 8, 's'], [9, 9, 'm'], [10, 10, 'b', BLUE]] },
+          { y: 240, lines: [[11, 15, 's'], [16, 19, 'm']] },
+          { y: 240, lines: [[20, 22, 's'], [23, 26, 's'], [27, 27, 'b', BLUE]] },
+          { y: 220, lines: [[28, 31, 'm'], [32, 33, 'b', RED], [34, 36, 's']] },
+          { y: 260, lines: [[37, 38, 'm'], [39, 42, 's']] },
+          { y: 230, lines: [[43, 46, 's'], [47, 49, 's'], [50, 52, 'm', GOLD]] },
+          { y: 220, lines: [[53, 54, 'm'], [55, 57, 's'], [58, 60, 's']] },
+          { y: 200, lines: [[61, 66, 's'], [67, 68, 'b'], [69, 72, 's'], [73, 76, 's']] },
+          { y: 240, lines: [[77, 79, 'm'], [80, 81, 's'], [82, 82, 'bi', BLUE]] },
+          { y: 300, lines: [[83, 84, 'x', RED], [85, 87, 'm']] },
+          { y: 300, lines: [[88, 90, 'm'], [91, 91, 's'], [92, 94, 'b'], [95, 96, 's']] },
+        ]
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = B.until != null ? T[B.until] - 0.08 : next ? T[next.lines[0][0]] - 0.08 : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 12, filter: blur(8) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
+              tl.to(w, { color: col || '#141414', duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+            }
+          })
+          if (end < END) tl.to(box, { autoAlpha: 0, filter: blur(10), y: -16, duration: 0.14, ease: 'power2.in' }, end - 0.14)
+        })
+
+        // ---------- short full-frame blur between parts ----------
+        const morph = (at) => {
+          tl.to('#world', { filter: blur(26), duration: 0.16, ease: 'power2.in' }, at - 0.16)
+          tl.to('#veil', { opacity: 0.5, duration: 0.16, ease: 'power2.in' }, at - 0.16)
+          tl.to('#world', { filter: blur(0), duration: 0.24, ease: 'power2.out' }, at + 0.02)
+          tl.to('#veil', { opacity: 0, duration: 0.24, ease: 'power2.out' }, at + 0.02)
+        }
+        const MORPHS = [7, 11, 28, 37, 43, 53, 61, 77, 83, 88].map((k) => Math.round((T[k] - 0.1) * 100) / 100)
+        MORPHS.forEach(morph)
+
+        const pop = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0.84, y: 70, filter: blur(14) }, o), { autoAlpha: 1, scale: 1, y: 0, x: 0, rotation: 0, filter: blur(0), duration: 0.36, ease: 'expo.out' }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        gsap.set(['#o-medal', '#o-port', '#o-first', '#o-medal2', '#o-route', '#pin-ht', '#pin-fr', '#o-boat', '#o-jo', '#o-ball', '#o-1re', '#o-team', '#o-ring', '#o-name', '#sc-1', '#sc-2', '#o-medal3', '#o-tl', '#o-owens', '#o-port2', '#o-tl2', '#o-oui', '#o-non', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+
+        // ---------- 1. hook: the gold medal drops and swings ----------
+        tl.fromTo('#o-medal', { autoAlpha: 0, y: -900, rotation: -20 }, { autoAlpha: 1, y: 0, rotation: 0, duration: 0.6, ease: 'bounce.out' }, 0)
+        tl.fromTo('#o-medal', { rotationY: 0 }, { rotationY: 360, duration: 0.8, ease: 'power2.inOut', immediateRender: false }, T[6] - 0.2)
+        hide('#o-medal', MORPHS[0])
+
+        // ---------- 2. his name ----------
+        pop('#o-port', MORPHS[0] + 0.02, { x: 140, rotation: 6 })
+        hide('#o-port', MORPHS[1])
+
+        // ---------- 3. Port-au-Prince → Paris, the 1900 Olympics ----------
+        pop('#pin-ht', T[13] - 0.05, { y: -60 })
+        tl.set('#o-route', { autoAlpha: 1 }, T[16] - 0.1)
+        const path = $('route-path')
+        const len = path.getTotalLength()
+        tl.fromTo(path, { strokeDashoffset: len, strokeDasharray: '4 22' }, { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, T[16] - 0.1)
+        tl.set('#o-boat', { autoAlpha: 1 }, T[16] - 0.1)
+        const boat = { p: 0 }
+        tl.fromTo(boat, { p: 0 }, { p: 1, duration: 1.2, ease: 'power1.inOut', immediateRender: false, onUpdate: () => { const pt = path.getPointAtLength(boat.p * len); gsap.set('#o-boat', { x: pt.x - 45, y: pt.y - 70 }) } }, T[16] - 0.1)
+        tl.to('#o-boat', { autoAlpha: 0, duration: 0.15 }, T[16] + 1.15)
+        pop('#pin-fr', T[21] - 0.05, { y: -60 })
+        tl.fromTo('#o-jo', { autoAlpha: 0, scale: 2.4, rotation: -2 }, { autoAlpha: 1, scale: 1, rotation: -6, duration: 0.18, ease: 'power4.in' }, T[24] - 0.05)
+        hide(['#pin-ht', '#pin-fr', '#o-route', '#o-boat', '#o-jo'], MORPHS[2])
+
+        // ---------- 4. rugby, for the first time ----------
+        tl.fromTo('#o-ball', { autoAlpha: 0, x: -700, y: -300, rotation: -200 }, { autoAlpha: 1, x: 0, y: 0, rotation: -12, duration: 0.6, ease: 'power3.out' }, MORPHS[2] + 0.02)
+        tl.to('#o-ball', { y: -40, rotation: 6, duration: 0.25, yoyo: true, repeat: 3, ease: 'sine.inOut' }, T[33])
+        tl.fromTo('#o-1re', { autoAlpha: 0, scale: 2.4, rotation: 4 }, { autoAlpha: 1, scale: 1, rotation: -6, duration: 0.18, ease: 'power4.in' }, T[30] - 0.05)
+        hide(['#o-ball', '#o-1re'], MORPHS[3])
+
+        // ---------- 5. the team photo: zoom on Henriquez ----------
+        pop('#o-team', MORPHS[3] + 0.02, { scale: 0.9 })
+        tl.fromTo('#team-img', { scale: 1 }, { scale: 2.2, duration: 0.6, ease: 'power3.inOut' }, MORPHS[3] + 0.25)
+        tl.fromTo('#o-ring', { autoAlpha: 0, scale: 2 }, { autoAlpha: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, MORPHS[3] + 0.8)
+        pop('#o-name', MORPHS[3] + 0.95, { scale: 0.5 })
+        hide(['#o-team', '#o-ring', '#o-name'], MORPHS[4])
+
+        // ---------- 6. France beats Germany, then Great Britain: gold ----------
+        pop('#sc-1', T[45] - 0.05, { x: -200 })
+        pop('#sc-2', T[48] - 0.05, { x: 200 })
+        tl.fromTo('#o-medal3', { autoAlpha: 0, y: -500, scale: 0.7 }, { autoAlpha: 1, y: 0, scale: 0.7, duration: 0.5, ease: 'bounce.out' }, T[51] - 0.1)
+        hide(['#sc-1', '#sc-2', '#o-medal3'], MORPHS[5])
+
+        // ---------- 7. the first black Olympic champion ----------
+        pop('#o-port', MORPHS[5] + 0.02, { x: -140, rotation: -6 })
+        tl.fromTo('#o-medal2', { autoAlpha: 0, y: -400, rotation: 30, scale: 0.6 }, { autoAlpha: 1, y: 0, rotation: -8, scale: 0.6, duration: 0.5, ease: 'bounce.out' }, T[54] - 0.05)
+        pop('#o-first', T[56] - 0.05, { scale: 0.3, rotation: 14 })
+        hide(['#o-port', '#o-medal2', '#o-first'], MORPHS[6])
+
+        // ---------- 8. 36 years later: Berlin, Jesse Owens, four golds ----------
+        pop('#o-tl', MORPHS[6] + 0.02)
+        tl.fromTo('#tl-fill', { width: '0%' }, { width: '100%', duration: 0.9, ease: 'power2.inOut' }, T[61])
+        tl.fromTo('#tl-gap', { autoAlpha: 0, scale: 0.4 }, { autoAlpha: 1, scale: 1, duration: 0.3, ease: 'back.out(2.5)' }, T[62] + 0.4)
+        pop('#o-owens', T[67] - 0.05, { y: 120 })
+        $('ms').querySelectorAll('.gm').forEach((g, i) => tl.fromTo(g, { autoAlpha: 0, scale: 0.2, rotation: -40 }, { autoAlpha: 1, scale: 1, rotation: 0, duration: 0.3, ease: 'back.out(2.6)' }, T[70] + i * 0.12))
+        hide(['#o-tl', '#o-owens'], MORPHS[7])
+
+        // ---------- 9. but the first one was Haitian ----------
+        pop('#o-port2', MORPHS[7] + 0.02, { scale: 0.7 })
+        tl.to('#o-port2', { scale: 1.06, duration: 0.25, ease: 'back.out(3)' }, T[82])
+        hide('#o-port2', MORPHS[8])
+
+        // ---------- 10. 36 years before Jesse Owens ----------
+        pop('#o-tl2', MORPHS[8] + 0.05, { y: 120 })
+        tl.fromTo('#world', { y: 0 }, { y: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, T[83] + 0.05)
+        hide('#o-tl2', MORPHS[9])
+
+        // ---------- 11. the question: OUI / NON in the comments (arrow toward TikTok's comment button) ----------
+        pop('#o-oui', T[92] - 0.05, { scale: 0.3 })
+        pop('#o-non', T[94] - 0.05, { scale: 0.3 })
+        pop('#o-bub', T[95] - 0.05, { scale: 0.4 })
+        pop('#o-arrow', T[96], { scale: 0.3, x: -40 })
+        const left = END - T[96] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-oui', { scale: 1.08, duration: 0.25, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[96] + 0.3)
+        tl.to('#o-non', { scale: 1.08, duration: 0.25, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[96] + 0.55)
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[96] + 0.4)
+
+        // slow camera push over the whole film
+        tl.fromTo('#world', { scale: 1 }, { scale: 1.04, duration: END, ease: 'none', immediateRender: false }, 0)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
