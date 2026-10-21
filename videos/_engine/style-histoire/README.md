@@ -1,36 +1,52 @@
-# Style « histoire express » — le style validé par le client
+# Style « histoire express » v2 — le style validé par le client
 
-**Règle : toute nouvelle vidéo de faits / histoire (Haïti, drapeaux, anecdotes…) reprend exactement ce style**, sauf demande contraire explicite. Modèle de référence à copier : `videos/drapeaux-jumeaux-tchad-roumanie/` (validé « C'est parfait »), dérivé de `videos/drapeau-haiti-liechtenstein/` (la vidéo virale). Grammaire d'origine : réf. K (`../references/ref-k-histoire`) en version rapide.
+**Règle : toute nouvelle vidéo de faits / histoire (Haïti, drapeaux, anecdotes…) reprend exactement ce style v2**, sauf demande contraire explicite (« Garde le style v2 pour toutes les prochaines vidéos »).
+
+- **Modèles à copier** : `videos/santa-maria-2014/` (le plus complet) et `videos/or-haiti-1914-v2/`. On copie leur `index.html` (CSS, `ctl(t)`, helpers) et on ne réécrit que les scènes, les blocs de texte et les transitions.
+- Historique : v1 = `videos/drapeaux-jumeaux-tchad-roumanie/` et `videos/or-haiti-1914/` (flou plein cadre entre les parties). La v2 garde tout le reste de la v1 et change le mouvement.
 
 ## Image
 
-- 9:16 (1080×1920), **36 à 40 s**, un seul plan continu sur fond gris clair `#E7E7E7`, grille de points discrète au centre (masque radial), lente poussée de caméra (×1,04 sur toute la durée).
-- **Sans marque KONVWA** : la couleur vient du sujet (couleurs officielles des drapeaux, etc.). Police Poppins.
-- **Texte = voix mot par mot**, en blocs de lignes centrées en haut (`y` ≈ 200–300 px) : chaque mot arrive flou et gris clair (`#B9B9B9`, 0,16 s) puis se pose en noir ou dans sa couleur de mot-clé. Tailles mêlées : `s` 50 px, `m` 68 px, `b` 116 px, `bi`/`mi` italiques gras pour la chute, `x` 230 px pour une date géante.
-- **10 à 12 parties de 2 à 3 s**, enchaînées par un flou plein cadre bref (26 px, 0,16 s à l'aller, 0,24 s au retour, voile gris 50 %), calé 0,1 s avant le premier mot de la partie.
-- Une idée visuelle par partie, posée au centre de l'écran : drapeaux dessinés en HTML avec un pli qui ondule, photos réelles en carte arrondie (30 px) avec zoom lent et puce blanche, pastille noire de date, tampon rouge incliné + secousse sur la réplique forte, loupe, mâts, cartes en grille, lettre / document.
-- Apparitions `pop` : 0,38 s `expo.out` depuis flou 14 px, échelle 0,84, +70 px. Les pops démarrent **avant** le flou suivant (sinon l'objet reste affiché).
-- Série : pastille noire en capitales en haut (`top: 96px`) pendant toute la vidéo, ex. « DRAPEAUX JUMEAUX · ÉP. 2 ».
-- **Images réelles uniquement** (Unsplash via MCP, Wikimedia Commons avec `wmsearch.sh` / `wmget.sh` — lents exprès, limite de débit —, Pixabay via `motion.mjs assets`). Jamais d'images générées par IA.
+- 9:16 (1080×1920), **30 à 40 s**, fond gris clair `#E7E7E7`, grille de points discrète au centre. Police Poppins.
+- **Sans marque KONVWA** : la couleur vient du sujet (drapeaux, bleu nuit, rouge haïtien, cuivre…).
+- Pastille noire en capitales en haut (`top: 96px`) tout du long : série (« DRAPEAUX JUMEAUX · ÉP. 2 ») ou thème (« HISTOIRE D'HAÏTI · 1492 »).
+- **Texte = voix mot par mot**, en blocs de lignes centrées en haut (`y` ≈ 200–260 px), chaque ligne est un masque (`overflow: hidden`) :
+  - mots ordinaires : arrivent flous et gris clair (`#B9B9B9`, 0,16 s) puis se posent en noir ;
+  - **mots-clés** (styles `b`, `bi`, `mi`, `x`) : **montent de leur ligne avec un rebond** (`back.out(1.7)`, 0,42 s), directement dans leur couleur ;
+  - sortie : tous les mots repartent vers le haut dans leur ligne (0,18 s).
+  - Largeur : une ligne `m` (68 px) tient ≈ 26 caractères, `b`/`bi` (116/108 px) ≈ 14, `s` (50 px) ≈ 36 : couper les lignes plus longues.
+- **Chaque scène naît de la précédente** (plus de flou plein cadre). Une vidéo alterne les trois transitions :
+  - **inondation de couleur** : un disque sort d'un objet de la scène (badge, cercle, tampon), couvre l'écran en 0,3 s, puis se rétracte en 0,32 s dans l'objet de la scène suivante ;
+  - **iris d'appareil photo à 6 lames** qui se ferme puis s'ouvre **sur une photo d'époque plein écran**, qui se replie ensuite en carte (`unfold`, échelle 3,4 → 1) ;
+  - **page qui pousse** (vers le haut ou la gauche, 0,4 s), lancée juste après la sortie du texte pour ne pas le traverser.
+  - Inondations et iris sont calculés à partir du temps dans `ctl(t)` (aucun état entre deux images).
+- **Zooms de caméra** (`cam`) sur le détail qui compte (une date, un badge, une croix sur une carte), lents zooms sur les photos (`kb`). Vérifier que le zoom ne pousse pas une puce hors de l'écran (échelle ≤ 1,2 près des bords).
+- **Apparitions en ressort** depuis zéro (`spring`, `back.out(1.8)`, 0,5 s), tampons rouges inclinés avec secousse sur la réplique forte, ondes de sonar, frises qui se remplissent, compteurs.
+- **« Bilan »** : l'inondation noire part de l'objet de la scène précédente au moment du scratch, **reste noire pendant le silence** (« Bilan : » écrit en blanc), puis se rétracte sur le mot suivant, quand la musique revient.
+- **Images réelles uniquement** : tableaux, cartes et photos d'époque (Wikimedia Commons avec `wmsearch.sh` / `wmget.sh`, lents exprès), Unsplash via MCP, Pixabay via `motion.mjs assets`. Jamais d'images générées par IA. Le reste (fort, caisses, clou, lettre, unes de journaux génériques) est dessiné en HTML/SVG. Une image ne sert qu'une fois par composition (sinon en faire une variante recadrée ou en noir et blanc).
 
 ## Voix
 
 - FLORA, modèle `t2a-gemini-3-1-flash-tts`, `voice_name: Charon`, `language_code: fr-FR`, 2 prises (≈ 0,013 $ chacune). Vouvoiement.
-- Consigne : « Dis comme un conteur TikTok très dynamique : débit rapide et énergique, phrases enchaînées presque sans pause, ton captivant et amusé, une courte pause avant « <réplique forte> », et la question finale posée directement au spectateur. Lis les dates exactement comme elles sont écrites : <texte> ». **Dates écrites en lettres** (une prise avait dit « 1921 » au lieu de « 1936 »).
-- Accroche ≤ 7 mots, dite dès 0,2 s.
-- Traitement : silences de début/fin coupés, transcription `npx hyperframes transcribe -m medium -l fr --json`, puis `align_voice.py` (pauses raccourcies, silence ajouté avant la réplique forte, `atempo=1.1`) → `assets/vo/vo.wav` + temps de chaque mot (`T = 0,2 + RAW`).
+- Consigne : « Dis comme un conteur TikTok très dynamique : débit rapide et énergique, phrases enchaînées presque sans pause, ton captivant et <ton du sujet>, une courte pause avant « Bilan », et la question finale posée directement au spectateur. Lis les dates et les nombres exactement comme ils sont écrits : <texte> ». **Dates et nombres écrits en lettres**.
+- Écouter / transcrire les deux prises : une prise peut sauter la moitié du texte.
+- Traitement : silences de début et de fin coupés, `npx hyperframes transcribe -m medium -l fr --json`, **recaler sur les silences (`silencedetect`) les temps de la fin de la prise** (la transcription dérive souvent après 20 s), puis `align_voice.py` (pauses raccourcies, silence ajouté avant « Bilan » et avant « Répondez », `atempo=1.1`) → `assets/vo/vo.wav` + temps de chaque mot (`T = 0,2 + RAW`).
 
 ## Son
 
-- Musique : `musique-bed.mp3` (ElevenLabs Music via FLORA), bouclée pour couvrir la durée (`acrossfade d=2`), volume 0,18. Enveloppe mixée dans `assets/music/bed.mp3` : **scratch + coupure nette** juste avant la réplique forte, **retour fort** (×1,1) sur la chute, baissée sous la question finale, fondu de 1,6 s.
-- Sons (repris de `videos/drapeaux-jumeaux-tchad-roumanie/assets/sfx`) : whoosh à chaque flou, pop à chaque apparition, basse sur l'accroche et la chute, scratch, déchirure, touches de clavier, scintillement. Volumes 0,2 à 0,45 : **rien ne couvre la voix** (pas de foule ni de trompettes).
-- `build_exemple.py` montre tout le câblage (enveloppe, pistes de sons sans chevauchement, remplacement de `__END__`, `__VO__`, `RAW`, `WORDS`).
+- Musique : `musique-bed.mp3` (ElevenLabs Music via FLORA), bouclée (`acrossfade d=2`), volume 0,18. Enveloppe mixée dans `assets/music/bed.mp3` : **scratch + coupure** juste avant « Bilan », **retour fort** sur le mot qui suit, baissée sous la question finale, fondu de 1,6 s.
+- Sons (repris de `videos/santa-maria-2014/assets/sfx`) : souffle + souffle court sur chaque inondation, souffle court + clic d'obturateur sur chaque iris, souffle sur chaque poussée, pop sur chaque ressort, basse sur l'accroche et le tampon, touches de clavier, montée, scintillement. Volumes 0,15 à 0,45 : **rien ne couvre la voix**.
+- `build_exemple.py` (version Santa María) montre tout le câblage : enveloppe, sons des transitions, pistes sans chevauchement, remplacement de `__END__`, `__VO__`, `__SCRATCH__`, `RAW`, `WORDS`.
 
 ## Fin : faire commenter
 
-- Question ouverte (« Et vous, quels … connaissez-vous ? Dites-le en commentaire. ») ou OUI / NON, bulle blanche « Répondez ici » + flèche rouge animée vers le bouton commentaires de TikTok (à droite, `left: 860px; top: 1180px`).
+- Question ouverte ou OUI / NON, boutons OUI / NON en ressort, bulle blanche « Répondez ici » + flèche rouge animée vers le bouton commentaires de TikTok (`left: 860px; top: 1180px`).
 - Jamais de faux commentaires affichés.
 
 ## Contrôle et rendu
 
-`npx --yes hyperframes@0.8.168 check`, captures `snapshot --at …` au milieu de chaque partie (les alertes de contraste sur les mots en cours d'apparition sont normales), puis `render --quality looks --output renders/<nom>.mp4`. README dans le dossier de la vidéo (déroulé, faits, sources des images, coût). MP4 jamais commité.
+1. `npx --yes hyperframes@0.8.168 check` (les alertes de contraste sur les mots en cours d'apparition ou sous une inondation sont normales).
+2. Captures `snapshot --at …` au milieu de chaque scène **et pendant chaque transition**.
+3. `npx --yes hyperframes@0.8.168 render --fps 120 --quality looks --output renders/raw120.mp4` (≈ 7 min pour 35 s).
+4. `python3 -I videos/_engine/style-histoire/finish.py renders/raw120.mp4 renders/<nom>.mp4` : 2 sous-images fusionnées → **60 i/s avec flou de mouvement**, son à **−14 LUFS** (deux passes) avec crêtes limitées à −1,5 dBFS, recherche des images isolées qui « sautent » (doit afficher `pops none`).
+5. README dans le dossier de la vidéo (déroulé, transitions, faits, sources des images, coût). MP4 jamais commité.
