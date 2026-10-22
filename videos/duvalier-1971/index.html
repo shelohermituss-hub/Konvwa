@@ -148,10 +148,9 @@
         </div>
         <!-- 3. his son, president for life, 19 years old -->
         <div class="scene" id="s3">
-          <div class="sashc obj" id="o-sash" style="left: 240px; top: 660px"><div class="sash" id="sash"></div><div class="plate">JEAN-CLAUDE DUVALIER</div></div>
-          <div class="badge obj" id="o-19b" style="left: 650px; top: 620px; background: #D21034">19 ANS</div>
-          <div class="chip obj" id="ch-jc" style="left: 280px; top: 1370px">Le fils de « Papa Doc »</div>
-          <div class="stamp obj" id="o-vie" style="left: 90px; top: 900px">PRÉSIDENT À VIE</div>
+          <div class="photo obj" id="o-pf2" style="left: 280px; top: 640px; width: 520px; height: 770px"><img id="pf2-img" src="assets/img/pere-fils.jpg" alt="" style="transform-origin: 50% 62%" /></div>
+          <div class="chip obj" id="ch-jc" style="left: 220px; top: 1370px">François et Jean-Claude Duvalier</div>
+          <div class="stamp obj" id="o-vie" style="left: 90px; top: 1190px">PRÉSIDENT À VIE</div>
         </div>
         <!-- 4. the Constitution is changed, a referendum -->
         <div class="scene" id="s4">
@@ -165,9 +164,9 @@
         </div>
         <!-- 6. « Baby Doc » -->
         <div class="scene" id="s6">
-          <div class="fl64 obj" id="o-f64" style="left: 130px; top: 760px; width: 820px; height: 492px"><i style="left: 0; background: #141414"></i><i style="left: 50%; background: #D21034"></i><div class="arms"><svg viewBox="0 0 60 60" width="70%" height="80%"><rect x="27" y="22" width="6" height="30" fill="#7a4d1e" /><path d="M30 22 C 18 12, 8 16, 4 22 M30 22 C 42 12, 52 16, 56 22 M30 22 C 22 6, 14 6, 10 8 M30 22 C 38 6, 46 6, 50 8" stroke="#1E8E3E" stroke-width="5" fill="none" stroke-linecap="round" /><rect x="10" y="50" width="40" height="5" fill="#1E8E3E" /></svg></div><div class="wave"></div></div>
-          <div class="chip obj" id="ch-f64" style="left: 170px; top: 1205px">Le drapeau des Duvalier (1964–1986)</div>
-          <div class="stamp obj" id="o-bd" style="left: 270px; top: 920px; color: #fff; border-color: #fff; background: rgba(20, 20, 20, 0.55)">BABY DOC</div>
+          <div class="photo obj" id="o-bdp" style="left: 260px; top: 640px; width: 560px; height: 822px"><img id="bdp-img" src="assets/img/baby-doc.jpg" alt="" style="transform-origin: 50% 35%" /></div>
+          <div class="chip obj" id="ch-f64" style="left: 300px; top: 1415px">Jean-Claude Duvalier</div>
+          <div class="stamp obj" id="o-bd" style="left: 270px; top: 1180px">BABY DOC</div>
         </div>
         <!-- 7. fifteen years, then the flight to France -->
         <div class="scene" id="s7">
@@ -292,8 +291,8 @@
         const X = { s2: at(8), s3: at(15), s4: at(27), s5: at(39), s6: at(43), s7: at(48), s8: Math.round((SCRATCH + 0.3) * 100) / 100, s9: at(69) }
         const HOLD8 = T[62] - 0.14 - X.s8 // the black flood holds through the scratch silence, until « président »
         const FLOODS = [
-          { t: X.s3, a: [820, 795], b: [540, 1050], col: INK, hold: 0 },
-          { t: X.s6, a: [540, 900], b: [540, 1006], col: RED, hold: 0 },
+          { t: X.s3, a: [820, 795], b: [540, 1025], col: INK, hold: 0 },
+          { t: X.s6, a: [540, 900], b: [540, 1050], col: RED, hold: 0 },
           { t: X.s8, a: [720, 1475], b: [540, 900], col: INK, hold: HOLD8 },
         ]
         const IRISES = [{ t: X.s2 }]
@@ -399,7 +398,7 @@
 
         const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8', '#s9']
         gsap.set(SC.slice(1), { autoAlpha: 0 })
-        gsap.set(['#o-pf', '#o-19b', '#o-medal', '#ch-hk', '#o-apr', '#ch-pd', '#o-rib', '#ch-jc', '#o-vie', '#o-bal', '#st1', '#hw', '#ck', '#v-oui', '#v-non', '#ch-f64', '#o-bd', '#t71', '#t86', '#tbar', '#o-15', '#o-route', '#d-ht', '#d-fr', '#ch-ht', '#ch-fr', '#o-plane', '#o-fev', '#o-19', '#o-avie', '#o-lt20', '#o-oui', '#o-non', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
+        gsap.set(['#o-pf', '#o-medal', '#ch-hk', '#o-apr', '#ch-pd', '#o-rib', '#ch-jc', '#o-vie', '#o-bal', '#st1', '#hw', '#ck', '#v-oui', '#v-non', '#ch-f64', '#o-bd', '#t71', '#t86', '#tbar', '#o-15', '#o-route', '#d-ht', '#d-fr', '#ch-ht', '#ch-fr', '#o-plane', '#o-fev', '#o-19', '#o-avie', '#o-lt20', '#o-oui', '#o-non', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
         tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
         tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
         // scenes covered by a flood or an iris swap while hidden
@@ -431,14 +430,12 @@
         tl.fromTo('#o-rib', { autoAlpha: 1, scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.3, ease: 'power3.out' }, T[14])
 
         // ---------- 3. black flood out of the band → the son, president for life ----------
-        spring('#o-sash', X.s3 + 0.05, {})
-        tl.fromTo('#sash', { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.45, ease: 'power3.out', immediateRender: false }, T[18] - 0.1)
-        gsap.set('#sash', { scaleX: 0, transformOrigin: '0% 50%' })
-        spring('#o-19b', T[25] - 0.08, { rotation: 14 })
+        spring('#o-pf2', X.s3 + 0.05, {})
+        kb('#pf2-img', X.s3, T[25] - 0.1, 1.15, 1.02)
         spring('#ch-jc', T[17] - 0.05, { x: -60 })
         stamp('#o-vie', T[20] - 0.05, -7)
         shake(T[20] + 0.13)
-        cam('#s3', T[25] - 0.1, X.s4 - T[25], 1.08, '540px 900px', 'power2.out')
+        cam('#s3', T[25] - 0.1, X.s4 - T[25] + 0.1, 1.2, '545px 700px', 'power2.out')
 
         // ---------- 4. the Constitution is changed; a referendum ----------
         spring('#o-doc', X.s4 + 0.2, { rotation: -6 })
@@ -459,8 +456,8 @@
         cam('#s5', T[42], X.s6 - T[42], 1.08, '540px 900px', 'power2.in')
 
         // ---------- 6. red flood out of the « oui » bar → the Duvalier flag, « Baby Doc » ----------
-        spring('#o-f64', X.s6 + 0.05, { rotation: -6 })
-        tl.fromTo('#o-f64 .wave', { backgroundPosition: '0px 0px' }, { backgroundPosition: '-600px 0px', duration: X.s7 - X.s6, ease: 'none', immediateRender: false }, X.s6)
+        spring('#o-bdp', X.s6 + 0.05, { rotation: -6 })
+        kb('#bdp-img', X.s6, X.s7, 1.2, 1.03)
         spring('#ch-f64', T[45] - 0.1, { x: -60 })
         stamp('#o-bd', T[46] - 0.05, -6)
         shake(T[46] + 0.13)
