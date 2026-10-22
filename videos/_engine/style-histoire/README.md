@@ -48,5 +48,5 @@
 1. `npx --yes hyperframes@0.8.168 check` (les alertes de contraste sur les mots en cours d'apparition ou sous une inondation sont normales).
 2. Captures `snapshot --at …` au milieu de chaque scène **et pendant chaque transition**.
 3. `npx --yes hyperframes@0.8.168 render --fps 120 --quality looks --output renders/raw120.mp4` (≈ 7 min pour 35 s).
-4. `python3 -I videos/_engine/style-histoire/finish.py renders/raw120.mp4 renders/<nom>.mp4` : 2 sous-images fusionnées → **60 i/s avec flou de mouvement**, son à **−14 LUFS** (deux passes) avec crêtes limitées à −1,5 dBFS, recherche des images isolées qui « sautent » (doit afficher `pops none`).
+4. `python3 -I videos/_engine/style-histoire/finish.py renders/raw120.mp4 renders/<nom>.mp4` : 2 sous-images fusionnées → **60 i/s avec flou de mouvement**, son à **−14 LUFS** (deux passes) avec un limiteur à −2 dB (crêtes ≈ −1 dBFS après encodage), recherche des images isolées qui « sautent » (doit afficher `pops none`).
 5. README dans le dossier de la vidéo (déroulé, transitions, faits, sources des images, coût). MP4 jamais commité.

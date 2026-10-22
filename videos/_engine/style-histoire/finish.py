@@ -3,13 +3,13 @@
 import json, subprocess, sys, numpy as np
 
 src, out = sys.argv[1], sys.argv[2]
-# two-pass loudnorm: measure first, then apply linearly so the result lands on -14 LUFS; a limiter keeps peaks under -1.5 dBFS
+# two-pass loudnorm: measure first, then apply linearly so the result lands on -14 LUFS; a limiter at -2 dB keeps peaks under about -1 dBFS after AAC encoding
 m = subprocess.run(['ffmpeg', '-hide_banner', '-i', src, '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json', '-f', 'null', '-'], capture_output=True, text=True).stderr
 j = json.loads(m[m.rindex('{'):m.rindex('}') + 1])
 ln = ('loudnorm=I=-14:TP=-1.5:LRA=11:linear=true:measured_I={input_i}:measured_TP={input_tp}:'
       'measured_LRA={input_lra}:measured_thresh={input_thresh}:offset={target_offset}').format(**j)
 subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', src,
-                '-vf', 'tmix=frames=2,fps=60', '-af', ln + ',alimiter=limit=0.84:level=disabled',
+                '-vf', 'tmix=frames=2,fps=60', '-af', ln + ',alimiter=limit=0.79:level=disabled',
                 '-c:v', 'libx264', '-crf', '18', '-preset', 'medium', '-pix_fmt', 'yuv420p',
                 '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', out], check=True)
 
