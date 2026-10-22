@@ -1,6 +1,6 @@
 # « Une reine d'Haïti est enterrée en Italie » — Marie-Louise Christophe, Pise
 
-Composition HyperFrames écrite à la main (`index.html`), 9:16, ≈ 34 s, style « histoire express » v2 (`../_engine/style-histoire/README.md`). Pastille « HISTOIRE D'HAÏTI · 1851 ».
+Composition HyperFrames écrite à la main (`index.html`), 9:16, ≈ 34 s, style « histoire express » v3 (`../_engine/style-histoire/README.md`). Pastille « HISTOIRE D'HAÏTI · 1851 ».
 
 Structure v2 inchangée, avec en plus des éléments « affiche » tirés des deux références du client : viseur de caméra au hook (coins, REC, timecode), disques orange KONVWA (`#F05A28`, demande du client) derrière les détourages, mots fantômes géants en fond, micro-typographie Courier, au moins une image ou un objet par scène.
 
