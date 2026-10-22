@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Deux Haïti, 1807-1820</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      « Haïti coupée en deux pendant 13 ans » — style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
+      accroche en viseur de caméra avec un compteur (1807 → 1820) et la carte d'Haïti qui se déchire sur la frontière,
+      scènes « affiche » (détourés sur disque orange, mots fantômes, micro-typo), transitions inondation / iris / page qui pousse,
+      ctl(t) sans état, rendu 120 i/s fusionné en 60 i/s, −14 LUFS.
+    -->
+    <style>
+      @font-face { font-family: "Caveat"; src: url("assets/fonts/caveat-700.woff2") format("woff2"); font-weight: 700; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .series { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; z-index: 30; }
+      .series span { padding: 10px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: 0.08em; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
+      .w { display: inline-block; }
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      .x { font-size: 230px; font-weight: 900; letter-spacing: -0.06em; line-height: 0.95; }
+
+      .obj { position: absolute; z-index: 10; }
+      .tri { position: absolute; overflow: hidden; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); background: #d4d4d4; }
+      .tri i { position: absolute; top: 0; bottom: 0; width: 33.4%; display: flex; align-items: center; justify-content: center; color: #fff; font-style: normal; font-weight: 800; letter-spacing: 0.12em; writing-mode: vertical-rl; transform-origin: 50% 50%; }
+      .tri .wave, .rw .wave { position: absolute; inset: 0; background: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0.16) 70px, rgba(0, 0, 0, 0.14) 150px, rgba(255, 255, 255, 0) 220px); background-size: 440px 100%; mix-blend-mode: soft-light; }
+      .rw { position: absolute; overflow: hidden; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); }
+      .rw i { position: absolute; left: 0; right: 0; height: 50%; }
+      .cap { position: absolute; text-align: center; font-weight: 700; font-size: 42px; letter-spacing: -0.01em; }
+      .pole { position: absolute; width: 14px; border-radius: 7px; background: linear-gradient(90deg, #8a8a8a, #d9d9d9 45%, #7a7a7a); box-shadow: 6px 14px 20px rgba(0, 0, 0, 0.15); }
+      .pole::before { content: ""; position: absolute; left: -9px; top: -24px; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f1d77a, #b8901f); }
+
+      .sw { position: absolute; width: 360px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+      .sw .dot { width: 300px; height: 300px; border-radius: 50%; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25), inset 0 0 0 10px rgba(255, 255, 255, 0.85); }
+      .sw b { font-size: 46px; font-weight: 800; }
+      .sw code { font-family: "Poppins", sans-serif; font-size: 32px; font-weight: 600; color: #555; }
+      .lens { position: absolute; width: 360px; height: 360px; border-radius: 50%; border: 14px solid #141414; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
+      .lens::after { content: ""; position: absolute; left: 290px; top: 300px; width: 30px; height: 150px; border-radius: 14px; background: #141414; transform: rotate(-45deg); }
+
+      .photo { position: absolute; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip { position: absolute; white-space: nowrap; padding: 14px 28px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 36px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); display: flex; align-items: center; gap: 14px; }
+      .mini { position: relative; display: inline-block; width: 56px; height: 38px; border-radius: 6px; overflow: hidden; flex: none; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); }
+      .mini i { position: absolute; top: 0; bottom: 0; width: 34%; }
+      .badge { position: absolute; padding: 12px 34px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 46px; box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25); white-space: nowrap; }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #CE1126; border-radius: 22px; color: #CE1126; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.7); white-space: nowrap; }
+      .letter { position: absolute; width: 760px; height: 760px; border-radius: 24px; background: #fffdf7; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.18); padding: 56px 60px; box-sizing: border-box; }
+      .letter .hd { display: flex; align-items: center; gap: 22px; font-weight: 900; font-size: 64px; color: #2a6ebb; }
+      .letter .hd svg { width: 90px; height: 90px; }
+      .letter p { margin: 34px 0 0; font-size: 38px; line-height: 1.5; color: #333; }
+      .letter p b { color: #141414; }
+      .grid4 .card { position: absolute; width: 440px; border-radius: 26px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.16); overflow: hidden; }
+      .grid4 .card .fl { height: 290px; position: relative; }
+      .grid4 .card .fl img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .grid4 .card b { display: block; padding: 14px 22px; font-size: 36px; font-weight: 800; }
+      .ring { position: absolute; border-radius: 50%; border: 8px solid #CE1126; box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.7); }
+      .q { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: #141414; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 92px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+
+      .crate { position: absolute; border-radius: 10px; background: repeating-linear-gradient(180deg, #b98545 0px, #b98545 52px, #8a5a26 52px, #8a5a26 58px); box-shadow: 0 26px 50px rgba(0, 0, 0, 0.25), inset 0 0 0 10px #7a4d1e; display: flex; align-items: center; justify-content: center; }
+      .crate span { padding: 6px 22px; border: 6px solid rgba(40, 22, 6, 0.75); color: rgba(40, 22, 6, 0.8); font-weight: 900; font-size: 54px; letter-spacing: 0.12em; transform: rotate(-4deg); }
+      .num { position: absolute; left: 0; right: 0; text-align: center; font-weight: 900; font-size: 150px; letter-spacing: -0.04em; color: #A87900; font-variant-numeric: tabular-nums; }
+      .cal { position: absolute; width: 360px; height: 420px; border-radius: 30px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); overflow: hidden; text-align: center; }
+      .cal .top { height: 110px; background: #D21034; color: #fff; font-weight: 800; font-size: 40px; letter-spacing: 0.08em; display: flex; align-items: center; justify-content: center; }
+      .cal b { display: block; font-size: 230px; font-weight: 900; letter-spacing: -0.06em; line-height: 1.2; }
+      .bank { position: absolute; width: 470px; height: 560px; border-radius: 30px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); }
+      .bank svg { position: absolute; left: 45px; top: 40px; width: 380px; height: 330px; }
+      .bank b { position: absolute; left: 0; right: 0; top: 390px; text-align: center; font-size: 40px; font-weight: 900; letter-spacing: 0.06em; line-height: 1.15; }
+      .tbar { position: absolute; height: 30px; border-radius: 15px; background: #cfcfcf; overflow: hidden; }
+      .tbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #D21034; transform-origin: 0 50%; }
+      .tlab { position: absolute; font-weight: 800; font-size: 46px; }
+      .btn { position: absolute; width: 380px; height: 170px; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 96px; letter-spacing: 0.04em; box-shadow: 0 26px 50px rgba(0, 0, 0, 0.2); }
+      .gray img { filter: grayscale(1) contrast(1.1); }
+      .scene { position: absolute; inset: 0; }
+      #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
+      #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
+      #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
+      /* --- références client : viseur de caméra (hook) et affiches à disque rouge, détourés, mots fantômes, micro-typo --- */
+      .hud { position: absolute; inset: 0; pointer-events: none; z-index: 12; }
+      .hud .cn { position: absolute; width: 60px; height: 60px; border: 0 solid #141414; }
+      .hud .rec { position: absolute; left: 80px; top: 190px; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
+      .hud .fps { position: absolute; right: 80px; top: 190px; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .sun { position: absolute; border-radius: 50%; background: #F05A28; }
+      .ring3 { position: absolute; border-radius: 50%; border: 3px solid rgba(20, 20, 20, 0.35); }
+      .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
+      .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; }
+      .cut { position: absolute; }
+      .cut img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; display: block; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.25)); }
+      .counter2 { position: absolute; left: 0; right: 0; text-align: center; }
+      .counter2 small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
+      .counter2 b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #141414; font-variant-numeric: tabular-nums; }
+      .crown { position: absolute; width: 170px; height: 120px; }
+      .rings { position: absolute; width: 140px; height: 100px; }
+      .tomb { position: absolute; width: 560px; height: 720px; border-radius: 280px 280px 24px 24px; background: linear-gradient(180deg, #ededed, #c9c9c9); box-shadow: 0 40px 70px rgba(0, 0, 0, 0.25), inset 0 0 0 14px rgba(255, 255, 255, 0.5); text-align: center; padding-top: 170px; box-sizing: border-box; color: #3a3a3a; }
+      .tomb .cross { font-size: 90px; font-weight: 300; line-height: 1; }
+      .tomb h3 { margin: 26px 0 8px; font-size: 52px; font-weight: 900; letter-spacing: 0.06em; }
+      .tomb p { margin: 6px 0; font-size: 32px; font-weight: 600; letter-spacing: 0.12em; }
+      .candle { position: absolute; width: 60px; height: 190px; }
+      .memo { position: absolute; width: 360px; padding: 24px 26px; border-radius: 22px; background: #fff; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18); display: flex; align-items: center; gap: 18px; }
+      .memo b { font-size: 46px; font-weight: 300; }
+      .memo span { font-size: 32px; font-weight: 800; line-height: 1.15; }
+      .memo small { display: block; font-size: 26px; font-weight: 600; color: #888; }
+      .ship { position: absolute; width: 90px; height: 90px; }
+      #veil { display: none; }
+      /* --- deux Haïti : drapeaux du Nord (noir et rouge, vertical) et du Sud (bleu et rouge, horizontal), épingles, VS, médaillon --- */
+      .map img { object-position: 50% 50%; }
+      .sabres { width: 300px; height: 300px; }
+      .vs { width: 140px; height: 140px; border-radius: 50%; background: #D21034; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 60px; letter-spacing: -0.02em; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); }
+      .pin { position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; background: #D21034; border: 6px solid #fff; box-sizing: border-box; }
+      .pin2 { display: inline-block; width: 24px; height: 24px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: #D21034; flex: none; }
+      .flag { position: absolute; overflow: hidden; border-radius: 8px; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22); }
+      .fn i, .fs i { position: absolute; }
+      .fn i:nth-child(1) { left: 0; top: 0; bottom: 0; width: 50%; background: #141414; }
+      .fn i:nth-child(2) { left: 50%; top: 0; bottom: 0; width: 50%; background: #D21034; }
+      .fs i:nth-child(1) { left: 0; top: 0; bottom: auto; width: 100%; height: 50%; background: #00209F; }
+      .fs i:nth-child(2) { left: 0; top: 50%; bottom: auto; width: 100%; height: 50%; background: #D21034; }
+      .flag .wave { position: absolute; inset: 0; background: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0.16) 70px, rgba(0, 0, 0, 0.16) 150px, rgba(255, 255, 255, 0) 220px); background-size: 440px 100%; mix-blend-mode: soft-light; }
+      .medal { position: absolute; width: 250px; height: 250px; border-radius: 50%; overflow: hidden; border: 8px solid #fff; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22); }
+      .medal img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="32.2" data-width="1080" data-height="1920">
+      <div id="world">
+        <div class="grid" id="grid"></div>
+        <!-- 1. hook: Haiti in a camera viewfinder, the years tick from 1807 to 1820, then the map tears in two along the frontier -->
+        <div class="scene" id="s1">
+          <div class="ghost" id="g1" style="top: 820px; font-size: 380px">HAÏTI</div>
+          <div class="sun obj" id="sun1" style="left: 190px; top: 820px; width: 700px; height: 700px"></div>
+          <div class="ring3 obj" id="rg1" style="left: 140px; top: 770px; width: 800px; height: 800px"></div>
+          <div class="cut obj map" id="o-n1" style="left: 40px; top: 790px; width: 1000px; height: 747px"><img src="assets/img/carte-nord.png" alt="" /></div>
+          <div class="cut obj map" id="o-s1" style="left: 40px; top: 790px; width: 1000px; height: 747px"><img src="assets/img/carte-sud.png" alt="" /></div>
+          <div class="counter2 obj" id="o-yr" style="top: 560px"><small>NORD / SUD · DEUX PAYS</small><b><span id="yr">1807</span></b></div>
+          <div class="hud" id="hud">
+            <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="left: 50px; top: 1690px; border-left-width: 6px; border-bottom-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 1690px; border-right-width: 6px; border-bottom-width: 6px"></div>
+            <div class="rec" style="top: 1700px; left: 130px"><i id="recdot"></i>REC <span id="tc">00:00:00:00</span></div>
+            <div class="fps" style="top: 1700px; right: 130px">HAÏTI · 1807</div>
+          </div>
+        </div>
+        <!-- 2. 1806: Emperor Dessalines is assassinated -->
+        <div class="scene" id="s2">
+          <div class="ghost" style="top: 1460px; font-size: 300px">1806</div>
+          <div class="sun obj" id="sun2" style="left: 190px; top: 760px; width: 700px; height: 700px"></div>
+          <div class="cut obj" id="o-des" style="left: 215px; top: 700px; width: 650px; height: 785px"><img id="des-img" src="assets/img/dessalines-cut.png" alt="" /></div>
+          <div class="chip obj" id="ch-emp" style="left: 90px; top: 1420px">Empereur Jacques Iᵉʳ</div>
+          <div class="badge obj" id="o-1806" style="left: 560px; top: 660px">† 17 OCT. 1806</div>
+          <div class="micro" id="mi2" style="right: 80px; top: 1560px; text-align: right">PONT-ROUGE<br />PORTE DE PORT-AU-PRINCE</div>
+        </div>
+        <!-- 3. the generals fight over power; in 1807 the country splits in two -->
+        <div class="scene" id="s3">
+          <div class="ghost" style="top: 1480px; font-size: 300px">1807</div>
+          <div class="photo obj" id="o-hc3" style="left: 70px; top: 700px; width: 440px; height: 560px"><img id="hc3-img" src="assets/img/henri.jpg" alt="" style="object-position: 50% 12%; transform-origin: 50% 20%" /></div>
+          <div class="photo obj" id="o-pe3" style="left: 570px; top: 700px; width: 440px; height: 560px"><img id="pe3-img" src="assets/img/petion.jpg" alt="" style="object-position: 50% 20%; transform-origin: 50% 25%" /></div>
+          <div class="chip obj" id="ch-hc3" style="left: 90px; top: 1230px">Christophe</div>
+          <div class="chip obj" id="ch-pe3" style="left: 720px; top: 1230px">Pétion</div>
+          <div class="vs obj" id="o-vs" style="left: 470px; top: 900px">VS</div>
+          <div class="cut obj map" id="o-n3" style="left: 40px; top: 700px; width: 1000px; height: 747px"><img src="assets/img/carte-nord-teinte.png" alt="" /></div>
+          <div class="cut obj map" id="o-s3" style="left: 40px; top: 700px; width: 1000px; height: 747px"><img src="assets/img/carte-sud-teinte.png" alt="" /></div>
+          <svg class="route obj" id="o-front" viewBox="0 0 1739 1299" style="left: 40px; top: 700px; width: 1000px; height: 747px"><polyline points="0,712 1100,712 1130,745 1210,762 1300,772 1380,774 1460,768 1560,764 1739,768" fill="none" stroke="#D21034" stroke-width="9" stroke-dasharray="14 16" stroke-linecap="round" /></svg>
+          <div class="chip obj" id="ch-n3" style="left: 300px; top: 640px">NORD</div>
+          <div class="chip obj" id="ch-s3" style="left: 620px; top: 1500px">SUD</div>
+          <div class="micro" id="mi3" style="left: 80px; top: 1640px">FRONTIÈRE APPROXIMATIVE<br />1807 — 1820</div>
+        </div>
+        <!-- 4. the north: Henri Christophe, crowned king in 1811 -->
+        <div class="scene" id="s4">
+          <div class="ghost" style="top: 1470px; font-size: 330px">NORD</div>
+          <div class="sun obj" id="sun4" style="left: 190px; top: 780px; width: 700px; height: 700px"></div>
+          <div class="cut obj" id="o-hc4" style="left: 190px; top: 720px; width: 700px; height: 753px"><img src="assets/img/henri-cut.png" alt="" /></div>
+          <svg class="crown obj" id="o-crown4" viewBox="0 0 170 120" style="left: 441px; top: 672px"><path d="M10 100 L20 30 L55 70 L85 14 L115 70 L150 30 L160 100 Z" fill="#E8B923" stroke="#9c7410" stroke-width="5" stroke-linejoin="round" /><rect x="10" y="98" width="150" height="16" rx="4" fill="#d4a017" stroke="#9c7410" stroke-width="4" /><circle cx="85" cy="12" r="9" fill="#D21034" /><circle cx="20" cy="28" r="7" fill="#141414" /><circle cx="150" cy="28" r="7" fill="#141414" /></svg>
+          <div class="chip obj" id="ch-n4" style="left: 80px; top: 1500px"><span class="mini fn"><i></i><i></i></span>État du Nord</div>
+          <div class="badge obj" id="o-1811" style="left: 640px; top: 620px">ROI · 1811</div>
+          <div class="micro" id="mi4" style="right: 80px; top: 1600px; text-align: right">ÉTAT D'HAÏTI · 1807<br />ROYAUME D'HAÏTI · 1811</div>
+        </div>
+        <!-- 4b. iris onto the map: the capital, Le Cap -->
+        <div class="scene" id="s4b">
+          <div class="ghost" style="top: 1460px; font-size: 300px">LE CAP</div>
+          <div class="photo obj" id="o-cap" style="left: 70px; top: 640px; width: 940px; height: 631px"><img id="cap-img" src="assets/img/carte-cap.jpg" alt="" style="transform-origin: 48% 31%" /><i class="pin" id="pin-cap" style="left: 452px; top: 199px"></i></div>
+          <div class="chip obj" id="ch-cap" style="left: 100px; top: 1230px">Cap-Henri · auj. Cap-Haïtien</div>
+          <div class="photo obj" id="o-ss" style="left: 600px; top: 1340px; width: 380px; height: 253px; border-radius: 20px"><img src="assets/img/sans-souci.jpg" alt="" /></div>
+          <div class="micro" id="mi4b" style="left: 80px; top: 1370px">PALAIS SANS-SOUCI<br />MILOT · GRAVURE 1873<br />19°46′N · 72°12′O</div>
+        </div>
+        <!-- 5. the south: a republic led by Alexandre Pétion -->
+        <div class="scene" id="s5">
+          <div class="ghost" style="top: 1470px; font-size: 330px">SUD</div>
+          <div class="sun obj" id="sun5" style="left: 190px; top: 780px; width: 700px; height: 700px"></div>
+          <div class="cut obj" id="o-pe5" style="left: 215px; top: 700px; width: 650px; height: 815px"><img src="assets/img/petion-cut.png" alt="" /></div>
+          <div class="chip obj" id="ch-s5" style="left: 80px; top: 1520px"><span class="mini fs"><i></i><i></i></span>République du Sud</div>
+          <div class="badge obj" id="o-pres" style="left: 560px; top: 640px">PRÉSIDENT · 1807</div>
+          <div class="micro" id="mi5" style="right: 80px; top: 1630px; text-align: right">ÉLU LE 9 MARS 1807<br />MORT EN 1818</div>
+        </div>
+        <!-- 5b. iris onto the map: the capital, Port-au-Prince -->
+        <div class="scene" id="s5b">
+          <div class="ghost" style="top: 1470px; font-size: 230px">PORT-AU-PRINCE</div>
+          <div class="photo obj" id="o-pap" style="left: 70px; top: 640px; width: 940px; height: 631px"><img id="pap-img" src="assets/img/carte-pap.jpg" alt="" style="transform-origin: 49% 47%" /><i class="pin" id="pin-pap" style="left: 463px; top: 295px"></i></div>
+          <div class="chip obj" id="ch-pap" style="left: 100px; top: 1230px">Port-au-Prince</div>
+          <div class="photo obj" id="o-pap2" style="left: 600px; top: 1330px; width: 380px; height: 299px; border-radius: 20px"><img src="assets/img/port-au-prince.jpg" alt="" /></div>
+          <div class="micro" id="mi5b" style="left: 80px; top: 1370px">PORT-AU-PRINCE<br />PHOTO VERS 1890<br />18°32′N · 72°20′O</div>
+        </div>
+        <!-- 6. two armies fight for years, with no winner -->
+        <div class="scene" id="s6">
+          <div class="ghost" style="top: 1500px; font-size: 300px">GUERRE</div>
+          <div class="pole obj" id="p-n" style="left: 150px; top: 700px; height: 640px"></div>
+          <div class="flag obj fn" id="f-n" style="left: 164px; top: 712px; width: 330px; height: 220px"><i></i><i></i><b class="wave"></b></div>
+          <div class="pole obj" id="p-s" style="left: 916px; top: 700px; height: 640px"></div>
+          <div class="flag obj fs" id="f-s" style="left: 586px; top: 712px; width: 330px; height: 220px"><i></i><i></i><b class="wave"></b></div>
+          <svg class="sabres obj" id="o-sab" viewBox="0 0 300 300" style="left: 390px; top: 960px"><g stroke-linecap="round"><path d="M40 260 Q 120 160 250 40" fill="none" stroke="#c9c9c9" stroke-width="14" /><path d="M40 260 Q 120 160 250 40" fill="none" stroke="#f4f4f4" stroke-width="5" /><path d="M260 260 Q 180 160 50 40" fill="none" stroke="#c9c9c9" stroke-width="14" /><path d="M260 260 Q 180 160 50 40" fill="none" stroke="#f4f4f4" stroke-width="5" /><path d="M22 238 L66 282 M278 238 L234 282" stroke="#A87900" stroke-width="16" /><path d="M30 270 L18 290 M270 270 L282 290" stroke="#141414" stroke-width="14" /></g></svg>
+          <div class="tlab obj" id="t07" style="left: 90px; top: 1380px">1807</div>
+          <div class="tlab obj" id="t20" style="left: 850px; top: 1380px">1820</div>
+          <div class="tbar obj" id="tbar" style="left: 90px; top: 1460px; width: 900px"><i id="tfill" style="background: #141414"></i></div>
+          <div class="micro" id="mi6" style="right: 80px; top: 1540px; text-align: right">GUERRE CIVILE<br />NORD CONTRE SUD</div>
+        </div>
+        <!-- 7. 1820: Christophe takes his own life, Jean-Pierre Boyer reunites the country -->
+        <div class="scene" id="s7">
+          <div class="ghost" style="top: 1500px; font-size: 300px">1820</div>
+          <div class="sun obj" id="sun7" style="left: 290px; top: 760px; width: 640px; height: 640px"></div>
+          <div class="cut obj" id="o-boyer" style="left: 400px; top: 620px; width: 420px; height: 897px"><img src="assets/img/boyer-cut.png" alt="" /></div>
+          <div class="medal obj" id="o-med" style="left: 70px; top: 700px"><img src="assets/img/henri-visage.jpg" alt="" /></div>
+          <svg class="crown obj" id="o-crown7" viewBox="0 0 170 120" style="left: 140px; top: 640px; width: 120px; height: 85px"><path d="M10 100 L20 30 L55 70 L85 14 L115 70 L150 30 L160 100 Z" fill="#E8B923" stroke="#9c7410" stroke-width="5" stroke-linejoin="round" /><rect x="10" y="98" width="150" height="16" rx="4" fill="#d4a017" stroke="#9c7410" stroke-width="4" /><circle cx="85" cy="12" r="9" fill="#D21034" /><circle cx="20" cy="28" r="7" fill="#141414" /><circle cx="150" cy="28" r="7" fill="#141414" /></svg>
+          <div class="badge obj" id="o-1820" style="left: 740px; top: 1000px">OCT. 1820</div>
+          <div class="cut obj map" id="o-n7" style="left: 30px; top: 1170px; width: 380px; height: 284px"><img src="assets/img/carte-nord.png" alt="" /></div>
+          <div class="cut obj map" id="o-s7" style="left: 30px; top: 1170px; width: 380px; height: 284px"><img src="assets/img/carte-sud.png" alt="" /></div>
+          <div class="chip obj" id="ch-by" style="left: 560px; top: 1500px">Jean-Pierre Boyer</div>
+          <div class="micro" id="mi7" style="left: 80px; top: 1620px">RÉUNIFICATION<br />OCTOBRE 1820</div>
+        </div>
+        <!-- 8. two Haitis, two capitals, two flags -->
+        <div class="scene" id="s8">
+          <div class="ghost" style="top: 1500px; font-size: 330px">×2</div>
+          <svg class="route obj" id="o-split8" viewBox="0 0 20 900" style="left: 530px; top: 720px; width: 20px; height: 900px"><path d="M10 0 L10 900" stroke="#D21034" stroke-width="6" stroke-dasharray="14 16" stroke-linecap="round" /></svg>
+          <div class="chip obj" id="b-n1" style="left: 70px; top: 760px"><span class="mini fn"><i></i><i></i></span>Royaume</div>
+          <div class="chip obj" id="b-s1" style="left: 600px; top: 760px"><span class="mini fs"><i></i><i></i></span>République</div>
+          <div class="chip obj" id="b-n2" style="left: 70px; top: 960px"><i class="pin2"></i>Cap-Henri</div>
+          <div class="chip obj" id="b-s2" style="left: 600px; top: 960px"><i class="pin2"></i>Port-au-Prince</div>
+          <div class="flag obj fn" id="b-n3" style="left: 85px; top: 1180px; width: 390px; height: 260px"><i></i><i></i><b class="wave"></b></div>
+          <div class="flag obj fs" id="b-s3" style="left: 605px; top: 1180px; width: 390px; height: 260px"><i></i><i></i><b class="wave"></b></div>
+          <div class="micro" id="mi8n" style="left: 85px; top: 1470px">NORD · NOIR ET ROUGE</div>
+          <div class="micro" id="mi8s" style="left: 605px; top: 1470px">SUD · BLEU ET ROUGE</div>
+        </div>
+        <!-- 9. the question -->
+        <div class="scene" id="s9">
+          <div class="btn obj" id="o-oui" style="left: 110px; top: 900px; background: #141414; color: #fff">OUI</div>
+          <div class="btn obj" id="o-non" style="left: 590px; top: 900px; background: #fff; color: #141414">NON</div>
+          <div class="bubble obj" id="o-bub" style="left: 470px; top: 1250px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1180px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </div>
+
+        <div id="flood"></div>
+        <div id="iris"></div>
+        <div id="blocks"></div>
+      </div>
+      <div class="series"><span>HISTOIRE D'HAÏTI · 1807</span></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), pauses raccourcies, silence avant « Bilan », accélérée ×1,1.
+           Musique : celle du style (ElevenLabs via FLORA), coupure au scratch et retour sur « deux Haïti » mixés dans le fichier. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="30.48" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="32.2" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/whoosh-short.mp3" data-start="0.05" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx2" src="assets/sfx/click.mp3" data-start="0.05" data-duration="0.37" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx3" src="assets/sfx/impact-bass-1.mp3" data-start="0.08" data-duration="2.12" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx4" src="assets/sfx/pop.mp3" data-start="0.54" data-duration="0.72" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx5" src="assets/sfx/riser.mp3" data-start="0.66" data-duration="0.88" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx6" src="assets/sfx/key-press.mp3" data-start="0.66" data-duration="0.43" data-track-index="21" data-volume="0.1"></audio>
+      <audio id="sx7" src="assets/sfx/key-press.mp3" data-start="0.76" data-duration="0.43" data-track-index="24" data-volume="0.1"></audio>
+      <audio id="sx8" src="assets/sfx/key-press.mp3" data-start="0.86" data-duration="0.43" data-track-index="25" data-volume="0.1"></audio>
+      <audio id="sx9" src="assets/sfx/key-press.mp3" data-start="0.96" data-duration="0.43" data-track-index="26" data-volume="0.1"></audio>
+      <audio id="sx10" src="assets/sfx/key-press.mp3" data-start="1.06" data-duration="0.43" data-track-index="27" data-volume="0.1"></audio>
+      <audio id="sx11" src="assets/sfx/key-press.mp3" data-start="1.16" data-duration="0.43" data-track-index="21" data-volume="0.1"></audio>
+      <audio id="sx12" src="assets/sfx/key-press.mp3" data-start="1.26" data-duration="0.43" data-track-index="24" data-volume="0.1"></audio>
+      <audio id="sx13" src="assets/sfx/dechirure.mp3" data-start="1.32" data-duration="0.84" data-track-index="22" data-volume="0.45"></audio>
+      <audio id="sx14" src="assets/sfx/whoosh-short.mp3" data-start="1.38" data-duration="0.57" data-track-index="25" data-volume="0.25"></audio>
+      <audio id="sx15" src="assets/sfx/impact-bass-2.mp3" data-start="1.4" data-duration="2.59" data-track-index="26" data-volume="0.4"></audio>
+      <audio id="sx16" src="assets/sfx/sparkle.mp3" data-start="1.7" data-duration="1.8" data-track-index="20" data-volume="0.15"></audio>
+      <audio id="sx17" src="assets/sfx/whoosh.mp3" data-start="1.89" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx18" src="assets/sfx/whoosh-short.mp3" data-start="2.21" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx19" src="assets/sfx/pop.mp3" data-start="2.59" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx20" src="assets/sfx/impact-bass-1.mp3" data-start="3.96" data-duration="2.12" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx21" src="assets/sfx/pop.mp3" data-start="4.01" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx22" src="assets/sfx/whoosh.mp3" data-start="4.26" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx23" src="assets/sfx/whoosh-short.mp3" data-start="4.58" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="4.63" data-duration="0.72" data-track-index="24" data-volume="0.22"></audio>
+      <audio id="sx25" src="assets/sfx/pop.mp3" data-start="4.86" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx26" src="assets/sfx/impact-bass-2.mp3" data-start="5.46" data-duration="2.59" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx27" src="assets/sfx/pop.mp3" data-start="6.55" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx28" src="assets/sfx/key-press.mp3" data-start="6.78" data-duration="0.43" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="7.25" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="7.48" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx31" src="assets/sfx/dechirure.mp3" data-start="7.7" data-duration="0.84" data-track-index="23" data-volume="0.35"></audio>
+      <audio id="sx32" src="assets/sfx/impact-bass-1.mp3" data-start="7.82" data-duration="2.12" data-track-index="24" data-volume="0.3"></audio>
+      <audio id="sx33" src="assets/sfx/whoosh.mp3" data-start="8.11" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx34" src="assets/sfx/pop.mp3" data-start="8.36" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx35" src="assets/sfx/whoosh-short.mp3" data-start="10.47" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx36" src="assets/sfx/impact-bass-2.mp3" data-start="10.97" data-duration="2.59" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx37" src="assets/sfx/pop.mp3" data-start="11.0" data-duration="0.72" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx38" src="assets/sfx/sparkle.mp3" data-start="11.02" data-duration="1.8" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx39" src="assets/sfx/whoosh-short.mp3" data-start="11.18" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx40" src="assets/sfx/click.mp3" data-start="11.44" data-duration="0.37" data-track-index="24" data-volume="0.3"></audio>
+      <audio id="sx41" src="assets/sfx/click-soft.mp3" data-start="11.56" data-duration="0.37" data-track-index="25" data-volume="0.25"></audio>
+      <audio id="sx42" src="assets/sfx/pop.mp3" data-start="12.01" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx43" src="assets/sfx/chime.mp3" data-start="12.06" data-duration="2.54" data-track-index="22" data-volume="0.12"></audio>
+      <audio id="sx44" src="assets/sfx/pop.mp3" data-start="12.16" data-duration="0.72" data-track-index="24" data-volume="0.18"></audio>
+      <audio id="sx45" src="assets/sfx/whoosh.mp3" data-start="12.48" data-duration="0.57" data-track-index="25" data-volume="0.25"></audio>
+      <audio id="sx46" src="assets/sfx/pop.mp3" data-start="13.23" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx47" src="assets/sfx/pop.mp3" data-start="14.39" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx48" src="assets/sfx/whoosh-short.mp3" data-start="15.15" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx49" src="assets/sfx/click.mp3" data-start="15.41" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx50" src="assets/sfx/click-soft.mp3" data-start="15.53" data-duration="0.37" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx51" src="assets/sfx/pop.mp3" data-start="15.93" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx52" src="assets/sfx/chime.mp3" data-start="15.98" data-duration="2.54" data-track-index="21" data-volume="0.12"></audio>
+      <audio id="sx53" src="assets/sfx/pop.mp3" data-start="16.2" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx54" src="assets/sfx/whoosh.mp3" data-start="16.52" data-duration="0.57" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx55" src="assets/sfx/pop.mp3" data-start="16.72" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx56" src="assets/sfx/whoosh-short.mp3" data-start="16.87" data-duration="0.57" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx57" src="assets/sfx/whoosh-short.mp3" data-start="17.06" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx58" src="assets/sfx/impact-bass-1.mp3" data-start="17.47" data-duration="2.12" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx59" src="assets/sfx/pop.mp3" data-start="17.74" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx60" src="assets/sfx/riser.mp3" data-start="17.84" data-duration="1.21" data-track-index="23" data-volume="0.15"></audio>
+      <audio id="sx61" src="assets/sfx/whoosh.mp3" data-start="19.07" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx62" src="assets/sfx/pop.mp3" data-start="19.27" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx63" src="assets/sfx/pop.mp3" data-start="20.45" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx64" src="assets/sfx/whoosh.mp3" data-start="21.62" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx65" src="assets/sfx/whoosh-short.mp3" data-start="21.76" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx66" src="assets/sfx/impact-bass-2.mp3" data-start="22.17" data-duration="2.59" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx67" src="assets/sfx/pop.mp3" data-start="22.45" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx68" src="assets/sfx/impact-bass-1.mp3" data-start="22.84" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx69" src="assets/sfx/sparkle.mp3" data-start="22.89" data-duration="1.8" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx70" src="assets/sfx/whoosh.mp3" data-start="23.42" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx71" src="assets/sfx/scratch.mp3" data-start="23.42" data-duration="1.23" data-track-index="24" data-volume="0.4"></audio>
+      <audio id="sx72" src="assets/sfx/whoosh-short.mp3" data-start="24.61" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx73" src="assets/sfx/impact-bass-2.mp3" data-start="24.75" data-duration="2.59" data-track-index="23" data-volume="0.45"></audio>
+      <audio id="sx74" src="assets/sfx/pop.mp3" data-start="24.91" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx75" src="assets/sfx/pop.mp3" data-start="25.42" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx76" src="assets/sfx/pop.mp3" data-start="25.6" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx77" src="assets/sfx/pop.mp3" data-start="26.23" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx78" src="assets/sfx/pop.mp3" data-start="26.41" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx79" src="assets/sfx/sparkle.mp3" data-start="26.56" data-duration="1.8" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx80" src="assets/sfx/whoosh.mp3" data-start="26.67" data-duration="0.57" data-track-index="24" data-volume="0.25"></audio>
+      <audio id="sx81" src="assets/sfx/pop.mp3" data-start="29.3" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx82" src="assets/sfx/pop.mp3" data-start="29.78" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx83" src="assets/sfx/pop.mp3" data-start="30.05" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx84" src="assets/sfx/click.mp3" data-start="30.26" data-duration="0.37" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx85" src="assets/sfx/sparkle.mp3" data-start="30.36" data-duration="1.8" data-track-index="23" data-volume="0.2"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 32.2
+        const BLUE = '#00209F'
+        const RED = '#D21034'
+        const ORANGE = '#F05A28'
+        const GOLD = '#A87900'
+        const INK = '#141414'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0.0, 0.458, 0.589, 0.9, 0.982, 1.047, 1.113, 1.244, 1.505, 2.105, 2.17, 2.44, 3.008, 3.59, 3.764, 4.48, 4.737, 5.198, 5.313, 5.831, 5.946, 6.349, 6.464, 6.58, 7.049, 7.099, 7.213, 7.328, 7.616, 7.731, 8.16, 8.214, 8.623, 8.769, 9.45, 9.637, 9.761, 10.01, 10.568, 10.753, 10.878, 11.356, 12.166, 12.375, 12.532, 12.711, 12.761, 13.107, 13.673, 14.069, 14.238, 14.747, 15.333, 15.851, 16.566, 16.865, 17.124, 17.643, 17.946, 18.076, 18.405, 18.551, 19.121, 19.365, 19.687, 20.33, 20.612, 21.028, 21.126, 21.369, 21.467, 21.694, 21.758, 22.295, 22.538, 22.928, 23.025, 24.101, 24.55, 24.76, 25.27, 25.45, 26.08, 26.26, 26.72, 26.84, 27.06, 27.558, 27.653, 27.986, 28.081, 28.77, 29.2, 29.59, 29.68, 29.97, 30.06]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Pendant", "13", "ans,", "il", "y", "a", "eu", "deux", "Haïti.", "En", "1806,", "l'empereur", "Dessalines", "est", "assassiné.", "Ses", "généraux", "se", "disputent", "le", "pouvoir,", "et", "en", "1807,", "le", "pays", "se", "coupe", "en", "deux.", "Au", "nord,", "Henri", "Christophe,", "qui", "se", "fait", "couronner", "roi", "en", "1811.", "Capitale :", "le", "Cap.", "Au", "sud,", "une", "république,", "dirigée", "par", "Alexandre", "Pétion.", "Capitale :", "Port-au-Prince.", "Deux", "armées", "s'affrontent", "pendant", "des", "années,", "sans", "vainqueur.", "Il", "faut", "attendre", "1820 :", "Christophe", "se", "donne", "la", "mort,", "et", "Jean-Pierre", "Boyer", "réunifie", "le", "pays.", "Bilan :", "deux", "Haïti,", "deux", "capitales,", "deux", "drapeaux !", "Et", "vous,", "connaissiez-vous", "ce", "royaume", "du", "Nord ?", "Répondez", "OUI", "ou", "NON", "en", "commentaire."]
+        const SCRATCH = 23.44
+
+        // ---------- transitions: when each scene takes over, and how ----------
+        const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
+        const X = { s2: at(9), s3: at(15), s4: at(30), s4b: at(41), s5: at(44), s5b: at(52), s6: at(54), s7: at(62), s8: Math.round((SCRATCH + 0.3) * 100) / 100, s9: at(84) }
+        const HOLD8 = T[78] - 0.14 - X.s8 // the black flood holds through the scratch silence, until « deux Haïti »
+        const FLOODS = [
+          { t: X.s2, a: [540, 1215], b: [540, 1110], col: ORANGE, hold: 0 },
+          { t: X.s3, a: [770, 695], b: [540, 980], col: INK, hold: 0 },
+          { t: X.s8, a: [610, 1080], b: [540, 1170], col: INK, hold: HOLD8 },
+        ]
+        const IRISES = [{ t: X.s4b }, { t: X.s5b }]
+        const PUSHES = [['s3', 's4', 'x'], ['s4b', 's5', 'y'], ['s5b', 's6', 'x'], ['s6', 's7', 'y'], ['s8', 's9', 'y']]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 220, lines: [[0, 2, 'm'], [3, 6, 's'], [7, 8, 'b', RED]] },
+          { y: 220, lines: [[9, 10, 'm'], [11, 12, 'm'], [13, 13, 's'], [14, 14, 'bi', RED]] },
+          { y: 240, lines: [[15, 18, 's'], [19, 20, 'm']] },
+          { y: 220, lines: [[21, 22, 's'], [23, 23, 'b'], [24, 27, 's'], [28, 29, 'bi', RED]] },
+          { y: 210, lines: [[30, 31, 's'], [32, 33, 'm'], [34, 37, 's'], [38, 38, 'b', GOLD], [39, 40, 'm']] },
+          { y: 250, lines: [[41, 41, 's'], [42, 43, 'b']] },
+          { y: 220, lines: [[44, 45, 's'], [46, 47, 'm'], [48, 49, 's'], [50, 51, 'mi', BLUE]] },
+          { y: 250, lines: [[52, 52, 's'], [53, 53, 'mi', BLUE]] },
+          { y: 220, lines: [[54, 55, 'b'], [56, 59, 's'], [60, 61, 'bi', RED]] },
+          { y: 200, lines: [[62, 64, 's'], [65, 65, 'b'], [66, 70, 's'], [71, 73, 'm'], [74, 76, 'mi', BLUE]] },
+          { y: 240, lines: [[77, 77, 'm', '#fff'], [78, 79, 'm'], [80, 81, 'm'], [82, 83, 'bi', RED]] },
+          { y: 240, lines: [[84, 85, 's'], [86, 87, 'm'], [88, 90, 'm'], [91, 91, 's'], [92, 94, 'm'], [95, 96, 's']] },
+        ]
+        const BILAN = 10
+        const BIG = { b: 1, bi: 1, mi: 1, x: 1 }
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = next ? (bi === BILAN - 1 ? X.s8 - 0.32 : T[next.lines[0][0]] - 0.08) : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              if (BIG[st]) {
+                // key words rise out of their line, on a spring
+                tl.fromTo(w, { yPercent: 118, color: col || INK }, { yPercent: 0, duration: 0.42, ease: 'back.out(1.7)' }, T[k] - 0.03)
+              } else {
+                tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 14, filter: blur(6) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
+                tl.to(w, { color: col || INK, duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+              }
+            }
+          })
+          // exit: every word drops back into its line
+          if (end < END) {
+            tl.to(box.querySelectorAll('.w'), { yPercent: -125, duration: 0.18, ease: 'power3.in', stagger: 0.006 }, end - 0.2)
+            tl.set(box, { autoAlpha: 0 }, end)
+          }
+        })
+        // « Bilan : » is white on the black flood, and turns to ink as the flood contracts
+        tl.to(blocksBox.children[BILAN].querySelector('.w'), { color: INK, duration: 0.2 }, X.s8 + HOLD8)
+
+        // ---------- flood + iris: pure functions of time ----------
+        const ease = { in: (p) => p * p * p, out: (p) => 1 - Math.pow(1 - p, 3) }
+        const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)))
+        const flood = $('flood')
+        const iris = $('iris')
+        const blades = []
+        for (let i = 0; i < 6; i++) blades.push(el('div', 'blade', null, iris))
+        const RMAX = 1250
+        function ctl(t) {
+          // colour flood: grows out of an object, covers the frame, contracts into the next scene's object
+          let r = 0, cx = 540, cy = 960, col = INK
+          for (const F of FLOODS) {
+            const g0 = F.t - 0.3, c0 = F.t + F.hold, c1 = c0 + 0.32
+            if (t >= g0 && t <= c1) {
+              col = F.col
+              if (t < F.t) { r = 2300 * ease.in(seg(t, g0, F.t)); cx = F.a[0]; cy = F.a[1] }
+              else if (t < c0) { r = 2300; cx = F.b[0]; cy = F.b[1] }
+              else { r = 2300 * (1 - ease.out(seg(t, c0, c1))); cx = F.b[0]; cy = F.b[1] }
+            }
+          }
+          flood.style.background = col
+          flood.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + cx + 'px ' + cy + 'px)'
+          // camera iris: six blades close over the old scene and open on a photo
+          let ap = RMAX
+          for (const I of IRISES) {
+            if (t >= I.t - 0.28 && t < I.t) ap = RMAX * (1 - ease.in(seg(t, I.t - 0.28, I.t)))
+            else if (t >= I.t && t <= I.t + 0.36) ap = RMAX * ease.out(seg(t, I.t + 0.02, I.t + 0.36))
+          }
+          iris.style.visibility = ap >= RMAX - 1 ? 'hidden' : 'inherit'
+          const twist = (1 - ap / RMAX) * 50
+          blades.forEach((b, i) => {
+            b.style.left = 540 - 1600 + 'px'
+            b.style.top = 960 - 3200 + 'px'
+            b.style.transform = 'rotate(' + (i * 60 + twist).toFixed(2) + 'deg) translateY(' + (-ap).toFixed(1) + 'px)'
+          })
+        }
+        const clock = { v: 0 }
+        tl.fromTo(clock, { v: 0 }, { v: END, duration: END, ease: 'none', immediateRender: false, onUpdate: () => ctl(clock.v) }, 0)
+        ctl(0)
+
+        // ---------- helpers ----------
+        const spring = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0 }, o), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.8)' }, at)
+        const stamp = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.4, rotation: 2 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.18, ease: 'power4.in' }, at)
+        const show = (sel, at) => tl.set(sel, { autoAlpha: 1 }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        const shake = (at) => tl.fromTo('#world', { x: 0 }, { x: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, at)
+        const cam = (sel, at, dur, scale, origin, ez) => tl.to(sel, { scale, transformOrigin: origin, duration: dur, ease: ez || 'power2.inOut' }, at)
+        // a photo that fills the frame behind the iris, then zooms out into its card
+        const unfold = (sel, at) => tl.fromTo(sel, { scale: 3.4 }, { scale: 1, duration: 0.55, ease: 'power3.inOut' }, at)
+        const kb = (sel, from, to, s0, s1) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: to - from, ease: 'none', immediateRender: false }, from)
+        const sonar = (sels, from, to) => sels.forEach((s, i) => tl.fromTo(s, { autoAlpha: 0.9, scale: 0.4 }, { autoAlpha: 0, scale: 3.2, duration: 1.2, ease: 'power1.out', repeat: Math.max(0, Math.floor((to - from) / 1.2) - 1), immediateRender: false }, from + i * 0.4))
+
+
+
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s4b', '#s5', '#s5b', '#s6', '#s7', '#s8', '#s9']
+        gsap.set(SC.slice(1), { autoAlpha: 0 })
+        gsap.set(['#o-yr', '#ch-emp', '#o-1806', '#mi2', '#ch-hc3', '#ch-pe3', '#o-vs', '#o-n3', '#o-s3', '#o-front', '#ch-n3', '#ch-s3', '#mi3', '#o-crown4', '#ch-n4', '#o-1811', '#mi4', '#pin-cap', '#ch-cap', '#o-ss', '#mi4b', '#ch-s5', '#o-pres', '#mi5', '#pin-pap', '#ch-pap', '#o-pap2', '#mi5b', '#p-n', '#p-s', '#f-n', '#f-s', '#o-sab', '#t07', '#t20', '#tbar', '#mi6', '#o-boyer', '#o-1820', '#o-n7', '#o-s7', '#ch-by', '#mi7', '#o-split8', '#b-n1', '#b-s1', '#b-n2', '#b-s2', '#b-n3', '#b-s3', '#mi8n', '#mi8s', '#o-oui', '#o-non', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
+        gsap.set('#sun7', { scale: 0 })
+        gsap.set('#o-crown7', { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+        tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
+        // scenes covered by a flood or an iris swap while hidden
+        ;[['s1', 's2'], ['s2', 's3'], ['s4', 's4b'], ['s5', 's5b'], ['s7', 's8']].forEach(([a, b]) => { hide('#' + a, X[b]); show('#' + b, X[b]) })
+        // page pushes: the old scene leaves, the new one arrives from the opposite side
+        PUSHES.forEach(([a, b, ax]) => {
+          const D = ax === 'x' ? 1080 : 1920
+          const t0 = X[b] - 0.1
+          tl.to('#' + a, { [ax]: -D, duration: 0.4, ease: 'power3.inOut' }, t0)
+          show('#' + b, t0)
+          tl.fromTo('#' + b, { [ax]: D }, { [ax]: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, t0)
+          hide('#' + a, t0 + 0.4)
+        })
+        // ghost words drift slowly the whole time they are on screen; flags ripple
+        document.querySelectorAll('.ghost').forEach((g, i) => tl.fromTo(g, { x: i % 2 ? -60 : 60 }, { x: i % 2 ? 60 : -60, duration: END, ease: 'none', immediateRender: false }, 0))
+        tl.fromTo('.flag .wave', { backgroundPosition: '0px 0px' }, { backgroundPosition: '-1320px 0px', duration: END, ease: 'none', immediateRender: false }, 0)
+
+        // ---------- 1. hook: viewfinder, the map of Haiti rises on the orange sun, the years tick 1807 → 1820, the map tears in two on « deux » ----------
+        tl.fromTo('#sun1', { scale: 0 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)' }, 0)
+        tl.fromTo('#rg1', { scale: 0.6, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.7, ease: 'power3.out' }, 0.1)
+        tl.fromTo(['#o-n1', '#o-s1'], { y: 650 }, { y: 0, duration: 0.55, ease: 'expo.out' }, 0)
+        tl.fromTo('#hud', { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        spring('#o-yr', T[1] - 0.12, {})
+        const yr = { v: 1807 }
+        tl.fromTo(yr, { v: 1807 }, { v: 1820, duration: T[7] - T[1], ease: 'power1.in', immediateRender: false, onUpdate: () => { $('yr').textContent = String(Math.round(yr.v)) } }, T[1])
+        tl.to('#o-yr b', { color: RED, duration: 0.15 }, T[7] - 0.05)
+        tl.fromTo('#o-yr', { scale: 1 }, { scale: 1.12, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T[7])
+        // the tear: the north lifts away, the south drops, the orange sun shows through the crack
+        tl.to('#o-n1', { x: -26, y: -70, rotation: -4, duration: 0.4, ease: 'back.out(2)' }, T[7] - 0.04)
+        tl.to('#o-s1', { x: 26, y: 60, rotation: 3, duration: 0.4, ease: 'back.out(2)' }, T[7] - 0.04)
+        shake(T[7])
+        cam('#s1', T[8], X.s2 - T[8], 1.12, '540px 1215px', 'power2.in')
+        // the viewfinder's timecode and blinking REC dot are pure functions of time
+        const tc = $('tc')
+        const recdot = $('recdot')
+        const clock2 = { v: 0 }
+        tl.fromTo(clock2, { v: 0 }, { v: X.s2, duration: X.s2, ease: 'none', immediateRender: false, onUpdate: () => { const t = clock2.v; const f = Math.floor((t % 1) * 30); tc.textContent = '00:00:' + String(Math.floor(t)).padStart(2, '0') + ':' + String(f).padStart(2, '0'); recdot.style.opacity = Math.floor(t * 2) % 2 ? '0.25' : '1' } }, 0)
+
+        // ---------- 2. orange flood out of the crack → the emperor Dessalines; he turns grey on « assassiné » ----------
+        tl.fromTo('#o-des', { y: 420 }, { y: 0, duration: 0.6, ease: 'expo.out', immediateRender: false }, X.s2)
+        kb('#des-img', X.s2, X.s3, 1, 1.06)
+        spring('#ch-emp', T[11] - 0.05, { x: -60 })
+        tl.fromTo('#mi2', { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[12])
+        tl.fromTo('#des-img', { filter: 'grayscale(0) contrast(1) drop-shadow(0px 30px 40px rgba(0,0,0,0.25))' }, { filter: 'grayscale(1) contrast(1.15) drop-shadow(0px 30px 40px rgba(0,0,0,0.25))', duration: 0.35, immediateRender: false }, T[14])
+        tl.to('#sun2', { scale: 0.88, backgroundColor: '#2a2a2a', duration: 0.45 }, T[14])
+        spring('#o-1806', T[14] + 0.05, { rotation: 10 })
+        shake(T[14] + 0.1)
+        cam('#s2', T[14] + 0.3, X.s3 - T[14] - 0.3, 1.07, '770px 700px', 'power2.in')
+
+        // ---------- 3. black flood from the date → Christophe VS Pétion; then the map, the frontier, the split ----------
+        spring('#o-hc3', X.s3 + 0.05, { x: -140, rotation: -8 })
+        spring('#o-pe3', T[16] - 0.08, { x: 140, rotation: 8 })
+        kb('#hc3-img', X.s3, T[21], 1.15, 1.02)
+        kb('#pe3-img', T[16], T[21], 1.15, 1.02)
+        spring('#ch-hc3', T[16] + 0.1, { x: -60 })
+        spring('#ch-pe3', T[17], { x: 60 })
+        stamp('#o-vs', T[18] - 0.05, -6)
+        shake(T[18] + 0.13)
+        tl.to('#o-hc3', { x: 26, rotation: 3, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out' }, T[20] - 0.05)
+        tl.to('#o-pe3', { x: -26, rotation: -3, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out' }, T[20] - 0.05)
+        tl.to(['#o-hc3', '#o-pe3', '#ch-hc3', '#ch-pe3', '#o-vs'], { autoAlpha: 0, scale: 0.7, duration: 0.25, ease: 'power2.in' }, T[21] - 0.2)
+        tl.fromTo(['#o-n3', '#o-s3'], { autoAlpha: 0, scale: 0.85 }, { autoAlpha: 1, scale: 1, duration: 0.45, ease: 'back.out(1.6)', immediateRender: false }, T[21])
+        tl.fromTo('#o-front', { autoAlpha: 1, clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: T[27] - T[23], ease: 'power1.inOut', immediateRender: false }, T[23])
+        tl.fromTo('#mi3', { autoAlpha: 0, x: -30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[24])
+        spring('#ch-n3', T[25] - 0.05, { y: -40 })
+        spring('#ch-s3', T[27] - 0.05, { y: 40 })
+        tl.to('#o-n3', { x: -20, y: -60, rotation: -3, duration: 0.4, ease: 'back.out(2)' }, T[28] - 0.05)
+        tl.to('#o-s3', { x: 20, y: 55, rotation: 2, duration: 0.4, ease: 'back.out(2)' }, T[28] - 0.05)
+        tl.to('#o-front', { autoAlpha: 0, duration: 0.2 }, T[28])
+        tl.to('#ch-n3', { y: -60, duration: 0.4, ease: 'back.out(2)' }, T[28] - 0.05)
+        tl.to('#ch-s3', { y: 55, duration: 0.4, ease: 'back.out(2)' }, T[28] - 0.05)
+        shake(T[28] + 0.05)
+
+        // ---------- 4. page pushes left: the north, Henri Christophe on the orange sun; the crown lands on « roi » ----------
+        tl.fromTo('#sun4', { scale: 0.6 }, { scale: 1, duration: 0.6, ease: 'back.out(1.6)', immediateRender: false }, X.s4)
+        tl.fromTo('#o-hc4', { y: 400 }, { y: 0, duration: 0.6, ease: 'expo.out', immediateRender: false }, X.s4)
+        spring('#ch-n4', T[31] - 0.05, { x: -60 })
+        tl.fromTo('#o-crown4', { autoAlpha: 0, y: -700, rotation: -25 }, { autoAlpha: 1, y: 0, rotation: -6, duration: 0.55, ease: 'bounce.out' }, T[38] - 0.3)
+        spring('#o-1811', T[40] - 0.08, { rotation: 10 })
+        tl.fromTo('#mi4', { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[39])
+
+        // ---------- 4b. iris onto the map: Le Cap ----------
+        unfold('#o-cap', X.s4b + 0.15)
+        kb('#cap-img', X.s4b, X.s5, 1.05, 1.3)
+        spring('#pin-cap', X.s4b + 0.55, {})
+        tl.fromTo('#pin-cap', { boxShadow: '0 0 0 0px rgba(210,16,52,0.45)' }, { boxShadow: '0 0 0 40px rgba(210,16,52,0)', duration: 0.6, repeat: 1, ease: 'power1.out', immediateRender: false }, X.s4b + 0.6)
+        spring('#ch-cap', T[42] - 0.08, { x: -60 })
+        spring('#o-ss', X.s4b + 0.7, { rotation: 8 })
+        tl.fromTo('#mi4b', { autoAlpha: 0, x: -30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, X.s4b + 0.6)
+
+        // ---------- 5. page pushes up: the south, Alexandre Pétion on the orange sun ----------
+        tl.fromTo('#sun5', { scale: 0.6 }, { scale: 1, duration: 0.6, ease: 'back.out(1.6)', immediateRender: false }, X.s5)
+        tl.fromTo('#o-pe5', { y: 400 }, { y: 0, duration: 0.6, ease: 'expo.out', immediateRender: false }, X.s5)
+        spring('#ch-s5', T[47] - 0.08, { x: -60 })
+        spring('#o-pres', T[50] - 0.05, { rotation: 10 })
+        tl.fromTo('#mi5', { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[48])
+
+        // ---------- 5b. iris onto the map: Port-au-Prince ----------
+        unfold('#o-pap', X.s5b + 0.15)
+        kb('#pap-img', X.s5b, X.s6, 1.05, 1.3)
+        spring('#pin-pap', X.s5b + 0.5, {})
+        tl.fromTo('#pin-pap', { boxShadow: '0 0 0 0px rgba(210,16,52,0.45)' }, { boxShadow: '0 0 0 40px rgba(210,16,52,0)', duration: 0.6, repeat: 1, ease: 'power1.out', immediateRender: false }, X.s5b + 0.55)
+        spring('#ch-pap', T[53] - 0.08, { x: -60 })
+        spring('#o-pap2', T[53] + 0.15, { rotation: 8 })
+        tl.fromTo('#mi5b', { autoAlpha: 0, x: -30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, X.s5b + 0.6)
+
+        // ---------- 6. page pushes left: two flags face each other, the sabres cross, the years pass ----------
+        spring(['#p-n', '#p-s'], X.s6 + 0.05, { y: 300 })
+        tl.fromTo('#f-n', { autoAlpha: 1, scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.45, ease: 'back.out(1.6)', immediateRender: false }, T[54] + 0.1)
+        tl.fromTo('#f-s', { autoAlpha: 1, scaleX: 0, transformOrigin: '100% 50%' }, { scaleX: 1, duration: 0.45, ease: 'back.out(1.6)', immediateRender: false }, T[55])
+        tl.fromTo('#o-sab', { autoAlpha: 0, scale: 0.5, rotation: -40 }, { autoAlpha: 1, scale: 1, rotation: 0, duration: 0.3, ease: 'back.out(2.5)', immediateRender: false }, T[56] - 0.05)
+        shake(T[56] + 0.2)
+        spring(['#t07', '#t20'], T[57] - 0.1, {})
+        tl.fromTo('#tbar', { autoAlpha: 1, scaleX: 0, transformOrigin: '0 50%' }, { scaleX: 1, duration: 0.3, ease: 'power3.out', immediateRender: false }, T[57] - 0.05)
+        tl.fromTo('#tfill', { scaleX: 0 }, { scaleX: 1, duration: T[61] - T[57] + 0.3, ease: 'power1.inOut', immediateRender: false }, T[57])
+        tl.fromTo('#mi6', { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[58])
+        tl.to('#o-sab', { rotation: 8, duration: 0.1, yoyo: true, repeat: 3, ease: 'sine.inOut' }, T[60])
+
+        // ---------- 7. page pushes up: 1820 — the king's crown falls, Boyer rises, the two halves of the map snap back together ----------
+        spring('#o-med', X.s7 + 0.05, { x: -80 })
+        tl.fromTo('#o-crown7', { autoAlpha: 0, y: -400 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'bounce.out', immediateRender: false }, X.s7 + 0.2)
+        spring('#o-1820', T[65] - 0.08, { rotation: 10 })
+        tl.to('#o-crown7', { y: 700, rotation: 70, autoAlpha: 0, duration: 0.6, ease: 'power2.in' }, T[70] - 0.05)
+        tl.to('#o-med img', { filter: 'grayscale(1) contrast(1.1)', duration: 0.4 }, T[70])
+        tl.to('#o-med', { scale: 0.9, duration: 0.4 }, T[70])
+        tl.to('#sun7', { scale: 1, duration: 0.55, ease: 'back.out(1.6)' }, T[72] - 0.2)
+        tl.fromTo('#o-boyer', { autoAlpha: 1, y: 500 }, { y: 0, duration: 0.6, ease: 'expo.out', immediateRender: false }, T[72] - 0.15)
+        spring('#ch-by', T[73] - 0.05, { x: 60 })
+        tl.fromTo('#o-n7', { autoAlpha: 0, x: -20, y: -50, rotation: -4 }, { autoAlpha: 1, duration: 0.25, immediateRender: false }, T[73] - 0.1)
+        tl.fromTo('#o-s7', { autoAlpha: 0, x: 20, y: 45, rotation: 3 }, { autoAlpha: 1, duration: 0.25, immediateRender: false }, T[73] - 0.1)
+        tl.to(['#o-n7', '#o-s7'], { x: 0, y: 0, rotation: 0, duration: 0.3, ease: 'back.out(2.2)' }, T[74] + 0.05)
+        tl.fromTo('#mi7', { autoAlpha: 0, x: -30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[75])
+        cam('#s7', T[75], X.s8 - T[75], 1.06, '610px 1080px', 'power2.in')
+
+        // ---------- 8. black flood held through the scratch; it opens on the two columns: two Haitis, two capitals, two flags ----------
+        tl.fromTo('#o-split8', { autoAlpha: 1, clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)', duration: 0.5, ease: 'power2.out', immediateRender: false }, X.s8 + HOLD8)
+        spring('#b-n1', T[78] - 0.05, { x: -80 })
+        spring('#b-s1', T[79] - 0.05, { x: 80 })
+        spring('#b-n2', T[80] - 0.05, { x: -80 })
+        spring('#b-s2', T[81] - 0.05, { x: 80 })
+        spring('#b-n3', T[82] - 0.05, { rotation: -10 })
+        spring('#b-s3', T[83] - 0.05, { rotation: 10 })
+        tl.fromTo(['#mi8n', '#mi8s'], { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.1 }, T[83] + 0.15)
+        cam('#s8', T[83], X.s9 - T[83], 1.05, '540px 1100px', 'power1.out')
+
+        // ---------- 9. OUI / NON, and where to answer ----------
+        spring('#o-oui', T[92] - 0.1, { rotation: -10 })
+        spring('#o-non', T[94] - 0.1, { rotation: 10 })
+        spring('#o-bub', T[95] - 0.12, {})
+        spring('#o-arrow', T[96] - 0.02, { rotation: -30 })
+        const left = END - T[96] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[96] + 0.5)
+        tl.to(['#o-oui', '#o-non'], { y: -10, duration: 0.5, yoyo: true, repeat: n, ease: 'sine.inOut', stagger: 0.25 }, T[96] + 0.4)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
