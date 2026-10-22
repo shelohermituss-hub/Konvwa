@@ -94,7 +94,7 @@
       .hud .rec { position: absolute; left: 80px; top: 190px; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
       .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
       .hud .fps { position: absolute; right: 80px; top: 190px; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
-      .sun { position: absolute; border-radius: 50%; background: #D21034; }
+      .sun { position: absolute; border-radius: 50%; background: #F05A28; }
       .ring3 { position: absolute; border-radius: 50%; border: 3px solid rgba(20, 20, 20, 0.35); }
       .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
       .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; }
@@ -316,6 +316,7 @@
         const END = 34.2
         const BLUE = '#00209F'
         const RED = '#D21034'
+        const ORANGE = '#F05A28'
         const GOLD = '#A87900'
         const INK = '#141414'
 
@@ -330,7 +331,7 @@
         const X = { s2: at(13), s2b: at(19), s3: at(24), s4: at(32), s5: at(44), s6: at(56), s7: at(65), s8: Math.round((SCRATCH + 0.3) * 100) / 100, s9: at(84) }
         const HOLD8 = T[78] - 0.14 - X.s8 // the black flood holds through the scratch silence, until « la Toscane »
         const FLOODS = [
-          { t: X.s2, a: [590, 1250], b: [290, 980], col: RED, hold: 0 },
+          { t: X.s2, a: [590, 1250], b: [290, 980], col: ORANGE, hold: 0 },
           { t: X.s4, a: [540, 1500], b: [540, 860], col: INK, hold: 0 },
           { t: X.s8, a: [540, 950], b: [540, 1250], col: INK, hold: HOLD8 },
         ]
