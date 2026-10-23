@@ -55,6 +55,7 @@ Tirées des deux références du client (compte à rebours « frames to impact �
 ## Fin : faire commenter
 
 - Question ouverte ou OUI / NON, boutons OUI / NON en ressort, bulle blanche « Répondez ici » + flèche rouge animée vers le bouton commentaires de TikTok (`left: 860px; top: 1180px`).
+- **Préférer, quand le sujet s'y prête, une question qui invite à partager un savoir** : un nom, un exemple, un souvenir que le spectateur connaît (« Quel prénom-prière connaissez-vous ? Écrivez-le en commentaire »). C'est la fin de `videos/prenoms-prieres/`, la vidéo qui a le mieux marché : chacun qui connaît un exemple a une raison de commenter, et les réponses relancent la discussion. Le visuel suit l'idée : un objet vide à remplir (badge « JE M'APPELLE » vide avec curseur qui clignote) plutôt que deux boutons. Garder OUI / NON quand il n'y a rien à partager (« Connaissiez-vous… ? »).
 - Jamais de faux commentaires affichés.
 
 ## Contrôle et rendu
