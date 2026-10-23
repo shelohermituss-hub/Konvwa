@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Ti non</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      « Ti Jo, Bòbòt, Black Indien… tout le monde a un ti non » — style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
+      accroche en viseur de caméra, une carte d'identité, le compteur passe de 1 à 2 noms et l'autocollant « Ti Jo » se colle dessus,
+      scènes « affiche » (disque orange, mots fantômes, micro-typo), fin qui invite chacun à écrire son ti non.
+    -->
+    <style>
+      @font-face { font-family: "Caveat"; src: url("assets/fonts/caveat-700.woff2") format("woff2"); font-weight: 700; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .series { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; z-index: 30; }
+      .series span { padding: 10px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: 0.08em; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
+      .w { display: inline-block; }
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      .x { font-size: 230px; font-weight: 900; letter-spacing: -0.06em; line-height: 0.95; }
+
+      .obj { position: absolute; z-index: 10; }
+      .tri { position: absolute; overflow: hidden; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); background: #d4d4d4; }
+      .tri i { position: absolute; top: 0; bottom: 0; width: 33.4%; display: flex; align-items: center; justify-content: center; color: #fff; font-style: normal; font-weight: 800; letter-spacing: 0.12em; writing-mode: vertical-rl; transform-origin: 50% 50%; }
+      .tri .wave, .rw .wave { position: absolute; inset: 0; background: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0.16) 70px, rgba(0, 0, 0, 0.14) 150px, rgba(255, 255, 255, 0) 220px); background-size: 440px 100%; mix-blend-mode: soft-light; }
+      .rw { position: absolute; overflow: hidden; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); }
+      .rw i { position: absolute; left: 0; right: 0; height: 50%; }
+      .cap { position: absolute; text-align: center; font-weight: 700; font-size: 42px; letter-spacing: -0.01em; }
+      .pole { position: absolute; width: 14px; border-radius: 7px; background: linear-gradient(90deg, #8a8a8a, #d9d9d9 45%, #7a7a7a); box-shadow: 6px 14px 20px rgba(0, 0, 0, 0.15); }
+      .pole::before { content: ""; position: absolute; left: -9px; top: -24px; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f1d77a, #b8901f); }
+
+      .sw { position: absolute; width: 360px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+      .sw .dot { width: 300px; height: 300px; border-radius: 50%; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25), inset 0 0 0 10px rgba(255, 255, 255, 0.85); }
+      .sw b { font-size: 46px; font-weight: 800; }
+      .sw code { font-family: "Poppins", sans-serif; font-size: 32px; font-weight: 600; color: #555; }
+      .lens { position: absolute; width: 360px; height: 360px; border-radius: 50%; border: 14px solid #141414; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
+      .lens::after { content: ""; position: absolute; left: 290px; top: 300px; width: 30px; height: 150px; border-radius: 14px; background: #141414; transform: rotate(-45deg); }
+
+      .photo { position: absolute; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip { position: absolute; white-space: nowrap; padding: 14px 28px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 36px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); display: flex; align-items: center; gap: 14px; }
+      .mini { position: relative; display: inline-block; width: 56px; height: 38px; border-radius: 6px; overflow: hidden; flex: none; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); }
+      .mini i { position: absolute; top: 0; bottom: 0; width: 34%; }
+      .badge { position: absolute; padding: 12px 34px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 46px; box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25); white-space: nowrap; }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #CE1126; border-radius: 22px; color: #CE1126; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.7); white-space: nowrap; }
+      .letter { position: absolute; width: 760px; height: 760px; border-radius: 24px; background: #fffdf7; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.18); padding: 56px 60px; box-sizing: border-box; }
+      .letter .hd { display: flex; align-items: center; gap: 22px; font-weight: 900; font-size: 64px; color: #2a6ebb; }
+      .letter .hd svg { width: 90px; height: 90px; }
+      .letter p { margin: 34px 0 0; font-size: 38px; line-height: 1.5; color: #333; }
+      .letter p b { color: #141414; }
+      .grid4 .card { position: absolute; width: 440px; border-radius: 26px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.16); overflow: hidden; }
+      .grid4 .card .fl { height: 290px; position: relative; }
+      .grid4 .card .fl img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .grid4 .card b { display: block; padding: 14px 22px; font-size: 36px; font-weight: 800; }
+      .ring { position: absolute; border-radius: 50%; border: 8px solid #CE1126; box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.7); }
+      .q { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: #141414; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 92px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+
+      .crate { position: absolute; border-radius: 10px; background: repeating-linear-gradient(180deg, #b98545 0px, #b98545 52px, #8a5a26 52px, #8a5a26 58px); box-shadow: 0 26px 50px rgba(0, 0, 0, 0.25), inset 0 0 0 10px #7a4d1e; display: flex; align-items: center; justify-content: center; }
+      .crate span { padding: 6px 22px; border: 6px solid rgba(40, 22, 6, 0.75); color: rgba(40, 22, 6, 0.8); font-weight: 900; font-size: 54px; letter-spacing: 0.12em; transform: rotate(-4deg); }
+      .num { position: absolute; left: 0; right: 0; text-align: center; font-weight: 900; font-size: 150px; letter-spacing: -0.04em; color: #A87900; font-variant-numeric: tabular-nums; }
+      .cal { position: absolute; width: 360px; height: 420px; border-radius: 30px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); overflow: hidden; text-align: center; }
+      .cal .top { height: 110px; background: #D21034; color: #fff; font-weight: 800; font-size: 40px; letter-spacing: 0.08em; display: flex; align-items: center; justify-content: center; }
+      .cal b { display: block; font-size: 230px; font-weight: 900; letter-spacing: -0.06em; line-height: 1.2; }
+      .bank { position: absolute; width: 470px; height: 560px; border-radius: 30px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); }
+      .bank svg { position: absolute; left: 45px; top: 40px; width: 380px; height: 330px; }
+      .bank b { position: absolute; left: 0; right: 0; top: 390px; text-align: center; font-size: 40px; font-weight: 900; letter-spacing: 0.06em; line-height: 1.15; }
+      .tbar { position: absolute; height: 30px; border-radius: 15px; background: #cfcfcf; overflow: hidden; }
+      .tbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #D21034; transform-origin: 0 50%; }
+      .tlab { position: absolute; font-weight: 800; font-size: 46px; }
+      .btn { position: absolute; width: 380px; height: 170px; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 96px; letter-spacing: 0.04em; box-shadow: 0 26px 50px rgba(0, 0, 0, 0.2); }
+      .gray img { filter: grayscale(1) contrast(1.1); }
+      .scene { position: absolute; inset: 0; }
+      #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
+      #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
+      #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
+      /* --- références client : viseur de caméra (hook) et affiches à disque rouge, détourés, mots fantômes, micro-typo --- */
+      .hud { position: absolute; inset: 0; pointer-events: none; z-index: 12; }
+      .hud .cn { position: absolute; width: 60px; height: 60px; border: 0 solid #141414; }
+      .hud .rec { position: absolute; left: 80px; top: 190px; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
+      .hud .fps { position: absolute; right: 80px; top: 190px; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .sun { position: absolute; border-radius: 50%; background: #F05A28; }
+      .ring3 { position: absolute; border-radius: 50%; border: 3px solid rgba(20, 20, 20, 0.35); }
+      .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
+      .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; }
+      .cut { position: absolute; }
+      .cut img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; display: block; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.25)); }
+      .counter2 { position: absolute; left: 0; right: 0; text-align: center; }
+      .counter2 small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
+      .counter2 b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #141414; font-variant-numeric: tabular-nums; }
+      .crown { position: absolute; width: 170px; height: 120px; }
+      .rings { position: absolute; width: 140px; height: 100px; }
+      .tomb { position: absolute; width: 560px; height: 720px; border-radius: 280px 280px 24px 24px; background: linear-gradient(180deg, #ededed, #c9c9c9); box-shadow: 0 40px 70px rgba(0, 0, 0, 0.25), inset 0 0 0 14px rgba(255, 255, 255, 0.5); text-align: center; padding-top: 170px; box-sizing: border-box; color: #3a3a3a; }
+      .tomb .cross { font-size: 90px; font-weight: 300; line-height: 1; }
+      .tomb h3 { margin: 26px 0 8px; font-size: 52px; font-weight: 900; letter-spacing: 0.06em; }
+      .tomb p { margin: 6px 0; font-size: 32px; font-weight: 600; letter-spacing: 0.12em; }
+      .candle { position: absolute; width: 60px; height: 190px; }
+      .memo { position: absolute; width: 360px; padding: 24px 26px; border-radius: 22px; background: #fff; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18); display: flex; align-items: center; gap: 18px; }
+      .memo b { font-size: 46px; font-weight: 300; }
+      .memo span { font-size: 32px; font-weight: 800; line-height: 1.15; }
+      .memo small { display: block; font-size: 26px; font-weight: 600; color: #888; }
+      .ship { position: absolute; width: 90px; height: 90px; }
+      #veil { display: none; }
+      /* --- ti non : carte d'identité, autocollants, cartes « origine », bulle de cri, cœur --- */
+      .idc { position: absolute; width: 820px; height: 500px; border-radius: 22px; background: linear-gradient(135deg, #eaf3ff, #fdfbf4); box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); padding: 36px 44px; box-sizing: border-box; border: 2px solid #d8e2ef; }
+      .idc h4 { margin: 0; font-size: 36px; font-weight: 800; letter-spacing: 0.12em; color: #2b3d6b; }
+      .idc .ph { position: absolute; left: 44px; top: 110px; width: 220px; height: 280px; border-radius: 14px; background: #e7e1d3; overflow: hidden; }
+      .idc .ph svg { width: 100%; height: 100%; display: block; }
+      .idc .fl { position: absolute; left: 300px; top: 110px; right: 40px; }
+      .idc p { margin: 0 0 22px; display: flex; flex-direction: column; }
+      .idc p span { font-size: 24px; font-weight: 700; color: #7a8aa8; letter-spacing: 0.1em; text-transform: uppercase; }
+      .idc p b { font-family: "Courier New", monospace; font-size: 44px; font-weight: 700; color: #141414; }
+      .idc.mini { width: 520px; height: 320px; padding: 22px 28px; }
+      .idc.mini h4 { font-size: 24px; }
+      .idc.mini .ph { left: 28px; top: 70px; width: 150px; height: 200px; }
+      .idc.mini .fl { left: 200px; top: 90px; right: 20px; }
+      .idc.mini p b { font-size: 32px; }
+      .stk { position: absolute; padding: 16px 40px 22px; border-radius: 16px; font-family: "Caveat", cursive; font-weight: 700; font-size: 110px; line-height: 1; color: #141414; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2); white-space: nowrap; }
+      .stk.big { width: 800px; height: 300px; box-sizing: border-box; padding: 30px 50px; }
+      .stk.big small { display: block; font-size: 76px; color: #5a4a00; }
+      .stk.big em { display: inline-block; width: 8px; height: 110px; background: #141414; margin-top: 14px; }
+      .cat { position: absolute; width: 440px; height: 300px; border-radius: 26px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.16); padding: 30px 34px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
+      .cat svg { width: 72px; height: 72px; }
+      .cat b { font-size: 38px; font-weight: 800; line-height: 1.1; }
+      .cat em { font-family: "Caveat", cursive; font-style: normal; font-weight: 700; font-size: 48px; color: #1d3a8a; line-height: 1; white-space: nowrap; }
+      .shout { position: absolute; padding: 20px 44px; background: #fff; border: 8px solid #141414; border-radius: 40px; font-weight: 900; font-size: 96px; letter-spacing: -0.02em; color: #D21034; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); white-space: nowrap; }
+      .shout::after { content: ""; position: absolute; right: 70px; bottom: -48px; border-width: 44px 0 0 44px; border-style: solid; border-color: #141414 transparent transparent transparent; }
+      .heart { position: absolute; width: 300px; height: 270px; filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.25)); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="26.9" data-width="1080" data-height="1920">
+      <div id="world">
+        <div class="grid" id="grid"></div>
+        <!-- 1. hook: an identity card in a camera viewfinder; the counter goes from 1 name to 2, then a « Ti Jo » sticker slaps over the first name -->
+        <div class="scene" id="s1">
+          <div class="ghost" id="g1" style="top: 1480px; font-size: 330px">2 NOMS</div>
+          <div class="sun obj" id="sun1" style="left: 190px; top: 760px; width: 700px; height: 700px"></div>
+          <div class="ring3 obj" id="rg1" style="left: 140px; top: 710px; width: 800px; height: 800px"></div>
+          <div class="idc obj" id="o-id" style="left: 130px; top: 860px"><h4>CARTE D'IDENTITÉ</h4><div class="ph"><svg viewBox="0 0 100 120"><circle cx="50" cy="42" r="24" fill="#b9b2a2" /><path d="M8 120 C 12 82, 88 82, 92 120 Z" fill="#b9b2a2" /></svg></div><div class="fl"><p><span>Nom</span><b>JOSEPH</b></p><p><span>Prénom</span><b>Jean-Joseph</b></p><p><span>Né le</span><b>12 / 03 / 1990</b></p></div></div>
+          <div class="stk obj" id="o-stk1" style="left: 400px; top: 1000px; background: #FFD447; font-size: 150px">Ti Jo</div>
+          <div class="counter2 obj" id="o-nb" style="top: 560px"><small>UNE PERSONNE</small><b><span id="nb">1</span>&nbsp;<span id="nbw">NOM</span></b></div>
+          <div class="hud" id="hud">
+            <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="left: 50px; top: 1690px; border-left-width: 6px; border-bottom-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 1690px; border-right-width: 6px; border-bottom-width: 6px"></div>
+            <div class="rec" style="top: 1700px; left: 130px"><i id="recdot"></i>REC <span id="tc">00:00:00:00</span></div>
+            <div class="fps" style="top: 1700px; right: 130px">HAÏTI · TI NON</div>
+          </div>
+        </div>
+        <!-- 2. Ti Jo, Bòbòt, Black Indien, Fanfan, Choupèt: stickers -->
+        <div class="scene" id="s2">
+          <div class="ghost" style="top: 1480px; font-size: 330px">TI NON</div>
+          <div class="stk obj" id="k1" style="left: 90px; top: 660px; background: #FFD447">Ti Jo</div>
+          <div class="stk obj" id="k2" style="left: 560px; top: 730px; background: #FF9DBB">Bòbòt</div>
+          <div class="stk obj" id="k3" style="left: 130px; top: 950px; background: #8FD9C4">Black Indien</div>
+          <div class="stk obj" id="k4" style="left: 600px; top: 1080px; background: #9CCBFF">Fanfan</div>
+          <div class="stk obj" id="k5" style="left: 230px; top: 1250px; background: #FFB86B">Choupèt</div>
+        </div>
+        <!-- 3. given as a child, and it never lets go: children, then a grown man still called « Ti » Jo -->
+        <div class="scene" id="s3">
+          <div class="ghost" style="top: 1500px; font-size: 300px">ENFANCE</div>
+          <div class="photo obj" id="o-enf" style="left: 70px; top: 640px; width: 940px; height: 529px"><img id="enf-img" src="assets/img/enfants.jpg" alt="" style="transform-origin: 50% 40%" /></div>
+          <div class="sun obj" id="sun3" style="left: 560px; top: 1060px; width: 440px; height: 440px"></div>
+          <div class="cut obj" id="o-h3" style="left: 560px; top: 1040px; width: 440px; height: 462px"><img src="assets/img/homme3-cut.png" alt="" /></div>
+          <div class="stk obj" id="o-stk3" style="left: 560px; top: 1430px; background: #FFD447">Ti Jo</div>
+          <div class="stamp obj" id="o-vie" style="left: 90px; top: 1300px">À VIE</div>
+          <div class="micro" id="mi3" style="left: 90px; top: 1210px">SURNOM D'ENFANCE</div>
+        </div>
+        <!-- 4. where it comes from: a short first name, the looks, a habit, a family story -->
+        <div class="scene" id="s4">
+          <div class="ghost" style="top: 1500px; font-size: 300px">ORIGINE</div>
+          <div class="cat obj" id="c1" style="left: 70px; top: 660px"><svg viewBox="0 0 48 48"><circle cx="13" cy="36" r="7" fill="none" stroke="#141414" stroke-width="4" /><circle cx="35" cy="36" r="7" fill="none" stroke="#141414" stroke-width="4" /><path d="M17 30 L38 6 M31 30 L10 6" stroke="#141414" stroke-width="4" stroke-linecap="round" /></svg><b>Prénom court</b><em>Jean-Joseph → Ti Jo</em></div>
+          <div class="cat obj" id="c2" style="left: 570px; top: 660px"><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="9" fill="#141414" /><path d="M6 46 C 8 28, 40 28, 42 46 Z" fill="#141414" /></svg><b>Physique</b><em>Black Indien</em></div>
+          <div class="cat obj" id="c3" style="left: 70px; top: 1000px"><svg viewBox="0 0 48 48"><path d="M38 18 A 15 15 0 1 0 39 30" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round" /><path d="M31 18 L39 18 L39 10" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg><b>Manie</b><em>…</em></div>
+          <div class="cat obj" id="c4" style="left: 570px; top: 1000px"><svg viewBox="0 0 48 48"><path d="M6 10 C 14 7, 20 8, 24 12 C 28 8, 34 7, 42 10 L42 40 C 34 37, 28 38, 24 42 C 20 38, 14 37, 6 40 Z M24 12 L24 42" fill="none" stroke="#141414" stroke-width="4" stroke-linejoin="round" /></svg><b>Histoire</b><em>…</em></div>
+          <div class="micro" id="mi4" style="left: 0; right: 0; top: 1360px; text-align: center">UN SURNOM · UNE HISTOIRE</div>
+        </div>
+        <!-- 5. iris onto a market: at the market, at school, in the neighbourhood, that is the name people shout -->
+        <div class="scene" id="s5">
+          <div class="ghost" style="top: 1500px; font-size: 300px">KARTYE</div>
+          <div class="photo obj" id="o-mar" style="left: 70px; top: 640px; width: 940px; height: 687px"><img id="mar-img" src="assets/img/marche.jpg" alt="" style="transform-origin: 40% 40%" /></div>
+          <div class="cut obj" id="o-h1" style="left: 500px; top: 1140px; width: 560px; height: 476px"><img src="assets/img/homme1-cut.png" alt="" /></div>
+          <div class="shout obj" id="o-shout" style="left: 70px; top: 1300px">FANFAN !</div>
+          <div class="micro" id="mi5" style="left: 90px; top: 1250px"><span id="w1">MARCHÉ</span> <span id="w2">· ÉCOLE</span> <span id="w3">· QUARTIER</span></div>
+        </div>
+        <!-- 6. Bilan: the real name stays on the papers, the ti non lives in people's hearts -->
+        <div class="scene" id="s6">
+          <div class="ghost" style="top: 1500px; font-size: 330px">CŒUR</div>
+          <div class="sun obj" id="sun6" style="left: 290px; top: 720px; width: 600px; height: 600px"></div>
+          <div class="cut obj" id="o-h2" style="left: 310px; top: 790px; width: 560px; height: 468px"><img src="assets/img/homme2-cut.png" alt="" /></div>
+          <div class="idc obj mini" id="o-id6" style="left: 40px; top: 1230px"><h4>CARTE D'IDENTITÉ</h4><div class="ph"><svg viewBox="0 0 100 120"><circle cx="50" cy="42" r="24" fill="#b9b2a2" /><path d="M8 120 C 12 82, 88 82, 92 120 Z" fill="#b9b2a2" /></svg></div><div class="fl"><p><span>Prénom</span><b>Jean-Joseph</b></p></div></div>
+          <svg class="heart obj" id="o-heart" viewBox="0 0 100 90" style="left: 640px; top: 1180px"><path d="M50 86 C 10 58, 0 36, 12 18 C 24 2, 44 6, 50 22 C 56 6, 76 2, 88 18 C 100 36, 90 58, 50 86 Z" fill="#D21034" /><text x="50" y="50" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="24" fill="#fff">ti non</text></svg>
+        </div>
+        <!-- 7. the question: your ti non, in the comments -->
+        <div class="scene" id="s7">
+          <div class="stk obj big" id="o-stk7" style="left: 140px; top: 820px; background: #FFD447"><small>Mon ti non :</small><em id="caret7"></em></div>
+          <div class="bubble obj" id="o-bub" style="left: 470px; top: 1250px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1180px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </div>
+
+        <div id="flood"></div>
+        <div id="iris"></div>
+        <div id="blocks"></div>
+      </div>
+      <div class="series"><span>CULTURE D'HAÏTI · TI NON</span></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), pauses raccourcies, silence avant « Bilan », accélérée ×1,1.
+           Musique : celle du style (ElevenLabs via FLORA), coupure au scratch et retour sur « votre vrai prénom » mixés dans le fichier. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="25.19" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="26.9" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/whoosh-short.mp3" data-start="0.05" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx2" src="assets/sfx/click.mp3" data-start="0.05" data-duration="0.37" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx3" src="assets/sfx/impact-bass-1.mp3" data-start="0.08" data-duration="2.12" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx4" src="assets/sfx/pop.mp3" data-start="0.15" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx5" src="assets/sfx/pop.mp3" data-start="1.51" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx6" src="assets/sfx/impact-bass-2.mp3" data-start="1.53" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx7" src="assets/sfx/click-soft.mp3" data-start="2.37" data-duration="0.37" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx8" src="assets/sfx/whoosh-short.mp3" data-start="3.22" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx9" src="assets/sfx/click.mp3" data-start="3.47" data-duration="0.37" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx10" src="assets/sfx/impact-bass-1.mp3" data-start="3.5" data-duration="2.12" data-track-index="23" data-volume="0.35"></audio>
+      <audio id="sx11" src="assets/sfx/whoosh.mp3" data-start="3.95" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx12" src="assets/sfx/whoosh-short.mp3" data-start="4.27" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx13" src="assets/sfx/pop.mp3" data-start="4.31" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx14" src="assets/sfx/click.mp3" data-start="4.42" data-duration="0.37" data-track-index="24" data-volume="0.3"></audio>
+      <audio id="sx15" src="assets/sfx/click.mp3" data-start="4.49" data-duration="0.37" data-track-index="25" data-volume="0.3"></audio>
+      <audio id="sx16" src="assets/sfx/pop.mp3" data-start="4.96" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx17" src="assets/sfx/click.mp3" data-start="5.14" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx18" src="assets/sfx/pop.mp3" data-start="5.74" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx19" src="assets/sfx/click.mp3" data-start="5.92" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx20" src="assets/sfx/pop.mp3" data-start="6.32" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx21" src="assets/sfx/click.mp3" data-start="6.5" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx22" src="assets/sfx/whoosh.mp3" data-start="6.96" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx23" src="assets/sfx/pop.mp3" data-start="7.16" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx24" src="assets/sfx/whoosh-short.mp3" data-start="9.28" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx25" src="assets/sfx/click.mp3" data-start="9.95" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx26" src="assets/sfx/whoosh.mp3" data-start="10.36" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx27" src="assets/sfx/impact-bass-1.mp3" data-start="10.41" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="11.28" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="11.9" data-duration="0.72" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="12.36" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx31" src="assets/sfx/pop.mp3" data-start="12.97" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx32" src="assets/sfx/whoosh-short.mp3" data-start="14.19" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx33" src="assets/sfx/click.mp3" data-start="14.45" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx34" src="assets/sfx/click-soft.mp3" data-start="14.57" data-duration="0.37" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx35" src="assets/sfx/pop.mp3" data-start="14.74" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx36" src="assets/sfx/pop.mp3" data-start="15.57" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx37" src="assets/sfx/whoosh-short.mp3" data-start="16.41" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx38" src="assets/sfx/pop.mp3" data-start="16.46" data-duration="0.72" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx39" src="assets/sfx/impact-bass-2.mp3" data-start="17.56" data-duration="2.59" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx40" src="assets/sfx/sparkle.mp3" data-start="17.61" data-duration="1.8" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx41" src="assets/sfx/whoosh.mp3" data-start="17.99" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx42" src="assets/sfx/scratch.mp3" data-start="17.99" data-duration="1.23" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx43" src="assets/sfx/whoosh-short.mp3" data-start="19.08" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx44" src="assets/sfx/impact-bass-2.mp3" data-start="19.22" data-duration="2.59" data-track-index="24" data-volume="0.45"></audio>
+      <audio id="sx45" src="assets/sfx/whoosh-short.mp3" data-start="20.19" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx46" src="assets/sfx/pop.mp3" data-start="21.57" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx47" src="assets/sfx/chime.mp3" data-start="21.65" data-duration="2.54" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx48" src="assets/sfx/sparkle.mp3" data-start="22.08" data-duration="1.8" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx49" src="assets/sfx/whoosh.mp3" data-start="22.11" data-duration="0.57" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx50" src="assets/sfx/click.mp3" data-start="22.41" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx51" src="assets/sfx/pop.mp3" data-start="24.01" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx52" src="assets/sfx/click.mp3" data-start="24.78" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx53" src="assets/sfx/sparkle.mp3" data-start="24.88" data-duration="1.8" data-track-index="21" data-volume="0.2"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 26.9
+        const BLUE = '#00209F'
+        const RED = '#D21034'
+        const ORANGE = '#F05A28'
+        const GOLD = '#A87900'
+        const INK = '#141414'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0.0, 0.22, 0.81, 0.935, 1.06, 1.185, 1.31, 1.435, 1.71, 2.018, 2.172, 2.64, 2.795, 3.12, 3.295, 3.62, 3.825, 4.17, 4.82, 5.023, 5.6, 6.18, 7.01, 7.166, 7.322, 7.477, 7.633, 7.789, 8.251, 8.406, 8.562, 8.718, 8.874, 9.185, 9.491, 9.647, 9.803, 9.958, 10.114, 10.41, 10.564, 10.718, 10.872, 11.18, 11.642, 11.796, 12.104, 12.258, 12.566, 12.72, 12.874, 13.182, 13.336, 13.49, 13.644, 13.952, 14.37, 14.593, 15.039, 15.421, 15.867, 16.09, 16.313, 16.759, 17.141, 17.364, 17.587, 18.54, 19.02, 19.159, 19.298, 19.576, 19.715, 19.954, 20.093, 20.371, 20.509, 20.648, 20.787, 20.926, 21.065, 21.314, 21.453, 21.742, 21.881, 22.16, 22.37, 22.92, 23.045, 23.31, 23.407, 23.503, 23.91, 24.38, 24.582]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["En", "Haïti,", "tout", "le", "monde", "a", "deux", "noms.", "Celui", "des", "papiers…", "et", "le", "ti", "non.", "Ti", "Jo.", "Bòbòt.", "Black", "Indien.", "Fanfan.", "Choupèt !", "Le", "ti", "non,", "c'est", "le", "petit", "nom", "qu'on", "vous", "donne", "enfant,", "et", "qui", "ne", "vous", "lâche", "plus.", "Il", "vient", "d'un", "prénom", "raccourci,", "d'un", "physique,", "d'une", "manie,", "ou", "d'une", "histoire", "que", "toute", "la", "famille", "connaît.", "Au", "marché,", "à", "l'école,", "dans", "le", "quartier :", "c'est", "lui", "qu'on", "crie.", "Bilan :", "votre", "vrai", "prénom", "est", "sur", "vos", "papiers,", "mais", "votre", "ti", "non", "est", "dans", "le", "cœur", "des", "gens !", "Et", "toi,", "c'est", "quoi", "ton", "ti", "non ?", "Écris-le", "en", "commentaire."]
+        const SCRATCH = 18.01
+
+        // ---------- transitions: when each scene takes over, and how ----------
+        const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
+        const X = { s2: at(17), s3: at(22), s4: at(39), s5: at(56), s6: Math.round((SCRATCH + 0.3) * 100) / 100, s7: at(85) }
+        const HOLD6 = T[68] - 0.14 - X.s6 // the black flood holds through the scratch silence, until « votre vrai prénom »
+        const FLOODS = [
+          { t: X.s2, a: [600, 1070], b: [540, 1000], col: ORANGE, hold: 0 },
+          { t: X.s6, a: [270, 1370], b: [590, 1020], col: INK, hold: HOLD6 },
+        ]
+        const IRISES = [{ t: X.s5 }]
+        const PUSHES = [['s2', 's3', 'x'], ['s3', 's4', 'y'], ['s6', 's7', 'y']]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 230, lines: [[0, 4, 'm'], [5, 7, 'b', RED]] },
+          { y: 240, lines: [[8, 10, 'm'], [11, 12, 's'], [13, 14, 'b', RED]] },
+          { y: 250, lines: [[15, 17, 'm'], [18, 19, 'm'], [20, 21, 'm']] },
+          { y: 200, lines: [[22, 24, 'm'], [25, 28, 's'], [29, 32, 's'], [33, 36, 's'], [37, 38, 'bi', RED]] },
+          { y: 200, lines: [[39, 40, 's'], [41, 43, 'm'], [44, 45, 'm'], [46, 47, 'm'], [48, 50, 's'], [51, 55, 's']] },
+          { y: 220, lines: [[56, 59, 'm'], [60, 62, 's'], [63, 64, 's'], [65, 66, 'bi', RED]] },
+          { y: 210, lines: [[67, 67, 'm', '#fff'], [68, 70, 's'], [71, 74, 's'], [75, 78, 'm'], [79, 81, 's'], [82, 84, 'bi', RED]] },
+          { y: 240, lines: [[85, 86, 's'], [87, 91, 'm'], [92, 94, 's']] },
+        ]
+        const BILAN = 6
+        const BIG = { b: 1, bi: 1, mi: 1, x: 1 }
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = next ? (bi === BILAN - 1 ? X.s6 - 0.02 : T[next.lines[0][0]] - 0.08) : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              if (BIG[st]) {
+                // key words rise out of their line, on a spring
+                tl.fromTo(w, { yPercent: 118, color: col || INK }, { yPercent: 0, duration: Math.max(0.18, Math.min(0.42, end - 0.22 - (T[k] - 0.03))), ease: 'back.out(1.7)' }, T[k] - 0.03)
+              } else {
+                tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 14, filter: blur(6) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
+                tl.to(w, { color: col || INK, duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+              }
+            }
+          })
+          // exit: every word drops back into its line
+          if (end < END) {
+            tl.to(box.querySelectorAll('.w'), { yPercent: -125, duration: 0.18, ease: 'power3.in', stagger: 0.006 }, end - 0.2)
+            tl.set(box, { autoAlpha: 0 }, end)
+          }
+        })
+        // « Bilan : » is white on the black flood, and turns to ink as the flood contracts
+        tl.to(blocksBox.children[BILAN].querySelector('.w'), { color: INK, duration: 0.2 }, X.s6 + HOLD6)
+
+        // ---------- flood + iris: pure functions of time ----------
+        const ease = { in: (p) => p * p * p, out: (p) => 1 - Math.pow(1 - p, 3) }
+        const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)))
+        const flood = $('flood')
+        const iris = $('iris')
+        const blades = []
+        for (let i = 0; i < 6; i++) blades.push(el('div', 'blade', null, iris))
+        const RMAX = 1250
+        function ctl(t) {
+          // colour flood: grows out of an object, covers the frame, contracts into the next scene's object
+          let r = 0, cx = 540, cy = 960, col = INK
+          for (const F of FLOODS) {
+            const g0 = F.t - 0.3, c0 = F.t + F.hold, c1 = c0 + 0.32
+            if (t >= g0 && t <= c1) {
+              col = F.col
+              if (t < F.t) { r = 2300 * ease.in(seg(t, g0, F.t)); cx = F.a[0]; cy = F.a[1] }
+              else if (t < c0) { r = 2300; cx = F.b[0]; cy = F.b[1] }
+              else { r = 2300 * (1 - ease.out(seg(t, c0, c1))); cx = F.b[0]; cy = F.b[1] }
+            }
+          }
+          flood.style.background = col
+          flood.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + cx + 'px ' + cy + 'px)'
+          // camera iris: six blades close over the old scene and open on a photo
+          let ap = RMAX
+          for (const I of IRISES) {
+            if (t >= I.t - 0.28 && t < I.t) ap = RMAX * (1 - ease.in(seg(t, I.t - 0.28, I.t)))
+            else if (t >= I.t && t <= I.t + 0.36) ap = RMAX * ease.out(seg(t, I.t + 0.02, I.t + 0.36))
+          }
+          iris.style.visibility = ap >= RMAX - 1 ? 'hidden' : 'inherit'
+          const twist = (1 - ap / RMAX) * 50
+          blades.forEach((b, i) => {
+            b.style.left = 540 - 1600 + 'px'
+            b.style.top = 960 - 3200 + 'px'
+            b.style.transform = 'rotate(' + (i * 60 + twist).toFixed(2) + 'deg) translateY(' + (-ap).toFixed(1) + 'px)'
+          })
+        }
+        const clock = { v: 0 }
+        tl.fromTo(clock, { v: 0 }, { v: END, duration: END, ease: 'none', immediateRender: false, onUpdate: () => ctl(clock.v) }, 0)
+        ctl(0)
+
+        // ---------- helpers ----------
+        const spring = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0 }, o), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.8)' }, at)
+        const stamp = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.4, rotation: 2 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.18, ease: 'power4.in' }, at)
+        const show = (sel, at) => tl.set(sel, { autoAlpha: 1 }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        const shake = (at) => tl.fromTo('#world', { x: 0 }, { x: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, at)
+        const cam = (sel, at, dur, scale, origin, ez) => tl.to(sel, { scale, transformOrigin: origin, duration: dur, ease: ez || 'power2.inOut' }, at)
+        // a photo that fills the frame behind the iris, then zooms out into its card
+        const unfold = (sel, at) => tl.fromTo(sel, { scale: 3.4 }, { scale: 1, duration: 0.55, ease: 'power3.inOut' }, at)
+        const kb = (sel, from, to, s0, s1) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: to - from, ease: 'none', immediateRender: false }, from)
+        const sonar = (sels, from, to) => sels.forEach((s, i) => tl.fromTo(s, { autoAlpha: 0.9, scale: 0.4 }, { autoAlpha: 0, scale: 3.2, duration: 1.2, ease: 'power1.out', repeat: Math.max(0, Math.floor((to - from) / 1.2) - 1), immediateRender: false }, from + i * 0.4))
+
+
+
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7']
+        gsap.set(SC.slice(1), { autoAlpha: 0 })
+        gsap.set(['#o-stk1', '#k1', '#k2', '#k3', '#k4', '#k5', '#sun3', '#o-h3', '#o-stk3', '#o-vie', '#mi3', '#c1', '#c2', '#c3', '#c4', '#mi4', '#o-h1', '#o-shout', '#mi5', '#w1', '#w2', '#w3', '#o-id6', '#o-heart', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+        tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
+        // scenes covered by a flood or an iris swap while hidden
+        ;[['s1', 's2'], ['s4', 's5'], ['s5', 's6']].forEach(([a, b]) => { hide('#' + a, X[b]); show('#' + b, X[b]) })
+        // page pushes: the old scene leaves, the new one arrives from the opposite side
+        PUSHES.forEach(([a, b, ax]) => {
+          const D = ax === 'x' ? 1080 : 1920
+          const t0 = X[b] - 0.1
+          tl.to('#' + a, { [ax]: -D, duration: 0.4, ease: 'power3.inOut' }, t0)
+          show('#' + b, t0)
+          tl.fromTo('#' + b, { [ax]: D }, { [ax]: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, t0)
+          hide('#' + a, t0 + 0.4)
+        })
+        // ghost words drift slowly the whole time they are on screen
+        document.querySelectorAll('.ghost').forEach((g, i) => tl.fromTo(g, { x: i % 2 ? -60 : 60 }, { x: i % 2 ? 60 : -60, duration: END, ease: 'none', immediateRender: false }, 0))
+        // a sticker slaps on: big and tilted, then flat with a little bounce
+        const slap = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 1.8, rotation: rot * 2.5 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.28, ease: 'back.out(2.4)' }, at)
+
+        // ---------- 1. hook: viewfinder, an ID card on the orange sun; the counter jumps from 1 name to 2; « Ti Jo » slaps over the first name ----------
+        tl.fromTo('#sun1', { scale: 0 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)' }, 0)
+        tl.fromTo('#rg1', { scale: 0.6, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.7, ease: 'power3.out' }, 0.1)
+        tl.fromTo('#o-id', { y: 700, rotation: 8 }, { y: 0, rotation: -3, duration: 0.55, ease: 'expo.out' }, 0)
+        tl.fromTo('#hud', { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        spring('#o-nb', 0.15, {})
+        const nb = { v: 1 }
+        tl.fromTo(nb, { v: 1 }, { v: 2, duration: 0.01, immediateRender: false, onUpdate: () => { const two = nb.v > 1.5; $('nb').textContent = two ? '2' : '1'; $('nbw').textContent = two ? 'NOMS' : 'NOM' } }, T[6])
+        tl.to('#o-nb b', { color: RED, duration: 0.15 }, T[6])
+        tl.fromTo('#o-nb', { scale: 1 }, { scale: 1.15, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T[6])
+        tl.to('#o-id', { scale: 1.04, duration: 0.15, yoyo: true, repeat: 1 }, T[10] - 0.05)
+        slap('#o-stk1', T[13] - 0.05, 8)
+        shake(T[13] + 0.2)
+        cam('#s1', T[14] + 0.1, X.s2 - T[14] - 0.1, 1.08, '600px 1070px', 'power2.in')
+        // the viewfinder's timecode and blinking REC dot are pure functions of time
+        const tc = $('tc')
+        const recdot = $('recdot')
+        const clock2 = { v: 0 }
+        tl.fromTo(clock2, { v: 0 }, { v: X.s2, duration: X.s2, ease: 'none', immediateRender: false, onUpdate: () => { const t = clock2.v; const f = Math.floor((t % 1) * 30); tc.textContent = '00:00:' + String(Math.floor(t)).padStart(2, '0') + ':' + String(f).padStart(2, '0'); recdot.style.opacity = Math.floor(t * 2) % 2 ? '0.25' : '1' } }, 0)
+
+        // ---------- 2. orange flood out of the sticker → one sticker per nickname ----------
+        slap('#k1', X.s2 + 0.05, -6)
+        slap('#k2', T[17] + 0.05, 7)
+        slap('#k3', T[18] - 0.06, -4)
+        slap('#k4', T[20] - 0.06, 5)
+        slap('#k5', T[21] - 0.06, -7)
+
+        // ---------- 3. page pushes left: children; then a grown man still called « Ti » Jo — for life ----------
+        spring('#o-enf', X.s3 + 0.05, { y: 160 })
+        kb('#enf-img', X.s3, X.s4, 1.05, 1.18)
+        tl.fromTo('#mi3', { autoAlpha: 0, x: -30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[32])
+        tl.fromTo('#sun3', { autoAlpha: 1, scale: 0 }, { scale: 1, duration: 0.45, ease: 'back.out(1.6)', immediateRender: false }, T[33] - 0.1)
+        tl.fromTo('#o-h3', { autoAlpha: 1, y: 320 }, { y: 0, duration: 0.5, ease: 'expo.out', immediateRender: false }, T[33] - 0.05)
+        slap('#o-stk3', T[35] - 0.05, -6)
+        stamp('#o-vie', T[38] - 0.05, -10)
+        shake(T[38] + 0.13)
+
+        // ---------- 4. page pushes up: where a ti non comes from — one card per origin ----------
+        spring('#c1', T[43] - 0.1, { rotation: -8 })
+        spring('#c2', T[45] - 0.1, { rotation: 8 })
+        spring('#c3', T[47] - 0.1, { rotation: -8 })
+        spring('#c4', T[50] - 0.1, { rotation: 8 })
+        tl.fromTo('#mi4', { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.3 }, T[53])
+
+        // ---------- 5. iris onto the market; a neighbour is called out: « FANFAN ! » ----------
+        unfold('#o-mar', X.s5 + 0.15)
+        kb('#mar-img', X.s5, X.s6, 1.05, 1.2)
+        tl.set('#mi5', { autoAlpha: 1 }, T[57] - 0.1)
+        ;[['#w1', 57], ['#w2', 59], ['#w3', 62]].forEach(([w, k]) => tl.fromTo(w, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.2 }, T[k] - 0.05))
+        tl.fromTo('#o-h1', { autoAlpha: 1, y: 380 }, { y: 0, duration: 0.5, ease: 'expo.out', immediateRender: false }, T[62] - 0.1)
+        tl.fromTo('#o-shout', { autoAlpha: 0, scale: 0, rotation: -20 }, { autoAlpha: 1, scale: 1, rotation: -6, duration: 0.3, ease: 'back.out(2.6)', immediateRender: false }, T[65] - 0.05)
+        shake(T[66])
+        cam('#s5', T[66], X.s6 - T[66], 1.08, '270px 1370px', 'power2.in')
+
+        // ---------- 6. black flood out of the shout, held through the scratch; a face on the orange sun, the ID card, a heart ----------
+        tl.fromTo('#o-h2', { y: 300 }, { y: 0, duration: 0.6, ease: 'expo.out', immediateRender: false }, X.s6 + HOLD6)
+        tl.fromTo('#sun6', { scale: 0.7 }, { scale: 1, duration: 0.6, ease: 'back.out(1.6)', immediateRender: false }, X.s6 + HOLD6)
+        tl.fromTo('#o-id6', { autoAlpha: 1, x: -400, rotation: -20 }, { x: 0, rotation: -8, duration: 0.45, ease: 'back.out(1.6)', immediateRender: false }, T[74] - 0.1)
+        tl.to('#o-id6', { filter: 'grayscale(1) brightness(0.92)', duration: 0.4 }, T[76])
+        spring('#o-heart', T[82] - 0.08, { rotation: 20 })
+        tl.to('#o-heart', { scale: 1.12, duration: 0.18, yoyo: true, repeat: 3, ease: 'sine.inOut' }, T[82] + 0.45)
+        cam('#s6', T[83], X.s7 - T[83], 1.05, '590px 1020px', 'power1.out')
+
+        // ---------- 7. a blank sticker waits for your ti non; where to answer ----------
+        slap('#o-stk7', X.s7 + 0.05, -5)
+        tl.fromTo('#caret7', { opacity: 1 }, { opacity: 0, duration: 0.3, yoyo: true, repeat: Math.floor((END - X.s7) / 0.3), ease: 'steps(1)', immediateRender: false }, X.s7)
+        spring('#o-bub', T[92] - 0.1, {})
+        spring('#o-arrow', T[94] - 0.02, { rotation: -30 })
+        const left = END - T[94] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[94] + 0.5)
+        tl.to('#o-stk7', { y: -10, duration: 0.5, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[94] + 0.4)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
