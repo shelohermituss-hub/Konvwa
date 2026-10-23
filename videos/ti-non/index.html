@@ -176,11 +176,12 @@
         <div class="scene" id="s3">
           <div class="ghost" style="top: 1500px; font-size: 300px">ENFANCE</div>
           <div class="photo obj" id="o-enf" style="left: 70px; top: 640px; width: 940px; height: 529px"><img id="enf-img" src="assets/img/enfants.jpg" alt="" style="transform-origin: 50% 40%" /></div>
-          <div class="sun obj" id="sun3" style="left: 560px; top: 1060px; width: 440px; height: 440px"></div>
-          <div class="cut obj" id="o-h3" style="left: 560px; top: 1040px; width: 440px; height: 462px"><img src="assets/img/homme3-cut.png" alt="" /></div>
-          <div class="stk obj" id="o-stk3" style="left: 560px; top: 1430px; background: #FFD447">Ti Jo</div>
-          <div class="stamp obj" id="o-vie" style="left: 90px; top: 1300px">À VIE</div>
-          <div class="micro" id="mi3" style="left: 90px; top: 1210px">SURNOM D'ENFANCE</div>
+          <div class="tlab obj" id="t5" style="left: 90px; top: 1390px">5 ANS</div>
+          <div class="tlab obj" id="t50" style="left: 820px; top: 1390px">50 ANS</div>
+          <div class="tbar obj" id="tbar3" style="left: 90px; top: 1470px; width: 900px"><i id="tfill3" style="background: #F05A28"></i></div>
+          <div class="stk obj" id="o-stk3" style="left: 60px; top: 1270px; background: #FFD447; font-size: 80px">Ti Jo</div>
+          <div class="stamp obj" id="o-vie" style="left: 300px; top: 1205px">À VIE</div>
+          <div class="micro" id="mi3" style="left: 90px; top: 1540px">SURNOM D'ENFANCE</div>
         </div>
         <!-- 4. where it comes from: a short first name, the looks, a habit, a family story -->
         <div class="scene" id="s4">
@@ -411,7 +412,7 @@
 
         const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7']
         gsap.set(SC.slice(1), { autoAlpha: 0 })
-        gsap.set(['#o-stk1', '#k1', '#k2', '#k3', '#k4', '#k5', '#sun3', '#o-h3', '#o-stk3', '#o-vie', '#mi3', '#c1', '#c2', '#c3', '#c4', '#mi4', '#o-h1', '#o-shout', '#mi5', '#w1', '#w2', '#w3', '#o-id6', '#o-heart', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
+        gsap.set(['#o-stk1', '#k1', '#k2', '#k3', '#k4', '#k5', '#t5', '#t50', '#tbar3', '#o-stk3', '#o-vie', '#mi3', '#c1', '#c2', '#c3', '#c4', '#mi4', '#o-h1', '#o-shout', '#mi5', '#w1', '#w2', '#w3', '#o-id6', '#o-heart', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
         tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
         tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
         // scenes covered by a flood or an iris swap while hidden
@@ -461,9 +462,13 @@
         spring('#o-enf', X.s3 + 0.05, { y: 160 })
         kb('#enf-img', X.s3, X.s4, 1.05, 1.18)
         tl.fromTo('#mi3', { autoAlpha: 0, x: -30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[32])
-        tl.fromTo('#sun3', { autoAlpha: 1, scale: 0 }, { scale: 1, duration: 0.45, ease: 'back.out(1.6)', immediateRender: false }, T[33] - 0.1)
-        tl.fromTo('#o-h3', { autoAlpha: 1, y: 320 }, { y: 0, duration: 0.5, ease: 'expo.out', immediateRender: false }, T[33] - 0.05)
-        slap('#o-stk3', T[35] - 0.05, -6)
+        // the nickname given at 5 stays all the way to 50: the sticker rides the timeline as it fills
+        spring(['#t5', '#t50'], T[32] - 0.1, {})
+        tl.fromTo('#tbar3', { autoAlpha: 1, scaleX: 0, transformOrigin: '0 50%' }, { scaleX: 1, duration: 0.3, ease: 'power3.out', immediateRender: false }, T[32] - 0.05)
+        slap('#o-stk3', T[33] - 0.05, -6)
+        gsap.set('#tfill3', { scaleX: 0 })
+        tl.fromTo('#tfill3', { scaleX: 0 }, { scaleX: 1, duration: T[38] - T[34], ease: 'power1.inOut', immediateRender: false }, T[34])
+        tl.to('#o-stk3', { x: 760, rotation: 6, duration: T[38] - T[34], ease: 'power1.inOut' }, T[34])
         stamp('#o-vie', T[38] - 0.05, -10)
         shake(T[38] + 0.13)
 

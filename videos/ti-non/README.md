@@ -6,7 +6,7 @@ Composition HyperFrames écrite à la main (`index.html`), 9:16, 26,9 s, style �
 |---|---|---|
 | Accroche | viseur REC, carte d'identité sur disque orange, compteur « UNE PERSONNE · 1 NOM » qui passe à « 2 NOMS » sur « deux », l'autocollant « Ti Jo » se colle sur le prénom au mot « ti non » | inondation orange depuis l'autocollant (sur « Bòbòt ») |
 | Les surnoms | un autocollant par surnom : Ti Jo, Bòbòt, Black Indien, Fanfan, Choupèt | page poussée à gauche |
-| L'enfance | photo d'enfants en Haïti, puis un homme âgé détouré avec l'autocollant « Ti Jo », tampon « À VIE » | page poussée vers le haut |
+| L'enfance | photo d'enfants en Haïti, frise « 5 ANS → 50 ANS » où l'autocollant « Ti Jo » glisse jusqu'au bout, tampon « À VIE » | page poussée vers le haut |
 | L'origine | quatre cartes : prénom court (Jean-Joseph → Ti Jo), physique (Black Indien), manie, histoire | iris |
 | Le quartier | photo d'un marché, un homme détouré, bulle « FANFAN ! » sur « qu'on crie » | **inondation noire depuis la bulle, tenue pendant le scratch** (« Bilan : » en blanc) |
 | Bilan | visage sur disque orange, la carte d'identité qui grisonne (« vos papiers »), un cœur « ti non » qui bat | page poussée vers le haut |
@@ -17,7 +17,7 @@ Composition HyperFrames écrite à la main (`index.html`), 9:16, 26,9 s, style �
 - **Musique** : `../_engine/style-histoire/musique-bed.mp3`, bouclée ; coupure au scratch, retour sur « votre vrai prénom », baissée sous la question.
 - **Sons** : 54 effets (clics d'autocollants, pops, whooshs, basses, carillon, scintillements, scratch avant « Bilan »), toujours sous la voix.
 - **Images** :
-  - `homme1-cut.png`, `homme2-cut.png`, `homme3-cut.png` : photos d'hommes haïtiens **fournies par le client**, détourées (`rembg -m birefnet-general`) ; droits et accord des personnes à vérifier par le client avant publication ;
+  - `homme1-cut.png`, `homme2-cut.png` : photos d'hommes haïtiens **fournies par le client**, détourées (`rembg -m birefnet-general`) ; droits et accord des personnes à vérifier par le client avant publication ;
   - `enfants.jpg` : enfants souriants, Haïti, TopSphere Media, Unsplash (photo `rWEUBzbp2rc`) ;
   - `marche.jpg` : femmes haïtiennes au marché, Heather Suggitt, Unsplash (photo `5pFiifvkpR4`) ;
   - carte d'identité, autocollants, cartes, bulle, cœur, viseur : dessinés en HTML/SVG ; écriture manuscrite `assets/fonts/caveat-700.woff2` (Caveat, SIL OFL).
