@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Péralte, 1919</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      « La photo qui devait humilier Péralte en a fait un martyr » — style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
+      accroche en viseur de caméra, la photo de 1919 qui se développe pendant qu'un compteur monte à 100 %,
+      scènes « affiche » (disque orange, mots fantômes, micro-typo), transitions inondation / iris / page qui pousse,
+      ctl(t) sans état, rendu 120 i/s fusionné en 60 i/s, −14 LUFS.
+    -->
+    <style>
+      @font-face { font-family: "Caveat"; src: url("assets/fonts/caveat-700.woff2") format("woff2"); font-weight: 700; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .series { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; z-index: 30; }
+      .series span { padding: 10px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: 0.08em; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
+      .w { display: inline-block; }
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      .x { font-size: 230px; font-weight: 900; letter-spacing: -0.06em; line-height: 0.95; }
+
+      .obj { position: absolute; z-index: 10; }
+      .tri { position: absolute; overflow: hidden; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); background: #d4d4d4; }
+      .tri i { position: absolute; top: 0; bottom: 0; width: 33.4%; display: flex; align-items: center; justify-content: center; color: #fff; font-style: normal; font-weight: 800; letter-spacing: 0.12em; writing-mode: vertical-rl; transform-origin: 50% 50%; }
+      .tri .wave, .rw .wave { position: absolute; inset: 0; background: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0.16) 70px, rgba(0, 0, 0, 0.14) 150px, rgba(255, 255, 255, 0) 220px); background-size: 440px 100%; mix-blend-mode: soft-light; }
+      .rw { position: absolute; overflow: hidden; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); }
+      .rw i { position: absolute; left: 0; right: 0; height: 50%; }
+      .cap { position: absolute; text-align: center; font-weight: 700; font-size: 42px; letter-spacing: -0.01em; }
+      .pole { position: absolute; width: 14px; border-radius: 7px; background: linear-gradient(90deg, #8a8a8a, #d9d9d9 45%, #7a7a7a); box-shadow: 6px 14px 20px rgba(0, 0, 0, 0.15); }
+      .pole::before { content: ""; position: absolute; left: -9px; top: -24px; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f1d77a, #b8901f); }
+
+      .sw { position: absolute; width: 360px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+      .sw .dot { width: 300px; height: 300px; border-radius: 50%; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25), inset 0 0 0 10px rgba(255, 255, 255, 0.85); }
+      .sw b { font-size: 46px; font-weight: 800; }
+      .sw code { font-family: "Poppins", sans-serif; font-size: 32px; font-weight: 600; color: #555; }
+      .lens { position: absolute; width: 360px; height: 360px; border-radius: 50%; border: 14px solid #141414; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
+      .lens::after { content: ""; position: absolute; left: 290px; top: 300px; width: 30px; height: 150px; border-radius: 14px; background: #141414; transform: rotate(-45deg); }
+
+      .photo { position: absolute; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip { position: absolute; white-space: nowrap; padding: 14px 28px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 36px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); display: flex; align-items: center; gap: 14px; }
+      .mini { position: relative; display: inline-block; width: 56px; height: 38px; border-radius: 6px; overflow: hidden; flex: none; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); }
+      .mini i { position: absolute; top: 0; bottom: 0; width: 34%; }
+      .badge { position: absolute; padding: 12px 34px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 46px; box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25); white-space: nowrap; }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #CE1126; border-radius: 22px; color: #CE1126; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.7); white-space: nowrap; }
+      .letter { position: absolute; width: 760px; height: 760px; border-radius: 24px; background: #fffdf7; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.18); padding: 56px 60px; box-sizing: border-box; }
+      .letter .hd { display: flex; align-items: center; gap: 22px; font-weight: 900; font-size: 64px; color: #2a6ebb; }
+      .letter .hd svg { width: 90px; height: 90px; }
+      .letter p { margin: 34px 0 0; font-size: 38px; line-height: 1.5; color: #333; }
+      .letter p b { color: #141414; }
+      .grid4 .card { position: absolute; width: 440px; border-radius: 26px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.16); overflow: hidden; }
+      .grid4 .card .fl { height: 290px; position: relative; }
+      .grid4 .card .fl img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .grid4 .card b { display: block; padding: 14px 22px; font-size: 36px; font-weight: 800; }
+      .ring { position: absolute; border-radius: 50%; border: 8px solid #CE1126; box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.7); }
+      .q { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: #141414; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 92px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+
+      .crate { position: absolute; border-radius: 10px; background: repeating-linear-gradient(180deg, #b98545 0px, #b98545 52px, #8a5a26 52px, #8a5a26 58px); box-shadow: 0 26px 50px rgba(0, 0, 0, 0.25), inset 0 0 0 10px #7a4d1e; display: flex; align-items: center; justify-content: center; }
+      .crate span { padding: 6px 22px; border: 6px solid rgba(40, 22, 6, 0.75); color: rgba(40, 22, 6, 0.8); font-weight: 900; font-size: 54px; letter-spacing: 0.12em; transform: rotate(-4deg); }
+      .num { position: absolute; left: 0; right: 0; text-align: center; font-weight: 900; font-size: 150px; letter-spacing: -0.04em; color: #A87900; font-variant-numeric: tabular-nums; }
+      .cal { position: absolute; width: 360px; height: 420px; border-radius: 30px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); overflow: hidden; text-align: center; }
+      .cal .top { height: 110px; background: #D21034; color: #fff; font-weight: 800; font-size: 40px; letter-spacing: 0.08em; display: flex; align-items: center; justify-content: center; }
+      .cal b { display: block; font-size: 230px; font-weight: 900; letter-spacing: -0.06em; line-height: 1.2; }
+      .bank { position: absolute; width: 470px; height: 560px; border-radius: 30px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); }
+      .bank svg { position: absolute; left: 45px; top: 40px; width: 380px; height: 330px; }
+      .bank b { position: absolute; left: 0; right: 0; top: 390px; text-align: center; font-size: 40px; font-weight: 900; letter-spacing: 0.06em; line-height: 1.15; }
+      .tbar { position: absolute; height: 30px; border-radius: 15px; background: #cfcfcf; overflow: hidden; }
+      .tbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #D21034; transform-origin: 0 50%; }
+      .tlab { position: absolute; font-weight: 800; font-size: 46px; }
+      .btn { position: absolute; width: 380px; height: 170px; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 96px; letter-spacing: 0.04em; box-shadow: 0 26px 50px rgba(0, 0, 0, 0.2); }
+      .gray img { filter: grayscale(1) contrast(1.1); }
+      .scene { position: absolute; inset: 0; }
+      #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
+      #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
+      #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
+      /* --- références client : viseur de caméra (hook) et affiches à disque rouge, détourés, mots fantômes, micro-typo --- */
+      .hud { position: absolute; inset: 0; pointer-events: none; z-index: 12; }
+      .hud .cn { position: absolute; width: 60px; height: 60px; border: 0 solid #141414; }
+      .hud .rec { position: absolute; left: 80px; top: 190px; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
+      .hud .fps { position: absolute; right: 80px; top: 190px; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .sun { position: absolute; border-radius: 50%; background: #F05A28; }
+      .ring3 { position: absolute; border-radius: 50%; border: 3px solid rgba(20, 20, 20, 0.35); }
+      .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
+      .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; }
+      .cut { position: absolute; }
+      .cut img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; display: block; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.25)); }
+      .counter2 { position: absolute; left: 0; right: 0; text-align: center; }
+      .counter2 small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
+      .counter2 b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #141414; font-variant-numeric: tabular-nums; }
+      .crown { position: absolute; width: 170px; height: 120px; }
+      .rings { position: absolute; width: 140px; height: 100px; }
+      .tomb { position: absolute; width: 560px; height: 720px; border-radius: 280px 280px 24px 24px; background: linear-gradient(180deg, #ededed, #c9c9c9); box-shadow: 0 40px 70px rgba(0, 0, 0, 0.25), inset 0 0 0 14px rgba(255, 255, 255, 0.5); text-align: center; padding-top: 170px; box-sizing: border-box; color: #3a3a3a; }
+      .tomb .cross { font-size: 90px; font-weight: 300; line-height: 1; }
+      .tomb h3 { margin: 26px 0 8px; font-size: 52px; font-weight: 900; letter-spacing: 0.06em; }
+      .tomb p { margin: 6px 0; font-size: 32px; font-weight: 600; letter-spacing: 0.12em; }
+      .candle { position: absolute; width: 60px; height: 190px; }
+      .memo { position: absolute; width: 360px; padding: 24px 26px; border-radius: 22px; background: #fff; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18); display: flex; align-items: center; gap: 18px; }
+      .memo b { font-size: 46px; font-weight: 300; }
+      .memo span { font-size: 32px; font-weight: 800; line-height: 1.15; }
+      .memo small { display: block; font-size: 26px; font-weight: 600; color: #888; }
+      .ship { position: absolute; width: 90px; height: 90px; }
+      #veil { display: none; }
+      /* --- Péralte : tirage photo, ciel de nuit, médaillon, croix dorée, pièce de monnaie --- */
+      .print { position: absolute; background: #fbfaf6; padding: 18px 18px 64px; box-sizing: border-box; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.28); }
+      .print img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .night { position: absolute; border-radius: 30px; overflow: hidden; background: linear-gradient(180deg, #0b1220, #1d2a48); box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3); }
+      .night .star { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px #fff; }
+      .night .moon { position: absolute; width: 140px; height: 140px; filter: drop-shadow(0 0 24px rgba(243, 234, 210, 0.6)); }
+      .medal { position: absolute; width: 320px; height: 320px; border-radius: 50%; overflow: hidden; border: 10px solid #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4); z-index: 11; }
+      .medal img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
+      .crossv { position: absolute; width: 600px; height: 820px; filter: drop-shadow(0 0 18px rgba(232, 185, 35, 0.7)); }
+      .halo { position: absolute; width: 600px; height: 600px; border-radius: 50%; border: 6px solid #E8B923; box-sizing: border-box; }
+      .coin { position: absolute; width: 600px; height: 600px; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 35% 30%, #f7dc7a, #c9971f 60%, #8a6410); box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3), inset 0 0 0 18px rgba(255, 255, 255, 0.18), inset 0 0 0 28px rgba(120, 80, 10, 0.35); }
+      .coin img { position: absolute; left: 70px; top: 70px; width: 460px; height: 460px; border-radius: 50%; object-fit: cover; object-position: 50% 30%; filter: grayscale(1) sepia(1) saturate(2) contrast(1.35); mix-blend-mode: multiply; }
+      .coin i { position: absolute; inset: 44px; border-radius: 50%; border: 4px dashed rgba(90, 60, 5, 0.45); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="29.3" data-width="1080" data-height="1920">
+      <div id="world">
+        <div class="grid" id="grid"></div>
+        <!-- 1. hook: in a camera viewfinder, the 1919 photo develops out of the dark while a counter climbs to 100 % -->
+        <div class="scene" id="s1">
+          <div class="ghost" id="g1" style="top: 1480px; font-size: 300px">1919</div>
+          <div class="sun obj" id="sun1" style="left: 190px; top: 780px; width: 700px; height: 700px"></div>
+          <div class="ring3 obj" id="rg1" style="left: 140px; top: 730px; width: 800px; height: 800px"></div>
+          <div class="print obj" id="o-print" style="left: 330px; top: 740px; width: 420px; height: 640px"><img id="print-img" src="assets/img/photo-1919.jpg" alt="" /></div>
+          <div class="counter2 obj" id="o-dev" style="top: 540px"><small>DÉVELOPPEMENT · PHOTO DE 1919</small><b><span id="dev">0</span>&nbsp;%</b></div>
+          <div class="hud" id="hud">
+            <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="left: 50px; top: 1690px; border-left-width: 6px; border-bottom-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 1690px; border-right-width: 6px; border-bottom-width: 6px"></div>
+            <div class="rec" style="top: 1700px; left: 130px"><i id="recdot"></i>REC <span id="tc">00:00:00:00</span></div>
+            <div class="fps" style="top: 1700px; right: 130px">HAÏTI · 1919</div>
+          </div>
+        </div>
+        <!-- 2. 1919: Haiti is occupied by the US Marines -->
+        <div class="scene" id="s2">
+          <div class="ghost" style="top: 1480px; font-size: 280px">OCCUPATION</div>
+          <div class="photo obj" id="o-mar" style="left: 70px; top: 660px; width: 940px; height: 553px"><img id="mar-img" src="assets/img/marines-cap.jpg" alt="" style="transform-origin: 50% 45%" /></div>
+          <div class="chip obj" id="ch-mar" style="left: 100px; top: 1170px">Marines américains · Cap-Haïtien</div>
+          <div class="badge obj" id="o-occ" style="left: 470px; top: 600px">1915 — 1934</div>
+          <div class="micro" id="mi2" style="right: 80px; top: 1300px; text-align: right">OCCUPATION AMÉRICAINE<br />19 ANS</div>
+        </div>
+        <!-- 3. Charlemagne Péralte leads the Caco resistance -->
+        <div class="scene" id="s3">
+          <div class="ghost" style="top: 1480px; font-size: 330px">CACOS</div>
+          <div class="sun obj" id="sun3" style="left: 140px; top: 700px; width: 640px; height: 640px"></div>
+          <div class="cut obj" id="o-pe3" style="left: 170px; top: 640px; width: 560px; height: 801px"><img src="assets/img/peralte-cut.png" alt="" /></div>
+          <div class="chip obj" id="ch-pe3" style="left: 80px; top: 1420px">Charlemagne Péralte</div>
+          <div class="photo obj" id="o-cacos" style="left: 620px; top: 1100px; width: 400px; height: 317px; border-radius: 20px"><img src="assets/img/cacos-1915.jpg" alt="" /></div>
+          <div class="chip obj" id="ch-cac" style="left: 640px; top: 1390px">Chef des Cacos</div>
+          <div class="micro" id="mi3" style="right: 80px; top: 1500px; text-align: right">NÉ À HINCHE · 1885<br />AVEC LES CHEFS CACOS · 1915</div>
+        </div>
+        <!-- 4. betrayed, he is killed in the night -->
+        <div class="scene" id="s4">
+          <div class="ghost" style="top: 1500px; font-size: 330px">NUIT</div>
+          <div class="night obj" id="o-night" style="left: 70px; top: 640px; width: 940px; height: 760px"><i class="star" style="left: 90px; top: 80px"></i><i class="star" style="left: 300px; top: 160px"></i><i class="star" style="left: 760px; top: 110px"></i><i class="star" style="left: 860px; top: 420px"></i><i class="star" style="left: 140px; top: 560px"></i><i class="star" style="left: 620px; top: 640px"></i><svg class="moon" viewBox="0 0 100 100" style="left: 690px; top: 120px"><path d="M60 8 A42 42 0 1 0 92 70 A34 34 0 1 1 60 8 Z" fill="#f3ead2" /></svg></div>
+          <div class="medal obj" id="o-med" style="left: 380px; top: 860px"><img id="med-img" src="assets/img/peralte.jpg" alt="" /></div>
+          <div class="chip obj" id="ch-tr" style="left: 120px; top: 1250px">Trahi pour 2 000 $</div>
+          <div class="badge obj" id="o-nov" style="left: 560px; top: 1260px; background: #D21034">1ᵉʳ NOV. 1919</div>
+        </div>
+        <!-- 5. iris: the Marines tie the body to a door, photograph it, and spread the picture across the country -->
+        <div class="scene" id="s5">
+          <div class="ghost" style="top: 1500px; font-size: 280px">PROPAGANDE</div>
+          <div class="photo obj copy" id="cp1" style="left: 300px; top: 660px; width: 480px; height: 747px"><img src="assets/img/photo-1919.jpg" alt="" /></div>
+          <div class="photo obj copy" id="cp2" style="left: 300px; top: 660px; width: 480px; height: 747px"><img src="assets/img/photo-1919.jpg" alt="" /></div>
+          <div class="photo obj copy" id="cp3" style="left: 300px; top: 660px; width: 480px; height: 747px"><img src="assets/img/photo-1919.jpg" alt="" /></div>
+          <div class="photo obj" id="o-ph5" style="left: 300px; top: 660px; width: 480px; height: 747px"><img id="ph5-img" src="assets/img/photo-1919.jpg" alt="" style="transform-origin: 50% 30%" /></div>
+          <div class="chip obj" id="ch-ex" style="left: 230px; top: 1370px">Des milliers d'exemplaires</div>
+          <div class="micro" id="mi5" style="left: 80px; top: 1500px">PHOTO DES MARINES · 1919<br />DIFFUSÉE DANS TOUT LE PAYS</div>
+        </div>
+        <!-- 6. Haitians see a crucified Christ; Péralte becomes a martyr -->
+        <div class="scene" id="s6">
+          <div class="ghost" style="top: 1500px; font-size: 330px">MARTYR</div>
+          <div class="sun obj" id="sun6" style="left: 190px; top: 760px; width: 700px; height: 700px"></div>
+          <div class="halo obj" id="hl1" style="left: 240px; top: 810px"></div>
+          <div class="halo obj" id="hl2" style="left: 240px; top: 810px"></div>
+          <svg class="crossv obj" id="o-cross" viewBox="0 0 600 820" style="left: 240px; top: 640px"><path id="cross-path" d="M300 20 L300 800 M60 250 L540 250" fill="none" stroke="#E8B923" stroke-width="14" stroke-linecap="round" /></svg>
+          <div class="photo obj" id="o-ph6" style="left: 360px; top: 760px; width: 360px; height: 560px; border-radius: 18px"><img src="assets/img/photo-1919.jpg" alt="" style="filter: sepia(0.5) contrast(1.05)" /></div>
+          <div class="chip obj" id="ch-mart" style="left: 330px; top: 1380px">Martyr national</div>
+        </div>
+        <!-- 7. Bilan: a coin with his face — the man became a symbol -->
+        <div class="scene" id="s7">
+          <div class="ghost" style="top: 1500px; font-size: 300px">SYMBOLE</div>
+          <div class="coin obj" id="o-coin" style="left: 240px; top: 760px"><img src="assets/img/peralte.jpg" alt="" /><i></i></div>
+          <div class="micro" id="mi7" style="left: 0; right: 0; top: 1420px; text-align: center">SON VISAGE EST SUR LES PIÈCES<br />ET LES TIMBRES D'HAÏTI</div>
+        </div>
+        <!-- 8. the question -->
+        <div class="scene" id="s8">
+          <div class="btn obj" id="o-oui" style="left: 110px; top: 900px; background: #141414; color: #fff">OUI</div>
+          <div class="btn obj" id="o-non" style="left: 590px; top: 900px; background: #fff; color: #141414">NON</div>
+          <div class="bubble obj" id="o-bub" style="left: 470px; top: 1250px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1180px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </div>
+
+        <div id="flood"></div>
+        <div id="iris"></div>
+        <div id="blocks"></div>
+      </div>
+      <div class="series"><span>HISTOIRE D'HAÏTI · 1919</span></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), pauses raccourcies, silence avant « Bilan », accélérée ×1,1.
+           Musique : celle du style (ElevenLabs via FLORA), coupure au scratch et retour sur « ils voulaient » mixés dans le fichier. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="27.6" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="29.3" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/whoosh-short.mp3" data-start="0.05" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx2" src="assets/sfx/click.mp3" data-start="0.05" data-duration="0.37" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx3" src="assets/sfx/impact-bass-1.mp3" data-start="0.08" data-duration="2.12" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx4" src="assets/sfx/pop.mp3" data-start="0.1" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx5" src="assets/sfx/riser.mp3" data-start="0.15" data-duration="2.08" data-track-index="25" data-volume="0.2"></audio>
+      <audio id="sx6" src="assets/sfx/key-press.mp3" data-start="0.2" data-duration="0.43" data-track-index="26" data-volume="0.08"></audio>
+      <audio id="sx7" src="assets/sfx/key-press.mp3" data-start="0.34" data-duration="0.43" data-track-index="27" data-volume="0.08"></audio>
+      <audio id="sx8" src="assets/sfx/key-press.mp3" data-start="0.48" data-duration="0.43" data-track-index="22" data-volume="0.08"></audio>
+      <audio id="sx9" src="assets/sfx/key-press.mp3" data-start="0.62" data-duration="0.43" data-track-index="20" data-volume="0.08"></audio>
+      <audio id="sx10" src="assets/sfx/key-press.mp3" data-start="0.76" data-duration="0.43" data-track-index="21" data-volume="0.08"></audio>
+      <audio id="sx11" src="assets/sfx/key-press.mp3" data-start="0.9" data-duration="0.43" data-track-index="24" data-volume="0.08"></audio>
+      <audio id="sx12" src="assets/sfx/key-press.mp3" data-start="1.04" data-duration="0.43" data-track-index="22" data-volume="0.08"></audio>
+      <audio id="sx13" src="assets/sfx/key-press.mp3" data-start="1.18" data-duration="0.43" data-track-index="20" data-volume="0.08"></audio>
+      <audio id="sx14" src="assets/sfx/key-press.mp3" data-start="1.32" data-duration="0.43" data-track-index="21" data-volume="0.08"></audio>
+      <audio id="sx15" src="assets/sfx/key-press.mp3" data-start="1.46" data-duration="0.43" data-track-index="24" data-volume="0.08"></audio>
+      <audio id="sx16" src="assets/sfx/key-press.mp3" data-start="1.6" data-duration="0.43" data-track-index="22" data-volume="0.08"></audio>
+      <audio id="sx17" src="assets/sfx/key-press.mp3" data-start="1.74" data-duration="0.43" data-track-index="20" data-volume="0.08"></audio>
+      <audio id="sx18" src="assets/sfx/key-press.mp3" data-start="1.88" data-duration="0.43" data-track-index="21" data-volume="0.08"></audio>
+      <audio id="sx19" src="assets/sfx/key-press.mp3" data-start="2.02" data-duration="0.43" data-track-index="24" data-volume="0.08"></audio>
+      <audio id="sx20" src="assets/sfx/impact-bass-2.mp3" data-start="2.18" data-duration="2.59" data-track-index="20" data-volume="0.45"></audio>
+      <audio id="sx21" src="assets/sfx/click.mp3" data-start="2.2" data-duration="0.37" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx22" src="assets/sfx/whoosh.mp3" data-start="2.36" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx23" src="assets/sfx/whoosh-short.mp3" data-start="2.68" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="2.73" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx25" src="assets/sfx/pop.mp3" data-start="3.82" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx26" src="assets/sfx/pop.mp3" data-start="4.7" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx27" src="assets/sfx/whoosh.mp3" data-start="5.67" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="6.65" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx29" src="assets/sfx/whoosh.mp3" data-start="7.84" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="7.9" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx31" src="assets/sfx/pop.mp3" data-start="8.12" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx32" src="assets/sfx/whoosh-short.mp3" data-start="8.16" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx33" src="assets/sfx/pop.mp3" data-start="8.21" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx34" src="assets/sfx/pop.mp3" data-start="8.36" data-duration="0.72" data-track-index="25" data-volume="0.22"></audio>
+      <audio id="sx35" src="assets/sfx/impact-bass-2.mp3" data-start="9.15" data-duration="2.59" data-track-index="20" data-volume="0.45"></audio>
+      <audio id="sx36" src="assets/sfx/whoosh-short.mp3" data-start="9.42" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx37" src="assets/sfx/click.mp3" data-start="9.68" data-duration="0.37" data-track-index="22" data-volume="0.45"></audio>
+      <audio id="sx38" src="assets/sfx/click-soft.mp3" data-start="9.8" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx39" src="assets/sfx/whoosh-short.mp3" data-start="12.6" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx40" src="assets/sfx/whoosh-short.mp3" data-start="12.72" data-duration="0.57" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx41" src="assets/sfx/whoosh-short.mp3" data-start="12.84" data-duration="0.57" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx42" src="assets/sfx/pop.mp3" data-start="13.64" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx43" src="assets/sfx/whoosh.mp3" data-start="15.09" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx44" src="assets/sfx/pop.mp3" data-start="15.34" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx45" src="assets/sfx/riser.mp3" data-start="17.45" data-duration="0.5" data-track-index="20" data-volume="0.15"></audio>
+      <audio id="sx46" src="assets/sfx/chime.mp3" data-start="17.88" data-duration="2.54" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx47" src="assets/sfx/sparkle.mp3" data-start="18.2" data-duration="1.8" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx48" src="assets/sfx/pop.mp3" data-start="19.57" data-duration="0.72" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx49" src="assets/sfx/whoosh.mp3" data-start="20.02" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx50" src="assets/sfx/scratch.mp3" data-start="20.02" data-duration="1.23" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx51" src="assets/sfx/whoosh-short.mp3" data-start="21.22" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx52" src="assets/sfx/impact-bass-2.mp3" data-start="21.36" data-duration="2.59" data-track-index="21" data-volume="0.45"></audio>
+      <audio id="sx53" src="assets/sfx/whoosh-short.mp3" data-start="23.42" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx54" src="assets/sfx/chime.mp3" data-start="23.72" data-duration="2.54" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx55" src="assets/sfx/sparkle.mp3" data-start="23.82" data-duration="1.8" data-track-index="23" data-volume="0.22"></audio>
+      <audio id="sx56" src="assets/sfx/whoosh.mp3" data-start="25.89" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx57" src="assets/sfx/pop.mp3" data-start="26.43" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx58" src="assets/sfx/pop.mp3" data-start="26.92" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx59" src="assets/sfx/pop.mp3" data-start="27.16" data-duration="0.72" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx60" src="assets/sfx/click.mp3" data-start="27.35" data-duration="0.37" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx61" src="assets/sfx/sparkle.mp3" data-start="27.45" data-duration="1.8" data-track-index="23" data-volume="0.2"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 29.3
+        const BLUE = '#00209F'
+        const RED = '#D21034'
+        const ORANGE = '#F05A28'
+        const GOLD = '#A87900'
+        const INK = '#141414'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0.0, 0.381, 1.08, 1.3, 1.827, 1.98, 2.582, 3.091, 3.455, 3.673, 4.109, 4.327, 4.545, 5.055, 5.717, 6.502, 6.855, 7.091, 7.209, 7.797, 7.974, 8.065, 8.68, 8.78, 8.9, 9.08, 9.2, 9.28, 9.603, 9.923, 10.255, 10.68, 10.823, 11.059, 11.106, 11.248, 11.533, 11.627, 12.29, 12.399, 12.89, 13.272, 13.49, 13.708, 13.817, 14.035, 14.254, 14.799, 14.963, 15.145, 15.568, 15.754, 16.248, 16.31, 16.681, 16.99, 17.55, 17.68, 17.95, 18.56, 19.029, 19.32, 19.42, 20.698, 21.164, 21.371, 22.052, 22.353, 22.505, 22.9, 23.0, 23.1, 23.25, 23.32, 23.74, 23.82, 24.08, 24.85, 25.2, 25.937, 26.33, 26.75, 26.82, 27.08, 27.15]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Cette", "photo", "devait", "humilier", "un", "héros.", "1919 :", "Haïti", "est", "occupée", "par", "les", "Marines", "américains.", "Charlemagne", "Péralte", "mène", "la", "résistance", "des", "Cacos.", "Trahi,", "il", "est", "tué", "dans", "la", "nuit.", "Les", "Marines", "attachent", "son", "corps", "à", "une", "porte,", "le", "photographient,", "et", "diffusent", "l'image", "dans", "tout", "le", "pays,", "pour", "décourager", "les", "rebelles.", "Mais", "les", "Haïtiens", "y", "voient", "autre", "chose :", "un", "Christ", "crucifié.", "Péralte", "devient", "un", "martyr.", "Bilan :", "ils", "voulaient", "tuer", "un", "homme,", "ils", "ont", "créé", "un", "symbole !", "Et", "vous,", "connaissiez-vous", "Charlemagne", "Péralte ?", "Répondez", "OUI", "ou", "NON", "en", "commentaire."]
+        const SCRATCH = 20.04
+
+        // ---------- transitions: when each scene takes over, and how ----------
+        const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
+        const X = { s2: at(6), s3: at(14), s4: at(21), s5: at(28), s6: at(49), s7: Math.round((SCRATCH + 0.3) * 100) / 100, s8: at(79) }
+        const HOLD7 = T[64] - 0.14 - X.s7 // the black flood holds through the scratch silence, until « ils voulaient »
+        const FLOODS = [
+          { t: X.s2, a: [540, 1060], b: [540, 940], col: ORANGE, hold: 0 },
+          { t: X.s4, a: [460, 1020], b: [540, 1000], col: INK, hold: 0 },
+          { t: X.s7, a: [540, 1040], b: [540, 1040], col: INK, hold: HOLD7 },
+        ]
+        const IRISES = [{ t: X.s5 }]
+        const PUSHES = [['s2', 's3', 'x'], ['s5', 's6', 'y'], ['s7', 's8', 'y']]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 220, lines: [[0, 2, 'm'], [3, 3, 'bi', RED], [4, 5, 'm']] },
+          { y: 220, lines: [[6, 6, 'b'], [7, 9, 'm'], [10, 13, 's']] },
+          { y: 230, lines: [[14, 15, 'm'], [16, 18, 's'], [19, 20, 'b', RED]] },
+          { y: 240, lines: [[21, 21, 'bi', RED], [22, 27, 'm']] },
+          { y: 220, lines: [[28, 32, 's'], [33, 35, 'm'], [36, 37, 'mi', RED]] },
+          { y: 220, lines: [[38, 40, 'm'], [41, 44, 's'], [45, 46, 's'], [47, 48, 'mi', RED]] },
+          { y: 220, lines: [[49, 51, 's'], [52, 55, 's'], [56, 57, 'm'], [58, 58, 'bi', RED]] },
+          { y: 240, lines: [[59, 60, 'm'], [61, 62, 'b', GOLD]] },
+          { y: 230, lines: [[63, 63, 'm', '#fff'], [64, 66, 'm'], [67, 68, 'm'], [69, 71, 's'], [72, 73, 'bi', RED]] },
+          { y: 240, lines: [[74, 75, 's'], [76, 76, 'm'], [77, 78, 'm'], [79, 79, 's'], [80, 82, 'm'], [83, 84, 's']] },
+        ]
+        const BILAN = 8
+        const BIG = { b: 1, bi: 1, mi: 1, x: 1 }
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = next ? (bi === BILAN - 1 ? X.s7 - 0.02 : T[next.lines[0][0]] - 0.08) : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              if (BIG[st]) {
+                // key words rise out of their line, on a spring
+                tl.fromTo(w, { yPercent: 118, color: col || INK }, { yPercent: 0, duration: 0.42, ease: 'back.out(1.7)' }, T[k] - 0.03)
+              } else {
+                tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 14, filter: blur(6) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
+                tl.to(w, { color: col || INK, duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+              }
+            }
+          })
+          // exit: every word drops back into its line
+          if (end < END) {
+            tl.to(box.querySelectorAll('.w'), { yPercent: -125, duration: 0.18, ease: 'power3.in', stagger: 0.006 }, end - 0.2)
+            tl.set(box, { autoAlpha: 0 }, end)
+          }
+        })
+        // « Bilan : » is white on the black flood, and turns to ink as the flood contracts
+        tl.to(blocksBox.children[BILAN].querySelector('.w'), { color: INK, duration: 0.2 }, X.s7 + HOLD7)
+
+        // ---------- flood + iris: pure functions of time ----------
+        const ease = { in: (p) => p * p * p, out: (p) => 1 - Math.pow(1 - p, 3) }
+        const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)))
+        const flood = $('flood')
+        const iris = $('iris')
+        const blades = []
+        for (let i = 0; i < 6; i++) blades.push(el('div', 'blade', null, iris))
+        const RMAX = 1250
+        function ctl(t) {
+          // colour flood: grows out of an object, covers the frame, contracts into the next scene's object
+          let r = 0, cx = 540, cy = 960, col = INK
+          for (const F of FLOODS) {
+            const g0 = F.t - 0.3, c0 = F.t + F.hold, c1 = c0 + 0.32
+            if (t >= g0 && t <= c1) {
+              col = F.col
+              if (t < F.t) { r = 2300 * ease.in(seg(t, g0, F.t)); cx = F.a[0]; cy = F.a[1] }
+              else if (t < c0) { r = 2300; cx = F.b[0]; cy = F.b[1] }
+              else { r = 2300 * (1 - ease.out(seg(t, c0, c1))); cx = F.b[0]; cy = F.b[1] }
+            }
+          }
+          flood.style.background = col
+          flood.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + cx + 'px ' + cy + 'px)'
+          // camera iris: six blades close over the old scene and open on a photo
+          let ap = RMAX
+          for (const I of IRISES) {
+            if (t >= I.t - 0.28 && t < I.t) ap = RMAX * (1 - ease.in(seg(t, I.t - 0.28, I.t)))
+            else if (t >= I.t && t <= I.t + 0.36) ap = RMAX * ease.out(seg(t, I.t + 0.02, I.t + 0.36))
+          }
+          iris.style.visibility = ap >= RMAX - 1 ? 'hidden' : 'inherit'
+          const twist = (1 - ap / RMAX) * 50
+          blades.forEach((b, i) => {
+            b.style.left = 540 - 1600 + 'px'
+            b.style.top = 960 - 3200 + 'px'
+            b.style.transform = 'rotate(' + (i * 60 + twist).toFixed(2) + 'deg) translateY(' + (-ap).toFixed(1) + 'px)'
+          })
+        }
+        const clock = { v: 0 }
+        tl.fromTo(clock, { v: 0 }, { v: END, duration: END, ease: 'none', immediateRender: false, onUpdate: () => ctl(clock.v) }, 0)
+        ctl(0)
+
+        // ---------- helpers ----------
+        const spring = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0 }, o), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.8)' }, at)
+        const stamp = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.4, rotation: 2 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.18, ease: 'power4.in' }, at)
+        const show = (sel, at) => tl.set(sel, { autoAlpha: 1 }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        const shake = (at) => tl.fromTo('#world', { x: 0 }, { x: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, at)
+        const cam = (sel, at, dur, scale, origin, ez) => tl.to(sel, { scale, transformOrigin: origin, duration: dur, ease: ez || 'power2.inOut' }, at)
+        // a photo that fills the frame behind the iris, then zooms out into its card
+        const unfold = (sel, at) => tl.fromTo(sel, { scale: 3.4 }, { scale: 1, duration: 0.55, ease: 'power3.inOut' }, at)
+        const kb = (sel, from, to, s0, s1) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: to - from, ease: 'none', immediateRender: false }, from)
+        const sonar = (sels, from, to) => sels.forEach((s, i) => tl.fromTo(s, { autoAlpha: 0.9, scale: 0.4 }, { autoAlpha: 0, scale: 3.2, duration: 1.2, ease: 'power1.out', repeat: Math.max(0, Math.floor((to - from) / 1.2) - 1), immediateRender: false }, from + i * 0.4))
+
+
+
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8']
+        gsap.set(SC.slice(1), { autoAlpha: 0 })
+        gsap.set(['#ch-mar', '#o-occ', '#mi2', '#ch-pe3', '#o-cacos', '#ch-cac', '#mi3', '#ch-tr', '#o-nov', '#cp1', '#cp2', '#cp3', '#ch-ex', '#mi5', '#hl1', '#hl2', '#o-cross', '#ch-mart', '#mi7', '#o-oui', '#o-non', '#o-bub', '#o-arrow'], { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+        tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
+        // scenes covered by a flood or an iris swap while hidden
+        ;[['s1', 's2'], ['s3', 's4'], ['s4', 's5'], ['s6', 's7']].forEach(([a, b]) => { hide('#' + a, X[b]); show('#' + b, X[b]) })
+        // page pushes: the old scene leaves, the new one arrives from the opposite side
+        PUSHES.forEach(([a, b, ax]) => {
+          const D = ax === 'x' ? 1080 : 1920
+          const t0 = X[b] - 0.1
+          tl.to('#' + a, { [ax]: -D, duration: 0.4, ease: 'power3.inOut' }, t0)
+          show('#' + b, t0)
+          tl.fromTo('#' + b, { [ax]: D }, { [ax]: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, t0)
+          hide('#' + a, t0 + 0.4)
+        })
+        // ghost words drift slowly the whole time they are on screen; the stars twinkle
+        document.querySelectorAll('.ghost').forEach((g, i) => tl.fromTo(g, { x: i % 2 ? -60 : 60 }, { x: i % 2 ? 60 : -60, duration: END, ease: 'none', immediateRender: false }, 0))
+        tl.fromTo('.star', { opacity: 1 }, { opacity: 0.3, duration: 0.4, yoyo: true, repeat: Math.floor(END / 0.4), stagger: 0.13, ease: 'sine.inOut', immediateRender: false }, 0)
+
+        // ---------- 1. hook: viewfinder, the 1919 photo develops on the orange sun while the counter climbs to 100 % ----------
+        tl.fromTo('#sun1', { scale: 0 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)' }, 0)
+        tl.fromTo('#rg1', { scale: 0.6, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.7, ease: 'power3.out' }, 0.1)
+        tl.fromTo('#o-print', { y: 700, rotation: 8 }, { y: 0, rotation: -4, duration: 0.55, ease: 'expo.out' }, 0)
+        tl.fromTo('#hud', { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        spring('#o-dev', 0.1, {})
+        tl.fromTo('#print-img', { filter: 'brightness(0) blur(14px) sepia(0.6)' }, { filter: 'brightness(1) blur(0px) sepia(0.6)', duration: T[5] - 0.1, ease: 'power1.in', immediateRender: true }, 0.15)
+        const dev = { v: 0 }
+        tl.fromTo(dev, { v: 0 }, { v: 100, duration: T[5] - 0.1, ease: 'power1.in', immediateRender: false, onUpdate: () => { $('dev').textContent = String(Math.round(dev.v)) } }, 0.15)
+        tl.to('#o-dev b', { color: RED, duration: 0.15 }, T[5])
+        tl.fromTo('#o-dev', { scale: 1 }, { scale: 1.12, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T[5] + 0.05)
+        cam('#s1', T[5] + 0.1, X.s2 - T[5] - 0.1, 1.08, '540px 1060px', 'power2.in')
+        // the viewfinder's timecode and blinking REC dot are pure functions of time
+        const tc = $('tc')
+        const recdot = $('recdot')
+        const clock2 = { v: 0 }
+        tl.fromTo(clock2, { v: 0 }, { v: X.s2, duration: X.s2, ease: 'none', immediateRender: false, onUpdate: () => { const t = clock2.v; const f = Math.floor((t % 1) * 30); tc.textContent = '00:00:' + String(Math.floor(t)).padStart(2, '0') + ':' + String(f).padStart(2, '0'); recdot.style.opacity = Math.floor(t * 2) % 2 ? '0.25' : '1' } }, 0)
+
+        // ---------- 2. orange flood out of the photo → the Marines in Cap-Haïtien ----------
+        spring('#o-mar', X.s2 + 0.05, { y: 160, rotation: -3 })
+        kb('#mar-img', X.s2, X.s3, 1.15, 1.02)
+        spring('#o-occ', T[9] - 0.05, { rotation: 10 })
+        spring('#ch-mar', T[12] - 0.05, { x: -60 })
+        tl.fromTo('#mi2', { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[11])
+
+        // ---------- 3. page pushes left: Péralte on the orange sun, the Cacos leaders in 1915 ----------
+        tl.fromTo('#sun3', { scale: 0.6 }, { scale: 1, duration: 0.6, ease: 'back.out(1.6)', immediateRender: false }, X.s3)
+        tl.fromTo('#o-pe3', { y: 420 }, { y: 0, duration: 0.6, ease: 'expo.out', immediateRender: false }, X.s3)
+        spring('#ch-pe3', T[15] - 0.05, { x: -60 })
+        spring('#o-cacos', T[19] - 0.1, { rotation: 10, x: 120 })
+        spring('#ch-cac', T[20] - 0.05, { x: 60 })
+        tl.fromTo('#mi3', { autoAlpha: 0, x: 30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[17])
+        cam('#s3', T[20], X.s4 - T[20], 1.06, '460px 1020px', 'power2.in')
+
+        // ---------- 4. black flood (night falls): betrayed for $2,000, killed on 1 November 1919 ----------
+        spring('#o-med', X.s4 + 0.05, {})
+        spring('#ch-tr', T[21] + 0.1, { x: -60 })
+        tl.to('#med-img', { filter: 'grayscale(1) brightness(0.55)', duration: 0.4 }, T[24])
+        spring('#o-nov', T[24] - 0.05, { rotation: 10 })
+        shake(T[24] + 0.1)
+
+        // ---------- 5. iris (the shutter): the photo; on « diffusent » copies scatter across the frame ----------
+        unfold('#o-ph5', X.s5 + 0.15)
+        kb('#ph5-img', X.s5, X.s6, 1.04, 1.12)
+        ;[['#cp1', -330, -60, -14], ['#cp2', 330, -20, 12], ['#cp3', -20, 120, -4]].forEach(([c, x, y, r], i) => tl.fromTo(c, { autoAlpha: 1, x: 0, y: 0, rotation: 0, scale: 1 }, { x, y, rotation: r, scale: 0.62, duration: 0.45, ease: 'back.out(1.6)', immediateRender: false }, T[39] + i * 0.12))
+        spring('#ch-ex', T[42] - 0.05, { x: -60 })
+        tl.fromTo('#mi5', { autoAlpha: 0, x: -30 }, { autoAlpha: 1, x: 0, duration: 0.3 }, T[45])
+
+        // ---------- 6. page pushes up: a golden cross draws itself behind the photo on « Christ »; halos on « crucifié » ----------
+        tl.fromTo('#sun6', { scale: 0.6 }, { scale: 1, duration: 0.6, ease: 'back.out(1.6)', immediateRender: false }, X.s6)
+        spring('#o-ph6', X.s6 + 0.1, { y: 200 })
+        tl.fromTo('#o-cross', { autoAlpha: 1, clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)', duration: 0.45, ease: 'power2.out', immediateRender: false }, T[57] - 0.1)
+        ;['#hl1', '#hl2'].forEach((h, i) => tl.fromTo(h, { autoAlpha: 0.9, scale: 0.7 }, { autoAlpha: 0, scale: 1.6, duration: 1.2, ease: 'power1.out', immediateRender: false }, T[58] + i * 0.35))
+        spring('#ch-mart', T[62] - 0.05, { y: 60 })
+        cam('#s6', T[62], X.s7 - T[62], 1.06, '540px 1040px', 'power2.in')
+
+        // ---------- 7. black flood held through the scratch; it opens on a coin with his face, which spins on « symbole » ----------
+        tl.fromTo('#o-coin', { y: 300, scale: 0.8 }, { y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.6)', immediateRender: false }, X.s7 + HOLD7)
+        tl.fromTo('#o-coin', { rotationY: 0 }, { rotationY: 360, transformPerspective: 1200, duration: 0.8, ease: 'power2.inOut', immediateRender: false }, T[73] - 0.1)
+        tl.fromTo('#mi7', { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.3 }, T[66])
+        cam('#s7', T[73], X.s8 - T[73], 1.05, '540px 1040px', 'power1.out')
+
+        // ---------- 8. OUI / NON, and where to answer ----------
+        spring('#o-oui', T[80] - 0.1, { rotation: -10 })
+        spring('#o-non', T[82] - 0.1, { rotation: 10 })
+        spring('#o-bub', T[83] - 0.12, {})
+        spring('#o-arrow', T[84] - 0.02, { rotation: -30 })
+        const left = END - T[84] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[84] + 0.5)
+        tl.to(['#o-oui', '#o-non'], { y: -10, duration: 0.5, yoyo: true, repeat: n, ease: 'sine.inOut', stagger: 0.25 }, T[84] + 0.4)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
