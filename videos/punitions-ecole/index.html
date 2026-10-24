@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Punitions à l'école</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      « À genoux sur des grains de maïs » — les punitions de l'école haïtienne, style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
+      accroche en viseur de caméra (grains qui tombent sur un disque orange, chrono qui monte à 10:00), une punition numérotée par scène,
+      fin « partager un savoir » : une ardoise vide « Ma punition : » à remplir en commentaire.
+    -->
+    <style>
+      @font-face { font-family: "Caveat"; src: url("assets/fonts/caveat-700.woff2") format("woff2"); font-weight: 700; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .series { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; z-index: 30; }
+      .series span { padding: 10px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: 0.08em; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
+      .w { display: inline-block; }
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+
+      .obj { position: absolute; z-index: 10; }
+      .scene { position: absolute; inset: 0; }
+      .photo { position: absolute; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip { position: absolute; white-space: nowrap; padding: 14px 28px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 36px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); }
+      .nchip { position: absolute; white-space: nowrap; padding: 8px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 900; font-size: 40px; letter-spacing: 0.02em; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22); }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #CE1126; border-radius: 22px; color: #CE1126; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.7); white-space: nowrap; }
+      .stamp.sm { font-size: 64px; border-width: 8px; padding: 6px 28px; }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+      .tbar { position: absolute; height: 30px; border-radius: 15px; background: #cfcfcf; overflow: hidden; }
+      .tbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #F05A28; transform-origin: 0 50%; }
+      .tlab { position: absolute; font-weight: 800; font-size: 46px; }
+      #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
+      #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
+      #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
+      /* --- viseur de caméra (accroche), disques orange, mots fantômes, micro-typo --- */
+      .hud { position: absolute; inset: 0; pointer-events: none; z-index: 12; }
+      .hud .cn { position: absolute; width: 60px; height: 60px; border: 0 solid #141414; }
+      .hud .rec { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
+      .hud .fps { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .sun { position: absolute; border-radius: 50%; background: #F05A28; }
+      .ring3 { position: absolute; border-radius: 50%; border: 3px solid rgba(20, 20, 20, 0.35); }
+      .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
+      .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; white-space: nowrap; }
+      .counter2 { position: absolute; left: 0; right: 0; text-align: center; }
+      .counter2 small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
+      .counter2 b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #141414; font-variant-numeric: tabular-nums; }
+      /* --- punitions : grains de maïs, livres, main, rigoise, règle, cahier, ardoise --- */
+      .disc { position: absolute; border-radius: 50%; overflow: hidden; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.28), inset 0 0 0 10px rgba(255, 255, 255, 0.85); }
+      .disc img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .kern { position: absolute; width: 64px; height: 80px; filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.4)); }
+      .strip { position: absolute; border-radius: 60px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); transform-origin: 0 50%; }
+      .strip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .book { position: absolute; width: 230px; height: 170px; }
+      .upar { position: absolute; width: 120px; height: 150px; }
+      .skin { position: absolute; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #a8714d, #7c4b2d 70%); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25); }
+      .skin i { position: absolute; width: 34px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #5a3019, #8a5434); opacity: 0; }
+      .chrono { position: absolute; }
+      .chrono small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
+      .chrono b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+      .hand { position: absolute; width: 400px; height: 520px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.25)); }
+      .rig { position: absolute; width: 700px; height: 120px; transform-origin: 650px 60px; filter: drop-shadow(0 16px 16px rgba(0, 0, 0, 0.3)); }
+      .hk { position: absolute; width: 120px; height: 140px; }
+      .hk svg { width: 100%; height: 100%; display: block; }
+      .fingers { position: absolute; width: 480px; height: 300px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.22)); }
+      .ruler { position: absolute; width: 640px; height: 96px; transform-origin: 600px 48px; filter: drop-shadow(0 18px 20px rgba(0, 0, 0, 0.28)); }
+      .cat { position: absolute; width: 440px; height: 300px; border-radius: 26px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.16); padding: 30px 34px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
+      .cat svg { width: 72px; height: 72px; }
+      .cat b { font-size: 40px; font-weight: 800; line-height: 1.1; }
+      .cat em { font-family: "Caveat", cursive; font-style: normal; font-weight: 700; font-size: 52px; color: #D21034; line-height: 1; }
+      .soleil { position: absolute; width: 280px; height: 280px; }
+      .ball { position: absolute; width: 120px; height: 120px; }
+      .nb { position: absolute; width: 900px; height: 900px; border-radius: 20px; background: #fffdf7 repeating-linear-gradient(180deg, transparent 0px, transparent 68px, #a9cbe8 68px, #a9cbe8 70px); background-position: 0 40px; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.18); overflow: hidden; }
+      .nb::before { content: ""; position: absolute; left: 110px; top: 0; bottom: 0; width: 3px; background: #e58a8a; }
+      .nb .hw { position: absolute; left: 130px; font-family: "Caveat", cursive; font-weight: 700; font-size: 56px; line-height: 70px; color: #1d3a8a; white-space: nowrap; }
+      .nb .hw u { position: absolute; inset: -4px -10px; background: #fffdf7; transform-origin: 100% 50%; text-decoration: none; }
+      .x100 { position: absolute; width: 230px; height: 230px; border-radius: 50%; background: #D21034; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); }
+      .x100 b { font-size: 92px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+      .x100 small { font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; }
+      .shout { position: absolute; padding: 24px 50px; background: #fff; border: 8px solid #141414; border-radius: 44px; font-weight: 900; font-size: 92px; letter-spacing: -0.02em; color: #141414; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); white-space: nowrap; }
+      .shout::after { content: ""; position: absolute; left: 90px; bottom: -48px; border-width: 44px 44px 0 0; border-style: solid; border-color: #141414 transparent transparent transparent; }
+      .strike { position: absolute; width: 760px; height: 260px; }
+      .ico { position: absolute; width: 300px; height: 300px; }
+      .path { position: absolute; height: 0; border-top: 8px dashed #141414; }
+      .walker { position: absolute; width: 70px; height: 70px; border-radius: 50%; background: #F05A28; border: 6px solid #fff; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25); }
+      .gen { position: absolute; width: 270px; padding: 18px 10px; border-radius: 22px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16); text-align: center; }
+      .gen svg { width: 90px; height: 90px; display: block; margin: 0 auto 6px; }
+      .gen b { font-size: 30px; font-weight: 800; letter-spacing: 0.02em; }
+      .doc { position: absolute; width: 760px; height: 800px; border-radius: 24px; background: #fffdf7; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.18); padding: 56px 60px; box-sizing: border-box; }
+      .doc small { display: block; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.16em; color: #666; }
+      .doc h3 { margin: 18px 0 30px; font-size: 92px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; }
+      .doc p { position: relative; margin: 0 0 26px; font-size: 42px; font-weight: 600; line-height: 1.3; color: #333; }
+      .doc p mark { position: relative; background: none; color: #141414; font-weight: 800; }
+      .doc p mark i { position: absolute; left: -6px; right: -6px; top: 8%; bottom: 4%; background: #FFD447; z-index: -1; transform-origin: 0 50%; }
+      .doc .bar { height: 22px; border-radius: 11px; background: #e4e0d5; margin: 0 0 22px; }
+      .seal { position: absolute; width: 270px; height: 270px; border-radius: 50%; border: 12px solid #CE1126; color: #CE1126; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 44px; letter-spacing: 0.04em; background: rgba(255, 253, 247, 0.6); }
+      .seal::before { content: ""; position: absolute; inset: 12px; border-radius: 50%; border: 4px solid #CE1126; }
+      .nbm { position: absolute; width: 470px; height: 560px; border-radius: 20px; background: #fffdf7 repeating-linear-gradient(180deg, transparent 0px, transparent 68px, #a9cbe8 68px, #a9cbe8 70px); background-position: 0 40px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); overflow: hidden; }
+      .nbm .hw { position: absolute; left: 40px; font-family: "Caveat", cursive; font-weight: 700; font-size: 52px; line-height: 70px; color: #1d3a8a; white-space: nowrap; }
+      .slate { position: absolute; width: 860px; height: 400px; box-sizing: border-box; border: 26px solid #8A5A2B; border-radius: 20px; background: radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.07), transparent 60%), #2E4A3B; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3), inset 0 0 0 4px #6e4520; padding: 40px 54px; color: #fff; font-family: "Caveat", cursive; font-weight: 700; }
+      .slate small { display: block; font-size: 92px; line-height: 1; color: rgba(255, 255, 255, 0.92); }
+      .slate em { display: inline-block; width: 9px; height: 120px; background: rgba(255, 255, 255, 0.9); margin-top: 26px; }
+      .recap { position: absolute; left: 60px; right: 60px; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 14px; }
+      .recap span { padding: 8px 22px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 32px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12); white-space: nowrap; }
+      .recap span b { color: #D21034; margin-right: 8px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="57.4" data-width="1080" data-height="1920">
+      <svg width="0" height="0" style="position: absolute">
+        <defs>
+          <radialGradient id="kg" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#FFD873" /><stop offset="0.6" stop-color="#F2A93B" /><stop offset="1" stop-color="#D9801C" /></radialGradient>
+          <symbol id="kernel" viewBox="0 0 40 50"><path d="M20 2 C 34 2, 39 14, 37 27 C 35 40, 27 48, 20 48 C 13 48, 5 40, 3 27 C 1 14, 6 2, 20 2 Z" fill="url(#kg)" /><ellipse cx="20" cy="36" rx="6" ry="8" fill="#FBE6A6" opacity="0.9" /></symbol>
+          <symbol id="rigoise" viewBox="0 0 700 120"><path d="M610 60 C 470 34, 330 92, 180 60 C 110 46, 50 66, 8 54" fill="none" stroke="#7a4a22" stroke-width="20" stroke-linecap="round" /><path d="M610 60 C 470 34, 330 92, 180 60 C 110 46, 50 66, 8 54" fill="none" stroke="#4b2a10" stroke-width="20" stroke-dasharray="9 11" stroke-linecap="butt" /><rect x="590" y="42" width="106" height="36" rx="12" fill="#2f1b0b" /><rect x="600" y="48" width="86" height="6" rx="3" fill="#5a3a1e" /></symbol>
+          <symbol id="kid" viewBox="0 0 100 100"><circle cx="50" cy="32" r="20" fill="#3a3a3a" /><path d="M14 100 C 16 64, 84 64, 86 100 Z" fill="#3a3a3a" /></symbol>
+        </defs>
+      </svg>
+      <div id="world">
+        <div class="grid" id="grid"></div>
+        <!-- 1. hook: a camera viewfinder; corn kernels rain on a disc of corn on the orange sun; the kneeling chrono climbs to 10:00; PUNITION N° 1 -->
+        <div class="scene" id="s1">
+          <div class="ghost" style="top: 1480px; font-size: 360px">MAÏS</div>
+          <div class="sun obj" id="sun1" style="left: 190px; top: 780px; width: 700px; height: 700px"></div>
+          <div class="ring3 obj" id="rg1" style="left: 140px; top: 730px; width: 800px; height: 800px"></div>
+          <div class="disc obj" id="o-k1" style="left: 280px; top: 870px; width: 520px; height: 520px"><img src="assets/img/mais.jpg" alt="" /></div>
+          <div id="rain1"></div>
+          <div class="counter2 obj" id="o-chr" style="top: 575px"><small>À GENOUX DEPUIS</small><b id="chr">00:00</b></div>
+          <div class="photo obj" id="o-eco" style="left: 640px; top: 1330px; width: 390px; height: 260px; border-radius: 22px"><img src="assets/img/ecolieres.jpg" alt="" /></div>
+          <div class="stamp sm obj" id="o-p1" style="left: 50px; top: 1460px">PUNITION N° 1</div>
+          <div class="hud" id="hud">
+            <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="left: 50px; top: 1690px; border-left-width: 6px; border-bottom-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 1690px; border-right-width: 6px; border-bottom-width: 6px"></div>
+            <div class="rec" style="top: 1700px; left: 130px"><i id="recdot"></i>REC <span id="tc">00:00:00:00</span></div>
+            <div class="fps" style="top: 1700px; right: 130px">HAÏTI · ÉCOLE</div>
+          </div>
+        </div>
+        <!-- 2. the classroom; the teacher pours the corn on the floor; arms up, a book in each hand -->
+        <div class="scene" id="s2">
+          <div class="ghost" style="top: 1500px; font-size: 280px">À GENOUX</div>
+          <div class="photo obj" id="o-cls" style="left: 70px; top: 600px; width: 940px; height: 529px"><img id="cls-img" src="assets/img/classe.jpg" alt="" style="transform-origin: 50% 40%" /></div>
+          <div class="micro" id="mi2" style="left: 90px; top: 1150px">PAR TERRE · DEVANT LE TABLEAU</div>
+          <div class="strip obj" id="o-strip" style="left: 90px; top: 1200px; width: 900px; height: 110px"><img src="assets/img/mais.jpg" alt="" /></div>
+          <div id="rain2"></div>
+          <svg class="upar obj" id="o-up1" viewBox="0 0 120 150" style="left: 200px; top: 1360px"><path d="M60 140 L60 22 M18 62 L60 18 L102 62" fill="none" stroke="#D21034" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <svg class="upar obj" id="o-up2" viewBox="0 0 120 150" style="left: 760px; top: 1360px"><path d="M60 140 L60 22 M18 62 L60 18 L102 62" fill="none" stroke="#D21034" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <svg class="book obj" id="o-bk1" viewBox="0 0 230 170" style="left: 120px; top: 1380px"><rect x="8" y="10" width="214" height="150" rx="10" fill="#1d3a8a" /><rect x="8" y="10" width="26" height="150" rx="6" fill="#142a66" /><rect x="60" y="56" width="132" height="40" rx="6" fill="#fff" /><text x="126" y="84" text-anchor="middle" font-family="Poppins" font-weight="800" font-size="22" fill="#1d3a8a">LECTURE</text><rect x="214" y="18" width="8" height="134" fill="#f4efe2" /></svg>
+          <svg class="book obj" id="o-bk2" viewBox="0 0 230 170" style="left: 710px; top: 1380px"><rect x="8" y="10" width="214" height="150" rx="10" fill="#D21034" /><rect x="8" y="10" width="26" height="150" rx="6" fill="#a10c27" /><rect x="60" y="56" width="132" height="40" rx="6" fill="#fff" /><text x="126" y="84" text-anchor="middle" font-family="Poppins" font-weight="800" font-size="22" fill="#D21034">CALCUL</text><rect x="214" y="18" width="8" height="134" fill="#f4efe2" /></svg>
+          <div class="micro" id="mi2b" style="left: 0; right: 0; top: 1590px; text-align: center">LES BRAS EN L'AIR · UN LIVRE PAR MAIN</div>
+        </div>
+        <!-- 3. close-up on the grains; the chrono reaches ten minutes; the marks on the knee, until the evening -->
+        <div class="scene" id="s3">
+          <div class="ghost" style="top: 1500px; font-size: 330px">10 MIN</div>
+          <div class="photo obj" id="o-mac" style="left: 70px; top: 600px; width: 940px; height: 620px"><img id="mac-img" src="assets/img/mais.jpg" alt="" style="transform-origin: 50% 50%" /></div>
+          <div class="chrono obj" id="o-chr3" style="left: 90px; top: 1270px"><small>À GENOUX</small><b id="chr3">00:00</b></div>
+          <div class="tbar obj" id="tbar3" style="left: 90px; top: 1420px; width: 470px"><i id="tfill3"></i></div>
+          <div class="skin obj" id="o-knee" style="left: 640px; top: 1180px; width: 360px; height: 360px">
+            <i style="left: 90px; top: 110px"></i><i style="left: 160px; top: 90px"></i><i style="left: 230px; top: 130px"></i><i style="left: 120px; top: 180px"></i><i style="left: 200px; top: 200px"></i><i style="left: 260px; top: 210px"></i><i style="left: 150px; top: 250px"></i>
+          </div>
+          <div class="stamp sm obj" id="o-soir" style="left: 60px; top: 1480px">JUSQU'AU SOIR</div>
+        </div>
+        <!-- 4. N° 2 the rigoise: a whip swings down on an open palm, in front of the whole class -->
+        <div class="scene" id="s4">
+          <div class="ghost" style="top: 1500px; font-size: 330px">RIGWAZ</div>
+          <div class="sun obj" id="sun4" style="left: 190px; top: 680px; width: 700px; height: 700px"></div>
+          <svg class="hand obj" id="o-hand" viewBox="0 0 200 260" style="left: 340px; top: 740px"><g fill="#8d5a3b"><rect x="38" y="104" width="128" height="140" rx="50" /><rect x="44" y="30" width="26" height="110" rx="13" /><rect x="74" y="10" width="28" height="120" rx="14" /><rect x="106" y="16" width="28" height="116" rx="14" /><rect x="138" y="40" width="26" height="100" rx="13" /><rect x="-6" y="150" width="70" height="28" rx="14" transform="rotate(-38 30 164)" /></g><path d="M70 170 C 95 160, 130 165, 150 182 M64 200 C 92 190, 120 196, 140 214" fill="none" stroke="#6a3f24" stroke-width="4" stroke-linecap="round" /></svg>
+          <svg class="rig obj" id="o-rig" style="left: 330px; top: 760px"><use href="#rigoise" /></svg>
+          <div class="nchip obj" id="n2" style="left: 90px; top: 640px">N° 2</div>
+          <div class="chip obj" id="o-cnt" style="left: 760px; top: 640px"><span id="cnt">×1</span></div>
+          <div id="o-heads"></div>
+          <div class="micro" id="mi4" style="left: 0; right: 0; top: 1600px; text-align: center">DEVANT TOUTE LA CLASSE</div>
+        </div>
+        <!-- 5. N° 3 the ruler on the fingertips; N° 4 ears pulled; N° 5 arm pinched -->
+        <div class="scene" id="s5">
+          <div class="ghost" style="top: 1500px; font-size: 330px">RÈGLE</div>
+          <svg class="fingers obj" id="o-fing" viewBox="0 0 480 300" style="left: 300px; top: 760px"><g fill="#8d5a3b"><rect x="40" y="60" width="86" height="260" rx="43" /><rect x="140" y="20" width="90" height="300" rx="45" /><rect x="244" y="30" width="90" height="290" rx="45" /><rect x="348" y="80" width="84" height="240" rx="42" /></g><g fill="#c9977a"><ellipse cx="83" cy="96" rx="24" ry="28" /><ellipse cx="185" cy="56" rx="25" ry="29" /><ellipse cx="289" cy="66" rx="25" ry="29" /><ellipse cx="390" cy="114" rx="23" ry="27" /></g></svg>
+          <svg class="ruler obj" id="o-rul" viewBox="0 0 640 96" style="left: 160px; top: 690px"><rect x="2" y="2" width="636" height="92" rx="10" fill="#E9C46A" stroke="#b8902f" stroke-width="4" /><g id="ticks" stroke="#6b5216" stroke-width="3"></g><text x="560" y="78" font-family="Poppins" font-weight="800" font-size="20" fill="#6b5216">30 cm</text></svg>
+          <div class="nchip obj" id="n3" style="left: 90px; top: 640px">N° 3</div>
+          <div class="cat obj" id="c4" style="left: 70px; top: 1150px"><svg viewBox="0 0 48 48"><path d="M30 44 C 22 44, 22 34, 16 30 C 10 26, 10 12, 22 8 C 34 4, 42 14, 38 24 C 35 31, 30 30, 30 36" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round" /><path d="M22 20 C 24 16, 30 16, 30 22" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round" /></svg><b>Oreilles tirées</b><em>N° 4</em></div>
+          <div class="cat obj" id="c5" style="left: 570px; top: 1150px"><svg viewBox="0 0 48 48"><path d="M8 14 C 18 10, 24 18, 22 24 C 20 30, 10 30, 8 26 M40 34 C 30 38, 24 30, 26 24 C 28 18, 38 18, 40 22" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round" /><path d="M20 40 L28 8" stroke="#D21034" stroke-width="3" stroke-dasharray="3 4" /></svg><b>Bras pincé</b><em>N° 5</em></div>
+        </div>
+        <!-- 6. iris onto a schoolyard: N° 6 on your knees in the sun while the others play -->
+        <div class="scene" id="s6">
+          <div class="ghost" style="top: 1500px; font-size: 330px">SOLEIL</div>
+          <div class="photo obj" id="o-cour" style="left: 70px; top: 640px; width: 940px; height: 671px"><img id="cour-img" src="assets/img/cour.jpg" alt="" style="transform-origin: 50% 45%" /></div>
+          <svg class="soleil obj" id="o-sol" viewBox="0 0 200 200" style="left: 790px; top: 500px"><g id="rays" fill="#FFB000"></g><circle cx="100" cy="100" r="54" fill="#FFC93C" stroke="#fff" stroke-width="6" /></svg>
+          <div class="nchip obj" id="n6" style="left: 90px; top: 1340px">N° 6</div>
+          <div class="micro" id="mi6" style="left: 270px; top: 1356px">COUR DE RÉCRÉATION</div>
+          <svg class="ball obj" id="o-ball" viewBox="0 0 120 120" style="left: 820px; top: 1400px"><circle cx="60" cy="60" r="54" fill="#fff" stroke="#141414" stroke-width="6" /><path d="M60 6 C 30 40, 30 80, 60 114 M60 6 C 90 40, 90 80, 60 114 M8 50 L112 50" fill="none" stroke="#D21034" stroke-width="6" /></svg>
+        </div>
+        <!-- 7. N° 7 a hundred times the same line, in the notebook -->
+        <div class="scene" id="s7">
+          <div class="ghost" style="top: 1500px; font-size: 360px">×100</div>
+          <div class="nb obj" id="o-nb" style="left: 90px; top: 640px" ><div id="hwbox"></div></div>
+          <div class="x100 obj" id="o-x100" style="left: 820px; top: 470px"><b id="x100">×1</b><small>FOIS</small></div>
+          <div class="nchip obj" id="n7" style="left: 60px; top: 580px">N° 7</div>
+        </div>
+        <!-- 8. N° 8 speaking Creole: a greeting in Creole, struck out, PUNI -->
+        <div class="scene" id="s8">
+          <div class="ghost" style="top: 1500px; font-size: 330px">KREYÒL</div>
+          <div class="sun obj" id="sun8" style="left: 240px; top: 690px; width: 600px; height: 600px"></div>
+          <div class="shout obj" id="o-krey" style="left: 150px; top: 880px">Bonjou, mèt !</div>
+          <svg class="strike obj" id="o-strike" viewBox="0 0 760 260" style="left: 160px; top: 850px"><path d="M30 200 L730 60" stroke="#D21034" stroke-width="22" stroke-linecap="round" /></svg>
+          <div class="nchip obj" id="n8" style="left: 90px; top: 640px">N° 8</div>
+          <div class="stamp obj" id="o-puni" style="left: 330px; top: 1250px">PUNI</div>
+          <div class="micro" id="mi8" style="left: 0; right: 0; top: 1470px; text-align: center">LE CRÉOLE · LA LANGUE DE TOUS LES HAÏTIENS</div>
+        </div>
+        <!-- 9. N° 9 a second punishment at home: school → house -->
+        <div class="scene" id="s9">
+          <div class="ghost" style="top: 1500px; font-size: 330px">LAKAY</div>
+          <svg class="ico obj" id="o-sch" viewBox="0 0 300 300" style="left: 70px; top: 760px"><path d="M30 130 L150 50 L270 130 Z" fill="#141414" /><rect x="50" y="128" width="200" height="140" fill="#fffdf7" stroke="#141414" stroke-width="8" /><rect x="128" y="190" width="44" height="78" fill="#141414" /><rect x="74" y="160" width="36" height="36" fill="#a9cbe8" stroke="#141414" stroke-width="5" /><rect x="190" y="160" width="36" height="36" fill="#a9cbe8" stroke="#141414" stroke-width="5" /><circle cx="150" cy="104" r="14" fill="#FFC93C" stroke="#141414" stroke-width="5" /><text x="150" y="292" text-anchor="middle" font-family="Poppins" font-weight="800" font-size="30" fill="#141414">ÉCOLE</text></svg>
+          <div class="path obj" id="o-path" style="left: 380px; top: 940px; width: 320px"></div>
+          <div class="walker obj" id="o-walk" style="left: 345px; top: 905px"></div>
+          <div class="sun obj" id="sun9" style="left: 660px; top: 700px; width: 380px; height: 380px"></div>
+          <svg class="ico obj" id="o-house" viewBox="0 0 300 300" style="left: 700px; top: 740px"><path d="M30 140 L150 40 L270 140 Z" fill="#D21034" /><rect x="60" y="138" width="180" height="130" fill="#fffdf7" stroke="#141414" stroke-width="8" /><rect x="132" y="190" width="40" height="78" fill="#141414" /><rect x="80" y="166" width="34" height="34" fill="#a9cbe8" stroke="#141414" stroke-width="5" /><text x="150" y="292" text-anchor="middle" font-family="Poppins" font-weight="800" font-size="30" fill="#141414">MAISON</text></svg>
+          <div class="nchip obj" id="n9" style="left: 90px; top: 640px">N° 9</div>
+          <div class="stamp obj" id="o-x2" style="left: 170px; top: 1200px">2ᵉ PUNITION</div>
+          <div class="micro" id="mi9" style="left: 0; right: 0; top: 1420px; text-align: center">LES PARENTS DU CÔTÉ DU MAÎTRE</div>
+        </div>
+        <!-- 10. iris onto a 1935 classroom: the old school; passed down the generations -->
+        <div class="scene" id="s10">
+          <div class="ghost" style="top: 1530px; font-size: 330px">1935</div>
+          <div class="photo obj" id="o-1935" style="left: 70px; top: 560px; width: 940px; height: 611px"><img id="old-img" src="assets/img/classe-1935.jpg" alt="" style="transform-origin: 50% 45%" /></div>
+          <div class="chip obj" id="o-c1935" style="left: 90px; top: 1130px; font-size: 28px">SALLE DE CLASSE · 1935</div>
+          <div class="tbar obj" id="tbar10" style="left: 200px; top: 1360px; width: 680px"><i id="tfill10" style="background: #141414"></i></div>
+          <div class="gen obj" id="g1" style="left: 50px; top: 1250px"><svg viewBox="0 0 100 100"><use href="#kid" /></svg><b>LEURS PARENTS</b></div>
+          <div class="gen obj" id="g2" style="left: 405px; top: 1250px"><svg viewBox="0 0 100 100"><use href="#kid" /></svg><b>VOS PARENTS</b></div>
+          <div class="gen obj" id="g3" style="left: 760px; top: 1250px; background: #F05A28; color: #fff"><svg viewBox="0 0 100 100" style="filter: brightness(4)"><use href="#kid" /></svg><b>VOUS</b></div>
+        </div>
+        <!-- 11. the 2001 law: corporal punishment against children forbidden; but habits remained -->
+        <div class="scene" id="s11">
+          <div class="ghost" style="top: 1500px; font-size: 360px">2001</div>
+          <div class="doc obj" id="o-doc" style="left: 160px; top: 600px"><small>RÉPUBLIQUE D'HAÏTI</small><h3>LOI DE 2001</h3><p>Interdiction des mauvais traitements et des <mark><i id="mk"></i>châtiments corporels</mark> contre les enfants.</p><div class="bar" style="width: 90%"></div><div class="bar" style="width: 76%"></div><div class="bar" style="width: 84%"></div><div class="bar" style="width: 52%"></div></div>
+          <div class="seal obj" id="o-seal" style="left: 680px; top: 1180px">INTERDIT</div>
+          <svg class="rig obj" id="o-rig11" style="left: 60px; top: 1440px"><use href="#rigoise" /></svg>
+          <div id="rain11"></div>
+          <div class="micro" id="mi11" style="left: 90px; top: 1600px">ET DANS LES FAITS ?</div>
+        </div>
+        <!-- 12. Bilan: the lessons fade away; the corn stays — never forgotten -->
+        <div class="scene" id="s12">
+          <div class="ghost" style="top: 1500px; font-size: 330px">JAMAIS</div>
+          <div class="nbm obj" id="o-nbm" style="left: 60px; top: 700px"><div class="hw" id="l1" style="top: 46px">Leçon : les verbes…</div><div class="hw" id="l2" style="top: 116px">Table de 7…</div><div class="hw" id="l3" style="top: 186px">Géographie…</div><div class="hw" id="l4" style="top: 256px">Dictée…</div><div class="hw" id="l5" style="top: 326px">Récitation…</div></div>
+          <div class="sun obj" id="sun12" style="left: 560px; top: 800px; width: 460px; height: 460px"></div>
+          <div class="disc obj" id="o-k12" style="left: 620px; top: 860px; width: 340px; height: 340px"><img src="assets/img/mais.jpg" alt="" style="filter: saturate(1.15)" /></div>
+          <div class="stamp obj" id="o-jam" style="left: 520px; top: 1300px">JAMAIS</div>
+        </div>
+        <!-- 13. the question: a blank slate, « Ma punition : » — answer in the comments -->
+        <div class="scene" id="s13">
+          <div class="recap" id="o-recap" style="top: 560px"><span><b>1</b>Maïs</span><span><b>2</b>Rigoise</span><span><b>3</b>Règle</span><span><b>4</b>Oreilles</span><span><b>5</b>Pincé</span><span><b>6</b>Soleil</span><span><b>7</b>Lignes</span><span><b>8</b>Créole</span><span><b>9</b>Maison</span></div>
+          <div class="slate obj" id="o-slate" style="left: 110px; top: 780px"><small>Ma punition :</small><em id="caret13"></em></div>
+          <div class="bubble obj" id="o-bub" style="left: 470px; top: 1250px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1180px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </div>
+
+        <div id="flood"></div>
+        <div id="iris"></div>
+        <div id="blocks"></div>
+      </div>
+      <div class="series"><span>CULTURE D'HAÏTI · L'ÉCOLE</span></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), pauses raccourcies, silence avant « Bilan », accélérée ×1,05.
+           Musique : celle du style (ElevenLabs via FLORA), coupure au scratch et retour sur « les leçons » mixés dans le fichier. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="55.7" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="57.4" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/impact-bass-1.mp3" data-start="0.08" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx2" src="assets/sfx/grains.mp3" data-start="0.15" data-duration="1.33" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx3" src="assets/sfx/pop.mp3" data-start="0.15" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx4" src="assets/sfx/riser.mp3" data-start="0.4" data-duration="4.39" data-track-index="24" data-volume="0.12"></audio>
+      <audio id="sx5" src="assets/sfx/grains.mp3" data-start="0.9" data-duration="1.33" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx6" src="assets/sfx/click.mp3" data-start="3.21" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx7" src="assets/sfx/click.mp3" data-start="4.87" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx8" src="assets/sfx/impact-bass-2.mp3" data-start="4.89" data-duration="2.59" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx9" src="assets/sfx/whoosh.mp3" data-start="5.12" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx10" src="assets/sfx/whoosh-short.mp3" data-start="5.44" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx11" src="assets/sfx/pop.mp3" data-start="5.49" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx12" src="assets/sfx/grains.mp3" data-start="5.85" data-duration="1.33" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx13" src="assets/sfx/pop.mp3" data-start="8.58" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx14" src="assets/sfx/pop.mp3" data-start="8.64" data-duration="0.72" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx15" src="assets/sfx/whoosh-short.mp3" data-start="9.24" data-duration="0.57" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx16" src="assets/sfx/pop.mp3" data-start="9.39" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx17" src="assets/sfx/pop.mp3" data-start="9.47" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx18" src="assets/sfx/whoosh.mp3" data-start="10.2" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx19" src="assets/sfx/key-press.mp3" data-start="10.45" data-duration="0.43" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx20" src="assets/sfx/riser.mp3" data-start="10.45" data-duration="1.09" data-track-index="22" data-volume="0.12"></audio>
+      <audio id="sx21" src="assets/sfx/chime.mp3" data-start="11.49" data-duration="2.54" data-track-index="20" data-volume="0.12"></audio>
+      <audio id="sx22" src="assets/sfx/pop.mp3" data-start="13.14" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx23" src="assets/sfx/click-soft.mp3" data-start="13.52" data-duration="0.37" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx24" src="assets/sfx/click.mp3" data-start="14.58" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx25" src="assets/sfx/impact-bass-1.mp3" data-start="14.6" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx26" src="assets/sfx/whoosh.mp3" data-start="14.76" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx27" src="assets/sfx/pop.mp3" data-start="14.96" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="15.06" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx29" src="assets/sfx/whoosh-short.mp3" data-start="15.64" data-duration="0.57" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx30" src="assets/sfx/whoosh-short.mp3" data-start="16.34" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx31" src="assets/sfx/claque.mp3" data-start="16.49" data-duration="0.39" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx32" src="assets/sfx/whoosh-short.mp3" data-start="16.84" data-duration="0.57" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx33" src="assets/sfx/claque.mp3" data-start="16.99" data-duration="0.39" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx34" src="assets/sfx/whoosh-short.mp3" data-start="17.28" data-duration="0.57" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx35" src="assets/sfx/claque.mp3" data-start="17.43" data-duration="0.39" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx36" src="assets/sfx/pop.mp3" data-start="17.94" data-duration="0.72" data-track-index="20" data-volume="0.15"></audio>
+      <audio id="sx37" src="assets/sfx/pop.mp3" data-start="18.14" data-duration="0.72" data-track-index="21" data-volume="0.13"></audio>
+      <audio id="sx38" src="assets/sfx/pop.mp3" data-start="18.29" data-duration="0.72" data-track-index="22" data-volume="0.13"></audio>
+      <audio id="sx39" src="assets/sfx/whoosh.mp3" data-start="18.7" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx40" src="assets/sfx/whoosh-short.mp3" data-start="18.96" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx41" src="assets/sfx/pop.mp3" data-start="19.0" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx42" src="assets/sfx/claque.mp3" data-start="19.58" data-duration="0.39" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx43" src="assets/sfx/claque.mp3" data-start="19.96" data-duration="0.39" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx44" src="assets/sfx/pop.mp3" data-start="20.45" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx45" src="assets/sfx/pop.mp3" data-start="21.73" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx46" src="assets/sfx/whoosh-short.mp3" data-start="22.16" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx47" src="assets/sfx/click.mp3" data-start="22.42" data-duration="0.37" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx48" src="assets/sfx/click-soft.mp3" data-start="22.54" data-duration="0.37" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx49" src="assets/sfx/pop.mp3" data-start="22.89" data-duration="0.72" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx50" src="assets/sfx/sparkle.mp3" data-start="22.98" data-duration="1.8" data-track-index="20" data-volume="0.15"></audio>
+      <audio id="sx51" src="assets/sfx/roulement.mp3" data-start="24.25" data-duration="0.95" data-track-index="21" data-volume="0.12"></audio>
+      <audio id="sx52" src="assets/sfx/whoosh.mp3" data-start="25.05" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx53" src="assets/sfx/pop.mp3" data-start="25.3" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx54" src="assets/sfx/key-press.mp3" data-start="25.45" data-duration="0.43" data-track-index="22" data-volume="0.15"></audio>
+      <audio id="sx55" src="assets/sfx/key-press.mp3" data-start="27.19" data-duration="0.43" data-track-index="20" data-volume="0.12"></audio>
+      <audio id="sx56" src="assets/sfx/riser.mp3" data-start="27.52" data-duration="1.3" data-track-index="21" data-volume="0.12"></audio>
+      <audio id="sx57" src="assets/sfx/whoosh.mp3" data-start="28.8" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx58" src="assets/sfx/whoosh-short.mp3" data-start="29.12" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx59" src="assets/sfx/pop.mp3" data-start="29.17" data-duration="0.72" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx60" src="assets/sfx/pop.mp3" data-start="29.55" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx61" src="assets/sfx/dechirure.mp3" data-start="31.33" data-duration="0.6" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx62" src="assets/sfx/click.mp3" data-start="31.84" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx63" src="assets/sfx/impact-bass-2.mp3" data-start="31.86" data-duration="2.59" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx64" src="assets/sfx/whoosh.mp3" data-start="31.91" data-duration="0.57" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx65" src="assets/sfx/pop.mp3" data-start="32.11" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx66" src="assets/sfx/pop.mp3" data-start="32.24" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx67" src="assets/sfx/whoosh-short.mp3" data-start="32.73" data-duration="0.57" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx68" src="assets/sfx/click.mp3" data-start="34.03" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx69" src="assets/sfx/impact-bass-1.mp3" data-start="34.05" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx70" src="assets/sfx/roulement.mp3" data-start="35.1" data-duration="0.5" data-track-index="20" data-volume="0.15"></audio>
+      <audio id="sx71" src="assets/sfx/whoosh-short.mp3" data-start="35.26" data-duration="0.57" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx72" src="assets/sfx/click.mp3" data-start="35.52" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx73" src="assets/sfx/click-soft.mp3" data-start="35.64" data-duration="0.37" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx74" src="assets/sfx/pop.mp3" data-start="36.09" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx75" src="assets/sfx/pop.mp3" data-start="38.86" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx76" src="assets/sfx/pop.mp3" data-start="40.25" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx77" src="assets/sfx/pop.mp3" data-start="41.6" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx78" src="assets/sfx/whoosh.mp3" data-start="42.42" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx79" src="assets/sfx/impact-bass-2.mp3" data-start="43.3" data-duration="2.59" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx80" src="assets/sfx/click.mp3" data-start="44.98" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx81" src="assets/sfx/impact-bass-1.mp3" data-start="45.0" data-duration="2.12" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx82" src="assets/sfx/whoosh-short.mp3" data-start="45.46" data-duration="0.57" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx83" src="assets/sfx/whoosh-short.mp3" data-start="47.99" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx84" src="assets/sfx/grains.mp3" data-start="48.83" data-duration="1.33" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx85" src="assets/sfx/scratch.mp3" data-start="49.03" data-duration="1.23" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx86" src="assets/sfx/whoosh.mp3" data-start="49.03" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx87" src="assets/sfx/whoosh-short.mp3" data-start="50.41" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx88" src="assets/sfx/impact-bass-2.mp3" data-start="50.55" data-duration="2.59" data-track-index="21" data-volume="0.45"></audio>
+      <audio id="sx89" src="assets/sfx/whoosh-short.mp3" data-start="51.5" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx90" src="assets/sfx/pop.mp3" data-start="52.05" data-duration="0.72" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx91" src="assets/sfx/grains.mp3" data-start="52.1" data-duration="1.33" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx92" src="assets/sfx/click.mp3" data-start="53.0" data-duration="0.37" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx93" src="assets/sfx/impact-bass-1.mp3" data-start="53.02" data-duration="2.12" data-track-index="23" data-volume="0.45"></audio>
+      <audio id="sx94" src="assets/sfx/whoosh.mp3" data-start="53.23" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx95" src="assets/sfx/click.mp3" data-start="53.53" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx96" src="assets/sfx/pop.mp3" data-start="53.58" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx97" src="assets/sfx/pop.mp3" data-start="55.02" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx98" src="assets/sfx/click.mp3" data-start="55.51" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx99" src="assets/sfx/sparkle.mp3" data-start="55.61" data-duration="1.79" data-track-index="22" data-volume="0.2"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 57.4
+        const RED = '#D21034'
+        const ORANGE = '#F05A28'
+        const INK = '#141414'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0.0, 0.073, 0.512, 0.732, 0.952, 1.392, 1.538, 2.11, 2.197, 2.401, 2.604, 2.808, 2.859, 3.215, 3.317, 3.55, 3.826, 4.335, 4.59, 5.24, 5.342, 5.653, 6.017, 6.121, 6.329, 6.485, 6.987, 7.195, 7.558, 7.61, 7.922, 8.286, 8.463, 8.7, 8.818, 9.173, 9.292, 9.589, 9.65, 9.8, 10.252, 10.356, 10.572, 10.681, 10.843, 11.276, 11.439, 11.764, 12.467, 12.685, 12.793, 13.036, 13.132, 13.318, 13.748, 14.304, 14.719, 14.814, 14.912, 14.961, 15.203, 15.446, 15.543, 16.17, 16.3, 16.51, 16.704, 16.801, 17.044, 17.141, 17.239, 17.825, 17.875, 18.074, 18.181, 18.748, 18.856, 19.28, 19.33, 19.395, 19.61, 19.771, 20.35, 20.527, 21.031, 21.633, 21.683, 21.849, 22.34, 22.403, 22.781, 22.907, 23.284, 23.537, 23.662, 24.054, 24.31, 24.453, 24.596, 24.881, 25.104, 25.359, 25.63, 25.765, 26.036, 26.44, 26.711, 26.846, 26.99, 27.45, 27.585, 28.04, 28.28, 28.47, 29.02, 29.147, 29.401, 29.973, 30.1, 30.35, 30.68, 31.18, 31.56, 31.96, 32.1, 32.53, 32.63, 33.25, 33.4, 33.75, 34.15, 34.35, 34.75, 34.85, 34.95, 35.439, 35.928, 36.016, 36.146, 36.539, 36.887, 36.974, 37.062, 37.366, 37.584, 37.628, 37.715, 38.33, 38.603, 38.76, 39.177, 39.334, 40.151, 40.326, 40.736, 40.911, 41.086, 41.285, 41.495, 41.787, 41.94, 42.15, 42.47, 42.848, 43.1, 43.82, 43.95, 44.19, 44.7, 44.9, 45.264, 45.791, 46.265, 46.581, 46.719, 46.815, 46.998, 47.209, 47.629, 47.886, 48.258, 48.731, 48.94, 49.806, 50.35, 50.4, 51.002, 51.063, 51.302, 51.382, 51.947, 52.17, 52.716, 53.281, 53.374, 53.734, 54.13, 54.273, 54.415, 54.915, 55.218, 55.305]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["À", "genoux", "sur", "des", "grains", "de", "maïs.", "Si", "vous", "êtes", "allé", "à", "l'école", "en", "Haïti,", "vous", "connaissez", "cette", "punition.", "Le", "maître", "versait", "le", "maïs", "par", "terre.", "Vous", "restiez", "à", "genoux", "dessus,", "les", "bras", "en", "l'air,", "un", "livre", "dans", "chaque", "main.", "Au", "bout", "de", "dix", "minutes,", "les", "grains", "s'enfonçaient", "dans", "la", "peau,", "et", "les", "marques", "restaient", "jusqu'au", "soir.", "Il", "y", "avait", "aussi", "la", "rigoise :", "des", "coups", "dans", "la", "paume", "de", "la", "main,", "devant", "toute", "la", "classe.", "La", "règle,", "sur", "le", "bout", "des", "doigts.", "Les", "oreilles", "tirées,", "le", "bras", "pincé.", "À", "genoux", "au", "soleil,", "dans", "la", "cour,", "pendant", "que", "les", "autres", "jouaient.", "Cent", "fois", "la", "même", "phrase", "dans", "le", "cahier :", "« Je", "ne", "bavarderai", "plus", "en", "classe. »", "Et", "dans", "certaines", "écoles,", "même", "parler", "créole,", "c'était", "puni.", "Le", "pire ?", "En", "rentrant,", "une", "deuxième", "punition", "vous", "attendait", "à", "la", "maison.", "Beaucoup", "de", "ces", "punitions", "viennent", "de", "la", "vieille", "école", "à", "la", "française.", "Elles", "ont", "traversé", "les", "générations :", "vos", "parents", "les", "ont", "subies,", "et", "leurs", "parents", "avant", "eux.", "Pourtant,", "depuis", "2001,", "une", "loi", "haïtienne", "interdit", "les", "châtiments", "corporels", "contre", "les", "enfants.", "Mais", "dans", "beaucoup", "d'écoles,", "les", "habitudes", "sont", "restées.", "Bilan :", "les", "leçons,", "on", "les", "a", "oubliées.", "Les", "punitions,", "jamais.", "Et", "toi,", "laquelle", "tu", "as", "subie ?", "Écris-la", "en", "commentaire."]
+        const SCRATCH = 49.05
+
+        // ---------- transitions: when each scene takes over, and how ----------
+        const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
+        const X = { s2: at(20), s3: at(40), s4: at(57), s5: at(75), s6: at(88), s7: at(100), s8: at(114), s9: at(123), s10: at(135), s11: at(162), bil: Math.round((SCRATCH + 0.3) * 100) / 100, s13: at(193) }
+        const HOLDB = T[184] - 0.14 - X.bil // the black flood holds through the scratch silence, until « les leçons »
+        const FLOODS = [
+          { t: X.s2, a: [540, 1130], b: [540, 865], col: ORANGE, hold: 0 },
+          { t: X.s8, a: [905, 675], b: [540, 990], col: ORANGE, hold: 0 },
+          { t: X.bil, a: [815, 1315], b: [295, 980], col: INK, hold: HOLDB },
+        ]
+        const IRISES = [{ t: X.s6 }, { t: X.s10 }]
+        const PUSHES = [['s2', 's3', 'x'], ['s3', 's4', 'y'], ['s4', 's5', 'x'], ['s6', 's7', 'y'], ['s8', 's9', 'x'], ['s10', 's11', 'y'], ['s12', 's13', 'y']]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 230, lines: [[0, 1, 'b', RED], [2, 6, 'm']] },
+          { y: 200, lines: [[7, 10, 'm'], [11, 14, 'm'], [15, 17, 's'], [18, 18, 'bi', RED]] },
+          { y: 240, lines: [[19, 21, 'm'], [22, 25, 'm']] },
+          { y: 220, lines: [[26, 30, 's'], [31, 34, 'mi', RED], [35, 39, 's']] },
+          { y: 230, lines: [[40, 44, 'm'], [45, 47, 's'], [48, 50, 's']] },
+          { y: 240, lines: [[51, 54, 's'], [55, 56, 'bi', RED]] },
+          { y: 240, lines: [[57, 61, 's'], [62, 62, 'b', RED]] },
+          { y: 240, lines: [[63, 70, 's'], [71, 74, 'm']] },
+          { y: 210, lines: [[75, 76, 'b', RED], [77, 81, 's'], [82, 84, 'm'], [85, 87, 'm']] },
+          { y: 220, lines: [[88, 91, 'mi', RED], [92, 94, 's'], [95, 99, 's']] },
+          { y: 220, lines: [[100, 104, 'm'], [105, 107, 's'], [108, 113, 's']] },
+          { y: 220, lines: [[114, 117, 's'], [118, 120, 'm'], [121, 122, 'bi', RED]] },
+          { y: 200, lines: [[123, 124, 'b', RED], [125, 126, 's'], [127, 129, 'mi', RED], [130, 134, 's']] },
+          { y: 220, lines: [[135, 138, 'm'], [139, 143, 's'], [144, 146, 'mi', RED]] },
+          { y: 200, lines: [[147, 149, 's'], [150, 151, 'm'], [152, 156, 's'], [157, 161, 's']] },
+          { y: 200, lines: [[162, 164, 'm'], [165, 168, 's'], [169, 171, 'mi', RED], [172, 174, 's']] },
+          { y: 230, lines: [[175, 178, 's'], [179, 180, 'm'], [181, 182, 'bi', RED]] },
+          { y: 200, lines: [[183, 183, 'm', '#fff'], [184, 189, 's'], [190, 191, 'm'], [192, 192, 'b', RED]] },
+          { y: 230, lines: [[193, 194, 's'], [195, 198, 'm'], [199, 201, 's']] },
+        ]
+        const BILAN = 17
+        const BIG = { b: 1, bi: 1, mi: 1, x: 1 }
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = next ? (bi === BILAN - 1 ? X.bil - 0.02 : T[next.lines[0][0]] - 0.08) : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              if (BIG[st]) {
+                // key words rise out of their line, on a spring
+                tl.fromTo(w, { yPercent: 118, color: col || INK }, { yPercent: 0, duration: Math.max(0.18, Math.min(0.42, end - 0.22 - (T[k] - 0.03))), ease: 'back.out(1.7)' }, T[k] - 0.03)
+              } else {
+                tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 14, filter: blur(6) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
+                tl.to(w, { color: col || INK, duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+              }
+            }
+          })
+          // exit: every word drops back into its line
+          if (end < END) {
+            tl.to(box.querySelectorAll('.w'), { yPercent: -125, duration: 0.18, ease: 'power3.in', stagger: 0.006 }, end - 0.2)
+            tl.set(box, { autoAlpha: 0 }, end)
+          }
+        })
+        // « Bilan : » is white on the black flood, and turns to ink as the flood contracts
+        tl.to(blocksBox.children[BILAN].querySelector('.w'), { color: INK, duration: 0.2 }, X.bil + HOLDB)
+
+        // ---------- flood + iris: pure functions of time ----------
+        const ease = { in: (p) => p * p * p, out: (p) => 1 - Math.pow(1 - p, 3) }
+        const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)))
+        const flood = $('flood')
+        const iris = $('iris')
+        const blades = []
+        for (let i = 0; i < 6; i++) blades.push(el('div', 'blade', null, iris))
+        const RMAX = 1250
+        function ctl(t) {
+          // colour flood: grows out of an object, covers the frame, contracts into the next scene's object
+          let r = 0, cx = 540, cy = 960, col = INK
+          for (const F of FLOODS) {
+            const g0 = F.t - 0.3, c0 = F.t + F.hold, c1 = c0 + 0.32
+            if (t >= g0 && t <= c1) {
+              col = F.col
+              if (t < F.t) { r = 2300 * ease.in(seg(t, g0, F.t)); cx = F.a[0]; cy = F.a[1] }
+              else if (t < c0) { r = 2300; cx = F.b[0]; cy = F.b[1] }
+              else { r = 2300 * (1 - ease.out(seg(t, c0, c1))); cx = F.b[0]; cy = F.b[1] }
+            }
+          }
+          flood.style.background = col
+          flood.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + cx + 'px ' + cy + 'px)'
+          // camera iris: six blades close over the old scene and open on a photo
+          let ap = RMAX
+          for (const I of IRISES) {
+            if (t >= I.t - 0.28 && t < I.t) ap = RMAX * (1 - ease.in(seg(t, I.t - 0.28, I.t)))
+            else if (t >= I.t && t <= I.t + 0.36) ap = RMAX * ease.out(seg(t, I.t + 0.02, I.t + 0.36))
+          }
+          iris.style.visibility = ap >= RMAX - 1 ? 'hidden' : 'inherit'
+          const twist = (1 - ap / RMAX) * 50
+          blades.forEach((b, i) => {
+            b.style.left = 540 - 1600 + 'px'
+            b.style.top = 960 - 3200 + 'px'
+            b.style.transform = 'rotate(' + (i * 60 + twist).toFixed(2) + 'deg) translateY(' + (-ap).toFixed(1) + 'px)'
+          })
+        }
+        const clock = { v: 0 }
+        tl.fromTo(clock, { v: 0 }, { v: END, duration: END, ease: 'none', immediateRender: false, onUpdate: () => ctl(clock.v) }, 0)
+        ctl(0)
+
+        // ---------- helpers ----------
+        const spring = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0 }, o), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.8)' }, at)
+        const stamp = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.4, rotation: 2 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.18, ease: 'power4.in' }, at)
+        const show = (sel, at) => tl.set(sel, { autoAlpha: 1 }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        const shake = (at) => tl.fromTo('#world', { x: 0 }, { x: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, at)
+        const cam = (sel, at, dur, scale, origin, ez) => tl.to(sel, { scale, transformOrigin: origin, duration: dur, ease: ez || 'power2.inOut' }, at)
+        // a photo that fills the frame behind the iris, then zooms out into its card
+        const unfold = (sel, at) => tl.fromTo(sel, { scale: 3.4 }, { scale: 1, duration: 0.55, ease: 'power3.inOut' }, at)
+        const kb = (sel, from, to, s0, s1) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: to - from, ease: 'none', immediateRender: false }, from)
+        const sonar = (sels, from, to) => sels.forEach((s, i) => tl.fromTo(s, { autoAlpha: 0.9, scale: 0.4 }, { autoAlpha: 0, scale: 3.2, duration: 1.2, ease: 'power1.out', repeat: Math.max(0, Math.floor((to - from) / 1.2) - 1), immediateRender: false }, from + i * 0.4))
+
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8', '#s9', '#s10', '#s11', '#s12', '#s13']
+        gsap.set(SC.slice(1), { autoAlpha: 0 })
+        gsap.set(['#mi2', '#mi2b', '#mi4', '#mi6', '#mi8', '#mi9', '#mi11', '#o-sol'], { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+        tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
+        // scenes covered by a flood or an iris swap while hidden
+        ;[['s1', 's2', X.s2], ['s5', 's6', X.s6], ['s7', 's8', X.s8], ['s9', 's10', X.s10], ['s11', 's12', X.bil]].forEach(([a, b, t]) => { hide('#' + a, t); show('#' + b, t) })
+        // page pushes: the old scene leaves, the new one arrives from the opposite side
+        PUSHES.forEach(([a, b, ax]) => {
+          const D = ax === 'x' ? 1080 : 1920
+          const t0 = X[b] - 0.1
+          tl.to('#' + a, { [ax]: -D, duration: 0.4, ease: 'power3.inOut' }, t0)
+          show('#' + b, t0)
+          tl.fromTo('#' + b, { [ax]: D }, { [ax]: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, t0)
+          hide('#' + a, t0 + 0.4)
+        })
+        // ghost words drift slowly the whole time they are on screen
+        document.querySelectorAll('.ghost').forEach((g, i) => tl.fromTo(g, { x: i % 2 ? -60 : 60 }, { x: i % 2 ? 60 : -60, duration: END, ease: 'none', immediateRender: false }, 0))
+        const slap = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 1.8, rotation: rot * 2.5 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.28, ease: 'back.out(2.4)' }, at)
+        const fadeIn = (sel, at) => tl.fromTo(sel, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, at)
+        // seeded random, so every render places the grains the same way
+        let seed = 11
+        const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+        const KSVG = '<svg viewBox="0 0 40 50" width="64" height="80"><use href="#kernel" /></svg>'
+        // grains of corn fall from above and bounce where they land
+        const rain = (box, n, x0, x1, y0, y1, from, spread, inDisc) => {
+          for (let i = 0; i < n; i++) {
+            let x = x0 + rnd() * (x1 - x0), y = y0 + rnd() * (y1 - y0)
+            if (inDisc) { const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * inDisc[2]; x = inDisc[0] + Math.cos(a) * r - 32; y = inDisc[1] + Math.sin(a) * r - 40 }
+            const k = el('div', 'kern obj', null, $(box))
+            k.innerHTML = KSVG
+            k.style.left = Math.round(x) + 'px'
+            k.style.top = Math.round(y) + 'px'
+            const t = from + (i / n) * spread + rnd() * 0.08
+            tl.fromTo(k, { autoAlpha: 0, y: -520 - rnd() * 260, rotation: rnd() * 360 }, { autoAlpha: 1, y: 0, rotation: rnd() * 200 - 100, duration: 0.55, ease: 'bounce.out' }, t)
+          }
+        }
+        const mmss = (s) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0')
+
+        // ---------- 1. hook: viewfinder; corn rains on the disc; « À GENOUX DEPUIS » climbs to 10:00; PUNITION N° 1 ----------
+        tl.fromTo('#sun1', { scale: 0 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)' }, 0)
+        tl.fromTo('#rg1', { scale: 0.6, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.7, ease: 'power3.out' }, 0.1)
+        tl.fromTo('#o-k1', { y: 700, rotation: 20 }, { y: 0, rotation: 0, duration: 0.55, ease: 'expo.out' }, 0)
+        tl.fromTo('#hud', { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        rain('rain1', 14, 0, 0, 0, 0, 0.12, 1.6, [540, 1130, 230])
+        spring('#o-chr', 0.15, {})
+        const chr = { v: 0 }
+        tl.fromTo(chr, { v: 0 }, { v: 600, duration: T[18] - 0.35, ease: 'power2.in', immediateRender: false, onUpdate: () => { $('chr').textContent = mmss(chr.v) } }, 0.25)
+        tl.to('#chr', { color: RED, duration: 0.15 }, T[18] - 0.1)
+        tl.fromTo('#o-chr', { scale: 1 }, { scale: 1.12, duration: 0.12, yoyo: true, repeat: 3, ease: 'power2.out', immediateRender: false }, T[18] - 0.1)
+        slap('#o-eco', T[12] - 0.05, 6)
+        stamp('#o-p1', T[18] - 0.05, -7)
+        shake(T[18] + 0.13)
+        cam('#s1', T[18] + 0.2, X.s2 - T[18] - 0.2, 1.08, '540px 1130px', 'power2.in')
+        // the viewfinder's timecode and blinking REC dot are pure functions of time
+        const tc = $('tc')
+        const recdot = $('recdot')
+        const clock2 = { v: 0 }
+        tl.fromTo(clock2, { v: 0 }, { v: X.s2, duration: X.s2, ease: 'none', immediateRender: false, onUpdate: () => { const t = clock2.v; const f = Math.floor((t % 1) * 30); tc.textContent = '00:00:' + String(Math.floor(t)).padStart(2, '0') + ':' + String(f).padStart(2, '0'); recdot.style.opacity = Math.floor(t * 2) % 2 ? '0.25' : '1' } }, 0)
+
+        // ---------- 2. orange flood out of the corn → the classroom; corn poured on the floor; arms up, a book in each hand ----------
+        spring('#o-cls', X.s2 + 0.05, { y: 140 })
+        kb('#cls-img', X.s2, X.s3, 1.04, 1.16)
+        fadeIn('#mi2', T[21])
+        tl.fromTo('#o-strip', { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'power2.out' }, T[21] - 0.05)
+        rain('rain2', 12, 110, 940, 1215, 1250, T[21], 0.7)
+        spring('#o-up1', T[32] - 0.08, { y: 60 })
+        spring('#o-up2', T[32] - 0.02, { y: 60 })
+        tl.to(['#o-up1', '#o-up2'], { y: -160, autoAlpha: 0, duration: 0.3, ease: 'power2.in' }, T[36] - 0.25)
+        spring('#o-bk1', T[36] - 0.1, { rotation: -20, y: -80 })
+        spring('#o-bk2', T[36] - 0.02, { rotation: 20, y: -80 })
+        tl.to(['#o-bk1', '#o-bk2'], { y: -14, duration: 0.45, yoyo: true, repeat: 1, ease: 'sine.inOut' }, T[38])
+        fadeIn('#mi2b', T[38])
+
+        // ---------- 3. page pushes left: the grains up close; ten minutes on the chrono; the marks, until the evening ----------
+        kb('#mac-img', X.s3, X.s4, 1.05, 1.42)
+        const chr3 = { v: 0 }
+        tl.fromTo(chr3, { v: 0 }, { v: 600, duration: T[44] + 0.5 - T[40], ease: 'power1.in', immediateRender: false, onUpdate: () => { $('chr3').textContent = mmss(chr3.v) } }, T[40])
+        tl.fromTo('#tfill3', { scaleX: 0 }, { scaleX: 1, duration: T[44] + 0.5 - T[40], ease: 'power1.in' }, T[40])
+        tl.to('#chr3', { color: RED, duration: 0.15 }, T[44] + 0.45)
+        spring('#o-knee', T[51] - 0.1, { y: 120 })
+        tl.fromTo('#o-knee i', { opacity: 0, scale: 0 }, { opacity: 0.9, scale: 1, duration: 0.25, ease: 'back.out(2)', stagger: 0.06 }, T[53] - 0.05)
+        stamp('#o-soir', T[55] - 0.05, -7)
+        shake(T[55] + 0.13)
+
+        // ---------- 4. page pushes up: N° 2 the rigoise swings down on an open palm, in front of the whole class ----------
+        tl.fromTo('#sun4', { scale: 0.7 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)', immediateRender: false }, X.s4 + 0.05)
+        tl.fromTo('#o-hand', { y: 420 }, { y: 0, duration: 0.55, ease: 'expo.out', immediateRender: false }, X.s4 + 0.05)
+        spring('#n2', T[57] + 0.05, { rotation: -10 })
+        tl.fromTo('#o-rig', { autoAlpha: 0, x: 420, rotation: 30 }, { autoAlpha: 1, x: 0, rotation: 30, duration: 0.45, ease: 'expo.out' }, T[62] - 0.1)
+        const cnt = { v: 0 }
+        const HITS = [T[64], T[67], T[70]]
+        HITS.forEach((h, i) => {
+          tl.fromTo('#o-rig', { rotation: 30 }, { rotation: -31, duration: 0.11, ease: 'power3.in', immediateRender: false }, h - 0.11)
+          tl.to('#o-rig', { rotation: 30, duration: 0.3, ease: 'power2.out' }, h)
+          tl.fromTo('#o-hand', { y: 0 }, { y: 18, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, h)
+          shake(h)
+        })
+        spring('#o-cnt', HITS[0], { y: 30 })
+        tl.fromTo(cnt, { v: HITS[0] }, { v: HITS[2] + 0.01, duration: HITS[2] - HITS[0] + 0.01, ease: 'none', immediateRender: false, onUpdate: () => { $('cnt').textContent = '×' + (cnt.v >= HITS[2] ? 3 : cnt.v >= HITS[1] ? 2 : 1) } }, HITS[0])
+        for (let i = 0; i < 7; i++) {
+          const h = el('div', 'hk obj', null, $('o-heads'))
+          h.innerHTML = '<svg viewBox="0 0 100 100"><use href="#kid" /><circle cx="43" cy="30" r="3.4" fill="#fff" /><circle cx="57" cy="30" r="3.4" fill="#fff" /></svg>'
+          h.style.left = 70 + i * 137 + 'px'
+          h.style.top = '1430px'
+          spring(h, T[71] - 0.08 + i * 0.05, { y: 60 })
+        }
+        fadeIn('#mi4', T[72])
+
+        // ---------- 5. page pushes left: N° 3 the ruler on the fingertips; N° 4 ears pulled; N° 5 arm pinched ----------
+        let ticks = ''
+        for (let x = 20; x <= 600; x += 20) ticks += '<line x1="' + x + '" y1="4" x2="' + x + '" y2="' + (x % 100 === 0 ? 40 : 24) + '" />'
+        $('ticks').innerHTML = ticks
+        tl.fromTo('#o-fing', { y: 360 }, { y: 0, duration: 0.55, ease: 'expo.out', immediateRender: false }, X.s5 + 0.05)
+        spring('#n3', T[75] + 0.05, { rotation: -10 })
+        tl.fromTo('#o-rul', { autoAlpha: 0, x: -500, rotation: 12 }, { autoAlpha: 1, x: 0, rotation: 12, duration: 0.4, ease: 'expo.out' }, T[76] - 0.1)
+        ;[T[79], T[81]].forEach((h) => {
+          tl.fromTo('#o-rul', { rotation: 12 }, { rotation: -3, duration: 0.1, ease: 'power3.in', immediateRender: false }, h - 0.1)
+          tl.to('#o-rul', { rotation: 12, duration: 0.3, ease: 'power2.out' }, h)
+          tl.fromTo('#o-fing', { scaleY: 1 }, { scaleY: 0.94, transformOrigin: '50% 100%', duration: 0.06, yoyo: true, repeat: 1, immediateRender: false }, h)
+          shake(h)
+        })
+        spring('#c4', T[82] - 0.1, { rotation: -8 })
+        spring('#c5', T[85] - 0.1, { rotation: 8 })
+
+        // ---------- 6. iris onto the schoolyard: N° 6 on your knees in the sun while the others play ----------
+        unfold('#o-cour', X.s6 + 0.15)
+        kb('#cour-img', X.s6, X.s7, 1.05, 1.2)
+        let rays = ''
+        for (let i = 0; i < 12; i++) rays += '<rect x="94" y="4" width="12" height="40" rx="6" transform="rotate(' + i * 30 + ' 100 100)" />'
+        $('rays').innerHTML = rays
+        spring('#o-sol', T[90] - 0.12, { rotation: -60 })
+        tl.fromTo('#o-sol', { rotation: 0 }, { rotation: 90, duration: X.s7 - T[90] + 0.4, ease: 'none', immediateRender: false }, T[90] + 0.4)
+        tl.fromTo('#o-sol', { scale: 1 }, { scale: 1.15, duration: 0.15, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T[91])
+        spring('#n6', X.s6 + 0.45, { rotation: -10 })
+        fadeIn('#mi6', X.s6 + 0.55)
+        tl.fromTo('#o-ball', { autoAlpha: 0, y: -400 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'bounce.out' }, T[95] - 0.1)
+        tl.to('#o-ball', { y: -110, duration: 0.25, yoyo: true, repeat: Math.max(1, Math.floor((X.s7 - T[95] - 0.6) / 0.25)), ease: 'power1.out' }, T[95] + 0.45)
+
+        // ---------- 7. page pushes up: N° 7 a hundred times the same line; the last one is the one you hear ----------
+        const LINE = 'Je ne bavarderai plus en classe.'
+        for (let k = 0; k < 12; k++) {
+          const h = el('div', 'hw', LINE, $('hwbox'))
+          h.style.top = 44 + k * 70 + 'px'
+          if (k === 11) h.style.color = RED
+          const cover = el('u', null, null, h)
+          const t0 = k < 11 ? X.s7 + 0.25 + k * 0.17 : T[108] - 0.05
+          tl.fromTo(cover, { scaleX: 1 }, { scaleX: 0, duration: k < 11 ? 0.22 : T[113] + 0.25 - t0, ease: 'none' }, t0)
+        }
+        spring('#o-x100', X.s7 + 0.1, { rotation: 20 })
+        spring('#n7', X.s7 + 0.2, { rotation: -10 })
+        const x100 = { v: 1 }
+        tl.fromTo(x100, { v: 1 }, { v: 100, duration: X.s8 - 0.35 - (X.s7 + 0.25), ease: 'power1.in', immediateRender: false, onUpdate: () => { $('x100').textContent = '×' + Math.round(x100.v) } }, X.s7 + 0.25)
+        tl.fromTo('#o-x100', { scale: 1 }, { scale: 1.12, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, X.s8 - 0.4)
+        cam('#s7', T[108], X.s8 - T[108], 1.08, '540px 1500px', 'power1.inOut')
+
+        // ---------- 8. orange flood out of the counter: N° 8 speaking Creole — struck out, PUNI ----------
+        tl.fromTo('#sun8', { scale: 0.7 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)', immediateRender: false }, X.s8)
+        spring('#o-krey', X.s8 + 0.05, { rotation: -14 })
+        spring('#n8', T[116] - 0.05, { rotation: -10 })
+        fadeIn('#mi8', T[118])
+        tl.fromTo('#o-strike', { scaleX: 0 }, { scaleX: 1, transformOrigin: '0% 50%', duration: 0.18, ease: 'power3.out' }, T[121] - 0.05)
+        stamp('#o-puni', T[122] - 0.05, -8)
+        shake(T[122] + 0.13)
+
+        // ---------- 9. page pushes left: N° 9 walking home from school to a second punishment ----------
+        spring('#o-sch', X.s9 + 0.05, { y: 80 })
+        spring('#sun9', X.s9 + 0.12, {})
+        spring('#o-house', X.s9 + 0.18, { y: 80 })
+        spring('#n9', T[124] - 0.05, { rotation: -10 })
+        tl.fromTo('#o-path', { scaleX: 0 }, { scaleX: 1, transformOrigin: '0% 50%', duration: 0.5, ease: 'power2.out' }, T[125] - 0.05)
+        tl.fromTo('#o-walk', { autoAlpha: 0, x: 0 }, { autoAlpha: 1, x: 0, duration: 0.1 }, T[125] - 0.05)
+        tl.to('#o-walk', { x: 330, duration: T[127] - T[125] + 0.2, ease: 'power1.inOut' }, T[125])
+        tl.to('#o-walk', { autoAlpha: 0, scale: 0.4, duration: 0.2 }, T[127] + 0.2)
+        stamp('#o-x2', T[129] - 0.05, -6)
+        shake(T[129] + 0.13)
+        tl.fromTo('#o-house', { rotation: 0 }, { rotation: 6, duration: 0.07, yoyo: true, repeat: 5, ease: 'sine.inOut', immediateRender: false }, T[134] - 0.05)
+        fadeIn('#mi9', T[131])
+
+        // ---------- 10. iris onto a 1935 classroom: the old school; handed down the generations ----------
+        unfold('#o-1935', X.s10 + 0.15)
+        kb('#old-img', X.s10, X.s11, 1.05, 1.18)
+        spring('#o-c1935', X.s10 + 0.55, { y: 20 })
+        tl.fromTo('#tbar10', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2 }, T[149] - 0.1)
+        tl.fromTo('#tfill10', { scaleX: 0 }, { scaleX: 1, duration: T[161] - T[149], ease: 'none' }, T[149])
+        spring('#g3', T[149] - 0.1, { y: 40 })
+        spring('#g2', T[152] - 0.1, { y: 40 })
+        spring('#g1', T[158] - 0.1, { y: 40 })
+
+        // ---------- 11. page pushes up: the 2001 law — INTERDIT; but the rigoise and the corn are still there ----------
+        tl.fromTo('#o-doc h3', { scale: 1 }, { scale: 1.08, transformOrigin: '0% 50%', duration: 0.15, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T[164])
+        stamp('#o-seal', T[168] - 0.05, -12)
+        shake(T[168] + 0.13)
+        tl.fromTo('#mk', { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: 'power2.out' }, T[170] - 0.05)
+        fadeIn('#mi11', T[175])
+        tl.to(['#o-doc', '#o-seal'], { opacity: 0.55, duration: 0.4 }, T[175])
+        tl.fromTo('#o-rig11', { autoAlpha: 0, x: -760, rotation: -6 }, { autoAlpha: 1, x: 0, rotation: -6, duration: 0.5, ease: 'expo.out' }, T[179] - 0.1)
+        rain('rain11', 9, 560, 990, 1470, 1560, T[181] - 0.1, 0.45)
+
+        // ---------- 12. black flood out of the seal, held through the scratch: the lessons fade, the corn stays — JAMAIS ----------
+        tl.fromTo('#o-nbm', { rotation: -6 }, { rotation: -3, duration: 0.6, ease: 'back.out(1.6)', immediateRender: false }, X.bil + HOLDB)
+        tl.to(['#l1', '#l2', '#l3', '#l4', '#l5'], { opacity: 0.12, y: -22, filter: blur(6), duration: 0.5, stagger: 0.08, ease: 'power2.in' }, T[188])
+        spring('#sun12', T[190] - 0.12, {})
+        spring('#o-k12', T[190] - 0.06, { y: 120 })
+        stamp('#o-jam', T[192] - 0.05, -8)
+        shake(T[192] + 0.13)
+        cam('#s12', T[192] + 0.2, X.s13 - T[192] - 0.2, 1.05, '790px 1100px', 'power1.out')
+
+        // ---------- 13. a blank slate « Ma punition : » and the nine punishments to choose from; where to answer ----------
+        tl.fromTo('#o-recap span', { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.05 }, X.s13 + 0.15)
+        slap('#o-slate', X.s13 + 0.05, -3)
+        tl.fromTo('#caret13', { opacity: 1 }, { opacity: 0, duration: 0.3, yoyo: true, repeat: Math.floor((END - X.s13) / 0.3), ease: 'steps(1)', immediateRender: false }, X.s13)
+        spring('#o-bub', T[199] - 0.1, {})
+        spring('#o-arrow', T[201] - 0.02, { rotation: -30 })
+        const left = END - T[201] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[201] + 0.5)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
