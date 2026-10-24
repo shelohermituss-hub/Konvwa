@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <!--
       « Ne balayez jamais la nuit » — les croyances qu'on répète en Haïti, style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
-      accroche en viseur de caméra (balai qui balaie sur un disque orange, horloge qui monte à 21:00, lune), une croyance numérotée par scène,
+      accroche en viseur de caméra (le vieil homme détouré dès la première image, balai qui balaie, horloge qui monte à 21:00, lune), une croyance numérotée par scène,
       fin « partager un savoir » : une note vide « On me répétait : » à remplir en commentaire.
     -->
     <style>
@@ -40,96 +40,65 @@
       .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
       .bubble svg { width: 60px; height: 60px; }
       .arrow { position: absolute; width: 150px; height: 110px; }
-      .tbar { position: absolute; height: 30px; border-radius: 15px; background: #cfcfcf; overflow: hidden; }
-      .tbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #F05A28; transform-origin: 0 50%; }
       .tlab { position: absolute; font-weight: 800; font-size: 46px; }
       #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
       #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
       #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
-      /* --- viseur de caméra (accroche), disques orange, mots fantômes, micro-typo --- */
+      /* --- viseur de caméra (accroche), mots fantômes, micro-typo --- */
       .hud { position: absolute; inset: 0; pointer-events: none; z-index: 12; }
       .hud .cn { position: absolute; width: 60px; height: 60px; border: 0 solid #141414; }
       .hud .rec { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
       .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
       .hud .fps { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
-      .sun { position: absolute; border-radius: 50%; background: #F05A28; }
-      .ring3 { position: absolute; border-radius: 50%; border: 3px solid rgba(20, 20, 20, 0.35); }
       .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
       .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; white-space: nowrap; }
       .counter2 { position: absolute; left: 0; right: 0; text-align: center; }
       .counter2 small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
       .counter2 b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #141414; font-variant-numeric: tabular-nums; }
-      /* --- croyances : balai, maison, liste, enfant, alliances, nuit, notes, fer, main, miroir, Venn, cadenas, note à remplir --- */
+      /* --- croyances : uniquement des photos et des détourages réels ; texte, pastilles, tampons et croix par-dessus --- */
       .cut { position: absolute; }
       .cut img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.28)); }
-      .moon { position: absolute; width: 170px; height: 170px; }
-      .star { position: absolute; width: 34px; height: 34px; }
       .shout { position: absolute; padding: 18px 40px; background: #fff; border: 7px solid #141414; border-radius: 40px; font-weight: 900; font-size: 64px; letter-spacing: -0.02em; color: #141414; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); white-space: nowrap; }
       .shout::after { content: ""; position: absolute; left: 70px; bottom: -40px; border-width: 36px 36px 0 0; border-style: solid; border-color: #141414 transparent transparent transparent; }
       .shout.r::after { left: auto; right: 70px; border-width: 36px 0 0 36px; }
       .ico { position: absolute; }
-      .coin { position: absolute; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe48a, #e0a51e 60%, #a8740d); box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.35), 0 10px 18px rgba(0, 0, 0, 0.25); color: #7a5208; font-weight: 900; font-size: 46px; display: flex; align-items: center; justify-content: center; }
-      .list { position: absolute; width: 760px; height: 960px; border-radius: 24px; background: #fffdf7; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.18); transform-origin: 50% 0%; padding: 50px 56px; box-sizing: border-box; }
-      .list .row { display: flex; align-items: center; gap: 22px; height: 96px; }
-      .list .row b { width: 64px; font-family: "Caveat", cursive; font-size: 58px; color: #D21034; }
-      .list .row i { height: 22px; border-radius: 11px; background: #e4e0d5; }
-      .gauge { position: absolute; width: 70px; height: 520px; border-radius: 35px; background: #d6d6d6; overflow: hidden; box-shadow: inset 0 0 0 6px #fff; }
-      .gauge i { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: #F05A28; transform-origin: 50% 100%; }
-      .arcbox { position: absolute; width: 760px; height: 260px; }
-      .arcbox u { position: absolute; inset: -10px; background: #E7E7E7; transform-origin: 100% 50%; }
-      .drop { position: absolute; width: 26px; height: 40px; }
-      .env { position: absolute; width: 420px; height: 280px; border-radius: 14px; background: #fff; border: 14px solid #141414; box-sizing: border-box; box-shadow: 0 30px 50px rgba(0, 0, 0, 0.25); overflow: hidden; }
-      .env::before { content: ""; position: absolute; left: -20px; right: -20px; top: -150px; height: 300px; border-bottom: 10px solid #141414; transform: rotate(0deg); border-radius: 0 0 50% 50%; }
-      .night { position: absolute; border-radius: 30px; background: radial-gradient(ellipse at 50% 30%, #2a3a6a, #121a33 70%); box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3); overflow: hidden; }
-      .notes { position: absolute; font-size: 130px; font-weight: 900; color: #141414; white-space: nowrap; }
-      .ghostie { position: absolute; width: 170px; height: 220px; opacity: 0.85; }
-      .nosign { position: absolute; width: 420px; height: 420px; }
-      .steam { position: absolute; width: 260px; height: 220px; }
+      .coin { position: absolute; width: 110px; height: 110px; }
+      .coin img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.3)); }
+      .num { position: absolute; width: 92px; height: 92px; border-radius: 50%; background: #141414; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 44px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); }
+      .notes { position: absolute; font-size: 130px; font-weight: 900; color: #fff; white-space: nowrap; text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+      .haze { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%); }
       .split { position: absolute; display: flex; border-radius: 26px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); font-weight: 900; font-size: 64px; color: #fff; }
       .split span { padding: 14px 34px; }
-      .mirror { position: absolute; width: 360px; height: 560px; }
-      .cloth { position: absolute; width: 380px; height: 470px; transform-origin: 50% 0%; border-radius: 10px 10px 30px 30px; background: repeating-linear-gradient(45deg, #D21034 0 30px, #F05A28 30px 60px, #FFD447 60px 90px, #00209F 90px 120px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
       .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
-      .venn { position: absolute; width: 440px; height: 440px; border-radius: 50%; display: flex; align-items: center; font-weight: 900; font-size: 44px; letter-spacing: 0.04em; box-sizing: border-box; }
-      .q { position: absolute; width: 220px; height: 220px; border-radius: 50%; background: #141414; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 150px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); }
-      .bulb { position: absolute; width: 150px; height: 190px; }
-      .lock { position: absolute; width: 190px; height: 230px; filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.3)); }
-      .note { position: absolute; width: 840px; height: 360px; box-sizing: border-box; padding: 34px 50px; background: #FFD447; border-radius: 10px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22); font-family: "Caveat", cursive; font-weight: 700; color: #141414; }
-      .note small { display: block; font-size: 92px; line-height: 1; color: #5a4a00; }
+      .note { position: absolute; width: 680px; height: 615px; }
+      .note img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.25)); }
+      .note div { position: absolute; left: 80px; right: 60px; top: 190px; font-family: "Caveat", cursive; font-weight: 700; color: #141414; }
+      .note small { display: block; font-size: 92px; line-height: 1; color: #4a3a00; }
       .note em { display: inline-block; width: 9px; height: 120px; background: #141414; margin-top: 20px; }
       .recap { position: absolute; left: 50px; right: 50px; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 14px; }
-      .hk { position: absolute; width: 110px; height: 128px; }
-      .hk svg { width: 100%; height: 100%; display: block; }
       .recap span { padding: 8px 22px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 32px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12); white-space: nowrap; }
       .recap span b { color: #D21034; margin-right: 8px; }
+      .xmark { position: absolute; }
     </style>
   </head>
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="62.9" data-width="1080" data-height="1920">
       <svg width="0" height="0" style="position: absolute">
         <defs>
-          <symbol id="broom" viewBox="0 0 120 420"><rect x="54" y="0" width="12" height="270" rx="6" fill="#b58a52" /><path d="M30 262 L90 262 L112 410 L8 410 Z" fill="#d9b35b" /><path d="M30 262 L90 262 L94 290 L26 290 Z" fill="#8a5a2b" /><g stroke="#b58a3a" stroke-width="3"><path d="M40 292 L28 408" /><path d="M52 292 L48 408" /><path d="M64 292 L68 408" /><path d="M76 292 L88 408" /></g></symbol>
-          <symbol id="star4" viewBox="0 0 40 40"><path d="M20 0 L24 16 L40 20 L24 24 L20 40 L16 24 L0 20 L16 16 Z" fill="#1d2b53" /></symbol>
-          <symbol id="star4y" viewBox="0 0 40 40"><path d="M20 0 L24 16 L40 20 L24 24 L20 40 L16 24 L0 20 L16 16 Z" fill="#FFC93C" stroke="#c98a00" stroke-width="2" /></symbol>
-          <symbol id="kid" viewBox="0 0 100 100"><circle cx="50" cy="32" r="20" fill="#3a3a3a" /><path d="M14 100 C 16 64, 84 64, 86 100 Z" fill="#3a3a3a" /></symbol>
-          <symbol id="dropS" viewBox="0 0 26 40"><path d="M13 0 C 18 12, 26 20, 26 27 A 13 13 0 0 1 0 27 C 0 20, 8 12, 13 0 Z" fill="#3d7bd9" /></symbol>
+          <symbol id="xx" viewBox="0 0 300 300"><path d="M30 30 L270 270 M270 30 L30 270" stroke="#D21034" stroke-width="26" stroke-linecap="round" /></symbol>
         </defs>
       </svg>
       <div id="world">
         <div class="grid" id="grid"></div>
-        <!-- 1. hook: viewfinder; a straw broom sweeps on the orange sun while the clock runs to 21:00 and the moon rises; JAMAIS LA NUIT; « Pa bale lannwit ! » -->
+        <!-- 1. hook: viewfinder; the old man (client's photo, cut out) rises into frame, a straw broom sweeps beside him, the clock runs to 21:00, the moon appears; JAMAIS LA NUIT; « Pa bale lannwit ! » -->
         <div class="scene" id="s1">
           <div class="ghost" style="top: 1480px; font-size: 330px">LANNWIT</div>
-          <div class="sun obj" id="sun1" style="left: 190px; top: 760px; width: 700px; height: 700px"></div>
-          <div class="ring3 obj" id="rg1" style="left: 140px; top: 710px; width: 800px; height: 800px"></div>
-          <svg class="moon obj" id="o-moon" viewBox="0 0 100 100" style="left: 790px; top: 700px"><path d="M62 6 A 46 46 0 1 0 94 74 A 38 38 0 1 1 62 6 Z" fill="#1d2b53" /></svg>
-          <svg class="star obj" id="st1" style="left: 160px; top: 760px"><use href="#star4" /></svg>
-          <svg class="star obj" id="st2" style="left: 900px; top: 940px"><use href="#star4" /></svg>
-          <svg class="star obj" id="st3" style="left: 120px; top: 1200px"><use href="#star4" /></svg>
-          <div class="cut obj" id="o-broom" style="left: 459px; top: 700px; width: 162px; height: 820px; transform-origin: 50% 0%"><img src="assets/img/balai-cut.png" alt="" style="transform: rotate(180deg)" /></div>
+          <div class="cut obj" id="o-moon" style="left: 100px; top: 600px; width: 150px; height: 180px"><img src="assets/img/lune-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-broom" style="left: 880px; top: 740px; width: 130px; height: 660px; transform-origin: 50% 0%"><img src="assets/img/balai-cut.png" alt="" style="transform: rotate(180deg)" /></div>
+          <div class="cut obj" id="o-man" style="left: 50px; top: 1110px; width: 960px; height: 763px; transform-origin: 50% 100%"><img src="assets/img/vieil-homme-cut.png" alt="" /></div>
           <div class="counter2 obj" id="o-clk" style="top: 545px"><small>IL EST</small><b id="clk">18:00</b></div>
-          <div class="stamp sm obj" id="o-jam1" style="left: 60px; top: 1470px">JAMAIS LA NUIT</div>
-          <div class="shout obj" id="o-pb1" style="left: 60px; top: 1120px">Pa bale lannwit !</div>
+          <div class="stamp sm obj" id="o-jam1" style="left: 300px; top: 790px">JAMAIS LA NUIT</div>
+          <div class="shout obj" id="o-pb1" style="left: 300px; top: 950px">Pa bale lannwit !</div>
           <div class="hud" id="hud">
             <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
             <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
@@ -139,153 +108,142 @@
             <div class="fps" style="top: 1700px; right: 130px">HAÏTI · N° 1</div>
           </div>
         </div>
-        <!-- 2. after sunset, sweeping chases the luck and the money out of the house -->
+        <!-- 2. a real Haitian house (Île-à-Vache) goes dark after sunset; a broom sweeps at the door; luck and coins leave -->
         <div class="scene" id="s2">
           <div class="ghost" style="top: 1500px; font-size: 330px">CHANCE</div>
-          <div class="sun obj" id="sun2" style="left: 250px; top: 650px; width: 580px; height: 580px"></div>
-          <svg class="ico obj" id="o-house" viewBox="0 0 300 300" style="left: 290px; top: 660px; width: 500px; height: 500px"><path d="M20 140 L150 34 L280 140 Z" fill="#D21034" /><rect x="50" y="136" width="200" height="140" fill="#fffdf7" stroke="#141414" stroke-width="8" /><rect x="124" y="180" width="52" height="96" fill="#2b2b2b" /><rect x="72" y="166" width="36" height="36" fill="#1d2b53" stroke="#141414" stroke-width="5" /><rect x="192" y="166" width="36" height="36" fill="#1d2b53" stroke="#141414" stroke-width="5" /></svg>
-          <svg class="ico obj" id="o-br2" viewBox="0 0 120 420" style="left: 440px; top: 960px; width: 90px; height: 315px; transform-origin: 50% 0%"><use href="#broom" /></svg>
+          <div class="photo obj" id="o-house" style="left: 70px; top: 640px; width: 940px; height: 760px"><img id="house-img" src="assets/img/maison.jpg" alt="" style="transform-origin: 40% 70%" /></div>
+          <div class="cut obj" id="o-br2" style="left: 470px; top: 1020px; width: 80px; height: 400px; transform-origin: 50% 0%"><img src="assets/img/balai-cut.png" alt="" style="transform: rotate(180deg)" /></div>
+          <div class="chip obj" id="o-luck" style="left: 420px; top: 1180px">LA CHANCE</div>
           <div id="fly2"></div>
-          <div class="micro" id="mi2" style="left: 0; right: 0; top: 1300px; text-align: center">APRÈS LE COUCHER DU SOLEIL</div>
+          <div class="micro" id="mi2" style="left: 0; right: 0; top: 1430px; text-align: center">APRÈS LE COUCHER DU SOLEIL</div>
         </div>
-        <!-- 3. and the list is long: a list unrolls, nine lines -->
+        <!-- 3. and the list is long: an old handwritten page unrolls, numbers 1 to 11 pop on it -->
         <div class="scene" id="s3">
           <div class="ghost" style="top: 1500px; font-size: 330px">LISTE</div>
-          <div class="list obj" id="o-list" style="left: 160px; top: 600px"><div id="rows"></div></div>
+          <div class="photo obj" id="o-list" style="left: 160px; top: 600px; width: 760px; height: 1010px; transform-origin: 50% 0%"><img src="assets/img/papier.jpg" alt="" /><div id="nums"></div></div>
         </div>
-        <!-- 4. N° 2 do not step over a sleeping child: it will not grow -->
+        <!-- 4. N° 2 a child asleep on her mother's shoulder (Haïti): do not step over a sleeping child -->
         <div class="scene" id="s4">
           <div class="ghost" style="top: 1500px; font-size: 330px">TIMOUN</div>
-          <div class="nchip obj" id="n2" style="left: 90px; top: 640px">N° 2</div>
-          <div class="arcbox obj" id="o-arc" style="left: 100px; top: 760px"><svg viewBox="0 0 760 260" width="760" height="260"><path d="M20 250 C 160 -40, 600 -40, 740 250" fill="none" stroke="#141414" stroke-width="8" stroke-dasharray="4 22" stroke-linecap="round" /><path d="M716 214 L742 252 L752 206" fill="none" stroke="#141414" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></svg><u id="arcc"></u></div>
-          <svg class="ico obj" id="o-kid" viewBox="0 0 640 220" style="left: 120px; top: 1010px; width: 640px; height: 220px"><rect x="10" y="170" width="620" height="40" rx="12" fill="#c9a36a" /><circle cx="90" cy="118" r="48" fill="#5b3a26" /><path d="M140 170 C 150 100, 520 96, 560 170 Z" fill="#F05A28" /><rect x="520" y="140" width="80" height="30" rx="15" fill="#5b3a26" /><path d="M70 96 C 80 80, 108 80, 116 94" fill="none" stroke="#2b1a10" stroke-width="5" stroke-linecap="round" /></svg>
-          <div class="micro" id="mi4" style="left: 120px; top: 1250px">ZZZ…</div>
-          <div class="tlab obj" id="t4" style="left: 860px; top: 650px; font-size: 30px">TAILLE</div>
-          <div class="gauge obj" id="o-gauge" style="left: 880px; top: 700px"><i id="gfill"></i></div>
-          <div class="stamp sm obj" id="o-stop" style="left: 560px; top: 1330px">STOP</div>
+          <div class="photo obj" id="o-kid" style="left: 70px; top: 640px; width: 940px; height: 700px"><img id="kid-img" src="assets/img/enfant.jpg" alt="" style="transform-origin: 30% 40%" /></div>
+          <div class="nchip obj" id="n2" style="left: 90px; top: 600px">N° 2</div>
+          <div class="micro" id="mi4" style="left: 90px; top: 1370px">ZZZ…</div>
+          <div class="stamp sm obj" id="o-stop" style="left: 600px; top: 1260px">STOP</div>
         </div>
         <!-- 5. N° 3 eating from the pot: rain on your wedding day -->
         <div class="scene" id="s5">
           <div class="ghost" style="top: 1500px; font-size: 330px">CHODYÈ</div>
           <div class="photo obj" id="o-pot" style="left: 70px; top: 640px; width: 520px; height: 700px"><img id="pot-img" src="assets/img/marmite.jpg" alt="" style="transform-origin: 50% 40%" /></div>
+          <div class="photo obj" id="o-rain" style="left: 620px; top: 660px; width: 390px; height: 600px"><img id="rain-img" src="assets/img/pluie.jpg" alt="" style="transform-origin: 50% 30%" /></div>
+          <div class="cut obj" id="o-rings" style="left: 590px; top: 1010px; width: 440px; height: 343px"><img src="assets/img/alliances-cut.png" alt="" /></div>
           <div class="nchip obj" id="n3" style="left: 90px; top: 1370px">N° 3</div>
-          <div class="sun obj" id="sun5" style="left: 600px; top: 860px; width: 400px; height: 400px"></div>
-          <svg class="ico obj" id="o-rings" viewBox="0 0 200 140" style="left: 640px; top: 960px; width: 320px; height: 224px"><circle cx="78" cy="78" r="48" fill="none" stroke="#FFD447" stroke-width="16" /><circle cx="124" cy="62" r="48" fill="none" stroke="#fff" stroke-width="16" /><path d="M112 4 L124 18 L136 4 Z" fill="#9fd3ff" /></svg>
-          <div id="rain5"></div>
-          <div class="chip obj" id="o-jourj" style="left: 690px; top: 1290px">MARIAGE</div>
+          <div class="chip obj" id="o-jourj" style="left: 690px; top: 1370px">MARIAGE</div>
         </div>
-        <!-- 6. iris onto a black witch moth: N° 4 bad news is coming -->
+        <!-- 6. iris onto a black witch moth: N° 4 an old envelope, bad news -->
         <div class="scene" id="s6">
           <div class="ghost" style="top: 1500px; font-size: 330px">PAPIYON</div>
           <div class="photo obj" id="o-moth" style="left: 70px; top: 620px; width: 940px; height: 529px"><img id="moth-img" src="assets/img/papillon.jpg" alt="" style="transform-origin: 50% 50%" /></div>
           <div class="nchip obj" id="n4" style="left: 90px; top: 1180px">N° 4</div>
           <div class="micro" id="mi6" style="left: 250px; top: 1196px">« PAPIYON NWA » · ASCALAPHA ODORATA</div>
-          <div class="env obj" id="o-env" style="left: 560px; top: 1250px"></div>
+          <div class="cut obj" id="o-env" style="left: 520px; top: 1240px; width: 460px; height: 325px"><img src="assets/img/lettre-cut.png" alt="" /></div>
         </div>
-        <!-- 7. night flood: N° 5 someone calls your name in the dark — do not answer -->
+        <!-- 7. night flood: N° 5 a real starry sky, the moon, a Haitian blue door at night; « Ti Jo ! » — « Wi ? » crossed out -->
         <div class="scene" id="s7">
           <div class="ghost" style="top: 1500px; font-size: 330px">SILANS</div>
-          <div class="night obj" id="o-night" style="left: 70px; top: 600px; width: 940px; height: 820px">
-            <svg viewBox="0 0 940 820" width="940" height="820"><path d="M820 70 A 60 60 0 1 0 870 170 A 50 50 0 1 1 820 70 Z" fill="#FFE07A" /><g fill="#fff" opacity="0.8"><circle cx="120" cy="90" r="4" /><circle cx="260" cy="160" r="3" /><circle cx="520" cy="80" r="4" /><circle cx="680" cy="210" r="3" /><circle cx="90" cy="300" r="3" /></g><rect x="330" y="300" width="280" height="520" fill="#5a3a22" /><rect x="350" y="320" width="240" height="500" fill="#7a4f2c" /><rect x="586" y="320" width="12" height="500" fill="#FFD447" opacity="0.9" /><circle cx="560" cy="580" r="12" fill="#FFD447" /></svg>
-          </div>
+          <div class="photo obj" id="o-night" style="left: 70px; top: 600px; width: 940px; height: 860px"><img id="sky-img" src="assets/img/ciel.jpg" alt="" style="transform-origin: 50% 30%; filter: brightness(1.5) contrast(1.15)" /></div>
+          <div class="cut obj" id="o-moon7" style="left: 800px; top: 640px; width: 160px; height: 192px"><img src="assets/img/lune-cut.png" alt="" style="filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.35))" /></div>
+          <div class="photo obj" id="o-door" style="left: 330px; top: 930px; width: 420px; height: 500px; border-radius: 20px"><img src="assets/img/porte.jpg" alt="" style="object-position: 45% 60%; filter: brightness(0.5) saturate(0.75)" /></div>
           <div class="nchip obj" id="n5" style="left: 90px; top: 640px">N° 5</div>
-          <div class="shout obj" id="o-call" style="left: 110px; top: 840px">Ti Jo !</div>
-          <div class="shout r obj" id="o-wi" style="left: 600px; top: 1180px">Wi ?</div>
-          <svg class="ico obj" id="o-xwi" viewBox="0 0 300 200" style="left: 580px; top: 1150px; width: 300px; height: 200px"><path d="M20 20 L280 180 M280 20 L20 180" stroke="#D21034" stroke-width="22" stroke-linecap="round" /></svg>
+          <div class="shout obj" id="o-call" style="left: 110px; top: 780px">Ti Jo !</div>
+          <div class="shout r obj" id="o-wi" style="left: 600px; top: 1230px">Wi ?</div>
+          <svg class="xmark obj" id="o-xwi" viewBox="0 0 300 300" style="left: 590px; top: 1170px; width: 280px; height: 280px"><use href="#xx" /></svg>
         </div>
-        <!-- 8. N° 6 whistling at night calls the spirits -->
+        <!-- 8. N° 6 whistling at night calls the spirits: a misty forest, the fog rises -->
         <div class="scene" id="s8">
           <div class="ghost" style="top: 1500px; font-size: 330px">LESPRI</div>
+          <div class="photo obj" id="o-fog" style="left: 70px; top: 620px; width: 940px; height: 820px"><img id="fog-img" src="assets/img/brume.jpg" alt="" style="transform-origin: 50% 50%" /><div id="hazes"></div></div>
           <div class="nchip obj" id="n6" style="left: 90px; top: 640px">N° 6</div>
-          <div class="notes obj" id="o-notes" style="left: 260px; top: 760px">♪ ♫ ♪</div>
-          <svg class="nosign obj" id="o-no" viewBox="0 0 420 420" style="left: 330px; top: 660px"><circle cx="210" cy="210" r="180" fill="none" stroke="#D21034" stroke-width="34" /><path d="M84 84 L336 336" stroke="#D21034" stroke-width="34" /></svg>
-          <div id="ghosts8"></div>
+          <div class="notes obj" id="o-notes" style="left: 270px; top: 720px">♪ ♫ ♪</div>
+          <div class="stamp sm obj" id="o-sifle" style="left: 330px; top: 980px">PA SIFLE</div>
         </div>
-        <!-- 9. N° 7 just ironed? no shower: chaud-froid -->
+        <!-- 9. N° 7 the charcoal iron; the shower crossed out; CHAUD | FROID -->
         <div class="scene" id="s9">
           <div class="ghost" style="top: 1500px; font-size: 330px">CHOFRET</div>
-          <div class="sun obj" id="sun9" style="left: 120px; top: 700px; width: 560px; height: 560px"></div>
-          <svg class="steam obj" id="o-steam" viewBox="0 0 260 220" style="left: 270px; top: 600px"><g fill="none" stroke="#9a9a9a" stroke-width="10" stroke-linecap="round"><path d="M60 210 C 30 160, 90 130, 60 80 C 40 50, 70 30, 60 10" /><path d="M130 210 C 100 160, 160 130, 130 80 C 110 50, 140 30, 130 10" /><path d="M200 210 C 170 160, 230 130, 200 80 C 180 50, 210 30, 200 10" /></g></svg>
-          <div class="cut obj" id="o-iron" style="left: 140px; top: 760px; width: 520px; height: 520px"><img src="assets/img/fer-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-iron" style="left: 80px; top: 720px; width: 560px; height: 560px"><img src="assets/img/fer-cut.png" alt="" /></div>
           <div class="nchip obj" id="n7" style="left: 90px; top: 640px">N° 7</div>
-          <svg class="ico obj" id="o-shower" viewBox="0 0 200 260" style="left: 720px; top: 760px; width: 260px; height: 338px"><path d="M40 10 L40 60 C 40 70, 50 76, 60 76 L120 76" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round" /><path d="M90 76 L170 76 L150 104 L110 104 Z" fill="#141414" /><g fill="#3d7bd9"><circle cx="118" cy="140" r="7" /><circle cx="140" cy="160" r="7" /><circle cx="122" cy="190" r="7" /><circle cx="146" cy="214" r="7" /><circle cx="124" cy="240" r="7" /></g></svg>
-          <svg class="ico obj" id="o-xsh" viewBox="0 0 300 300" style="left: 700px; top: 780px; width: 300px; height: 300px"><path d="M30 30 L270 270 M270 30 L30 270" stroke="#D21034" stroke-width="26" stroke-linecap="round" /></svg>
-          <div class="split obj" id="o-split" style="left: 230px; top: 1330px"><span style="background: #D21034">CHAUD</span><span style="background: #2a6ebb">FROID</span></div>
+          <div class="cut obj" id="o-shower" style="left: 620px; top: 720px; width: 400px; height: 377px"><img src="assets/img/douche-cut.png" alt="" /></div>
+          <svg class="xmark obj" id="o-xsh" viewBox="0 0 300 300" style="left: 670px; top: 760px; width: 300px; height: 300px"><use href="#xx" /></svg>
+          <div class="split obj" id="o-split" style="left: 230px; top: 1340px"><span style="background: #D21034">CHAUD</span><span style="background: #2a6ebb">FROID</span></div>
         </div>
-        <!-- 10. N° 8 an itchy palm: money is coming -->
+        <!-- 10. green flood: N° 8 an open palm that itches; coins pop out of it -->
         <div class="scene" id="s10">
           <div class="ghost" style="top: 1500px; font-size: 330px">LAJAN</div>
-          <div class="sun obj" id="sun10" style="left: 190px; top: 680px; width: 700px; height: 700px"></div>
-          <svg class="ico obj" id="o-hand" viewBox="0 0 200 260" style="left: 340px; top: 740px; width: 400px; height: 520px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.25))"><g fill="#8d5a3b"><rect x="38" y="104" width="128" height="140" rx="50" /><rect x="44" y="30" width="26" height="110" rx="13" /><rect x="74" y="10" width="28" height="120" rx="14" /><rect x="106" y="16" width="28" height="116" rx="14" /><rect x="138" y="40" width="26" height="100" rx="13" /><rect x="-6" y="150" width="70" height="28" rx="14" transform="rotate(-38 30 164)" /></g><path d="M70 170 C 95 160, 130 165, 150 182 M64 200 C 92 190, 120 196, 140 214" fill="none" stroke="#6a3f24" stroke-width="4" stroke-linecap="round" /></svg>
-          <svg class="ico obj" id="o-itch" viewBox="0 0 120 80" style="left: 470px; top: 1060px; width: 150px; height: 100px"><g stroke="#FFD447" stroke-width="9" stroke-linecap="round"><path d="M10 40 L40 30" /><path d="M46 60 L76 50" /><path d="M80 24 L110 14" /></g></svg>
+          <div class="cut obj" id="o-hand" style="left: 200px; top: 900px; width: 900px; height: 481px; transform-origin: 80% 70%"><img src="assets/img/paume-cut.png" alt="" /></div>
           <div class="nchip obj" id="n8" style="left: 90px; top: 640px">N° 8</div>
           <div id="coins10"></div>
         </div>
-        <!-- 11. iris onto lightning: N° 9 the mirrors get covered -->
+        <!-- 11. iris onto lightning: N° 9 a flash, and a cloth drops over the mirror -->
         <div class="scene" id="s11">
           <div class="ghost" style="top: 1500px; font-size: 330px">LORAJ</div>
           <div class="photo obj" id="o-storm" style="left: 70px; top: 620px; width: 470px; height: 700px"><img id="storm-img" src="assets/img/orage.jpg" alt="" style="transform-origin: 50% 40%" /></div>
-          <svg class="mirror obj" id="o-mirror" viewBox="0 0 360 560" style="left: 610px; top: 700px"><rect x="160" y="440" width="40" height="100" fill="#8a5a2b" /><rect x="90" y="530" width="180" height="24" rx="10" fill="#6e4520" /><ellipse cx="180" cy="230" rx="160" ry="220" fill="#8a5a2b" /><ellipse cx="180" cy="230" rx="132" ry="192" fill="#cfe6f5" /><path d="M110 120 L170 70 M110 190 L220 90" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity="0.8" /></svg>
-          <div class="cloth obj" id="o-cloth" style="left: 600px; top: 690px"></div>
+          <div class="photo obj" id="o-mirror" style="left: 580px; top: 660px; width: 430px; height: 640px"><img src="assets/img/miroir.jpg" alt="" style="object-position: 55% 50%" /></div>
+          <div class="photo obj" id="o-cloth" style="left: 560px; top: 640px; width: 470px; height: 690px; border-radius: 16px 16px 40px 40px; transform-origin: 50% 0%"><img src="assets/img/tissu.jpg" alt="" /></div>
           <div class="nchip obj" id="n9" style="left: 90px; top: 1350px">N° 9</div>
           <div class="flash" id="flash"></div>
         </div>
-        <!-- 11b. N° 10 rain and sun at once: the devil is beating his wife — a rainbow -->
+        <!-- 11b. N° 10 rain and sun at once: the devil is beating his wife — a real rainbow over the sea -->
         <div class="scene" id="s11b">
           <div class="ghost" style="top: 1500px; font-size: 330px">DYAB</div>
+          <div class="photo obj" id="o-rainbow" style="left: 70px; top: 620px; width: 940px; height: 900px"><img id="rb-img" src="assets/img/arc-en-ciel.jpg" alt="" style="transform-origin: 50% 40%; object-position: 50% 40%" /></div>
           <div class="nchip obj" id="n10" style="left: 90px; top: 640px">N° 10</div>
-          <svg class="ico obj" id="o-sun11" viewBox="0 0 200 200" style="left: 120px; top: 720px; width: 380px; height: 380px"><g id="rays11" fill="#FFB000"></g><circle cx="100" cy="100" r="54" fill="#FFC93C" stroke="#fff" stroke-width="6" /></svg>
-          <svg class="ico obj" id="o-cloud" viewBox="0 0 460 260" style="left: 520px; top: 760px; width: 460px; height: 260px"><path d="M90 240 A 80 80 0 0 1 110 90 A 110 110 0 0 1 320 70 A 90 90 0 0 1 400 240 Z" fill="#8e9bb0" /><path d="M90 240 A 80 80 0 0 1 110 90 A 110 110 0 0 1 320 70" fill="none" stroke="#fff" stroke-width="8" opacity="0.5" /></svg>
-          <div id="rain11b"></div>
-          <svg class="ico obj" id="o-rainbow" viewBox="0 0 800 400" style="left: 140px; top: 1130px; width: 800px; height: 400px"><g fill="none" stroke-width="34"><path d="M40 400 A 360 360 0 0 1 760 400" stroke="#D21034" /><path d="M74 400 A 326 326 0 0 1 726 400" stroke="#F05A28" /><path d="M108 400 A 292 292 0 0 1 692 400" stroke="#FFD447" /><path d="M142 400 A 258 258 0 0 1 658 400" stroke="#2fa36b" /><path d="M176 400 A 224 224 0 0 1 624 400" stroke="#2a6ebb" /></g></svg>
-          <div class="micro" id="mi11b" style="left: 0; right: 0; top: 1600px; text-align: center">SOLÈY + LAPLI</div>
+          <div class="chip obj" id="o-soley" style="left: 110px; top: 1380px">SOLÈY</div>
+          <div class="chip obj" id="o-lapli" style="left: 360px; top: 1380px">+ LAPLI</div>
+          <div class="micro" id="mi11b" style="left: 0; right: 0; top: 1560px; text-align: center">« SE DYAB LA K AP BAT MADANM LI »</div>
         </div>
-        <!-- 11c. night flood: N° 11 never cut your nails at night -->
+        <!-- 11c. violet flood: N° 11 fingers and a nail clipper — crossed out under the moon, PA LANNWIT -->
         <div class="scene" id="s11c">
           <div class="ghost" style="top: 1500px; font-size: 330px">ZONG</div>
-          <div class="sun obj" id="sun11c" style="left: 190px; top: 700px; width: 700px; height: 700px"></div>
-          <svg class="moon obj" id="o-moon11" viewBox="0 0 100 100" style="left: 820px; top: 640px"><path d="M62 6 A 46 46 0 1 0 94 74 A 38 38 0 1 1 62 6 Z" fill="#1d2b53" /></svg>
-          <svg class="ico obj" id="o-hand11" viewBox="0 0 200 260" style="left: 340px; top: 760px; width: 400px; height: 520px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.25))"><g fill="#8d5a3b"><rect x="38" y="104" width="128" height="140" rx="50" /><rect x="44" y="30" width="26" height="110" rx="13" /><rect x="74" y="10" width="28" height="120" rx="14" /><rect x="106" y="16" width="28" height="116" rx="14" /><rect x="138" y="40" width="26" height="100" rx="13" /><rect x="-6" y="150" width="70" height="28" rx="14" transform="rotate(-38 30 164)" /></g><g fill="#c9977a"><ellipse cx="57" cy="40" rx="9" ry="11" /><ellipse cx="88" cy="20" rx="10" ry="12" /><ellipse cx="120" cy="26" rx="10" ry="12" /><ellipse cx="151" cy="50" rx="9" ry="11" /></g></svg>
-          <svg class="ico obj" id="o-clip" viewBox="0 0 240 110" style="left: 580px; top: 820px; width: 280px; height: 128px; transform-origin: 10% 50%"><rect x="20" y="40" width="200" height="22" rx="11" fill="#9aa3ad" /><rect x="20" y="64" width="200" height="22" rx="11" fill="#7d8691" /><circle cx="196" cy="62" r="12" fill="#5a636e" /><path d="M200 50 L232 30" stroke="#5a636e" stroke-width="10" stroke-linecap="round" /></svg>
-          <svg class="ico obj" id="o-xclip" viewBox="0 0 300 300" style="left: 570px; top: 740px; width: 300px; height: 300px"><path d="M30 30 L270 270 M270 30 L30 270" stroke="#D21034" stroke-width="26" stroke-linecap="round" /></svg>
+          <div class="cut obj" id="o-moon11" style="left: 820px; top: 620px; width: 160px; height: 192px"><img src="assets/img/lune-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-hand11" style="left: -70px; top: 1000px; width: 400px; height: 922px"><img src="assets/img/doigts-cut.png" alt="" style="transform: rotate(180deg)" /></div>
+          <div class="cut obj" id="o-clip" style="left: 460px; top: 900px; width: 440px; height: 375px; transform-origin: 20% 70%"><img src="assets/img/coupe-ongles-cut.png" alt="" /></div>
+          <svg class="xmark obj" id="o-xclip" viewBox="0 0 300 300" style="left: 530px; top: 940px; width: 300px; height: 300px"><use href="#xx" /></svg>
           <div class="nchip obj" id="n11" style="left: 90px; top: 640px">N° 11</div>
-          <div class="stamp sm obj" id="o-pal" style="left: 90px; top: 1460px">PA LANNWIT</div>
+          <div class="stamp sm obj" id="o-pal" style="left: 440px; top: 1400px">PA LANNWIT</div>
         </div>
-        <!-- 12. where from: Africa and old France, passed on by our grandmothers -->
+        <!-- 12. where from: Madame Félix (Seguin, Haïti) — AFRIQUE + VIEILLE FRANCE → HAÏTI, passed on by our grandmothers -->
         <div class="scene" id="s12">
           <div class="ghost" style="top: 1500px; font-size: 330px">GRANN</div>
-          <div class="venn obj" id="v1" style="left: 110px; top: 620px; background: rgba(240, 90, 40, 0.85); color: #fff; justify-content: flex-start; padding-left: 60px">AFRIQUE</div>
-          <div class="venn obj" id="v2" style="left: 530px; top: 620px; background: rgba(0, 32, 159, 0.8); color: #fff; justify-content: flex-end; padding-right: 60px">FRANCE</div>
-          <div class="chip obj" id="o-hti" style="left: 440px; top: 806px; font-size: 40px">HAÏTI</div>
-          <div class="q obj" id="o-q" style="left: 430px; top: 700px">?</div>
-          <div id="o-heads"></div>
-          <div class="photo obj" id="o-gm" style="left: 200px; top: 1110px; width: 680px; height: 453px"><img id="gm-img" src="assets/img/grandmere.jpg" alt="" style="transform-origin: 50% 35%" /></div>
-          <div class="micro" id="mi12" style="left: 0; right: 0; top: 1590px; text-align: center">DE BOUCHE À OREILLE</div>
+          <div class="photo obj" id="o-gm" style="left: 70px; top: 620px; width: 940px; height: 627px"><img id="gm-img" src="assets/img/grandmere.jpg" alt="" style="transform-origin: 50% 35%" /></div>
+          <div class="chip obj" id="o-noone" style="left: 110px; top: 1180px; background: #141414; color: #fff">ÉCRIT NULLE PART</div>
+          <div class="chip obj" id="v1" style="left: 90px; top: 1300px; background: #1f7a4d; color: #fff; font-size: 44px">AFRIQUE</div>
+          <div class="chip obj" id="v2" style="left: 420px; top: 1300px; background: #00209F; color: #fff; font-size: 44px">+ VIEILLE FRANCE</div>
+          <div class="chip obj" id="o-hti" style="left: 360px; top: 1430px; background: #D21034; color: #fff; font-size: 52px">= HAÏTI</div>
+          <div class="micro" id="mi12" style="left: 0; right: 0; top: 1580px; text-align: center">DE BOUCHE À OREILLE</div>
         </div>
-        <!-- 13. sometimes plain common sense: sweeping in the dark throws away a fallen coin -->
+        <!-- 13. sometimes plain common sense: a light bulb; in the dark the broom sweeps a fallen coin away -->
         <div class="scene" id="s13">
           <div class="ghost" style="top: 1500px; font-size: 330px">BON SENS</div>
-          <div class="night obj" id="o-dark" style="left: 70px; top: 640px; width: 940px; height: 700px; background: radial-gradient(circle at 50% 70%, #3a3a3a, #0d0d0d 60%)"></div>
-          <div class="coin obj" id="o-coin" style="left: 495px; top: 1160px">G</div>
-          <svg class="ico obj" id="o-br13" viewBox="0 0 120 420" style="left: 740px; top: 880px; width: 120px; height: 420px; transform-origin: 50% 0%"><use href="#broom" /></svg>
-          <svg class="bulb obj" id="o-bulb" viewBox="0 0 150 190" style="left: 465px; top: 690px"><circle cx="75" cy="70" r="58" fill="#FFD447" /><rect x="50" y="122" width="50" height="40" rx="8" fill="#9a9a9a" /><rect x="58" y="164" width="34" height="14" rx="6" fill="#6a6a6a" /><path d="M60 96 L75 60 L90 96" fill="none" stroke="#c98a00" stroke-width="6" /></svg>
+          <div class="photo obj" id="o-bulb" style="left: 70px; top: 620px; width: 940px; height: 560px"><img id="bulb-img" src="assets/img/ampoule.jpg" alt="" style="transform-origin: 50% 40%" /></div>
+          <div class="photo obj" id="o-dark" style="left: 70px; top: 1210px; width: 940px; height: 420px; background: radial-gradient(ellipse at 50% 60%, #2e2e2e, #0b0b0b 70%)"></div>
+          <div class="coin obj" id="o-coin" style="left: 485px; top: 1365px"><img src="assets/img/piece-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-br13" style="left: 700px; top: 1150px; width: 90px; height: 450px; transform-origin: 50% 0%"><img src="assets/img/balai-cut.png" alt="" style="transform: rotate(180deg)" /></div>
         </div>
-        <!-- 14. Bilan: we say we do not believe it… but the broom stays locked at night -->
+        <!-- 14. Bilan: we say we do not believe it… but the broom stays put at night, padlocked -->
         <div class="scene" id="s14">
           <div class="ghost" style="top: 1500px; font-size: 330px">PÈSONN</div>
-          <div class="sun obj" id="sun14" style="left: 290px; top: 700px; width: 600px; height: 600px"></div>
-          <svg class="moon obj" id="o-moon14" viewBox="0 0 100 100" style="left: 820px; top: 640px"><path d="M62 6 A 46 46 0 1 0 94 74 A 38 38 0 1 1 62 6 Z" fill="#1d2b53" /></svg>
-          <div class="cut obj" id="o-broom14" style="left: 500px; top: 600px; width: 190px; height: 800px"><img src="assets/img/balai-cut.png" alt="" style="transform: scaleX(-1); filter: sepia(0.35) drop-shadow(0 30px 40px rgba(0, 0, 0, 0.28))" /></div>
+          <div class="cut obj" id="o-moon14" style="left: 840px; top: 620px; width: 150px; height: 180px"><img src="assets/img/lune-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-broom14" style="left: 360px; top: 640px; width: 170px; height: 860px"><img src="assets/img/balai-cut.png" alt="" style="transform: scaleX(-1); filter: sepia(0.35) drop-shadow(0 30px 40px rgba(0, 0, 0, 0.28))" /></div>
           <div class="shout obj" id="o-croi" style="left: 60px; top: 760px">J'y crois pas !</div>
-          <svg class="lock obj" id="o-lock" viewBox="0 0 190 230" style="left: 500px; top: 980px"><path d="M45 100 L45 66 A 50 50 0 0 1 145 66 L145 100" fill="none" stroke="#9a9a9a" stroke-width="22" /><rect x="15" y="96" width="160" height="124" rx="22" fill="#D21034" /><circle cx="95" cy="150" r="16" fill="#141414" /><rect x="88" y="152" width="14" height="40" rx="6" fill="#141414" /></svg>
+          <div class="photo obj" id="o-lock" style="left: 580px; top: 1000px; width: 400px; height: 560px"><img src="assets/img/cadenas.jpg" alt="" style="object-position: 50% 60%" /></div>
         </div>
-        <!-- 15. the question: the nine beliefs, and a blank note « On me répétait : » -->
+        <!-- 15. the question: the eleven beliefs, and a real blank sticky note « On me répétait : » -->
         <div class="scene" id="s15">
           <div class="recap" id="o-recap" style="top: 560px"><span><b>1</b>Balayer</span><span><b>2</b>Enjamber</span><span><b>3</b>Marmite</span><span><b>4</b>Papillon</span><span><b>5</b>Appel</span><span><b>6</b>Siffler</span><span><b>7</b>Repasser</span><span><b>8</b>Paume</span><span><b>9</b>Miroirs</span><span><b>10</b>Diable</span><span><b>11</b>Ongles</span></div>
-          <div class="note obj" id="o-note" style="left: 120px; top: 790px"><small>On me répétait :</small><em id="caret15"></em></div>
-          <div class="bubble obj" id="o-bub" style="left: 470px; top: 1250px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
-          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1180px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <div class="note obj" id="o-note" style="left: 200px; top: 790px"><img src="assets/img/note-cut.png" alt="" /><div><small>On me répétait :</small><em id="caret15"></em></div></div>
+          <div class="bubble obj" id="o-bub" style="left: 380px; top: 1460px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1400px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </div>
+
 
         <div id="flood"></div>
         <div id="iris"></div>
@@ -293,7 +251,7 @@
       </div>
       <div class="series"><span>CULTURE D'HAÏTI · CROYANCES</span></div>
 
-      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), prise 1 + question finale de la prise 2, pauses raccourcies, silence avant « Bilan ».
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), prise la plus longue, pauses raccourcies, silence avant « Bilan ».
            Musique : celle du style (ElevenLabs via FLORA), coupure au scratch et retour sur « on dit » mixés dans le fichier. -->
       <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="61.23" data-track-index="10" data-volume="1"></audio>
       <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="62.9" data-track-index="11" data-volume="0.18"></audio>
@@ -303,12 +261,12 @@
       <audio id="sx2" src="assets/sfx/pop.mp3" data-start="0.12" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
       <audio id="sx3" src="assets/sfx/riser.mp3" data-start="0.3" data-duration="0.88" data-track-index="23" data-volume="0.12"></audio>
       <audio id="sx4" src="assets/sfx/whoosh-short.mp3" data-start="0.5" data-duration="0.57" data-track-index="24" data-volume="0.12"></audio>
-      <audio id="sx5" src="assets/sfx/whoosh-short.mp3" data-start="0.72" data-duration="0.57" data-track-index="20" data-volume="0.12"></audio>
-      <audio id="sx6" src="assets/sfx/whoosh-short.mp3" data-start="0.94" data-duration="0.57" data-track-index="22" data-volume="0.12"></audio>
-      <audio id="sx7" src="assets/sfx/sparkle.mp3" data-start="1.0" data-duration="1.8" data-track-index="25" data-volume="0.15"></audio>
+      <audio id="sx5" src="assets/sfx/chime.mp3" data-start="0.6" data-duration="2.54" data-track-index="20" data-volume="0.12"></audio>
+      <audio id="sx6" src="assets/sfx/whoosh-short.mp3" data-start="0.72" data-duration="0.57" data-track-index="25" data-volume="0.12"></audio>
+      <audio id="sx7" src="assets/sfx/whoosh-short.mp3" data-start="0.94" data-duration="0.57" data-track-index="22" data-volume="0.12"></audio>
       <audio id="sx8" src="assets/sfx/whoosh-short.mp3" data-start="1.16" data-duration="0.57" data-track-index="24" data-volume="0.12"></audio>
-      <audio id="sx9" src="assets/sfx/click.mp3" data-start="1.36" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
-      <audio id="sx10" src="assets/sfx/impact-bass-2.mp3" data-start="1.38" data-duration="2.59" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx9" src="assets/sfx/click.mp3" data-start="1.36" data-duration="0.37" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx10" src="assets/sfx/impact-bass-2.mp3" data-start="1.38" data-duration="2.59" data-track-index="25" data-volume="0.4"></audio>
       <audio id="sx11" src="assets/sfx/pop.mp3" data-start="3.46" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
       <audio id="sx12" src="assets/sfx/click-soft.mp3" data-start="3.89" data-duration="0.37" data-track-index="21" data-volume="0.2"></audio>
       <audio id="sx13" src="assets/sfx/whoosh.mp3" data-start="4.37" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
@@ -316,103 +274,103 @@
       <audio id="sx15" src="assets/sfx/pop.mp3" data-start="4.74" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
       <audio id="sx16" src="assets/sfx/pop.mp3" data-start="4.89" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
       <audio id="sx17" src="assets/sfx/whoosh-short.mp3" data-start="5.39" data-duration="0.57" data-track-index="20" data-volume="0.1"></audio>
-      <audio id="sx18" src="assets/sfx/whoosh-short.mp3" data-start="5.83" data-duration="0.57" data-track-index="21" data-volume="0.1"></audio>
-      <audio id="sx19" src="assets/sfx/whoosh-short.mp3" data-start="6.27" data-duration="0.57" data-track-index="20" data-volume="0.1"></audio>
-      <audio id="sx20" src="assets/sfx/whoosh-short.mp3" data-start="6.71" data-duration="0.57" data-track-index="21" data-volume="0.1"></audio>
-      <audio id="sx21" src="assets/sfx/sparkle.mp3" data-start="7.11" data-duration="1.8" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx22" src="assets/sfx/whoosh-short.mp3" data-start="7.15" data-duration="0.57" data-track-index="22" data-volume="0.1"></audio>
-      <audio id="sx23" src="assets/sfx/grains.mp3" data-start="7.51" data-duration="1.33" data-track-index="21" data-volume="0.25"></audio>
-      <audio id="sx24" src="assets/sfx/chime.mp3" data-start="7.56" data-duration="2.54" data-track-index="23" data-volume="0.1"></audio>
-      <audio id="sx25" src="assets/sfx/whoosh-short.mp3" data-start="7.59" data-duration="0.57" data-track-index="24" data-volume="0.1"></audio>
-      <audio id="sx26" src="assets/sfx/whoosh.mp3" data-start="8.46" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx27" src="assets/sfx/key-press.mp3" data-start="8.86" data-duration="0.43" data-track-index="21" data-volume="0.15"></audio>
-      <audio id="sx28" src="assets/sfx/key-press.mp3" data-start="9.04" data-duration="0.43" data-track-index="20" data-volume="0.15"></audio>
-      <audio id="sx29" src="assets/sfx/key-press.mp3" data-start="9.22" data-duration="0.43" data-track-index="22" data-volume="0.15"></audio>
-      <audio id="sx30" src="assets/sfx/key-press.mp3" data-start="9.4" data-duration="0.43" data-track-index="21" data-volume="0.15"></audio>
-      <audio id="sx31" src="assets/sfx/key-press.mp3" data-start="9.58" data-duration="0.43" data-track-index="20" data-volume="0.15"></audio>
-      <audio id="sx32" src="assets/sfx/whoosh.mp3" data-start="9.78" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx33" src="assets/sfx/pop.mp3" data-start="10.03" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx34" src="assets/sfx/whoosh-short.mp3" data-start="10.03" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx35" src="assets/sfx/riser.mp3" data-start="11.54" data-duration="0.6" data-track-index="20" data-volume="0.1"></audio>
-      <audio id="sx36" src="assets/sfx/click.mp3" data-start="12.32" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
-      <audio id="sx37" src="assets/sfx/impact-bass-1.mp3" data-start="12.34" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
-      <audio id="sx38" src="assets/sfx/whoosh.mp3" data-start="12.73" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx39" src="assets/sfx/pop.mp3" data-start="12.93" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx40" src="assets/sfx/pop.mp3" data-start="13.03" data-duration="0.72" data-track-index="23" data-volume="0.15"></audio>
-      <audio id="sx41" src="assets/sfx/roulement.mp3" data-start="14.5" data-duration="1.62" data-track-index="20" data-volume="0.12"></audio>
-      <audio id="sx42" src="assets/sfx/pop.mp3" data-start="15.08" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
-      <audio id="sx43" src="assets/sfx/sparkle.mp3" data-start="15.18" data-duration="1.8" data-track-index="22" data-volume="0.15"></audio>
-      <audio id="sx44" src="assets/sfx/whoosh-short.mp3" data-start="15.84" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
-      <audio id="sx45" src="assets/sfx/click.mp3" data-start="16.1" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
-      <audio id="sx46" src="assets/sfx/click-soft.mp3" data-start="16.22" data-duration="0.37" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx47" src="assets/sfx/pop.mp3" data-start="16.57" data-duration="0.72" data-track-index="21" data-volume="0.16"></audio>
-      <audio id="sx48" src="assets/sfx/whoosh-short.mp3" data-start="18.02" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx49" src="assets/sfx/impact-bass-2.mp3" data-start="18.27" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
-      <audio id="sx50" src="assets/sfx/whoosh.mp3" data-start="18.43" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx51" src="assets/sfx/whoosh-short.mp3" data-start="18.75" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx52" src="assets/sfx/pop.mp3" data-start="19.05" data-duration="0.72" data-track-index="22" data-volume="0.16"></audio>
-      <audio id="sx53" src="assets/sfx/pop.mp3" data-start="20.6" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx54" src="assets/sfx/pop.mp3" data-start="21.73" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx55" src="assets/sfx/claque.mp3" data-start="21.97" data-duration="0.39" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx56" src="assets/sfx/impact-bass-1.mp3" data-start="22.02" data-duration="2.12" data-track-index="22" data-volume="0.3"></audio>
-      <audio id="sx57" src="assets/sfx/whoosh.mp3" data-start="22.26" data-duration="0.57" data-track-index="23" data-volume="0.25"></audio>
-      <audio id="sx58" src="assets/sfx/pop.mp3" data-start="22.51" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
-      <audio id="sx59" src="assets/sfx/sparkle.mp3" data-start="22.51" data-duration="1.8" data-track-index="21" data-volume="0.15"></audio>
-      <audio id="sx60" src="assets/sfx/claque.mp3" data-start="23.42" data-duration="0.39" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx61" src="assets/sfx/riser.mp3" data-start="24.24" data-duration="1.2" data-track-index="20" data-volume="0.12"></audio>
-      <audio id="sx62" src="assets/sfx/whoosh.mp3" data-start="25.58" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx63" src="assets/sfx/pop.mp3" data-start="25.93" data-duration="0.72" data-track-index="21" data-volume="0.16"></audio>
-      <audio id="sx64" src="assets/sfx/whoosh-short.mp3" data-start="25.93" data-duration="0.57" data-track-index="22" data-volume="0.15"></audio>
-      <audio id="sx65" src="assets/sfx/pop.mp3" data-start="27.18" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx66" src="assets/sfx/claque.mp3" data-start="27.45" data-duration="0.39" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx67" src="assets/sfx/click.mp3" data-start="29.15" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
-      <audio id="sx68" src="assets/sfx/impact-bass-2.mp3" data-start="29.17" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
-      <audio id="sx69" src="assets/sfx/whoosh.mp3" data-start="29.72" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx70" src="assets/sfx/whoosh-short.mp3" data-start="30.04" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx71" src="assets/sfx/pop.mp3" data-start="30.24" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
-      <audio id="sx72" src="assets/sfx/key-press.mp3" data-start="30.64" data-duration="0.43" data-track-index="20" data-volume="0.15"></audio>
-      <audio id="sx73" src="assets/sfx/grains.mp3" data-start="31.53" data-duration="1.33" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx74" src="assets/sfx/chime.mp3" data-start="31.58" data-duration="2.54" data-track-index="22" data-volume="0.15"></audio>
-      <audio id="sx75" src="assets/sfx/whoosh-short.mp3" data-start="32.24" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
-      <audio id="sx76" src="assets/sfx/click.mp3" data-start="32.5" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
-      <audio id="sx77" src="assets/sfx/click-soft.mp3" data-start="32.62" data-duration="0.37" data-track-index="24" data-volume="0.25"></audio>
-      <audio id="sx78" src="assets/sfx/pop.mp3" data-start="32.87" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx79" src="assets/sfx/impact-bass-2.mp3" data-start="33.15" data-duration="2.59" data-track-index="21" data-volume="0.45"></audio>
-      <audio id="sx80" src="assets/sfx/roulement.mp3" data-start="33.2" data-duration="1.2" data-track-index="23" data-volume="0.2"></audio>
-      <audio id="sx81" src="assets/sfx/whoosh-short.mp3" data-start="33.6" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx82" src="assets/sfx/whoosh.mp3" data-start="34.86" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx83" src="assets/sfx/whoosh-short.mp3" data-start="35.08" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx84" src="assets/sfx/pop.mp3" data-start="35.11" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
-      <audio id="sx85" src="assets/sfx/roulement.mp3" data-start="35.18" data-duration="2.04" data-track-index="24" data-volume="0.12"></audio>
-      <audio id="sx86" src="assets/sfx/pop.mp3" data-start="35.5" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx87" src="assets/sfx/sparkle.mp3" data-start="36.49" data-duration="1.8" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx88" src="assets/sfx/impact-bass-1.mp3" data-start="37.59" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx89" src="assets/sfx/whoosh.mp3" data-start="38.16" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx90" src="assets/sfx/whoosh-short.mp3" data-start="38.48" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx91" src="assets/sfx/pop.mp3" data-start="38.73" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
-      <audio id="sx92" src="assets/sfx/whoosh-short.mp3" data-start="39.19" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx93" src="assets/sfx/key-press.mp3" data-start="39.59" data-duration="0.35" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx94" src="assets/sfx/claque.mp3" data-start="39.62" data-duration="0.39" data-track-index="23" data-volume="0.3"></audio>
-      <audio id="sx95" src="assets/sfx/click.mp3" data-start="40.55" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
-      <audio id="sx96" src="assets/sfx/impact-bass-2.mp3" data-start="40.57" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
-      <audio id="sx97" src="assets/sfx/whoosh.mp3" data-start="40.87" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx98" src="assets/sfx/pop.mp3" data-start="41.12" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx99" src="assets/sfx/pop.mp3" data-start="44.1" data-duration="0.72" data-track-index="20" data-volume="0.13"></audio>
-      <audio id="sx100" src="assets/sfx/pop.mp3" data-start="44.2" data-duration="0.72" data-track-index="21" data-volume="0.13"></audio>
-      <audio id="sx101" src="assets/sfx/pop.mp3" data-start="44.3" data-duration="0.72" data-track-index="22" data-volume="0.13"></audio>
-      <audio id="sx102" src="assets/sfx/pop.mp3" data-start="44.4" data-duration="0.72" data-track-index="23" data-volume="0.13"></audio>
+      <audio id="sx18" src="assets/sfx/whoosh-short.mp3" data-start="5.55" data-duration="0.57" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx19" src="assets/sfx/whoosh-short.mp3" data-start="5.83" data-duration="0.57" data-track-index="22" data-volume="0.1"></audio>
+      <audio id="sx20" src="assets/sfx/whoosh-short.mp3" data-start="6.27" data-duration="0.57" data-track-index="20" data-volume="0.1"></audio>
+      <audio id="sx21" src="assets/sfx/whoosh-short.mp3" data-start="6.71" data-duration="0.57" data-track-index="21" data-volume="0.1"></audio>
+      <audio id="sx22" src="assets/sfx/pop.mp3" data-start="7.06" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx23" src="assets/sfx/whoosh-short.mp3" data-start="7.15" data-duration="0.57" data-track-index="22" data-volume="0.1"></audio>
+      <audio id="sx24" src="assets/sfx/whoosh-short.mp3" data-start="7.46" data-duration="0.57" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx25" src="assets/sfx/grains.mp3" data-start="7.51" data-duration="1.33" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx26" src="assets/sfx/chime.mp3" data-start="7.56" data-duration="2.54" data-track-index="24" data-volume="0.1"></audio>
+      <audio id="sx27" src="assets/sfx/whoosh-short.mp3" data-start="7.59" data-duration="0.57" data-track-index="25" data-volume="0.1"></audio>
+      <audio id="sx28" src="assets/sfx/whoosh.mp3" data-start="8.46" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="8.91" data-duration="0.72" data-track-index="21" data-volume="0.12"></audio>
+      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="9.05" data-duration="0.72" data-track-index="20" data-volume="0.12"></audio>
+      <audio id="sx31" src="assets/sfx/pop.mp3" data-start="9.19" data-duration="0.72" data-track-index="22" data-volume="0.12"></audio>
+      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="9.33" data-duration="0.72" data-track-index="23" data-volume="0.12"></audio>
+      <audio id="sx33" src="assets/sfx/pop.mp3" data-start="9.47" data-duration="0.72" data-track-index="25" data-volume="0.12"></audio>
+      <audio id="sx34" src="assets/sfx/pop.mp3" data-start="9.61" data-duration="0.72" data-track-index="26" data-volume="0.12"></audio>
+      <audio id="sx35" src="assets/sfx/whoosh.mp3" data-start="9.78" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx36" src="assets/sfx/pop.mp3" data-start="10.03" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx37" src="assets/sfx/click.mp3" data-start="12.32" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx38" src="assets/sfx/impact-bass-1.mp3" data-start="12.34" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx39" src="assets/sfx/whoosh.mp3" data-start="12.73" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx40" src="assets/sfx/pop.mp3" data-start="12.93" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx41" src="assets/sfx/pop.mp3" data-start="13.03" data-duration="0.72" data-track-index="23" data-volume="0.15"></audio>
+      <audio id="sx42" src="assets/sfx/whoosh-short.mp3" data-start="14.29" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx43" src="assets/sfx/roulement.mp3" data-start="14.5" data-duration="1.62" data-track-index="21" data-volume="0.12"></audio>
+      <audio id="sx44" src="assets/sfx/pop.mp3" data-start="15.08" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx45" src="assets/sfx/sparkle.mp3" data-start="15.18" data-duration="1.8" data-track-index="22" data-volume="0.15"></audio>
+      <audio id="sx46" src="assets/sfx/whoosh-short.mp3" data-start="15.84" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx47" src="assets/sfx/click.mp3" data-start="16.1" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx48" src="assets/sfx/click-soft.mp3" data-start="16.22" data-duration="0.37" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx49" src="assets/sfx/pop.mp3" data-start="16.57" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx50" src="assets/sfx/whoosh-short.mp3" data-start="18.02" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx51" src="assets/sfx/impact-bass-2.mp3" data-start="18.27" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx52" src="assets/sfx/whoosh.mp3" data-start="18.43" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx53" src="assets/sfx/whoosh-short.mp3" data-start="18.75" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx54" src="assets/sfx/pop.mp3" data-start="18.9" data-duration="0.72" data-track-index="23" data-volume="0.14"></audio>
+      <audio id="sx55" src="assets/sfx/pop.mp3" data-start="19.05" data-duration="0.72" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx56" src="assets/sfx/pop.mp3" data-start="20.6" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx57" src="assets/sfx/pop.mp3" data-start="21.73" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx58" src="assets/sfx/claque.mp3" data-start="21.97" data-duration="0.39" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx59" src="assets/sfx/impact-bass-1.mp3" data-start="22.02" data-duration="2.12" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx60" src="assets/sfx/whoosh.mp3" data-start="22.26" data-duration="0.57" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx61" src="assets/sfx/pop.mp3" data-start="22.51" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx62" src="assets/sfx/sparkle.mp3" data-start="22.51" data-duration="1.8" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx63" src="assets/sfx/click.mp3" data-start="23.35" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx64" src="assets/sfx/impact-bass-1.mp3" data-start="23.37" data-duration="2.12" data-track-index="23" data-volume="0.35"></audio>
+      <audio id="sx65" src="assets/sfx/riser.mp3" data-start="24.14" data-duration="1.4" data-track-index="20" data-volume="0.12"></audio>
+      <audio id="sx66" src="assets/sfx/whoosh.mp3" data-start="25.58" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx67" src="assets/sfx/pop.mp3" data-start="25.93" data-duration="0.72" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx68" src="assets/sfx/pop.mp3" data-start="27.18" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx69" src="assets/sfx/claque.mp3" data-start="27.45" data-duration="0.39" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx70" src="assets/sfx/click.mp3" data-start="29.15" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx71" src="assets/sfx/impact-bass-2.mp3" data-start="29.17" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx72" src="assets/sfx/whoosh.mp3" data-start="29.72" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx73" src="assets/sfx/whoosh-short.mp3" data-start="30.04" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx74" src="assets/sfx/pop.mp3" data-start="30.24" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx75" src="assets/sfx/key-press.mp3" data-start="30.64" data-duration="0.43" data-track-index="20" data-volume="0.15"></audio>
+      <audio id="sx76" src="assets/sfx/grains.mp3" data-start="31.53" data-duration="1.33" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx77" src="assets/sfx/chime.mp3" data-start="31.58" data-duration="2.54" data-track-index="22" data-volume="0.15"></audio>
+      <audio id="sx78" src="assets/sfx/whoosh-short.mp3" data-start="32.24" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx79" src="assets/sfx/click.mp3" data-start="32.5" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx80" src="assets/sfx/click-soft.mp3" data-start="32.62" data-duration="0.37" data-track-index="24" data-volume="0.25"></audio>
+      <audio id="sx81" src="assets/sfx/pop.mp3" data-start="32.87" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx82" src="assets/sfx/impact-bass-2.mp3" data-start="33.15" data-duration="2.59" data-track-index="21" data-volume="0.45"></audio>
+      <audio id="sx83" src="assets/sfx/roulement.mp3" data-start="33.2" data-duration="1.2" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx84" src="assets/sfx/whoosh-short.mp3" data-start="33.6" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx85" src="assets/sfx/whoosh.mp3" data-start="34.86" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx86" src="assets/sfx/pop.mp3" data-start="35.08" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx87" src="assets/sfx/pop.mp3" data-start="35.11" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx88" src="assets/sfx/roulement.mp3" data-start="35.18" data-duration="2.04" data-track-index="24" data-volume="0.12"></audio>
+      <audio id="sx89" src="assets/sfx/pop.mp3" data-start="35.5" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx90" src="assets/sfx/sparkle.mp3" data-start="36.49" data-duration="1.8" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx91" src="assets/sfx/impact-bass-1.mp3" data-start="37.59" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx92" src="assets/sfx/whoosh.mp3" data-start="38.16" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx93" src="assets/sfx/whoosh-short.mp3" data-start="38.48" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx94" src="assets/sfx/pop.mp3" data-start="38.73" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx95" src="assets/sfx/whoosh-short.mp3" data-start="39.19" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx96" src="assets/sfx/key-press.mp3" data-start="39.59" data-duration="0.35" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx97" src="assets/sfx/claque.mp3" data-start="39.62" data-duration="0.39" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx98" src="assets/sfx/click.mp3" data-start="40.55" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx99" src="assets/sfx/impact-bass-2.mp3" data-start="40.57" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx100" src="assets/sfx/whoosh.mp3" data-start="40.87" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx101" src="assets/sfx/pop.mp3" data-start="41.07" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx102" src="assets/sfx/pop.mp3" data-start="42.19" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
       <audio id="sx103" src="assets/sfx/whoosh-short.mp3" data-start="45.46" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx104" src="assets/sfx/whoosh-short.mp3" data-start="46.44" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx105" src="assets/sfx/click.mp3" data-start="46.99" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx106" src="assets/sfx/pop.mp3" data-start="47.51" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx107" src="assets/sfx/whoosh.mp3" data-start="48.27" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx108" src="assets/sfx/pop.mp3" data-start="48.52" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx109" src="assets/sfx/click-soft.mp3" data-start="49.61" data-duration="0.37" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx110" src="assets/sfx/whoosh-short.mp3" data-start="50.08" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx111" src="assets/sfx/whoosh-short.mp3" data-start="50.48" data-duration="0.57" data-track-index="21" data-volume="0.1"></audio>
-      <audio id="sx112" src="assets/sfx/whoosh-short.mp3" data-start="50.92" data-duration="0.57" data-track-index="20" data-volume="0.1"></audio>
-      <audio id="sx113" src="assets/sfx/whoosh-short.mp3" data-start="51.36" data-duration="0.57" data-track-index="21" data-volume="0.1"></audio>
-      <audio id="sx114" src="assets/sfx/whoosh-short.mp3" data-start="51.8" data-duration="0.57" data-track-index="20" data-volume="0.1"></audio>
+      <audio id="sx104" src="assets/sfx/whoosh-short.mp3" data-start="46.09" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx105" src="assets/sfx/click.mp3" data-start="46.99" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx106" src="assets/sfx/whoosh.mp3" data-start="48.27" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx107" src="assets/sfx/pop.mp3" data-start="48.47" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx108" src="assets/sfx/click-soft.mp3" data-start="49.61" data-duration="0.37" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx109" src="assets/sfx/pop.mp3" data-start="50.28" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx110" src="assets/sfx/whoosh-short.mp3" data-start="50.43" data-duration="0.57" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx111" src="assets/sfx/whoosh-short.mp3" data-start="50.83" data-duration="0.57" data-track-index="22" data-volume="0.1"></audio>
+      <audio id="sx112" src="assets/sfx/whoosh-short.mp3" data-start="51.27" data-duration="0.57" data-track-index="20" data-volume="0.1"></audio>
+      <audio id="sx113" src="assets/sfx/whoosh-short.mp3" data-start="51.71" data-duration="0.57" data-track-index="21" data-volume="0.1"></audio>
+      <audio id="sx114" src="assets/sfx/whoosh-short.mp3" data-start="52.15" data-duration="0.57" data-track-index="20" data-volume="0.1"></audio>
       <audio id="sx115" src="assets/sfx/whoosh.mp3" data-start="52.33" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
       <audio id="sx116" src="assets/sfx/scratch.mp3" data-start="53.21" data-duration="1.23" data-track-index="20" data-volume="0.4"></audio>
       <audio id="sx117" src="assets/sfx/whoosh.mp3" data-start="53.21" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
@@ -436,7 +394,9 @@
         const blur = (n) => 'blur(' + n + 'px)'
         const END = 62.9
         const RED = '#D21034'
-        const ORANGE = '#F05A28'
+        const SUNSET = '#E8A33D'
+        const GREEN = '#1f7a4d'
+        const VIOLET = '#2b1f55'
         const NIGHT = '#1b2442'
         const INK = '#141414'
 
@@ -451,11 +411,11 @@
         const X = { s2: at(14), s3: at(29), s4: at(34), s5: at(43), s6: at(56), s7: at(67), s8: at(79), s9: at(88), s10: at(101), s11: at(112), s11b: at(120), s11c: at(133), s12: at(142), s13: at(168), bil: Math.round((SCRATCH + 0.3) * 100) / 100, s15: at(199) }
         const HOLDB = T[187] - 0.14 - X.bil // the black flood holds through the scratch silence, until « on dit »
         const FLOODS = [
-          { t: X.s2, a: [540, 1110], b: [540, 1060], col: ORANGE, hold: 0 },
-          { t: X.s7, a: [770, 1390], b: [540, 1000], col: NIGHT, hold: 0 },
-          { t: X.s10, a: [400, 980], b: [540, 1030], col: ORANGE, hold: 0 },
-          { t: X.s11c, a: [310, 910], b: [540, 1020], col: NIGHT, hold: 0 },
-          { t: X.bil, a: [540, 1205], b: [590, 1000], col: INK, hold: HOLDB },
+          { t: X.s2, a: [560, 1320], b: [540, 1020], col: SUNSET, hold: 0 },
+          { t: X.s7, a: [740, 1385], b: [540, 1020], col: NIGHT, hold: 0 },
+          { t: X.s10, a: [370, 1000], b: [540, 1140], col: GREEN, hold: 0 },
+          { t: X.s11c, a: [540, 1070], b: [540, 1000], col: VIOLET, hold: 0 },
+          { t: X.bil, a: [540, 1420], b: [520, 1000], col: INK, hold: HOLDB },
         ]
         const IRISES = [{ t: X.s6 }, { t: X.s11 }]
         const PUSHES = [['s2', 's3', 'y'], ['s3', 's4', 'x'], ['s4', 's5', 'y'], ['s7', 's8', 'x'], ['s8', 's9', 'y'], ['s11', 's11b', 'x'], ['s11c', 's12', 'y'], ['s12', 's13', 'x'], ['s14', 's15', 'y']]
@@ -570,7 +530,7 @@
 
         const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8', '#s9', '#s10', '#s11', '#s11b', '#s11c', '#s12', '#s13', '#s14', '#s15']
         gsap.set(SC.slice(1), { autoAlpha: 0 })
-        gsap.set(['#mi2', '#mi4', '#mi6', '#mi12', '#t4'], { autoAlpha: 0 })
+        gsap.set(['#mi2', '#mi4', '#mi6', '#mi12', '#mi11b'], { autoAlpha: 0 })
         tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
         tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
         // scenes covered by a flood or an iris swap while hidden
@@ -588,72 +548,69 @@
         document.querySelectorAll('.ghost').forEach((g, i) => tl.fromTo(g, { x: i % 2 ? -60 : 60 }, { x: i % 2 ? 60 : -60, duration: END, ease: 'none', immediateRender: false }, 0))
         const slap = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 1.8, rotation: rot * 2.5 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.28, ease: 'back.out(2.4)' }, at)
         const fadeIn = (sel, at) => tl.fromTo(sel, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, at)
+        const cross = (sel, at) => tl.fromTo(sel, { autoAlpha: 0, scale: 2 }, { autoAlpha: 1, scale: 1, duration: 0.2, ease: 'power3.in' }, at)
         // seeded random, so every render is the same
         let seed = 7
         const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
         // a broom sweeps: a few quick swings around its handle
         const sweep = (sel, from, n, amp) => tl.fromTo(sel, { rotation: -amp }, { rotation: amp, duration: 0.22, yoyo: true, repeat: n * 2 - 1, ease: 'sine.inOut', immediateRender: false }, from)
+        const coinImg = '<img src="assets/img/piece-cut.png" alt="" />'
 
-        // ---------- 1. hook: the broom sweeps, the clock runs to 21:00, the moon rises; JAMAIS LA NUIT; « Pa bale lannwit ! » ----------
-        tl.fromTo('#sun1', { scale: 0 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)' }, 0)
-        tl.fromTo('#rg1', { scale: 0.6, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.7, ease: 'power3.out' }, 0.1)
-        tl.fromTo('#o-broom', { y: 800, rotation: 12 }, { y: 0, rotation: -12, duration: 0.55, ease: 'expo.out' }, 0)
-        sweep('#o-broom', 0.5, 2, 12)
-        tl.to('#o-broom', { rotation: -12, duration: 0.15 }, T[2] - 0.05)
+        // ---------- 1. hook: the old man rises into frame on frame 1, the broom sweeps, the clock runs to 21:00; JAMAIS LA NUIT; « Pa bale lannwit ! » ----------
+        tl.fromTo('#o-man', { y: 260, scale: 0.92 }, { y: 0, scale: 1, duration: 0.45, ease: 'expo.out' }, 0)
+        tl.fromTo('#o-man', { rotation: 0 }, { rotation: -1.5, duration: 0.5, yoyo: true, repeat: 3, ease: 'sine.inOut', immediateRender: false }, 0.5)
+        tl.fromTo('#o-broom', { y: 700, rotation: 12 }, { y: 0, rotation: -12, duration: 0.55, ease: 'expo.out' }, 0.05)
+        sweep('#o-broom', 0.55, 2, 12)
+        tl.to('#o-broom', { rotation: -10, duration: 0.15 }, T[2] - 0.05)
         tl.fromTo('#hud', { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0)
         spring('#o-clk', 0.12, {})
         const clk = { v: 18 * 60 }
         tl.fromTo(clk, { v: 18 * 60 }, { v: 21 * 60, duration: T[4] - 0.3, ease: 'power2.in', immediateRender: false, onUpdate: () => { const m = Math.round(clk.v); $('clk').textContent = String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0') } }, 0.2)
         tl.to('#clk', { color: RED, duration: 0.15 }, T[4] - 0.1)
-        tl.fromTo('#o-moon', { autoAlpha: 0, y: 220, rotation: -30 }, { autoAlpha: 1, y: 0, rotation: 0, duration: 0.9, ease: 'power2.out' }, 0.6)
-        ;['#st1', '#st2', '#st3'].forEach((s, i) => { spring(s, 1.0 + i * 0.2, {}); tl.to(s, { scale: 0.6, duration: 0.4, yoyo: true, repeat: 5, ease: 'sine.inOut' }, 1.6 + i * 0.13) })
+        tl.fromTo('#o-moon', { autoAlpha: 0, y: 160, rotation: -20 }, { autoAlpha: 1, y: 0, rotation: 0, duration: 0.9, ease: 'power2.out' }, 0.5)
         stamp('#o-jam1', T[4] - 0.05, -6)
         shake(T[4] + 0.13)
         slap('#o-pb1', T[10] - 0.05, -4)
         tl.fromTo('#o-pb1', { scale: 1 }, { scale: 1.1, duration: 0.12, yoyo: true, repeat: 3, ease: 'power2.out', immediateRender: false }, T[12])
-        cam('#s1', T[13], X.s2 - T[13], 1.08, '540px 1110px', 'power2.in')
+        cam('#s1', T[13], X.s2 - T[13], 1.08, '560px 1320px', 'power2.in')
         // the viewfinder's timecode and blinking REC dot are pure functions of time
         const tc = $('tc')
         const recdot = $('recdot')
         const clock2 = { v: 0 }
         tl.fromTo(clock2, { v: 0 }, { v: X.s2, duration: X.s2, ease: 'none', immediateRender: false, onUpdate: () => { const t = clock2.v; const f = Math.floor((t % 1) * 30); tc.textContent = '00:00:' + String(Math.floor(t)).padStart(2, '0') + ':' + String(f).padStart(2, '0'); recdot.style.opacity = Math.floor(t * 2) % 2 ? '0.25' : '1' } }, 0)
 
-        // ---------- 2. orange flood → the house: sweeping after sunset chases luck and money out of the door ----------
-        tl.fromTo('#sun2', { scale: 0.7 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)', immediateRender: false }, X.s2)
-        spring('#o-house', X.s2 + 0.05, { y: 80 })
+        // ---------- 2. sunset flood → the house goes dark; the broom sweeps at the door; luck, then the money, leave ----------
+        unfold('#o-house', X.s2 + 0.05)
+        kb('#house-img', X.s2, X.s3, 1.02, 1.12)
+        tl.fromTo('#house-img', { filter: 'brightness(1) saturate(1)' }, { filter: 'brightness(0.5) saturate(0.7)', duration: 0.8, ease: 'power1.inOut', immediateRender: false }, T[16])
         spring('#o-br2', T[14] + 0.1, { rotation: 20 })
         sweep('#o-br2', T[14] + 0.6, 6, 16)
         fadeIn('#mi2', T[16])
-        // luck (stars) then money (coins) fly out of the door and off to the right
-        const fly = (html, cls, t, i) => {
-          const f = el('div', cls + ' obj', null, $('fly2'))
-          f.innerHTML = html
-          f.style.left = '495px'
-          f.style.top = '1000px'
-          const dx = 360 + rnd() * 260, dy = 180 + rnd() * 260
-          tl.fromTo(f, { autoAlpha: 0, x: 0, y: 0, scale: 0.4, rotation: 0 }, { autoAlpha: 1, x: dx, y: dy, scale: 1, rotation: 200 + rnd() * 200, duration: 0.7, ease: 'power2.out' }, t + i * 0.09)
+        tl.fromTo('#o-luck', { autoAlpha: 0, x: 0, scale: 0.4 }, { autoAlpha: 1, x: 0, scale: 1, duration: 0.3, ease: 'back.out(2)' }, T[23] - 0.1)
+        tl.to('#o-luck', { x: 700, rotation: 25, duration: 0.6, ease: 'power2.in' }, T[23] + 0.3)
+        // the coins roll out of the door and off to the right
+        for (let i = 0; i < 6; i++) {
+          const f = el('div', 'coin obj', null, $('fly2'))
+          f.innerHTML = coinImg
+          f.style.left = '460px'
+          f.style.top = '1180px'
+          const dx = 360 + rnd() * 260, dy = -120 + rnd() * 240
+          tl.fromTo(f, { autoAlpha: 0, x: 0, y: 0, scale: 0.4, rotation: 0 }, { autoAlpha: 1, x: dx, y: dy, scale: 1, rotation: 200 + rnd() * 200, duration: 0.7, ease: 'power2.out' }, T[25] - 0.05 + i * 0.09)
         }
-        for (let i = 0; i < 4; i++) fly('<svg viewBox="0 0 40 40" width="80" height="80"><use href="#star4y" /></svg>', 'ico', T[23] - 0.05, i)
-        for (let i = 0; i < 6; i++) fly('G', 'coin', T[25] - 0.05, i)
 
-        // ---------- 3. page pushes up: the list is long — nine numbered lines unroll ----------
-        const W9 = [420, 360, 480, 300, 440, 380, 460, 340, 400]
-        W9.forEach((w, i) => {
-          const r = el('div', 'row', null, $('rows'))
-          r.innerHTML = '<b>' + (i + 1) + '.</b><i style="width: ' + w + 'px"></i>'
-          tl.fromTo(r, { autoAlpha: 0, x: -30 }, { autoAlpha: 1, x: 0, duration: 0.2, ease: 'power2.out' }, X.s3 + 0.25 + i * 0.09)
-        })
+        // ---------- 3. page pushes up: the list is long — an old handwritten page unrolls, numbers 1 to 11 pop on it ----------
+        for (let i = 0; i < 11; i++) {
+          const nb = el('div', 'num', String(i + 1), $('nums'))
+          nb.style.left = (i < 6 ? 60 : 420) + 'px'
+          nb.style.top = 70 + (i < 6 ? i : i - 6) * 150 + 'px'
+          tl.fromTo(nb, { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.25, ease: 'back.out(2.2)' }, X.s3 + 0.3 + i * 0.07)
+        }
         tl.fromTo('#o-list', { scaleY: 0.08 }, { scaleY: 1, duration: 0.7, ease: 'power3.out', immediateRender: false }, X.s3 + 0.05)
 
-        // ---------- 4. page pushes left: N° 2 a sleeping child; someone steps over; it will not grow ----------
+        // ---------- 4. page pushes left: N° 2 a child asleep — do not step over her; STOP ----------
+        kb('#kid-img', X.s4, X.s5, 1.03, 1.14)
         spring('#n2', X.s4 + 0.1, { rotation: -10 })
-        tl.fromTo('#o-kid', { y: 200, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5, ease: 'expo.out' }, X.s4 + 0.05)
         fadeIn('#mi4', X.s4 + 0.4)
-        tl.fromTo('#arcc', { scaleX: 1 }, { scaleX: 0, duration: 0.6, ease: 'power1.inOut' }, T[34])
-        tl.fromTo('#o-gauge', { autoAlpha: 0, scaleY: 0.3 }, { autoAlpha: 1, scaleY: 1, transformOrigin: '50% 100%', duration: 0.4, ease: 'back.out(1.6)' }, T[39] - 0.25)
-        fadeIn('#t4', T[39] - 0.2)
-        tl.fromTo('#gfill', { scaleY: 0 }, { scaleY: 0.35, duration: 0.5, ease: 'power2.out' }, T[39])
-        tl.to('#gfill', { background: '#9a9a9a', duration: 0.2 }, T[41])
         stamp('#o-stop', T[42] - 0.05, -8)
         shake(T[42] + 0.13)
 
@@ -661,20 +618,12 @@
         spring('#o-pot', X.s5 + 0.05, { y: 120, rotation: -6 })
         kb('#pot-img', X.s5, X.s6, 1.04, 1.15)
         spring('#n3', T[44], { rotation: -10 })
-        spring('#sun5', X.s5 + 0.2, {})
+        tl.fromTo('#o-rain', { autoAlpha: 0, y: -300 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'expo.out' }, T[49] - 0.1)
+        kb('#rain-img', T[49], X.s6, 1.05, 1.2)
         spring('#o-rings', T[53] - 0.1, { rotation: -20 })
         spring('#o-jourj', T[54], { y: 20 })
-        for (let i = 0; i < 14; i++) {
-          const d = el('div', 'obj', null, $('rain5'))
-          d.innerHTML = '<svg class="drop" viewBox="0 0 26 40" style="position: static"><use href="#dropS" /></svg>'
-          d.style.left = Math.round(610 + rnd() * 380) + 'px'
-          d.style.top = '760px'
-          gsap.set(d, { autoAlpha: 0 })
-          tl.fromTo(d, { autoAlpha: 0, y: 0 }, { autoAlpha: 1, y: 520, duration: 0.6, ease: 'power1.in', repeat: Math.max(0, Math.floor((X.s6 - T[50]) / 0.6) - 1), immediateRender: false }, T[50] + i * 0.06 + rnd() * 0.3)
-          tl.set(d, { autoAlpha: 0 }, X.s6 - 0.05)
-        }
 
-        // ---------- 6. iris onto the black witch moth: N° 4 a black-edged letter, bad news ----------
+        // ---------- 6. iris onto the black witch moth: N° 4 an envelope slaps down, bad news ----------
         unfold('#o-moth', X.s6 + 0.15)
         kb('#moth-img', X.s6, X.s7, 1.05, 1.2)
         spring('#n4', X.s6 + 0.45, { rotation: -10 })
@@ -682,132 +631,112 @@
         slap('#o-env', T[63] - 0.08, 6)
         shake(T[64])
 
-        // ---------- 7. night flood: N° 5 a voice calls « Ti Jo ! » from the dark; « Wi ? » — crossed out ----------
+        // ---------- 7. night flood: N° 5 a starry sky, the moon, a door in the dark; « Ti Jo ! » — « Wi ? » crossed out ----------
+        kb('#sky-img', X.s7, X.s8, 1.0, 1.12)
+        tl.fromTo('#o-moon7', { autoAlpha: 0, y: 120 }, { autoAlpha: 1, y: 0, duration: 0.7, ease: 'power2.out' }, X.s7 + 0.2)
+        spring('#o-door', X.s7 + 0.15, { y: 120 })
         spring('#n5', X.s7 + 0.3, { rotation: -10 })
         slap('#o-call', T[72] - 0.08, -4)
         tl.fromTo('#o-call', { x: 0 }, { x: 10, duration: 0.05, yoyo: true, repeat: 5, immediateRender: false }, T[74])
         slap('#o-wi', T[76] - 0.1, 4)
-        tl.fromTo('#o-xwi', { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.2, ease: 'back.out(2)' }, T[77])
+        cross('#o-xwi', T[77])
         shake(T[77] + 0.1)
 
-        // ---------- 8. page pushes left: N° 6 whistling → the no sign → spirits drift up ----------
+        // ---------- 8. page pushes left: N° 6 whistling in a misty forest → PA SIFLE → the fog rises ----------
+        kb('#fog-img', X.s8, X.s9, 1.0, 1.15)
         spring('#n6', X.s8 + 0.1, { rotation: -10 })
         tl.fromTo('#o-notes', { autoAlpha: 0, x: -200 }, { autoAlpha: 1, x: 0, duration: 0.5, ease: 'power2.out' }, X.s8 + 0.05)
         tl.fromTo('#o-notes', { y: 0 }, { y: -20, duration: 0.25, yoyo: true, repeat: 5, ease: 'sine.inOut', immediateRender: false }, X.s8 + 0.5)
-        tl.fromTo('#o-no', { autoAlpha: 0, scale: 2, rotation: -40 }, { autoAlpha: 1, scale: 1, rotation: 0, duration: 0.25, ease: 'power3.in' }, T[81] - 0.05)
-        shake(T[81] + 0.2)
-        for (let i = 0; i < 3; i++) {
-          const g = el('div', 'obj', null, $('ghosts8'))
-          g.innerHTML = '<svg class="ghostie" viewBox="0 0 170 220" style="position: static"><path d="M10 210 L10 90 A 75 75 0 0 1 160 90 L160 210 L132 186 L104 210 L76 186 L48 210 L20 186 Z" fill="#fff" stroke="#c9c9c9" stroke-width="4" /><circle cx="62" cy="96" r="12" fill="#141414" /><circle cx="108" cy="96" r="12" fill="#141414" /></svg>'
-          g.style.left = 130 + i * 300 + 'px'
-          g.style.top = 1160 + (i % 2) * 70 + 'px'
-          tl.fromTo(g, { autoAlpha: 0, y: 160 }, { autoAlpha: 0.9, y: 0, duration: 0.6, ease: 'power2.out' }, T[85] - 0.1 + i * 0.12)
-          tl.to(g, { y: -24, duration: 0.6, yoyo: true, repeat: 2, ease: 'sine.inOut' }, T[85] + 0.6 + i * 0.12)
+        stamp('#o-sifle', T[81] - 0.05, -6)
+        shake(T[81] + 0.13)
+        for (let i = 0; i < 4; i++) {
+          const h = el('div', 'haze', null, $('hazes'))
+          h.style.left = 40 + i * 220 + 'px'
+          h.style.top = '520px'
+          h.style.width = h.style.height = '320px'
+          tl.fromTo(h, { autoAlpha: 0, y: 220, scale: 0.6 }, { autoAlpha: 0.9, y: -260, scale: 1.4, duration: 1.6, ease: 'power1.out' }, T[85] - 0.2 + i * 0.15)
         }
 
-        // ---------- 9. page pushes up: N° 7 the charcoal iron steams; the shower is crossed out; CHAUD | FROID ----------
-        tl.fromTo('#sun9', { scale: 0.7 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)', immediateRender: false }, X.s9 + 0.05)
+        // ---------- 9. page pushes up: N° 7 the charcoal iron; the shower is crossed out; CHAUD | FROID ----------
         tl.fromTo('#o-iron', { y: 400 }, { y: 0, duration: 0.55, ease: 'expo.out', immediateRender: false }, X.s9 + 0.05)
+        tl.fromTo('#o-iron', { rotation: 0 }, { rotation: 2, duration: 0.3, yoyo: true, repeat: 5, ease: 'sine.inOut', immediateRender: false }, T[91])
         spring('#n7', X.s9 + 0.2, { rotation: -10 })
-        tl.fromTo('#o-steam', { autoAlpha: 0, y: 60 }, { autoAlpha: 0.9, y: 0, duration: 0.5 }, T[91] - 0.2)
-        tl.to('#o-steam', { y: -30, autoAlpha: 0.5, duration: 0.8, yoyo: true, repeat: 3, ease: 'sine.inOut' }, T[91] + 0.3)
         spring('#o-shower', T[94] - 0.1, { y: -80 })
-        tl.fromTo('#o-xsh', { autoAlpha: 0, scale: 2 }, { autoAlpha: 1, scale: 1, duration: 0.2, ease: 'power3.in' }, T[95] - 0.05)
+        cross('#o-xsh', T[95] - 0.05)
         shake(T[95] + 0.15)
         slap('#o-split', T[100] - 0.08, -4)
 
-        // ---------- 10. orange flood out of the iron → N° 8 the itchy palm; coins pop out ----------
-        tl.fromTo('#sun10', { scale: 0.7 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)', immediateRender: false }, X.s10)
+        // ---------- 10. green flood out of the iron → N° 8 the open palm itches; coins pop out of it ----------
         tl.fromTo('#o-hand', { y: 420 }, { y: 0, duration: 0.55, ease: 'expo.out', immediateRender: false }, X.s10 + 0.05)
         spring('#n8', X.s10 + 0.2, { rotation: -10 })
-        tl.fromTo('#o-itch', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.1 }, T[107] - 0.1)
-        tl.fromTo('#o-itch', { x: -10 }, { x: 10, duration: 0.07, yoyo: true, repeat: 9, ease: 'none', immediateRender: false }, T[107] - 0.1)
-        const CP = [[180, 760], [800, 720], [130, 1150], [840, 1120], [250, 1380], [720, 1400]]
+        tl.fromTo('#o-hand', { rotation: 0 }, { rotation: 3, duration: 0.07, yoyo: true, repeat: 9, ease: 'none', immediateRender: false }, T[107] - 0.1)
+        const CP = [[320, 760], [820, 680], [470, 640], [180, 1420], [800, 1440], [490, 1480]]
         CP.forEach(([x, y], i) => {
-          const c = el('div', 'coin obj', 'G', $('coins10'))
+          const c = el('div', 'coin obj', null, $('coins10'))
+          c.innerHTML = coinImg
           c.style.left = x + 'px'
           c.style.top = y + 'px'
-          spring(c, T[109] - 0.05 + i * 0.07, { y: 140, rotation: 90 })
+          tl.fromTo(c, { autoAlpha: 0, x: 600 - x - 55, y: 1080 - y, scale: 0.3, rotation: 0 }, { autoAlpha: 1, x: 0, y: 0, scale: 1, rotation: 360, duration: 0.55, ease: 'back.out(1.6)' }, T[109] - 0.05 + i * 0.07)
         })
 
-        // ---------- 11. iris onto the lightning: N° 9 a flash, and a madras cloth drops over the mirror ----------
+        // ---------- 11. iris onto the lightning: N° 9 a flash, and a cloth drops over the mirror ----------
         unfold('#o-storm', X.s11 + 0.15)
-        kb('#storm-img', X.s11, X.s12, 1.05, 1.2)
+        kb('#storm-img', X.s11, X.s11b, 1.05, 1.2)
         spring('#o-mirror', X.s11 + 0.35, { y: 80 })
         spring('#n9', X.s11 + 0.5, { rotation: -10 })
         tl.fromTo('#flash', { opacity: 0 }, { opacity: 0.85, duration: 0.05, yoyo: true, repeat: 3, ease: 'none', immediateRender: false }, T[115] - 0.05)
         tl.fromTo('#o-cloth', { autoAlpha: 0, scaleY: 0 }, { autoAlpha: 1, scaleY: 1, duration: 0.45, ease: 'bounce.out' }, T[117] - 0.05)
 
-        // ---------- 11b. page pushes left: N° 10 sun and rain at once — the devil beats his wife; a rainbow ----------
-        let rays11 = ''
-        for (let i = 0; i < 12; i++) rays11 += '<rect x="94" y="4" width="12" height="40" rx="6" transform="rotate(' + i * 30 + ' 100 100)" />'
-        $('rays11').innerHTML = rays11
+        // ---------- 11b. page pushes left: N° 10 sun and rain at once — a rainbow; the devil beats his wife ----------
+        kb('#rb-img', X.s11b, X.s11c, 1.02, 1.16)
         spring('#n10', X.s11b + 0.1, { rotation: -10 })
-        spring('#o-sun11', T[124] - 0.1, { rotation: -60 })
-        tl.fromTo('#o-sun11', { rotation: 0 }, { rotation: 60, duration: X.s11c - T[124], ease: 'none', immediateRender: false }, T[124] + 0.4)
-        spring('#o-cloud', T[121] - 0.1, { x: 200 })
-        for (let i = 0; i < 12; i++) {
-          const d = el('div', 'obj', null, $('rain11b'))
-          d.innerHTML = '<svg class="drop" viewBox="0 0 26 40" style="position: static"><use href="#dropS" /></svg>'
-          d.style.left = Math.round(600 + rnd() * 320) + 'px'
-          d.style.top = '980px'
-          gsap.set(d, { autoAlpha: 0 })
-          tl.fromTo(d, { autoAlpha: 0, y: 0 }, { autoAlpha: 1, y: 380, duration: 0.55, ease: 'power1.in', repeat: Math.max(0, Math.floor((X.s11c - T[121]) / 0.55) - 2), immediateRender: false }, T[121] + i * 0.05 + rnd() * 0.3)
-        }
-        tl.fromTo('#o-rainbow', { autoAlpha: 0, scale: 0.2 }, { autoAlpha: 1, scale: 1, transformOrigin: '50% 100%', duration: 0.6, ease: 'back.out(1.6)' }, T[126] - 0.1)
+        slap('#o-soley', T[124] - 0.1, -4)
+        slap('#o-lapli', T[121] - 0.1, 3)
         fadeIn('#mi11b', T[128])
         shake(T[130])
 
-        // ---------- 11c. night flood out of the sun: N° 11 the nail clipper on a hand — crossed out, PA LANNWIT ----------
-        tl.fromTo('#sun11c', { scale: 0.7 }, { scale: 1, duration: 0.5, ease: 'back.out(1.6)', immediateRender: false }, X.s11c)
+        // ---------- 11c. violet flood out of the rainbow: N° 11 fingers, a nail clipper — crossed out under the moon, PA LANNWIT ----------
         tl.fromTo('#o-hand11', { y: 420 }, { y: 0, duration: 0.55, ease: 'expo.out', immediateRender: false }, X.s11c + 0.05)
         tl.fromTo('#o-moon11', { autoAlpha: 0, y: 160 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, X.s11c + 0.2)
         spring('#n11', X.s11c + 0.25, { rotation: -10 })
         tl.fromTo('#o-clip', { autoAlpha: 0, x: 300, rotation: 0 }, { autoAlpha: 1, x: 0, rotation: 0, duration: 0.4, ease: 'expo.out' }, T[136] - 0.15)
         tl.fromTo('#o-clip', { rotation: 0 }, { rotation: -8, duration: 0.08, yoyo: true, repeat: 3, immediateRender: false }, T[136] + 0.25)
-        tl.fromTo('#o-xclip', { autoAlpha: 0, scale: 2 }, { autoAlpha: 1, scale: 1, duration: 0.2, ease: 'power3.in' }, T[137] - 0.05)
+        cross('#o-xclip', T[137] - 0.05)
         shake(T[137] + 0.15)
         stamp('#o-pal', T[140] - 0.05, -6)
 
-        // ---------- 12. page pushes up: Africa + France → Haïti; passed on by our grandmothers ----------
-        spring('#o-q', X.s12 + 0.1, { rotation: -30 })
-        tl.to('#o-q', { scale: 0, autoAlpha: 0, duration: 0.25, ease: 'back.in(2)' }, T[157] - 0.2)
-        for (let i = 0; i < 7; i++) {
-          const h = el('div', 'hk obj', null, $('o-heads'))
-          h.innerHTML = '<svg viewBox="0 0 100 100"><use href="#kid" /></svg>'
-          h.style.left = 90 + i * 135 + 'px'
-          h.style.top = '1010px'
-          spring(h, T[152] - 0.08 + i * 0.05, { y: 60 })
-          tl.to(h, { autoAlpha: 0, y: 40, duration: 0.25 }, T[157] - 0.2 + i * 0.02)
-        }
+        // ---------- 12. page pushes up: a Haitian grandmother; written nowhere; AFRIQUE + VIEILLE FRANCE = HAÏTI ----------
+        spring('#o-gm', X.s12 + 0.05, { y: 140, rotation: 6 })
+        kb('#gm-img', X.s12, X.s13, 1.02, 1.14)
+        slap('#o-noone', T[146] - 0.05, -3)
+        tl.to('#o-noone', { autoAlpha: 0, y: -20, duration: 0.25 }, T[157] - 0.3)
         tl.fromTo('#v1', { autoAlpha: 0, x: -300 }, { autoAlpha: 1, x: 0, duration: 0.5, ease: 'expo.out' }, T[159] - 0.15)
-        tl.fromTo('#v2', { autoAlpha: 0, x: 300 }, { autoAlpha: 1, x: 0, duration: 0.5, ease: 'expo.out' }, T[163] - 0.15)
+        tl.fromTo('#v2', { autoAlpha: 0, x: 300 }, { autoAlpha: 1, x: 0, duration: 0.5, ease: 'expo.out' }, T[162] - 0.15)
         slap('#o-hti', T[163] + 0.3, -4)
-        spring('#o-gm', T[166] - 0.1, { y: 140, rotation: 6 })
-        kb('#gm-img', T[166], X.s13, 1.02, 1.12)
-        fadeIn('#mi12', T[167] + 0.2)
+        fadeIn('#mi12', T[165])
 
         // ---------- 13. page pushes left: a light bulb (common sense); in the dark the broom sweeps a coin away ----------
-        spring('#o-bulb', T[169] - 0.05, { y: -60 })
-        tl.fromTo('#o-bulb', { opacity: 1 }, { opacity: 0.35, duration: 0.12, yoyo: true, repeat: 3, ease: 'steps(1)', immediateRender: false }, T[173])
-        spring('#o-coin', X.s13 + 0.2, {})
-        tl.fromTo('#o-br13', { autoAlpha: 0, x: 260 }, { autoAlpha: 1, x: 0, duration: 0.4, ease: 'power2.out' }, T[174] - 0.1)
-        sweep('#o-br13', T[174] + 0.3, 4, 18)
+        spring('#o-bulb', X.s13 + 0.05, { y: -60 })
+        kb('#bulb-img', X.s13, X.bil, 1.02, 1.12)
+        tl.fromTo('#bulb-img', { opacity: 1 }, { opacity: 0.4, duration: 0.12, yoyo: true, repeat: 3, ease: 'steps(1)', immediateRender: false }, T[173])
+        tl.fromTo('#o-dark', { autoAlpha: 0, y: 160 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: 'expo.out' }, T[174] - 0.15)
+        spring('#o-coin', T[174] + 0.1, {})
+        tl.fromTo('#o-br13', { autoAlpha: 0, x: 260 }, { autoAlpha: 1, x: 0, duration: 0.4, ease: 'power2.out' }, T[175] - 0.1)
+        sweep('#o-br13', T[175] + 0.3, 4, 18)
         tl.to('#o-coin', { x: -420, rotation: -540, duration: 0.7, ease: 'power2.in' }, T[180])
         tl.to('#o-coin', { autoAlpha: 0, duration: 0.15 }, T[180] + 0.6)
 
-        // ---------- 14. black flood out of the coin, held through the scratch: « J'y crois pas ! »… and a padlock on the broom ----------
+        // ---------- 14. black flood out of the coin, held through the scratch: « J'y crois pas ! »… and the padlock ----------
         gsap.set('#o-broom14', { rotation: 8 })
         tl.fromTo('#o-broom14', { y: 300 }, { y: 0, duration: 0.6, ease: 'expo.out', immediateRender: false }, X.bil + HOLDB)
-        tl.fromTo('#sun14', { scale: 0.7 }, { scale: 1, duration: 0.6, ease: 'back.out(1.6)', immediateRender: false }, X.bil + HOLDB)
         tl.fromTo('#o-moon14', { autoAlpha: 0, y: 120 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, X.bil + HOLDB + 0.2)
         slap('#o-croi', T[188] - 0.05, -5)
         tl.to('#o-croi', { autoAlpha: 0.35, duration: 0.3 }, T[193])
-        tl.fromTo('#o-lock', { autoAlpha: 0, y: -260, rotation: -30 }, { autoAlpha: 1, y: 0, rotation: 0, duration: 0.35, ease: 'bounce.out' }, T[195] - 0.1)
+        tl.fromTo('#o-lock', { autoAlpha: 0, y: -400, rotation: -12 }, { autoAlpha: 1, y: 0, rotation: 4, duration: 0.4, ease: 'bounce.out' }, T[195] - 0.1)
         shake(T[196])
-        cam('#s14', T[197], X.s15 - T[197], 1.05, '590px 1050px', 'power1.out')
+        cam('#s14', T[197], X.s15 - T[197], 1.05, '590px 1150px', 'power1.out')
 
-        // ---------- 15. the nine beliefs, a blank note « On me répétait : »; where to answer ----------
+        // ---------- 15. the eleven beliefs, a blank sticky note « On me répétait : »; where to answer ----------
         tl.fromTo('#o-recap span', { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.05 }, X.s15 + 0.15)
         slap('#o-note', X.s15 + 0.05, -3)
         tl.fromTo('#caret15', { opacity: 1 }, { opacity: 0, duration: 0.3, yoyo: true, repeat: Math.floor((END - X.s15) / 0.3), ease: 'steps(1)', immediateRender: false }, X.s15)
