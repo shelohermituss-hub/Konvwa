@@ -7,7 +7,7 @@
 
 ## Image
 
-- 9:16 (1080×1920), **≈ 1 min (55 à 60 s)** depuis `videos/punitions-ecole/` (demande du client : « vidéo une minute maintenant » ; avant : 30 à 40 s). Pour tenir la minute : ≈ 200 mots de texte, une scène toutes les 4 à 5 s, voix accélérée ×1,05 au lieu de ×1,1 si besoin. Fond gris clair `#E7E7E7`, grille de points discrète au centre. Police Poppins.
+- 9:16 (1080×1920), **1 min ou plus (≥ 60 s)** depuis `videos/punitions-ecole/` et `videos/croyances/` (demandes du client : « vidéo une minute maintenant », puis « 1 minute ou plus » ; avant : 30 à 40 s). Pour tenir la minute : ≈ 210 à 230 mots de texte, une scène toutes les 4 s environ, voix non accélérée (×1,0) ou ×1,05 au plus ; vérifier la durée de la voix alignée avant de construire les scènes et ajouter du contenu si elle fait moins de 58 s. Fond gris clair `#E7E7E7`, grille de points discrète au centre. Police Poppins.
 - **Sans marque KONVWA** (ni logo ni nom) : la couleur vient du sujet (drapeaux, bleu nuit, rouge haïtien `#D21034` pour les mots-clés et la flèche, cuivre…), sauf les **disques derrière les détourages, toujours en orange `#F05A28`** (demande du client : pas de rouge rosé derrière les images).
 - Pastille noire en capitales en haut (`top: 96px`) tout du long : série (« DRAPEAUX JUMEAUX · ÉP. 2 ») ou thème (« HISTOIRE D'HAÏTI · 1492 »).
 - **Texte = voix mot par mot**, en blocs de lignes centrées en haut (`y` ≈ 200–260 px), chaque ligne est un masque (`overflow: hidden`) :
