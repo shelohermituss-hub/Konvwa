@@ -35,7 +35,8 @@ Composition HyperFrames écrite à la main (`index.html`), 9:16, **≈ 64 s** (f
   - `corde.jpg` « Happy African American children jumping over the rope in the park » ; `toupie.jpg` « Colorful trompo on a brown surface » ; `ronde.jpg` « Happy fun group of African American children raised hands together in circle » ; `pneu.jpg` « Rear view of boy playing with tire on field » ;
   - `grands-petits.jpg` « Adorable african black kids » ; `lakou.jpg` « Full shot african kids playing with ball » ; `fenetre.jpg` « Medium shot african kids at window » ; `ardoise-cut.png` « Writing slate », détourée ;
   - **seule exception** (rien dans Magnific pour les osselets) — Wikimedia Commons : `makovsky-osselets.jpg` Vladimir Makovsky, *Les osselets* (1870), domaine public ; `os-antiques.jpg` et `os1/2/3-cut.png` « Roman knucklebones from Silchester », BabelStone, **CC BY-SA 3.0** (créditer en description de la publication) ;
-  - écriture manuscrite `assets/fonts/caveat-700.woff2` (Caveat, SIL OFL).
+  - polices embarquées (SIL OFL) : Poppins 500–900 (`poppins-*.woff2`) pour le message, Instrument Serif italique (`instrument-serif-400i.woff2`) pour les mots d'emphase, Caveat (`caveat-700.woff2`) pour l'écriture à la craie.
+- **Typographie et couleurs** : « deux voix » (grotesque très serrée + serif italique, petits mots en gris doux) et une couleur d'accent par scène (bleu marine, brun bois, violet, bleu craie, vert, ambre, magenta, bleu Haïti) au lieu du rouge partout (demande du client).
 - **Rendu** :
   1. `npx --yes hyperframes@0.8.168 render --fps 120 --quality looks --output renders/raw120.mp4`
   2. `python3 -I ../_engine/style-histoire/finish.py renders/raw120.mp4 renders/jeux-enfance.mp4`

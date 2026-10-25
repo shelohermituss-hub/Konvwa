@@ -12,6 +12,13 @@
     -->
     <style>
       @font-face { font-family: "Caveat"; src: url("assets/fonts/caveat-700.woff2") format("woff2"); font-weight: 700; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-500.woff2") format("woff2"); font-weight: 500; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-600.woff2") format("woff2"); font-weight: 600; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-700.woff2") format("woff2"); font-weight: 700; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-800.woff2") format("woff2"); font-weight: 800; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-900.woff2") format("woff2"); font-weight: 900; }
+      @font-face { font-family: "Instrument Serif"; src: url("assets/fonts/instrument-serif-400.woff2") format("woff2"); font-weight: 400; }
+      @font-face { font-family: "Instrument Serif"; src: url("assets/fonts/instrument-serif-400i.woff2") format("woff2"); font-weight: 400; font-style: italic; }
       html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
       #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
       #world { position: absolute; inset: 0; }
@@ -22,12 +29,14 @@
       .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
       .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
       .w { display: inline-block; }
-      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
-      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
-      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
-      .line.b + .line.s { margin-top: 14px; }
-      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
-      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      /* typographie à deux voix (réf. client) : grotesque très serrée pour le message, serif italique pour l'emphase, petits mots en gris */
+      .s { font-size: 48px; font-weight: 500; letter-spacing: -0.015em; }
+      .m { font-size: 74px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
+      .b { font-size: 138px; font-weight: 900; letter-spacing: -0.065em; line-height: 0.9; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.06), 0 22px 34px rgba(0, 0, 0, 0.16); }
+      .line.b + .line.s, .line.bi + .line.s { margin-top: 14px; }
+      .bi { font-family: "Instrument Serif", serif; font-size: 156px; font-weight: 400; font-style: italic; letter-spacing: -0.03em; line-height: 0.92; text-shadow: 0 18px 30px rgba(0, 0, 0, 0.14); }
+      .mi { font-family: "Instrument Serif", serif; font-size: 96px; font-weight: 400; font-style: italic; letter-spacing: -0.02em; line-height: 0.95; }
+      .bi .w, .mi .w { padding-right: 0.04em; }
 
       .obj { position: absolute; z-index: 10; }
       .scene { position: absolute; inset: 0; }
@@ -68,7 +77,7 @@
       .slate em { display: inline-block; width: 8px; height: 110px; background: rgba(255, 255, 255, 0.9); margin-top: 22px; }
       .recap { position: absolute; left: 50px; right: 50px; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 14px; }
       .recap span { padding: 8px 22px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 34px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12); white-space: nowrap; }
-      .recap span b { color: #D21034; margin-right: 8px; }
+      .recap span b { color: #8C5A2B; margin-right: 8px; }
       .arrowR { position: absolute; font-weight: 900; font-size: 64px; color: #141414; }
     </style>
   </head>
@@ -90,7 +99,7 @@
           <svg class="xmark obj" id="o-xteddy" viewBox="0 0 300 300" style="left: 810px; top: 850px; width: 250px; height: 250px"><use href="#xx" /></svg>
           <div class="cut obj" id="o-girl" style="left: -30px; top: 1150px; width: 1060px; height: 772px; transform-origin: 40% 100%"><img src="assets/img/fillettes-cut.png" alt="" /></div>
           <div class="counter2 obj" id="o-clk" style="top: 545px; left: 380px; right: 0"><small>IL EST</small><b id="clk">15:00</b></div>
-          <div class="stamp sm obj" id="o-nuit" style="left: 430px; top: 880px">JUSQU'À LA NUIT</div>
+          <div class="stamp sm obj" id="o-nuit" style="left: 430px; top: 880px; color: #1d3557; border-color: #1d3557">JUSQU'À LA NUIT</div>
           <div class="hud" id="hud">
             <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
             <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
@@ -127,7 +136,7 @@
           <div class="cut obj" id="o-peb4" style="left: 250px; top: 1150px; width: 120px; height: 82px"><img src="assets/img/caillou-cut.png" alt="" /></div>
           <div class="photo obj" id="o-pied" style="left: 560px; top: 820px; width: 450px; height: 560px"><img src="assets/img/marel-pieds.jpg" alt="" style="object-position: 50% 60%" /></div>
           <div class="nchip obj" id="n2" style="left: 90px; top: 580px">N° 2 · MARÈL</div>
-          <div class="stamp sm obj" id="o-liy" style="left: 260px; top: 1420px">PA PILE LIY LAN !</div>
+          <div class="stamp sm obj" id="o-liy" style="left: 260px; top: 1420px; color: #2a6ebb; border-color: #2a6ebb">PA PILE LIY LAN !</div>
         </div>
         <!-- 5. green flood: N° 3 lago kache — a boy counts, hands over his eyes (1 … 10); the yard empties; behind a tree, under a bed, in the washing -->
         <div class="scene" id="s5">
@@ -163,7 +172,7 @@
         <!-- 8. blue flood: nobody bought them — 0 HTG; passed on from the big ones to the little ones (siblings), yard to yard (children playing in a dirt yard) -->
         <div class="scene" id="s8">
           <div class="ghost" style="top: 1500px; font-size: 360px">LAKOU</div>
-          <div class="stamp obj" id="o-htg" style="left: 90px; top: 640px">0 HTG</div>
+          <div class="stamp obj" id="o-htg" style="left: 90px; top: 640px; color: #1d3557; border-color: #1d3557">0 HTG</div>
           <div class="photo obj" id="o-gp" style="left: 520px; top: 620px; width: 490px; height: 380px"><img id="gp-img" src="assets/img/grands-petits.jpg" alt="" style="object-position: 50% 30%; transform-origin: 50% 30%" /></div>
           <div class="chip obj" id="o-grands" style="left: 560px; top: 960px">GRANDS → PETITS</div>
           <div class="photo obj" id="o-lakou" style="left: 70px; top: 1080px; width: 940px; height: 480px"><img id="lakou-img" src="assets/img/lakou.jpg" alt="" style="object-position: 50% 60%; transform-origin: 50% 60%" /></div>
@@ -175,14 +184,14 @@
           <div class="ghost" style="top: 1500px; font-size: 360px">RI</div>
           <div class="photo obj" id="o-rires" style="left: 70px; top: 640px; width: 940px; height: 860px"><img id="rires-img" src="assets/img/fenetre.jpg" alt="" style="object-position: 50% 45%; transform-origin: 50% 45%" /></div>
           <div class="chip obj" id="o-rien" style="left: 110px; top: 1440px; background: #141414; color: #fff">PRESQUE RIEN</div>
-          <div class="chip obj" id="o-tout" style="left: 560px; top: 1440px; background: #D21034; color: #fff">MAIS TOUT</div>
+          <div class="chip obj" id="o-tout" style="left: 560px; top: 1440px; background: #00209F; color: #fff">MAIS TOUT</div>
         </div>
         <!-- 10. the question: the nine games, a real school slate « Mon jeu préféré : »; where to answer -->
         <div class="scene" id="s10">
           <div class="recap" id="o-recap" style="top: 560px"><span><b>1</b>Oslè</span><span><b>2</b>Marèl</span><span><b>3</b>Lago kache</span><span><b>4</b>Mab</span><span><b>5</b>Kap</span><span><b>6</b>Corde</span><span><b>7</b>Toupie</span><span><b>8</b>Ronde</span><span><b>9</b>Pneu</span></div>
           <div class="slate obj" id="o-slate" style="left: 90px; top: 760px"><img src="assets/img/ardoise-cut.png" alt="" /><div><small>Mon jeu préféré :</small><em id="caret10"></em></div></div>
           <div class="bubble obj" id="o-bub" style="left: 380px; top: 1460px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
-          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1400px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1400px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </div>
 
         <div id="flood"></div>
@@ -298,6 +307,13 @@
         const blur = (n) => 'blur(' + n + 'px)'
         const END = 64.2
         const RED = '#D21034'
+        // one accent per scene, taken from its photos (no more red everywhere)
+        const NAVY = '#1d3557'
+        const CHALK = '#2a6ebb'
+        const VIOLET = '#5b4a8b'
+        const AMBER = '#c9780a'
+        const MAGENTA = '#b3245f'
+        const HAITI = '#00209F'
         const WOOD = '#8C5A2B'
         const GREEN = '#1f5f3a'
         const BLUE = '#1d3557'
@@ -324,24 +340,24 @@
 
         // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
         const BLOCKS = [
-          { y: 250, lines: [[0, 2, 'mi', RED], [3, 5, 'mi', RED]] },
-          { y: 230, lines: [[6, 9, 'm'], [10, 14, 's'], [15, 17, 'mi', RED]] },
-          { y: 220, lines: [[18, 18, 's'], [19, 19, 'b', RED], [20, 25, 's']] },
-          { y: 210, lines: [[26, 31, 's'], [32, 35, 's'], [36, 39, 'm'], [40, 42, 'mi', RED]] },
-          { y: 210, lines: [[43, 48, 'm'], [49, 52, 's'], [53, 57, 's'], [58, 62, 'mi', RED]] },
-          { y: 200, lines: [[63, 63, 's'], [64, 65, 'b', RED], [66, 71, 's'], [72, 77, 's']] },
-          { y: 230, lines: [[78, 81, 'm'], [82, 87, 's'], [88, 92, 'mi', RED]] },
-          { y: 220, lines: [[93, 93, 's'], [94, 95, 'b', RED], [96, 100, 's']] },
-          { y: 250, lines: [[101, 103, 'm'], [104, 108, 'mi', RED]] },
+          { y: 250, lines: [[0, 2, 'm'], [3, 5, 'mi', NAVY]] },
+          { y: 230, lines: [[6, 9, 'm'], [10, 14, 's'], [15, 17, 'mi', NAVY]] },
+          { y: 210, lines: [[18, 18, 's'], [19, 19, 'bi', WOOD], [20, 25, 's']] },
+          { y: 210, lines: [[26, 31, 's'], [32, 35, 's'], [36, 39, 'm'], [40, 42, 'mi', WOOD]] },
+          { y: 210, lines: [[43, 48, 'm'], [49, 52, 's'], [53, 57, 's'], [58, 62, 'mi', VIOLET]] },
+          { y: 200, lines: [[63, 63, 's'], [64, 65, 'bi', CHALK], [66, 71, 's'], [72, 77, 's']] },
+          { y: 230, lines: [[78, 81, 'm'], [82, 87, 's'], [88, 92, 'mi', CHALK]] },
+          { y: 220, lines: [[93, 93, 's'], [94, 95, 'bi', GREEN], [96, 100, 's']] },
+          { y: 250, lines: [[101, 103, 'm'], [104, 108, 'mi', GREEN]] },
           { y: 220, lines: [[109, 111, 'm'], [112, 114, 'm'], [115, 119, 's']] },
-          { y: 200, lines: [[120, 123, 's'], [124, 125, 'm'], [126, 127, 'b', RED], [128, 131, 's']] },
-          { y: 220, lines: [[132, 133, 'b', RED], [134, 137, 's'], [138, 145, 's']] },
+          { y: 200, lines: [[120, 123, 's'], [124, 125, 'm'], [126, 127, 'bi', AMBER], [128, 131, 's']] },
+          { y: 210, lines: [[132, 133, 'bi', AMBER], [134, 137, 's'], [138, 145, 's']] },
           { y: 230, lines: [[146, 149, 'm'], [150, 151, 'm'], [152, 155, 'm']] },
-          { y: 250, lines: [[156, 159, 'mi', RED], [160, 165, 's']] },
-          { y: 250, lines: [[166, 167, 'm'], [168, 173, 'mi', RED]] },
+          { y: 250, lines: [[156, 159, 'mi', MAGENTA], [160, 165, 's']] },
+          { y: 250, lines: [[166, 167, 'm'], [168, 173, 'mi', BLUE]] },
           { y: 220, lines: [[174, 179, 's'], [180, 183, 'm'], [184, 187, 'm']] },
-          { y: 220, lines: [[188, 188, 'm', '#fff'], [189, 192, 's'], [193, 198, 'mi', RED]] },
-          { y: 240, lines: [[199, 200, 's'], [201, 203, 'm'], [204, 206, 's']] },
+          { y: 220, lines: [[188, 188, 'b', '#fff'], [189, 192, 's'], [193, 198, 'mi', HAITI]] },
+          { y: 240, lines: [[199, 200, 's'], [201, 203, 'mi', INK], [204, 206, 's']] },
         ]
         const BILAN = 16
         const BIG = { b: 1, bi: 1, mi: 1, x: 1 }
@@ -364,7 +380,8 @@
                 tl.fromTo(w, { yPercent: 118, color: col || INK }, { yPercent: 0, duration: Math.max(0.18, Math.min(0.42, end - 0.22 - (T[k] - 0.03))), ease: 'back.out(1.7)' }, T[k] - 0.03)
               } else {
                 tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 14, filter: blur(6) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
-                tl.to(w, { color: col || INK, duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+                // small words settle in soft grey, the others in ink (or the line's colour)
+                tl.to(w, { color: col || (st === 's' ? '#5f5f5f' : INK), duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
               }
             }
           })
