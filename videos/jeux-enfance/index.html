@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Jeux d’enfance en Haïti</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      « Pas de téléphone, pas de jouets » — les jeux d’enfance en Haïti (oslè, marèl, lago kache…), style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
+      accroche en viseur de caméra (fillette haïtienne détourée dès la première image, téléphone et nounours barrés, horloge qui monte à 19:00), un jeu numéroté par scène,
+      fin « partager un savoir » : une vraie ardoise vide « Mon jeu préféré : » à remplir en commentaire.
+    -->
+    <style>
+      @font-face { font-family: "Caveat"; src: url("assets/fonts/caveat-700.woff2") format("woff2"); font-weight: 700; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .series { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; z-index: 30; }
+      .series span { padding: 10px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: 0.08em; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
+      .w { display: inline-block; }
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+
+      .obj { position: absolute; z-index: 10; }
+      .scene { position: absolute; inset: 0; }
+      .photo { position: absolute; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip { position: absolute; white-space: nowrap; padding: 14px 28px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 36px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); }
+      .nchip { position: absolute; white-space: nowrap; padding: 8px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 900; font-size: 40px; letter-spacing: 0.02em; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22); }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #CE1126; border-radius: 22px; color: #CE1126; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.7); white-space: nowrap; }
+      .stamp.sm { font-size: 64px; border-width: 8px; padding: 6px 28px; }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+      .tlab { position: absolute; font-weight: 800; font-size: 46px; }
+      #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
+      #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
+      #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
+      /* --- viseur de caméra (accroche), mots fantômes, micro-typo --- */
+      .hud { position: absolute; inset: 0; pointer-events: none; z-index: 12; }
+      .hud .cn { position: absolute; width: 60px; height: 60px; border: 0 solid #141414; }
+      .hud .rec { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
+      .hud .fps { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
+      .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; white-space: nowrap; }
+      .counter2 { position: absolute; left: 0; right: 0; text-align: center; }
+      .counter2 small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
+      .counter2 b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #141414; font-variant-numeric: tabular-nums; }
+      /* --- jeux d'enfance : uniquement des photos, tableaux et détourages réels ; texte, pastilles, tampons et croix par-dessus --- */
+      .cut { position: absolute; }
+      .cut img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.28)); }
+      .xmark { position: absolute; }
+      .cap { position: absolute; padding: 6px 14px; border-radius: 10px; background: rgba(20, 20, 20, 0.72); color: #fff; font-family: "Courier New", monospace; font-size: 20px; font-weight: 700; letter-spacing: 0.08em; white-space: nowrap; }
+      .count { position: absolute; font-family: "Caveat", cursive; font-weight: 700; font-size: 220px; line-height: 1; color: #fff; text-shadow: 0 10px 30px rgba(0, 0, 0, 0.55); }
+      .slate { position: absolute; width: 900px; height: 606px; }
+      .slate img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 18px; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.25)); }
+      .slate div { position: absolute; left: 150px; right: 330px; top: 150px; font-family: "Caveat", cursive; font-weight: 700; color: rgba(255, 255, 255, 0.92); }
+      .slate small { display: block; font-size: 84px; line-height: 1; }
+      .slate em { display: inline-block; width: 8px; height: 110px; background: rgba(255, 255, 255, 0.9); margin-top: 22px; }
+      .recap { position: absolute; left: 50px; right: 50px; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 14px; }
+      .recap span { padding: 8px 22px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 34px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12); white-space: nowrap; }
+      .recap span b { color: #D21034; margin-right: 8px; }
+      .arrowR { position: absolute; font-weight: 900; font-size: 64px; color: #141414; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="64.2" data-width="1080" data-height="1920">
+      <svg width="0" height="0" style="position: absolute">
+        <defs>
+          <symbol id="xx" viewBox="0 0 300 300"><path d="M30 30 L270 270 M270 30 L30 270" stroke="#D21034" stroke-width="26" stroke-linecap="round" /></symbol>
+        </defs>
+      </svg>
+      <div id="world">
+        <div class="grid" id="grid"></div>
+        <!-- 1. hook: viewfinder; a laughing Haitian girl (cut out) is there from frame 1; a phone and a teddy bear are crossed out; the clock runs to 19:00 -->
+        <div class="scene" id="s1">
+          <div class="ghost" style="top: 1480px; font-size: 360px">JWE</div>
+          <div class="cut obj" id="o-phone" style="left: 640px; top: 640px; width: 190px; height: 388px"><img src="assets/img/telephone-cut.png" alt="" /></div>
+          <svg class="xmark obj" id="o-xphone" viewBox="0 0 300 300" style="left: 600px; top: 690px; width: 270px; height: 270px"><use href="#xx" /></svg>
+          <div class="cut obj" id="o-teddy" style="left: 820px; top: 860px; width: 230px; height: 241px"><img src="assets/img/nounours-cut.png" alt="" /></div>
+          <svg class="xmark obj" id="o-xteddy" viewBox="0 0 300 300" style="left: 810px; top: 850px; width: 250px; height: 250px"><use href="#xx" /></svg>
+          <div class="cut obj" id="o-girl" style="left: -20px; top: 900px; width: 680px; height: 1012px; transform-origin: 40% 100%"><img src="assets/img/fillette-cut.png" alt="" /></div>
+          <div class="counter2 obj" id="o-clk" style="top: 545px; left: 380px; right: 0"><small>IL EST</small><b id="clk">15:00</b></div>
+          <div class="stamp sm obj" id="o-nuit" style="left: 380px; top: 1230px">JUSQU'À LA NUIT</div>
+          <div class="hud" id="hud">
+            <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="left: 50px; top: 1690px; border-left-width: 6px; border-bottom-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 1690px; border-right-width: 6px; border-bottom-width: 6px"></div>
+            <div class="rec" style="top: 1700px; left: 130px"><i id="recdot"></i>REC <span id="tc">00:00:00:00</span></div>
+            <div class="fps" style="top: 1700px; right: 130px">HAÏTI · LAKOU</div>
+          </div>
+        </div>
+        <!-- 2. N° 1 oslè: Makovsky's painting of children at knucklebones; three real bones: one thrown up, the others gathered, caught -->
+        <div class="scene" id="s2">
+          <div class="ghost" style="top: 1500px; font-size: 360px">OSLÈ</div>
+          <div class="photo obj" id="o-mak" style="left: 70px; top: 620px; width: 940px; height: 709px"><img id="mak-img" src="assets/img/makovsky-osselets.jpg" alt="" style="transform-origin: 40% 70%" /></div>
+          <div class="cap obj" id="cap2" style="left: 90px; top: 1270px">« LES OSSELETS » · V. MAKOVSKY · 1870</div>
+          <div class="nchip obj" id="n1" style="left: 90px; top: 600px">N° 1 · OSLÈ</div>
+          <div class="cut obj" id="o-os1" style="left: 470px; top: 1400px; width: 100px; height: 160px"><img src="assets/img/os1-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-os2" style="left: 250px; top: 1390px; width: 120px; height: 177px"><img src="assets/img/os2-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-os3" style="left: 690px; top: 1430px; width: 110px; height: 133px"><img src="assets/img/os3-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-peb" style="left: 870px; top: 1460px; width: 110px; height: 72px"><img src="assets/img/caillou-cut.png" alt="" /></div>
+        </div>
+        <!-- 3. very old: ancient knucklebones (Roman era, Silchester); a counter runs back 2 500 years -->
+        <div class="scene" id="s3">
+          <div class="ghost" style="top: 1500px; font-size: 330px">LONTAN</div>
+          <div class="photo obj" id="o-antik" style="left: 160px; top: 700px; width: 760px; height: 706px"><img id="antik-img" src="assets/img/os-antiques.jpg" alt="" style="transform-origin: 50% 50%; filter: sepia(0.25)" /></div>
+          <div class="counter2 obj" id="o-ans" style="top: 560px"><small>IL Y A</small><b id="ans">0 AN</b></div>
+          <div class="chip obj" id="o-grece" style="left: 110px; top: 1330px; background: #1d3557; color: #fff">GRÈCE ANTIQUE</div>
+          <div class="chip obj" id="o-mouton" style="left: 640px; top: 1330px">OS DE MOUTON</div>
+          <div class="cap obj" id="cap3" style="left: 180px; top: 1440px">OS ANTIQUES · ÉPOQUE ROMAINE · SILCHESTER</div>
+        </div>
+        <!-- 4. iris onto a chalk hopscotch: N° 2 marèl; a pebble lands in a square; a foot hops; « Pa pile liy lan ! » -->
+        <div class="scene" id="s4">
+          <div class="ghost" style="top: 1500px; font-size: 360px">MARÈL</div>
+          <div class="photo obj" id="o-marel" style="left: 70px; top: 600px; width: 520px; height: 780px"><img id="marel-img" src="assets/img/marel.jpg" alt="" style="transform-origin: 50% 70%" /></div>
+          <div class="cut obj" id="o-peb4" style="left: 250px; top: 1150px; width: 120px; height: 79px"><img src="assets/img/caillou-cut.png" alt="" /></div>
+          <div class="photo obj" id="o-pied" style="left: 560px; top: 820px; width: 450px; height: 560px"><img src="assets/img/marel-pieds.jpg" alt="" style="object-position: 40% 50%" /></div>
+          <div class="nchip obj" id="n2" style="left: 90px; top: 580px">N° 2 · MARÈL</div>
+          <div class="stamp sm obj" id="o-liy" style="left: 260px; top: 1420px">PA PILE LIY LAN !</div>
+        </div>
+        <!-- 5. green flood: N° 3 lago kache — a boy counts against a wall (1 … 10); the yard empties; behind a tree, under a bed, in the washing -->
+        <div class="scene" id="s5">
+          <div class="ghost" style="top: 1500px; font-size: 360px">KACHE</div>
+          <div class="photo obj" id="o-mur" style="left: 70px; top: 600px; width: 520px; height: 781px"><img id="mur-img" src="assets/img/compte-mur.jpg" alt="" style="transform-origin: 50% 40%" /></div>
+          <div class="count obj" id="o-cnt" style="left: 640px; top: 760px">1</div>
+          <div class="nchip obj" id="n3" style="left: 90px; top: 580px">N° 3 · LAGO KACHE</div>
+          <div class="photo obj" id="o-arbre" style="left: 600px; top: 640px; width: 410px; height: 615px"><img src="assets/img/cache-arbre.jpg" alt="" style="object-position: 50% 60%" /></div>
+          <div class="chip obj" id="o-lit" style="left: 110px; top: 1420px">SOUS UN LIT</div>
+          <div class="photo obj" id="o-linge" style="left: 480px; top: 1290px; width: 530px; height: 340px"><img src="assets/img/linge.jpg" alt="" /></div>
+        </div>
+        <!-- 6. page pushes left: and the list goes on — N° 4 mab (marbles), N° 5 kap (a kite at sunset) -->
+        <div class="scene" id="s6">
+          <div class="ghost" style="top: 1500px; font-size: 360px">MAB</div>
+          <div class="photo obj" id="o-billes" style="left: 70px; top: 620px; width: 560px; height: 420px"><img id="billes-img" src="assets/img/billes.jpg" alt="" style="transform-origin: 50% 50%" /></div>
+          <div class="nchip obj" id="n4" style="left: 90px; top: 600px">N° 4 · MAB</div>
+          <div class="photo obj" id="o-kap" style="left: 380px; top: 980px; width: 630px; height: 420px"><img id="kap-img" src="assets/img/kap.jpg" alt="" style="transform-origin: 60% 30%" /></div>
+          <div class="nchip obj" id="n5" style="left: 400px; top: 960px">N° 5 · KAP</div>
+        </div>
+        <!-- 7. page pushes up: N° 6 jump rope, N° 7 a spinning top, N° 8 a ring of children, N° 9 old tyres rolled with sticks -->
+        <div class="scene" id="s7">
+          <div class="ghost" style="top: 1500px; font-size: 330px">TOUPI</div>
+          <div class="photo obj" id="o-corde" style="left: 70px; top: 620px; width: 450px; height: 340px"><img src="assets/img/cordes.jpg" alt="" /></div>
+          <div class="nchip obj" id="n6" style="left: 90px; top: 600px">N° 6</div>
+          <div class="cut obj" id="o-toupie" style="left: 640px; top: 600px; width: 300px; height: 347px"><img src="assets/img/toupie-cut.png" alt="" /></div>
+          <div class="nchip obj" id="n7" style="left: 580px; top: 600px">N° 7</div>
+          <div class="photo obj" id="o-ronde" style="left: 70px; top: 1000px; width: 450px; height: 340px"><img src="assets/img/ronde.jpg" alt="" style="object-position: 62% 60%" /></div>
+          <div class="nchip obj" id="n8" style="left: 90px; top: 980px">N° 8</div>
+          <div class="photo obj" id="o-pneus" style="left: 560px; top: 1000px; width: 450px; height: 340px"><img id="pneus-img" src="assets/img/pneus.jpg" alt="" style="transform-origin: 50% 60%" /></div>
+          <div class="nchip obj" id="n9" style="left: 580px; top: 980px">N° 9</div>
+          <div class="chip obj" id="o-labels" style="left: 110px; top: 1400px; font-size: 30px">CORDE · TOUPIE · RONDE · PNEU</div>
+        </div>
+        <!-- 8. blue flood: nobody bought them — 0 HTG; a boy (cut out) passes them on, from the big ones to the little ones, yard to yard -->
+        <div class="scene" id="s8">
+          <div class="ghost" style="top: 1500px; font-size: 360px">LAKOU</div>
+          <div class="cut obj" id="o-boy" style="left: 240px; top: 1110px; width: 820px; height: 795px; transform-origin: 50% 100%"><img src="assets/img/garcon-cut.png" alt="" /></div>
+          <div class="stamp obj" id="o-htg" style="left: 90px; top: 640px">0 HTG</div>
+          <div class="chip obj" id="o-grands" style="left: 470px; top: 660px">GRANDS</div>
+          <div class="arrowR obj" id="o-arr8" style="left: 690px; top: 650px">→</div>
+          <div class="chip obj" id="o-petits" style="left: 780px; top: 660px">PETITS</div>
+          <div class="chip obj" id="o-cour" style="left: 90px; top: 800px; background: #141414; color: #fff">COUR → COUR</div>
+          <div class="chip obj" id="o-quartier" style="left: 90px; top: 900px; background: #141414; color: #fff">QUARTIER → QUARTIER</div>
+        </div>
+        <!-- 9. Bilan: black flood held through the scratch; then laughing Haitian children -->
+        <div class="scene" id="s9">
+          <div class="ghost" style="top: 1500px; font-size: 360px">RI</div>
+          <div class="photo obj" id="o-rires" style="left: 70px; top: 640px; width: 940px; height: 860px"><img id="rires-img" src="assets/img/enfants-rires.jpg" alt="" style="object-position: 62% 40%; transform-origin: 60% 40%" /></div>
+          <div class="chip obj" id="o-rien" style="left: 110px; top: 1440px; background: #141414; color: #fff">PRESQUE RIEN</div>
+          <div class="chip obj" id="o-tout" style="left: 560px; top: 1440px; background: #D21034; color: #fff">MAIS TOUT</div>
+        </div>
+        <!-- 10. the question: the nine games, a real school slate « Mon jeu préféré : »; where to answer -->
+        <div class="scene" id="s10">
+          <div class="recap" id="o-recap" style="top: 560px"><span><b>1</b>Oslè</span><span><b>2</b>Marèl</span><span><b>3</b>Lago kache</span><span><b>4</b>Mab</span><span><b>5</b>Kap</span><span><b>6</b>Corde</span><span><b>7</b>Toupie</span><span><b>8</b>Ronde</span><span><b>9</b>Pneu</span></div>
+          <div class="slate obj" id="o-slate" style="left: 90px; top: 760px"><img src="assets/img/ardoise-droite.jpg" alt="" /><div><small>Mon jeu préféré :</small><em id="caret10"></em></div></div>
+          <div class="bubble obj" id="o-bub" style="left: 380px; top: 1460px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1400px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#D21034" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </div>
+
+        <div id="flood"></div>
+        <div id="iris"></div>
+        <div id="blocks"></div>
+      </div>
+      <div class="series"><span>CULTURE D'HAÏTI · JEUX D'ENFANCE</span></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), prise 3 (prononciation créole guidée), pauses raccourcies, silence avant « Bilan ».
+           Musique : celle du style, coupure au scratch et retour sur « on n'avait » mixés dans le fichier. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="62.53" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="64.2" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/impact-bass-1.mp3" data-start="0.08" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx2" src="assets/sfx/pop.mp3" data-start="0.12" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx3" src="assets/sfx/pop.mp3" data-start="0.46" data-duration="0.72" data-track-index="23" data-volume="0.25"></audio>
+      <audio id="sx4" src="assets/sfx/claque.mp3" data-start="0.83" data-duration="0.39" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx5" src="assets/sfx/pop.mp3" data-start="1.54" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx6" src="assets/sfx/claque.mp3" data-start="1.86" data-duration="0.39" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx7" src="assets/sfx/impact-bass-2.mp3" data-start="2.01" data-duration="2.59" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx8" src="assets/sfx/whoosh-short.mp3" data-start="2.54" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx9" src="assets/sfx/pop.mp3" data-start="3.66" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx10" src="assets/sfx/riser.mp3" data-start="3.76" data-duration="0.93" data-track-index="21" data-volume="0.12"></audio>
+      <audio id="sx11" src="assets/sfx/click.mp3" data-start="4.77" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx12" src="assets/sfx/impact-bass-1.mp3" data-start="4.79" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx13" src="assets/sfx/whoosh.mp3" data-start="5.54" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx14" src="assets/sfx/whoosh-short.mp3" data-start="5.86" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx15" src="assets/sfx/pop.mp3" data-start="6.16" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx16" src="assets/sfx/pop.mp3" data-start="7.77" data-duration="0.72" data-track-index="20" data-volume="0.15"></audio>
+      <audio id="sx17" src="assets/sfx/pop.mp3" data-start="7.87" data-duration="0.72" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx18" src="assets/sfx/pop.mp3" data-start="7.97" data-duration="0.72" data-track-index="22" data-volume="0.15"></audio>
+      <audio id="sx19" src="assets/sfx/pop.mp3" data-start="8.61" data-duration="0.72" data-track-index="20" data-volume="0.15"></audio>
+      <audio id="sx20" src="assets/sfx/whoosh-short.mp3" data-start="9.46" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx21" src="assets/sfx/grains.mp3" data-start="10.73" data-duration="1.33" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx22" src="assets/sfx/claque.mp3" data-start="12.26" data-duration="0.39" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx23" src="assets/sfx/whoosh.mp3" data-start="13.68" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="13.93" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx25" src="assets/sfx/roulement.mp3" data-start="14.11" data-duration="0.99" data-track-index="22" data-volume="0.1"></audio>
+      <audio id="sx26" src="assets/sfx/pop.mp3" data-start="14.96" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx27" src="assets/sfx/click.mp3" data-start="15.1" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="19.92" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx29" src="assets/sfx/whoosh-short.mp3" data-start="20.41" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx30" src="assets/sfx/click.mp3" data-start="20.67" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx31" src="assets/sfx/click-soft.mp3" data-start="20.79" data-duration="0.37" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="21.14" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx33" src="assets/sfx/whoosh-short.mp3" data-start="23.81" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx34" src="assets/sfx/claque.mp3" data-start="24.36" data-duration="0.39" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx35" src="assets/sfx/pop.mp3" data-start="25.1" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx36" src="assets/sfx/key-press.mp3" data-start="25.55" data-duration="0.43" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx37" src="assets/sfx/key-press.mp3" data-start="25.91" data-duration="0.43" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx38" src="assets/sfx/click.mp3" data-start="26.89" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx39" src="assets/sfx/impact-bass-1.mp3" data-start="26.91" data-duration="2.12" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx40" src="assets/sfx/whoosh.mp3" data-start="27.74" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx41" src="assets/sfx/whoosh-short.mp3" data-start="28.06" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx42" src="assets/sfx/pop.mp3" data-start="28.26" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx43" src="assets/sfx/key-press.mp3" data-start="29.65" data-duration="0.43" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx44" src="assets/sfx/key-press.mp3" data-start="29.81" data-duration="0.43" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx45" src="assets/sfx/key-press.mp3" data-start="29.97" data-duration="0.43" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx46" src="assets/sfx/key-press.mp3" data-start="30.12" data-duration="0.43" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx47" src="assets/sfx/key-press.mp3" data-start="30.28" data-duration="0.43" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx48" src="assets/sfx/key-press.mp3" data-start="30.44" data-duration="0.43" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx49" src="assets/sfx/key-press.mp3" data-start="30.6" data-duration="0.43" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx50" src="assets/sfx/key-press.mp3" data-start="30.75" data-duration="0.43" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx51" src="assets/sfx/key-press.mp3" data-start="30.91" data-duration="0.43" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx52" src="assets/sfx/key-press.mp3" data-start="31.07" data-duration="0.43" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx53" src="assets/sfx/whoosh.mp3" data-start="32.58" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx54" src="assets/sfx/whoosh-short.mp3" data-start="33.45" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx55" src="assets/sfx/pop.mp3" data-start="34.48" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx56" src="assets/sfx/pop.mp3" data-start="35.02" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx57" src="assets/sfx/whoosh.mp3" data-start="36.06" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx58" src="assets/sfx/pop.mp3" data-start="37.01" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx59" src="assets/sfx/grains.mp3" data-start="37.11" data-duration="1.33" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx60" src="assets/sfx/pop.mp3" data-start="37.72" data-duration="0.72" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx61" src="assets/sfx/pop.mp3" data-start="40.03" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx62" src="assets/sfx/whoosh-short.mp3" data-start="40.13" data-duration="0.57" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx63" src="assets/sfx/whoosh.mp3" data-start="43.77" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx64" src="assets/sfx/pop.mp3" data-start="43.97" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx65" src="assets/sfx/pop.mp3" data-start="44.86" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx66" src="assets/sfx/pop.mp3" data-start="45.5" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx67" src="assets/sfx/roulement.mp3" data-start="45.58" data-duration="2.04" data-track-index="22" data-volume="0.08"></audio>
+      <audio id="sx68" src="assets/sfx/pop.mp3" data-start="47.06" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx69" src="assets/sfx/sparkle.mp3" data-start="47.82" data-duration="1.8" data-track-index="20" data-volume="0.12"></audio>
+      <audio id="sx70" src="assets/sfx/whoosh.mp3" data-start="49.11" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx71" src="assets/sfx/whoosh-short.mp3" data-start="49.43" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx72" src="assets/sfx/whoosh.mp3" data-start="49.48" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx73" src="assets/sfx/click.mp3" data-start="50.91" data-duration="0.37" data-track-index="20" data-volume="0.45"></audio>
+      <audio id="sx74" src="assets/sfx/impact-bass-2.mp3" data-start="50.93" data-duration="2.59" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx75" src="assets/sfx/pop.mp3" data-start="52.1" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx76" src="assets/sfx/pop.mp3" data-start="52.39" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx77" src="assets/sfx/pop.mp3" data-start="52.95" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx78" src="assets/sfx/pop.mp3" data-start="53.98" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx79" src="assets/sfx/whoosh.mp3" data-start="55.16" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx80" src="assets/sfx/scratch.mp3" data-start="55.16" data-duration="1.23" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx81" src="assets/sfx/whoosh-short.mp3" data-start="56.72" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx82" src="assets/sfx/impact-bass-2.mp3" data-start="56.86" data-duration="2.59" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx83" src="assets/sfx/pop.mp3" data-start="57.53" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx84" src="assets/sfx/pop.mp3" data-start="58.85" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx85" src="assets/sfx/impact-bass-1.mp3" data-start="59.27" data-duration="2.12" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx86" src="assets/sfx/sparkle.mp3" data-start="59.27" data-duration="1.8" data-track-index="23" data-volume="0.15"></audio>
+      <audio id="sx87" src="assets/sfx/whoosh.mp3" data-start="59.34" data-duration="0.57" data-track-index="24" data-volume="0.25"></audio>
+      <audio id="sx88" src="assets/sfx/click.mp3" data-start="59.64" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx89" src="assets/sfx/pop.mp3" data-start="59.69" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx90" src="assets/sfx/pop.mp3" data-start="61.79" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx91" src="assets/sfx/click.mp3" data-start="62.37" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx92" src="assets/sfx/sparkle.mp3" data-start="62.47" data-duration="1.73" data-track-index="22" data-volume="0.2"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 64.2
+        const RED = '#D21034'
+        const WOOD = '#8C5A2B'
+        const GREEN = '#1f5f3a'
+        const BLUE = '#1d3557'
+        const INK = '#141414'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0.0, 0.249, 0.384, 1.051, 1.255, 1.459, 2.077, 2.344, 2.856, 3.067, 3.561, 3.716, 3.871, 4.335, 4.49, 4.708, 5.197, 5.442, 5.756, 6.714, 7.521, 7.624, 7.83, 8.185, 8.32, 8.456, 8.978, 9.145, 9.312, 9.875, 10.042, 10.208, 10.507, 10.582, 10.806, 10.881, 11.141, 11.354, 11.566, 11.778, 12.416, 12.841, 13.266, 13.732, 13.821, 13.91, 13.999, 14.088, 14.177, 14.611, 14.708, 14.806, 14.903, 15.194, 15.617, 16.041, 16.887, 17.311, 19.086, 19.37, 19.772, 19.914, 20.056, 20.594, 21.017, 21.105, 21.346, 21.45, 21.554, 21.762, 21.866, 21.97, 22.3, 22.433, 22.567, 22.932, 23.065, 23.198, 23.565, 23.71, 24.002, 24.148, 24.679, 24.84, 25.001, 25.324, 25.485, 25.716, 25.96, 26.22, 26.614, 27.008, 27.429, 27.961, 28.131, 28.472, 28.902, 29.451, 29.606, 29.76, 29.915, 30.201, 30.388, 30.575, 31.14, 31.659, 31.962, 32.272, 32.478, 33.353, 33.779, 33.991, 34.331, 34.487, 34.643, 34.924, 35.112, 35.3, 35.488, 35.676, 36.114, 36.239, 36.364, 36.489, 36.906, 37.132, 37.574, 37.933, 38.366, 38.728, 39.154, 39.335, 39.934, 40.119, 40.505, 40.725, 41.384, 41.603, 42.121, 42.392, 42.528, 42.8, 42.936, 43.072, 43.208, 43.588, 43.815, 43.977, 44.139, 44.302, 44.76, 44.984, 45.186, 45.395, 45.604, 45.812, 46.482, 46.641, 46.8, 46.959, 47.215, 47.618, 47.777, 48.095, 48.598, 48.758, 49.33, 49.529, 49.979, 50.203, 50.315, 50.426, 50.538, 50.65, 51.445, 51.661, 51.806, 51.951, 52.097, 52.242, 52.602, 52.799, 53.084, 53.344, 53.606, 53.834, 54.29, 54.517, 56.065, 56.657, 56.85, 57.38, 57.572, 58.021, 58.157, 58.293, 58.429, 58.701, 58.973, 59.388, 59.58, 60.005, 60.159, 60.633, 61.688, 62.049, 62.169]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Pas", "de", "téléphone.", "Pas", "de", "jouets.", "Et", "pourtant,", "en", "Haïti,", "vous", "jouiez", "jusqu'à", "la", "nuit,", "avec", "presque", "rien.", "D'abord,", "l'oslè :", "des", "petits", "os,", "ou", "des", "cailloux.", "Vous", "en", "lancez", "un", "en", "l'air,", "vous", "ramassez", "les", "autres,", "et", "vous", "le", "rattrapez", "avant", "qu'il", "tombe.", "Et", "ce", "jeu", "est", "très", "vieux :", "dans", "la", "Grèce", "antique,", "on", "jouait", "déjà", "aux", "osselets,", "avec", "des", "os", "de", "mouton.", "Ensuite,", "la", "marèl :", "des", "cases", "tracées", "à", "la", "craie,", "ou", "au", "bâton", "dans", "la", "terre.", "Vous", "lancez", "un", "caillou,", "et", "vous", "sautez", "sur", "un", "pied,", "sans", "jamais", "toucher", "la", "ligne.", "Puis", "lago", "kache :", "quelqu'un", "compte", "contre", "un", "mur,", "les", "yeux", "fermés…", "et", "toute", "la", "cour", "disparaît.", "Derrière", "un", "arbre,", "sous", "un", "lit,", "dans", "le", "linge", "qui", "sèche.", "Et", "la", "liste", "continue.", "Les", "billes,", "les", "mab,", "qu'on", "gagnait", "aux", "copains.", "Le", "kap,", "le", "cerf-volant", "fait", "maison,", "avec", "du", "papier", "et", "des", "bouts", "de", "bois.", "La", "corde", "à", "sauter,", "la", "toupie,", "la", "ronde", "en", "chantant,", "et", "le", "vieux", "pneu", "qu'on", "fait", "rouler", "avec", "un", "bâton.", "Ces", "jeux,", "personne", "ne", "vous", "les", "a", "achetés :", "ils", "passaient", "des", "grands", "aux", "petits,", "de", "cour", "en", "cour,", "de", "quartier", "en", "quartier.", "Bilan :", "on", "n'avait", "presque", "rien…", "et", "on", "n'a", "jamais", "autant", "ri.", "Et", "toi,", "ton", "jeu", "préféré ?", "Écris-le", "en", "commentaire."]
+        const SCRATCH = 55.18
+
+        // ---------- transitions: when each scene takes over, and how ----------
+        const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
+        const X = { s2: at(18), s3: at(43), s4: at(63), s5: at(93), s6: at(120), s7: at(146), s8: at(166), bil: Math.round((SCRATCH + 0.3) * 100) / 100, s10: at(199) }
+        const HOLDB = T[189] - 0.14 - X.bil // the black flood holds through the scratch silence, until « on n'avait »
+        const FLOODS = [
+          { t: X.s2, a: [300, 1300], b: [540, 975], col: WOOD, hold: 0 },
+          { t: X.s5, a: [520, 1460], b: [330, 990], col: GREEN, hold: 0 },
+          { t: X.s8, a: [785, 1170], b: [540, 1300], col: BLUE, hold: 0 },
+          { t: X.bil, a: [540, 1300], b: [540, 1070], col: INK, hold: HOLDB },
+        ]
+        const IRISES = [{ t: X.s4 }]
+        const PUSHES = [['s2', 's3', 'y'], ['s5', 's6', 'x'], ['s6', 's7', 'y'], ['s9', 's10', 'y']]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 250, lines: [[0, 2, 'mi', RED], [3, 5, 'mi', RED]] },
+          { y: 230, lines: [[6, 9, 'm'], [10, 14, 's'], [15, 17, 'mi', RED]] },
+          { y: 220, lines: [[18, 18, 's'], [19, 19, 'b', RED], [20, 25, 's']] },
+          { y: 210, lines: [[26, 31, 's'], [32, 35, 's'], [36, 39, 'm'], [40, 42, 'mi', RED]] },
+          { y: 210, lines: [[43, 48, 'm'], [49, 52, 's'], [53, 57, 's'], [58, 62, 'mi', RED]] },
+          { y: 200, lines: [[63, 63, 's'], [64, 65, 'b', RED], [66, 71, 's'], [72, 77, 's']] },
+          { y: 230, lines: [[78, 81, 'm'], [82, 87, 's'], [88, 92, 'mi', RED]] },
+          { y: 220, lines: [[93, 93, 's'], [94, 95, 'b', RED], [96, 100, 's']] },
+          { y: 250, lines: [[101, 103, 'm'], [104, 108, 'mi', RED]] },
+          { y: 220, lines: [[109, 111, 'm'], [112, 114, 'm'], [115, 119, 's']] },
+          { y: 200, lines: [[120, 123, 's'], [124, 125, 'm'], [126, 127, 'b', RED], [128, 131, 's']] },
+          { y: 220, lines: [[132, 133, 'b', RED], [134, 137, 's'], [138, 145, 's']] },
+          { y: 230, lines: [[146, 149, 'm'], [150, 151, 'm'], [152, 155, 'm']] },
+          { y: 250, lines: [[156, 159, 'mi', RED], [160, 165, 's']] },
+          { y: 250, lines: [[166, 167, 'm'], [168, 173, 'mi', RED]] },
+          { y: 220, lines: [[174, 179, 's'], [180, 183, 'm'], [184, 187, 'm']] },
+          { y: 220, lines: [[188, 188, 'm', '#fff'], [189, 192, 's'], [193, 198, 'mi', RED]] },
+          { y: 240, lines: [[199, 200, 's'], [201, 203, 'm'], [204, 206, 's']] },
+        ]
+        const BILAN = 16
+        const BIG = { b: 1, bi: 1, mi: 1, x: 1 }
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = next ? (bi === BILAN - 1 ? X.bil - 0.02 : T[next.lines[0][0]] - 0.08) : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              if (BIG[st]) {
+                // key words rise out of their line, on a spring
+                tl.fromTo(w, { yPercent: 118, color: col || INK }, { yPercent: 0, duration: Math.max(0.18, Math.min(0.42, end - 0.22 - (T[k] - 0.03))), ease: 'back.out(1.7)' }, T[k] - 0.03)
+              } else {
+                tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 14, filter: blur(6) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
+                tl.to(w, { color: col || INK, duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+              }
+            }
+          })
+          // exit: every word drops back into its line
+          if (end < END) {
+            tl.to(box.querySelectorAll('.w'), { yPercent: -125, duration: 0.18, ease: 'power3.in', stagger: 0.006 }, end - 0.2)
+            tl.set(box, { autoAlpha: 0 }, end)
+          }
+        })
+        // « Bilan : » is white on the black flood, and turns to ink as the flood contracts
+        tl.to(blocksBox.children[BILAN].querySelector('.w'), { color: INK, duration: 0.2 }, X.bil + HOLDB)
+
+        // ---------- flood + iris: pure functions of time ----------
+        const ease = { in: (p) => p * p * p, out: (p) => 1 - Math.pow(1 - p, 3) }
+        const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)))
+        const flood = $('flood')
+        const iris = $('iris')
+        const blades = []
+        for (let i = 0; i < 6; i++) blades.push(el('div', 'blade', null, iris))
+        const RMAX = 1250
+        function ctl(t) {
+          // colour flood: grows out of an object, covers the frame, contracts into the next scene's object
+          let r = 0, cx = 540, cy = 960, col = INK
+          for (const F of FLOODS) {
+            const g0 = F.t - 0.3, c0 = F.t + F.hold, c1 = c0 + 0.32
+            if (t >= g0 && t <= c1) {
+              col = F.col
+              if (t < F.t) { r = 2300 * ease.in(seg(t, g0, F.t)); cx = F.a[0]; cy = F.a[1] }
+              else if (t < c0) { r = 2300; cx = F.b[0]; cy = F.b[1] }
+              else { r = 2300 * (1 - ease.out(seg(t, c0, c1))); cx = F.b[0]; cy = F.b[1] }
+            }
+          }
+          flood.style.background = col
+          flood.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + cx + 'px ' + cy + 'px)'
+          // camera iris: six blades close over the old scene and open on a photo
+          let ap = RMAX
+          for (const I of IRISES) {
+            if (t >= I.t - 0.28 && t < I.t) ap = RMAX * (1 - ease.in(seg(t, I.t - 0.28, I.t)))
+            else if (t >= I.t && t <= I.t + 0.36) ap = RMAX * ease.out(seg(t, I.t + 0.02, I.t + 0.36))
+          }
+          iris.style.visibility = ap >= RMAX - 1 ? 'hidden' : 'inherit'
+          const twist = (1 - ap / RMAX) * 50
+          blades.forEach((b, i) => {
+            b.style.left = 540 - 1600 + 'px'
+            b.style.top = 960 - 3200 + 'px'
+            b.style.transform = 'rotate(' + (i * 60 + twist).toFixed(2) + 'deg) translateY(' + (-ap).toFixed(1) + 'px)'
+          })
+        }
+        const clock = { v: 0 }
+        tl.fromTo(clock, { v: 0 }, { v: END, duration: END, ease: 'none', immediateRender: false, onUpdate: () => ctl(clock.v) }, 0)
+        ctl(0)
+
+        // ---------- helpers ----------
+        const spring = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0 }, o), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.8)' }, at)
+        const stamp = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.4, rotation: 2 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.18, ease: 'power4.in' }, at)
+        const show = (sel, at) => tl.set(sel, { autoAlpha: 1 }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        const shake = (at) => tl.fromTo('#world', { x: 0 }, { x: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, at)
+        const cam = (sel, at, dur, scale, origin, ez) => tl.to(sel, { scale, transformOrigin: origin, duration: dur, ease: ez || 'power2.inOut' }, at)
+        // a photo that fills the frame behind the iris, then zooms out into its card
+        const unfold = (sel, at) => tl.fromTo(sel, { scale: 3.4 }, { scale: 1, duration: 0.55, ease: 'power3.inOut' }, at)
+        const kb = (sel, from, to, s0, s1) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: to - from, ease: 'none', immediateRender: false }, from)
+        const sonar = (sels, from, to) => sels.forEach((s, i) => tl.fromTo(s, { autoAlpha: 0.9, scale: 0.4 }, { autoAlpha: 0, scale: 3.2, duration: 1.2, ease: 'power1.out', repeat: Math.max(0, Math.floor((to - from) / 1.2) - 1), immediateRender: false }, from + i * 0.4))
+
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8', '#s9', '#s10']
+        gsap.set(SC.slice(1), { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+        tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
+        // scenes covered by a flood or an iris swap while hidden
+        ;[['s1', 's2', X.s2], ['s3', 's4', X.s4], ['s4', 's5', X.s5], ['s7', 's8', X.s8], ['s8', 's9', X.bil]].forEach(([a, b, t]) => { hide('#' + a, t); show('#' + b, t) })
+        // page pushes: the old scene leaves, the new one arrives from the opposite side
+        PUSHES.forEach(([a, b, ax]) => {
+          const D = ax === 'x' ? 1080 : 1920
+          const t0 = X[b] - 0.1
+          tl.to('#' + a, { [ax]: -D, duration: 0.4, ease: 'power3.inOut' }, t0)
+          show('#' + b, t0)
+          tl.fromTo('#' + b, { [ax]: D }, { [ax]: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, t0)
+          hide('#' + a, t0 + 0.4)
+        })
+        // ghost words drift slowly the whole time they are on screen
+        document.querySelectorAll('.ghost').forEach((g, i) => tl.fromTo(g, { x: i % 2 ? -60 : 60 }, { x: i % 2 ? 60 : -60, duration: END, ease: 'none', immediateRender: false }, 0))
+        const slap = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 1.8, rotation: rot * 2.5 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.28, ease: 'back.out(2.4)' }, at)
+        const fadeIn = (sel, at) => tl.fromTo(sel, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, at)
+        const cross = (sel, at) => tl.fromTo(sel, { autoAlpha: 0, scale: 2 }, { autoAlpha: 1, scale: 1, duration: 0.2, ease: 'power3.in' }, at)
+        const count = (obj, from, to, t0, t1, fmt, node, ez) => tl.fromTo(obj, { v: from }, { v: to, duration: t1 - t0, ease: ez || 'power1.inOut', immediateRender: false, onUpdate: () => { node.textContent = fmt(obj.v) } }, t0)
+
+        // ---------- 1. hook: the laughing girl is there on frame 1; phone and teddy crossed out; the clock runs to 19:00 ----------
+        tl.fromTo('#o-girl', { y: 240, scale: 0.94 }, { y: 0, scale: 1, duration: 0.45, ease: 'expo.out' }, 0)
+        tl.fromTo('#o-girl', { rotation: 0 }, { rotation: 1.5, duration: 0.45, yoyo: true, repeat: 5, ease: 'sine.inOut', immediateRender: false }, 0.5)
+        tl.fromTo('#hud', { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        slap('#o-phone', T[2] - 0.12, 8)
+        cross('#o-xphone', T[2] + 0.25)
+        slap('#o-teddy', T[5] - 0.12, -8)
+        cross('#o-xteddy', T[5] + 0.2)
+        shake(T[5] + 0.35)
+        tl.to(['#o-phone', '#o-xphone', '#o-teddy', '#o-xteddy'], { autoAlpha: 0, x: 300, duration: 0.3, ease: 'power2.in' }, T[7])
+        spring('#o-clk', T[10] - 0.1, {})
+        const clk = { v: 15 * 60 }
+        count(clk, 15 * 60, 19 * 60, T[10], T[14], (v) => { const m = Math.round(v); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0') }, $('clk'), 'power2.in')
+        tl.to('#clk', { color: RED, duration: 0.15 }, T[14] - 0.05)
+        stamp('#o-nuit', T[14] - 0.02, -6)
+        shake(T[14] + 0.15)
+        cam('#s1', T[16], X.s2 - T[16], 1.06, '300px 1300px', 'power2.in')
+        // the viewfinder's timecode and blinking REC dot are pure functions of time
+        const tc = $('tc')
+        const recdot = $('recdot')
+        const clock2 = { v: 0 }
+        tl.fromTo(clock2, { v: 0 }, { v: X.s2, duration: X.s2, ease: 'none', immediateRender: false, onUpdate: () => { const t = clock2.v; const f = Math.floor((t % 1) * 30); tc.textContent = '00:00:' + String(Math.floor(t)).padStart(2, '0') + ':' + String(f).padStart(2, '0'); recdot.style.opacity = Math.floor(t * 2) % 2 ? '0.25' : '1' } }, 0)
+
+        // ---------- 2. wood flood → N° 1 oslè: the painting; bones and a pebble; one thrown up, the others gathered, caught ----------
+        unfold('#o-mak', X.s2 + 0.05)
+        kb('#mak-img', X.s2, X.s3, 1.04, 1.22)
+        spring('#n1', X.s2 + 0.3, { rotation: -10 })
+        fadeIn('#cap2', X.s2 + 0.5)
+        ;['#o-os2', '#o-os1', '#o-os3'].forEach((s, i) => spring(s, T[21] - 0.05 + i * 0.1, { y: 120, rotation: 60 }))
+        spring('#o-peb', T[25] - 0.05, { y: 80 })
+        // throw the middle bone up, sweep the others together, catch it
+        tl.to('#o-os1', { y: -520, rotation: 300, duration: 0.55, ease: 'power2.out' }, T[28] - 0.05)
+        tl.to(['#o-os2', '#o-os3', '#o-peb'], { x: (i) => [180, -150, -330][i], y: 20, rotation: (i) => [20, -25, 30][i], duration: 0.35, ease: 'power3.inOut' }, T[33] - 0.05)
+        tl.to('#o-os1', { y: 0, rotation: 540, duration: 0.45, ease: 'power2.in' }, T[39] - 0.15)
+        shake(T[39] + 0.3)
+
+        // ---------- 3. page pushes up: very old — ancient knucklebones; 2 500 years; Greece; sheep bones ----------
+        spring('#o-antik', X.s3 + 0.05, { y: 140, rotation: -4 })
+        kb('#antik-img', X.s3, X.s4, 1.02, 1.14)
+        spring('#o-ans', X.s3 + 0.1, {})
+        count({ v: 0 }, 0, 2500, T[45], T[52], (v) => (Math.round(v / 50) * 50).toLocaleString('fr-FR').replace(/ | /g, ' ') + ' ANS', $('ans'), 'power2.out')
+        slap('#o-grece', T[51] - 0.05, -4)
+        slap('#o-mouton', T[60] - 0.05, 4)
+        fadeIn('#cap3', T[53])
+
+        // ---------- 4. iris onto the chalk hopscotch: N° 2 marèl; the pebble lands; a foot hops; « Pa pile liy lan ! » ----------
+        unfold('#o-marel', X.s4 + 0.15)
+        kb('#marel-img', X.s4, X.s5, 1.03, 1.16)
+        spring('#n2', X.s4 + 0.45, { rotation: -10 })
+        tl.fromTo('#o-peb4', { autoAlpha: 0, x: 420, y: -520, rotation: -200 }, { autoAlpha: 1, x: 0, y: 0, rotation: 0, duration: 0.55, ease: 'power2.in' }, T[79] - 0.1)
+        tl.fromTo('#o-peb4', { scaleY: 1 }, { scaleY: 0.82, duration: 0.07, yoyo: true, repeat: 1, ease: 'power1.out', immediateRender: false }, T[79] + 0.45)
+        tl.fromTo('#o-pied', { autoAlpha: 0, y: -160, rotation: 6 }, { autoAlpha: 1, y: 0, rotation: 3, duration: 0.4, ease: 'back.out(1.8)' }, T[84] - 0.1)
+        tl.to('#o-pied', { y: -40, duration: 0.18, yoyo: true, repeat: 3, ease: 'power1.out' }, T[84] + 0.35)
+        stamp('#o-liy', T[90] - 0.05, -5)
+        shake(T[90] + 0.13)
+
+        // ---------- 5. green flood: N° 3 lago kache; counting 1 … 10; the yard empties; behind a tree, under a bed, in the washing ----------
+        tl.fromTo('#o-mur', { y: 420 }, { y: 0, duration: 0.55, ease: 'expo.out', immediateRender: false }, X.s5 + 0.05)
+        kb('#mur-img', X.s5, T[109], 1.02, 1.12)
+        spring('#n3', X.s5 + 0.2, { rotation: -10 })
+        spring('#o-cnt', T[97] - 0.05, {})
+        count({ v: 1 }, 1, 10, T[97], T[103] + 0.3, (v) => String(Math.round(v)), $('o-cnt'), 'none')
+        // the yard empties: the counting boy and the number vanish
+        tl.to(['#o-mur', '#o-cnt'], { autoAlpha: 0, scale: 0.6, duration: 0.35, ease: 'back.in(2)', stagger: 0.06 }, T[108] - 0.1)
+        tl.fromTo('#o-arbre', { autoAlpha: 0, x: 300 }, { autoAlpha: 1, x: 0, duration: 0.45, ease: 'expo.out' }, T[109] - 0.1)
+        tl.to('#o-arbre', { x: -530, duration: 0.5, ease: 'power3.inOut' }, T[112] - 0.3)
+        slap('#o-lit', T[112] - 0.05, -4)
+        tl.fromTo('#o-linge', { autoAlpha: 0, y: 260 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(1.6)' }, T[115] - 0.1)
+
+        // ---------- 6. page pushes left: and the list goes on — N° 4 marbles, N° 5 kite ----------
+        spring('#o-billes', T[124] - 0.1, { y: 120, rotation: -6 })
+        kb('#billes-img', T[124], X.s7, 1.02, 1.15)
+        spring('#n4', T[126] - 0.05, { rotation: -10 })
+        spring('#o-kap', T[132] - 0.1, { y: 140, rotation: 6 })
+        kb('#kap-img', T[132], X.s7, 1.02, 1.18)
+        spring('#n5', T[133] - 0.05, { rotation: -10 })
+
+        // ---------- 7. page pushes up: N° 6 rope, N° 7 the top spins, N° 8 the ring, N° 9 old tyres ----------
+        spring('#o-corde', X.s7 + 0.05, { y: 120, rotation: -6 })
+        spring('#n6', X.s7 + 0.15, { rotation: -10 })
+        spring('#o-toupie', T[150] - 0.1, { y: -120 })
+        spring('#n7', T[151] - 0.05, { rotation: -10 })
+        // the top spins: a wobble around its point that never stops
+        tl.fromTo('#o-toupie', { rotation: -4 }, { rotation: 4, duration: 0.18, yoyo: true, repeat: Math.floor((X.s8 - T[151]) / 0.18), ease: 'sine.inOut', immediateRender: false }, T[151] + 0.4)
+        spring('#o-ronde', T[153] - 0.1, { y: 120, rotation: 6 })
+        spring('#n8', T[153], { rotation: -10 })
+        spring('#o-pneus', T[159] - 0.1, { y: 120, rotation: -6 })
+        kb('#pneus-img', T[159], X.s8, 1.02, 1.18)
+        spring('#n9', T[159], { rotation: -10 })
+        fadeIn('#o-labels', T[161])
+
+        // ---------- 8. blue flood out of the tyres: nobody bought them — 0 HTG; from the big ones to the little ones ----------
+        tl.fromTo('#o-boy', { y: 600 }, { y: 0, duration: 0.6, ease: 'expo.out', immediateRender: false }, X.s8 + 0.05)
+        tl.fromTo('#o-boy', { rotation: 0 }, { rotation: -2, duration: 0.5, yoyo: true, repeat: 7, ease: 'sine.inOut', immediateRender: false }, X.s8 + 0.7)
+        stamp('#o-htg', T[173] - 0.02, -8)
+        shake(T[173] + 0.15)
+        slap('#o-grands', T[177] - 0.05, -3)
+        fadeIn('#o-arr8', T[178])
+        slap('#o-petits', T[179] - 0.05, 3)
+        slap('#o-cour', T[181] - 0.05, -2)
+        slap('#o-quartier', T[185] - 0.05, 2)
+
+        // ---------- 9. black flood held through the scratch; « Bilan : »; laughing children; almost nothing — but everything ----------
+        unfold('#o-rires', X.bil + HOLDB + 0.05)
+        kb('#rires-img', X.bil + HOLDB, X.s10, 1.03, 1.15)
+        slap('#o-rien', T[191] - 0.05, -3)
+        slap('#o-tout', T[197] - 0.05, 3)
+        shake(T[198] + 0.1)
+        cam('#s9', T[198], X.s10 - T[198], 1.05, '540px 1070px', 'power1.out')
+
+        // ---------- 10. the nine games, a blank slate « Mon jeu préféré : »; where to answer ----------
+        tl.fromTo('#o-recap span', { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.05 }, X.s10 + 0.15)
+        slap('#o-slate', X.s10 + 0.05, -2)
+        tl.fromTo('#caret10', { opacity: 1 }, { opacity: 0, duration: 0.3, yoyo: true, repeat: Math.floor((END - X.s10) / 0.3), ease: 'steps(1)', immediateRender: false }, X.s10)
+        spring('#o-bub', T[204] - 0.1, {})
+        spring('#o-arrow', T[206] - 0.02, { rotation: -30 })
+        const left = END - T[206] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[206] + 0.5)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
