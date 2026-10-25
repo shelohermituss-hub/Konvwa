@@ -36,3 +36,7 @@ graphify-out/graph.html
 graphify-out/manifest.json
 graphify-out/cost.json
 graphify-out/.graphify_*
+
+# HyperFrames : rendus et état local des projets vidéo (les MP4 ne sont jamais commités)
+videos/*/renders/
+videos/*/.hyperframes/
