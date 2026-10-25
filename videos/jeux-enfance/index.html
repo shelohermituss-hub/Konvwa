@@ -17,8 +17,6 @@
       @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-700.woff2") format("woff2"); font-weight: 700; }
       @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-800.woff2") format("woff2"); font-weight: 800; }
       @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-900.woff2") format("woff2"); font-weight: 900; }
-      @font-face { font-family: "Instrument Serif"; src: url("assets/fonts/instrument-serif-400.woff2") format("woff2"); font-weight: 400; }
-      @font-face { font-family: "Instrument Serif"; src: url("assets/fonts/instrument-serif-400i.woff2") format("woff2"); font-weight: 400; font-style: italic; }
       html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
       #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
       #world { position: absolute; inset: 0; }
@@ -29,14 +27,13 @@
       .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
       .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
       .w { display: inline-block; }
-      /* typographie à deux voix (réf. client) : grotesque très serrée pour le message, serif italique pour l'emphase, petits mots en gris */
-      .s { font-size: 48px; font-weight: 500; letter-spacing: -0.015em; }
-      .m { font-size: 74px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
-      .b { font-size: 138px; font-weight: 900; letter-spacing: -0.065em; line-height: 0.9; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.06), 0 22px 34px rgba(0, 0, 0, 0.16); }
-      .line.b + .line.s, .line.bi + .line.s { margin-top: 14px; }
-      .bi { font-family: "Instrument Serif", serif; font-size: 156px; font-weight: 400; font-style: italic; letter-spacing: -0.03em; line-height: 0.92; text-shadow: 0 18px 30px rgba(0, 0, 0, 0.14); }
-      .mi { font-family: "Instrument Serif", serif; font-size: 96px; font-weight: 400; font-style: italic; letter-spacing: -0.02em; line-height: 0.95; }
-      .bi .w, .mi .w { padding-right: 0.04em; }
+      /* typographie de la série (Poppins, emphase en italique gras) ; relief pour que le texte ne paraisse pas plat */
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.14), 0 10px 18px rgba(0, 0, 0, 0.16); }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.22), 0 6px 0 rgba(0, 0, 0, 0.1), 0 20px 30px rgba(0, 0, 0, 0.22); }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.22), 0 6px 0 rgba(0, 0, 0, 0.1), 0 20px 30px rgba(0, 0, 0, 0.22); }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2), 0 4px 0 rgba(0, 0, 0, 0.08), 0 12px 20px rgba(0, 0, 0, 0.18); }
 
       .obj { position: absolute; z-index: 10; }
       .scene { position: absolute; inset: 0; }
@@ -340,24 +337,24 @@
 
         // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
         const BLOCKS = [
-          { y: 250, lines: [[0, 2, 'm'], [3, 5, 'mi', NAVY]] },
+          { y: 250, lines: [[0, 2, 'mi', NAVY], [3, 5, 'mi', NAVY]] },
           { y: 230, lines: [[6, 9, 'm'], [10, 14, 's'], [15, 17, 'mi', NAVY]] },
-          { y: 210, lines: [[18, 18, 's'], [19, 19, 'bi', WOOD], [20, 25, 's']] },
+          { y: 220, lines: [[18, 18, 's'], [19, 19, 'b', WOOD], [20, 25, 's']] },
           { y: 210, lines: [[26, 31, 's'], [32, 35, 's'], [36, 39, 'm'], [40, 42, 'mi', WOOD]] },
           { y: 210, lines: [[43, 48, 'm'], [49, 52, 's'], [53, 57, 's'], [58, 62, 'mi', VIOLET]] },
-          { y: 200, lines: [[63, 63, 's'], [64, 65, 'bi', CHALK], [66, 71, 's'], [72, 77, 's']] },
+          { y: 200, lines: [[63, 63, 's'], [64, 65, 'b', CHALK], [66, 71, 's'], [72, 77, 's']] },
           { y: 230, lines: [[78, 81, 'm'], [82, 87, 's'], [88, 92, 'mi', CHALK]] },
-          { y: 220, lines: [[93, 93, 's'], [94, 95, 'bi', GREEN], [96, 100, 's']] },
+          { y: 220, lines: [[93, 93, 's'], [94, 95, 'b', GREEN], [96, 100, 's']] },
           { y: 250, lines: [[101, 103, 'm'], [104, 108, 'mi', GREEN]] },
           { y: 220, lines: [[109, 111, 'm'], [112, 114, 'm'], [115, 119, 's']] },
-          { y: 200, lines: [[120, 123, 's'], [124, 125, 'm'], [126, 127, 'bi', AMBER], [128, 131, 's']] },
-          { y: 210, lines: [[132, 133, 'bi', AMBER], [134, 137, 's'], [138, 145, 's']] },
+          { y: 200, lines: [[120, 123, 's'], [124, 125, 'm'], [126, 127, 'b', AMBER], [128, 131, 's']] },
+          { y: 220, lines: [[132, 133, 'b', AMBER], [134, 137, 's'], [138, 145, 's']] },
           { y: 230, lines: [[146, 149, 'm'], [150, 151, 'm'], [152, 155, 'm']] },
           { y: 250, lines: [[156, 159, 'mi', MAGENTA], [160, 165, 's']] },
           { y: 250, lines: [[166, 167, 'm'], [168, 173, 'mi', BLUE]] },
           { y: 220, lines: [[174, 179, 's'], [180, 183, 'm'], [184, 187, 'm']] },
-          { y: 220, lines: [[188, 188, 'b', '#fff'], [189, 192, 's'], [193, 198, 'mi', HAITI]] },
-          { y: 240, lines: [[199, 200, 's'], [201, 203, 'mi', INK], [204, 206, 's']] },
+          { y: 220, lines: [[188, 188, 'm', '#fff'], [189, 192, 's'], [193, 198, 'mi', HAITI]] },
+          { y: 240, lines: [[199, 200, 's'], [201, 203, 'm'], [204, 206, 's']] },
         ]
         const BILAN = 16
         const BIG = { b: 1, bi: 1, mi: 1, x: 1 }
@@ -380,8 +377,7 @@
                 tl.fromTo(w, { yPercent: 118, color: col || INK }, { yPercent: 0, duration: Math.max(0.18, Math.min(0.42, end - 0.22 - (T[k] - 0.03))), ease: 'back.out(1.7)' }, T[k] - 0.03)
               } else {
                 tl.fromTo(w, { opacity: 0, color: '#B9B9B9', y: 14, filter: blur(6) }, { opacity: 1, y: 0, filter: blur(0), duration: 0.16, ease: 'power2.out' }, T[k])
-                // small words settle in soft grey, the others in ink (or the line's colour)
-                tl.to(w, { color: col || (st === 's' ? '#5f5f5f' : INK), duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
+                tl.to(w, { color: col || INK, duration: 0.25, ease: 'power1.out' }, T[k] + 0.08)
               }
             }
           })
