@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Le repas du dimanche en Haïti</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      « Ta famille mangeait quoi le dimanche ? » — le repas du dimanche en Haïti, style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
+      accroche en viseur (grand-mère qui sert à table, horloge DIMANCHE 07:00, l'épis), la messe, cinq plats numérotés dans un menu qui se remplit
+      (le N° 5 reste « ? » jusqu'à la fin), la table chez grand-mère, et la fin « partager un savoir » : une carte vide « Chez nous, le dimanche : ».
+    -->
+    <style>
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-500.woff2") format("woff2"); font-weight: 500; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-600.woff2") format("woff2"); font-weight: 600; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-700.woff2") format("woff2"); font-weight: 700; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-800.woff2") format("woff2"); font-weight: 800; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-900.woff2") format("woff2"); font-weight: 900; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .series { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; z-index: 30; }
+      .series span { padding: 10px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: 0.08em; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
+      .w { display: inline-block; }
+      /* typographie de la série (Poppins, emphase en italique gras), animée comme la vidéo de référence du client :
+         mots à venir en gris très clair qui foncent à la voix, gros mots en dégradé avec reflet, mots surlignés */
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      .b .w, .bi .w { color: transparent !important; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(100deg, var(--acc) 0%, var(--acc2) 42%, #ffffff 50%, var(--acc2) 58%, var(--acc) 100%); background-size: 320% 100%; background-position: 100% 0; padding: 0 0.05em 0.06em; }
+      .hl { position: relative; z-index: 0; }
+      .hl-join::before { right: -0.42em !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+      .hl::before { content: ""; position: absolute; left: -0.14em; right: -0.14em; top: 0.06em; bottom: 0; background: var(--acc); border-radius: 0.14em; transform: scaleX(var(--hx, 0)); transform-origin: 0 50%; z-index: -1; }
+
+      .obj { position: absolute; z-index: 10; }
+      .scene { position: absolute; inset: 0; }
+      .photo { position: absolute; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip { position: absolute; white-space: nowrap; padding: 14px 28px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 36px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); }
+      .nchip { position: absolute; white-space: nowrap; padding: 8px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 900; font-size: 40px; letter-spacing: 0.02em; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22); }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #CE1126; border-radius: 22px; color: #CE1126; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.7); white-space: nowrap; }
+      .stamp.sm { font-size: 64px; border-width: 8px; padding: 6px 28px; }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+      .tlab { position: absolute; font-weight: 800; font-size: 46px; }
+      #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
+      #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
+      #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
+      /* --- viseur de caméra (accroche), mots fantômes, micro-typo --- */
+      .hud { position: absolute; inset: 0; pointer-events: none; z-index: 12; }
+      .hud .cn { position: absolute; width: 60px; height: 60px; border: 0 solid #141414; }
+      .hud .rec { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
+      .hud .fps { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
+      .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; white-space: nowrap; }
+      .counter2 { position: absolute; left: 0; right: 0; text-align: center; }
+      .counter2 small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
+      .counter2 b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #141414; font-variant-numeric: tabular-nums; }
+      /* --- repas du dimanche : uniquement des photos et détourages réels ; texte, pastilles, tampons et menu numéroté par-dessus --- */
+      .cut { position: absolute; }
+      .cut img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.28)); }
+      .cap { position: absolute; padding: 6px 14px; border-radius: 10px; background: rgba(20, 20, 20, 0.72); color: #fff; font-family: "Courier New", monospace; font-size: 20px; font-weight: 700; letter-spacing: 0.08em; white-space: nowrap; }
+      #menu { position: absolute; left: 540px; top: 1520px; display: flex; gap: 18px; z-index: 14; }
+      #menu span { width: 88px; height: 88px; border-radius: 50%; background: #fff; color: #141414; font-weight: 900; font-size: 46px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18); }
+      .card { position: absolute; width: 900px; padding: 50px 60px; border-radius: 40px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); }
+      .card small { display: block; font-weight: 800; font-size: 60px; letter-spacing: -0.02em; color: #141414; line-height: 1.1; }
+      .card em { display: inline-block; width: 8px; height: 100px; background: #b3245f; margin-top: 26px; }
+      .recap { position: absolute; left: 50px; right: 50px; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 14px; }
+      .recap span { padding: 8px 22px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 34px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12); white-space: nowrap; }
+      .recap span b { color: #b3245f; margin-right: 8px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="65.2" data-width="1080" data-height="1920">
+      <div id="world">
+        <div class="grid" id="grid"></div>
+        <!-- 1. hook: viewfinder; a grandmother serving at the family table is there from frame 1; the clock says Sunday 07:00; onion, garlic and hot pepper (the épis) fly in; five dishes announced -->
+        <div class="scene" id="s1">
+          <div class="ghost" style="top: 1480px; font-size: 330px">DIMANCH</div>
+          <div class="photo obj" id="o-gm" style="left: 70px; top: 760px; width: 940px; height: 627px"><img id="gm-img" src="assets/img/grandmere.jpg" alt="" style="object-position: 40% 40%; transform-origin: 40% 40%" /></div>
+          <div class="counter2 obj" id="o-clk" style="top: 560px"><small>DIMANCHE</small><b id="clk">07:00</b></div>
+          <div class="cut obj" id="o-epis" style="left: 640px; top: 1160px; width: 380px; height: 344px"><img src="assets/img/epis-cut.png" alt="" /></div>
+          <div class="stamp sm obj" id="o-plats" style="left: 110px; top: 1300px; color: #b3245f; border-color: #b3245f">5 PLATS</div>
+          <div class="hud" id="hud">
+            <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="left: 50px; top: 1690px; border-left-width: 6px; border-bottom-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 1690px; border-right-width: 6px; border-bottom-width: 6px"></div>
+            <div class="rec" style="top: 1700px; left: 130px"><i id="recdot"></i>REC <span id="tc">00:00:00:00</span></div>
+            <div class="fps" style="top: 1700px; right: 130px">HAÏTI · LAKAY</div>
+          </div>
+        </div>
+        <!-- 2. navy flood: church first — Sunday clothes, polished shoes, no getting dirty before noon -->
+        <div class="scene" id="s2">
+          <div class="ghost" style="top: 1480px; font-size: 380px">LAMÈS</div>
+          <div class="cut obj" id="o-garcon" style="left: 60px; top: 600px; width: 540px; height: 880px"><img src="assets/img/garcon-cut.png" alt="" /></div>
+          <div class="chip obj" id="o-habits" style="left: 560px; top: 700px; background: #1d3557; color: #fff">HABITS DU DIMANCHE</div>
+          <div class="cut obj" id="o-chaus" style="left: 640px; top: 860px; width: 330px; height: 400px"><img src="assets/img/chaussures-cut.png" alt="" /></div>
+          <div class="stamp sm obj" id="o-sale" style="left: 190px; top: 1290px; color: #c62828; border-color: #c62828">INTERDIT DE SE SALIR</div>
+        </div>
+        <!-- 3. page pushes up: meanwhile the pots are at work; N° 1 rice with red beans and the crispy bottom of the pot -->
+        <div class="scene" id="s3">
+          <div class="ghost" style="top: 1480px; font-size: 380px">DIRI</div>
+          <div class="photo obj" id="o-pot" style="left: 170px; top: 640px; width: 740px; height: 541px"><img id="pot-img" src="assets/img/poulet.jpg" alt="" style="transform-origin: 50% 50%" /></div>
+          <div class="chip obj" id="o-marm" style="left: 200px; top: 1150px">LES MARMITES TRAVAILLENT</div>
+          <div class="chip obj" id="o-rue" style="left: 420px; top: 1250px; background: #8C5A2B; color: #fff">ÇA SENT JUSQUE DANS LA RUE</div>
+          <div class="photo obj" id="o-riz" style="left: 70px; top: 700px; width: 940px; height: 527px"><img id="riz-img" src="assets/img/riz.jpg" alt="" style="transform-origin: 50% 50%" /></div>
+          <div class="nchip obj" id="n1" style="left: 90px; top: 680px; background: #8C5A2B">N° 1 · RIZ COLLÉ</div>
+          <div class="stamp sm obj" id="o-fond" style="left: 130px; top: 1200px; color: #8C5A2B; border-color: #8C5A2B">LE FOND QUI CROUSTILLE</div>
+        </div>
+        <!-- 4. iris: N° 2 chicken in sauce, simmering since the morning -->
+        <div class="scene" id="s4">
+          <div class="ghost" style="top: 1480px; font-size: 380px">POUL</div>
+          <div class="photo obj" id="o-poulet" style="left: 70px; top: 660px; width: 940px; height: 688px"><img id="poulet-img" src="assets/img/poulet.jpg" alt="" style="transform-origin: 50% 50%" /></div>
+          <div class="nchip obj" id="n2" style="left: 90px; top: 640px; background: #b5462a">N° 2 · POULET EN SAUCE</div>
+          <div class="chip obj" id="o-mijote" style="left: 520px; top: 1300px; background: #b5462a; color: #fff">MIJOTE DEPUIS 7 H</div>
+        </div>
+        <!-- 5. page pushes left: N° 3 banane pesée, of course -->
+        <div class="scene" id="s5">
+          <div class="ghost" style="top: 1480px; font-size: 380px">PEZE</div>
+          <div class="cut obj" id="o-peze" style="left: 120px; top: 720px; width: 840px; height: 609px"><img src="assets/img/peze-cut.png" alt="" /></div>
+          <div class="nchip obj" id="n3" style="left: 90px; top: 640px; background: #c9780a">N° 3 · BANANE PESÉE</div>
+          <div class="stamp sm obj" id="o-sur" style="left: 560px; top: 1270px; color: #c9780a; border-color: #c9780a">BIEN SÛR !</div>
+        </div>
+        <!-- 6. page pushes up: N° 4 beet salad, all pink -->
+        <div class="scene" id="s6">
+          <div class="ghost" style="top: 1480px; font-size: 380px">SALAD</div>
+          <div class="photo obj" id="o-bet" style="left: 70px; top: 680px; width: 940px; height: 627px"><img id="bet-img" src="assets/img/betterave.jpg" alt="" style="transform-origin: 50% 50%" /></div>
+          <div class="nchip obj" id="n4" style="left: 90px; top: 660px; background: #b3245f">N° 4 · SALADE DE BETTERAVE</div>
+          <div class="chip obj" id="o-rose" style="left: 620px; top: 1260px; background: #e86fa3; color: #fff">TOUTE ROSE</div>
+          <div class="stamp sm obj" id="o-nappe" style="left: 120px; top: 1350px; color: #b3245f; border-color: #b3245f">LA NAPPE BLANCHE !</div>
+        </div>
+        <!-- 7. amber flood: N° 5 macaroni au gratin — everyone wanted the crispy corner; nobody wanted to share -->
+        <div class="scene" id="s7">
+          <div class="ghost" style="top: 1480px; font-size: 380px">GRATEN</div>
+          <div class="photo obj" id="o-mac" style="left: 210px; top: 600px; width: 660px; height: 884px"><img id="mac-img" src="assets/img/macaroni.jpg" alt="" style="transform-origin: 70% 20%" /></div>
+          <div class="nchip obj" id="n5" style="left: 90px; top: 580px; background: #d18f00">N° 5 · MACARONI AU GRATIN</div>
+          <svg class="obj" id="o-ring" viewBox="0 0 300 300" style="position: absolute; left: 600px; top: 600px; width: 300px; height: 300px"><circle cx="150" cy="150" r="120" fill="none" stroke="#c62828" stroke-width="14" stroke-dasharray="760" stroke-dashoffset="760" id="ring-c" /></svg>
+          <div class="chip obj" id="o-coin" style="left: 620px; top: 900px; background: #d18f00; color: #fff">LE COIN GRILLÉ</div>
+          <div class="stamp sm obj" id="o-pataje" style="left: 140px; top: 1240px; color: #c62828; border-color: #c62828">PA PATAJE !</div>
+        </div>
+        <!-- 8. page pushes up: everybody together at grandma's; the radio on, the uncles talking loud, a big glass of grenadia juice; the grown-ups first… the kids got the chicken neck -->
+        <div class="scene" id="s8">
+          <div class="ghost" style="top: 1480px; font-size: 380px">LAKAY</div>
+          <div class="photo obj" id="o-table" style="left: 70px; top: 640px; width: 940px; height: 627px"><img id="table-img" src="assets/img/table.jpg" alt="" style="transform-origin: 50% 50%" /></div>
+          <div class="cut obj" id="o-radio" style="left: 50px; top: 1060px; width: 330px; height: 365px"><img src="assets/img/radio-cut.png" alt="" /></div>
+          <div class="chip obj" id="o-oncles" style="left: 330px; top: 1340px; background: #2e7d32; color: #fff">LES ONCLES PARLENT FORT</div>
+          <div class="cut obj" id="o-jus" style="left: 780px; top: 960px; width: 240px; height: 320px"><img src="assets/img/jus-cut.png" alt="" /></div>
+          <div class="chip obj" id="o-grands" style="left: 110px; top: 700px">LES GRANDS D'ABORD</div>
+          <div class="stamp obj" id="o-cou" style="left: 120px; top: 1250px; color: #b5462a; border-color: #b5462a">LE COU DU POULET</div>
+          <div class="stamp obj" id="o-sieste" style="left: 330px; top: 1000px; color: #2e7d32; border-color: #2e7d32; background: rgba(231, 231, 231, 0.85)">SIESTE</div>
+        </div>
+        <!-- 9. Bilan: black flood held through the scratch; one meal a week — but the whole family in one place -->
+        <div class="scene" id="s9">
+          <div class="ghost" style="top: 1480px; font-size: 380px">FANMI</div>
+          <div class="photo obj" id="o-fam" style="left: 70px; top: 700px; width: 940px; height: 627px"><img id="fam-img" src="assets/img/grandmere.jpg" alt="" style="object-position: 50% 40%; transform-origin: 50% 40%" /></div>
+          <div class="chip obj" id="o-un" style="left: 110px; top: 1270px; background: #141414; color: #fff">1 REPAS PAR SEMAINE</div>
+          <div class="chip obj" id="o-tous" style="left: 560px; top: 1360px; background: #00209F; color: #fff">TOUTE LA FAMILLE</div>
+        </div>
+        <!-- 10. the question: the five dishes, a blank card « Chez nous, le dimanche : » to fill in the comments; where to answer -->
+        <div class="scene" id="s10">
+          <div class="recap" id="o-recap" style="top: 620px"><span><b>1</b>Riz collé</span><span><b>2</b>Poulet en sauce</span><span><b>3</b>Banane pesée</span><span><b>4</b>Betterave</span><span><b>5</b>Macaroni au gratin</span></div>
+          <div class="card obj" id="o-card" style="left: 90px; top: 830px"><small>Chez nous, le dimanche :</small><em id="caret10"></em></div>
+          <div class="bubble obj" id="o-bub" style="left: 380px; top: 1460px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1400px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </div>
+
+        <!-- the menu: five numbered plates fill up dish by dish; N° 5 stays « ? » until it is revealed -->
+        <div id="menu"><span id="m1">1</span><span id="m2">2</span><span id="m3">3</span><span id="m4">4</span><span id="m5">?</span></div>
+
+        <div id="flood"></div>
+        <div id="iris"></div>
+        <div id="blocks"></div>
+      </div>
+      <div class="series"><span>CULTURE D'HAÏTI · LE REPAS DU DIMANCHE</span></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), noms de plats en français, pauses raccourcies, silence avant « Bilan ».
+           Musique : celle du style, coupure au scratch et retour sur « un seul repas » mixés dans le fichier. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="63.55" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="65.2" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/impact-bass-1.mp3" data-start="0.08" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx2" src="assets/sfx/pop.mp3" data-start="0.12" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx3" src="assets/sfx/key-press.mp3" data-start="0.15" data-duration="0.43" data-track-index="23" data-volume="0.15"></audio>
+      <audio id="sx4" src="assets/sfx/whoosh-short.mp3" data-start="3.79" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx5" src="assets/sfx/pop.mp3" data-start="4.04" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx6" src="assets/sfx/pop.mp3" data-start="4.55" data-duration="0.72" data-track-index="20" data-volume="0.14"></audio>
+      <audio id="sx7" src="assets/sfx/click.mp3" data-start="4.61" data-duration="0.37" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx8" src="assets/sfx/pop.mp3" data-start="4.62" data-duration="0.72" data-track-index="23" data-volume="0.14"></audio>
+      <audio id="sx9" src="assets/sfx/impact-bass-2.mp3" data-start="4.63" data-duration="2.59" data-track-index="24" data-volume="0.35"></audio>
+      <audio id="sx10" src="assets/sfx/pop.mp3" data-start="4.69" data-duration="0.72" data-track-index="25" data-volume="0.14"></audio>
+      <audio id="sx11" src="assets/sfx/pop.mp3" data-start="4.76" data-duration="0.72" data-track-index="26" data-volume="0.14"></audio>
+      <audio id="sx12" src="assets/sfx/pop.mp3" data-start="4.83" data-duration="0.72" data-track-index="21" data-volume="0.14"></audio>
+      <audio id="sx13" src="assets/sfx/whoosh.mp3" data-start="8.65" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx14" src="assets/sfx/whoosh-short.mp3" data-start="8.97" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx15" src="assets/sfx/pop.mp3" data-start="9.02" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx16" src="assets/sfx/pop.mp3" data-start="9.79" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx17" src="assets/sfx/pop.mp3" data-start="10.74" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx18" src="assets/sfx/sparkle.mp3" data-start="11.21" data-duration="1.8" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx19" src="assets/sfx/click.mp3" data-start="12.93" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx20" src="assets/sfx/impact-bass-1.mp3" data-start="12.95" data-duration="2.12" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx21" src="assets/sfx/whoosh.mp3" data-start="13.97" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx22" src="assets/sfx/pop.mp3" data-start="14.17" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx23" src="assets/sfx/pop.mp3" data-start="15.79" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="17.41" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx25" src="assets/sfx/whoosh.mp3" data-start="18.73" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx26" src="assets/sfx/chime.mp3" data-start="19.03" data-duration="2.54" data-track-index="21" data-volume="0.14"></audio>
+      <audio id="sx27" src="assets/sfx/pop.mp3" data-start="19.03" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx28" src="assets/sfx/whoosh-short.mp3" data-start="19.6" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx29" src="assets/sfx/click.mp3" data-start="21.68" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx30" src="assets/sfx/whoosh-short.mp3" data-start="23.26" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx31" src="assets/sfx/click.mp3" data-start="23.52" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx32" src="assets/sfx/click-soft.mp3" data-start="23.64" data-duration="0.37" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx33" src="assets/sfx/chime.mp3" data-start="23.64" data-duration="2.54" data-track-index="23" data-volume="0.14"></audio>
+      <audio id="sx34" src="assets/sfx/pop.mp3" data-start="23.64" data-duration="0.72" data-track-index="24" data-volume="0.18"></audio>
+      <audio id="sx35" src="assets/sfx/pop.mp3" data-start="23.94" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx36" src="assets/sfx/pop.mp3" data-start="25.6" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx37" src="assets/sfx/whoosh.mp3" data-start="27.12" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx38" src="assets/sfx/pop.mp3" data-start="27.32" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx39" src="assets/sfx/chime.mp3" data-start="27.37" data-duration="2.54" data-track-index="22" data-volume="0.14"></audio>
+      <audio id="sx40" src="assets/sfx/pop.mp3" data-start="27.37" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx41" src="assets/sfx/click.mp3" data-start="29.21" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx42" src="assets/sfx/whoosh.mp3" data-start="30.84" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx43" src="assets/sfx/pop.mp3" data-start="31.04" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx44" src="assets/sfx/chime.mp3" data-start="31.09" data-duration="2.54" data-track-index="22" data-volume="0.14"></audio>
+      <audio id="sx45" src="assets/sfx/pop.mp3" data-start="31.09" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx46" src="assets/sfx/pop.mp3" data-start="33.5" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx47" src="assets/sfx/click.mp3" data-start="35.11" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx48" src="assets/sfx/impact-bass-2.mp3" data-start="35.13" data-duration="2.59" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx49" src="assets/sfx/whoosh.mp3" data-start="35.66" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx50" src="assets/sfx/whoosh-short.mp3" data-start="35.98" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx51" src="assets/sfx/whoosh-short.mp3" data-start="36.03" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx52" src="assets/sfx/pop.mp3" data-start="36.23" data-duration="0.72" data-track-index="24" data-volume="0.18"></audio>
+      <audio id="sx53" src="assets/sfx/chime.mp3" data-start="36.31" data-duration="2.54" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx54" src="assets/sfx/sparkle.mp3" data-start="36.35" data-duration="1.8" data-track-index="25" data-volume="0.18"></audio>
+      <audio id="sx55" src="assets/sfx/whoosh.mp3" data-start="40.31" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx56" src="assets/sfx/riser.mp3" data-start="40.42" data-duration="0.5" data-track-index="21" data-volume="0.1"></audio>
+      <audio id="sx57" src="assets/sfx/pop.mp3" data-start="40.73" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx58" src="assets/sfx/click.mp3" data-start="41.77" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx59" src="assets/sfx/impact-bass-1.mp3" data-start="41.79" data-duration="2.12" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx60" src="assets/sfx/whoosh.mp3" data-start="42.49" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx61" src="assets/sfx/pop.mp3" data-start="42.69" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx62" src="assets/sfx/pop.mp3" data-start="44.49" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx63" src="assets/sfx/grains.mp3" data-start="44.96" data-duration="1.33" data-track-index="21" data-volume="0.12"></audio>
+      <audio id="sx64" src="assets/sfx/pop.mp3" data-start="45.65" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx65" src="assets/sfx/pop.mp3" data-start="47.46" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx66" src="assets/sfx/pop.mp3" data-start="48.86" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx67" src="assets/sfx/whoosh.mp3" data-start="49.85" data-duration="0.57" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx68" src="assets/sfx/click.mp3" data-start="51.67" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx69" src="assets/sfx/impact-bass-2.mp3" data-start="51.69" data-duration="2.59" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx70" src="assets/sfx/roulement.mp3" data-start="52.6" data-duration="1.2" data-track-index="20" data-volume="0.06"></audio>
+      <audio id="sx71" src="assets/sfx/click-soft.mp3" data-start="54.72" data-duration="0.37" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx72" src="assets/sfx/scratch.mp3" data-start="55.06" data-duration="1.23" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx73" src="assets/sfx/whoosh.mp3" data-start="55.06" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx74" src="assets/sfx/whoosh-short.mp3" data-start="56.55" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx75" src="assets/sfx/impact-bass-2.mp3" data-start="56.69" data-duration="2.59" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx76" src="assets/sfx/pop.mp3" data-start="56.82" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx77" src="assets/sfx/pop.mp3" data-start="58.13" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx78" src="assets/sfx/impact-bass-1.mp3" data-start="58.63" data-duration="2.12" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx79" src="assets/sfx/sparkle.mp3" data-start="58.63" data-duration="1.8" data-track-index="23" data-volume="0.15"></audio>
+      <audio id="sx80" src="assets/sfx/whoosh.mp3" data-start="59.82" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx81" src="assets/sfx/click.mp3" data-start="60.12" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx82" src="assets/sfx/pop.mp3" data-start="60.17" data-duration="0.72" data-track-index="24" data-volume="0.18"></audio>
+      <audio id="sx83" src="assets/sfx/pop.mp3" data-start="61.11" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx84" src="assets/sfx/pop.mp3" data-start="62.76" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx85" src="assets/sfx/click.mp3" data-start="63.24" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx86" src="assets/sfx/sparkle.mp3" data-start="63.34" data-duration="1.8" data-track-index="22" data-volume="0.2"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 65.2
+        const RED = '#c62828'
+        // one colour per dish, taken from its photo
+        const NAVY = '#1d3557'
+        const WOOD = '#8C5A2B'
+        const SAUCE = '#b5462a'
+        const AMBER = '#c9780a'
+        const MAGENTA = '#b3245f'
+        const GOLD = '#d18f00'
+        const GREEN = '#2e7d32'
+        const HAITI = '#00209F'
+        const INK = '#141414'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0.244, 1.078, 1.128, 1.377, 1.661, 2.469, 2.65, 2.831, 3.195, 3.376, 3.74, 4.35, 4.542, 4.757, 4.972, 5.402, 5.616, 5.831, 6.337, 6.475, 6.69, 6.904, 7.273, 7.549, 7.979, 8.193, 8.408, 8.87, 9.029, 9.406, 9.644, 10.082, 10.266, 10.636, 11.005, 11.375, 11.559, 12.298, 12.483, 12.667, 13.037, 13.406, 14.023, 14.38, 14.56, 14.74, 14.92, 15.099, 15.182, 15.639, 15.999, 16.359, 16.539, 16.899, 17.258, 17.438, 17.618, 17.798, 18.832, 19.186, 19.551, 19.737, 19.924, 20.297, 20.484, 20.671, 20.857, 21.231, 21.418, 21.605, 22.165, 22.351, 22.538, 23.44, 23.98, 24.41, 24.583, 24.93, 25.103, 25.276, 25.45, 25.796, 26.143, 26.316, 27.168, 27.612, 27.97, 28.113, 28.536, 28.947, 29.173, 29.629, 29.766, 29.902, 30.174, 30.31, 30.895, 31.512, 31.968, 32.135, 32.47, 32.637, 33.345, 33.596, 33.847, 34.098, 34.348, 34.599, 34.85, 35.101, 35.88, 36.046, 36.59, 37.081, 37.131, 37.779, 37.96, 38.54, 39.332, 39.488, 39.643, 39.799, 40.11, 40.267, 40.422, 40.578, 41.094, 41.144, 41.357, 41.513, 41.825, 42.54, 42.717, 43.088, 43.273, 43.893, 43.943, 43.993, 44.387, 44.757, 45.315, 45.5, 45.686, 45.872, 46.057, 46.242, 46.614, 46.799, 46.985, 47.171, 47.357, 47.542, 47.727, 48.526, 48.714, 48.901, 49.09, 49.277, 49.902, 50.09, 50.278, 50.655, 51.219, 51.408, 51.596, 51.784, 52.404, 52.621, 53.083, 53.448, 53.631, 53.961, 54.094, 54.276, 54.46, 54.643, 55.928, 56.491, 56.665, 56.84, 57.189, 57.363, 57.827, 57.977, 58.151, 58.326, 58.675, 58.849, 59.024, 59.867, 60.031, 60.196, 60.46, 60.962, 61.104, 61.432, 61.76, 61.924, 62.088, 62.663, 62.949, 63.044]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Dimanche,", "sept", "heures", "du", "matin :", "toute", "la", "maison", "sent", "déjà", "l'épis.", "Cinq", "plats", "vont", "sortir", "de", "cette", "cuisine,", "et", "pour", "le", "dernier,", "les", "enfants", "vont", "se", "battre.", "D'abord,", "la", "messe :", "habits", "du", "dimanche,", "chaussures", "cirées,", "et", "interdiction", "de", "se", "salir", "avant", "midi.", "Pendant", "ce", "temps,", "à", "la", "maison,", "les", "marmites", "travaillent,", "et", "l'odeur", "arrive", "jusque", "dans", "la", "rue.", "Numéro", "un :", "le", "riz", "collé", "aux", "pois", "rouges,", "avec", "le", "fond", "croustillant", "de", "la", "marmite.", "Numéro", "deux :", "le", "poulet", "en", "sauce,", "qui", "mijote", "depuis", "le", "matin.", "Numéro", "trois :", "la", "banane", "pesée,", "bien", "sûr :", "pas", "de", "dimanche", "sans", "elle.", "Numéro", "quatre :", "la", "salade", "de", "betterave,", "toute", "rose,", "celle", "qui", "tache", "la", "nappe", "blanche.", "Et", "numéro", "cinq :", "le", "macaroni", "au", "gratin.", "Celui-là,", "tout", "le", "monde", "voulait", "le", "coin", "bien", "grillé,", "et", "personne", "ne", "voulait", "partager.", "On", "mangeait", "tous", "ensemble,", "chez", "grand-mère,", "la", "radio", "allumée,", "les", "oncles", "qui", "parlent", "fort,", "avec", "un", "grand", "verre", "de", "jus", "de", "grenadia.", "Les", "grands", "se", "servaient", "d'abord…", "et", "les", "enfants", "récupéraient", "le", "cou", "du", "poulet.", "Après", "manger,", "personne", "ne", "bouge :", "c'est", "l'heure", "de", "la", "sieste.", "Bilan :", "un", "seul", "repas", "par", "semaine…", "mais", "toute", "la", "famille", "au", "même", "endroit.", "Et", "chez", "toi ?", "Dis-moi :", "ta", "famille", "mangeait", "quoi", "le", "dimanche ?", "Écris-le", "en", "commentaire."]
+        const SCRATCH = 55.08
+
+        // ---------- transitions: when each scene takes over, and how ----------
+        const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
+        const X = { s2: at(27), s3: at(42), s4: at(73), s5: at(84), s6: at(96), s7: at(110), s8: at(131), bil: Math.round((SCRATCH + 0.3) * 100) / 100, s10: at(189) }
+        const HOLDB = T[177] - 0.14 - X.bil // the black flood holds through the scratch silence, until « un seul repas »
+        const FLOODS = [
+          { t: X.s2, a: [540, 1070], b: [340, 1000], col: NAVY, hold: 0 },
+          { t: X.s7, a: [540, 1020], b: [700, 750], col: GOLD, hold: 0 },
+          { t: X.bil, a: [700, 1300], b: [540, 1010], col: INK, hold: HOLDB },
+        ]
+        const IRISES = [{ t: X.s4 }]
+        const PUSHES = [['s2', 's3', 'y'], ['s4', 's5', 'x'], ['s5', 's6', 'y'], ['s7', 's8', 'y'], ['s9', 's10', 'y']]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 220, lines: [[0, 0, 's'], [1, 4, 'mi', WOOD], [5, 10, 's']] },
+          { y: 200, lines: [[11, 12, 'b', MAGENTA], [13, 17, 's'], [18, 23, 's'], [24, 26, 'mi', MAGENTA]] },
+          { y: 230, lines: [[27, 29, 'm'], [30, 32, 's'], [33, 34, 'mi', NAVY]] },
+          { y: 230, lines: [[35, 36, 's'], [37, 39, 'b', NAVY], [40, 41, 's']] },
+          { y: 230, lines: [[42, 44, 's'], [45, 47, 's'], [48, 49, 'm'], [50, 50, 'mi', WOOD]] },
+          { y: 260, lines: [[51, 53, 's'], [54, 57, 'm']] },
+          { y: 190, lines: [[58, 59, 's'], [60, 62, 'b', WOOD], [63, 65, 'm'], [66, 69, 's', WOOD], [70, 72, 's']] },
+          { y: 200, lines: [[73, 74, 's'], [75, 76, 'b', SAUCE], [77, 78, 'm'], [79, 83, 's']] },
+          { y: 210, lines: [[84, 85, 's'], [86, 87, 'm'], [88, 88, 'b', AMBER], [89, 90, 's']] },
+          { y: 260, lines: [[91, 93, 'm'], [94, 95, 'mi', AMBER]] },
+          { y: 230, lines: [[96, 97, 's'], [98, 101, 'm'], [102, 103, 'b', MAGENTA]] },
+          { y: 260, lines: [[104, 106, 's'], [107, 109, 'mi', MAGENTA]] },
+          { y: 230, lines: [[110, 112, 's'], [113, 114, 'b', GOLD], [115, 116, 'm']] },
+          { y: 210, lines: [[117, 117, 's'], [118, 121, 's'], [122, 125, 'mi', GOLD], [126, 130, 's']] },
+          { y: 230, lines: [[131, 132, 's'], [133, 134, 'm'], [135, 136, 'mi', GREEN]] },
+          { y: 240, lines: [[137, 139, 's'], [140, 141, 'm'], [142, 144, 's']] },
+          { y: 250, lines: [[145, 149, 's'], [150, 152, 'mi', AMBER]] },
+          { y: 200, lines: [[153, 154, 's'], [155, 157, 'm'], [158, 161, 's'], [162, 165, 'mi', SAUCE]] },
+          { y: 210, lines: [[166, 167, 's'], [168, 170, 'm'], [171, 172, 's'], [173, 175, 'b', GREEN]] },
+          { y: 240, lines: [[176, 176, 'm', '#fff'], [177, 179, 'mi', HAITI], [180, 181, 's']] },
+          { y: 240, lines: [[182, 182, 's'], [183, 185, 'mi', HAITI], [186, 188, 'm']] },
+          { y: 220, lines: [[189, 192, 's'], [193, 195, 'm'], [196, 196, 'b', MAGENTA], [197, 198, 'm']] },
+          { y: 260, lines: [[199, 201, 'm']] },
+        ]
+        // words that get a coloured highlight box when spoken (like « thinking… » in the reference)
+        const HL = new Set([68, 69, 123, 124, 125, 163, 164, 165])
+        const BILAN = 19
+        // words already sit in the line in very light grey and darken as they are spoken (reference video);
+        // the hero word (style b) rises in an accent gradient and a highlight sweeps across it
+        const FAINT = '#cfcfcf'
+        const FINAL = { s: '#7a7a7a', m: INK, mi: INK, bi: INK }
+        const HLW = typeof HL === 'undefined' ? new Set() : HL
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = next ? (bi === BILAN - 1 ? X.bil - 0.02 : T[next.lines[0][0]] - 0.08) : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            const acc = col || '#2f4fd8'
+            line.style.setProperty('--acc', acc)
+            line.style.setProperty('--acc2', 'color-mix(in srgb, ' + acc + ' 55%, #ffffff)')
+            const onDark = col === '#fff'
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              if (st === 'b' || st === 'bi') {
+                tl.fromTo(w, { yPercent: 115 }, { yPercent: 0, duration: 0.42, ease: 'back.out(1.6)' }, T[k] - 0.05)
+                tl.fromTo(w, { backgroundPosition: '100% 0' }, { backgroundPosition: '0% 0', duration: 0.9, ease: 'power2.inOut', immediateRender: false }, T[k] + 0.25)
+              } else {
+                const fin = onDark ? '#ffffff' : (col && (st === 'mi' || st === 'bi') ? col : FINAL[st] || '#23232b')
+                gsap.set(w, { color: onDark ? 'rgba(255,255,255,0.22)' : FAINT })
+                tl.fromTo(w, { y: 8, filter: blur(3) }, { y: 0, filter: blur(0), duration: 0.2, ease: 'power2.out', immediateRender: false }, T[k] - 0.02)
+                tl.to(w, { color: fin, duration: 0.22, ease: 'power1.out' }, T[k] - 0.02)
+                if (HLW.has(k)) {
+                  w.classList.add('hl')
+                  if (HLW.has(k + 1)) w.classList.add('hl-join')
+                  w.style.setProperty('--acc', acc)
+                  tl.fromTo(w, { '--hx': 0 }, { '--hx': 1, duration: 0.3, ease: 'power3.out', immediateRender: false }, T[k] + 0.05)
+                  tl.to(w, { color: '#ffffff', duration: 0.15 }, T[k] + 0.12)
+                }
+              }
+            }
+          })
+          // exit: every word drops back into its line
+          if (end < END) {
+            tl.to(box.querySelectorAll('.w'), { yPercent: -125, duration: 0.18, ease: 'power3.in', stagger: 0.006 }, end - 0.2)
+            tl.set(box, { autoAlpha: 0 }, end)
+          }
+        })
+        // « Bilan : » is white on the black flood, and turns to ink as the flood contracts
+        tl.to(blocksBox.children[BILAN].querySelector('.w'), { color: INK, duration: 0.2 }, X.bil + HOLDB)
+
+        // ---------- flood + iris: pure functions of time ----------
+        const ease = { in: (p) => p * p * p, out: (p) => 1 - Math.pow(1 - p, 3) }
+        const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)))
+        const flood = $('flood')
+        const iris = $('iris')
+        const blades = []
+        for (let i = 0; i < 6; i++) blades.push(el('div', 'blade', null, iris))
+        const RMAX = 1250
+        function ctl(t) {
+          // colour flood: grows out of an object, covers the frame, contracts into the next scene's object
+          let r = 0, cx = 540, cy = 960, col = INK
+          for (const F of FLOODS) {
+            const g0 = F.t - 0.3, c0 = F.t + F.hold, c1 = c0 + 0.32
+            if (t >= g0 && t <= c1) {
+              col = F.col
+              if (t < F.t) { r = 2300 * ease.in(seg(t, g0, F.t)); cx = F.a[0]; cy = F.a[1] }
+              else if (t < c0) { r = 2300; cx = F.b[0]; cy = F.b[1] }
+              else { r = 2300 * (1 - ease.out(seg(t, c0, c1))); cx = F.b[0]; cy = F.b[1] }
+            }
+          }
+          flood.style.background = col
+          flood.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + cx + 'px ' + cy + 'px)'
+          // camera iris: six blades close over the old scene and open on a photo
+          let ap = RMAX
+          for (const I of IRISES) {
+            if (t >= I.t - 0.28 && t < I.t) ap = RMAX * (1 - ease.in(seg(t, I.t - 0.28, I.t)))
+            else if (t >= I.t && t <= I.t + 0.36) ap = RMAX * ease.out(seg(t, I.t + 0.02, I.t + 0.36))
+          }
+          iris.style.visibility = ap >= RMAX - 1 ? 'hidden' : 'inherit'
+          const twist = (1 - ap / RMAX) * 50
+          blades.forEach((b, i) => {
+            b.style.left = 540 - 1600 + 'px'
+            b.style.top = 960 - 3200 + 'px'
+            b.style.transform = 'rotate(' + (i * 60 + twist).toFixed(2) + 'deg) translateY(' + (-ap).toFixed(1) + 'px)'
+          })
+        }
+        const clock = { v: 0 }
+        tl.fromTo(clock, { v: 0 }, { v: END, duration: END, ease: 'none', immediateRender: false, onUpdate: () => ctl(clock.v) }, 0)
+        ctl(0)
+
+        // ---------- helpers ----------
+        const spring = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0 }, o), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.8)' }, at)
+        const stamp = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.4, rotation: 2 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.18, ease: 'power4.in' }, at)
+        const show = (sel, at) => tl.set(sel, { autoAlpha: 1 }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        const shake = (at) => tl.fromTo('#world', { x: 0 }, { x: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, at)
+        const cam = (sel, at, dur, scale, origin, ez) => tl.to(sel, { scale, transformOrigin: origin, duration: dur, ease: ez || 'power2.inOut' }, at)
+        // a photo that fills the frame behind the iris, then zooms out into its card
+        const unfold = (sel, at) => tl.fromTo(sel, { scale: 3.4 }, { scale: 1, duration: 0.55, ease: 'power3.inOut' }, at)
+        const kb = (sel, from, to, s0, s1) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: to - from, ease: 'none', immediateRender: false }, from)
+        const sonar = (sels, from, to) => sels.forEach((s, i) => tl.fromTo(s, { autoAlpha: 0.9, scale: 0.4 }, { autoAlpha: 0, scale: 3.2, duration: 1.2, ease: 'power1.out', repeat: Math.max(0, Math.floor((to - from) / 1.2) - 1), immediateRender: false }, from + i * 0.4))
+
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8', '#s9', '#s10']
+        gsap.set(SC.slice(1), { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+        tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
+        // scenes covered by a flood or an iris swap while hidden
+        ;[['s1', 's2', X.s2], ['s3', 's4', X.s4], ['s6', 's7', X.s7], ['s8', 's9', X.bil]].forEach(([a, b, t]) => { hide('#' + a, t); show('#' + b, t) })
+        // page pushes: the old scene leaves, the new one arrives from the opposite side
+        PUSHES.forEach(([a, b, ax]) => {
+          const D = ax === 'x' ? 1080 : 1920
+          const t0 = X[b] - 0.1
+          tl.to('#' + a, { [ax]: -D, duration: 0.4, ease: 'power3.inOut' }, t0)
+          show('#' + b, t0)
+          tl.fromTo('#' + b, { [ax]: D }, { [ax]: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, t0)
+          hide('#' + a, t0 + 0.4)
+        })
+        // ghost words drift slowly the whole time they are on screen
+        document.querySelectorAll('.ghost').forEach((g, i) => tl.fromTo(g, { x: i % 2 ? -60 : 60 }, { x: i % 2 ? 60 : -60, duration: END, ease: 'none', immediateRender: false }, 0))
+        const slap = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 1.8, rotation: rot * 2.5 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.28, ease: 'back.out(2.4)' }, at)
+        const fadeIn = (sel, at) => tl.fromTo(sel, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, at)
+        const out = (sels, at, dx) => tl.to(sels, { autoAlpha: 0, x: dx || 0, scale: dx ? 1 : 0.6, duration: 0.3, ease: 'power2.in', stagger: 0.04 }, at)
+        const count = (obj, from, to, t0, t1, fmt, node, ez) => tl.fromTo(obj, { v: from }, { v: to, duration: t1 - t0, ease: ez || 'power1.inOut', immediateRender: false, onUpdate: () => { node.textContent = fmt(obj.v) } }, t0)
+
+        // ---------- the menu: on from « Cinq plats »; each plate fills with its dish's colour when announced ----------
+        gsap.set('#menu', { xPercent: -50 })
+        tl.fromTo('#menu span', { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'back.out(2.4)', stagger: 0.07 }, T[11])
+        const fill = (sel, col, at) => {
+          tl.to(sel, { backgroundColor: col, color: '#ffffff', duration: 0.2 }, at)
+          tl.fromTo(sel, { scale: 1.5 }, { scale: 1, duration: 0.4, ease: 'back.out(3)', immediateRender: false }, at)
+        }
+        fill('#m1', WOOD, T[58])
+        fill('#m2', SAUCE, T[73])
+        fill('#m3', AMBER, T[84])
+        fill('#m4', MAGENTA, T[96])
+        // N° 5 is a « ? » until it is named
+        tl.fromTo('#m5', { rotation: -8 }, { rotation: 8, duration: 0.25, yoyo: true, repeat: Math.floor((T[111] - T[26]) / 0.25), ease: 'sine.inOut', immediateRender: false }, T[24])
+        count({ v: 0 }, 0, 5, T[111] + 0.05, T[111] + 0.07, (v) => (v < 5 ? '?' : '5'), $('m5'), 'none')
+        fill('#m5', GOLD, T[111] + 0.06)
+        tl.set('#m5', { rotation: 0 }, T[111] + 0.06)
+        hide('#menu', X.bil)
+
+        // ---------- 1. hook: the grandmother is there on frame 1; Sunday 07:00; the épis flies in; five dishes ----------
+        tl.fromTo('#o-gm', { y: 260, scale: 0.94 }, { y: 0, scale: 1, duration: 0.45, ease: 'expo.out' }, 0)
+        kb('#gm-img', 0, X.s2, 1.04, 1.18)
+        tl.fromTo('#hud', { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        spring('#o-clk', 0.1, {})
+        const clk = { v: 7 * 60 }
+        count(clk, 7 * 60 - 20, 7 * 60, 0.1, T[4], (v) => { const m = Math.round(v); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0') }, $('clk'), 'power2.out')
+        tl.fromTo('#o-epis', { autoAlpha: 0, x: 380, y: 260, rotation: 60 }, { autoAlpha: 1, x: 0, y: 0, rotation: -6, duration: 0.5, ease: 'back.out(1.6)' }, T[10] - 0.15)
+        tl.fromTo('#o-epis', { y: 0 }, { y: -16, duration: 0.4, yoyo: true, repeat: 5, ease: 'sine.inOut', immediateRender: false }, T[10] + 0.4)
+        stamp('#o-plats', T[11] - 0.02, -6)
+        shake(T[11] + 0.15)
+        cam('#s1', T[24], X.s2 - T[24], 1.06, '540px 1070px', 'power2.in')
+        // the viewfinder's timecode and blinking REC dot are pure functions of time
+        const tc = $('tc')
+        const recdot = $('recdot')
+        const clock2 = { v: 0 }
+        tl.fromTo(clock2, { v: 0 }, { v: X.s2, duration: X.s2, ease: 'none', immediateRender: false, onUpdate: () => { const t = clock2.v; const f = Math.floor((t % 1) * 30); tc.textContent = '00:00:' + String(Math.floor(t)).padStart(2, '0') + ':' + String(f).padStart(2, '0'); recdot.style.opacity = Math.floor(t * 2) % 2 ? '0.25' : '1' } }, 0)
+
+        // ---------- 2. navy flood: church first — Sunday clothes, polished shoes, no getting dirty ----------
+        tl.fromTo('#o-garcon', { autoAlpha: 0, y: 300 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'expo.out' }, X.s2 + 0.05)
+        slap('#o-habits', T[30] - 0.05, 3)
+        spring('#o-chaus', T[33] - 0.1, { y: 140, rotation: 12 })
+        // a quick shine on the polished shoes
+        tl.fromTo('#o-chaus', { filter: 'brightness(1)' }, { filter: 'brightness(1.35)', duration: 0.15, yoyo: true, repeat: 3, ease: 'sine.inOut', immediateRender: false }, T[34])
+        stamp('#o-sale', T[39] - 0.02, -5)
+        shake(T[39] + 0.15)
+
+        // ---------- 3. page pushes up: the pots at work; N° 1 rice with red beans, the crispy bottom ----------
+        spring('#o-pot', X.s3 + 0.05, { y: 140, rotation: -4 })
+        kb('#pot-img', X.s3, T[58], 1.1, 1.3)
+        slap('#o-marm', T[49] - 0.05, -3)
+        slap('#o-rue', T[54] - 0.05, 3)
+        out(['#o-pot', '#o-marm', '#o-rue'], T[58] - 0.3)
+        tl.fromTo('#o-riz', { autoAlpha: 0, y: 380 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'expo.out' }, T[60] - 0.15)
+        kb('#riz-img', T[60], X.s4, 1.02, 1.16)
+        spring('#n1', T[59] - 0.05, { rotation: -10 })
+        stamp('#o-fond', T[68] - 0.02, -5)
+
+        // ---------- 4. iris: N° 2 chicken in sauce, simmering since the morning ----------
+        unfold('#o-poulet', X.s4 + 0.15)
+        kb('#poulet-img', X.s4, X.s5, 1.03, 1.18)
+        spring('#n2', X.s4 + 0.4, { rotation: -10 })
+        slap('#o-mijote', T[80] - 0.05, -3)
+
+        // ---------- 5. page pushes left: N° 3 banane pesée, of course ----------
+        spring('#o-peze', X.s5 + 0.05, { y: 160, rotation: 8 })
+        tl.fromTo('#o-peze', { y: 0 }, { y: -14, duration: 0.4, yoyo: true, repeat: 3, ease: 'sine.inOut', immediateRender: false }, X.s5 + 0.6)
+        spring('#n3', X.s5 + 0.2, { rotation: -10 })
+        stamp('#o-sur', T[89] - 0.02, -7)
+
+        // ---------- 6. page pushes up: N° 4 beet salad, all pink ----------
+        spring('#o-bet', X.s6 + 0.05, { y: 140, rotation: -4 })
+        kb('#bet-img', X.s6, X.s7, 1.02, 1.16)
+        spring('#n4', X.s6 + 0.2, { rotation: -10 })
+        slap('#o-rose', T[102] - 0.05, 4)
+        stamp('#o-nappe', T[108] - 0.02, -5)
+        shake(T[108] + 0.15)
+
+        // ---------- 7. gold flood: N° 5 macaroni au gratin; the crispy corner circled; « Pa pataje ! » ----------
+        tl.fromTo('#o-mac', { autoAlpha: 0, y: 420 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'expo.out' }, X.s7 + 0.05)
+        kb('#mac-img', X.s7, T[122], 1.02, 1.1)
+        cam('#mac-img', T[122], 0.6, 1.35, '70% 20%', 'power3.inOut')
+        spring('#n5', X.s7 + 0.25, { rotation: -10 })
+        show('#o-ring', T[123] - 0.05)
+        tl.fromTo('#ring-c', { attr: { 'stroke-dashoffset': 760 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 0.45, ease: 'power2.out', immediateRender: false }, T[123] - 0.05)
+        slap('#o-coin', T[125] - 0.05, 4)
+        stamp('#o-pataje', T[129] - 0.02, -6)
+        shake(T[129] + 0.15)
+
+        // ---------- 8. page pushes up: all at grandma's table; radio, loud uncles, grenadia juice; grown-ups first, the kids get the neck ----------
+        spring('#o-table', X.s8 + 0.05, { y: 140, rotation: -3 })
+        kb('#table-img', X.s8, X.bil, 1.02, 1.15)
+        spring('#o-radio', T[138] - 0.1, { y: 140, rotation: -10 })
+        tl.fromTo('#o-radio', { rotation: -2 }, { rotation: 2, duration: 0.12, yoyo: true, repeat: 9, ease: 'sine.inOut', immediateRender: false }, T[139])
+        slap('#o-oncles', T[141] - 0.05, -2)
+        spring('#o-jus', T[150] - 0.1, { y: 140, rotation: 10 })
+        slap('#o-grands', T[154] - 0.05, -3)
+        out(['#o-radio', '#o-oncles', '#o-jus'], T[158] - 0.25)
+        stamp('#o-cou', T[163] - 0.02, -6)
+        shake(T[163] + 0.15)
+        // after the meal: nobody moves — nap time
+        tl.to('#table-img', { filter: 'brightness(0.75) saturate(0.8)', duration: 0.6, ease: 'power1.inOut' }, T[166])
+        stamp('#o-sieste', T[174] - 0.02, -8)
+
+        // ---------- 9. black flood held through the scratch; « Bilan : »; one meal a week — the whole family ----------
+        unfold('#o-fam', X.bil + HOLDB + 0.05)
+        kb('#fam-img', X.bil + HOLDB, X.s10, 1.03, 1.16)
+        slap('#o-un', T[178] - 0.05, -3)
+        slap('#o-tous', T[183] - 0.05, 3)
+        shake(T[185] + 0.1)
+
+        // ---------- 10. the five dishes, a blank card « Chez nous, le dimanche : »; where to answer ----------
+        tl.fromTo('#o-recap span', { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.06 }, X.s10 + 0.15)
+        slap('#o-card', T[193] - 0.05, -2)
+        tl.fromTo('#caret10', { opacity: 1 }, { opacity: 0, duration: 0.3, yoyo: true, repeat: Math.floor((END - X.s10) / 0.3), ease: 'steps(1)', immediateRender: false }, X.s10)
+        spring('#o-bub', T[199] - 0.1, {})
+        spring('#o-arrow', T[201] - 0.02, { rotation: -30 })
+        const left = END - T[201] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[201] + 0.5)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
