@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1080, height=1920" />
-    <title>Bannann peze ou bannann bouyi ?</title>
+    <title>Banane pesée ou banane bouillie ?</title>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
     <!--
-      Débats (nouveau format) : « Bannann peze ou bannann bouyi ? », style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
-      accroche en viseur (gants de boxe qui se cognent entre une pile de bannann peze et un régime de plantain vert), un tableau de score,
+      Débats (nouveau format) : « Banane pesée ou banane bouillie ? », style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
+      accroche en viseur (gants de boxe qui se cognent entre une pile de banane pesée et un régime de plantain vert), un tableau de score,
       chaque camp présenté, quatre rounds avec une cloche, les piques entre camps, égalité au Bilan, et la question « Ton camp ? ».
     -->
     <style>
@@ -78,11 +78,11 @@
       .plus { position: absolute; padding: 6px 30px; border-radius: 999px; color: #fff; font-weight: 900; font-size: 64px; box-shadow: 0 16px 34px rgba(0, 0, 0, 0.25); white-space: nowrap; z-index: 13; }
       .round { position: absolute; left: 0; right: 0; text-align: center; }
       .round span { display: inline-block; padding: 10px 40px; border-radius: 999px; background: #141414; color: #fff; font-weight: 900; font-size: 56px; letter-spacing: 0.06em; box-shadow: 0 18px 36px rgba(0, 0, 0, 0.25); }
-      .btn { position: absolute; width: 440px; height: 150px; border-radius: 40px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 74px; letter-spacing: 0.02em; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.25); }
+      .btn { position: absolute; width: 440px; height: 150px; border-radius: 40px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 62px; letter-spacing: 0.01em; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.25); }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="63.5" data-width="1080" data-height="1920">
+    <div id="root" data-composition-id="main" data-start="0" data-duration="60.3" data-width="1080" data-height="1920">
       <svg width="0" height="0" style="position: absolute">
         <defs>
           <symbol id="xx" viewBox="0 0 300 300"><path d="M30 30 L270 270 M270 30 L30 270" stroke="#D21034" stroke-width="26" stroke-linecap="round" /></symbol>
@@ -90,7 +90,7 @@
       </svg>
       <div id="world">
         <div class="grid" id="grid"></div>
-        <!-- 1. hook: viewfinder; a pile of bannann peze and a bunch of green plantain face off from frame 1; two boxing gloves slam together; « les deux » is crossed out -->
+        <!-- 1. hook: viewfinder; a pile of banane pesée and a bunch of green plantain face off from frame 1; two boxing gloves slam together; « les deux » is crossed out -->
         <div class="scene" id="s1">
           <div class="ghost" style="top: 1480px; font-size: 420px">VS</div>
           <div class="cut obj" id="o-peze1" style="left: 20px; top: 880px; width: 560px; height: 406px"><img src="assets/img/peze-cut.png" alt="" /></div>
@@ -109,9 +109,9 @@
             <div class="fps" style="top: 1700px; right: 130px">HAÏTI · KWIZIN</div>
           </div>
         </div>
-        <!-- 2. amber flood out of the pile: camp N° 1, bannann peze — green plantain, fried once, smashed, fried again until it cracks; griot and pikliz -->
+        <!-- 2. amber flood out of the pile: camp N° 1, banane pesée — green plantain, fried once, smashed, fried again until it cracks; griot and pikliz -->
         <div class="scene" id="s2">
-          <div class="ghost" style="top: 1480px; font-size: 400px">PEZE</div>
+          <div class="ghost" style="top: 1480px; font-size: 340px">PESÉE</div>
           <div class="cut obj" id="o-plant2" style="left: 190px; top: 640px; width: 700px; height: 630px"><img src="assets/img/plantains-cut.png" alt="" /></div>
           <div class="photo obj" id="o-friture" style="left: 100px; top: 700px; width: 880px; height: 587px"><img id="friture-img" src="assets/img/friture.jpg" alt="" style="transform-origin: 40% 50%" /></div>
           <div class="chip obj" id="o-frit1" style="left: 130px; top: 1230px; background: #c9780a; color: #fff">1<sup>re</sup> FRITURE</div>
@@ -122,11 +122,11 @@
           <div class="cut obj" id="o-pikliz" style="left: 600px; top: 640px; width: 420px; height: 392px"><img src="assets/img/pikliz-cut.png" alt="" /></div>
           <div class="cut obj" id="o-peze2" style="left: 220px; top: 1010px; width: 640px; height: 464px"><img src="assets/img/peze-cut.png" alt="" /></div>
           <div class="stamp sm obj" id="o-pique" style="left: 560px; top: 1040px; color: #c62828; border-color: #c62828">ÇA PIQUE !</div>
-          <div class="nchip obj" id="n1" style="left: 90px; top: 580px; background: #c9780a">CAMP N° 1 · PEZE</div>
+          <div class="nchip obj" id="n1" style="left: 90px; top: 580px; background: #c9780a">CAMP N° 1 · PESÉE</div>
         </div>
-        <!-- 3. green flood out of the bunch: camp N° 2, bannann bouyi — cooked in water; the morning with smoked herring, avocado, an egg; holds you till the evening -->
+        <!-- 3. green flood out of the bunch: camp N° 2, banane bouillie — cooked in water; the morning with smoked herring, avocado, an egg; holds you till the evening -->
         <div class="scene" id="s3">
-          <div class="ghost" style="top: 1480px; font-size: 400px">BOUYI</div>
+          <div class="ghost" style="top: 1480px; font-size: 300px">BOUILLIE</div>
           <div class="photo obj" id="o-bouyi" style="left: 70px; top: 640px; width: 940px; height: 627px"><img id="bouyi-img" src="assets/img/marmite.jpg" alt="" style="transform-origin: 50% 40%" /></div>
           <div class="cap obj" id="cap3" style="left: 90px; top: 1210px">CUIT DANS L'EAU · À LA MARMITE</div>
           <div class="chip obj" id="o-simple" style="left: 110px; top: 1300px">TOUT SIMPLE</div>
@@ -135,7 +135,7 @@
           <div class="cut obj" id="o-aranso" style="left: 40px; top: 840px; width: 560px; height: 380px"><img src="assets/img/aranso-cut.png" alt="" /></div>
           <div class="cut obj" id="o-avocat" style="left: 650px; top: 820px; width: 360px; height: 360px"><img src="assets/img/avocat-cut.png" alt="" /></div>
           <div class="cut obj" id="o-oeuf" style="left: 320px; top: 1110px; width: 440px; height: 321px"><img src="assets/img/oeuf-cut.png" alt="" /></div>
-          <div class="nchip obj" id="n2" style="left: 90px; top: 580px; background: #2e7d32">CAMP N° 2 · BOUYI</div>
+          <div class="nchip obj" id="n2" style="left: 90px; top: 580px; background: #2e7d32">CAMP N° 2 · BOUILLIE</div>
         </div>
         <!-- 4. iris into the ring: round 1, the crunch (peze); round 2, health — not a drop of oil (bouyi) -->
         <div class="scene" id="s4">
@@ -167,11 +167,11 @@
         <div class="scene" id="s6">
           <div class="ghost" style="top: 1480px; font-size: 400px">DEBA</div>
           <div class="cut obj" id="o-crie" style="left: 470px; top: 640px; width: 600px; height: 739px; transform-origin: 50% 100%"><img src="assets/img/dispute-d.png" alt="" /></div>
-          <div class="nchip obj" id="o-tagpeze" style="left: 600px; top: 1300px; background: #c9780a">CAMP PEZE</div>
+          <div class="nchip obj" id="o-tagpeze" style="left: 600px; top: 1300px; background: #c9780a">CAMP PESÉE</div>
           <div class="cut obj" id="o-malade" style="left: 30px; top: 820px; width: 500px; height: 395px"><img src="assets/img/malade-cut.png" alt="" /></div>
           <div class="stamp sm obj" id="o-xmalade" style="left: 40px; top: 1180px; color: #b3245f; border-color: #b3245f">PLAT DE MALADE ?!</div>
           <div class="cut obj" id="o-pleure" style="left: 20px; top: 640px; width: 420px; height: 750px; transform-origin: 50% 100%"><img src="assets/img/dispute-g.png" alt="" /></div>
-          <div class="nchip obj" id="o-tagbouyi" style="left: 60px; top: 1300px; background: #2e7d32">CAMP BOUYI</div>
+          <div class="nchip obj" id="o-tagbouyi" style="left: 60px; top: 1300px; background: #2e7d32">CAMP BOUILLIE</div>
           <div class="cut obj" id="o-peze6" style="left: 470px; top: 1060px; width: 560px; height: 406px"><img src="assets/img/peze-cut.png" alt="" /></div>
           <div class="cut obj" id="o-huile6" style="left: 560px; top: 640px; width: 480px; height: 412px; transform-origin: 30% 80%"><img src="assets/img/huile-cut.png" alt="" /></div>
         </div>
@@ -185,8 +185,8 @@
         <div class="scene" id="s8">
           <div class="cut obj" id="o-peze8" style="left: 40px; top: 640px; width: 480px; height: 348px"><img src="assets/img/peze-cut.png" alt="" /></div>
           <div class="cut obj" id="o-regime8" style="left: 560px; top: 620px; width: 480px; height: 370px"><img src="assets/img/regime-cut.png" alt="" /></div>
-          <div class="btn obj" id="o-bpeze" style="left: 60px; top: 1020px; background: #c9780a">PEZE</div>
-          <div class="btn obj" id="o-bbouyi" style="left: 580px; top: 1020px; background: #2e7d32">BOUYI</div>
+          <div class="btn obj" id="o-bpeze" style="left: 60px; top: 1020px; background: #c9780a">PESÉE</div>
+          <div class="btn obj" id="o-bbouyi" style="left: 580px; top: 1020px; background: #2e7d32">BOUILLIE</div>
           <div class="vs obj" id="o-vs8" style="left: 445px; top: 1000px; width: 190px; height: 190px">VS</div>
           <div class="chip obj" id="o-tag" style="left: 170px; top: 1220px; background: #b3245f; color: #fff">@ IDENTIFIE LE CAMP D'EN FACE</div>
           <div class="bubble obj" id="o-bub" style="left: 380px; top: 1460px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
@@ -194,11 +194,11 @@
         </div>
 
         <!-- the scoreboard stays on screen from the hook to the Bilan; floods cover it -->
-        <div id="score"><div class="sc" style="background: #c9780a"><span>PEZE</span><b id="sp">0</b></div><i>–</i><div class="sc" style="background: #2e7d32"><b id="sb">0</b><span>BOUYI</span></div></div>
-        <div class="plus" id="p1" style="left: 420px; top: 1330px; background: #c9780a">+1 PEZE</div>
-        <div class="plus" id="p2" style="left: 400px; top: 1330px; background: #2e7d32">+1 BOUYI</div>
-        <div class="plus" id="p3" style="left: 420px; top: 1330px; background: #c9780a">+1 PEZE</div>
-        <div class="plus" id="p4" style="left: 400px; top: 1330px; background: #2e7d32">+1 BOUYI</div>
+        <div id="score"><div class="sc" style="background: #c9780a"><span>PESÉE</span><b id="sp">0</b></div><i>–</i><div class="sc" style="background: #2e7d32"><b id="sb">0</b><span>BOUILLIE</span></div></div>
+        <div class="plus" id="p1" style="left: 420px; top: 1330px; background: #c9780a">+1 PESÉE</div>
+        <div class="plus" id="p2" style="left: 400px; top: 1330px; background: #2e7d32">+1 BOUILLIE</div>
+        <div class="plus" id="p3" style="left: 420px; top: 1330px; background: #c9780a">+1 PESÉE</div>
+        <div class="plus" id="p4" style="left: 400px; top: 1330px; background: #2e7d32">+1 BOUILLIE</div>
 
         <div id="flood"></div>
         <div id="iris"></div>
@@ -208,117 +208,117 @@
 
       <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), prise 2 (prononciation créole guidée), pauses raccourcies, cloche avant chaque round, silence avant « Bilan ».
            Musique : celle du style, coupure au scratch et retour sur « deux partout » mixés dans le fichier. -->
-      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="61.84" data-track-index="10" data-volume="1"></audio>
-      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="63.5" data-track-index="11" data-volume="0.18"></audio>
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="58.55" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="60.3" data-track-index="11" data-volume="0.18"></audio>
       <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
       <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
       <audio id="sx1" src="assets/sfx/impact-bass-1.mp3" data-start="0.3" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
       <audio id="sx2" src="assets/sfx/claque.mp3" data-start="0.3" data-duration="0.39" data-track-index="22" data-volume="0.35"></audio>
       <audio id="sx3" src="assets/sfx/pop.mp3" data-start="0.34" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
-      <audio id="sx4" src="assets/sfx/pop.mp3" data-start="4.13" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx5" src="assets/sfx/pop.mp3" data-start="5.11" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx6" src="assets/sfx/claque.mp3" data-start="6.06" data-duration="0.39" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx7" src="assets/sfx/impact-bass-2.mp3" data-start="6.26" data-duration="2.59" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx8" src="assets/sfx/whoosh.mp3" data-start="6.63" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx9" src="assets/sfx/whoosh-short.mp3" data-start="6.95" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx10" src="assets/sfx/pop.mp3" data-start="7.2" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
-      <audio id="sx11" src="assets/sfx/pop.mp3" data-start="9.02" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx12" src="assets/sfx/whoosh-short.mp3" data-start="9.87" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx13" src="assets/sfx/grains.mp3" data-start="10.47" data-duration="1.33" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx14" src="assets/sfx/pop.mp3" data-start="10.64" data-duration="0.72" data-track-index="21" data-volume="0.16"></audio>
-      <audio id="sx15" src="assets/sfx/whoosh-short.mp3" data-start="11.02" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx16" src="assets/sfx/claque.mp3" data-start="11.32" data-duration="0.39" data-track-index="23" data-volume="0.35"></audio>
-      <audio id="sx17" src="assets/sfx/impact-bass-1.mp3" data-start="11.34" data-duration="2.12" data-track-index="24" data-volume="0.3"></audio>
-      <audio id="sx18" src="assets/sfx/pop.mp3" data-start="11.94" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
-      <audio id="sx19" src="assets/sfx/click.mp3" data-start="13.41" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
-      <audio id="sx20" src="assets/sfx/impact-bass-2.mp3" data-start="13.43" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
-      <audio id="sx21" src="assets/sfx/whoosh.mp3" data-start="13.52" data-duration="0.57" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx22" src="assets/sfx/pop.mp3" data-start="14.02" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx23" src="assets/sfx/pop.mp3" data-start="14.2" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="14.72" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
-      <audio id="sx25" src="assets/sfx/whoosh.mp3" data-start="15.36" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx26" src="assets/sfx/click.mp3" data-start="15.41" data-duration="0.37" data-track-index="22" data-volume="0.35"></audio>
-      <audio id="sx27" src="assets/sfx/whoosh-short.mp3" data-start="15.68" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
-      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="15.98" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
-      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="18.52" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="19.18" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx31" src="assets/sfx/whoosh.mp3" data-start="19.32" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="19.52" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx33" src="assets/sfx/pop.mp3" data-start="20.5" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx34" src="assets/sfx/pop.mp3" data-start="21.35" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx35" src="assets/sfx/pop.mp3" data-start="22.04" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx36" src="assets/sfx/roulement.mp3" data-start="23.12" data-duration="1.37" data-track-index="20" data-volume="0.1"></audio>
-      <audio id="sx37" src="assets/sfx/whoosh-short.mp3" data-start="24.42" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
-      <audio id="sx38" src="assets/sfx/chime.mp3" data-start="24.49" data-duration="2.54" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx39" src="assets/sfx/cloche.mp3" data-start="24.67" data-duration="1.65" data-track-index="20" data-volume="0.32"></audio>
-      <audio id="sx40" src="assets/sfx/click.mp3" data-start="24.68" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
-      <audio id="sx41" src="assets/sfx/click-soft.mp3" data-start="24.8" data-duration="0.37" data-track-index="24" data-volume="0.25"></audio>
-      <audio id="sx42" src="assets/sfx/pop.mp3" data-start="25.0" data-duration="0.72" data-track-index="25" data-volume="0.2"></audio>
-      <audio id="sx43" src="assets/sfx/pop.mp3" data-start="26.01" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx44" src="assets/sfx/click.mp3" data-start="27.14" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
-      <audio id="sx45" src="assets/sfx/impact-bass-1.mp3" data-start="27.16" data-duration="2.12" data-track-index="21" data-volume="0.35"></audio>
-      <audio id="sx46" src="assets/sfx/pop.mp3" data-start="28.02" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
-      <audio id="sx47" src="assets/sfx/whoosh.mp3" data-start="28.73" data-duration="0.57" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx48" src="assets/sfx/cloche.mp3" data-start="28.8" data-duration="1.65" data-track-index="20" data-volume="0.32"></audio>
-      <audio id="sx49" src="assets/sfx/sparkle.mp3" data-start="28.87" data-duration="1.8" data-track-index="23" data-volume="0.16"></audio>
-      <audio id="sx50" src="assets/sfx/click-soft.mp3" data-start="28.9" data-duration="0.37" data-track-index="24" data-volume="0.3"></audio>
-      <audio id="sx51" src="assets/sfx/pop.mp3" data-start="28.93" data-duration="0.72" data-track-index="25" data-volume="0.2"></audio>
-      <audio id="sx52" src="assets/sfx/pop.mp3" data-start="31.0" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx53" src="assets/sfx/claque.mp3" data-start="31.52" data-duration="0.39" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx54" src="assets/sfx/pop.mp3" data-start="31.53" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx55" src="assets/sfx/pop.mp3" data-start="31.91" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
-      <audio id="sx56" src="assets/sfx/whoosh.mp3" data-start="32.65" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx57" src="assets/sfx/cloche.mp3" data-start="32.72" data-duration="1.65" data-track-index="21" data-volume="0.32"></audio>
-      <audio id="sx58" src="assets/sfx/sparkle.mp3" data-start="32.76" data-duration="1.8" data-track-index="22" data-volume="0.16"></audio>
-      <audio id="sx59" src="assets/sfx/click-soft.mp3" data-start="32.79" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
-      <audio id="sx60" src="assets/sfx/pop.mp3" data-start="33.0" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
-      <audio id="sx61" src="assets/sfx/whoosh-short.mp3" data-start="34.28" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx62" src="assets/sfx/pop.mp3" data-start="34.84" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx63" src="assets/sfx/pop.mp3" data-start="35.36" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx64" src="assets/sfx/pop.mp3" data-start="36.15" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx65" src="assets/sfx/pop.mp3" data-start="37.44" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx66" src="assets/sfx/pop.mp3" data-start="38.54" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
-      <audio id="sx67" src="assets/sfx/whoosh.mp3" data-start="39.21" data-duration="0.57" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx68" src="assets/sfx/cloche.mp3" data-start="39.28" data-duration="1.65" data-track-index="20" data-volume="0.32"></audio>
-      <audio id="sx69" src="assets/sfx/sparkle.mp3" data-start="39.39" data-duration="1.8" data-track-index="22" data-volume="0.16"></audio>
-      <audio id="sx70" src="assets/sfx/pop.mp3" data-start="39.41" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
-      <audio id="sx71" src="assets/sfx/click-soft.mp3" data-start="39.42" data-duration="0.37" data-track-index="24" data-volume="0.3"></audio>
-      <audio id="sx72" src="assets/sfx/whoosh-short.mp3" data-start="41.61" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx73" src="assets/sfx/click.mp3" data-start="42.98" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
-      <audio id="sx74" src="assets/sfx/pop.mp3" data-start="43.33" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx75" src="assets/sfx/claque.mp3" data-start="43.73" data-duration="0.39" data-track-index="20" data-volume="0.28"></audio>
-      <audio id="sx76" src="assets/sfx/pop.mp3" data-start="44.22" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
-      <audio id="sx77" src="assets/sfx/whoosh.mp3" data-start="44.99" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx78" src="assets/sfx/sparkle.mp3" data-start="45.07" data-duration="1.8" data-track-index="21" data-volume="0.16"></audio>
-      <audio id="sx79" src="assets/sfx/click-soft.mp3" data-start="45.1" data-duration="0.37" data-track-index="22" data-volume="0.3"></audio>
-      <audio id="sx80" src="assets/sfx/whoosh-short.mp3" data-start="45.19" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
-      <audio id="sx81" src="assets/sfx/pop.mp3" data-start="45.44" data-duration="0.72" data-track-index="24" data-volume="0.18"></audio>
-      <audio id="sx82" src="assets/sfx/pop.mp3" data-start="46.92" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx83" src="assets/sfx/click.mp3" data-start="47.51" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
-      <audio id="sx84" src="assets/sfx/impact-bass-2.mp3" data-start="47.53" data-duration="2.59" data-track-index="22" data-volume="0.3"></audio>
-      <audio id="sx85" src="assets/sfx/whoosh.mp3" data-start="47.86" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx86" src="assets/sfx/pop.mp3" data-start="48.27" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx87" src="assets/sfx/pop.mp3" data-start="49.07" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx88" src="assets/sfx/whoosh-short.mp3" data-start="49.49" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx89" src="assets/sfx/grains.mp3" data-start="49.8" data-duration="1.33" data-track-index="20" data-volume="0.16"></audio>
-      <audio id="sx90" src="assets/sfx/scratch.mp3" data-start="50.92" data-duration="1.23" data-track-index="21" data-volume="0.4"></audio>
-      <audio id="sx91" src="assets/sfx/whoosh.mp3" data-start="50.92" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
-      <audio id="sx92" src="assets/sfx/whoosh-short.mp3" data-start="52.43" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx93" src="assets/sfx/pop.mp3" data-start="52.48" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx94" src="assets/sfx/impact-bass-2.mp3" data-start="52.57" data-duration="2.59" data-track-index="22" data-volume="0.4"></audio>
-      <audio id="sx95" src="assets/sfx/click.mp3" data-start="52.82" data-duration="0.37" data-track-index="23" data-volume="0.4"></audio>
-      <audio id="sx96" src="assets/sfx/impact-bass-1.mp3" data-start="52.84" data-duration="2.12" data-track-index="24" data-volume="0.35"></audio>
-      <audio id="sx97" src="assets/sfx/sparkle.mp3" data-start="52.86" data-duration="1.8" data-track-index="25" data-volume="0.15"></audio>
-      <audio id="sx98" src="assets/sfx/whoosh.mp3" data-start="56.28" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx99" src="assets/sfx/pop.mp3" data-start="56.53" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx100" src="assets/sfx/pop.mp3" data-start="56.61" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx101" src="assets/sfx/pop.mp3" data-start="57.59" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx102" src="assets/sfx/pop.mp3" data-start="58.06" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx103" src="assets/sfx/pop.mp3" data-start="58.32" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx104" src="assets/sfx/pop.mp3" data-start="59.27" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx105" src="assets/sfx/click.mp3" data-start="59.53" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
-      <audio id="sx106" src="assets/sfx/sparkle.mp3" data-start="59.63" data-duration="1.8" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx107" src="assets/sfx/pop.mp3" data-start="60.13" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx4" src="assets/sfx/pop.mp3" data-start="3.88" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx5" src="assets/sfx/pop.mp3" data-start="4.48" data-duration="0.72" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx6" src="assets/sfx/claque.mp3" data-start="5.3" data-duration="0.39" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx7" src="assets/sfx/impact-bass-2.mp3" data-start="5.5" data-duration="2.59" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx8" src="assets/sfx/whoosh.mp3" data-start="5.65" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx9" src="assets/sfx/whoosh-short.mp3" data-start="5.97" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx10" src="assets/sfx/pop.mp3" data-start="6.22" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx11" src="assets/sfx/pop.mp3" data-start="7.61" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx12" src="assets/sfx/whoosh-short.mp3" data-start="8.58" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx13" src="assets/sfx/grains.mp3" data-start="9.25" data-duration="1.33" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx14" src="assets/sfx/pop.mp3" data-start="9.44" data-duration="0.72" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx15" src="assets/sfx/whoosh-short.mp3" data-start="10.04" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx16" src="assets/sfx/claque.mp3" data-start="10.34" data-duration="0.39" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx17" src="assets/sfx/impact-bass-1.mp3" data-start="10.36" data-duration="2.12" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx18" src="assets/sfx/pop.mp3" data-start="10.93" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx19" src="assets/sfx/click.mp3" data-start="12.58" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx20" src="assets/sfx/whoosh.mp3" data-start="12.59" data-duration="0.57" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx21" src="assets/sfx/impact-bass-2.mp3" data-start="12.6" data-duration="2.59" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx22" src="assets/sfx/pop.mp3" data-start="13.16" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx23" src="assets/sfx/pop.mp3" data-start="13.35" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="13.92" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx25" src="assets/sfx/whoosh.mp3" data-start="14.62" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx26" src="assets/sfx/click.mp3" data-start="14.66" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx27" src="assets/sfx/whoosh-short.mp3" data-start="14.94" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="15.24" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="17.47" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="18.05" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx31" src="assets/sfx/whoosh.mp3" data-start="18.52" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="18.72" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx33" src="assets/sfx/pop.mp3" data-start="19.61" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx34" src="assets/sfx/pop.mp3" data-start="20.51" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx35" src="assets/sfx/pop.mp3" data-start="21.31" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx36" src="assets/sfx/roulement.mp3" data-start="22.21" data-duration="1.28" data-track-index="20" data-volume="0.1"></audio>
+      <audio id="sx37" src="assets/sfx/whoosh-short.mp3" data-start="23.4" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx38" src="assets/sfx/chime.mp3" data-start="23.49" data-duration="2.54" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx39" src="assets/sfx/cloche.mp3" data-start="23.65" data-duration="1.65" data-track-index="20" data-volume="0.32"></audio>
+      <audio id="sx40" src="assets/sfx/click.mp3" data-start="23.66" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx41" src="assets/sfx/click-soft.mp3" data-start="23.78" data-duration="0.37" data-track-index="24" data-volume="0.25"></audio>
+      <audio id="sx42" src="assets/sfx/pop.mp3" data-start="23.98" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx43" src="assets/sfx/pop.mp3" data-start="24.77" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx44" src="assets/sfx/click.mp3" data-start="25.83" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx45" src="assets/sfx/impact-bass-1.mp3" data-start="25.85" data-duration="2.12" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx46" src="assets/sfx/pop.mp3" data-start="26.88" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
+      <audio id="sx47" src="assets/sfx/whoosh.mp3" data-start="27.55" data-duration="0.57" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx48" src="assets/sfx/cloche.mp3" data-start="27.62" data-duration="1.65" data-track-index="20" data-volume="0.32"></audio>
+      <audio id="sx49" src="assets/sfx/sparkle.mp3" data-start="27.73" data-duration="1.8" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx50" src="assets/sfx/pop.mp3" data-start="27.75" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx51" src="assets/sfx/click-soft.mp3" data-start="27.76" data-duration="0.37" data-track-index="25" data-volume="0.3"></audio>
+      <audio id="sx52" src="assets/sfx/pop.mp3" data-start="29.63" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx53" src="assets/sfx/claque.mp3" data-start="30.22" data-duration="0.39" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx54" src="assets/sfx/pop.mp3" data-start="30.27" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx55" src="assets/sfx/pop.mp3" data-start="30.7" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
+      <audio id="sx56" src="assets/sfx/whoosh.mp3" data-start="31.42" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx57" src="assets/sfx/cloche.mp3" data-start="31.49" data-duration="1.65" data-track-index="20" data-volume="0.32"></audio>
+      <audio id="sx58" src="assets/sfx/sparkle.mp3" data-start="31.55" data-duration="1.8" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx59" src="assets/sfx/click-soft.mp3" data-start="31.58" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx60" src="assets/sfx/pop.mp3" data-start="31.77" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx61" src="assets/sfx/whoosh-short.mp3" data-start="32.78" data-duration="0.57" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx62" src="assets/sfx/pop.mp3" data-start="32.93" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx63" src="assets/sfx/pop.mp3" data-start="33.28" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx64" src="assets/sfx/pop.mp3" data-start="33.8" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx65" src="assets/sfx/pop.mp3" data-start="35.74" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx66" src="assets/sfx/pop.mp3" data-start="37.31" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
+      <audio id="sx67" src="assets/sfx/whoosh.mp3" data-start="38.0" data-duration="0.57" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx68" src="assets/sfx/cloche.mp3" data-start="38.07" data-duration="1.65" data-track-index="20" data-volume="0.32"></audio>
+      <audio id="sx69" src="assets/sfx/sparkle.mp3" data-start="38.16" data-duration="1.8" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx70" src="assets/sfx/click-soft.mp3" data-start="38.19" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx71" src="assets/sfx/pop.mp3" data-start="38.2" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx72" src="assets/sfx/whoosh-short.mp3" data-start="40.26" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx73" src="assets/sfx/click.mp3" data-start="41.39" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx74" src="assets/sfx/pop.mp3" data-start="41.84" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx75" src="assets/sfx/claque.mp3" data-start="42.24" data-duration="0.39" data-track-index="21" data-volume="0.28"></audio>
+      <audio id="sx76" src="assets/sfx/pop.mp3" data-start="42.75" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
+      <audio id="sx77" src="assets/sfx/whoosh.mp3" data-start="43.52" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx78" src="assets/sfx/sparkle.mp3" data-start="43.6" data-duration="1.8" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx79" src="assets/sfx/click-soft.mp3" data-start="43.63" data-duration="0.37" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx80" src="assets/sfx/whoosh-short.mp3" data-start="43.72" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx81" src="assets/sfx/pop.mp3" data-start="43.97" data-duration="0.72" data-track-index="24" data-volume="0.18"></audio>
+      <audio id="sx82" src="assets/sfx/pop.mp3" data-start="45.23" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx83" src="assets/sfx/click.mp3" data-start="45.82" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx84" src="assets/sfx/impact-bass-2.mp3" data-start="45.84" data-duration="2.59" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx85" src="assets/sfx/whoosh.mp3" data-start="46.19" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx86" src="assets/sfx/pop.mp3" data-start="46.58" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx87" src="assets/sfx/pop.mp3" data-start="47.28" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx88" src="assets/sfx/whoosh-short.mp3" data-start="47.76" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx89" src="assets/sfx/grains.mp3" data-start="48.04" data-duration="1.33" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx90" src="assets/sfx/scratch.mp3" data-start="48.99" data-duration="1.23" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx91" src="assets/sfx/whoosh.mp3" data-start="48.99" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx92" src="assets/sfx/whoosh-short.mp3" data-start="50.44" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx93" src="assets/sfx/pop.mp3" data-start="50.49" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx94" src="assets/sfx/impact-bass-2.mp3" data-start="50.58" data-duration="2.59" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx95" src="assets/sfx/click.mp3" data-start="50.79" data-duration="0.37" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx96" src="assets/sfx/impact-bass-1.mp3" data-start="50.81" data-duration="2.12" data-track-index="24" data-volume="0.35"></audio>
+      <audio id="sx97" src="assets/sfx/sparkle.mp3" data-start="50.83" data-duration="1.8" data-track-index="25" data-volume="0.15"></audio>
+      <audio id="sx98" src="assets/sfx/whoosh.mp3" data-start="53.89" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx99" src="assets/sfx/pop.mp3" data-start="54.14" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx100" src="assets/sfx/pop.mp3" data-start="54.22" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx101" src="assets/sfx/pop.mp3" data-start="54.98" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx102" src="assets/sfx/pop.mp3" data-start="55.42" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx103" src="assets/sfx/pop.mp3" data-start="55.57" data-duration="0.72" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx104" src="assets/sfx/pop.mp3" data-start="56.36" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx105" src="assets/sfx/click.mp3" data-start="56.59" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx106" src="assets/sfx/sparkle.mp3" data-start="56.69" data-duration="1.8" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx107" src="assets/sfx/pop.mp3" data-start="57.09" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
     </div>
     <script>
       ;(function () {
@@ -326,7 +326,7 @@
         const $ = (id) => document.getElementById(id)
         const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
         const blur = (n) => 'blur(' + n + 'px)'
-        const END = 63.5
+        const END = 60.3
         const RED = '#c62828'
         // one colour per camp (amber = peze, plantain green = bouyi), then magenta for the trash talk and Haiti blue for the Bilan
         const AMBER = '#c9780a'
@@ -336,10 +336,10 @@
         const INK = '#141414'
 
         // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
-        const RAW = [0.266, 0.749, 0.99, 1.232, 1.715, 2.181, 2.913, 3.1, 3.286, 3.473, 3.66, 4.034, 4.22, 4.627, 4.989, 5.25, 5.714, 5.862, 6.011, 6.159, 6.307, 6.85, 7.103, 7.356, 7.843, 8.3, 8.753, 8.922, 9.26, 9.429, 9.767, 9.936, 10.274, 10.443, 10.612, 10.95, 11.119, 11.626, 11.795, 12.133, 12.64, 12.809, 13.147, 13.571, 13.921, 14.096, 14.271, 14.447, 14.622, 14.972, 15.147, 15.579, 15.849, 16.119, 16.614, 17.123, 17.574, 17.839, 18.104, 18.368, 18.858, 19.029, 19.2, 19.371, 19.542, 19.884, 20.226, 20.397, 20.74, 20.911, 21.253, 21.766, 21.937, 22.334, 22.53, 22.725, 22.921, 23.117, 23.312, 23.508, 24.095, 24.947, 25.43, 25.906, 26.092, 26.688, 26.877, 27.065, 27.254, 27.442, 27.87, 28.05, 28.231, 29.081, 29.606, 30.093, 30.284, 30.903, 31.06, 31.218, 31.376, 31.76, 31.945, 32.129, 32.997, 33.537, 34.175, 34.434, 34.692, 35.21, 35.998, 36.266, 36.668, 36.802, 36.936, 37.069, 37.203, 37.337, 37.605, 37.739, 38.007, 38.391, 38.561, 38.731, 39.556, 40.117, 40.631, 40.804, 41.528, 41.749, 42.193, 42.596, 42.72, 42.844, 43.233, 43.332, 43.431, 43.531, 44.069, 44.241, 44.414, 45.043, 45.27, 45.498, 45.726, 46.184, 46.397, 46.61, 46.823, 47.036, 47.249, 47.908, 48.073, 48.238, 48.402, 48.972, 49.129, 49.287, 49.444, 49.601, 49.916, 50.074, 50.231, 50.388, 51.792, 52.37, 52.561, 53.181, 53.435, 53.688, 53.942, 54.682, 54.852, 55.022, 55.192, 55.362, 56.332, 56.957, 57.091, 57.47, 57.94, 58.203, 58.678, 59.167, 59.33, 59.819, 59.982, 60.472, 60.961, 61.124, 61.287, 61.45]
+        const RAW = [0.264, 0.689, 1.112, 1.325, 1.749, 2.228, 2.838, 2.993, 3.15, 3.307, 3.464, 3.778, 3.935, 4.205, 4.361, 4.518, 5.046, 5.096, 5.146, 5.196, 5.303, 5.865, 6.057, 6.249, 6.578, 6.937, 7.459, 7.514, 7.899, 8.091, 8.476, 8.667, 9.052, 9.244, 9.437, 9.822, 10.141, 10.59, 10.783, 11.167, 11.744, 11.936, 12.321, 12.639, 13.056, 13.248, 13.44, 13.633, 13.824, 14.209, 14.401, 14.841, 15.048, 15.255, 15.708, 16.124, 16.58, 16.751, 16.924, 17.325, 17.527, 17.9, 18.08, 18.571, 18.621, 18.989, 19.328, 19.508, 19.867, 20.047, 20.407, 21.157, 21.207, 21.518, 21.653, 21.833, 22.013, 22.192, 22.372, 22.552, 23.091, 23.93, 24.256, 24.668, 24.894, 25.481, 25.573, 25.8, 26.025, 26.252, 26.726, 26.849, 26.974, 27.898, 28.278, 28.716, 28.904, 29.53, 29.727, 29.924, 30.12, 30.55, 30.729, 30.91, 31.766, 32.131, 32.678, 32.728, 32.778, 33.132, 33.648, 33.93, 34.724, 34.906, 35.089, 35.271, 35.454, 35.636, 36.001, 36.182, 36.547, 37.16, 37.287, 37.414, 38.345, 38.709, 39.138, 39.334, 40.183, 40.373, 40.751, 41.011, 41.129, 41.318, 41.742, 41.842, 41.944, 42.045, 42.598, 42.759, 42.919, 43.566, 43.7, 43.834, 44.102, 44.482, 44.532, 44.913, 45.13, 45.347, 45.564, 46.24, 46.379, 46.518, 46.658, 47.182, 47.232, 47.575, 47.707, 47.837, 48.1, 48.231, 48.362, 48.494, 49.857, 50.377, 50.528, 51.077, 51.245, 51.415, 51.586, 52.172, 52.329, 52.689, 52.844, 53.0, 53.939, 54.394, 54.502, 54.858, 55.299, 55.453, 55.85, 56.256, 56.392, 56.729, 56.936, 57.343, 57.751, 57.886, 58.022, 58.157]
         const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
-        const WORDS = ["Bannann", "peze", "ou", "bannann", "bouyi ?", "Attention :", "à", "la", "fin,", "tu", "choisis", "ton", "camp.", "Et", "« les", "deux »,", "ce", "n'est", "pas", "une", "réponse.", "Dans", "ce", "coin :", "bannann", "peze.", "Du", "plantain", "vert,", "coupé", "en", "rondelles,", "frit", "une", "première", "fois,", "écrasé,", "puis", "refrit", "jusqu'à", "ce", "qu'il", "craque.", "Avec", "du", "griot,", "et", "du", "pikliz", "qui", "pique.", "Dans", "l'autre", "coin :", "bannann", "bouyi.", "Cuit", "dans", "l'eau,", "tout", "simple,", "tout", "tendre.", "Le", "matin,", "avec", "de", "l'aransò,", "un", "morceau", "d'avocat,", "un", "œuf.", "Le", "plat", "qui", "tient", "au", "ventre", "jusqu'au", "soir.", "Premier", "round :", "le", "croquant.", "Ça", "craque", "sous", "la", "dent.", "Point", "pour", "peze.", "Deuxième", "round :", "la", "santé.", "Pas", "une", "goutte", "d'huile.", "Point", "pour", "bouyi.", "Troisième", "round :", "la", "fête.", "Baptême,", "mariage,", "première", "communion :", "tout", "le", "monde", "cherche", "le", "plateau", "de", "bannann", "peze.", "Point", "pour", "peze.", "Quatrième", "round :", "le", "portefeuille.", "Une", "marmite", "d'eau,", "et", "c'est", "prêt.", "Pas", "d'huile", "à", "acheter.", "Point", "pour", "bouyi.", "Le", "camp", "peze", "dit :", "« Bouyi,", "c'est", "un", "plat", "de", "malade. »", "Le", "camp", "bouyi", "répond :", "« Peze,", "c'est", "de", "l'huile", "avec", "un", "peu", "de", "banane. »", "Bilan :", "deux", "partout.", "C'est", "la", "même", "banane…", "et", "c'est", "toi", "qui", "départages.", "Alors,", "ton", "camp ?", "Peze", "ou", "bouyi ?", "Écris-le", "en", "commentaire,", "et", "identifie", "quelqu'un", "du", "camp", "d'en", "face."]
-        const SCRATCH = 50.94
+        const WORDS = ["Banane", "pesée", "ou", "banane", "bouillie ?", "Attention :", "à", "la", "fin,", "tu", "choisis", "ton", "camp.", "Et", "« les", "deux »,", "ce", "n'est", "pas", "une", "réponse.", "Dans", "ce", "coin :", "banane", "pesée.", "Du", "plantain", "vert,", "coupé", "en", "rondelles,", "frit", "une", "première", "fois,", "écrasé,", "puis", "refrit", "jusqu'à", "ce", "qu'il", "craque.", "Avec", "du", "griot,", "et", "du", "pikliz", "qui", "pique.", "Dans", "l'autre", "coin :", "banane", "bouillie.", "Cuite", "dans", "l'eau,", "tout", "simple,", "tout", "tendre.", "Le", "matin,", "avec", "du", "hareng,", "un", "morceau", "d'avocat,", "un", "œuf.", "Le", "plat", "qui", "tient", "au", "ventre", "jusqu'au", "soir.", "Premier", "round :", "le", "croquant.", "Ça", "craque", "sous", "la", "dent.", "Point", "pour", "pesée.", "Deuxième", "round :", "la", "santé.", "Pas", "une", "goutte", "d'huile.", "Point", "pour", "bouillie.", "Troisième", "round :", "la", "fête.", "Baptême,", "mariage,", "première", "communion :", "tout", "le", "monde", "cherche", "le", "plateau", "de", "banane", "pesée.", "Point", "pour", "pesée.", "Quatrième", "round :", "le", "portefeuille.", "Une", "marmite", "d'eau,", "et", "c'est", "prêt.", "Pas", "d'huile", "à", "acheter.", "Point", "pour", "bouillie.", "Le", "camp", "pesée", "dit :", "« Bouillie,", "c'est", "un", "plat", "de", "malade. »", "Le", "camp", "bouillie", "répond :", "« Pesée,", "c'est", "de", "l'huile", "avec", "un", "peu", "de", "banane. »", "Bilan :", "deux", "partout.", "C'est", "la", "même", "banane…", "et", "c'est", "toi", "qui", "départages.", "Alors,", "ton", "camp ?", "Pesée", "ou", "bouillie ?", "Écris-le", "en", "commentaire,", "et", "identifie", "quelqu'un", "du", "camp", "d'en", "face."]
+        const SCRATCH = 49.01
 
         // ---------- transitions: when each scene takes over, and how ----------
         const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
