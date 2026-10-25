@@ -45,6 +45,7 @@ Tirées des deux références du client (compte à rebours « frames to impact �
 - FLORA, modèle `t2a-gemini-3-1-flash-tts`, `voice_name: Charon`, `language_code: fr-FR`, 2 prises (≈ 0,013 $ chacune). Vouvoiement.
 - Consigne : « Dis comme un conteur TikTok très dynamique : débit rapide et énergique, phrases enchaînées presque sans pause, ton captivant et <ton du sujet>, une courte pause avant « Bilan », et la question finale posée directement au spectateur. Lis les dates et les nombres exactement comme ils sont écrits : <texte> ». **Dates et nombres écrits en lettres**.
 - Écouter / transcrire les deux prises : une prise peut sauter la moitié du texte.
+- **Mots créoles dans la voix** : la voix fr-FR prononce mal le créole écrit (« bannann peze » sonnait « bannes en pésé »). Pour un plat ou un objet qui a un nom français courant en Haïti, écrire le texte de la voix **en français** (« banane pesée », « banane bouillie », « hareng » au lieu de « aransò ») — demande du client. Le texte à l'écran suit la voix (karaoké) ; le créole reste possible dans les pastilles, mots fantômes et tampons.
 - Traitement : silences de début et de fin coupés, `npx hyperframes transcribe -m medium -l fr --json`, **recaler sur les silences (`silencedetect`) les temps de la fin de la prise** (la transcription dérive souvent après 20 s), puis `align_voice.py` (pauses raccourcies, silence ajouté avant « Bilan » et avant « Répondez », `atempo=1.1`) → `assets/vo/vo.wav` + temps de chaque mot (`T = 0,2 + RAW`).
 
 ## Son
