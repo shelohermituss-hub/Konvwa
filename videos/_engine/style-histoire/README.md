@@ -53,6 +53,20 @@ Tirées des deux références du client (compte à rebours « frames to impact �
 - Sons (repris de `videos/santa-maria-2014/assets/sfx`) : souffle + souffle court sur chaque inondation, souffle court + clic d'obturateur sur chaque iris, souffle sur chaque poussée, pop sur chaque ressort, basse sur l'accroche et le tampon, touches de clavier, montée, scintillement. Volumes 0,15 à 0,45 : **rien ne couvre la voix**.
 - `build_exemple.py` (version Santa María) montre tout le câblage : enveloppe, sons des transitions, pistes sans chevauchement, remplacement de `__END__`, `__VO__`, `__SCRATCH__`, `RAW`, `WORDS`.
 
+## Chaque seconde compte : accroche, attention, partage
+
+Recommandations de Meta pour les Reels transmises par le client (les 6 dernières vidéos de la série sont devenues virales) : la plateforme diffuse plus largement ce que les gens **regardent jusqu'au bout, aiment, commentent et partagent**. À vérifier sur chaque nouveau texte, avant la voix :
+
+- **Accroche (0–3 s) amusante, pertinente ou inattendue.** La première phrase dite est déjà le fait surprenant ou la situation que tout le monde reconnaît (« Pas de téléphone. Pas de jouets. »), jamais une mise en contexte (« Aujourd'hui on va parler de… », « Saviez-vous que… »). ≤ 7 mots à l'écran, image forte et mouvement dès la première image (voir l'accroche v3).
+- **Garder l'attention jusqu'à la fin** :
+  - une **promesse ouverte** dans les 5 premières secondes, payée plus loin (« le dernier, presque personne ne s'en souvient », numérotation N° 1 → N° 9, compteur) ;
+  - **un événement visuel nouveau toutes les 2 s environ** (image, objet, tampon, compteur, transition) : aucun plan fixe sans changement plus de 3 s ;
+  - pas de temps mort dans la voix (pauses raccourcies), relance avant chaque partie (« Et ce jeu est très vieux : ») ;
+  - le « Bilan » arrive comme une chute, puis la question finale, sans générique ni logo pour faire durer.
+- **Du contenu « c'est tout moi », qu'on a envie d'envoyer à quelqu'un** : parler au spectateur (« vous », « ton », « on »), des détails haïtiens précis et vécus (mots créoles, lakou, phrases des parents, souvenirs d'école), des situations où chacun se reconnaît et pense à un proche. Un fait doit pouvoir se raconter à quelqu'un d'autre après la vidéo.
+- **De l'humour quand le sujet s'y prête** : une réplique créole de parent, un tampon décalé, une chute ; jamais moqueur envers une personne ou une croyance, et pas sur les sujets graves (morts, dictature, catastrophes).
+- **Interactions** : une seule question finale qui invite à partager un savoir (section suivante) ; quand ça colle au sujet, elle peut aussi pousser à identifier quelqu'un (« Identifie celui qui gagnait toujours aux oslè »), ce qui fait à la fois commenter et partager.
+
 ## Fin : faire commenter
 
 - Question ouverte ou OUI / NON, boutons OUI / NON en ressort, bulle blanche « Répondez ici » + flèche rouge animée vers le bouton commentaires de TikTok (`left: 860px; top: 1180px`).
