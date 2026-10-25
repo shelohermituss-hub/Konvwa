@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Bannann peze ou bannann bouyi ?</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Débats (nouveau format) : « Bannann peze ou bannann bouyi ? », style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
+      accroche en viseur (gants de boxe qui se cognent entre une pile de bannann peze et un régime de plantain vert), un tableau de score,
+      chaque camp présenté, quatre rounds avec une cloche, les piques entre camps, égalité au Bilan, et la question « Ton camp ? ».
+    -->
+    <style>
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-500.woff2") format("woff2"); font-weight: 500; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-600.woff2") format("woff2"); font-weight: 600; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-700.woff2") format("woff2"); font-weight: 700; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-800.woff2") format("woff2"); font-weight: 800; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-900.woff2") format("woff2"); font-weight: 900; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .series { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; z-index: 30; }
+      .series span { padding: 10px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: 0.08em; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
+      .w { display: inline-block; }
+      /* typographie de la série (Poppins, emphase en italique gras), animée comme la vidéo de référence du client :
+         mots à venir en gris très clair qui foncent à la voix, gros mots en dégradé avec reflet, mots surlignés */
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      .b .w, .bi .w { color: transparent !important; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(100deg, var(--acc) 0%, var(--acc2) 42%, #ffffff 50%, var(--acc2) 58%, var(--acc) 100%); background-size: 320% 100%; background-position: 100% 0; padding: 0 0.05em 0.06em; }
+      .hl { position: relative; z-index: 0; }
+      .hl-join::before { right: -0.42em !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+      .hl::before { content: ""; position: absolute; left: -0.14em; right: -0.14em; top: 0.06em; bottom: 0; background: var(--acc); border-radius: 0.14em; transform: scaleX(var(--hx, 0)); transform-origin: 0 50%; z-index: -1; }
+
+      .obj { position: absolute; z-index: 10; }
+      .scene { position: absolute; inset: 0; }
+      .photo { position: absolute; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip { position: absolute; white-space: nowrap; padding: 14px 28px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 36px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); }
+      .nchip { position: absolute; white-space: nowrap; padding: 8px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 900; font-size: 40px; letter-spacing: 0.02em; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22); }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #CE1126; border-radius: 22px; color: #CE1126; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.7); white-space: nowrap; }
+      .stamp.sm { font-size: 64px; border-width: 8px; padding: 6px 28px; }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+      .tlab { position: absolute; font-weight: 800; font-size: 46px; }
+      #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
+      #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
+      #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
+      /* --- viseur de caméra (accroche), mots fantômes, micro-typo --- */
+      .hud { position: absolute; inset: 0; pointer-events: none; z-index: 12; }
+      .hud .cn { position: absolute; width: 60px; height: 60px; border: 0 solid #141414; }
+      .hud .rec { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
+      .hud .fps { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
+      .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; white-space: nowrap; }
+      .counter2 { position: absolute; left: 0; right: 0; text-align: center; }
+      .counter2 small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
+      .counter2 b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #141414; font-variant-numeric: tabular-nums; }
+      /* --- débat bannann : uniquement des photos et détourages réels ; texte, pastilles, tampons, croix et tableau de score par-dessus --- */
+      .cut { position: absolute; }
+      .cut img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.28)); }
+      .xmark { position: absolute; }
+      .cap { position: absolute; padding: 6px 14px; border-radius: 10px; background: rgba(20, 20, 20, 0.72); color: #fff; font-family: "Courier New", monospace; font-size: 20px; font-weight: 700; letter-spacing: 0.08em; white-space: nowrap; }
+      .vs { position: absolute; width: 190px; height: 190px; border-radius: 50%; background: #141414; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-style: italic; font-size: 92px; letter-spacing: -0.04em; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.3); }
+      #score { position: absolute; left: 540px; top: 1500px; display: flex; align-items: center; border-radius: 999px; overflow: hidden; background: #141414; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.25); z-index: 14; }
+      #score .sc { display: flex; align-items: center; gap: 18px; padding: 8px 30px; color: #fff; font-weight: 900; font-size: 38px; letter-spacing: 0.04em; }
+      #score .sc b { display: inline-block; font-size: 66px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+      #score i { color: #fff; font-style: normal; font-weight: 900; font-size: 44px; padding: 0 14px; }
+      .plus { position: absolute; padding: 6px 30px; border-radius: 999px; color: #fff; font-weight: 900; font-size: 64px; box-shadow: 0 16px 34px rgba(0, 0, 0, 0.25); white-space: nowrap; z-index: 13; }
+      .round { position: absolute; left: 0; right: 0; text-align: center; }
+      .round span { display: inline-block; padding: 10px 40px; border-radius: 999px; background: #141414; color: #fff; font-weight: 900; font-size: 56px; letter-spacing: 0.06em; box-shadow: 0 18px 36px rgba(0, 0, 0, 0.25); }
+      .btn { position: absolute; width: 440px; height: 150px; border-radius: 40px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 74px; letter-spacing: 0.02em; box-shadow: 0 24px 50px rgba(0, 0, 0, 0.25); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="63.5" data-width="1080" data-height="1920">
+      <svg width="0" height="0" style="position: absolute">
+        <defs>
+          <symbol id="xx" viewBox="0 0 300 300"><path d="M30 30 L270 270 M270 30 L30 270" stroke="#D21034" stroke-width="26" stroke-linecap="round" /></symbol>
+        </defs>
+      </svg>
+      <div id="world">
+        <div class="grid" id="grid"></div>
+        <!-- 1. hook: viewfinder; a pile of bannann peze and a bunch of green plantain face off from frame 1; two boxing gloves slam together; « les deux » is crossed out -->
+        <div class="scene" id="s1">
+          <div class="ghost" style="top: 1480px; font-size: 420px">VS</div>
+          <div class="cut obj" id="o-peze1" style="left: 20px; top: 880px; width: 560px; height: 406px"><img src="assets/img/peze-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-regime1" style="left: 520px; top: 860px; width: 540px; height: 417px"><img src="assets/img/regime-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-gantg" style="left: 90px; top: 590px; width: 420px; height: 367px"><img src="assets/img/gants-g.png" alt="" /></div>
+          <div class="cut obj" id="o-gantd" style="left: 570px; top: 590px; width: 420px; height: 367px"><img src="assets/img/gants-d.png" alt="" /></div>
+          <div class="vs obj" id="o-vs" style="left: 445px; top: 1010px">VS</div>
+          <div class="chip obj" id="o-lesdeux" style="left: 330px; top: 1330px; background: #141414; color: #fff">« LES DEUX »</div>
+          <svg class="xmark obj" id="o-xdeux" viewBox="0 0 300 300" style="left: 410px; top: 1240px; width: 260px; height: 260px"><use href="#xx" /></svg>
+          <div class="hud" id="hud">
+            <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="left: 50px; top: 1690px; border-left-width: 6px; border-bottom-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 1690px; border-right-width: 6px; border-bottom-width: 6px"></div>
+            <div class="rec" style="top: 1700px; left: 130px"><i id="recdot"></i>REC <span id="tc">00:00:00:00</span></div>
+            <div class="fps" style="top: 1700px; right: 130px">HAÏTI · KWIZIN</div>
+          </div>
+        </div>
+        <!-- 2. amber flood out of the pile: camp N° 1, bannann peze — green plantain, fried once, smashed, fried again until it cracks; griot and pikliz -->
+        <div class="scene" id="s2">
+          <div class="ghost" style="top: 1480px; font-size: 400px">PEZE</div>
+          <div class="cut obj" id="o-plant2" style="left: 190px; top: 640px; width: 700px; height: 630px"><img src="assets/img/plantains-cut.png" alt="" /></div>
+          <div class="photo obj" id="o-friture" style="left: 100px; top: 700px; width: 880px; height: 587px"><img id="friture-img" src="assets/img/friture.jpg" alt="" style="transform-origin: 40% 50%" /></div>
+          <div class="chip obj" id="o-frit1" style="left: 130px; top: 1230px; background: #c9780a; color: #fff">1<sup>re</sup> FRITURE</div>
+          <div class="photo obj" id="o-planche" style="left: 330px; top: 600px; width: 520px; height: 780px"><img src="assets/img/peze-planche.jpg" alt="" style="object-position: 50% 60%" /></div>
+          <div class="chip obj" id="o-frit2" style="left: 380px; top: 1320px; background: #c9780a; color: #fff">2<sup>e</sup> FRITURE</div>
+          <div class="stamp obj" id="o-crac" style="left: 120px; top: 880px; color: #c9780a; border-color: #c9780a">CRAC !</div>
+          <div class="cut obj" id="o-griot" style="left: 40px; top: 690px; width: 560px; height: 334px"><img src="assets/img/griot-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-pikliz" style="left: 600px; top: 640px; width: 420px; height: 392px"><img src="assets/img/pikliz-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-peze2" style="left: 220px; top: 1010px; width: 640px; height: 464px"><img src="assets/img/peze-cut.png" alt="" /></div>
+          <div class="stamp sm obj" id="o-pique" style="left: 560px; top: 1040px; color: #c62828; border-color: #c62828">ÇA PIQUE !</div>
+          <div class="nchip obj" id="n1" style="left: 90px; top: 580px; background: #c9780a">CAMP N° 1 · PEZE</div>
+        </div>
+        <!-- 3. green flood out of the bunch: camp N° 2, bannann bouyi — cooked in water; the morning with smoked herring, avocado, an egg; holds you till the evening -->
+        <div class="scene" id="s3">
+          <div class="ghost" style="top: 1480px; font-size: 400px">BOUYI</div>
+          <div class="photo obj" id="o-bouyi" style="left: 70px; top: 640px; width: 940px; height: 627px"><img id="bouyi-img" src="assets/img/marmite.jpg" alt="" style="transform-origin: 50% 40%" /></div>
+          <div class="cap obj" id="cap3" style="left: 90px; top: 1210px">CUIT DANS L'EAU · À LA MARMITE</div>
+          <div class="chip obj" id="o-simple" style="left: 110px; top: 1300px">TOUT SIMPLE</div>
+          <div class="chip obj" id="o-tendre" style="left: 540px; top: 1300px; background: #2e7d32; color: #fff">TOUT TENDRE</div>
+          <div class="counter2 obj" id="o-clk" style="top: 640px"><small>IL EST</small><b id="clk">07:00</b></div>
+          <div class="cut obj" id="o-aranso" style="left: 40px; top: 840px; width: 560px; height: 380px"><img src="assets/img/aranso-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-avocat" style="left: 650px; top: 820px; width: 360px; height: 360px"><img src="assets/img/avocat-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-oeuf" style="left: 320px; top: 1110px; width: 440px; height: 321px"><img src="assets/img/oeuf-cut.png" alt="" /></div>
+          <div class="nchip obj" id="n2" style="left: 90px; top: 580px; background: #2e7d32">CAMP N° 2 · BOUYI</div>
+        </div>
+        <!-- 4. iris into the ring: round 1, the crunch (peze); round 2, health — not a drop of oil (bouyi) -->
+        <div class="scene" id="s4">
+          <div class="ghost" style="top: 1480px; font-size: 400px">ROUND</div>
+          <div class="round obj" id="r1" style="top: 590px"><span>ROUND 1</span></div>
+          <div class="photo obj" id="o-croq" style="left: 70px; top: 720px; width: 940px; height: 627px"><img id="croq-img" src="assets/img/peze-assiette.jpg" alt="" style="transform-origin: 50% 50%" /></div>
+          <div class="stamp obj" id="o-crac2" style="left: 560px; top: 1170px; color: #c9780a; border-color: #c9780a">CRAC !</div>
+          <div class="round obj" id="r2" style="top: 590px"><span>ROUND 2</span></div>
+          <div class="cut obj" id="o-huile" style="left: 260px; top: 730px; width: 560px; height: 481px"><img src="assets/img/huile-cut.png" alt="" /></div>
+          <svg class="xmark obj" id="o-xhuile" viewBox="0 0 300 300" style="left: 330px; top: 760px; width: 420px; height: 420px"><use href="#xx" /></svg>
+          <div class="chip obj" id="o-zero" style="left: 320px; top: 1260px; background: #2e7d32; color: #fff">0 GOUTTE D'HUILE</div>
+        </div>
+        <!-- 5. page pushes up: round 3, the party — baptism, wedding, first communion: everyone looks for the peze tray; round 4, the wallet — a pot of water and it's ready -->
+        <div class="scene" id="s5">
+          <div class="ghost" style="top: 1480px; font-size: 400px">FÈT</div>
+          <div class="round obj" id="r3" style="top: 590px"><span>ROUND 3</span></div>
+          <div class="photo obj" id="o-fete" style="left: 70px; top: 700px; width: 940px; height: 627px"><img id="fete-img" src="assets/img/fete.jpg" alt="" style="object-position: 50% 30%; transform-origin: 50% 30%" /></div>
+          <div class="chip obj" id="o-bapteme" style="left: 90px; top: 760px">BAPTÊME</div>
+          <div class="chip obj" id="o-mariage" style="left: 640px; top: 760px">MARIAGE</div>
+          <div class="chip obj" id="o-communion" style="left: 300px; top: 860px">1<sup>re</sup> COMMUNION</div>
+          <div class="cut obj" id="o-peze3" style="left: 270px; top: 1040px; width: 560px; height: 406px"><img src="assets/img/peze-cut.png" alt="" /></div>
+          <div class="round obj" id="r4" style="top: 590px"><span>ROUND 4</span></div>
+          <div class="cut obj" id="o-chef" style="left: 60px; top: 690px; width: 700px; height: 796px"><img src="assets/img/cuisinier-cut.png" alt="" /></div>
+          <div class="stamp sm obj" id="o-pret" style="left: 610px; top: 760px; color: #2e7d32; border-color: #2e7d32">PRÊT !</div>
+          <div class="cut obj" id="o-huile2" style="left: 680px; top: 1000px; width: 340px; height: 292px"><img src="assets/img/huile-cut.png" alt="" /></div>
+          <svg class="xmark obj" id="o-xhuile2" viewBox="0 0 300 300" style="left: 700px; top: 990px; width: 300px; height: 300px"><use href="#xx" /></svg>
+        </div>
+        <!-- 6. page pushes left: the trash talk — camp peze shouts « a sick person's dish »; camp bouyi answers « oil with a bit of banana » -->
+        <div class="scene" id="s6">
+          <div class="ghost" style="top: 1480px; font-size: 400px">DEBA</div>
+          <div class="cut obj" id="o-crie" style="left: 470px; top: 640px; width: 600px; height: 739px; transform-origin: 50% 100%"><img src="assets/img/dispute-d.png" alt="" /></div>
+          <div class="nchip obj" id="o-tagpeze" style="left: 600px; top: 1300px; background: #c9780a">CAMP PEZE</div>
+          <div class="cut obj" id="o-malade" style="left: 30px; top: 820px; width: 500px; height: 395px"><img src="assets/img/malade-cut.png" alt="" /></div>
+          <div class="stamp sm obj" id="o-xmalade" style="left: 40px; top: 1180px; color: #b3245f; border-color: #b3245f">PLAT DE MALADE ?!</div>
+          <div class="cut obj" id="o-pleure" style="left: 20px; top: 640px; width: 420px; height: 750px; transform-origin: 50% 100%"><img src="assets/img/dispute-g.png" alt="" /></div>
+          <div class="nchip obj" id="o-tagbouyi" style="left: 60px; top: 1300px; background: #2e7d32">CAMP BOUYI</div>
+          <div class="cut obj" id="o-peze6" style="left: 470px; top: 1060px; width: 560px; height: 406px"><img src="assets/img/peze-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-huile6" style="left: 560px; top: 640px; width: 480px; height: 412px; transform-origin: 30% 80%"><img src="assets/img/huile-cut.png" alt="" /></div>
+        </div>
+        <!-- 7. Bilan: black flood held through the scratch; 2 – 2; the same green plantain — and you decide -->
+        <div class="scene" id="s7">
+          <div class="ghost" style="top: 1480px; font-size: 400px">2 – 2</div>
+          <div class="cut obj" id="o-plant7" style="left: 240px; top: 700px; width: 600px; height: 540px"><img src="assets/img/plantains-cut.png" alt="" /></div>
+          <div class="stamp obj" id="o-egal" style="left: 230px; top: 1220px; color: #00209F; border-color: #00209F">ÉGALITÉ</div>
+        </div>
+        <!-- 8. the question: your side? two buttons, tag someone from the other side; where to answer -->
+        <div class="scene" id="s8">
+          <div class="cut obj" id="o-peze8" style="left: 40px; top: 640px; width: 480px; height: 348px"><img src="assets/img/peze-cut.png" alt="" /></div>
+          <div class="cut obj" id="o-regime8" style="left: 560px; top: 620px; width: 480px; height: 370px"><img src="assets/img/regime-cut.png" alt="" /></div>
+          <div class="btn obj" id="o-bpeze" style="left: 60px; top: 1020px; background: #c9780a">PEZE</div>
+          <div class="btn obj" id="o-bbouyi" style="left: 580px; top: 1020px; background: #2e7d32">BOUYI</div>
+          <div class="vs obj" id="o-vs8" style="left: 445px; top: 1000px; width: 190px; height: 190px">VS</div>
+          <div class="chip obj" id="o-tag" style="left: 170px; top: 1220px; background: #b3245f; color: #fff">@ IDENTIFIE LE CAMP D'EN FACE</div>
+          <div class="bubble obj" id="o-bub" style="left: 380px; top: 1460px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1400px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </div>
+
+        <!-- the scoreboard stays on screen from the hook to the Bilan; floods cover it -->
+        <div id="score"><div class="sc" style="background: #c9780a"><span>PEZE</span><b id="sp">0</b></div><i>–</i><div class="sc" style="background: #2e7d32"><b id="sb">0</b><span>BOUYI</span></div></div>
+        <div class="plus" id="p1" style="left: 420px; top: 1330px; background: #c9780a">+1 PEZE</div>
+        <div class="plus" id="p2" style="left: 400px; top: 1330px; background: #2e7d32">+1 BOUYI</div>
+        <div class="plus" id="p3" style="left: 420px; top: 1330px; background: #c9780a">+1 PEZE</div>
+        <div class="plus" id="p4" style="left: 400px; top: 1330px; background: #2e7d32">+1 BOUYI</div>
+
+        <div id="flood"></div>
+        <div id="iris"></div>
+        <div id="blocks"></div>
+      </div>
+      <div class="series"><span>DÉBAT · KWIZIN HAÏTI</span></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), prise 2 (prononciation créole guidée), pauses raccourcies, cloche avant chaque round, silence avant « Bilan ».
+           Musique : celle du style, coupure au scratch et retour sur « deux partout » mixés dans le fichier. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="61.84" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="63.5" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/impact-bass-1.mp3" data-start="0.3" data-duration="2.12" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx2" src="assets/sfx/claque.mp3" data-start="0.3" data-duration="0.39" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx3" src="assets/sfx/pop.mp3" data-start="0.34" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx4" src="assets/sfx/pop.mp3" data-start="4.08" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx5" src="assets/sfx/pop.mp3" data-start="5.12" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx6" src="assets/sfx/claque.mp3" data-start="6.06" data-duration="0.39" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx7" src="assets/sfx/impact-bass-2.mp3" data-start="6.26" data-duration="2.59" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx8" src="assets/sfx/whoosh.mp3" data-start="6.63" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx9" src="assets/sfx/whoosh-short.mp3" data-start="6.95" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx10" src="assets/sfx/pop.mp3" data-start="7.2" data-duration="0.72" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx11" src="assets/sfx/pop.mp3" data-start="8.92" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx12" src="assets/sfx/whoosh-short.mp3" data-start="9.67" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx13" src="assets/sfx/grains.mp3" data-start="10.31" data-duration="1.33" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx14" src="assets/sfx/pop.mp3" data-start="10.48" data-duration="0.72" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx15" src="assets/sfx/whoosh-short.mp3" data-start="11.12" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx16" src="assets/sfx/claque.mp3" data-start="11.42" data-duration="0.39" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx17" src="assets/sfx/impact-bass-1.mp3" data-start="11.44" data-duration="2.12" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx18" src="assets/sfx/pop.mp3" data-start="11.85" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx19" src="assets/sfx/whoosh.mp3" data-start="13.25" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx20" src="assets/sfx/click.mp3" data-start="13.38" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx21" src="assets/sfx/impact-bass-2.mp3" data-start="13.4" data-duration="2.59" data-track-index="22" data-volume="0.35"></audio>
+      <audio id="sx22" src="assets/sfx/pop.mp3" data-start="14.0" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx23" src="assets/sfx/pop.mp3" data-start="14.18" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx24" src="assets/sfx/pop.mp3" data-start="14.71" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx25" src="assets/sfx/whoosh.mp3" data-start="15.36" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx26" src="assets/sfx/click.mp3" data-start="15.41" data-duration="0.37" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx27" src="assets/sfx/whoosh-short.mp3" data-start="15.68" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx28" src="assets/sfx/pop.mp3" data-start="15.98" data-duration="0.72" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx29" src="assets/sfx/pop.mp3" data-start="17.93" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx30" src="assets/sfx/pop.mp3" data-start="18.45" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx31" src="assets/sfx/whoosh.mp3" data-start="18.89" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="19.09" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx33" src="assets/sfx/pop.mp3" data-start="20.22" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx34" src="assets/sfx/pop.mp3" data-start="21.19" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx35" src="assets/sfx/pop.mp3" data-start="21.98" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx36" src="assets/sfx/roulement.mp3" data-start="23.11" data-duration="1.37" data-track-index="20" data-volume="0.1"></audio>
+      <audio id="sx37" src="assets/sfx/whoosh-short.mp3" data-start="24.44" data-duration="0.57" data-track-index="21" data-volume="0.22"></audio>
+      <audio id="sx38" src="assets/sfx/chime.mp3" data-start="24.48" data-duration="2.54" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx39" src="assets/sfx/cloche.mp3" data-start="24.69" data-duration="1.65" data-track-index="20" data-volume="0.32"></audio>
+      <audio id="sx40" src="assets/sfx/click.mp3" data-start="24.7" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx41" src="assets/sfx/click-soft.mp3" data-start="24.82" data-duration="0.37" data-track-index="24" data-volume="0.25"></audio>
+      <audio id="sx42" src="assets/sfx/pop.mp3" data-start="25.02" data-duration="0.72" data-track-index="25" data-volume="0.2"></audio>
+      <audio id="sx43" src="assets/sfx/pop.mp3" data-start="26.01" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx44" src="assets/sfx/click.mp3" data-start="27.11" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx45" src="assets/sfx/impact-bass-1.mp3" data-start="27.13" data-duration="2.12" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx46" src="assets/sfx/pop.mp3" data-start="28.02" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
+      <audio id="sx47" src="assets/sfx/whoosh.mp3" data-start="28.75" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx48" src="assets/sfx/cloche.mp3" data-start="28.82" data-duration="1.65" data-track-index="22" data-volume="0.32"></audio>
+      <audio id="sx49" src="assets/sfx/sparkle.mp3" data-start="28.87" data-duration="1.8" data-track-index="23" data-volume="0.16"></audio>
+      <audio id="sx50" src="assets/sfx/click-soft.mp3" data-start="28.9" data-duration="0.37" data-track-index="24" data-volume="0.3"></audio>
+      <audio id="sx51" src="assets/sfx/pop.mp3" data-start="28.95" data-duration="0.72" data-track-index="25" data-volume="0.2"></audio>
+      <audio id="sx52" src="assets/sfx/pop.mp3" data-start="31.01" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx53" src="assets/sfx/pop.mp3" data-start="31.52" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx54" src="assets/sfx/claque.mp3" data-start="31.52" data-duration="0.39" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx55" src="assets/sfx/pop.mp3" data-start="31.92" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
+      <audio id="sx56" src="assets/sfx/whoosh.mp3" data-start="32.66" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx57" src="assets/sfx/cloche.mp3" data-start="32.73" data-duration="1.65" data-track-index="21" data-volume="0.32"></audio>
+      <audio id="sx58" src="assets/sfx/sparkle.mp3" data-start="32.77" data-duration="1.8" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx59" src="assets/sfx/click-soft.mp3" data-start="32.8" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx60" src="assets/sfx/pop.mp3" data-start="33.01" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx61" src="assets/sfx/whoosh-short.mp3" data-start="34.29" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx62" src="assets/sfx/pop.mp3" data-start="34.44" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx63" src="assets/sfx/pop.mp3" data-start="34.49" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx64" src="assets/sfx/pop.mp3" data-start="35.28" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx65" src="assets/sfx/pop.mp3" data-start="37.13" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx66" src="assets/sfx/pop.mp3" data-start="38.54" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
+      <audio id="sx67" src="assets/sfx/whoosh.mp3" data-start="39.23" data-duration="0.57" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx68" src="assets/sfx/cloche.mp3" data-start="39.3" data-duration="1.65" data-track-index="20" data-volume="0.32"></audio>
+      <audio id="sx69" src="assets/sfx/sparkle.mp3" data-start="39.39" data-duration="1.8" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx70" src="assets/sfx/click-soft.mp3" data-start="39.42" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx71" src="assets/sfx/pop.mp3" data-start="39.43" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx72" src="assets/sfx/whoosh-short.mp3" data-start="41.65" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx73" src="assets/sfx/click.mp3" data-start="42.98" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx74" src="assets/sfx/pop.mp3" data-start="43.34" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx75" src="assets/sfx/claque.mp3" data-start="43.74" data-duration="0.39" data-track-index="20" data-volume="0.28"></audio>
+      <audio id="sx76" src="assets/sfx/pop.mp3" data-start="44.23" data-duration="0.72" data-track-index="20" data-volume="0.24"></audio>
+      <audio id="sx77" src="assets/sfx/whoosh.mp3" data-start="45.01" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx78" src="assets/sfx/sparkle.mp3" data-start="45.08" data-duration="1.8" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx79" src="assets/sfx/click-soft.mp3" data-start="45.11" data-duration="0.37" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx80" src="assets/sfx/whoosh-short.mp3" data-start="45.21" data-duration="0.57" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx81" src="assets/sfx/pop.mp3" data-start="45.46" data-duration="0.72" data-track-index="24" data-volume="0.18"></audio>
+      <audio id="sx82" src="assets/sfx/pop.mp3" data-start="47.04" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx83" src="assets/sfx/click.mp3" data-start="47.57" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx84" src="assets/sfx/impact-bass-2.mp3" data-start="47.59" data-duration="2.59" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx85" src="assets/sfx/whoosh.mp3" data-start="47.87" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx86" src="assets/sfx/pop.mp3" data-start="48.28" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx87" src="assets/sfx/pop.mp3" data-start="49.08" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx88" src="assets/sfx/whoosh-short.mp3" data-start="49.5" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx89" src="assets/sfx/grains.mp3" data-start="49.81" data-duration="1.33" data-track-index="20" data-volume="0.16"></audio>
+      <audio id="sx90" src="assets/sfx/whoosh.mp3" data-start="50.93" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx91" src="assets/sfx/scratch.mp3" data-start="50.93" data-duration="1.23" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx92" src="assets/sfx/whoosh-short.mp3" data-start="52.47" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx93" src="assets/sfx/pop.mp3" data-start="52.52" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx94" src="assets/sfx/impact-bass-2.mp3" data-start="52.61" data-duration="2.59" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx95" src="assets/sfx/click.mp3" data-start="52.86" data-duration="0.37" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx96" src="assets/sfx/impact-bass-1.mp3" data-start="52.88" data-duration="2.12" data-track-index="24" data-volume="0.35"></audio>
+      <audio id="sx97" src="assets/sfx/sparkle.mp3" data-start="52.9" data-duration="1.8" data-track-index="25" data-volume="0.15"></audio>
+      <audio id="sx98" src="assets/sfx/whoosh.mp3" data-start="56.29" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx99" src="assets/sfx/pop.mp3" data-start="56.54" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx100" src="assets/sfx/pop.mp3" data-start="56.62" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx101" src="assets/sfx/pop.mp3" data-start="57.59" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx102" src="assets/sfx/pop.mp3" data-start="58.07" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx103" src="assets/sfx/pop.mp3" data-start="58.25" data-duration="0.72" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx104" src="assets/sfx/pop.mp3" data-start="59.03" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx105" src="assets/sfx/click.mp3" data-start="59.3" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx106" src="assets/sfx/sparkle.mp3" data-start="59.4" data-duration="1.8" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx107" src="assets/sfx/pop.mp3" data-start="59.97" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 63.5
+        const RED = '#c62828'
+        // one colour per camp (amber = peze, plantain green = bouyi), then magenta for the trash talk and Haiti blue for the Bilan
+        const AMBER = '#c9780a'
+        const GREEN = '#2e7d32'
+        const MAGENTA = '#b3245f'
+        const HAITI = '#00209F'
+        const INK = '#141414'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        const RAW = [0.259, 0.688, 0.901, 1.115, 1.544, 2.195, 2.918, 2.968, 3.122, 3.328, 3.551, 3.979, 4.193, 4.643, 4.997, 5.253, 5.714, 5.863, 6.012, 6.162, 6.31, 6.848, 7.097, 7.35, 7.851, 8.206, 8.769, 8.819, 9.041, 9.218, 9.573, 9.751, 10.106, 10.284, 10.461, 10.816, 11.218, 11.268, 11.703, 12.058, 12.591, 12.768, 13.123, 13.301, 13.903, 14.081, 14.258, 14.435, 14.613, 14.968, 15.146, 15.58, 15.85, 16.119, 16.619, 17.004, 17.591, 17.641, 17.714, 17.776, 18.105, 18.301, 18.498, 18.941, 19.137, 19.528, 19.921, 20.116, 20.508, 20.703, 21.095, 21.682, 21.879, 22.075, 22.518, 22.714, 22.91, 23.105, 23.301, 23.497, 24.084, 24.967, 25.431, 25.913, 26.109, 26.702, 26.846, 27.042, 27.237, 27.434, 27.875, 28.053, 28.23, 29.097, 29.578, 30.107, 30.185, 30.912, 31.067, 31.22, 31.374, 31.774, 31.952, 32.13, 33.009, 33.369, 34.192, 34.242, 34.292, 34.342, 35.127, 35.308, 36.111, 36.296, 36.48, 36.665, 36.85, 37.035, 37.404, 37.589, 37.959, 38.391, 38.561, 38.731, 39.575, 40.12, 40.645, 40.858, 41.568, 41.775, 42.201, 42.599, 42.722, 42.844, 43.239, 43.337, 43.436, 43.534, 44.078, 44.246, 44.413, 45.061, 45.353, 45.653, 46.198, 46.248, 46.298, 46.751, 46.936, 47.12, 47.305, 47.919, 48.083, 48.247, 48.411, 48.984, 49.034, 49.293, 49.45, 49.606, 49.919, 50.075, 50.231, 50.388, 51.799, 52.405, 52.598, 53.198, 53.334, 53.551, 53.769, 54.693, 54.743, 54.793, 54.996, 55.214, 56.339, 56.969, 57.097, 57.472, 57.952, 58.13, 58.706, 58.927, 59.105, 59.351, 59.819, 60.353, 60.887, 61.066, 61.244, 61.422]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Bannann", "peze", "ou", "bannann", "bouyi ?", "Attention :", "à", "la", "fin,", "tu", "choisis", "ton", "camp.", "Et", "« les", "deux »,", "ce", "n'est", "pas", "une", "réponse.", "Dans", "ce", "coin :", "bannann", "peze.", "Du", "plantain", "vert,", "coupé", "en", "rondelles,", "frit", "une", "première", "fois,", "écrasé,", "puis", "refrit", "jusqu'à", "ce", "qu'il", "craque.", "Avec", "du", "griot,", "et", "du", "pikliz", "qui", "pique.", "Dans", "l'autre", "coin :", "bannann", "bouyi.", "Cuit", "dans", "l'eau,", "tout", "simple,", "tout", "tendre.", "Le", "matin,", "avec", "de", "l'aransò,", "un", "morceau", "d'avocat,", "un", "œuf.", "Le", "plat", "qui", "tient", "au", "ventre", "jusqu'au", "soir.", "Premier", "round :", "le", "croquant.", "Ça", "craque", "sous", "la", "dent.", "Point", "pour", "peze.", "Deuxième", "round :", "la", "santé.", "Pas", "une", "goutte", "d'huile.", "Point", "pour", "bouyi.", "Troisième", "round :", "la", "fête.", "Baptême,", "mariage,", "première", "communion :", "tout", "le", "monde", "cherche", "le", "plateau", "de", "bannann", "peze.", "Point", "pour", "peze.", "Quatrième", "round :", "le", "portefeuille.", "Une", "marmite", "d'eau,", "et", "c'est", "prêt.", "Pas", "d'huile", "à", "acheter.", "Point", "pour", "bouyi.", "Le", "camp", "peze", "dit :", "« Bouyi,", "c'est", "un", "plat", "de", "malade. »", "Le", "camp", "bouyi", "répond :", "« Peze,", "c'est", "de", "l'huile", "avec", "un", "peu", "de", "banane. »", "Bilan :", "deux", "partout.", "C'est", "la", "même", "banane…", "et", "c'est", "toi", "qui", "départages.", "Alors,", "ton", "camp ?", "Peze", "ou", "bouyi ?", "Écris-le", "en", "commentaire,", "et", "identifie", "quelqu'un", "du", "camp", "d'en", "face."]
+        const SCRATCH = 50.95
+
+        // ---------- transitions: when each scene takes over, and how ----------
+        const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
+        const X = { s2: at(21), s3: at(51), s4: at(81) - 0.35, s5: at(104) - 0.3, s6: at(141), bil: Math.round((SCRATCH + 0.3) * 100) / 100, s8: at(176) }
+        const HOLDB = T[165] - 0.14 - X.bil // the black flood holds through the scratch silence, until « deux partout »
+        const FLOODS = [
+          { t: X.s2, a: [300, 1080], b: [540, 960], col: AMBER, hold: 0 },
+          { t: X.s3, a: [790, 1070], b: [540, 950], col: GREEN, hold: 0 },
+          { t: X.bil, a: [540, 1300], b: [540, 960], col: INK, hold: HOLDB },
+        ]
+        const IRISES = [{ t: X.s4 }]
+        const PUSHES = [['s4', 's5', 'y'], ['s5', 's6', 'x'], ['s7', 's8', 'y']]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 230, lines: [[0, 1, 'mi', AMBER], [2, 2, 's'], [3, 4, 'mi', GREEN]] },
+          { y: 250, lines: [[5, 5, 's'], [6, 12, 'm']] },
+          { y: 250, lines: [[13, 15, 'm', MAGENTA], [16, 20, 's']] },
+          { y: 230, lines: [[21, 23, 's'], [24, 25, 'b', AMBER]] },
+          { y: 220, lines: [[26, 28, 'm'], [29, 31, 's'], [32, 35, 's']] },
+          { y: 240, lines: [[36, 36, 'mi', AMBER], [37, 42, 's']] },
+          { y: 220, lines: [[43, 45, 'm'], [46, 48, 'm', RED], [49, 50, 'mi', RED]] },
+          { y: 230, lines: [[51, 53, 's'], [54, 55, 'b', GREEN]] },
+          { y: 250, lines: [[56, 58, 'm'], [59, 62, 's']] },
+          { y: 220, lines: [[63, 64, 's'], [65, 67, 'm', GREEN], [68, 72, 's']] },
+          { y: 250, lines: [[73, 78, 's'], [79, 80, 'mi', GREEN]] },
+          { y: 230, lines: [[81, 82, 's'], [83, 84, 'b', AMBER]] },
+          { y: 250, lines: [[85, 89, 'm'], [90, 92, 'mi', AMBER]] },
+          { y: 230, lines: [[93, 94, 's'], [95, 96, 'b', GREEN]] },
+          { y: 250, lines: [[97, 100, 'm', GREEN], [101, 103, 'mi', GREEN]] },
+          { y: 230, lines: [[104, 105, 's'], [106, 107, 'b', AMBER]] },
+          { y: 200, lines: [[108, 109, 'm'], [110, 111, 'm'], [112, 118, 's'], [119, 120, 'mi', AMBER]] },
+          { y: 270, lines: [[121, 123, 'mi', AMBER]] },
+          { y: 250, lines: [[124, 125, 's'], [126, 127, 'mi', GREEN]] },
+          { y: 200, lines: [[128, 130, 'm'], [131, 133, 's'], [134, 137, 's'], [138, 140, 'mi', GREEN]] },
+          { y: 220, lines: [[141, 144, 's'], [145, 147, 'mi', MAGENTA], [148, 150, 'mi', MAGENTA]] },
+          { y: 200, lines: [[151, 154, 's'], [155, 157, 'mi', MAGENTA], [158, 160, 'mi', MAGENTA], [161, 163, 'mi', MAGENTA]] },
+          { y: 230, lines: [[164, 164, 'm', '#fff'], [165, 166, 'b', HAITI]] },
+          { y: 240, lines: [[167, 170, 's'], [171, 173, 'm'], [174, 175, 'mi', HAITI]] },
+          { y: 230, lines: [[176, 176, 's'], [177, 178, 'b', MAGENTA], [179, 181, 'm']] },
+          { y: 220, lines: [[182, 184, 'm'], [185, 187, 's'], [188, 191, 's', MAGENTA]] },
+        ]
+        // words that get a coloured highlight box when spoken (like « thinking… » in the reference)
+        const HL = new Set([14, 15, 48, 67, 99, 100, 188, 189, 190, 191])
+        const BILAN = 22
+        // words already sit in the line in very light grey and darken as they are spoken (reference video);
+        // the hero word (style b) rises in an accent gradient and a highlight sweeps across it
+        const FAINT = '#cfcfcf'
+        const FINAL = { s: '#7a7a7a', m: INK, mi: INK, bi: INK }
+        const HLW = typeof HL === 'undefined' ? new Set() : HL
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = next ? (bi === BILAN - 1 ? X.bil - 0.02 : T[next.lines[0][0]] - 0.08) : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            const acc = col || '#2f4fd8'
+            line.style.setProperty('--acc', acc)
+            line.style.setProperty('--acc2', 'color-mix(in srgb, ' + acc + ' 55%, #ffffff)')
+            const onDark = col === '#fff'
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              if (st === 'b' || st === 'bi') {
+                tl.fromTo(w, { yPercent: 115 }, { yPercent: 0, duration: 0.42, ease: 'back.out(1.6)' }, T[k] - 0.05)
+                tl.fromTo(w, { backgroundPosition: '100% 0' }, { backgroundPosition: '0% 0', duration: 0.9, ease: 'power2.inOut', immediateRender: false }, T[k] + 0.25)
+              } else {
+                const fin = onDark ? '#ffffff' : (col && (st === 'mi' || st === 'bi') ? col : FINAL[st] || '#23232b')
+                gsap.set(w, { color: onDark ? 'rgba(255,255,255,0.22)' : FAINT })
+                tl.fromTo(w, { y: 8, filter: blur(3) }, { y: 0, filter: blur(0), duration: 0.2, ease: 'power2.out', immediateRender: false }, T[k] - 0.02)
+                tl.to(w, { color: fin, duration: 0.22, ease: 'power1.out' }, T[k] - 0.02)
+                if (HLW.has(k)) {
+                  w.classList.add('hl')
+                  if (HLW.has(k + 1)) w.classList.add('hl-join')
+                  w.style.setProperty('--acc', acc)
+                  tl.fromTo(w, { '--hx': 0 }, { '--hx': 1, duration: 0.3, ease: 'power3.out', immediateRender: false }, T[k] + 0.05)
+                  tl.to(w, { color: '#ffffff', duration: 0.15 }, T[k] + 0.12)
+                }
+              }
+            }
+          })
+          // exit: every word drops back into its line
+          if (end < END) {
+            tl.to(box.querySelectorAll('.w'), { yPercent: -125, duration: 0.18, ease: 'power3.in', stagger: 0.006 }, end - 0.2)
+            tl.set(box, { autoAlpha: 0 }, end)
+          }
+        })
+        // « Bilan : » is white on the black flood, and turns to ink as the flood contracts
+        tl.to(blocksBox.children[BILAN].querySelector('.w'), { color: INK, duration: 0.2 }, X.bil + HOLDB)
+
+        // ---------- flood + iris: pure functions of time ----------
+        const ease = { in: (p) => p * p * p, out: (p) => 1 - Math.pow(1 - p, 3) }
+        const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)))
+        const flood = $('flood')
+        const iris = $('iris')
+        const blades = []
+        for (let i = 0; i < 6; i++) blades.push(el('div', 'blade', null, iris))
+        const RMAX = 1250
+        function ctl(t) {
+          // colour flood: grows out of an object, covers the frame, contracts into the next scene's object
+          let r = 0, cx = 540, cy = 960, col = INK
+          for (const F of FLOODS) {
+            const g0 = F.t - 0.3, c0 = F.t + F.hold, c1 = c0 + 0.32
+            if (t >= g0 && t <= c1) {
+              col = F.col
+              if (t < F.t) { r = 2300 * ease.in(seg(t, g0, F.t)); cx = F.a[0]; cy = F.a[1] }
+              else if (t < c0) { r = 2300; cx = F.b[0]; cy = F.b[1] }
+              else { r = 2300 * (1 - ease.out(seg(t, c0, c1))); cx = F.b[0]; cy = F.b[1] }
+            }
+          }
+          flood.style.background = col
+          flood.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + cx + 'px ' + cy + 'px)'
+          // camera iris: six blades close over the old scene and open on a photo
+          let ap = RMAX
+          for (const I of IRISES) {
+            if (t >= I.t - 0.28 && t < I.t) ap = RMAX * (1 - ease.in(seg(t, I.t - 0.28, I.t)))
+            else if (t >= I.t && t <= I.t + 0.36) ap = RMAX * ease.out(seg(t, I.t + 0.02, I.t + 0.36))
+          }
+          iris.style.visibility = ap >= RMAX - 1 ? 'hidden' : 'inherit'
+          const twist = (1 - ap / RMAX) * 50
+          blades.forEach((b, i) => {
+            b.style.left = 540 - 1600 + 'px'
+            b.style.top = 960 - 3200 + 'px'
+            b.style.transform = 'rotate(' + (i * 60 + twist).toFixed(2) + 'deg) translateY(' + (-ap).toFixed(1) + 'px)'
+          })
+        }
+        const clock = { v: 0 }
+        tl.fromTo(clock, { v: 0 }, { v: END, duration: END, ease: 'none', immediateRender: false, onUpdate: () => ctl(clock.v) }, 0)
+        ctl(0)
+
+        // ---------- helpers ----------
+        const spring = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0 }, o), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.8)' }, at)
+        const stamp = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.4, rotation: 2 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.18, ease: 'power4.in' }, at)
+        const show = (sel, at) => tl.set(sel, { autoAlpha: 1 }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        const shake = (at) => tl.fromTo('#world', { x: 0 }, { x: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, at)
+        const cam = (sel, at, dur, scale, origin, ez) => tl.to(sel, { scale, transformOrigin: origin, duration: dur, ease: ez || 'power2.inOut' }, at)
+        // a photo that fills the frame behind the iris, then zooms out into its card
+        const unfold = (sel, at) => tl.fromTo(sel, { scale: 3.4 }, { scale: 1, duration: 0.55, ease: 'power3.inOut' }, at)
+        const kb = (sel, from, to, s0, s1) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: to - from, ease: 'none', immediateRender: false }, from)
+        const sonar = (sels, from, to) => sels.forEach((s, i) => tl.fromTo(s, { autoAlpha: 0.9, scale: 0.4 }, { autoAlpha: 0, scale: 3.2, duration: 1.2, ease: 'power1.out', repeat: Math.max(0, Math.floor((to - from) / 1.2) - 1), immediateRender: false }, from + i * 0.4))
+
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8']
+        gsap.set(SC.slice(1), { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+        tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
+        // scenes covered by a flood or an iris swap while hidden
+        ;[['s1', 's2', X.s2], ['s2', 's3', X.s3], ['s3', 's4', X.s4], ['s6', 's7', X.bil]].forEach(([a, b, t]) => { hide('#' + a, t); show('#' + b, t) })
+        // page pushes: the old scene leaves, the new one arrives from the opposite side
+        PUSHES.forEach(([a, b, ax]) => {
+          const D = ax === 'x' ? 1080 : 1920
+          const t0 = X[b] - 0.1
+          tl.to('#' + a, { [ax]: -D, duration: 0.4, ease: 'power3.inOut' }, t0)
+          show('#' + b, t0)
+          tl.fromTo('#' + b, { [ax]: D }, { [ax]: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, t0)
+          hide('#' + a, t0 + 0.4)
+        })
+        // ghost words drift slowly the whole time they are on screen
+        document.querySelectorAll('.ghost').forEach((g, i) => tl.fromTo(g, { x: i % 2 ? -60 : 60 }, { x: i % 2 ? 60 : -60, duration: END, ease: 'none', immediateRender: false }, 0))
+        const slap = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 1.8, rotation: rot * 2.5 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.28, ease: 'back.out(2.4)' }, at)
+        const fadeIn = (sel, at) => tl.fromTo(sel, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, at)
+        const cross = (sel, at) => tl.fromTo(sel, { autoAlpha: 0, scale: 2 }, { autoAlpha: 1, scale: 1, duration: 0.2, ease: 'power3.in' }, at)
+        const out = (sels, at, dx) => tl.to(sels, { autoAlpha: 0, x: dx || 0, scale: dx ? 1 : 0.6, duration: 0.3, ease: 'power2.in', stagger: 0.04 }, at)
+        const count = (obj, from, to, t0, t1, fmt, node, ez) => tl.fromTo(obj, { v: from }, { v: to, duration: t1 - t0, ease: ez || 'power1.inOut', immediateRender: false, onUpdate: () => { node.textContent = fmt(obj.v) } }, t0)
+
+        // ---------- scoreboard: on from « ton camp », a point flies down into it on each « Point pour … » ----------
+        gsap.set('#score', { xPercent: -50 })
+        tl.fromTo('#score', { autoAlpha: 0, y: 140 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'back.out(1.8)' }, T[11] - 0.1)
+        const point = (sel, num, val, at) => {
+          tl.fromTo(sel, { autoAlpha: 0, scale: 0, y: 0 }, { autoAlpha: 1, scale: 1, duration: 0.3, ease: 'back.out(2.4)' }, at)
+          tl.to(sel, { y: 190, scale: 0.4, autoAlpha: 0, duration: 0.35, ease: 'power3.in' }, at + 0.55)
+          count({ v: val - 1 }, val - 1, val, at + 0.86, at + 0.88, (v) => String(Math.round(v)), $(num.slice(1)), 'none')
+          tl.fromTo(num, { scale: 1.7 }, { scale: 1, duration: 0.35, ease: 'back.out(3)', immediateRender: false }, at + 0.88)
+          tl.fromTo('#score', { scale: 1.08 }, { scale: 1, duration: 0.3, ease: 'power2.out', immediateRender: false }, at + 0.88)
+        }
+        point('#p1', '#sp', 1, T[90] - 0.05)
+        point('#p2', '#sb', 1, T[101] - 0.05)
+        point('#p3', '#sp', 2, T[121] - 0.05)
+        point('#p4', '#sb', 2, T[138] - 0.05)
+        hide('#score', X.bil)
+
+        // ---------- 1. hook: the pile and the bunch are there on frame 1; the gloves slam; « les deux » is crossed out ----------
+        tl.fromTo('#o-peze1', { x: -260, rotation: -8 }, { x: 0, rotation: 0, duration: 0.45, ease: 'expo.out' }, 0)
+        tl.fromTo('#o-regime1', { x: 260, rotation: 8 }, { x: 0, rotation: 0, duration: 0.45, ease: 'expo.out' }, 0)
+        tl.fromTo('#o-gantg', { x: -520, rotation: -20 }, { x: 40, rotation: 6, duration: 0.3, ease: 'power3.in' }, 0)
+        tl.fromTo('#o-gantd', { x: 520, rotation: 20 }, { x: -40, rotation: -6, duration: 0.3, ease: 'power3.in' }, 0)
+        tl.to('#o-gantg', { x: 0, rotation: 0, duration: 0.35, ease: 'back.out(2.5)' }, 0.3)
+        tl.to('#o-gantd', { x: 0, rotation: 0, duration: 0.35, ease: 'back.out(2.5)' }, 0.3)
+        shake(0.3)
+        spring('#o-vs', 0.32, { rotation: -30 })
+        tl.fromTo('#hud', { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        // both sides bob as if squaring up
+        tl.fromTo(['#o-peze1', '#o-regime1'], { y: 0 }, { y: -18, duration: 0.42, yoyo: true, repeat: 7, ease: 'sine.inOut', immediateRender: false }, 0.6)
+        slap('#o-lesdeux', T[14] - 0.08, -3)
+        cross('#o-xdeux', T[17])
+        shake(T[17] + 0.2)
+        cam('#s1', T[18], X.s2 - T[18], 1.06, '300px 1080px', 'power2.in')
+        // the viewfinder's timecode and blinking REC dot are pure functions of time
+        const tc = $('tc')
+        const recdot = $('recdot')
+        const clock2 = { v: 0 }
+        tl.fromTo(clock2, { v: 0 }, { v: X.s2, duration: X.s2, ease: 'none', immediateRender: false, onUpdate: () => { const t = clock2.v; const f = Math.floor((t % 1) * 30); tc.textContent = '00:00:' + String(Math.floor(t)).padStart(2, '0') + ':' + String(f).padStart(2, '0'); recdot.style.opacity = Math.floor(t * 2) % 2 ? '0.25' : '1' } }, 0)
+
+        // ---------- 2. amber flood → camp N° 1, peze: green plantain, fried, smashed, fried again, CRAC; griot, pikliz, it stings ----------
+        spring('#n1', X.s2 + 0.25, { rotation: -10 })
+        spring('#o-plant2', T[27] - 0.1, { y: 120, rotation: 20 })
+        tl.to('#o-plant2', { x: -300, y: -60, scale: 0.42, rotation: -12, duration: 0.4, ease: 'power3.inOut' }, T[30] - 0.1)
+        tl.fromTo('#o-friture', { autoAlpha: 0, y: 380 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'expo.out' }, T[32] - 0.12)
+        kb('#friture-img', T[32], T[38], 1.02, 1.16)
+        slap('#o-frit1', T[33], -3)
+        // smashed: the board of flattened plantain slams down and squashes
+        tl.fromTo('#o-planche', { autoAlpha: 0, y: -700, rotation: -6 }, { autoAlpha: 1, y: 0, rotation: 4, duration: 0.3, ease: 'power3.in' }, T[36] - 0.3)
+        tl.fromTo('#o-planche', { scaleY: 1, scaleX: 1 }, { scaleY: 0.86, scaleX: 1.06, duration: 0.08, yoyo: true, repeat: 1, ease: 'power1.out', immediateRender: false }, T[36])
+        shake(T[36] + 0.02)
+        slap('#o-frit2', T[38] - 0.05, 3)
+        stamp('#o-crac', T[42] - 0.02, -8)
+        shake(T[42] + 0.15)
+        out(['#o-plant2', '#o-friture', '#o-frit1', '#o-planche', '#o-frit2', '#o-crac'], T[43] - 0.25)
+        spring('#o-griot', T[45] - 0.1, { y: 140, rotation: -8 })
+        spring('#o-peze2', T[44] - 0.1, { y: 160, rotation: 6 })
+        spring('#o-pikliz', T[48] - 0.1, { y: 140, rotation: 8 })
+        stamp('#o-pique', T[50] - 0.02, -7)
+        tl.fromTo('#o-pikliz', { x: 0 }, { x: 8, duration: 0.05, yoyo: true, repeat: 7, ease: 'none', immediateRender: false }, T[50] + 0.1)
+
+        // ---------- 3. green flood → camp N° 2, bouyi: cooked in water, simple and soft; the morning with herring, avocado, an egg; holds till evening ----------
+        unfold('#o-bouyi', X.s3 + 0.05)
+        kb('#bouyi-img', X.s3, T[63], 1.03, 1.16)
+        spring('#n2', X.s3 + 0.3, { rotation: -10 })
+        fadeIn('#cap3', X.s3 + 0.5)
+        slap('#o-simple', T[59] - 0.05, -3)
+        slap('#o-tendre', T[61] - 0.05, 3)
+        out(['#o-bouyi', '#cap3', '#o-simple', '#o-tendre'], T[63] - 0.25)
+        spring('#o-clk', T[63] - 0.05, {})
+        spring('#o-aranso', T[67] - 0.1, { y: 140, rotation: -12 })
+        spring('#o-avocat', T[70] - 0.1, { y: 140, rotation: 12 })
+        spring('#o-oeuf', T[72] - 0.1, { y: 140, rotation: -6 })
+        const clk = { v: 7 * 60 }
+        count(clk, 7 * 60, 18 * 60, T[76], T[80] + 0.2, (v) => { const m = Math.round(v / 15) * 15; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0') }, $('clk'), 'power2.in')
+        tl.to('#clk', { color: GREEN, duration: 0.15 }, T[80])
+
+        // ---------- 4. iris into the ring: round 1 the crunch (CRAC, point peze); round 2 health (no oil, point bouyi) ----------
+        spring('#r1', X.s4 + 0.3, { y: -60 })
+        unfold('#o-croq', T[83] - 0.1)
+        kb('#croq-img', T[83], T[93] - 0.4, 1.03, 1.2)
+        stamp('#o-crac2', T[86] - 0.02, -8)
+        shake(T[86] + 0.15)
+        out(['#r1', '#o-croq', '#o-crac2'], T[93] - 0.55)
+        spring('#r2', T[93] - 0.35, { y: -60 })
+        spring('#o-huile', T[97] - 0.1, { y: -160, rotation: 10 })
+        cross('#o-xhuile', T[99])
+        shake(T[99] + 0.2)
+        slap('#o-zero', T[100] - 0.05, -2)
+
+        // ---------- 5. page pushes up: round 3 the party (baptism, wedding, communion; the peze tray); round 4 the wallet (a pot of water, ready; no oil to buy) ----------
+        spring('#r3', X.s5 + 0.2, { y: -60 })
+        tl.fromTo('#o-fete', { autoAlpha: 0, y: 380 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'expo.out' }, T[106] - 0.1)
+        kb('#fete-img', T[106], T[124] - 0.4, 1.02, 1.14)
+        slap('#o-bapteme', T[108] - 0.05, -4)
+        slap('#o-mariage', T[109] - 0.05, 4)
+        slap('#o-communion', T[110] - 0.05, -2)
+        spring('#o-peze3', T[117] - 0.1, { y: 160, rotation: 8 })
+        out(['#r3', '#o-fete', '#o-bapteme', '#o-mariage', '#o-communion', '#o-peze3'], T[124] - 0.55)
+        spring('#r4', T[124] - 0.35, { y: -60 })
+        tl.fromTo('#o-chef', { autoAlpha: 0, x: -420 }, { autoAlpha: 1, x: 0, duration: 0.5, ease: 'expo.out' }, T[128] - 0.12)
+        stamp('#o-pret', T[132] - 0.02, -6)
+        spring('#o-huile2', T[134] - 0.1, { y: 120, rotation: -10 })
+        cross('#o-xhuile2', T[136])
+
+        // ---------- 6. page pushes left: trash talk — « a sick person's dish » vs « oil with a bit of banana » ----------
+        tl.fromTo('#o-crie', { autoAlpha: 0, x: 420 }, { autoAlpha: 1, x: 0, duration: 0.45, ease: 'expo.out' }, X.s6 + 0.05)
+        slap('#o-tagpeze', X.s6 + 0.3, 3)
+        tl.fromTo('#o-crie', { scale: 1 }, { scale: 1.05, duration: 0.12, yoyo: true, repeat: 3, ease: 'sine.inOut', immediateRender: false }, T[145])
+        spring('#o-malade', T[148] - 0.1, { y: 140, rotation: -6 })
+        stamp('#o-xmalade', T[150] - 0.02, -6)
+        shake(T[150] + 0.15)
+        out(['#o-crie', '#o-tagpeze'], T[151] - 0.25, 420)
+        out(['#o-malade', '#o-xmalade'], T[151] - 0.25, -420)
+        tl.fromTo('#o-pleure', { autoAlpha: 0, x: -420 }, { autoAlpha: 1, x: 0, duration: 0.45, ease: 'expo.out' }, T[151] - 0.05)
+        slap('#o-tagbouyi', T[152], -3)
+        spring('#o-peze6', T[155] - 0.1, { y: 160, rotation: 6 })
+        // the oil bottle tips over the peze
+        tl.fromTo('#o-huile6', { autoAlpha: 0, x: 200, y: -200, rotation: 30 }, { autoAlpha: 1, x: 0, y: 0, rotation: 0, duration: 0.4, ease: 'back.out(1.6)' }, T[158] - 0.15)
+        tl.to('#o-huile6', { rotation: -12, duration: 0.25, yoyo: true, repeat: 3, ease: 'sine.inOut' }, T[159])
+        shake(T[163] + 0.1)
+
+        // ---------- 7. black flood held through the scratch; « Bilan : »; 2 – 2; the same green plantain; you decide ----------
+        spring('#o-plant7', X.bil + HOLDB + 0.05, { y: 140, rotation: -10 })
+        tl.fromTo('#o-plant7', { rotation: -2 }, { rotation: 2, duration: 0.5, yoyo: true, repeat: 5, ease: 'sine.inOut', immediateRender: false }, X.bil + HOLDB + 0.6)
+        stamp('#o-egal', T[166] - 0.02, -5)
+        shake(T[166] + 0.15)
+        cam('#s7', T[171], X.s8 - T[171], 1.06, '540px 960px', 'power1.out')
+
+        // ---------- 8. your side? two buttons; tag someone from the other side; where to answer ----------
+        spring('#o-peze8', X.s8 + 0.1, { y: 140, rotation: -8 })
+        spring('#o-regime8', X.s8 + 0.18, { y: 140, rotation: 8 })
+        spring('#o-bpeze', T[179] - 0.08, { y: 80 })
+        spring('#o-vs8', T[180] - 0.08, { rotation: -30 })
+        spring('#o-bbouyi', T[181] - 0.08, { y: 80 })
+        tl.fromTo(['#o-bpeze', '#o-bbouyi'], { scale: 1 }, { scale: 1.06, duration: 0.4, yoyo: true, repeat: Math.floor((END - T[181] - 0.6) / 0.4), ease: 'sine.inOut', stagger: 0.4, immediateRender: false }, T[181] + 0.5)
+        slap('#o-tag', T[186] - 0.05, -2)
+        spring('#o-bub', T[183] - 0.1, {})
+        spring('#o-arrow', T[184] - 0.02, { rotation: -30 })
+        const left = END - T[184] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[184] + 0.5)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
