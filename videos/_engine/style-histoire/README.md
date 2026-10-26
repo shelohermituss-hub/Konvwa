@@ -79,6 +79,30 @@ Pour tenir une minute sans ennuyer avec des faits courts :
 - Nombres : **dits en toutes lettres dans le texte de la voix, affichés en chiffres à l'écran** (les mots en trop du nombre sont vides dans `WORDS`, `.w:empty { display: none }`).
 - Viser **≈ 65 s**.
 
+## TikTok : recommandation, recherche et monétisation
+
+Conseils officiels de TikTok transmis par le client (« Comprendre le système de recommandation », « Créer des vidéos de haute qualité », tableau « Récompenses par vidéo »), et ce qu'on en tire pour chaque vidéo :
+
+- **Le vrai frein à la monétisation, c'est la région des spectateurs, pas la qualité.**
+  - Seules les vues venant des États-Unis, du Mexique, du Brésil, du Japon, de la Corée du Sud, d'Allemagne, du Royaume-Uni et de France comptent pour le Programme de récompenses (depuis le 04/12/2025).
+  - Sur une vidéo du client (1,9 K vues), 89 % des vues venaient de régions non éligibles. Il n'y avait que 71 vues admissibles ; 6 % des vues venaient hors du fil Pour toi ou de la recherche, et 0,5 % étaient écartées pour temps de visionnage insuffisant.
+  - Or TikTok **tient compte de la localisation et de la région de publication** et pousse les créateurs de la région : sans changement, la vidéo reste surtout montrée en Haïti.
+- **Public visé : la France et la diaspora haïtienne des États-Unis et de France**, sans perdre l'identité haïtienne (le « contenu spécialisé » est ce que TikTok valorise).
+  - **Sujets haïtiens** : les raconter pour quelqu'un qui a grandi en Haïti et vit ailleurs (« Si tu as grandi en Haïti… », souvenirs, nostalgie, « envoie ça à ta famille à Miami »). Un Français qui ne connaît pas Haïti doit aussi comprendre : on explique en une phrase ce qu'est le lakou ou le griot.
+  - **Faits généraux** (format « 3 faits », science, histoire du monde) : ils intéressent tout public francophone. Ajouter quand c'est possible un lien avec Haïti ou la France.
+  - Français standard dans la voix et le texte (règle déjà en place), créole seulement en touche.
+- **Les vues venant de la recherche comptent** au même titre que le fil Pour toi.
+  - Les mots qu'on taperait dans la recherche doivent être **dits dans la voix, écrits à l'écran et repris dans la description** (« faits incroyables », « le saviez-vous », « histoire d'Haïti », « Lune », « requins »…).
+  - Chaque vidéo livrée est accompagnée d'une **proposition de description** (une phrase d'accroche avec ces mots-clés + 3 à 5 hashtags précis, pas de #fyp seul).
+- **Durée de visionnage** : TikTok la cite en premier. Les règles « chaque seconde compte » s'appliquent : aucun moment creux, des coupes fluides, la promesse annoncée dès l'accroche et tenue jusqu'au bout. Les vidéos restent **au-dessus d'une minute**, ce que demande le programme de récompenses.
+- **Variété** : le système écarte le contenu trop répétitif dans un même fil. On alterne donc les formats (faits, débat, souvenirs, histoire) et les couleurs, sans publier deux fois de suite le même gabarit.
+- **Tendances** : on peut ajouter un son tendance à faible volume au moment de publier dans l'application, si ça colle au sujet, sans remplacer la voix ni la musique de la série.
+- **À ne jamais faire** :
+  - changer de région du compte ou utiliser un VPN pour « paraître » en France ou aux États-Unis : c'est contraire aux règles et ça met le compte en danger ;
+  - acheter des vues.
+  - L'audience éligible se gagne par le sujet, la langue, les mots-clés et l'heure de publication.
+- **Heure de publication** : Haïti est à l'heure de New York ; Paris a 6 h d'avance (5 h pendant quelques semaines au printemps et à l'automne). Tester par exemple 12 h–13 h en Haïti (midi à New York, soir en France) contre la soirée en Haïti, et comparer la part de « vues admissibles » dans le tableau Récompenses.
+
 ## Fin : faire commenter
 
 - Question ouverte ou OUI / NON, boutons OUI / NON en ressort, bulle blanche « Répondez ici » + flèche rouge animée vers le bouton commentaires de TikTok (`left: 860px; top: 1180px`).

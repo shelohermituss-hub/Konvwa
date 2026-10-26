@@ -71,3 +71,9 @@ Uniquement des photos réelles et des détourages. Seuls sont en HTML :
   1. `npx --yes hyperframes@0.8.168 render --fps 120 --quality looks --output renders/raw120.mp4`
   2. `python3 -I ../_engine/style-histoire/finish.py renders/raw120.mp4 renders/3-faits.mp4`
   MP4 non commités.
+
+## Publication (proposition)
+
+- **Description** : « 3 faits que ton cerveau va refuser : la Lune est plus petite que l'Australie, Pluton face à la Russie… et le 3ᵉ est le plus fou 🦈 #lesaviezvous #faitsincroyables #science #espace #requin »
+- Mots-clés dits et écrits à l'écran : Lune, Australie, Pluton, Russie, requins, arbres, dinosaures.
+- Heure : tester midi en Haïti (midi à New York, 18 h à Paris) — voir la section « TikTok » du guide.
