@@ -1,0 +1,10 @@
+{
+  "name": "3-faits",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "npx --yes hyperframes@0.8.168 check",
+    "render": "npx --yes hyperframes@0.8.168 render",
+    "dev": "npx --yes hyperframes@0.8.168 preview"
+  }
+}

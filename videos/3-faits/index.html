@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>3 faits que ton cerveau va refuser</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      « 3 faits que ton cerveau va refuser » — trois faits de taille et d'âge, le meilleur annoncé pour la fin, style « histoire express » v3 (videos/_engine/style-histoire/README.md) :
+      accroche en viseur (Lune, Pluton et une carte N° 3 cachée), N° 1 la Lune posée à l'échelle sur l'Australie, N° 2 Pluton contre la Russie (barres de surface),
+      N° 3 requins contre arbres (frise 450 → 385 Ma, dinosaures ensuite), Bilan, et la fin « partager un savoir » : une carte vide « Mon fait fou : ».
+    -->
+    <style>
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-500.woff2") format("woff2"); font-weight: 500; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-600.woff2") format("woff2"); font-weight: 600; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-700.woff2") format("woff2"); font-weight: 700; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-800.woff2") format("woff2"); font-weight: 800; }
+      @font-face { font-family: "Poppins"; src: url("assets/fonts/poppins-900.woff2") format("woff2"); font-weight: 900; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #E7E7E7; font-family: "Poppins", sans-serif; color: #141414; }
+      #world { position: absolute; inset: 0; }
+      .grid { position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 0, 0, 0.16) 1.6px, transparent 1.8px); background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 46% 26% at 50% 50%, #000 0%, transparent 100%); opacity: 0; }
+      .series { position: absolute; left: 0; right: 0; top: 96px; display: flex; justify-content: center; z-index: 30; }
+      .series span { padding: 10px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 800; font-size: 30px; letter-spacing: 0.08em; }
+
+      .block { position: absolute; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; z-index: 20; }
+      .line { display: flex; align-items: baseline; justify-content: center; column-gap: 0.26em; white-space: nowrap; line-height: 1.08; overflow: hidden; padding: 0.1em 0.18em 0.14em; margin: -0.1em -0.18em -0.14em; }
+      .w { display: inline-block; }
+      .w:empty { display: none; }
+      /* typographie de la série (Poppins, emphase en italique gras), animée comme la vidéo de référence du client :
+         mots à venir en gris très clair qui foncent à la voix, gros mots en dégradé avec reflet, mots surlignés */
+      .s { font-size: 50px; font-weight: 500; letter-spacing: -0.01em; }
+      .m { font-size: 68px; font-weight: 700; letter-spacing: -0.025em; }
+      .b { font-size: 116px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.02; }
+      .line.b + .line.s { margin-top: 14px; }
+      .bi { font-size: 108px; font-weight: 800; font-style: italic; letter-spacing: -0.04em; line-height: 1.04; }
+      .mi { font-size: 68px; font-weight: 800; font-style: italic; letter-spacing: -0.03em; }
+      .b .w, .bi .w { color: transparent !important; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(100deg, var(--acc) 0%, var(--acc2) 42%, #ffffff 50%, var(--acc2) 58%, var(--acc) 100%); background-size: 320% 100%; background-position: 100% 0; padding: 0 0.05em 0.06em; }
+      .hl { position: relative; z-index: 0; }
+      .hl-join::before { right: -0.42em !important; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+      .hl::before { content: ""; position: absolute; left: -0.14em; right: -0.14em; top: 0.06em; bottom: 0; background: var(--acc); border-radius: 0.14em; transform: scaleX(var(--hx, 0)); transform-origin: 0 50%; z-index: -1; }
+
+      .obj { position: absolute; z-index: 10; }
+      .scene { position: absolute; inset: 0; }
+      .photo { position: absolute; border-radius: 30px; overflow: hidden; background: #111; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.22); }
+      .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip { position: absolute; white-space: nowrap; padding: 14px 28px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 36px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16); }
+      .nchip { position: absolute; white-space: nowrap; padding: 8px 26px; border-radius: 999px; background: #141414; color: #fff; font-weight: 900; font-size: 40px; letter-spacing: 0.02em; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22); }
+      .stamp { position: absolute; padding: 10px 36px; border: 10px solid #CE1126; border-radius: 22px; color: #CE1126; font-weight: 900; font-size: 84px; letter-spacing: 0.04em; background: rgba(231, 231, 231, 0.7); white-space: nowrap; }
+      .stamp.sm { font-size: 64px; border-width: 8px; padding: 6px 28px; }
+      .bubble { position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 30px; border-radius: 36px; background: #fff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18); font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .bubble svg { width: 60px; height: 60px; }
+      .arrow { position: absolute; width: 150px; height: 110px; }
+      .tlab { position: absolute; font-weight: 800; font-size: 46px; }
+      #flood { position: absolute; inset: 0; z-index: 15; clip-path: circle(0px at 540px 960px); pointer-events: none; }
+      #iris { position: absolute; inset: 0; z-index: 16; pointer-events: none; overflow: hidden; }
+      #iris .blade { position: absolute; width: 3200px; height: 3200px; transform-origin: 50% 100%; background: linear-gradient(0deg, #3a3a3a 0px, #262626 6px, #161616 120px, #0d0d0d 100%); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.45); }
+      /* --- viseur de caméra (accroche), mots fantômes, micro-typo --- */
+      .hud { position: absolute; inset: 0; pointer-events: none; z-index: 12; }
+      .hud .cn { position: absolute; width: 60px; height: 60px; border: 0 solid #141414; }
+      .hud .rec { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .hud .rec i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #D21034; margin-right: 10px; vertical-align: 1px; }
+      .hud .fps { position: absolute; font-family: "Courier New", monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.08em; color: #141414; }
+      .ghost { position: absolute; left: -200px; right: -200px; text-align: center; font-weight: 900; letter-spacing: -0.05em; color: rgba(20, 20, 20, 0.07); line-height: 0.9; white-space: nowrap; }
+      .micro { position: absolute; font-family: "Courier New", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; line-height: 1.35; white-space: nowrap; }
+      .counter2 { position: absolute; left: 0; right: 0; text-align: center; }
+      .counter2 small { display: block; font-family: "Courier New", monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.16em; color: #555; }
+      .counter2 b { display: block; font-size: 120px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #141414; font-variant-numeric: tabular-nums; }
+      /* --- 3 faits : uniquement des photos et détourages réels ; texte, pastilles, tampons, règle, barres et frise par-dessus --- */
+      .cut { position: absolute; }
+      .cut img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.28)); }
+      .disk img { width: 100%; height: 100%; display: block; border-radius: 50%; }
+      .cap { position: absolute; padding: 6px 14px; border-radius: 10px; background: rgba(20, 20, 20, 0.72); color: #fff; font-family: "Courier New", monospace; font-size: 20px; font-weight: 700; letter-spacing: 0.08em; white-space: nowrap; }
+      #menu { position: absolute; left: 540px; top: 1560px; display: flex; gap: 18px; z-index: 14; }
+      #menu span { width: 88px; height: 88px; border-radius: 50%; background: #fff; color: #141414; font-weight: 900; font-size: 46px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18); }
+      .hcard { position: absolute; width: 400px; height: 560px; border-radius: 30px; overflow: hidden; background: #0b0d16; box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3); }
+      .hcard img { position: absolute; left: 40px; top: 120px; width: 320px; height: 320px; }
+      .hcard img.full { left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
+      .hcard .q { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 300px; font-weight: 900; color: #fff; text-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+      .hcard .nchip { left: 24px; top: 24px; font-size: 34px; }
+      .ruler { position: absolute; height: 12px; background: #fff; border-radius: 6px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); transform-origin: 0 50%; }
+      .ruler::before, .ruler::after { content: ""; position: absolute; top: -26px; width: 12px; height: 64px; border-radius: 6px; background: #fff; }
+      .ruler::before { left: -6px; }
+      .ruler::after { right: -6px; }
+      .edge { position: absolute; border: 10px solid #c62828; background: rgba(198, 40, 40, 0.28); border-radius: 16px; box-sizing: border-box; }
+      .bar { position: absolute; left: 90px; height: 64px; border-radius: 18px; transform-origin: 0 50%; }
+      .blab { position: absolute; left: 90px; font-weight: 800; font-size: 40px; white-space: nowrap; }
+      .blab b { font-weight: 900; font-variant-numeric: tabular-nums; }
+      .axis { position: absolute; left: 100px; width: 880px; top: 1400px; height: 10px; border-radius: 5px; background: #141414; transform-origin: 0 50%; }
+      .mk { position: absolute; width: 0; height: 0; }
+      .mk i { position: absolute; left: -11px; top: -11px; width: 22px; height: 22px; border-radius: 50%; background: var(--c); border: 5px solid #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+      .mk span { position: absolute; left: 0; top: 26px; transform: translateX(-50%); padding: 6px 16px; border-radius: 999px; background: var(--c); color: #fff; font-weight: 900; font-size: 30px; white-space: nowrap; }
+      .mk small { position: absolute; left: 0; top: -66px; transform: translateX(-50%); font-weight: 800; font-size: 26px; letter-spacing: 0.06em; white-space: nowrap; color: #141414; }
+      .card { position: absolute; box-sizing: border-box; width: 900px; padding: 50px 60px; border-radius: 40px; background: #fff; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.18); }
+      .card small { display: block; font-weight: 800; font-size: 60px; letter-spacing: -0.02em; color: #141414; line-height: 1.1; }
+      .card em { display: inline-block; width: 8px; height: 100px; background: #b3245f; margin-top: 26px; }
+      .recap { position: absolute; left: 50px; right: 50px; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 14px; }
+      .recap span { padding: 8px 22px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 34px; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12); white-space: nowrap; }
+      .recap span b { color: #b3245f; margin-right: 8px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="66.2" data-width="1080" data-height="1920">
+      <div id="world">
+        <div class="grid" id="grid"></div>
+        <!-- 1. hook: viewfinder; three cards are there from frame 1 — N° 1 the Moon, N° 2 Pluto, N° 3 hidden behind a « ? »; the third is the craziest -->
+        <div class="scene" id="s1">
+          <div class="ghost" style="top: 1480px; font-size: 330px">3 FAITS</div>
+          <div class="hcard obj" id="o-c1" style="left: 50px; top: 760px"><img src="assets/img/lune-cut.png" alt="" /><div class="nchip" style="background: #3d5a80">N° 1</div></div>
+          <div class="hcard obj" id="o-c2" style="left: 340px; top: 700px"><img src="assets/img/pluton-cut.png" alt="" /><div class="nchip" style="background: #9c4a2f">N° 2</div></div>
+          <div class="hcard obj" id="o-c3" style="left: 630px; top: 760px"><img class="full" id="c3-img" src="assets/img/requin.jpg" alt="" style="filter: blur(26px) brightness(0.7); transform: scale(1.2)" /><div class="q" id="c3-q">?</div><div class="nchip" style="background: #c62828">N° 3</div></div>
+          <div class="stamp sm obj" id="o-fou" style="left: 470px; top: 1340px">LE PLUS FOU</div>
+          <div class="hud" id="hud">
+            <div class="cn" style="left: 50px; top: 170px; border-left-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 170px; border-right-width: 6px; border-top-width: 6px"></div>
+            <div class="cn" style="left: 50px; top: 1690px; border-left-width: 6px; border-bottom-width: 6px"></div>
+            <div class="cn" style="right: 50px; top: 1690px; border-right-width: 6px; border-bottom-width: 6px"></div>
+            <div class="rec" style="top: 1700px; left: 130px"><i id="recdot"></i>REC <span id="tc">00:00:00:00</span></div>
+            <div class="fps" style="top: 1700px; right: 130px">SCIENCE · 3 FAITS</div>
+          </div>
+        </div>
+        <!-- 2. slate flood out of the Moon card: N° 1 — the Moon (3 474 km) laid on Australia at the same scale (≈ 4 000 km east to west) -->
+        <div class="scene" id="s2">
+          <div class="ghost" style="top: 1480px; font-size: 380px">LUNE</div>
+          <div class="photo obj" id="o-map" style="left: 110px; top: 660px; width: 860px; height: 804px; background: #4d8fb3"><img id="map-img" src="assets/img/australie.jpg" alt="" style="object-fit: fill" /></div>
+          <div class="cap obj" id="o-mapcap" style="left: 130px; top: 1416px">AUSTRALIE · RELIEF NASA</div>
+          <div class="ruler obj" id="o-ruler" style="left: 143px; top: 985px; width: 808px"></div>
+          <div class="chip obj" id="o-rlab" style="left: 380px; top: 1030px; background: #c2571a; color: #fff">≈ <span id="rkm">4 000</span> km</div>
+          <div class="cut disk obj" id="o-moon" style="left: 196px; top: 640px; width: 702px; height: 702px"><img src="assets/img/lune-cut.png" alt="" /></div>
+          <div class="ruler obj" id="o-dline" style="left: 196px; top: 985px; width: 702px; background: #3d5a80"></div>
+          <div class="chip obj" id="o-dlab" style="left: 370px; top: 1030px; background: #3d5a80; color: #fff"><span id="dkm">3 474</span> km</div>
+          <div class="edge obj" id="o-e1" style="left: 128px; top: 900px; width: 84px; height: 190px"></div>
+          <div class="edge obj" id="o-e2" style="left: 882px; top: 900px; width: 84px; height: 190px"></div>
+          <div class="stamp sm obj" id="o-depasse" style="left: 230px; top: 1290px; color: #c62828; border-color: #c62828">ÇA DÉPASSE !</div>
+        </div>
+        <!-- 3. page pushes up: N° 2 — Pluto, a whole dwarf planet (icy mountains, white heart), against Russia; surfaces as bars: 17,7 vs 17,1 million km² -->
+        <div class="scene" id="s3">
+          <div class="ghost" style="top: 1480px; font-size: 380px">PLUTON</div>
+          <div class="cut disk obj" id="o-pluto" style="left: 70px; top: 640px; width: 500px; height: 500px"><img src="assets/img/pluton-cut.png" alt="" /></div>
+          <div class="photo obj" id="o-rus" style="left: 630px; top: 640px; width: 380px; height: 520px"><img src="assets/img/russie.jpg" alt="" style="object-position: 50% 40%" /></div>
+          <div class="cap obj" id="o-pcap" style="left: 90px; top: 1100px">PLUTON · NEW HORIZONS (NASA)</div>
+          <div class="cap obj" id="o-rcap" style="left: 650px; top: 1120px">RUSSIE · MOSCOU</div>
+          <div class="nchip obj" id="o-vs" style="left: 515px; top: 850px; background: #c62828">VS</div>
+          <div class="chip obj" id="o-glace" style="left: 60px; top: 600px; background: #fff">MONTAGNES DE GLACE</div>
+          <svg class="obj" id="o-heart" viewBox="0 0 300 300" style="position: absolute; left: 255px; top: 815px; width: 240px; height: 240px"><circle cx="150" cy="150" r="120" fill="none" stroke="#c62828" stroke-width="14" stroke-dasharray="760" stroke-dashoffset="760" id="heart-c" /></svg>
+          <div class="chip obj" id="o-coeur" style="left: 330px; top: 1040px; background: #9c4a2f; color: #fff">CŒUR BLANC</div>
+          <div class="blab obj" id="o-l1" style="top: 1200px">PLUTON · <b id="v1">17,7</b> millions de km²</div>
+          <div class="bar obj" id="o-b1" style="top: 1260px; width: 900px; background: #9c4a2f"></div>
+          <div class="blab obj" id="o-l2" style="top: 1350px">RUSSIE · <b id="v2">17,1</b> millions de km²</div>
+          <div class="bar obj" id="o-b2" style="top: 1410px; width: 869px; background: #c62828"></div>
+          <div class="stamp sm obj" id="o-97" style="left: 720px; top: 1490px; color: #c62828; border-color: #c62828">97 %</div>
+        </div>
+        <!-- 4. iris: N° 3, the craziest — sharks are older than trees; a fossil tooth; 450 million years -->
+        <div class="scene" id="s4">
+          <div class="ghost" style="top: 1480px; font-size: 380px">REQUIN</div>
+          <div class="photo obj" id="o-shark" style="left: 70px; top: 640px; width: 940px; height: 627px"><img id="shark-img" src="assets/img/requin.jpg" alt="" style="transform-origin: 60% 45%" /></div>
+          <div class="nchip obj" id="n3" style="left: 90px; top: 620px; background: #c62828">N° 3 · LE PLUS FOU</div>
+          <div class="chip obj" id="o-req" style="left: 110px; top: 1180px; background: #0f7c8c; color: #fff">REQUINS</div>
+          <div class="photo obj" id="o-arbre" style="left: 600px; top: 1060px; width: 380px; height: 324px"><img src="assets/img/foret.jpg" alt="" /></div>
+          <div class="chip obj" id="o-arb" style="left: 700px; top: 1350px; background: #2e7d32; color: #fff">ARBRES</div>
+          <div class="stamp sm obj" id="o-vieux" style="left: 110px; top: 1300px; color: #0f7c8c; border-color: #0f7c8c">PLUS VIEUX !</div>
+          <div class="cut obj" id="o-dent" style="left: 60px; top: 1120px; width: 300px; height: 420px"><img src="assets/img/dent-cut.png" alt="" /></div>
+          <div class="cap obj" id="o-dcap" style="left: 80px; top: 1500px">DENT DE REQUIN FOSSILE</div>
+          <div class="counter2 obj" id="o-cnt" style="left: 360px; right: 40px; top: 1300px"><small>IL Y A</small><b><span id="cnt">450</span> M</b><small>D'ANNÉES</small></div>
+        </div>
+        <!-- 5. page pushes left: the first trees, 385 million years — a 65-million-year gap; the dinosaurs come 200+ million years after the sharks -->
+        <div class="scene" id="s5">
+          <div class="ghost" style="top: 1480px; font-size: 380px">PYEBWA</div>
+          <div class="photo obj" id="o-foret" style="left: 70px; top: 640px; width: 940px; height: 600px"><img id="foret-img" src="assets/img/foret.jpg" alt="" style="transform-origin: 50% 60%" /><div class="cut" id="o-trex" style="left: 0; top: 40px; width: 860px; height: 562px"><img src="assets/img/trex-cut.png" alt="" /></div></div>
+          <div class="axis obj" id="o-axis"></div>
+          <div class="mk obj" id="mk-r" style="left: 100px; top: 1405px; --c: #0f7c8c"><small>REQUINS</small><i></i><span>450 M</span></div>
+          <div class="mk obj" id="mk-a" style="left: 227px; top: 1405px; --c: #2e7d32"><small>ARBRES</small><i></i><span>385 M</span></div>
+          <div class="mk obj" id="mk-d" style="left: 530px; top: 1405px; --c: #b8860b"><small>DINOSAURES</small><i></i><span>≈ 230 M</span></div>
+          <div class="mk obj" id="mk-n" style="left: 980px; top: 1405px; --c: #141414"><small style="transform: translateX(-82%)">AUJOURD'HUI</small><i></i></div>
+          <svg class="obj" id="o-gap" viewBox="0 0 127 60" style="position: absolute; left: 100px; top: 1490px; width: 127px; height: 60px"><path d="M4 4 L4 52 L123 52 L123 4" fill="none" stroke="#c62828" stroke-width="8" stroke-linejoin="round" /></svg>
+          <div class="chip obj" id="o-65" style="left: 130px; top: 1250px; background: #c62828; color: #fff">65 M D'ANNÉES D'ÉCART</div>
+          <div class="chip obj" id="o-apres" style="left: 420px; top: 1240px; background: #b8860b; color: #fff">200 M D'ANNÉES APRÈS</div>
+        </div>
+        <!-- 6. Bilan: black flood held through the scratch; the Earth is older, and bigger, than we imagine -->
+        <div class="scene" id="s6">
+          <div class="ghost" style="top: 1480px; font-size: 380px">LATÈ</div>
+          <div class="photo obj" id="o-terre" style="left: 70px; top: 700px; width: 940px; height: 545px"><img id="terre-img" src="assets/img/terre.jpg" alt="" style="transform-origin: 50% 50%" /></div>
+          <div class="cap obj" id="o-tcap" style="left: 90px; top: 1200px">LA TERRE · IMAGE NASA</div>
+          <div class="chip obj" id="o-vieille" style="left: 110px; top: 1290px; background: #0f7c8c; color: #fff">PLUS VIEILLE</div>
+          <div class="chip obj" id="o-grande" style="left: 560px; top: 1380px; background: #1565c0; color: #fff">PLUS GRANDE</div>
+        </div>
+        <!-- 7. the question: the three facts, a blank card « Mon fait fou : » to fill in the comments; where to answer -->
+        <div class="scene" id="s7">
+          <div class="recap" id="o-recap" style="top: 620px"><span><b>1</b>Australie &gt; Lune</span><span><b>2</b>Russie ≈ Pluton</span><span><b>3</b>Requins &gt; arbres</span></div>
+          <div class="card obj" id="o-card" style="left: 90px; top: 830px"><small>Mon fait encore plus fou :</small><em id="caret7"></em></div>
+          <div class="bubble obj" id="o-bub" style="left: 380px; top: 1460px"><svg viewBox="0 0 24 24" fill="#141414"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" /></svg>Répondez ici</div>
+          <svg class="arrow obj" id="o-arrow" viewBox="0 0 150 110" style="left: 860px; top: 1400px"><path d="M10 20 C 70 20, 110 40, 125 85" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round" /><path d="M100 78 L127 95 L138 64" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </div>
+
+        <!-- the tracker: three numbered facts; N° 3 stays « ? » until it is revealed -->
+        <div id="menu"><span id="m1">1</span><span id="m2">2</span><span id="m3">?</span></div>
+
+        <div id="flood"></div>
+        <div id="iris"></div>
+        <div id="blocks"></div>
+      </div>
+      <div class="series"><span>3 FAITS · LE 3<sup style="font-size: 0.6em">E</sup> EST LE PLUS FOU</span></div>
+
+      <!-- Voix : FLORA, Gemini TTS « Charon » (fr-FR), nombres dits en toutes lettres et affichés en chiffres, pauses raccourcies, silence avant « Bilan ».
+           Musique : celle du style, coupure au scratch et retour sur « la Terre » mixés dans le fichier. -->
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="64.53" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="66.2" data-track-index="11" data-volume="0.18"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx1" src="assets/sfx/impact-bass-1.mp3" data-start="0.08" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx2" src="assets/sfx/pop.mp3" data-start="0.1" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx3" src="assets/sfx/key-press.mp3" data-start="0.15" data-duration="0.43" data-track-index="23" data-volume="0.15"></audio>
+      <audio id="sx4" src="assets/sfx/pop.mp3" data-start="0.18" data-duration="0.72" data-track-index="24" data-volume="0.18"></audio>
+      <audio id="sx5" src="assets/sfx/pop.mp3" data-start="0.26" data-duration="0.72" data-track-index="25" data-volume="0.18"></audio>
+      <audio id="sx6" src="assets/sfx/whoosh-short.mp3" data-start="3.23" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx7" src="assets/sfx/pop.mp3" data-start="3.28" data-duration="0.72" data-track-index="21" data-volume="0.14"></audio>
+      <audio id="sx8" src="assets/sfx/pop.mp3" data-start="3.36" data-duration="0.72" data-track-index="22" data-volume="0.14"></audio>
+      <audio id="sx9" src="assets/sfx/pop.mp3" data-start="3.44" data-duration="0.72" data-track-index="23" data-volume="0.14"></audio>
+      <audio id="sx10" src="assets/sfx/click.mp3" data-start="4.32" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx11" src="assets/sfx/impact-bass-2.mp3" data-start="4.34" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx12" src="assets/sfx/whoosh.mp3" data-start="4.9" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx13" src="assets/sfx/whoosh-short.mp3" data-start="5.22" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx14" src="assets/sfx/pop.mp3" data-start="5.27" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx15" src="assets/sfx/chime.mp3" data-start="5.32" data-duration="2.54" data-track-index="24" data-volume="0.14"></audio>
+      <audio id="sx16" src="assets/sfx/pop.mp3" data-start="5.32" data-duration="0.72" data-track-index="25" data-volume="0.18"></audio>
+      <audio id="sx17" src="assets/sfx/whoosh.mp3" data-start="8.89" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx18" src="assets/sfx/pop.mp3" data-start="9.09" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx19" src="assets/sfx/riser.mp3" data-start="9.84" data-duration="1.7" data-track-index="20" data-volume="0.08"></audio>
+      <audio id="sx20" src="assets/sfx/pop.mp3" data-start="9.84" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx21" src="assets/sfx/whoosh-short.mp3" data-start="12.56" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx22" src="assets/sfx/riser.mp3" data-start="13.5" data-duration="1.02" data-track-index="20" data-volume="0.08"></audio>
+      <audio id="sx23" src="assets/sfx/pop.mp3" data-start="15.07" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx24" src="assets/sfx/whoosh.mp3" data-start="16.02" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx25" src="assets/sfx/impact-bass-1.mp3" data-start="16.67" data-duration="2.12" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx26" src="assets/sfx/pop.mp3" data-start="17.68" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx27" src="assets/sfx/pop.mp3" data-start="17.8" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx28" src="assets/sfx/click.mp3" data-start="18.25" data-duration="0.37" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx29" src="assets/sfx/impact-bass-2.mp3" data-start="18.27" data-duration="2.59" data-track-index="24" data-volume="0.3"></audio>
+      <audio id="sx30" src="assets/sfx/whoosh.mp3" data-start="19.63" data-duration="0.57" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx31" src="assets/sfx/pop.mp3" data-start="19.83" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx32" src="assets/sfx/chime.mp3" data-start="19.88" data-duration="2.54" data-track-index="22" data-volume="0.14"></audio>
+      <audio id="sx33" src="assets/sfx/pop.mp3" data-start="19.88" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx34" src="assets/sfx/pop.mp3" data-start="21.18" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx35" src="assets/sfx/claque.mp3" data-start="21.54" data-duration="0.39" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx36" src="assets/sfx/pop.mp3" data-start="25.47" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx37" src="assets/sfx/whoosh-short.mp3" data-start="26.64" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx38" src="assets/sfx/pop.mp3" data-start="26.89" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx39" src="assets/sfx/riser.mp3" data-start="28.21" data-duration="1.56" data-track-index="20" data-volume="0.08"></audio>
+      <audio id="sx40" src="assets/sfx/riser.mp3" data-start="31.73" data-duration="1.49" data-track-index="20" data-volume="0.08"></audio>
+      <audio id="sx41" src="assets/sfx/click.mp3" data-start="34.74" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx42" src="assets/sfx/impact-bass-1.mp3" data-start="34.76" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx43" src="assets/sfx/whoosh-short.mp3" data-start="37.16" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx44" src="assets/sfx/click.mp3" data-start="37.42" data-duration="0.37" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx45" src="assets/sfx/click-soft.mp3" data-start="37.54" data-duration="0.37" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx46" src="assets/sfx/chime.mp3" data-start="37.81" data-duration="2.54" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx47" src="assets/sfx/sparkle.mp3" data-start="37.85" data-duration="1.8" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx48" src="assets/sfx/pop.mp3" data-start="37.89" data-duration="0.72" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx49" src="assets/sfx/pop.mp3" data-start="39.75" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx50" src="assets/sfx/click.mp3" data-start="41.04" data-duration="0.37" data-track-index="20" data-volume="0.38"></audio>
+      <audio id="sx51" src="assets/sfx/pop.mp3" data-start="41.48" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx52" src="assets/sfx/pop.mp3" data-start="41.83" data-duration="0.72" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx53" src="assets/sfx/whoosh.mp3" data-start="42.28" data-duration="0.57" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx54" src="assets/sfx/pop.mp3" data-start="43.32" data-duration="0.72" data-track-index="20" data-volume="0.18"></audio>
+      <audio id="sx55" src="assets/sfx/roulement.mp3" data-start="43.42" data-duration="2.04" data-track-index="21" data-volume="0.06"></audio>
+      <audio id="sx56" src="assets/sfx/impact-bass-2.mp3" data-start="45.67" data-duration="2.59" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx57" src="assets/sfx/whoosh.mp3" data-start="46.09" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx58" src="assets/sfx/pop.mp3" data-start="46.44" data-duration="0.72" data-track-index="22" data-volume="0.18"></audio>
+      <audio id="sx59" src="assets/sfx/pop.mp3" data-start="47.93" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx60" src="assets/sfx/whoosh-short.mp3" data-start="49.85" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx61" src="assets/sfx/click.mp3" data-start="51.18" data-duration="0.37" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx62" src="assets/sfx/impact-bass-1.mp3" data-start="51.22" data-duration="2.12" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx63" src="assets/sfx/whoosh.mp3" data-start="52.31" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx64" src="assets/sfx/grains.mp3" data-start="52.56" data-duration="1.33" data-track-index="22" data-volume="0.1"></audio>
+      <audio id="sx65" src="assets/sfx/pop.mp3" data-start="54.26" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx66" src="assets/sfx/pop.mp3" data-start="54.6" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx67" src="assets/sfx/scratch.mp3" data-start="56.2" data-duration="1.23" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx68" src="assets/sfx/whoosh.mp3" data-start="56.2" data-duration="0.57" data-track-index="21" data-volume="0.25"></audio>
+      <audio id="sx69" src="assets/sfx/whoosh-short.mp3" data-start="57.75" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx70" src="assets/sfx/impact-bass-2.mp3" data-start="57.89" data-duration="2.59" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx71" src="assets/sfx/pop.mp3" data-start="58.63" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx72" src="assets/sfx/pop.mp3" data-start="59.41" data-duration="0.72" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx73" src="assets/sfx/impact-bass-1.mp3" data-start="60.64" data-duration="2.12" data-track-index="20" data-volume="0.35"></audio>
+      <audio id="sx74" src="assets/sfx/sparkle.mp3" data-start="60.64" data-duration="1.8" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx75" src="assets/sfx/whoosh.mp3" data-start="61.39" data-duration="0.57" data-track-index="22" data-volume="0.25"></audio>
+      <audio id="sx76" src="assets/sfx/click.mp3" data-start="61.69" data-duration="0.37" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx77" src="assets/sfx/pop.mp3" data-start="61.74" data-duration="0.72" data-track-index="24" data-volume="0.18"></audio>
+      <audio id="sx78" src="assets/sfx/pop.mp3" data-start="62.49" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx79" src="assets/sfx/pop.mp3" data-start="63.49" data-duration="0.72" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx80" src="assets/sfx/click.mp3" data-start="64.1" data-duration="0.37" data-track-index="21" data-volume="0.4"></audio>
+      <audio id="sx81" src="assets/sfx/sparkle.mp3" data-start="64.2" data-duration="1.8" data-track-index="22" data-volume="0.2"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const el = (tag, cls, txt, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (parent) parent.appendChild(e); return e }
+        const blur = (n) => 'blur(' + n + 'px)'
+        const END = 66.2
+        const RED = '#c62828'
+        // one colour per fact, taken from its photo
+        const SLATE = '#3d5a80'
+        const OCHRE = '#c2571a'
+        const TAN = '#9c4a2f'
+        const TEAL = '#0f7c8c'
+        const GREEN = '#2e7d32'
+        const AMBER = '#b8860b'
+        const BLUE = '#1565c0'
+        const MAGENTA = '#b3245f'
+        const INK = '#141414'
+
+        // ---------- the voice: start of each spoken word in assets/vo/vo.wav (starts at 0.2 s) ----------
+        // numbers are spoken in words and shown in digits: the extra words of a number are empty on screen
+        const RAW = [0.25, 0.467, 0.684, 0.901, 1.118, 1.553, 1.77, 2.668, 2.9, 3.132, 3.596, 3.829, 4.061, 4.293, 5.119, 5.653, 6.077, 6.721, 7.044, 7.366, 7.69, 8.013, 8.337, 8.887, 9.073, 9.262, 9.637, 9.825, 10.013, 10.201, 10.389, 11.141, 11.704, 11.892, 12.514, 13.301, 13.524, 13.75, 14.321, 14.973, 15.342, 15.967, 16.154, 16.359, 16.563, 16.768, 16.971, 17.481, 17.531, 17.584, 17.788, 17.992, 18.196, 18.401, 18.605, 18.809, 19.682, 20.315, 20.773, 21.082, 21.39, 21.699, 22.008, 22.898, 23.302, 23.504, 23.706, 24.11, 24.313, 24.486, 25.122, 25.325, 25.729, 25.931, 26.133, 26.336, 26.538, 26.741, 27.19, 27.397, 28.059, 28.49, 28.922, 29.138, 29.354, 29.569, 30.217, 30.895, 31.113, 31.577, 32.154, 32.731, 33.02, 33.555, 33.779, 34.027, 34.484, 34.69, 35.184, 35.431, 35.678, 35.925, 36.172, 37.34, 37.554, 38.197, 38.557, 38.626, 38.84, 39.297, 39.595, 40.189, 40.486, 40.784, 41.082, 41.379, 41.676, 42.22, 42.384, 42.718, 43.052, 43.219, 43.553, 43.719, 43.887, 44.054, 44.554, 44.721, 44.888, 45.222, 45.555, 46.137, 46.307, 46.647, 47.054, 47.78, 48.021, 48.263, 48.989, 49.699, 50.436, 50.919, 51.402, 52.133, 52.248, 52.364, 52.937, 53.106, 53.778, 53.946, 54.114, 54.282, 54.451, 54.787, 55.123, 55.459, 55.628, 57.069, 57.689, 57.951, 58.214, 58.476, 58.738, 59.099, 59.264, 59.526, 59.789, 60.236, 60.341, 60.446, 60.655, 61.438, 61.554, 61.931, 62.066, 62.335, 62.469, 62.605, 62.874, 63.008, 63.391, 63.772, 63.897]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["3", "faits", "que", "ton", "cerveau", "va", "refuser.", "Et", "le", "troisième", "est", "le", "plus", "fou.", "Numéro", "1 :", "l'Australie", "est", "plus", "large", "que", "la", "Lune.", "La", "Lune", "mesure", "3 474", "", "", "", "", "km", "de", "diamètre.", "L'Australie,", "d'est", "en", "ouest :", "environ", "4 000", "km.", "Pose", "la", "Lune", "sur", "la", "carte…", "et", "elle", "ne", "couvre", "même", "pas", "tout", "le", "pays.", "Numéro", "2 :", "la", "Russie", "face", "à", "Pluton.", "Pluton,", "c'est", "une", "planète", "naine", "entière,", "avec", "ses", "montagnes", "de", "glace", "et", "son", "cœur", "blanc.", "Sa", "surface :", "17,7", "millions", "", "", "", "de km²", "", "La", "Russie :", "17,1", "millions", "", "de km²", "Un", "seul", "pays…", "presque", "aussi", "grand", "que", "toute", "une", "planète.", "Et", "numéro", "3,", "le", "plus", "fou :", "les", "requins", "sont", "plus", "vieux", "que", "les", "arbres.", "Les", "premiers", "requins", "nageaient", "déjà", "il", "y", "a", "environ", "450", "", "", "millions", "d'années.", "Les", "premiers", "arbres ?", "Environ", "385", "", "", "millions.", "65", "millions", "d'années", "d'écart.", "Et", "les", "dinosaures ?", "Ils", "arriveront", "plus", "de", "200", "", "millions", "d'années", "après", "les", "requins.", "Bilan :", "la", "Terre", "est", "plus", "vieille,", "et", "plus", "grande,", "que", "tout", "ce", "qu'on", "imagine.", "Et", "toi,", "tu", "connais", "un", "fait", "encore", "plus", "fou ?", "Écris-le", "en", "commentaire."]
+        const SCRATCH = 56.22
+
+        // ---------- transitions: when each scene takes over, and how ----------
+        const at = (k) => Math.round((T[k] - 0.1) * 100) / 100
+        const X = { s2: at(14), s3: at(56), s4: at(103), s5: at(131), bil: Math.round((SCRATCH + 0.3) * 100) / 100, s7: at(171) }
+        const HOLDB = T[158] - 0.14 - X.bil // the black flood holds through the scratch silence, until « la Terre »
+        const FLOODS = [
+          { t: X.s2, a: [250, 1040], b: [547, 991], col: SLATE, hold: 0 },
+          { t: X.bil, a: [600, 900], b: [540, 970], col: INK, hold: HOLDB },
+        ]
+        const IRISES = [{ t: X.s4 }]
+        const PUSHES = [['s2', 's3', 'y'], ['s4', 's5', 'x'], ['s6', 's7', 'y']]
+
+        // ---------- blocks of stacked lines: [first word, last word, style, colour?]; y = top of the block ----------
+        const BLOCKS = [
+          { y: 220, lines: [[0, 1, 'b', RED], [2, 4, 's'], [5, 6, 'mi', RED]] },
+          { y: 250, lines: [[7, 9, 's'], [10, 13, 'mi', RED]] },
+          { y: 210, lines: [[14, 15, 'm'], [16, 16, 'b', OCHRE], [17, 22, 's', OCHRE]] },
+          { y: 220, lines: [[23, 25, 's'], [26, 31, 'b', SLATE], [32, 33, 's']] },
+          { y: 210, lines: [[34, 34, 'm'], [35, 38, 's'], [39, 40, 'b', OCHRE]] },
+          { y: 200, lines: [[41, 43, 'm'], [44, 46, 's'], [47, 50, 's'], [51, 55, 'mi', RED]] },
+          { y: 220, lines: [[56, 57, 'm'], [58, 61, 's'], [62, 62, 'b', TAN]] },
+          { y: 200, lines: [[63, 65, 's'], [66, 68, 'mi', TAN], [69, 73, 's'], [74, 77, 's', TAN]] },
+          { y: 220, lines: [[78, 79, 's'], [80, 81, 'b', TAN], [82, 86, 'm']] },
+          { y: 220, lines: [[87, 88, 's'], [89, 90, 'b', RED], [91, 92, 'm']] },
+          { y: 230, lines: [[93, 95, 'm'], [96, 98, 's', RED], [99, 102, 'mi', RED]] },
+          { y: 260, lines: [[103, 105, 'm'], [106, 108, 'b', RED]] },
+          { y: 220, lines: [[109, 110, 'b', TEAL], [111, 113, 'm', TEAL], [114, 116, 'mi', GREEN]] },
+          { y: 200, lines: [[117, 120, 's'], [121, 125, 's'], [126, 129, 'b', TEAL], [130, 130, 'm']] },
+          { y: 220, lines: [[131, 133, 'm'], [134, 134, 's'], [135, 138, 'b', GREEN]] },
+          { y: 250, lines: [[139, 140, 'b', RED], [141, 142, 'mi', RED]] },
+          { y: 200, lines: [[143, 145, 'm'], [146, 149, 's'], [150, 153, 'mi', AMBER], [154, 156, 's']] },
+          { y: 240, lines: [[157, 157, 'm', '#fff'], [158, 160, 's'], [161, 162, 'mi', TEAL]] },
+          { y: 250, lines: [[163, 165, 'mi', BLUE], [166, 170, 's']] },
+          { y: 220, lines: [[171, 172, 'm'], [173, 177, 's'], [178, 179, 'b', MAGENTA]] },
+          { y: 260, lines: [[180, 182, 'm']] },
+        ]
+        // words that get a coloured highlight box when spoken (like « thinking… » in the reference)
+        const HL = new Set([18, 19, 76, 77, 96, 112, 113])
+        const BILAN = 17
+        // words already sit in the line in very light grey and darken as they are spoken (reference video);
+        // the hero word (style b) rises in an accent gradient and a highlight sweeps across it
+        const FAINT = '#cfcfcf'
+        const FINAL = { s: '#7a7a7a', m: INK, mi: INK, bi: INK }
+        const HLW = typeof HL === 'undefined' ? new Set() : HL
+        const blocksBox = $('blocks')
+        BLOCKS.forEach((B, bi) => {
+          const first = B.lines[0][0]
+          const start = Math.max(0, T[first] - 0.06)
+          const next = BLOCKS[bi + 1]
+          const end = next ? (bi === BILAN - 1 ? X.bil - 0.02 : T[next.lines[0][0]] - 0.08) : END
+          const box = el('div', 'block', null, blocksBox)
+          box.style.top = B.y + 'px'
+          gsap.set(box, { autoAlpha: 0 })
+          tl.set(box, { autoAlpha: 1 }, start)
+          B.lines.forEach(([a, b, st, col]) => {
+            const line = el('div', 'line ' + st, null, box)
+            const acc = col || '#2f4fd8'
+            line.style.setProperty('--acc', acc)
+            line.style.setProperty('--acc2', 'color-mix(in srgb, ' + acc + ' 55%, #ffffff)')
+            const onDark = col === '#fff'
+            for (let k = a; k <= b; k++) {
+              const w = el('span', 'w', WORDS[k], line)
+              if (st === 'b' || st === 'bi') {
+                tl.fromTo(w, { yPercent: 115 }, { yPercent: 0, duration: 0.42, ease: 'back.out(1.6)' }, T[k] - 0.05)
+                tl.fromTo(w, { backgroundPosition: '100% 0' }, { backgroundPosition: '0% 0', duration: 0.9, ease: 'power2.inOut', immediateRender: false }, T[k] + 0.25)
+              } else {
+                const fin = onDark ? '#ffffff' : (col && (st === 'mi' || st === 'bi') ? col : FINAL[st] || '#23232b')
+                gsap.set(w, { color: onDark ? 'rgba(255,255,255,0.22)' : FAINT })
+                tl.fromTo(w, { y: 8, filter: blur(3) }, { y: 0, filter: blur(0), duration: 0.2, ease: 'power2.out', immediateRender: false }, T[k] - 0.02)
+                tl.to(w, { color: fin, duration: 0.22, ease: 'power1.out' }, T[k] - 0.02)
+                if (HLW.has(k)) {
+                  w.classList.add('hl')
+                  if (HLW.has(k + 1)) w.classList.add('hl-join')
+                  w.style.setProperty('--acc', acc)
+                  tl.fromTo(w, { '--hx': 0 }, { '--hx': 1, duration: 0.3, ease: 'power3.out', immediateRender: false }, T[k] + 0.05)
+                  tl.to(w, { color: '#ffffff', duration: 0.15 }, T[k] + 0.12)
+                }
+              }
+            }
+          })
+          // exit: every word drops back into its line
+          if (end < END) {
+            tl.to(box.querySelectorAll('.w'), { yPercent: -125, duration: 0.18, ease: 'power3.in', stagger: 0.006 }, end - 0.2)
+            tl.set(box, { autoAlpha: 0 }, end)
+          }
+        })
+        // « Bilan : » is white on the black flood, and turns to ink as the flood contracts
+        tl.to(blocksBox.children[BILAN].querySelector('.w'), { color: INK, duration: 0.2 }, X.bil + HOLDB)
+
+        // ---------- flood + iris: pure functions of time ----------
+        const ease = { in: (p) => p * p * p, out: (p) => 1 - Math.pow(1 - p, 3) }
+        const seg = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)))
+        const flood = $('flood')
+        const iris = $('iris')
+        const blades = []
+        for (let i = 0; i < 6; i++) blades.push(el('div', 'blade', null, iris))
+        const RMAX = 1250
+        function ctl(t) {
+          // colour flood: grows out of an object, covers the frame, contracts into the next scene's object
+          let r = 0, cx = 540, cy = 960, col = INK
+          for (const F of FLOODS) {
+            const g0 = F.t - 0.3, c0 = F.t + F.hold, c1 = c0 + 0.32
+            if (t >= g0 && t <= c1) {
+              col = F.col
+              if (t < F.t) { r = 2300 * ease.in(seg(t, g0, F.t)); cx = F.a[0]; cy = F.a[1] }
+              else if (t < c0) { r = 2300; cx = F.b[0]; cy = F.b[1] }
+              else { r = 2300 * (1 - ease.out(seg(t, c0, c1))); cx = F.b[0]; cy = F.b[1] }
+            }
+          }
+          flood.style.background = col
+          flood.style.clipPath = 'circle(' + r.toFixed(1) + 'px at ' + cx + 'px ' + cy + 'px)'
+          // camera iris: six blades close over the old scene and open on a photo
+          let ap = RMAX
+          for (const I of IRISES) {
+            if (t >= I.t - 0.28 && t < I.t) ap = RMAX * (1 - ease.in(seg(t, I.t - 0.28, I.t)))
+            else if (t >= I.t && t <= I.t + 0.36) ap = RMAX * ease.out(seg(t, I.t + 0.02, I.t + 0.36))
+          }
+          iris.style.visibility = ap >= RMAX - 1 ? 'hidden' : 'inherit'
+          const twist = (1 - ap / RMAX) * 50
+          blades.forEach((b, i) => {
+            b.style.left = 540 - 1600 + 'px'
+            b.style.top = 960 - 3200 + 'px'
+            b.style.transform = 'rotate(' + (i * 60 + twist).toFixed(2) + 'deg) translateY(' + (-ap).toFixed(1) + 'px)'
+          })
+        }
+        const clock = { v: 0 }
+        tl.fromTo(clock, { v: 0 }, { v: END, duration: END, ease: 'none', immediateRender: false, onUpdate: () => ctl(clock.v) }, 0)
+        ctl(0)
+
+        // ---------- helpers ----------
+        const spring = (sel, at, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0 }, o), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.5, ease: 'back.out(1.8)' }, at)
+        const stamp = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.4, rotation: 2 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.18, ease: 'power4.in' }, at)
+        const show = (sel, at) => tl.set(sel, { autoAlpha: 1 }, at)
+        const hide = (sel, at) => tl.set(sel, { autoAlpha: 0 }, at)
+        const shake = (at) => tl.fromTo('#world', { x: 0 }, { x: 12, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, at)
+        const cam = (sel, at, dur, scale, origin, ez) => tl.to(sel, { scale, transformOrigin: origin, duration: dur, ease: ez || 'power2.inOut' }, at)
+        // a photo that fills the frame behind the iris, then zooms out into its card
+        const unfold = (sel, at) => tl.fromTo(sel, { scale: 3.4 }, { scale: 1, duration: 0.55, ease: 'power3.inOut' }, at)
+        const kb = (sel, from, to, s0, s1) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: to - from, ease: 'none', immediateRender: false }, from)
+        const sonar = (sels, from, to) => sels.forEach((s, i) => tl.fromTo(s, { autoAlpha: 0.9, scale: 0.4 }, { autoAlpha: 0, scale: 3.2, duration: 1.2, ease: 'power1.out', repeat: Math.max(0, Math.floor((to - from) / 1.2) - 1), immediateRender: false }, from + i * 0.4))
+
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7']
+        gsap.set(SC.slice(1), { autoAlpha: 0 })
+        tl.to('#grid', { opacity: 1, duration: 0.4 }, 0.05)
+        tl.fromTo('.series', { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'back.out(2)' }, 0.05)
+        // scenes covered by a flood or an iris swap while hidden
+        ;[['s1', 's2', X.s2], ['s3', 's4', X.s4], ['s5', 's6', X.bil]].forEach(([a, b, t]) => { hide('#' + a, t); show('#' + b, t) })
+        // page pushes: the old scene leaves, the new one arrives from the opposite side
+        PUSHES.forEach(([a, b, ax]) => {
+          const D = ax === 'x' ? 1080 : 1920
+          const t0 = X[b] - 0.1
+          tl.to('#' + a, { [ax]: -D, duration: 0.4, ease: 'power3.inOut' }, t0)
+          show('#' + b, t0)
+          tl.fromTo('#' + b, { [ax]: D }, { [ax]: 0, duration: 0.4, ease: 'power3.inOut', immediateRender: false }, t0)
+          hide('#' + a, t0 + 0.4)
+        })
+        // ghost words drift slowly the whole time they are on screen
+        document.querySelectorAll('.ghost').forEach((g, i) => tl.fromTo(g, { x: i % 2 ? -60 : 60 }, { x: i % 2 ? 60 : -60, duration: END, ease: 'none', immediateRender: false }, 0))
+        const slap = (sel, at, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 1.8, rotation: rot * 2.5 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.28, ease: 'back.out(2.4)' }, at)
+        const fadeIn = (sel, at) => gsap.set(sel, { autoAlpha: 0 }) && tl.fromTo(sel, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, at)
+        const out = (sels, at, dx) => tl.to(sels, { autoAlpha: 0, x: dx || 0, scale: dx ? 1 : 0.6, duration: 0.3, ease: 'power2.in', stagger: 0.04 }, at)
+        const count = (obj, from, to, t0, t1, fmt, node, ez) => tl.fromTo(obj, { v: from }, { v: to, duration: t1 - t0, ease: ez || 'power1.inOut', immediateRender: false, onUpdate: () => { node.textContent = fmt(obj.v) } }, t0)
+        const grow = (sel, t0, t1) => tl.fromTo(sel, { scaleX: 0 }, { scaleX: 1, duration: t1 - t0, ease: 'power2.out', immediateRender: false }, t0)
+        const thou = (v) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+        const dec = (v) => v.toFixed(1).replace('.', ',')
+
+        // ---------- the tracker: on from « le troisième »; each fact fills with its colour; N° 3 is a « ? » until it comes ----------
+        gsap.set('#menu', { xPercent: -50 })
+        tl.fromTo('#menu span', { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'back.out(2.4)', stagger: 0.08 }, T[9] - 0.05)
+        const fill = (sel, col, at) => {
+          tl.to(sel, { backgroundColor: col, color: '#ffffff', duration: 0.2 }, at)
+          tl.fromTo(sel, { scale: 1.5 }, { scale: 1, duration: 0.4, ease: 'back.out(3)', immediateRender: false }, at)
+        }
+        fill('#m1', SLATE, T[14])
+        fill('#m2', TAN, T[56])
+        tl.fromTo('#m3', { rotation: -8 }, { rotation: 8, duration: 0.25, yoyo: true, repeat: Math.floor((T[104] - T[10]) / 0.25), ease: 'sine.inOut', immediateRender: false }, T[10])
+        count({ v: 0 }, 0, 3, T[104] + 0.05, T[104] + 0.07, (v) => (v < 3 ? '?' : '3'), $('m3'), 'none')
+        fill('#m3', RED, T[104] + 0.06)
+        tl.set('#m3', { rotation: 0 }, T[104] + 0.06)
+        hide('#menu', X.bil)
+
+        // ---------- 1. hook: three cards from frame 1 — the Moon, Pluto, and a hidden N° 3; « le plus fou » ----------
+        tl.fromTo('#o-c1', { y: 300, rotation: -20 }, { y: 0, rotation: -8, duration: 0.45, ease: 'expo.out' }, 0)
+        tl.fromTo('#o-c2', { y: 340, rotation: 10 }, { y: 0, rotation: 1, duration: 0.45, ease: 'expo.out' }, 0.06)
+        tl.fromTo('#o-c3', { y: 380, rotation: 22 }, { y: 0, rotation: 8, duration: 0.45, ease: 'expo.out' }, 0.12)
+        tl.fromTo('#hud', { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        // the Moon and Pluto turn slowly in their cards; the « ? » wobbles
+        tl.fromTo('#o-c1 img, #o-c2 img', { rotation: -10 }, { rotation: 10, duration: X.s2, ease: 'none', immediateRender: false }, 0)
+        tl.fromTo('#c3-q', { rotation: -10 }, { rotation: 10, duration: 0.3, yoyo: true, repeat: Math.floor(X.s2 / 0.3), ease: 'sine.inOut', immediateRender: false }, 0.4)
+        // « le troisième »: card 3 comes to the front and grows
+        tl.to('#o-c3', { scale: 1.12, rotation: 4, x: -20, duration: 0.4, ease: 'back.out(2)' }, T[9] - 0.05)
+        tl.to(['#o-c1', '#o-c2'], { filter: 'brightness(0.6)', duration: 0.3 }, T[9])
+        stamp('#o-fou', T[12] - 0.02, -6)
+        shake(T[12] + 0.15)
+        // « Numéro un »: back to card 1 before the flood grows out of it
+        tl.to(['#o-c1', '#o-c2'], { filter: 'brightness(1)', duration: 0.2 }, T[13] + 0.2)
+        cam('#s1', T[13] + 0.2, X.s2 - T[13] - 0.2, 1.08, '250px 1040px', 'power2.in')
+        // the viewfinder's timecode and blinking REC dot are pure functions of time
+        const tc = $('tc')
+        const recdot = $('recdot')
+        const clock2 = { v: 0 }
+        tl.fromTo(clock2, { v: 0 }, { v: X.s2, duration: X.s2, ease: 'none', immediateRender: false, onUpdate: () => { const t = clock2.v; const f = Math.floor((t % 1) * 30); tc.textContent = '00:00:' + String(Math.floor(t)).padStart(2, '0') + ':' + String(f).padStart(2, '0'); recdot.style.opacity = Math.floor(t * 2) % 2 ? '0.25' : '1' } }, 0)
+
+        // ---------- 2. slate flood: N° 1 — the Moon laid on Australia at the same scale ----------
+        gsap.set(['#o-ruler', '#o-dline'], { scaleX: 0 })
+        spring('#o-map', X.s2 + 0.05, { y: 140, rotation: -3 })
+        fadeIn('#o-mapcap', X.s2 + 0.4)
+        kb('#map-img', X.s2, T[23], 1.0, 1.04)
+        // « La Lune mesure… »: the Moon rises over the dimmed map, its diameter is drawn and counted
+        tl.to('#map-img', { filter: 'brightness(0.55)', duration: 0.3 }, T[23] - 0.1)
+        tl.fromTo('#o-moon', { autoAlpha: 0, scale: 0.2, rotation: -30 }, { autoAlpha: 1, scale: 1, rotation: 0, duration: 0.55, ease: 'back.out(1.6)' }, T[23] - 0.1)
+        show('#o-dline', T[26] - 0.05)
+        grow('#o-dline', T[26] - 0.05, T[31])
+        spring('#o-dlab', T[26] - 0.05, {})
+        count({ v: 0 }, 0, 3474, T[26], T[31] + 0.2, thou, $('dkm'), 'power2.out')
+        // « L'Australie, d'est en ouest »: the Moon parks in a corner, a ruler spans the country
+        out(['#o-dline', '#o-dlab'], T[34] - 0.2)
+        tl.to('#o-moon', { scale: 0.3, x: 330, y: -250, duration: 0.5, ease: 'power3.inOut' }, T[34] - 0.15)
+        tl.to('#map-img', { filter: 'brightness(1)', duration: 0.3 }, T[34] - 0.1)
+        show('#o-ruler', T[35] - 0.05)
+        grow('#o-ruler', T[35] - 0.05, T[38])
+        spring('#o-rlab', T[39] - 0.1, {})
+        count({ v: 0 }, 0, 4000, T[39] - 0.1, T[40] + 0.3, thou, $('rkm'), 'power2.out')
+        // « Pose la Lune sur la carte… »: it lands on the map — and the country sticks out on both sides
+        out(['#o-rlab'], T[41] - 0.2)
+        tl.to('#o-moon', { scale: 1, x: 0, y: 0, autoAlpha: 0.94, duration: 0.65, ease: 'power3.inOut' }, T[41] - 0.1)
+        tl.fromTo(['#o-e1', '#o-e2'], { autoAlpha: 0, scale: 1.6 }, { autoAlpha: 1, scale: 1, duration: 0.3, ease: 'back.out(2)', stagger: 0.12 }, T[47])
+        tl.to(['#o-e1', '#o-e2'], { autoAlpha: 0.35, duration: 0.18, yoyo: true, repeat: 5, ease: 'steps(1)' }, T[47] + 0.45)
+        stamp('#o-depasse', T[51] - 0.02, -5)
+        shake(T[51] + 0.15)
+
+        // ---------- 3. page pushes up: N° 2 — Pluto against Russia; surfaces as bars ----------
+        gsap.set(['#o-b1', '#o-b2'], { scaleX: 0 })
+        spring('#o-pluto', X.s3 + 0.05, { y: 160, rotation: -40 })
+        tl.fromTo('#o-pluto img', { rotation: -6 }, { rotation: 6, duration: X.s4 - X.s3, ease: 'none', immediateRender: false }, X.s3)
+        fadeIn('#o-pcap', X.s3 + 0.4)
+        spring('#o-rus', T[59] - 0.1, { y: 160, rotation: 8 })
+        fadeIn('#o-rcap', T[59] + 0.2)
+        slap('#o-vs', T[60] - 0.05, -6)
+        slap('#o-glace', T[71] - 0.05, -3)
+        show('#o-heart', T[76] - 0.1)
+        tl.fromTo('#heart-c', { attr: { 'stroke-dashoffset': 760 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 0.45, ease: 'power2.out', immediateRender: false }, T[76] - 0.1)
+        slap('#o-coeur', T[77] - 0.05, 3)
+        // « Sa surface »: the labels clear, two bars race
+        out(['#o-vs', '#o-glace', '#o-heart', '#o-coeur'], T[78] - 0.25)
+        fadeIn('#o-l1', T[78] - 0.05)
+        show('#o-b1', T[80] - 0.05)
+        grow('#o-b1', T[80] - 0.05, T[85])
+        count({ v: 0 }, 0, 17.7, T[80] - 0.05, T[85], dec, $('v1'), 'power2.out')
+        fadeIn('#o-l2', T[87] - 0.05)
+        show('#o-b2', T[89] - 0.05)
+        grow('#o-b2', T[89] - 0.05, T[92])
+        count({ v: 0 }, 0, 17.1, T[89] - 0.05, T[92], dec, $('v2'), 'power2.out')
+        stamp('#o-97', T[96] - 0.02, -6)
+        shake(T[96] + 0.15)
+
+        // ---------- 4. iris: N° 3 — sharks are older than trees; a fossil tooth; 450 million years ----------
+        unfold('#o-shark', X.s4 + 0.15)
+        kb('#shark-img', X.s4, X.s5, 1.03, 1.18)
+        spring('#n3', X.s4 + 0.4, { rotation: -10 })
+        slap('#o-req', T[110] - 0.05, -3)
+        stamp('#o-vieux', T[113] - 0.02, -6)
+        spring('#o-arbre', T[115] - 0.1, { y: 160, rotation: 8 })
+        slap('#o-arb', T[116] - 0.05, 3)
+        out(['#o-req', '#o-vieux', '#o-arbre', '#o-arb'], T[117] - 0.3)
+        spring('#o-dent', T[118] - 0.1, { y: 200, rotation: 30 })
+        fadeIn('#o-dcap', T[118] + 0.3)
+        tl.fromTo('#o-dent', { rotation: 0 }, { rotation: -6, duration: 0.5, yoyo: true, repeat: 5, ease: 'sine.inOut', immediateRender: false }, T[118] + 0.4)
+        spring('#o-cnt', T[121] - 0.1, {})
+        count({ v: 0 }, 0, 450, T[121], T[129] + 0.2, (v) => String(Math.round(v)), $('cnt'), 'power2.out')
+        shake(T[129] + 0.25)
+
+        // ---------- 5. page pushes left: the first trees; the 65-million-year gap; the dinosaurs much later ----------
+        gsap.set('#o-axis', { scaleX: 0 })
+        spring('#o-foret', X.s5 + 0.05, { y: 140, rotation: -3 })
+        kb('#foret-img', X.s5, END, 1.02, 1.2)
+        show('#o-axis', X.s5 + 0.1)
+        grow('#o-axis', X.s5 + 0.1, X.s5 + 0.7)
+        spring('#mk-r', X.s5 + 0.2, {})
+        spring('#mk-n', X.s5 + 0.6, {})
+        spring('#mk-a', T[135] - 0.05, {})
+        show('#o-gap', T[139] - 0.05)
+        tl.fromTo('#o-gap path', { attr: { 'stroke-dasharray': 300, 'stroke-dashoffset': 300 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 0.4, ease: 'power2.out', immediateRender: false }, T[139] - 0.05)
+        slap('#o-65', T[139] - 0.05, -3)
+        shake(T[141] + 0.1)
+        out(['#o-65'], T[143] - 0.25)
+        // « Et les dinosaures ? »: a T. rex skeleton walks into the forest photo; its marker lands 200+ million years after the sharks
+        tl.to('#foret-img', { filter: 'brightness(0.55) saturate(0.7)', duration: 0.4 }, T[143])
+        tl.fromTo('#o-trex', { autoAlpha: 0, x: -900 }, { autoAlpha: 1, x: 0, duration: 0.7, ease: 'power3.out' }, T[145] - 0.25)
+        tl.fromTo('#o-trex', { y: 0 }, { y: -12, duration: 0.25, yoyo: true, repeat: 3, ease: 'sine.inOut', immediateRender: false }, T[145] - 0.25)
+        spring('#mk-d', T[150] - 0.05, {})
+        slap('#o-apres', T[152] - 0.05, 3)
+        tl.fromTo('#mk-r', { scale: 1 }, { scale: 1.3, duration: 0.18, yoyo: true, repeat: 1, ease: 'power2.out', immediateRender: false }, T[156])
+
+        // ---------- 6. black flood held through the scratch; « Bilan : »; the Earth — older and bigger than we imagine ----------
+        unfold('#o-terre', X.bil + HOLDB + 0.05)
+        kb('#terre-img', X.bil + HOLDB, X.s7, 1.03, 1.16)
+        fadeIn('#o-tcap', X.bil + HOLDB + 0.5)
+        slap('#o-vieille', T[161] - 0.05, -3)
+        slap('#o-grande', T[164] - 0.05, 3)
+        shake(T[168] + 0.1)
+
+        // ---------- 7. the three facts, a blank card « Mon fait encore plus fou : »; where to answer ----------
+        tl.fromTo('#o-recap span', { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.08 }, X.s7 + 0.15)
+        slap('#o-card', T[175] - 0.05, -2)
+        tl.fromTo('#caret7', { opacity: 1 }, { opacity: 0, duration: 0.3, yoyo: true, repeat: Math.floor((END - X.s7) / 0.3), ease: 'steps(1)', immediateRender: false }, X.s7)
+        spring('#o-bub', T[180] - 0.1, {})
+        spring('#o-arrow', T[182] - 0.02, { rotation: -30 })
+        const left = END - T[182] - 0.6
+        const n = Math.max(1, Math.floor(left / 0.5))
+        tl.to('#o-arrow', { x: 18, y: 14, duration: 0.3, yoyo: true, repeat: n, ease: 'sine.inOut' }, T[182] + 0.5)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>

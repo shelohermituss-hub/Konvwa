@@ -68,6 +68,17 @@ Recommandations de Meta pour les Reels transmises par le client (les 6 dernière
 - **De l'humour quand le sujet s'y prête** : une réplique créole de parent, un tampon décalé, une chute ; jamais moqueur envers une personne ou une croyance, et pas sur les sujets graves (morts, dictature, catastrophes).
 - **Interactions** : une seule question finale qui invite à partager un savoir (section suivante) ; quand ça colle au sujet, elle peut aussi pousser à identifier quelqu'un (« Identifie celui qui gagnait toujours aux oslè »), ce qui fait à la fois commenter et partager.
 
+### Format « 3 faits » (demande du client, modèle `videos/3-faits/`)
+
+Pour tenir une minute sans ennuyer avec des faits courts :
+
+- **Trois faits par vidéo**, reliés par un thème (« 3 faits que ton cerveau va refuser », « 3 choses plus vieilles que tu ne le crois ») : ça remplit la minute naturellement et ça garde le rythme.
+- **Annoncer le meilleur pour la fin** dès l'accroche : « Et le troisième est le plus fou. » La carte ou la pastille N° 3 reste un « ? » jusqu'à son tour (suivi 1 · 2 · ? en bas de l'écran).
+- **Chaque fait est une petite histoire en trois temps** : l'accroche (le fait dit tout de suite), deux ou trois détails surprenants (chiffres comptés à l'écran, comparaison à l'échelle), puis le retournement (« et elle ne couvre même pas tout le pays »).
+- **Vérifier chaque fait avant la voix** ; si une formule courante est fausse ou dépassée, la reformuler honnêtement (« presque aussi grand ») et le dire au client.
+- Nombres : **dits en toutes lettres dans le texte de la voix, affichés en chiffres à l'écran** (les mots en trop du nombre sont vides dans `WORDS`, `.w:empty { display: none }`).
+- Viser **≈ 65 s**.
+
 ## Fin : faire commenter
 
 - Question ouverte ou OUI / NON, boutons OUI / NON en ressort, bulle blanche « Répondez ici » + flèche rouge animée vers le bouton commentaires de TikTok (`left: 860px; top: 1180px`).
