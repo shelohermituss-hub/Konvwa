@@ -72,13 +72,28 @@ Et [l'accusateur], alors ? [Ce qu'il doit à l'accusé, en rafale.]
 
 ## 3. Production
 
-- **Voix** : FLORA / Gemini TTS « Charon » (fr-FR ou en-US). Consigne : « narrateur TikTok qui démonte un mythe, débit rapide, aucune longue pause ». Faire 2 prises.
+- **Voix** :
+  - Analyse de la référence : voix d'homme jeune (20–30 ans), accent de France, synthétique (type ElevenLabs), énergique, débit d'environ 240 mots/min. Hauteur médiane d'environ 200 Hz, donc nettement plus aiguë et vive que « Charon » (128 Hz).
+  - Voix la plus proche mesurée (timbre MFCC) : **Thomas Perrin** (catalogue ElevenLabs de Magnific, `audio_tts`, modèle `eleven_v4`), avant Gabriel Dubois, Maxime Giraud et Théo Laurent. Charon est la plus éloignée.
+  - Consigne en tête du texte : `[energetic, punchy, fast delivery]`, MAJUSCULES sur le mot à frapper (« c'est FAUX »).
+  - Coût : 58 crédits Magnific pour un extrait de 13 s, soit environ 270 crédits pour une minute de voix.
+  - Ne pas cloner la voix du créateur de la référence : on prend une voix du catalogue qui s'en approche.
+  - Charon (FLORA) reste possible pour un ton plus grave de documentaire.
 - **Temps des mots** :
   - Whisper mot à mot sur la prise entière (`npx hyperframes transcribe … --json`), car la voix ne fait presque pas de pauses ;
   - corriger les noms mal entendus en comparant avec l'autre prise ;
   - puis `align_voice.py` : pauses à 0,14–0,16 s, tempo ×1,1 à ×1,18 pour arriver vers 210–230 mots/min.
-- **Musique** : `../style-histoire/musique-bed.mp3` en **continu** (pas de scratch), un peu plus présente que dans le style RÉEL (volume 0,3).
-- **Sons** : souffle court sur chaque coupe, pop sur chaque objet, clic et basse sur les tampons, montée sous les compteurs.
+- **Musique** : `../style-histoire/musique-bed.mp3` en **continu** (pas de scratch). Dans la référence, la musique est un fond de suspense (nappe, pulsation grave), constant, environ 9 dB sous la voix (voix −21 LUFS, musique + sons −29,6 LUFS avant mastering).
+- **Sons : trois couches** (mesurées sur la référence en séparant voix et fond avec Demucs : 80 sons en 98 s, soit **un son toutes les 1,2 s**) :
+  1. **Bruitage illustratif sur chaque dessin.** C'est la couche qui manquait. Chaque objet qui apparaît a son vrai son :
+     - mouches, parfum, tampon, horloge, tonnerre, chaînes, goutte d'eau ;
+     - scintillement, balance, compteur, papier, plume, feu, ping sur la carte ;
+     - frottement, éclaboussure, forge, pièces, usine, canon, pluie.
+  2. **Boom grave de cinéma** (sous-basse 55–67 Hz, environ 1,2 s, +25 dB au-dessus de la musique), environ 16 par vidéo, uniquement sur les phrases fortes : les deux affirmations de l'accroche, « FAUX », « Aucune preuve », les questions d'ouverture, les grands chiffres, la phrase miroir.
+  3. **Liaisons** : souffle (whoosh) court sur les coupes, montée (riser) avant un retournement.
+- **Banque de sons** : `sfx/` contient 25 sons générés avec Magnific (ElevenLabs SFX, environ 225 crédits), normalisés à −1 dB crête. Le fichier porte le nom du son : `boom-cine`, `riser`, `whoosh`, `tampon`, `ding`, `scintille`, `compteur`, `ping-carte`, `papier`, `plume`, `balance`, `horloge`, `goutte`, `eclaboussure`, `spray`, `frottement`, `mouches`, `chaines`, `pieces`, `forge`, `usine`, `feu`, `tonnerre`, `canon`, `pluie`.
+  - Un son manque pour un nouveau dessin ? Le générer avec `audio_sfx_generate` (1–3 s, 5 crédits par seconde) et l'ajouter ici.
+  - Volumes conseillés : bruitages 0,25–0,4, boom 0,35–0,45, whoosh 0,2.
 - **Rendu** :
   1. `npx --yes hyperframes@0.8.168 render --fps 120 --quality looks --output renders/raw120.mp4`
   2. `python3 -I ../_engine/style-histoire/finish.py …` (60 i/s, −14 LUFS)
