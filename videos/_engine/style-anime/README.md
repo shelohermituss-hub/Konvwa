@@ -74,7 +74,11 @@ Et [l'accusateur], alors ? [Ce qu'il doit à l'accusé, en rafale.]
 
 - **Voix** :
   - Analyse de la référence : voix d'homme jeune (20–30 ans), accent de France, synthétique (type ElevenLabs), énergique, débit d'environ 240 mots/min. Hauteur médiane d'environ 200 Hz, donc nettement plus aiguë et vive que « Charon » (128 Hz).
-  - Voix la plus proche mesurée (timbre MFCC) : **Thomas Perrin** (catalogue ElevenLabs de Magnific, `audio_tts`, modèle `eleven_v4`), avant Gabriel Dubois, Maxime Giraud et Théo Laurent. Charon est la plus éloignée.
+  - **Voix choisie par le client : Gabriel Dubois.** C'est la voix n° 3 du comparatif, issue du catalogue ElevenLabs de Magnific :
+    - outil `audio_tts`, `voiceId` 480, modèle `eleven_v4` ;
+    - homme jeune, accent de France ;
+    - c'est la plus rapide des voix testées (12,2 s pour l'extrait, contre environ 13 s pour les autres).
+  - Au comparatif de timbre (MFCC), il arrivait 2ᵉ derrière Thomas Perrin (`voiceId` 482). Charon était la plus éloignée.
   - Consigne en tête du texte : `[energetic, punchy, fast delivery]`, MAJUSCULES sur le mot à frapper (« c'est FAUX »).
   - Coût : 58 crédits Magnific pour un extrait de 13 s, soit environ 270 crédits pour une minute de voix.
   - Ne pas cloner la voix du créateur de la référence : on prend une voix du catalogue qui s'en approche.
