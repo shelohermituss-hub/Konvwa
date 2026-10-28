@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Les Noirs n'ont jamais rien inventé ? Faux.</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Style ANIMÉ (videos/_engine/style-anime/README.md), en français, sur le gabarit de script :
+      mythe en deux affirmations (« jamais rien inventé », « tout vient des Blancs ») → « c'est faux, je vais te le prouver » →
+      question 1 : Ned (1857), brevet refusé deux fois, décision de 1858 → « on leur interdisait de porter un nom » →
+      question 2 : preuves en rafale (Morgan 1923, Latimer 1882, Drew années 40, Lawson, Johnson) → phrase miroir.
+      Tout est dessiné en SVG et CSS dans ce fichier (aucune image).
+    -->
+    <style>
+      @font-face { font-family: "Bebas"; src: url("assets/fonts/bebas-neue.woff2") format("woff2"); }
+      @font-face { font-family: "Anton"; src: url("assets/fonts/anton.woff2") format("woff2"); }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0d0d12; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #0d0d12; font-family: "Bebas", sans-serif; }
+      .scene { position: absolute; inset: 0; overflow: hidden; visibility: hidden; }
+      .cam { position: absolute; inset: 0; transform-origin: 50% 55%; }
+      .bg { position: absolute; inset: 0; }
+      .vig { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 60% at 50% 48%, transparent 40%, rgba(0, 0, 0, 0.72) 100%); pointer-events: none; }
+      svg { position: absolute; overflow: visible; }
+      .bust { position: absolute; width: 620px; height: 723px; }
+      .frame { position: absolute; width: 290px; height: 350px; box-sizing: border-box; border: 16px solid #c9962e; border-radius: 8px; background: #e8d5b0; box-shadow: inset 0 0 0 4px #7a5418, 0 14px 30px rgba(0, 0, 0, 0.6); overflow: hidden; }
+      .frame .in { position: absolute; left: -12px; top: 22px; width: 282px; height: 329px; }
+      .sepia .in { filter: sepia(1) saturate(0.6) brightness(0.92); }
+      .sepia { background: #d9c49a; border-color: #8a6a2e; }
+      .ic { position: absolute; width: 170px; height: 170px; }
+      #caps { position: absolute; left: 40px; right: 40px; top: 1420px; height: 120px; z-index: 50; }
+      .grp { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: center; align-items: center; column-gap: 6px; visibility: hidden; }
+      .cw { position: relative; font-size: 84px; line-height: 1; color: #fff; letter-spacing: 0.01em; text-transform: uppercase; padding: 6px 10px 2px; -webkit-text-stroke: 3px #111; paint-order: stroke fill; text-shadow: 0 5px 0 rgba(0, 0, 0, 0.7), 0 0 22px rgba(0, 0, 0, 0.8); white-space: nowrap; }
+      .cw::before { content: ""; position: absolute; inset: 0; border-radius: 12px; background: #d7263d; opacity: var(--on, 0); z-index: -1; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35); }
+      #prog { position: absolute; left: 0; top: 0; height: 9px; width: 1080px; background: #f2b705; transform-origin: 0 50%; z-index: 60; box-shadow: 0 0 12px rgba(242, 183, 5, 0.7); }
+      #progbg { position: absolute; left: 0; top: 0; height: 9px; width: 1080px; background: rgba(255, 255, 255, 0.12); z-index: 59; }
+      .gold { position: absolute; font-family: "Anton", sans-serif; color: #ffc93c; text-shadow: 0 0 30px rgba(255, 190, 40, 0.75), 0 0 80px rgba(255, 150, 0, 0.45), 0 6px 0 #9a5b00; letter-spacing: 0.01em; line-height: 1; text-align: center; white-space: nowrap; }
+      .stamp { position: absolute; padding: 8px 34px 2px; border: 12px solid #d7263d; border-radius: 18px; color: #d7263d; font-family: "Anton", sans-serif; font-size: 140px; line-height: 1; letter-spacing: 0.04em; background: rgba(255, 245, 230, 0.92); white-space: nowrap; }
+      .plate { position: absolute; padding: 10px 30px 4px; border-radius: 14px; background: #f3e3c3; color: #3a2312; font-family: "Anton", sans-serif; font-size: 56px; letter-spacing: 0.05em; box-shadow: 0 10px 0 #b38a55, 0 20px 40px rgba(0, 0, 0, 0.5); white-space: nowrap; }
+      .red { background: #d7263d; color: #fff; box-shadow: 0 10px 0 #8a1020, 0 20px 40px rgba(0, 0, 0, 0.5); }
+      .name { position: absolute; width: 290px; text-align: center; font-family: "Anton", sans-serif; font-size: 46px; color: #ffe6a0; letter-spacing: 0.04em; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.7); white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="63.3" data-width="1080" data-height="1920">
+      <!-- 1. hook: a museum wall « LES GRANDS INVENTEURS », three white inventors in sepia frames; everyday inventions -->
+      <div class="scene" id="s1"><div class="cam">
+        <div class="bg" style="background: repeating-linear-gradient(90deg, #4a1e22 0 46px, #3c171b 46px 52px, #521f25 52px 98px, #3c171b 98px 104px)"></div><div class="vig"></div>
+        <div class="plate" id="pl1" style="left: 175px; top: 300px; font-size: 64px">LES GRANDS INVENTEURS</div>
+        <div class="frame sepia" id="f1a" style="left: 45px; top: 520px"><div class="in" id="w1a"></div></div>
+        <div class="frame sepia" id="f1b" style="left: 395px; top: 520px"><div class="in" id="w1b"></div></div>
+        <div class="frame sepia" id="f1c" style="left: 745px; top: 520px"><div class="in" id="w1c"></div></div>
+        <svg class="ic" id="i1a" viewBox="0 0 200 200" style="left: 65px; top: 1000px"></svg>
+        <svg class="ic" id="i1b" viewBox="0 0 200 200" style="left: 320px; top: 1000px"></svg>
+        <svg class="ic" id="i1c" viewBox="0 0 200 200" style="left: 590px; top: 1000px"></svg>
+        <svg class="ic" id="i1d" viewBox="0 0 200 200" style="left: 845px; top: 1000px"></svg>
+      </div></div>
+      <!-- 2. « c'est ce qu'on veut te faire croire » : a schoolbook « HISTOIRE DES INVENTIONS » ; FAUX -->
+      <div class="scene" id="s2"><div class="cam">
+        <div class="bg" style="background: repeating-linear-gradient(90deg, #4a2f1c 0 46px, #3d2616 46px 52px, #53351f 52px 98px, #3d2616 98px 104px)"></div><div class="vig"></div>
+        <svg id="book2" viewBox="0 0 900 640" style="left: 90px; top: 520px; width: 900px; height: 640px"></svg>
+        <div class="stamp" id="faux2" style="left: 300px; top: 700px">FAUX</div>
+      </div></div>
+      <!-- 3. « Jamais rien inventé ? 1857, États-Unis, un esclave nommé Ned invente une charrue pour le coton » -->
+      <div class="scene" id="s3"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #2a1838 0%, #8a3a2a 45%, #e08a3a 70%, #3a2a1a 71%, #241a10 100%)"></div>
+        <svg id="sun3" viewBox="0 0 1080 1920" style="left: 0; top: 0; width: 1080px; height: 1920px"><circle cx="760" cy="1300" r="170" fill="#ffd36a" opacity="0.85" /></svg>
+        <svg id="field3" viewBox="0 0 1080 1920" style="left: 0; top: 0; width: 1080px; height: 1920px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q3" style="left: 0; right: 0; top: 260px; font-size: 150px">JAMAIS RIEN ?</div>
+        <div class="gold" id="y3" style="left: 0; right: 0; top: 200px; font-size: 220px">1857</div>
+        <div class="plate" id="us3" style="left: 330px; top: 500px">ÉTATS-UNIS</div>
+        <div class="plate" id="nl3" style="left: 150px; top: 640px; background: #ffc93c">NED</div>
+        <div class="bust" id="ned3" style="left: -60px; top: 700px"></div>
+        <svg id="pl3" viewBox="0 0 480 360" style="left: 560px; top: 960px; width: 480px; height: 360px"></svg>
+      </div></div>
+      <!-- 4. « Son maître veut la breveter à son nom. Refusé : ce n'est pas lui l'inventeur » -->
+      <div class="scene" id="s4"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #5a3a22 0%, #2a1a0e 55%, #0e0804 100%)"></div><div class="vig"></div>
+        <div class="bust" id="m4" style="left: -80px; top: 760px"></div>
+        <svg id="doc4" viewBox="0 0 480 620" style="left: 540px; top: 520px; width: 480px; height: 620px"></svg>
+        <div class="plate" id="ml4" style="left: 60px; top: 600px">LE MAÎTRE</div>
+        <div class="stamp" id="r4" style="left: 330px; top: 760px; font-size: 120px">REFUSÉ</div>
+      </div></div>
+      <!-- 5. « Et Ned ? Esclave, donc pas citoyen. Pas de brevet non plus » -->
+      <div class="scene" id="s5"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a3a46 0%, #1c1c24 55%, #08080c 100%)"></div><div class="vig"></div>
+        <div class="bust" id="ned5" style="left: 230px; top: 640px"></div>
+        <svg id="chain5" viewBox="0 0 1080 200" style="left: 0; top: 1200px; width: 1080px; height: 200px"></svg>
+        <div class="plate" id="e5" style="left: 360px; top: 470px">ESCLAVE</div>
+        <div class="plate red" id="c5" style="left: 300px; top: 470px">PAS CITOYEN</div>
+        <div class="stamp" id="b5" style="left: 110px; top: 250px; font-size: 104px">PAS DE BREVET</div>
+      </div></div>
+      <!-- 6. « Un an plus tard, l'État américain l'écrit noir sur blanc : un esclave ne peut pas breveter son invention » -->
+      <div class="scene" id="s6"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 50%, #2a3448 0%, #141a26 55%, #06080c 100%)"></div><div class="vig"></div>
+        <div class="gold" id="y6" style="left: 0; right: 0; top: 190px; font-size: 200px">1858</div>
+        <svg id="doc6" viewBox="0 0 800 880" style="left: 140px; top: 440px; width: 800px; height: 880px"></svg>
+      </div></div>
+      <!-- 7. « Les inventions noires existaient. On leur interdisait juste de porter un nom » : the inventor's name is blacked out -->
+      <div class="scene" id="s7"><div class="cam">
+        <div class="bg" style="background: repeating-linear-gradient(90deg, #22303e 0 46px, #1c2834 46px 52px, #263646 52px 98px, #1c2834 98px 104px)"></div><div class="vig"></div>
+        <svg id="pat7" viewBox="0 0 800 900" style="left: 140px; top: 300px; width: 800px; height: 900px"></svg>
+        <div class="stamp" id="sn7" style="left: 250px; top: 1120px; font-size: 110px">SANS NOM</div>
+      </div></div>
+      <!-- 8. « Et tout ce que tu utilises vient des Blancs ? » : a big question mark, everyday inventions spin around -->
+      <div class="scene" id="s8"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 42%, #4a3a12 0%, #221a08 55%, #0a0804 100%)"></div><div class="vig"></div>
+        <svg id="ring8" viewBox="-540 -540 1080 1080" style="left: 0; top: 260px; width: 1080px; height: 1080px"></svg>
+        <div class="gold" id="q8" style="left: 0; right: 0; top: 530px; font-size: 520px">?</div>
+      </div></div>
+      <!-- 9. « Le feu de signalisation à trois positions : Garrett Morgan, brevet de 1923 » -->
+      <div class="scene" id="s9"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #0e1424 0%, #1a2238 60%, #10141c 100%)"></div><div class="vig"></div>
+        <svg id="tl9" viewBox="0 0 300 760" style="left: 660px; top: 330px; width: 300px; height: 760px"></svg>
+        <div class="gold" id="p9" style="left: 0; right: 0; top: 190px; font-size: 120px">3 POSITIONS</div>
+        <div class="gold" id="y9" style="left: 0; right: 0; top: 170px; font-size: 200px">1923</div>
+        <div class="bust" id="mo9" style="left: -80px; top: 760px"></div>
+        <div class="plate" id="ml9" style="left: 40px; top: 640px">GARRETT MORGAN</div>
+      </div></div>
+      <!-- 10. « une cagoule respiratoire… il est descendu lui-même dans un tunnel rempli de gaz pour sauver des ouvriers » -->
+      <div class="scene" id="s10"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 45% 40% at 50% 55%, #2a3a2a 0%, #121a12 60%, #060806 100%)"></div>
+        <svg id="tun10" viewBox="0 0 1080 1920" style="left: 0; top: 0; width: 1080px; height: 1920px"></svg>
+        <svg id="wk10" viewBox="0 0 1080 1920" style="left: 0; top: 0; width: 1080px; height: 1920px"></svg>
+        <svg id="rope10" viewBox="0 0 1080 1920" style="left: 0; top: 0; width: 1080px; height: 1920px"><path id="rp10" d="M540,-20 L540,700" stroke="#b39a6a" stroke-width="10" /></svg>
+        <svg id="fig10" viewBox="0 0 300 560" style="left: 390px; top: 560px; width: 300px; height: 560px"></svg>
+        <svg id="smoke10" viewBox="0 0 1080 1920" style="left: 0; top: 0; width: 1080px; height: 1920px"></svg>
+        <svg id="hood10" viewBox="0 0 400 460" style="left: 340px; top: 540px; width: 400px; height: 460px"></svg>
+        <div class="vig"></div>
+        <div class="plate" id="cg10" style="left: 120px; top: 300px; background: #ffc93c">CAGOULE RESPIRATOIRE</div>
+        <div class="gold" id="gz10" style="left: 0; right: 0; top: 180px; font-size: 160px; color: #9be27a; text-shadow: 0 0 30px rgba(120, 220, 80, 0.8), 0 6px 0 #2a5a1a">GAZ</div>
+      </div></div>
+      <!-- 11. « L'ampoule qui dure : Lewis Latimer, fils d'esclaves en fuite… filament de carbone… 1882 » -->
+      <div class="scene" id="s11"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 70% 35%, #2a2418 0%, #14100a 55%, #060504 100%)"></div>
+        <svg id="rays11" viewBox="-1000 -1000 2000 2000" style="left: -200px; top: -380px; width: 2000px; height: 2000px; opacity: 0"></svg>
+        <div class="vig"></div>
+        <svg id="bulb11" viewBox="0 0 200 200" style="left: 600px; top: 380px; width: 400px; height: 400px"></svg>
+        <div class="gold" id="y11" style="left: 0; right: 0; top: 170px; font-size: 200px">1882</div>
+        <div class="bust" id="la11" style="left: -80px; top: 760px"></div>
+        <div class="plate" id="ll11" style="left: 40px; top: 640px">LEWIS LATIMER</div>
+        <div class="plate red" id="fe11" style="left: 40px; top: 640px; font-size: 50px">FILS D'ESCLAVES EN FUITE</div>
+        <div class="plate" id="fc11" style="left: 40px; top: 640px; font-size: 50px; background: #ffc93c">FILAMENT DE CARBONE</div>
+      </div></div>
+      <!-- 12. « Les banques de sang : Charles Drew, dans les années 40 » -->
+      <div class="scene" id="s12"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a2a34 0%, #1a1218 55%, #08060a 100%)"></div><div class="vig"></div>
+        <svg id="bag12a" viewBox="0 0 340 460" style="left: 560px; top: 420px; width: 220px; height: 298px"></svg>
+        <svg id="bag12b" viewBox="0 0 340 460" style="left: 800px; top: 470px; width: 220px; height: 298px"></svg>
+        <div class="gold" id="y12" style="left: 0; right: 0; top: 190px; font-size: 150px">ANNÉES 40</div>
+        <div class="bust" id="dr12" style="left: -80px; top: 760px"></div>
+        <div class="plate" id="dl12" style="left: 40px; top: 640px">CHARLES DREW</div>
+      </div></div>
+      <!-- 13. « Ironie : la Croix-Rouge américaine sépare alors le sang des Noirs et des Blancs » -->
+      <div class="scene" id="s13"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a3a40 0%, #1a1a20 55%, #08080a 100%)"></div><div class="vig"></div>
+        <div class="gold" id="ir13" style="left: 0; right: 0; top: 170px; font-size: 170px">IRONIE</div>
+        <svg id="rc13" viewBox="0 0 300 300" style="left: 420px; top: 400px; width: 240px; height: 240px"><circle cx="150" cy="150" r="140" fill="#f4f1e8" stroke="#c9b48a" stroke-width="8" /><path d="M115,50 H185 V115 H250 V185 H185 V250 H115 V185 H50 V115 H115Z" fill="#d7263d" /></svg>
+        <svg id="bn13" viewBox="0 0 340 460" style="left: 200px; top: 760px; width: 300px; height: 406px"></svg>
+        <svg id="bb13" viewBox="0 0 340 460" style="left: 580px; top: 760px; width: 300px; height: 406px"></svg>
+        <div id="wall13" style="position: absolute; left: 524px; top: 700px; width: 32px; height: 520px; background: #d7263d; border-radius: 8px; transform-origin: 50% 100%; box-shadow: 0 0 24px rgba(215, 38, 61, 0.6)"></div>
+      </div></div>
+      <!-- 14. « Il dénonce cette règle et quitte son poste » -->
+      <div class="scene" id="s14"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #6a1a1a 0%, #3a0c0c 55%, #120404 100%)"></div><div class="vig"></div>
+        <svg id="rays14" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -40px; width: 2000px; height: 2000px; opacity: 0.2"></svg>
+        <div class="bust" id="dr14" style="left: 230px; top: 680px"></div>
+        <svg id="rule14" viewBox="0 0 520 300" style="left: 280px; top: 300px; width: 520px; height: 300px"></svg>
+        <div class="stamp" id="q14" style="left: 70px; top: 330px; font-size: 92px">IL QUITTE SON POSTE</div>
+      </div></div>
+      <!-- 15. « Et les jeux vidéo ? Jerry Lawson dirige la création de la première console à cartouches » -->
+      <div class="scene" id="s15"><div class="cam">
+        <div class="bg" style="background: repeating-linear-gradient(0deg, #3a2210 0 60px, #4a2c14 60px 120px)"></div>
+        <div class="bg" style="background: linear-gradient(180deg, rgba(232, 120, 40, 0.35), rgba(20, 10, 4, 0.6))"></div><div class="vig"></div>
+        <svg id="tv15" viewBox="0 0 440 380" style="left: 580px; top: 300px; width: 440px; height: 380px"></svg>
+        <svg id="cart15" viewBox="0 0 180 220" style="left: 710px; top: 590px; width: 180px; height: 220px"></svg>
+        <svg id="con15" viewBox="0 0 440 300" style="left: 580px; top: 760px; width: 440px; height: 300px"></svg>
+        <div class="gold" id="g15" style="left: 0; right: 0; top: 150px; font-size: 92px; line-height: 1.05">1<sup style="font-size: 50px">RE</sup> CONSOLE<br />À CARTOUCHES</div>
+        <div class="bust" id="lw15" style="left: -80px; top: 760px"></div>
+        <div class="plate" id="jl15" style="left: 40px; top: 640px">JERRY LAWSON</div>
+      </div></div>
+      <!-- 16. « Et Lonnie Johnson, ingénieur de la NASA, invente le Super Soaker » -->
+      <div class="scene" id="s16"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #0a1030 0%, #1a2a5a 60%, #0a1430 100%)"></div>
+        <svg id="stars16" viewBox="0 0 1080 1920" style="left: 0; top: 0; width: 1080px; height: 1920px"></svg>
+        <div class="vig"></div>
+        <svg id="rk16" viewBox="0 0 200 200" style="left: 700px; top: 330px; width: 260px; height: 260px"></svg>
+        <svg id="wg16" viewBox="0 0 200 200" style="left: 560px; top: 820px; width: 460px; height: 460px; transform: scaleX(-1)"></svg>
+        <svg id="sp16" viewBox="0 0 1080 1920" style="left: 0; top: 0; width: 1080px; height: 1920px"></svg>
+        <div class="gold" id="ss16" style="left: 0; right: 0; top: 170px; font-size: 150px">SUPER SOAKER</div>
+        <div class="bust" id="jo16" style="left: -80px; top: 760px"></div>
+        <div class="plate" id="jn16" style="left: 40px; top: 640px">LONNIE JOHNSON</div>
+        <div class="plate" id="na16" style="left: 40px; top: 640px; background: #ffc93c">INGÉNIEUR NASA</div>
+      </div></div>
+      <!-- 17. mirror line: the six inventors in gold frames; their names are finally signed -->
+      <div class="scene" id="s17"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #c98a1c 0%, #6b3d08 55%, #1b0f03 100%)"></div>
+        <svg id="rays17" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -260px; width: 2000px; height: 2000px; opacity: 0.3"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="fin17" style="left: 0; right: 0; top: 150px; font-size: 104px">INTERDITS DE SIGNER</div>
+        <div class="frame" id="f17a" style="left: 45px; top: 330px"><div class="in" id="g17a"></div></div>
+        <div class="frame" id="f17b" style="left: 395px; top: 330px"><div class="in" id="g17b"></div></div>
+        <div class="frame" id="f17c" style="left: 745px; top: 330px"><div class="in" id="g17c"></div></div>
+        <div class="frame" id="f17d" style="left: 45px; top: 790px"><div class="in" id="g17d"></div></div>
+        <div class="frame" id="f17e" style="left: 395px; top: 790px"><div class="in" id="g17e"></div></div>
+        <div class="frame" id="f17f" style="left: 745px; top: 790px"><div class="in" id="g17f"></div></div>
+        <div class="name" id="n17a" style="left: 45px; top: 686px">NED</div>
+        <div class="name" id="n17b" style="left: 395px; top: 686px">G. MORGAN</div>
+        <div class="name" id="n17c" style="left: 745px; top: 686px">L. LATIMER</div>
+        <div class="name" id="n17d" style="left: 45px; top: 1146px">C. DREW</div>
+        <div class="name" id="n17e" style="left: 395px; top: 1146px">J. LAWSON</div>
+        <div class="name" id="n17f" style="left: 745px; top: 1146px">L. JOHNSON</div>
+      </div></div>
+
+      <div id="caps"></div>
+      <div id="progbg"></div>
+      <div id="prog"></div>
+
+      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="62.25" data-track-index="10" data-volume="1"></audio>
+      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="63.3" data-track-index="11" data-volume="0.3"></audio>
+      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
+      <audio id="sx0" src="assets/sfx/whoosh.mp3" data-start="0" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx1" src="assets/sfx/impact-bass-1.mp3" data-start="0.02" data-duration="2.12" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx2" src="assets/sfx/pop.mp3" data-start="0.1" data-duration="0.72" data-track-index="22" data-volume="0.14"></audio>
+      <audio id="sx3" src="assets/sfx/pop.mp3" data-start="0.2" data-duration="0.72" data-track-index="23" data-volume="0.14"></audio>
+      <audio id="sx4" src="assets/sfx/pop.mp3" data-start="0.3" data-duration="0.72" data-track-index="24" data-volume="0.14"></audio>
+      <audio id="sx5" src="assets/sfx/pop.mp3" data-start="1.81" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx6" src="assets/sfx/pop.mp3" data-start="1.93" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx7" src="assets/sfx/pop.mp3" data-start="2.05" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx8" src="assets/sfx/pop.mp3" data-start="2.17" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx9" src="assets/sfx/whoosh-short.mp3" data-start="3.28" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx10" src="assets/sfx/pop.mp3" data-start="3.33" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx11" src="assets/sfx/click.mp3" data-start="5.74" data-duration="0.37" data-track-index="20" data-volume="0.45"></audio>
+      <audio id="sx12" src="assets/sfx/impact-bass-2.mp3" data-start="5.76" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx13" src="assets/sfx/whoosh-short.mp3" data-start="6.86" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx14" src="assets/sfx/pop.mp3" data-start="6.91" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx15" src="assets/sfx/riser.mp3" data-start="8.19" data-duration="0.42" data-track-index="20" data-volume="0.07"></audio>
+      <audio id="sx16" src="assets/sfx/impact-bass-1.mp3" data-start="8.66" data-duration="2.12" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx17" src="assets/sfx/pop.mp3" data-start="8.83" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx18" src="assets/sfx/pop.mp3" data-start="10.85" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx19" src="assets/sfx/whoosh.mp3" data-start="11.62" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx20" src="assets/sfx/whoosh-short.mp3" data-start="12.62" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx21" src="assets/sfx/pop.mp3" data-start="13.22" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx22" src="assets/sfx/click.mp3" data-start="14.39" data-duration="0.37" data-track-index="20" data-volume="0.45"></audio>
+      <audio id="sx23" src="assets/sfx/impact-bass-2.mp3" data-start="14.41" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx24" src="assets/sfx/whoosh-short.mp3" data-start="15.93" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx25" src="assets/sfx/roulement.mp3" data-start="16.18" data-duration="0.8" data-track-index="22" data-volume="0.15"></audio>
+      <audio id="sx26" src="assets/sfx/pop.mp3" data-start="16.23" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx27" src="assets/sfx/pop.mp3" data-start="16.97" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx28" src="assets/sfx/click.mp3" data-start="17.82" data-duration="0.37" data-track-index="20" data-volume="0.45"></audio>
+      <audio id="sx29" src="assets/sfx/impact-bass-2.mp3" data-start="17.84" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx30" src="assets/sfx/whoosh-short.mp3" data-start="19.01" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx31" src="assets/sfx/riser.mp3" data-start="19.01" data-duration="0.5" data-track-index="22" data-volume="0.07"></audio>
+      <audio id="sx32" src="assets/sfx/pop.mp3" data-start="19.33" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx33" src="assets/sfx/impact-bass-1.mp3" data-start="19.56" data-duration="2.12" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx34" src="assets/sfx/grains.mp3" data-start="21.74" data-duration="1.33" data-track-index="20" data-volume="0.12"></audio>
+      <audio id="sx35" src="assets/sfx/impact-bass-2.mp3" data-start="22.93" data-duration="2.59" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx36" src="assets/sfx/whoosh-short.mp3" data-start="23.99" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx37" src="assets/sfx/pop.mp3" data-start="24.04" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx38" src="assets/sfx/dechirure.mp3" data-start="25.92" data-duration="0.84" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx39" src="assets/sfx/click.mp3" data-start="27.37" data-duration="0.37" data-track-index="20" data-volume="0.45"></audio>
+      <audio id="sx40" src="assets/sfx/impact-bass-2.mp3" data-start="27.39" data-duration="2.59" data-track-index="21" data-volume="0.35"></audio>
+      <audio id="sx41" src="assets/sfx/whoosh-short.mp3" data-start="27.49" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx42" src="assets/sfx/sparkle.mp3" data-start="27.59" data-duration="1.8" data-track-index="23" data-volume="0.18"></audio>
+      <audio id="sx43" src="assets/sfx/pop.mp3" data-start="27.59" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx44" src="assets/sfx/whoosh-short.mp3" data-start="29.4" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx45" src="assets/sfx/click-soft.mp3" data-start="29.51" data-duration="0.37" data-track-index="22" data-volume="0.4"></audio>
+      <audio id="sx46" src="assets/sfx/click-soft.mp3" data-start="29.61" data-duration="0.37" data-track-index="23" data-volume="0.4"></audio>
+      <audio id="sx47" src="assets/sfx/click-soft.mp3" data-start="30.27" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx48" src="assets/sfx/pop.mp3" data-start="30.27" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx49" src="assets/sfx/pop.mp3" data-start="31.26" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx50" src="assets/sfx/riser.mp3" data-start="32.32" data-duration="0.6" data-track-index="20" data-volume="0.07"></audio>
+      <audio id="sx51" src="assets/sfx/whoosh-short.mp3" data-start="32.58" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx52" src="assets/sfx/impact-bass-1.mp3" data-start="32.97" data-duration="2.12" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx53" src="assets/sfx/pop.mp3" data-start="33.85" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx54" src="assets/sfx/whoosh.mp3" data-start="35.49" data-duration="0.57" data-track-index="20" data-volume="0.22"></audio>
+      <audio id="sx55" src="assets/sfx/impact-bass-1.mp3" data-start="36.44" data-duration="2.12" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx56" src="assets/sfx/pop.mp3" data-start="37.29" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx57" src="assets/sfx/sparkle.mp3" data-start="37.63" data-duration="1.8" data-track-index="22" data-volume="0.16"></audio>
+      <audio id="sx58" src="assets/sfx/whoosh-short.mp3" data-start="38.43" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx59" src="assets/sfx/click-soft.mp3" data-start="38.8" data-duration="0.37" data-track-index="20" data-volume="0.4"></audio>
+      <audio id="sx60" src="assets/sfx/sparkle.mp3" data-start="38.8" data-duration="1.8" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx61" src="assets/sfx/pop.mp3" data-start="39.35" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx62" src="assets/sfx/pop.mp3" data-start="40.01" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx63" src="assets/sfx/pop.mp3" data-start="42.06" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx64" src="assets/sfx/riser.mp3" data-start="43.86" data-duration="0.6" data-track-index="20" data-volume="0.07"></audio>
+      <audio id="sx65" src="assets/sfx/whoosh-short.mp3" data-start="43.94" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx66" src="assets/sfx/pop.mp3" data-start="43.99" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx67" src="assets/sfx/pop.mp3" data-start="44.21" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx68" src="assets/sfx/impact-bass-1.mp3" data-start="44.51" data-duration="2.12" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx69" src="assets/sfx/pop.mp3" data-start="44.84" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx70" src="assets/sfx/pop.mp3" data-start="45.74" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx71" src="assets/sfx/whoosh-short.mp3" data-start="46.21" data-duration="0.57" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx72" src="assets/sfx/pop.mp3" data-start="46.26" data-duration="0.72" data-track-index="23" data-volume="0.2"></audio>
+      <audio id="sx73" src="assets/sfx/pop.mp3" data-start="46.44" data-duration="0.72" data-track-index="24" data-volume="0.2"></audio>
+      <audio id="sx74" src="assets/sfx/pop.mp3" data-start="47.45" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx75" src="assets/sfx/impact-bass-2.mp3" data-start="48.0" data-duration="2.59" data-track-index="21" data-volume="0.3"></audio>
+      <audio id="sx76" src="assets/sfx/whoosh-short.mp3" data-start="49.29" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx77" src="assets/sfx/pop.mp3" data-start="49.4" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx78" src="assets/sfx/scratch.mp3" data-start="49.97" data-duration="1.23" data-track-index="20" data-volume="0.25"></audio>
+      <audio id="sx79" src="assets/sfx/click.mp3" data-start="50.48" data-duration="0.37" data-track-index="22" data-volume="0.45"></audio>
+      <audio id="sx80" src="assets/sfx/impact-bass-2.mp3" data-start="50.5" data-duration="2.59" data-track-index="23" data-volume="0.35"></audio>
+      <audio id="sx81" src="assets/sfx/whoosh-short.mp3" data-start="51.12" data-duration="0.57" data-track-index="21" data-volume="0.2"></audio>
+      <audio id="sx82" src="assets/sfx/pop.mp3" data-start="51.17" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx83" src="assets/sfx/pop.mp3" data-start="51.38" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx84" src="assets/sfx/whoosh-short.mp3" data-start="52.16" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx85" src="assets/sfx/pop.mp3" data-start="53.32" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx86" src="assets/sfx/claque.mp3" data-start="54.06" data-duration="0.39" data-track-index="20" data-volume="0.3"></audio>
+      <audio id="sx87" src="assets/sfx/chime.mp3" data-start="54.14" data-duration="2.54" data-track-index="21" data-volume="0.18"></audio>
+      <audio id="sx88" src="assets/sfx/whoosh-short.mp3" data-start="54.81" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx89" src="assets/sfx/pop.mp3" data-start="54.92" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx90" src="assets/sfx/pop.mp3" data-start="55.94" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx91" src="assets/sfx/whoosh.mp3" data-start="56.25" data-duration="0.57" data-track-index="22" data-volume="0.22"></audio>
+      <audio id="sx92" src="assets/sfx/whoosh-short.mp3" data-start="56.93" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx93" src="assets/sfx/grains.mp3" data-start="57.1" data-duration="1.33" data-track-index="21" data-volume="0.16"></audio>
+      <audio id="sx94" src="assets/sfx/pop.mp3" data-start="57.1" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
+      <audio id="sx95" src="assets/sfx/whoosh-short.mp3" data-start="57.68" data-duration="0.57" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx96" src="assets/sfx/pop.mp3" data-start="57.78" data-duration="0.72" data-track-index="23" data-volume="0.15"></audio>
+      <audio id="sx97" src="assets/sfx/pop.mp3" data-start="57.94" data-duration="0.72" data-track-index="22" data-volume="0.15"></audio>
+      <audio id="sx98" src="assets/sfx/pop.mp3" data-start="58.1" data-duration="0.72" data-track-index="24" data-volume="0.15"></audio>
+      <audio id="sx99" src="assets/sfx/pop.mp3" data-start="58.26" data-duration="0.72" data-track-index="20" data-volume="0.15"></audio>
+      <audio id="sx100" src="assets/sfx/pop.mp3" data-start="58.42" data-duration="0.72" data-track-index="25" data-volume="0.15"></audio>
+      <audio id="sx101" src="assets/sfx/pop.mp3" data-start="58.58" data-duration="0.72" data-track-index="21" data-volume="0.15"></audio>
+      <audio id="sx102" src="assets/sfx/sparkle.mp3" data-start="60.77" data-duration="1.8" data-track-index="20" data-volume="0.2"></audio>
+      <audio id="sx103" src="assets/sfx/impact-bass-1.mp3" data-start="60.87" data-duration="2.12" data-track-index="21" data-volume="0.32"></audio>
+      <audio id="sx104" src="assets/sfx/key-press.mp3" data-start="61.22" data-duration="0.43" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx105" src="assets/sfx/key-press.mp3" data-start="61.4" data-duration="0.43" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx106" src="assets/sfx/key-press.mp3" data-start="61.58" data-duration="0.43" data-track-index="24" data-volume="0.3"></audio>
+      <audio id="sx107" src="assets/sfx/key-press.mp3" data-start="61.76" data-duration="0.43" data-track-index="22" data-volume="0.3"></audio>
+      <audio id="sx108" src="assets/sfx/key-press.mp3" data-start="61.94" data-duration="0.43" data-track-index="23" data-volume="0.3"></audio>
+      <audio id="sx109" src="assets/sfx/key-press.mp3" data-start="62.12" data-duration="0.43" data-track-index="24" data-volume="0.3"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const END = 63.3
+        const RAW = [0.0, 0.074, 0.3, 0.544, 0.836, 1.03, 1.568, 1.665, 1.741, 1.824, 1.971, 2.068, 2.457, 2.7, 2.846, 3.186, 3.51, 3.56, 3.65, 3.919, 4.135, 4.243, 4.513, 5.055, 5.105, 5.148, 5.418, 5.688, 5.796, 5.847, 5.98, 6.088, 6.196, 6.767, 6.974, 7.297, 7.937, 8.038, 8.157, 8.683, 9.333, 9.732, 10.297, 10.701, 10.942, 11.349, 11.523, 11.929, 12.162, 12.277, 12.533, 12.723, 13.072, 13.305, 13.42, 13.885, 13.943, 14.0, 14.074, 14.697, 14.747, 14.818, 15.019, 15.219, 15.839, 15.959, 16.084, 16.521, 16.821, 17.021, 17.498, 17.815, 17.948, 18.193, 18.394, 18.921, 18.971, 19.021, 19.071, 19.181, 19.735, 20.29, 20.72, 20.967, 21.152, 21.59, 21.645, 22.075, 22.198, 22.445, 22.63, 23.122, 23.307, 23.898, 23.948, 24.458, 24.809, 25.599, 25.717, 25.772, 26.288, 26.58, 26.697, 27.048, 27.165, 27.399, 27.642, 27.692, 27.742, 27.857, 27.961, 28.377, 28.637, 28.793, 29.314, 29.364, 29.414, 29.464, 30.064, 30.116, 30.376, 31.108, 31.226, 31.923, 32.047, 32.173, 32.489, 32.763, 32.826, 33.142, 33.51, 33.7, 34.142, 34.899, 35.025, 35.151, 35.341, 35.74, 36.139, 36.338, 36.438, 36.737, 37.036, 37.135, 37.285, 37.484, 37.783, 37.933, 38.34, 38.648, 38.798, 39.195, 39.389, 39.858, 40.115, 40.757, 40.886, 41.271, 41.785, 41.913, 42.363, 42.492, 43.006, 43.134, 43.584, 43.712, 43.855, 44.055, 44.428, 44.535, 44.694, 45.003, 45.282, 45.426, 45.585, 45.905, 46.123, 46.173, 46.287, 46.761, 47.295, 47.614, 47.881, 47.978, 48.173, 48.318, 48.561, 48.658, 48.804, 49.199, 49.249, 49.574, 49.817, 50.06, 50.157, 50.449, 50.594, 51.034, 51.084, 51.134, 51.184, 51.234, 51.696, 52.008, 52.358, 52.474, 52.94, 53.057, 53.174, 53.639, 54.048, 54.106, 54.722, 54.772, 55.098, 55.788, 56.047, 56.147, 56.246, 56.775, 56.845, 56.945, 57.305, 57.593, 58.027, 58.133, 58.183, 58.414, 58.563, 58.713, 58.862, 59.112, 59.361, 59.56, 60.107, 60.236, 60.389, 60.572, 60.617, 60.983, 61.074, 61.348, 61.577]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Les", "Noirs", "n'ont", "jamais", "rien", "inventé.", "Et", "tout", "ce", "que", "tu", "utilises", "vient", "des", "Blancs.", "Ça,", "c'est", "ce", "qu'on", "veut", "te", "faire", "croire.", "Sauf", "que", "c'est", "faux,", "et", "je", "vais", "te", "le", "prouver.", "Jamais", "rien", "inventé ?", "En", "1857,", "aux", "États-Unis,", "un", "esclave", "nommé", "Ned", "invente", "une", "charrue", "pour", "le", "coton.", "Son", "maître", "veut", "la", "breveter", "à", "son", "nom.", "Refusé :", "ce", "n'est", "pas", "lui", "l'inventeur.", "Et", "Ned ?", "Esclave,", "donc", "pas", "citoyen.", "Pas", "de", "brevet", "non", "plus.", "Un", "an", "plus", "tard,", "l'État", "américain", "l'écrit", "noir", "sur", "blanc :", "un", "esclave", "ne", "peut", "pas", "breveter", "son", "invention.", "Les", "inventions", "noires", "existaient.", "On", "leur", "interdisait", "juste", "de", "porter", "un", "nom.", "Et", "tout", "ce", "que", "tu", "utilises", "vient", "des", "Blancs ?", "Le", "feu", "de", "signalisation", "à", "trois", "positions :", "Garrett", "Morgan,", "brevet", "de", "1923.", "Il", "a", "aussi", "inventé", "une", "cagoule", "respiratoire,", "et", "il", "est", "descendu", "lui-même", "dans", "un", "tunnel", "rempli", "de", "gaz", "pour", "sauver", "des", "ouvriers.", "L'ampoule", "qui", "dure :", "Lewis", "Latimer,", "fils", "d'esclaves", "en", "fuite,", "brevète", "un", "procédé", "de", "filament", "de", "carbone", "en", "1882.", "Les", "banques", "de", "sang :", "Charles", "Drew,", "dans", "les", "années", "40.", "Ironie :", "la", "Croix-Rouge", "américaine", "sépare", "alors", "le", "sang", "des", "Noirs", "et", "des", "Blancs.", "Il", "dénonce", "cette", "règle", "et", "quitte", "son", "poste.", "Et", "les", "jeux", "vidéo ?", "Jerry", "Lawson", "dirige", "la", "création", "de", "la", "première", "console", "à", "cartouches.", "Et", "Lonnie", "Johnson,", "ingénieur", "de", "la", "NASA,", "invente", "le", "Super", "Soaker.", "Alors", "non,", "ce", "n'est", "pas", "que", "les", "Noirs", "n'ont", "rien", "inventé.", "C'est", "qu'on", "leur", "a", "interdit", "de", "signer", "leurs", "inventions."]
+        let seed = 17
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+
+        // ---------- flat bust characters: skin, hair, hat, moustache, beard, glasses, outfit, expression ----------
+        const HAT = {
+          paille: (c, d) => `<ellipse cx="300" cy="200" rx="250" ry="46" fill="${c}"/><path d="M196,200 C196,128 232,94 300,94 C368,94 404,128 404,200Z" fill="${c}"/><rect x="196" y="170" width="208" height="22" fill="#7a4a26"/><g stroke="${d}" stroke-width="4" opacity="0.7">${[0, 1, 2, 3, 4, 5, 6].map((i) => `<path d="M${90 + i * 70},${206 + Math.abs(3 - i) * -4} L${110 + i * 66},${184}"/>`).join('')}<path d="M220,150 L380,150 M210,120 L390,120"/></g>`,
+        }
+        function bust(o) {
+          const skin = o.skin, dark = o.dark, hc = o.hairCol || '#1b1410'
+          const brow = { sad: ['M222,250 L282,236', 'M318,236 L378,250'], sure: ['M222,240 L282,246', 'M318,234 L378,226'], neutral: ['M222,242 L282,240', 'M318,240 L378,242'], angry: ['M222,232 L282,252', 'M318,252 L378,232'] }[o.mood]
+          const mouth = { sad: 'M262,382 Q300,356 338,382', sure: 'M258,366 Q300,404 342,362', neutral: 'M270,372 Q300,384 330,372', angry: 'M266,380 Q300,366 334,380' }[o.mood]
+          let hair = ''
+          if (o.hair === 'short') hair = `<path d="M178,262 C170,150 240,112 300,112 C360,112 430,150 422,262 C410,214 380,190 300,188 C220,190 190,214 178,262Z" fill="${hc}"/>`
+          if (o.hair === 'swept') hair = `<path d="M180,250 C168,150 250,100 330,112 C400,124 432,170 422,250 C400,190 350,170 300,176 C250,178 210,200 180,250Z" fill="${hc}"/><rect x="176" y="250" width="22" height="90" rx="10" fill="${hc}"/><rect x="402" y="250" width="22" height="90" rx="10" fill="${hc}"/>`
+          if (o.hair === 'bald') hair = `<path d="M176,300 C170,240 184,200 204,186 L210,300Z" fill="${hc}"/><path d="M424,300 C430,240 416,200 396,186 L390,300Z" fill="${hc}"/>`
+          const hat = o.hat ? HAT[o.hat](o.hatCol || '#e0c070', o.hatDark || '#a8873a') : ''
+          const beard = o.beard ? `<path d="M178,300 C176,420 230,478 300,478 C370,478 424,420 422,300 C410,360 380,350 300,352 C220,350 190,360 178,300Z" fill="${hc}"/>` : ''
+          const stache = o.stache ? `<path d="M244,352 C262,334 290,338 300,350 C310,338 338,334 356,352 C346,372 318,368 300,358 C282,368 254,372 244,352Z" fill="${hc}"/>` : ''
+          const glasses = o.glasses ? `<g fill="none" stroke="#1b1410" stroke-width="8"><circle cx="255" cy="300" r="40"/><circle cx="345" cy="300" r="40"/><path d="M295,294 Q300,286 305,294 M215,294 L180,284 M385,294 L420,284"/></g>` : ''
+          const body = o.plain
+            ? `<path d="M40,700 C40,520 150,468 300,468 C450,468 560,520 560,700Z" fill="${o.coat}"/><path d="M250,472 L300,540 L350,472" fill="none" stroke="${o.lapel}" stroke-width="10"/><path d="M170,500 L190,700 M430,500 L410,700" stroke="${o.lapel}" stroke-width="18"/>`
+            : `<path d="M40,700 C40,520 150,468 300,468 C450,468 560,520 560,700Z" fill="${o.coat}"/><path d="M300,468 L200,476 L268,640Z" fill="${o.lapel}"/><path d="M300,468 L400,476 L332,640Z" fill="${o.lapel}"/><path d="M252,470 L348,470 L300,600Z" fill="${o.shirt}"/>${o.tie ? `<path d="M290,480 L310,480 L318,580 L300,600 L282,580Z" fill="${o.tie}"/>` : ''}`
+          return `<svg viewBox="0 0 600 700" width="100%" height="100%" style="position:absolute;left:0;top:0">
+            ${body}
+            <rect x="262" y="392" width="76" height="92" rx="20" fill="${dark}"/>
+            <ellipse cx="180" cy="312" rx="24" ry="34" fill="${dark}"/><ellipse cx="420" cy="312" rx="24" ry="34" fill="${dark}"/>
+            <ellipse cx="300" cy="296" rx="124" ry="142" fill="${skin}"/>
+            <path d="M300,154 C380,160 424,226 424,300 C424,380 380,436 300,438 C352,410 380,360 380,296 C380,226 350,176 300,154Z" fill="${dark}" opacity="0.35"/>
+            ${hair}${beard}
+            <g class="eyes"><ellipse cx="255" cy="300" rx="26" ry="24" fill="#fff"/><ellipse cx="345" cy="300" rx="26" ry="24" fill="#fff"/>
+            <circle cx="258" cy="302" r="12" fill="#151515"/><circle cx="348" cy="302" r="12" fill="#151515"/>
+            <circle cx="262" cy="296" r="4" fill="#fff"/><circle cx="352" cy="296" r="4" fill="#fff"/></g>
+            <g class="lids" opacity="0"><rect x="224" y="274" width="62" height="52" fill="${skin}"/><rect x="314" y="274" width="62" height="52" fill="${skin}"/><path d="M230,302 Q255,312 280,302 M320,302 Q345,312 370,302" stroke="#1b1410" stroke-width="6" fill="none"/></g>
+            <path d="${brow[0]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/><path d="${brow[1]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/>
+            <path d="M296,320 Q290,342 304,346" stroke="${dark}" stroke-width="7" fill="none" stroke-linecap="round"/>
+            ${stache}<path d="${mouth}" stroke="#3a1a12" stroke-width="9" fill="none" stroke-linecap="round"/>
+            ${glasses}${hat}
+          </svg>`
+        }
+        const put = (id, o) => { $(id).innerHTML = bust(o) }
+        const BLACK = { skin: '#7a4a2e', dark: '#5c3520' }
+        const WHITE = { skin: '#f0c9a8', dark: '#d8a985' }
+        const NED = Object.assign({}, BLACK, { hair: 'short', hat: 'paille', coat: '#8a7a62', lapel: '#5a4a34', plain: true })
+        const MORGAN = Object.assign({}, BLACK, { hair: 'short', stache: true, coat: '#2a2e3a', lapel: '#1c1f28', shirt: '#f4f1e8', tie: '#7a1e2a' })
+        const LATIMER = Object.assign({}, BLACK, { skin: '#8a5a3a', dark: '#6a4228', hair: 'bald', stache: true, coat: '#3a2a22', lapel: '#2a1e18', shirt: '#f4f1e8', tie: '#1b1410' })
+        const DREW = Object.assign({}, BLACK, { skin: '#9a6a46', dark: '#7a5034', hair: 'short', stache: true, coat: '#f4f1e8', lapel: '#d8d4ca', shirt: '#cfd8e0', tie: '#1d3557' })
+        const LAWSON = Object.assign({}, BLACK, { hair: 'short', beard: true, coat: '#b5562a', lapel: '#8a3e1c', shirt: '#f2e2c0' })
+        const JOHNSON = Object.assign({}, BLACK, { skin: '#6a3e26', dark: '#4e2c1a', hair: 'short', glasses: true, coat: '#2c4a6a', lapel: '#1e3650', shirt: '#f4f1e8' })
+        put('w1a', Object.assign({}, WHITE, { mood: 'sure', hair: 'swept', hairCol: '#4a3a2a', coat: '#1e1e24', lapel: '#141418', shirt: '#f4f1e8', tie: '#1b1410' }))
+        put('w1b', Object.assign({}, WHITE, { mood: 'neutral', hair: 'bald', beard: true, hairCol: '#e8e2d8', coat: '#2a2a30', lapel: '#1c1c22', shirt: '#f4f1e8' }))
+        put('w1c', Object.assign({}, WHITE, { mood: 'sure', hair: 'short', stache: true, hairCol: '#3a2418', coat: '#2e2a26', lapel: '#1e1b18', shirt: '#f4f1e8', tie: '#5a1e22' }))
+        put('ned3', Object.assign({}, NED, { mood: 'neutral' }))
+        put('m4', Object.assign({}, WHITE, { mood: 'sure', hair: 'short', hairCol: '#6a4a2a', stache: true, hat: 'paille', hatCol: '#efe6d4', hatDark: '#b8ab90', coat: '#5a3a2a', lapel: '#46281c', shirt: '#f4f1e8', tie: '#1b1410' }))
+        put('ned5', Object.assign({}, NED, { mood: 'sad' }))
+        put('mo9', Object.assign({}, MORGAN, { mood: 'sure' }))
+        put('la11', Object.assign({}, LATIMER, { mood: 'sure' }))
+        put('dr12', Object.assign({}, DREW, { mood: 'neutral' }))
+        put('dr14', Object.assign({}, DREW, { mood: 'angry' }))
+        put('lw15', Object.assign({}, LAWSON, { mood: 'sure' }))
+        put('jo16', Object.assign({}, JOHNSON, { mood: 'sure' }))
+        put('g17a', Object.assign({}, NED, { mood: 'sure' })); put('g17b', Object.assign({}, MORGAN, { mood: 'sure' })); put('g17c', Object.assign({}, LATIMER, { mood: 'sure' }))
+        put('g17d', Object.assign({}, DREW, { mood: 'sure' })); put('g17e', Object.assign({}, LAWSON, { mood: 'sure' })); put('g17f', Object.assign({}, JOHNSON, { mood: 'sure' }))
+        const blink = (sel, times) => times.forEach((t) => tl.fromTo(sel + ' .lids', { opacity: 0 }, { opacity: 1, duration: 0.02, yoyo: true, repeat: 1, repeatDelay: 0.1, ease: 'none', immediateRender: false }, t))
+
+        // ---------- props ----------
+        function rays(id, n, c1, c2) {
+          let s = ''
+          for (let i = 0; i < n; i++) { const a0 = (i / n) * Math.PI * 2, a1 = ((i + 0.5) / n) * Math.PI * 2; s += `<path d="M0,0 L${(Math.cos(a0) * 1400).toFixed(0)},${(Math.sin(a0) * 1400).toFixed(0)} L${(Math.cos(a1) * 1400).toFixed(0)},${(Math.sin(a1) * 1400).toFixed(0)}Z" fill="${i % 2 ? c1 : c2}"/>` }
+          $(id).innerHTML = s
+        }
+        rays('rays11', 24, '#ffe08a', '#6a4a10'); rays('rays14', 28, '#ff7a6a', '#5a0e0e'); rays('rays17', 28, '#ffd36a', '#a8650f')
+        const IC = {
+          bulb: '<path d="M100,20 C55,20 30,55 30,90 C30,120 50,135 62,150 L62,165 L138,165 L138,150 C150,135 170,120 170,90 C170,55 145,20 100,20Z" fill="#ffe08a" stroke="#c9962e" stroke-width="6"/><rect x="66" y="165" width="68" height="14" fill="#9aa4ae"/><rect x="72" y="179" width="56" height="12" rx="4" fill="#7a848e"/><path class="fil" d="M84,150 L84,104 L88,98 L92,108 L96,98 L100,108 L104,98 L108,108 L112,98 L116,104 L116,150" fill="none" stroke="#c97a10" stroke-width="5"/>',
+          light: '<rect x="62" y="10" width="76" height="180" rx="18" fill="#2a2e36" stroke="#14161a" stroke-width="5"/><circle cx="100" cy="50" r="22" fill="#e63946"/><circle cx="100" cy="100" r="22" fill="#f2b705"/><circle cx="100" cy="150" r="22" fill="#2ecc71"/>',
+          pad: '<path d="M40,70 C10,70 6,150 30,160 C50,168 62,140 76,130 L124,130 C138,140 150,168 170,160 C194,150 190,70 160,70Z" fill="#3a3f4a" stroke="#1a1d24" stroke-width="5"/><rect x="48" y="92" width="34" height="10" fill="#fff"/><rect x="60" y="80" width="10" height="34" fill="#fff"/><circle cx="140" cy="88" r="9" fill="#e63946"/><circle cx="158" cy="106" r="9" fill="#f2b705"/>',
+          gun: '<rect x="20" y="70" width="130" height="40" rx="16" fill="#2ecc71"/><rect x="150" y="80" width="40" height="18" rx="6" fill="#f39c12"/><rect x="40" y="40" width="70" height="34" rx="14" fill="#f39c12"/><path d="M50,110 L80,110 L70,170 L40,170Z" fill="#2ecc71"/><rect x="100" y="110" width="60" height="16" rx="6" fill="#f39c12"/>',
+          drop: '<path d="M100,20 C130,70 160,100 160,130 C160,165 132,188 100,188 C68,188 40,165 40,130 C40,100 70,70 100,20Z" fill="#d7263d"/><ellipse cx="78" cy="130" rx="10" ry="20" fill="#fff" opacity=".5"/>',
+          rocket: '<path d="M100,10 C140,40 150,100 140,150 L60,150 C50,100 60,40 100,10Z" fill="#f4f1e8" stroke="#9aa4ae" stroke-width="5"/><circle cx="100" cy="80" r="18" fill="#2c6fa8" stroke="#9aa4ae" stroke-width="5"/><path d="M60,120 L30,170 L62,150Z M140,120 L170,170 L138,150Z" fill="#d7263d"/><path id="flame16" d="M75,150 L100,195 L125,150Z" fill="#f2b705"/>',
+        }
+        $('i1a').innerHTML = IC.bulb; $('i1b').innerHTML = IC.light; $('i1c').innerHTML = IC.pad; $('i1d').innerHTML = IC.gun
+        // a plough
+        const PLOUGH = '<path d="M70,300 L300,180" stroke="#7a4a26" stroke-width="22" stroke-linecap="round"/><path d="M300,180 L430,40 M300,180 L460,96" stroke="#7a4a26" stroke-width="16" stroke-linecap="round"/><path d="M40,290 L130,250 L150,330 L60,340Z" fill="#9aa4ae" stroke="#5a646e" stroke-width="6"/><path d="M200,240 L190,320" stroke="#5a646e" stroke-width="14"/><circle cx="430" cy="40" r="10" fill="#5a3418"/><circle cx="460" cy="96" r="10" fill="#5a3418"/>'
+        $('pl3').innerHTML = PLOUGH
+        // the schoolbook
+        $('book2').innerHTML = '<path d="M450,40 C330,0 150,0 20,40 L20,600 C150,560 330,560 450,600Z" fill="#f3e3c3" stroke="#b38a55" stroke-width="8"/><path d="M450,40 C570,0 750,0 880,40 L880,600 C750,560 570,560 450,600Z" fill="#efdcb8" stroke="#b38a55" stroke-width="8"/><text x="235" y="140" text-anchor="middle" font-family="Anton" font-size="56" fill="#7a2a12">HISTOIRE</text><text x="235" y="205" text-anchor="middle" font-family="Anton" font-size="44" fill="#3a2312">DES INVENTIONS</text><g stroke="#c9b089" stroke-width="6">' + [300, 340, 380, 420, 460, 500].map((y) => `<line x1="70" y1="${y}" x2="400" y2="${y - 8}"/>`).join('') + '</g><g transform="translate(500,90) scale(0.85)">' + IC.bulb + '</g><g transform="translate(680,90) scale(0.85)">' + IC.light + '</g><g transform="translate(500,300) scale(0.85)">' + IC.pad + '</g><g transform="translate(680,300) scale(0.85)">' + IC.gun + '</g>'
+        // cotton field at sunset
+        let fl = ''
+        for (let r = 0; r < 4; r++) {
+          const y = 1180 + r * 150, sc = 0.7 + r * 0.25
+          for (let i = 0; i < 9; i++) {
+            const x = -40 + i * 140 + (r % 2) * 70 + rnd() * 20
+            fl += `<g transform="translate(${x.toFixed(0)},${y}) scale(${sc.toFixed(2)})"><path d="M0,0 L0,-90 M0,-50 L-30,-90 M0,-60 L30,-100" stroke="#2a3a1a" stroke-width="8"/><circle cx="0" cy="-96" r="18" fill="#f4f1e8"/><circle cx="-32" cy="-94" r="15" fill="#f4f1e8"/><circle cx="32" cy="-104" r="15" fill="#f4f1e8"/></g>`
+          }
+        }
+        $('field3').innerHTML = '<rect x="0" y="1140" width="1080" height="780" fill="#3a2a16"/>' + fl
+        // patent request (s4)
+        $('doc4').innerHTML = '<rect x="10" y="10" width="460" height="600" rx="10" fill="#f3e9d2" stroke="#b38a55" stroke-width="8"/><text x="240" y="90" text-anchor="middle" font-family="Anton" font-size="66" fill="#7a2a12">BREVET</text><g transform="translate(90,130) scale(0.62)">' + PLOUGH + '</g><text x="50" y="430" font-family="Anton" font-size="34" fill="#3a2312">INVENTEUR :</text><text x="50" y="490" font-family="Anton" font-size="46" fill="#5a3a22">LE MAÎTRE ?</text><g stroke="#c9b089" stroke-width="6"><line x1="50" y1="540" x2="420" y2="540"/><line x1="50" y1="575" x2="360" y2="575"/></g>'
+        // chains
+        const chain = (id) => { let c = ''; for (let i = 0; i < 16; i++) c += `<ellipse cx="${20 + i * 68}" cy="100" rx="${i % 2 ? 38 : 40}" ry="${i % 2 ? 14 : 26}" fill="none" stroke="#9aa4ae" stroke-width="13"/>`; $(id).innerHTML = '<g class="ch">' + c + '</g>' }
+        chain('chain5')
+        // the 1858 decision
+        $('doc6').innerHTML = '<rect x="10" y="10" width="780" height="860" rx="12" fill="#f3e9d2" stroke="#b38a55" stroke-width="10"/><text x="400" y="110" text-anchor="middle" font-family="Anton" font-size="72" fill="#1d3557">ÉTATS-UNIS</text><text x="400" y="170" text-anchor="middle" font-family="Anton" font-size="38" fill="#7a2a12" letter-spacing="4">DÉCISION OFFICIELLE · 1858</text><g stroke="#c9b089" stroke-width="7">' + [240, 285, 330].map((y) => `<line x1="80" y1="${y}" x2="720" y2="${y}"/>`).join('') + '</g><g id="txt6"><text x="400" y="460" text-anchor="middle" font-family="Anton" font-size="96" fill="#111">UN ESCLAVE</text><text x="400" y="570" text-anchor="middle" font-family="Anton" font-size="96" fill="#111">NE PEUT PAS</text><text x="400" y="680" text-anchor="middle" font-family="Anton" font-size="96" fill="#d7263d">BREVETER</text></g><g transform="translate(640,770)"><path d="M-30,20 L-50,110 L-20,90 L0,115 L0,30Z M30,20 L50,110 L20,90 L0,115 L0,30Z" fill="#a8121e"/><circle r="62" fill="#c0182e"/><circle r="46" fill="none" stroke="#ffc93c" stroke-width="5"/><text y="14" text-anchor="middle" font-family="Anton" font-size="40" fill="#ffc93c">US</text></g>'
+        // the patent with the name blacked out (s7)
+        $('pat7').innerHTML = '<rect x="10" y="10" width="780" height="880" rx="12" fill="#f3e9d2" stroke="#b38a55" stroke-width="10"/><text x="400" y="110" text-anchor="middle" font-family="Anton" font-size="66" fill="#7a2a12">BREVET D\'INVENTION</text><g transform="translate(190,190) scale(0.9)">' + PLOUGH + '</g><text x="70" y="680" font-family="Anton" font-size="52" fill="#3a2312">INVENTEUR :</text><text x="360" y="682" font-family="Anton" font-size="64" fill="#5a3a22">NED</text><rect id="bar7" x="340" y="612" width="400" height="90" fill="#111" style="transform-origin:340px 657px"/><g stroke="#c9b089" stroke-width="7"><line x1="70" y1="770" x2="730" y2="770"/><line x1="70" y1="820" x2="600" y2="820"/></g>'
+        // ring of everyday inventions (s8)
+        const R8 = ['bulb', 'light', 'drop', 'pad', 'gun', 'rocket']
+        $('ring8').innerHTML = '<g id="rg8">' + R8.map((k, i) => { const a = (i / R8.length) * Math.PI * 2 - Math.PI / 2; return `<g class="ri" transform="translate(${(Math.cos(a) * 400 - 85).toFixed(0)},${(Math.sin(a) * 400 - 85).toFixed(0)}) scale(0.85)">${IC[k]}</g>` }).join('') + '</g>'
+        // the traffic light (s9)
+        $('tl9').innerHTML = '<rect x="135" y="560" width="30" height="200" fill="#3a3e46"/><rect x="40" y="20" width="220" height="560" rx="40" fill="#22252c" stroke="#111" stroke-width="8"/>' + [['r', '#e63946', 110], ['y', '#f2b705', 300], ['g', '#2ecc71', 490]].map(([k, c, y]) => `<circle cx="150" cy="${y}" r="74" fill="#111"/><circle id="l9${k}" cx="150" cy="${y}" r="64" fill="${c}" opacity="0.18"/>`).join('')
+        // the tunnel (s10)
+        let br = ''
+        for (let y = 0; y < 1920; y += 70) for (let x = (y / 70) % 2 ? -60 : 0; x < 1080; x += 120) br += `<rect x="${x}" y="${y}" width="114" height="64" fill="#4a423a" opacity="${(0.5 + rnd() * 0.5).toFixed(2)}"/>`
+        $('tun10').innerHTML = `<defs><mask id="arch10"><rect width="1080" height="1920" fill="#fff"/><path d="M190,1500 V760 C190,440 890,440 890,760 V1500Z" fill="#000"/></mask></defs><g mask="url(#arch10)"><rect width="1080" height="1920" fill="#2e2924"/>${br}</g><path d="M190,1500 V760 C190,440 890,440 890,760 V1500" fill="none" stroke="#6a5e50" stroke-width="22"/><rect x="0" y="1500" width="1080" height="420" fill="#1a1612"/>`
+        $('hood10').innerHTML = '<path d="M200,40 C110,40 70,110 70,200 L70,330 C70,360 330,360 330,330 L330,200 C330,110 290,40 200,40Z" fill="#c9b48a" stroke="#8a7450" stroke-width="8"/><circle cx="160" cy="190" r="30" fill="#2a3a4a" stroke="#5a646e" stroke-width="8"/><circle cx="240" cy="190" r="30" fill="#2a3a4a" stroke="#5a646e" stroke-width="8"/><path d="M200,340 C200,400 120,420 110,460" stroke="#6a5a40" stroke-width="22" fill="none" stroke-linecap="round"/>'
+        $('fig10').innerHTML = '<path d="M60,560 C60,330 100,250 150,250 C200,250 240,330 240,560Z" fill="#2a2e3a"/><path d="M150,20 C100,20 80,60 80,110 L80,200 C80,220 220,220 220,200 L220,110 C220,60 200,20 150,20Z" fill="#c9b48a" stroke="#8a7450" stroke-width="6"/><circle cx="125" cy="110" r="17" fill="#2a3a4a"/><circle cx="175" cy="110" r="17" fill="#2a3a4a"/><path d="M150,210 C150,300 110,330 100,400" stroke="#6a5a40" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M230,330 L150,-40" stroke="#2a2e3a" stroke-width="34" stroke-linecap="round"/>'
+        let wk = ''
+        ;[[300, 1270], [540, 1310], [780, 1270]].forEach(([x, y]) => { wk += `<g class="wk"><circle cx="${x}" cy="${y - 150}" r="44" fill="#6a5a4a"/><path d="M${x - 90},${y + 60} C${x - 90},${y - 70} ${x + 90},${y - 70} ${x + 90},${y + 60}Z" fill="#6a5a4a"/><path d="M${x - 50},${y - 186} C${x - 50},${y - 220} ${x + 50},${y - 220} ${x + 50},${y - 186}Z" fill="#f2b705"/></g>` })
+        $('wk10').innerHTML = wk
+        let sm = ''
+        for (let i = 0; i < 18; i++) sm += `<circle class="smk" cx="${(80 + rnd() * 920).toFixed(0)}" cy="${(600 + rnd() * 900).toFixed(0)}" r="${(110 + rnd() * 120).toFixed(0)}" fill="#8aa07a" opacity="0.16"/>`
+        $('smoke10').innerHTML = sm
+        // the bulb (s11)
+        $('bulb11').innerHTML = '<path id="glass11" d="M100,20 C55,20 30,55 30,90 C30,120 50,135 62,150 L62,165 L138,165 L138,150 C150,135 170,120 170,90 C170,55 145,20 100,20Z" fill="#5a5448" stroke="#9a8a6a" stroke-width="5"/><rect x="66" y="165" width="68" height="14" fill="#9aa4ae"/><rect x="72" y="179" width="56" height="12" rx="4" fill="#7a848e"/><path id="fil11" d="M84,150 L84,104 L88,98 L92,108 L96,98 L100,108 L104,98 L108,108 L112,98 L116,104 L116,150" fill="none" stroke="#2a2418" stroke-width="5"/>'
+        // blood bags
+        const bag = (label) => `<path d="M170,0 L170,60" stroke="#c9d2da" stroke-width="10"/><rect x="40" y="60" width="260" height="360" rx="44" fill="#b0162a" stroke="#e8eef2" stroke-width="10"/><rect x="40" y="60" width="260" height="110" rx="44" fill="#e8eef2" opacity="0.25"/>${label ? `<rect x="70" y="220" width="200" height="90" rx="12" fill="#f4f1e8"/><text x="170" y="290" text-anchor="middle" font-family="Anton" font-size="${label.length > 5 ? 54 : 62}" fill="#1b1410">${label}</text>` : '<path d="M170,210 C195,250 215,270 215,295 C215,322 194,340 170,340 C146,340 125,322 125,295 C125,270 145,250 170,210Z" fill="#f4f1e8" opacity="0.85"/>'}<path d="M150,420 L150,460 M190,420 L190,450" stroke="#c9d2da" stroke-width="10"/>`
+        $('bag12a').innerHTML = bag(''); $('bag12b').innerHTML = bag('')
+        $('bn13').innerHTML = bag('NOIRS'); $('bb13').innerHTML = bag('BLANCS')
+        // the rule (s14)
+        $('rule14').innerHTML = '<rect x="10" y="10" width="500" height="280" rx="12" fill="#f3e9d2" stroke="#b38a55" stroke-width="8"/><text x="260" y="90" text-anchor="middle" font-family="Anton" font-size="52" fill="#7a2a12">RÈGLE</text><text x="260" y="170" text-anchor="middle" font-family="Anton" font-size="44" fill="#3a2312">SANG SÉPARÉ</text><text x="260" y="230" text-anchor="middle" font-family="Anton" font-size="36" fill="#5a3a22">NOIRS / BLANCS</text><path id="x14" d="M60,40 L460,260 M460,40 L60,260" stroke="#d7263d" stroke-width="26" stroke-linecap="round"/>'
+        // TV, console, cartridge (s15)
+        $('tv15').innerHTML = '<rect x="10" y="10" width="420" height="330" rx="30" fill="#6a3e1e" stroke="#3a2210" stroke-width="8"/><rect x="40" y="40" width="300" height="270" rx="30" fill="#141618"/><g id="scr15" opacity="0"><rect x="40" y="40" width="300" height="270" rx="30" fill="#1e3a2a"/><rect x="70" y="130" width="14" height="70" fill="#9be27a"/><rect x="296" y="160" width="14" height="70" fill="#9be27a"/><path d="M190,60 L190,290" stroke="#9be27a" stroke-width="6" stroke-dasharray="14 12"/><rect id="ball15" x="150" y="150" width="16" height="16" fill="#fff"/></g><circle cx="385" cy="90" r="18" fill="#c9b48a"/><circle cx="385" cy="150" r="18" fill="#c9b48a"/><rect x="100" y="340" width="40" height="30" fill="#3a2210"/><rect x="300" y="340" width="40" height="30" fill="#3a2210"/>'
+        $('cart15').innerHTML = '<rect x="10" y="10" width="160" height="200" rx="10" fill="#f2b705" stroke="#8a6a00" stroke-width="6"/><rect x="30" y="34" width="120" height="80" rx="6" fill="#1d3557"/><text x="90" y="88" text-anchor="middle" font-family="Anton" font-size="38" fill="#fff">JEU</text>'
+        $('con15').innerHTML = '<rect x="10" y="40" width="420" height="250" rx="20" fill="#2a2a2e"/><g>' + [0, 1, 2, 3, 4, 5].map((i) => `<rect x="10" y="${130 + i * 26}" width="420" height="13" fill="#7a4a26"/>`).join('') + '</g><rect x="120" y="40" width="200" height="34" rx="6" fill="#0a0a0c"/><rect x="30" y="0" width="70" height="60" rx="10" fill="#3a3a40"/><rect x="58" y="-40" width="14" height="60" rx="7" fill="#1b1410"/><circle cx="65" cy="-44" r="16" fill="#d7263d"/><rect x="340" y="0" width="70" height="60" rx="10" fill="#3a3a40"/><rect x="368" y="-40" width="14" height="60" rx="7" fill="#1b1410"/><circle cx="375" cy="-44" r="16" fill="#d7263d"/>'
+        // stars, rocket, water gun (s16)
+        let st = ''
+        for (let i = 0; i < 70; i++) st += `<circle cx="${(rnd() * 1080).toFixed(0)}" cy="${(rnd() * 1300).toFixed(0)}" r="${(1 + rnd() * 2.5).toFixed(1)}" fill="#fff" opacity="${(0.4 + rnd() * 0.6).toFixed(2)}"/>`
+        $('stars16').innerHTML = st
+        $('rk16').innerHTML = IC.rocket
+        $('wg16').innerHTML = IC.gun
+        let dr = ''
+        for (let i = 0; i < 16; i++) dr += `<ellipse class="dr" cx="0" cy="0" rx="14" ry="9" fill="#7ad0ff"/>`
+        $('sp16').innerHTML = dr
+
+        // ---------- scene cuts on the voice ----------
+        const at = (k) => Math.round((T[k] - 0.06) * 100) / 100
+        const CUT = [0, at(15), at(33), at(50), at(64), at(75), at(93), at(105), at(114), at(126), at(148), at(166), at(176), at(189), at(197), at(212), at(223), END]
+        const SC = Array.from({ length: 17 }, (_, i) => '#s' + (i + 1))
+        SC.forEach((s, i) => {
+          tl.set(s, { visibility: 'visible' }, CUT[i])
+          tl.set(s, { visibility: 'hidden' }, CUT[i + 1])
+          tl.fromTo(s + ' .cam', { scale: 1 }, { scale: 1.06, duration: CUT[i + 1] - CUT[i], ease: 'none', immediateRender: false }, CUT[i])
+          if (i) tl.fromTo(s + ' .cam', { y: 30 }, { y: 0, duration: 0.25, ease: 'power3.out', immediateRender: false }, CUT[i])
+        })
+        const pop = (sel, t, o) => tl.fromTo(sel, Object.assign({ autoAlpha: 0, scale: 0.4 }, o || {}), { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: (o && o.rot) || 0, duration: 0.4, ease: 'back.out(1.8)' }, t)
+        const rise = (sel, t) => tl.fromTo(sel, { y: 260 }, { y: 0, duration: 0.45, ease: 'expo.out' }, t)
+        const out = (sel, t) => tl.to(sel, { autoAlpha: 0, scale: 0.7, duration: 0.18, ease: 'power2.in' }, t)
+        const count = (node, from, to, t0, t1) => { const o = { v: from }; tl.fromTo(o, { v: from }, { v: to, duration: t1 - t0, ease: 'power2.out', immediateRender: false, onUpdate: () => { node.textContent = String(Math.round(o.v)) } }, t0) }
+        const spin = (sel, t0, t1, deg) => tl.fromTo(sel, { rotation: 0 }, { rotation: deg, duration: t1 - t0, ease: 'none', immediateRender: false }, t0)
+        const stamp = (sel, t, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.6, rotation: 4 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.2, ease: 'power4.in' }, t)
+        const shake = (sel, t) => tl.fromTo(sel, { x: 0 }, { x: 14, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, t)
+        const bob = (sel, t0, t1) => tl.fromTo(sel, { y: 0 }, { y: -16, duration: 0.6, yoyo: true, repeat: Math.max(1, Math.floor((t1 - t0) / 0.6)), ease: 'sine.inOut', immediateRender: false }, t0)
+        const reveal = (sel, t, d) => tl.fromTo(sel, { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: d || 0.45, ease: 'power1.inOut' }, t)
+
+        // 1. the museum wall; three white inventors; everyday inventions
+        pop('#pl1', 0.02, { y: -60, scale: 0.8 })
+        ;['#f1a', '#f1b', '#f1c'].forEach((f, i) => tl.fromTo(f, { y: 300, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.45, ease: 'expo.out' }, 0.08 + i * 0.1))
+        ;['#i1a', '#i1b', '#i1c', '#i1d'].forEach((f, i) => pop(f, T[7] - 0.05 + i * 0.12, { y: 60, rot: i % 2 ? 6 : -6 }))
+        blink('#f1a', [1.1]); blink('#f1c', [2.0])
+        // 2. the schoolbook; FAUX
+        pop('#book2', CUT[1] + 0.02, { y: 200, scale: 0.85 })
+        stamp('#faux2', T[26] - 0.04, -10)
+        shake('#s2 .cam', T[26] + 0.16)
+        // 3. JAMAIS RIEN ? → 1857, États-Unis, Ned, the plough
+        pop('#q3', CUT[2] + 0.02, { scale: 0.6 })
+        out('#q3', T[37] - 0.2)
+        pop('#y3', T[37] - 0.05, { scale: 0.6 })
+        count($('y3'), 1700, 1857, T[37] - 0.05, T[38] + 0.3)
+        pop('#us3', T[39] - 0.05, { rot: -3 })
+        out('#us3', T[43] - 0.18)
+        rise('#ned3', T[40] - 0.05)
+        pop('#nl3', T[43] - 0.05, { rot: -4 })
+        pop('#pl3', T[46] - 0.05, { x: 300, rot: -8 })
+        blink('#ned3', [T[44] + 0.3])
+        // 4. the master wants the patent; REFUSÉ
+        rise('#m4', CUT[3])
+        pop('#ml4', CUT[3] + 0.1, { rot: -3 })
+        pop('#doc4', T[52] - 0.05, { y: 120, rot: 6 })
+        out('#ml4', T[58] - 0.2)
+        stamp('#r4', T[58] - 0.04, -10)
+        shake('#s4 .cam', T[58] + 0.16)
+        blink('#m4', [CUT[3] + 0.9])
+        // 5. Ned: slave, not a citizen, no patent
+        rise('#ned5', CUT[4])
+        tl.fromTo('#chain5 .ch', { x: -1100 }, { x: 0, duration: 0.5, ease: 'power3.out' }, T[66] - 0.1)
+        pop('#e5', T[66] - 0.05, { rot: -3 })
+        out('#e5', T[68] - 0.18)
+        pop('#c5', T[68] - 0.05, { rot: 3 })
+        stamp('#b5', T[70] - 0.04, -7)
+        shake('#s5 .cam', T[70] + 0.16)
+        blink('#ned5', [CUT[4] + 0.7])
+        // 6. 1858: the official decision, written black on white
+        pop('#y6', CUT[5] + 0.02, { scale: 0.6 })
+        count($('y6'), 1857, 1858, CUT[5] + 0.02, CUT[5] + 0.5)
+        pop('#doc6', T[79] - 0.05, { y: 200, scale: 0.85 })
+        tl.fromTo('#txt6', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01 }, T[85] - 0.05)
+        reveal('#txt6', T[85] - 0.05, (T[90] - T[85]) * 0.9)
+        shake('#s6 .cam', T[90] + 0.1)
+        // 7. the name is blacked out; SANS NOM
+        pop('#pat7', CUT[6] + 0.02, { y: 160, scale: 0.85 })
+        tl.fromTo('#bar7', { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: 'power2.inOut', immediateRender: false }, T[99] - 0.05)
+        gsap.set('#bar7', { scaleX: 0 })
+        stamp('#sn7', T[103] - 0.04, -6)
+        // 8. the big question and the ring of inventions
+        pop('#q8', CUT[7] + 0.02, { scale: 0.3 })
+        document.querySelectorAll('#ring8 .ri').forEach((r, i) => tl.fromTo(r, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2, immediateRender: false }, CUT[7] + 0.1 + i * 0.1))
+        gsap.set('#ring8 .ri', { autoAlpha: 0 })
+        spin('#ring8', CUT[7], CUT[8], 70)
+        // 9. the traffic light cycles; 3 POSITIONS; Garrett Morgan; 1923
+        const lamp = (id, c, t0, t1) => { tl.fromTo(id, { opacity: 0.18, filter: `drop-shadow(0 0 0px ${c})` }, { opacity: 1, filter: `drop-shadow(0 0 30px ${c})`, duration: 0.1, immediateRender: false }, t0); if (t1) tl.to(id, { opacity: 0.18, filter: `drop-shadow(0 0 0px ${c})`, duration: 0.1 }, t1) }
+        pop('#tl9', CUT[8] + 0.02, { y: 200, scale: 0.9 })
+        lamp('#l9r', '#e63946', T[115] - 0.05, T[117] - 0.05); lamp('#l9y', '#f2b705', T[117] - 0.05, T[119] - 0.05); lamp('#l9g', '#2ecc71', T[119] - 0.05, 0)
+        pop('#p9', T[119] - 0.05, { scale: 0.6 })
+        out('#p9', T[125] - 0.2)
+        rise('#mo9', T[121] - 0.05)
+        pop('#ml9', T[121] - 0.05, { rot: -3 })
+        pop('#y9', T[125] - 0.05, { scale: 0.6 })
+        count($('y9'), 1850, 1923, T[125] - 0.05, T[125] + 0.6)
+        blink('#mo9', [T[123]])
+        // 10. the hood; GAZ; he goes down; the workers are saved
+        document.querySelectorAll('#smoke10 .smk').forEach((s, i) => tl.fromTo(s, { x: 0 }, { x: i % 2 ? -140 : 140, duration: CUT[10] - CUT[9], ease: 'none', immediateRender: false }, CUT[9]))
+        pop('#hood10', T[131] - 0.05, { scale: 0.5 })
+        pop('#cg10', T[131] - 0.05, { rot: -3 })
+        out('#hood10', T[135] - 0.15); out('#cg10', T[135] - 0.15)
+        tl.fromTo('#rp10', { attr: { 'stroke-dasharray': 760, 'stroke-dashoffset': 760 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 0.3, immediateRender: false }, T[135] - 0.1)
+        gsap.set('#rp10', { attr: { 'stroke-dasharray': 760, 'stroke-dashoffset': 760 } })
+        tl.fromTo('#fig10', { y: -1200 }, { y: 0, duration: 1.0, ease: 'power2.out' }, T[136] - 0.05)
+        pop('#gz10', T[143] - 0.05, { scale: 0.6 })
+        document.querySelectorAll('#wk10 .wk').forEach((w, i) => tl.fromTo(w, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'back.out(2)', immediateRender: false }, T[145] - 0.05 + i * 0.1))
+        gsap.set('#wk10 .wk', { autoAlpha: 0 })
+        tl.to('#smoke10', { opacity: 0.25, duration: 0.6 }, T[145])
+        // 11. the bulb lights up; Lewis Latimer; sons of fugitive slaves; carbon filament; 1882
+        pop('#bulb11', CUT[10] + 0.02, { y: -200, scale: 0.8 })
+        tl.fromTo('#glass11', { fill: '#5a5448' }, { fill: '#ffe9a0', duration: 0.2, immediateRender: false }, T[149] - 0.05)
+        tl.fromTo('#fil11', { stroke: '#2a2418' }, { stroke: '#ff9a10', duration: 0.2, immediateRender: false }, T[149] - 0.05)
+        tl.fromTo('#bulb11', { filter: 'drop-shadow(0 0 0px rgba(255,220,120,0))' }, { filter: 'drop-shadow(0 0 60px rgba(255,220,120,0.95))', duration: 0.3, immediateRender: false }, T[149] - 0.05)
+        tl.fromTo('#rays11', { opacity: 0 }, { opacity: 0.32, duration: 0.3, immediateRender: false }, T[149] - 0.05)
+        spin('#rays11', CUT[10], CUT[11], 25)
+        rise('#la11', T[151] - 0.05)
+        pop('#ll11', T[151] - 0.05, { rot: -3 })
+        out('#ll11', T[153] - 0.18)
+        pop('#fe11', T[153] - 0.05, { rot: 3 })
+        out('#fe11', T[159] - 0.18)
+        pop('#fc11', T[159] - 0.05, { rot: -3 })
+        tl.to('#fil11', { strokeWidth: 9, duration: 0.2 }, T[161] - 0.05)
+        pop('#y11', T[165] - 0.05, { scale: 0.6 })
+        count($('y11'), 1800, 1882, T[165] - 0.05, T[165] + 0.6)
+        blink('#la11', [T[157]])
+        // 12. blood bags; Charles Drew; années 40
+        pop('#bag12a', CUT[11] + 0.02, { y: -200 })
+        pop('#bag12b', T[167] - 0.05, { y: -200 })
+        bob('#bag12a', CUT[11] + 0.5, CUT[12]); bob('#bag12b', T[167] + 0.4, CUT[12])
+        rise('#dr12', T[170] - 0.05)
+        pop('#dl12', T[170] - 0.05, { rot: -3 })
+        pop('#y12', T[174] - 0.05, { scale: 0.6 })
+        blink('#dr12', [T[172] + 0.2])
+        // 13. IRONIE; the Red Cross separates the blood
+        pop('#ir13', CUT[12] + 0.02, { scale: 0.6 })
+        pop('#rc13', T[178] - 0.05, { rot: -20 })
+        pop('#bn13', T[180] - 0.05, { x: 190 }); pop('#bb13', T[180] - 0.05, { x: -190 })
+        tl.fromTo('#wall13', { scaleY: 0 }, { scaleY: 1, duration: 0.35, ease: 'power3.out', immediateRender: false }, T[180] + 0.3)
+        gsap.set('#wall13', { scaleY: 0 })
+        tl.to('#bn13', { x: -60, duration: 0.3, ease: 'power2.out' }, T[185] - 0.05)
+        tl.to('#bb13', { x: 60, duration: 0.3, ease: 'power2.out' }, T[187] - 0.05)
+        shake('#s13 .cam', T[180] + 0.6)
+        // 14. he denounces the rule and quits
+        spin('#rays14', CUT[13], CUT[14], 20)
+        rise('#dr14', CUT[13])
+        pop('#rule14', T[190] - 0.05, { y: -120, rot: 4 })
+        tl.fromTo('#x14', { attr: { 'stroke-dasharray': 920, 'stroke-dashoffset': 920 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 0.3, immediateRender: false }, T[192] - 0.05)
+        gsap.set('#x14', { attr: { 'stroke-dasharray': 920, 'stroke-dashoffset': 920 } })
+        out('#rule14', T[194] - 0.15)
+        stamp('#q14', T[194] - 0.04, -6)
+        shake('#s14 .cam', T[194] + 0.16)
+        // 15. TV, console, Jerry Lawson, the cartridge goes in, the game starts
+        pop('#tv15', CUT[14] + 0.02, { y: -160, scale: 0.85 })
+        pop('#con15', CUT[14] + 0.1, { y: 160, scale: 0.85 })
+        tl.fromTo('#cart15', { y: -500, autoAlpha: 0 }, { y: -170, autoAlpha: 1, duration: 0.35, ease: 'back.out(1.6)' }, T[203] - 0.05)
+        tl.to('#cart15', { y: 0, duration: 0.3, ease: 'power3.in' }, T[209] - 0.05)
+        tl.fromTo('#scr15', { opacity: 0 }, { opacity: 1, duration: 0.1, immediateRender: false }, T[209] + 0.3)
+        tl.fromTo('#ball15', { x: 0, y: 0 }, { x: 120, y: 60, duration: 0.5, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, T[209] + 0.3)
+        shake('#con15', T[209] + 0.25)
+        rise('#lw15', T[201] - 0.05)
+        pop('#jl15', T[201] - 0.05, { rot: -3 })
+        pop('#g15', T[208] - 0.05, { scale: 0.6 })
+        blink('#lw15', [T[205]])
+        // 16. Lonnie Johnson; NASA; the rocket; the Super Soaker sprays
+        rise('#jo16', CUT[15] + 0.02)
+        pop('#jn16', T[213] - 0.05, { rot: -3 })
+        out('#jn16', T[215] - 0.18)
+        pop('#na16', T[215] - 0.05, { rot: 3 })
+        tl.fromTo('#rk16', { y: 900, autoAlpha: 1 }, { y: 0, duration: 0.6, ease: 'power2.out' }, T[217] - 0.1)
+        bob('#rk16', T[217] + 0.5, CUT[16])
+        tl.fromTo('#flame16', { scaleY: 0.7, transformOrigin: '50% 0%' }, { scaleY: 1.3, duration: 0.08, yoyo: true, repeat: 30, ease: 'none', immediateRender: false }, T[217] - 0.1)
+        tl.fromTo('#wg16', { x: 600 }, { x: 0, duration: 0.4, ease: 'back.out(1.4)' }, T[219] - 0.05)
+        document.querySelectorAll('#sp16 .dr').forEach((d, i) => tl.fromTo(d, { x: 600, y: 1040, autoAlpha: 1 }, { keyframes: { x: [600, 380, 160], y: [1040, 900, 980] }, duration: 0.55, ease: 'none', repeat: 3, immediateRender: false }, T[221] - 0.05 + i * 0.035))
+        gsap.set('#sp16 .dr', { autoAlpha: 0 })
+        tl.set('#sp16', { autoAlpha: 0 }, CUT[16] - 0.01)
+        pop('#ss16', T[221] - 0.05, { scale: 0.6 })
+        blink('#jo16', [T[214]])
+        // 17. mirror: the six inventors in gold frames, then their names get signed
+        spin('#rays17', CUT[16], END, 22)
+        ;['#f17a', '#f17b', '#f17c', '#f17d', '#f17e', '#f17f'].forEach((f, i) => pop(f, CUT[16] + 0.05 + i * 0.16, { y: 120, scale: 0.6 }))
+        pop('#fin17', T[238] - 0.05, { scale: 0.6 })
+        ;['#n17a', '#n17b', '#n17c', '#n17d', '#n17e', '#n17f'].forEach((n, i) => { tl.fromTo(n, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01 }, T[240] - 0.05 + i * 0.18); reveal(n, T[240] - 0.05 + i * 0.18, 0.35) })
+        blink('#f17b', [CUT[16] + 1.6]); blink('#f17e', [CUT[16] + 2.4])
+
+        // ---------- captions: groups of 2-4 words, the spoken word in a red box ----------
+        const caps = $('caps')
+        const G = []
+        let cur = []
+        WORDS.forEach((w, k) => {
+          if (!w) return
+          cur.push(k)
+          const len = cur.reduce((n, j) => n + WORDS[j].length + 1, 0)
+          if (/[.,:;?!…]$/.test(w) || cur.length >= 4 || len > 20) { G.push(cur); cur = [] }
+        })
+        if (cur.length) G.push(cur)
+        G.forEach((g, gi) => {
+          const box = document.createElement('div'); box.className = 'grp'; caps.appendChild(box)
+          const t0 = T[g[0]] - 0.04, t1 = gi < G.length - 1 ? T[G[gi + 1][0]] - 0.04 : END
+          tl.set(box, { visibility: 'visible' }, t0)
+          tl.set(box, { visibility: 'hidden' }, t1)
+          tl.fromTo(box, { scale: 0.92 }, { scale: 1, duration: 0.12, ease: 'power2.out', immediateRender: false }, t0)
+          g.forEach((k, j) => {
+            const s = document.createElement('span'); s.className = 'cw'; s.textContent = WORDS[k]; box.appendChild(s)
+            const next = j < g.length - 1 ? T[g[j + 1]] - 0.04 : t1
+            tl.set(s, { '--on': 1 }, T[k] - 0.04)
+            tl.set(s, { '--on': 0 }, next)
+          })
+        })
+        tl.fromTo('#prog', { scaleX: 0 }, { scaleX: 1, duration: END, ease: 'none', immediateRender: false }, 0)
+        gsap.set('#prog', { scaleX: 0 })
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
