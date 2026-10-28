@@ -1,22 +1,22 @@
 # « Les Noirs n'ont jamais rien inventé ? Faux. » — style ANIMÉ, en français
 
-Troisième vidéo en **style ANIMÉ**, écrite sur le **gabarit de script** de `../_engine/style-anime/README.md`. En français, **≈ 63 s**. Tout est dessiné en SVG et CSS dans `index.html`, sans aucune image.
+Troisième vidéo en **style ANIMÉ**, écrite sur le **gabarit de script** de `../_engine/style-anime/README.md`. En français, **≈ 63 s**. Tout est dessiné en SVG et CSS dans `index.html`, sans aucune image. Chaque scène a son **décor illustré**, et les inventeurs apparaissent en **médaillons** ronds plutôt qu'en grands bustes. C'est la règle demandée par le client : beaucoup d'illustrations, pas seulement des personnages.
 
 | Étape du gabarit | Texte | Image |
 |---|---|---|
-| Accroche (mythe en deux affirmations) | « Les Noirs n'ont jamais rien inventé. Et tout ce que tu utilises vient des Blancs. » | mur de musée « LES GRANDS INVENTEURS », trois portraits blancs en sépia ; ampoule, feu, manette, pistolet à eau |
-| Démenti et promesse | « Ça, c'est ce qu'on veut te faire croire… » | manuel « HISTOIRE DES INVENTIONS », tampon « FAUX » |
-| Question d'ouverture n° 1 | « Jamais rien inventé ? » | champ de coton au coucher du soleil, compteur « 1857 », Ned au chapeau de paille, sa charrue |
-| Origine, accusation retournée | le maître veut le brevet : refusé ; Ned : esclave, pas citoyen, pas de brevet | brevet « LE MAÎTRE ? » tamponné « REFUSÉ » ; Ned enchaîné, « PAS CITOYEN », tampon « PAS DE BREVET » |
-| Qui a écrit la règle | 1858, l'État américain l'écrit noir sur blanc | décision officielle scellée, « UN ESCLAVE NE PEUT PAS BREVETER » |
-| Chute | « On leur interdisait juste de porter un nom. » | brevet d'invention : le nom « NED » est noirci, tampon « SANS NOM » |
+| Accroche (mythe en deux affirmations) | « Les Noirs n'ont jamais rien inventé. Et tout ce que tu utilises vient des Blancs. » | musée : trois portraits blancs en sépia sous des spots, ampoule, feu, manette, pistolet à eau, cordon de velours |
+| Démenti et promesse | « Ça, c'est ce qu'on veut te faire croire… » | bureau avec lampe, crayon et encrier ; manuel « HISTOIRE DES INVENTIONS », tampon « FAUX » |
+| Question d'ouverture n° 1 | « Jamais rien inventé ? » | plantation au coucher du soleil (maison à colonnes, champ de coton, oiseaux), compteur « 1857 », Ned en médaillon, une mule tire la charrue |
+| Origine, accusation retournée | le maître veut le brevet : refusé ; Ned : esclave, pas citoyen, pas de brevet | le Patent Office (colonnes, drapeau), le maître en médaillon, la demande de brevet « LE MAÎTRE ? » tamponnée « REFUSÉ » ; certificat de citoyenneté barré, chaînes, tampon « PAS DE BREVET » |
+| Qui a écrit la règle | 1858, l'État américain l'écrit noir sur blanc | le Capitole la nuit, décision officielle scellée ; une plume écrit « UN ESCLAVE NE PEUT PAS BREVETER » |
+| Chute | « On leur interdisait juste de porter un nom. » | pile de brevets ; sur celui du dessus, le nom « NED » est noirci, tampon « SANS NOM » |
 | Question d'ouverture n° 2 | « Et tout ce que tu utilises vient des Blancs ? » | grand « ? » doré, les inventions tournent autour |
-| Preuves en rafale | Garrett Morgan (feu à trois positions, 1923 ; cagoule ; sauvetage dans le tunnel) | feu qui passe du rouge au vert, « 3 POSITIONS », « 1923 » ; cagoule, tunnel rempli de gaz, corde, ouvriers sauvés |
-| | Lewis Latimer (filament de carbone, 1882) | ampoule qui s'allume, « FILS D'ESCLAVES EN FUITE », « FILAMENT DE CARBONE », « 1882 » |
-| | Charles Drew (banques de sang, années 40) | poches de sang, « ANNÉES 40 » ; « IRONIE » : Croix-Rouge, poches « NOIRS » et « BLANCS » séparées par un mur ; Drew en colère, règle barrée, « IL QUITTE SON POSTE » |
-| | Jerry Lawson (console à cartouches) | télé et console années 70, la cartouche « JEU » entre, le jeu démarre, « 1ʳᵉ CONSOLE À CARTOUCHES » |
-| | Lonnie Johnson (NASA, Super Soaker) | fusée, « INGÉNIEUR NASA », pistolet à eau qui arrose, « SUPER SOAKER » |
-| **Phrase miroir** | « Ce n'est pas que les Noirs n'ont rien inventé. C'est qu'on leur a interdit de signer leurs inventions. » | les six inventeurs dans des cadres dorés, « INTERDITS DE SIGNER », leurs noms s'écrivent un à un |
+| Preuves en rafale | Garrett Morgan (feu à trois positions, 1923 ; cagoule ; sauvetage dans le tunnel) | carrefour la nuit : immeubles éclairés, passage piéton, deux voitures attendent au rouge et partent au vert, « 3 POSITIONS », « 1923 » ; cagoule, tunnel rempli de gaz, corde, ouvriers sauvés |
+| | Lewis Latimer (filament de carbone, 1882) | l'ampoule s'allume, puis les réverbères et les fenêtres de la ville ; « FILS D'ESCLAVES EN FUITE », « FILAMENT DE CARBONE », « 1882 » |
+| | Charles Drew (banques de sang, années 40) | labo des années 40 : la banque de sang se remplit, microscope, tubes, « ANNÉES 40 » ; « IRONIE » : Croix-Rouge, poches « NOIRS » et « BLANCS » séparées par un mur ; règle barrée, lettre « DÉMISSION », la porte s'ouvre, « IL QUITTE SON POSTE » |
+| | Jerry Lawson (console à cartouches) | salon des années 70 (canapé, lampe, tapis) : la cartouche « JEU » entre dans la console, le jeu démarre à la télé, les enfants sautent, « 1ʳᵉ CONSOLE À CARTOUCHES » |
+| | Lonnie Johnson (NASA, Super Soaker) | pas de tir NASA : la fusée décolle dans la fumée ; le pistolet à eau arrose, flaque, « SUPER SOAKER » |
+| **Phrase miroir** | « Ce n'est pas que les Noirs n'ont rien inventé. C'est qu'on leur a interdit de signer leurs inventions. » | les six inventeurs dans des cadres dorés, chacun avec le badge de son invention, « INTERDITS DE SIGNER », leurs noms s'écrivent un à un |
 
 Comme le veut le gabarit : **pas de bilan, pas de question finale**. La vidéo se termine sur la phrase miroir, et l'invitation à commenter est dans la description. Le mythe du « beurre de cacahuète de George Washington Carver », faux, est volontairement laissé de côté.
 

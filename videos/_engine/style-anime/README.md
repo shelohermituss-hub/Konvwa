@@ -50,6 +50,12 @@ Et [l'accusateur], alors ? [Ce qu'il doit à l'accusé, en rafale.]
 ## 2. Image (ce que le moteur dessine)
 
 - **Fonds** : sombres, avec un halo radial et un vignettage. Rayons qui tournent lentement pour les moments forts (doré pour la fierté, rouge, bleu). Rayures de papier peint ou bois pour les intérieurs, coucher de soleil, nuit.
+- **Beaucoup d'illustrations, pas seulement des personnages** (demande du client) :
+  - chaque scène a un **décor illustré** qui raconte la phrase (plantation, bâtiment officiel, carrefour avec voitures, tunnel, ville qui s'allume, labo, salon, pas de tir…) ;
+  - plusieurs **objets animés** par scène ;
+  - le personnage passe **en médaillon** rond (300 px) avec sa plaque de nom ;
+  - le grand buste est réservé aux moments forts (accroche, phrase miroir) ;
+  - modèle : `videos/inventeurs/`.
 - **Personnages en buste**, dessinés en SVG :
   - peau, coiffure (cheveux courts, tresses, gris), chapeau (cowboy, sombrero, paille), moustache, bandana, lunettes ;
   - humeur : triste, neutre, sûr de lui, en colère ;
