@@ -86,7 +86,7 @@ def main():
     bed = np.zeros((n, 2), np.float32)
     if plan.get('bed'):
         place(bed, load(plan['bed'], dur=plan['duration']), 0.0)
-        bed *= 10 ** ((v_level - BED_BELOW_VOICE_DB - rms_db(bed.mean(1))) / 20)
+        bed *= 10 ** ((v_level - plan.get('bed_below_voice_db', BED_BELOW_VOICE_DB) - rms_db(bed.mean(1))) / 20)
 
     sfx = np.zeros((n, 2), np.float32)
     for f, t0, vol, cap in plan['events']:

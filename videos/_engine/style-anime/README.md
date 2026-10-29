@@ -99,7 +99,7 @@ Et [l'accusateur], alors ? [Ce qu'il doit à l'accusé, en rafale.]
   - Un son manque pour un nouveau dessin ? Le générer avec `audio_sfx_generate` (1–3 s, 5 crédits par seconde) et l'ajouter ici.
   - **Mixage obligatoire avec `mix_anime.py`** (retour client : « les effets couvrent la voix ») :
     - on ne met plus les sons en pistes séparées dans `index.html` ; le script de construction écrit un plan (voix, musique, liste des sons avec début et volume) ;
-    - `python3 -I mix_anime.py plan.json assets/audio/mix.wav` produit un seul fichier son, placé sur une seule piste ;
+    - `python3 -I mix_anime.py plan.json assets/audio/mix.wav` produit un seul fichier son, à convertir en MP3 320 kbit/s (`ffmpeg -i mix.wav -b:a 320k mix.mp3`) avant de le placer sur une seule piste ;
     - réglages calés sur la référence : pendant la parole, le fond est environ 17 dB sous la voix et environ 9 LU sous elle sur l'ensemble ;
     - les gros sons (booms, salves, tampons) se placent **entre les phrases** : pendant la parole, ils sont baissés automatiquement ;
     - volumes du plan : bruitages 0,25–0,6, boom 0,4–0,55, whoosh 0,25, `sfx_gain` 1,6.

@@ -48,7 +48,7 @@ Pas de bilan ni de question finale : l'invitation à commenter est dans la descr
 
 - **Plus de 60 s** : deux passages ajoutés (Nawi et « les Amazones », Yaa Asantewaa et le Tabouret d'or), soit 66,6 s au lieu de 55,6 s, sans ralentir la voix (236 mots/min).
 - **La voix ne doit pas être couverte** :
-  - le son est désormais un seul mixage `assets/audio/mix.wav`, fait par `../_engine/style-anime/mix_anime.py` ;
+  - le son est désormais un seul mixage `assets/audio/mix.mp3`, fait par `../_engine/style-anime/mix_anime.py` ;
   - la musique est 18 dB sous la voix et baisse encore pendant qu'elle parle ;
   - pendant la parole, chaque bruitage est plafonné (20 dB sous la voix dans la zone de la parole, 12 dB en pleine bande) ; entre les phrases, il retrouve sa force ;
   - mesure (voix et fond séparés), en dB d'écart voix − fond pendant la parole :
