@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>La Joconde, le plus beau tableau ? Faux.</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Style ANIMÉ (videos/_engine/style-anime/README.md), en français, sur le gabarit de script :
+      mythe en deux affirmations (« le plus beau tableau du monde », « c'est pour ça que tout le monde la connaît ») → « c'est faux » →
+      « tout le monde la connaît ? » (avant 1911, admirée des spécialistes) → « le plus beau ? » : c'est un vol (21 août 1911, Peruggia)
+      → les crochets ; l'explosion (Louvre fermé, journaux, foules devant le mur vide, Apollinaire, Picasso, cartes postales)
+      → « et pendant ce temps-là » la malle à double fond → Florence, décembre 1913 → le retour d'une star → phrase miroir.
+      Tout est dessiné en SVG et CSS : un décor illustré par scène, personnages en médaillons.
+      Voix Gabriel Dubois (Magnific / ElevenLabs) ; bruitages de la banque du style ANIMÉ mixés sous la voix (mix_anime.py).
+    -->
+    <style>
+      @font-face { font-family: "Bebas"; src: url("assets/fonts/bebas-neue.woff2") format("woff2"); }
+      @font-face { font-family: "Anton"; src: url("assets/fonts/anton.woff2") format("woff2"); }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0d0d12; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #0d0d12; font-family: "Bebas", sans-serif; }
+      .scene { position: absolute; inset: 0; overflow: hidden; visibility: hidden; }
+      .cam { position: absolute; inset: 0; transform-origin: 50% 55%; }
+      .bg { position: absolute; inset: 0; }
+      .vig { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 60% at 50% 48%, transparent 40%, rgba(0, 0, 0, 0.72) 100%); pointer-events: none; }
+      svg { position: absolute; overflow: visible; }
+      .full { left: 0; top: 0; width: 1080px; height: 1920px; }
+      .bust { position: absolute; width: 620px; height: 723px; }
+      .frame { position: absolute; width: 290px; height: 350px; box-sizing: border-box; border: 16px solid #c9962e; border-radius: 8px; background: #e8d5b0; box-shadow: inset 0 0 0 4px #7a5418, 0 14px 30px rgba(0, 0, 0, 0.6); overflow: hidden; }
+      .frame .in { position: absolute; left: -12px; top: 22px; width: 282px; height: 329px; }
+      .med { position: absolute; width: 300px; height: 300px; box-sizing: border-box; border-radius: 50%; border: 12px solid #c9962e; overflow: hidden; box-shadow: inset 0 0 0 4px #7a5418, 0 12px 30px rgba(0, 0, 0, 0.55); }
+      .med .in { position: absolute; left: -36px; top: 6px; width: 348px; height: 406px; }
+      .med.sm { width: 220px; height: 220px; border-width: 9px; }
+      .med.sm .in { left: -27px; top: 4px; width: 256px; height: 299px; }
+      .ic { position: absolute; width: 150px; height: 150px; }
+      #caps { position: absolute; left: 40px; right: 40px; top: 1420px; height: 120px; z-index: 50; }
+      .grp { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: center; align-items: center; column-gap: 6px; visibility: hidden; }
+      .cw { position: relative; font-size: 84px; line-height: 1; color: #fff; letter-spacing: 0.01em; text-transform: uppercase; padding: 6px 10px 2px; -webkit-text-stroke: 3px #111; paint-order: stroke fill; text-shadow: 0 5px 0 rgba(0, 0, 0, 0.7), 0 0 22px rgba(0, 0, 0, 0.8); white-space: nowrap; }
+      .cw::before { content: ""; position: absolute; inset: 0; border-radius: 12px; background: #d7263d; opacity: var(--on, 0); z-index: -1; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35); }
+      #prog { position: absolute; left: 0; top: 0; height: 9px; width: 1080px; background: #f2b705; transform-origin: 0 50%; z-index: 60; box-shadow: 0 0 12px rgba(242, 183, 5, 0.7); }
+      #progbg { position: absolute; left: 0; top: 0; height: 9px; width: 1080px; background: rgba(255, 255, 255, 0.12); z-index: 59; }
+      .gold { position: absolute; font-family: "Anton", sans-serif; color: #ffc93c; text-shadow: 0 0 30px rgba(255, 190, 40, 0.75), 0 0 80px rgba(255, 150, 0, 0.45), 0 6px 0 #9a5b00; letter-spacing: 0.01em; line-height: 1; text-align: center; white-space: nowrap; }
+      .stamp { position: absolute; padding: 8px 34px 2px; border: 12px solid #d7263d; border-radius: 18px; color: #d7263d; font-family: "Anton", sans-serif; font-size: 130px; line-height: 1; letter-spacing: 0.04em; background: #fff5e6; white-space: nowrap; }
+      .plate { position: absolute; padding: 10px 30px 4px; border-radius: 14px; background: #f3e3c3; color: #3a2312; font-family: "Anton", sans-serif; font-size: 52px; letter-spacing: 0.05em; box-shadow: 0 10px 0 #b38a55, 0 20px 40px rgba(0, 0, 0, 0.5); white-space: nowrap; }
+      .red { background: #d7263d; color: #fff; box-shadow: 0 10px 0 #8a1020, 0 20px 40px rgba(0, 0, 0, 0.5); }
+      .name { position: absolute; width: 290px; text-align: center; font-family: "Anton", sans-serif; font-size: 40px; color: #ffe6a0; letter-spacing: 0.03em; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.7); white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="73.7" data-width="1080" data-height="1920">
+      <!-- 1. hook: the Louvre gallery, the Mona Lisa under a spotlight -->
+      <div class="scene" id="s1"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #3a1e22 0%, #5a2a2e 60%, #3a2414 61%, #1e140c 100%)"></div>
+        <svg id="gal1" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <svg id="ml1" viewBox="-30 -30 360 480" style="left: 360px; top: 470px; width: 360px; height: 480px"></svg>
+        <div class="plate" id="pb1" style="left: 175px; top: 300px; font-size: 56px; background: #ffc93c">LE PLUS BEAU DU MONDE ?</div>
+      </div></div>
+      <!-- 2. « C'est pour ça que tout le monde la connaît » : a crowd of phones -->
+      <div class="scene" id="s2"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 35%, #4a3a2a 0%, #1e1610 60%, #0a0806 100%)"></div>
+        <svg id="ml2" viewBox="-30 -30 360 480" style="left: 390px; top: 300px; width: 300px; height: 400px"></svg>
+        <svg id="cr2" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+      </div></div>
+      <!-- 3. « Ça, c'est ce qu'on veut te faire croire… » : the museum guide; FAUX -->
+      <div class="scene" id="s3"><div class="cam">
+        <div class="bg" style="background: repeating-linear-gradient(90deg, #4a2f1c 0 46px, #3d2616 46px 52px, #53351f 52px 98px, #3d2616 98px 104px)"></div><div class="vig"></div>
+        <svg id="gd3" viewBox="0 0 640 860" style="left: 220px; top: 420px; width: 640px; height: 860px"></svg>
+        <div class="stamp" id="faux3" style="left: 310px; top: 760px">FAUX</div>
+      </div></div>
+      <!-- 4. « Tout le monde la connaît ? Avant 1911, ce petit portrait de 77 cm est admiré des spécialistes » -->
+      <div class="scene" id="s4"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #4a3a28 0%, #6a5236 60%, #3a2a1a 61%, #241a10 100%); filter: sepia(0.3)"></div>
+        <svg id="gal4" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="ml4" viewBox="-30 -30 360 480" style="left: 470px; top: 760px; width: 140px; height: 187px"></svg>
+        <svg id="tape4" viewBox="0 0 400 80" style="left: 340px; top: 980px; width: 400px; height: 80px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q4" style="left: 0; right: 0; top: 170px; font-size: 110px">TOUT LE MONDE ?</div>
+        <div class="gold" id="y4" style="left: 0; right: 0; top: 170px; font-size: 190px">1911</div>
+        <div class="med sm" id="cr4a" style="left: 60px; top: 1100px"></div>
+        <div class="med sm" id="cr4b" style="left: 800px; top: 1100px"></div>
+        <div class="plate" id="sp4" style="left: 330px; top: 1180px; font-size: 44px">SPÉCIALISTES</div>
+      </div></div>
+      <!-- 5. « Mais le grand public passe devant sans s'arrêter » -->
+      <div class="scene" id="s5"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #4a3a28 0%, #6a5236 60%, #3a2a1a 61%, #241a10 100%)"></div>
+        <svg id="gal5" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="ml5" viewBox="-30 -30 360 480" style="left: 470px; top: 700px; width: 140px; height: 187px"></svg>
+        <svg id="vis5" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+      </div></div>
+      <!-- 6. « Le plus beau tableau du monde ? Ce n'est pas sa beauté… C'est un vol » -->
+      <div class="scene" id="s6"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a2a3a 0%, #1a121a 60%, #08060a 100%)"></div>
+        <svg id="rays6" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -40px; width: 2000px; height: 2000px; opacity: 0.18"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q6" style="left: 0; right: 0; top: 170px; font-size: 110px">LE PLUS BEAU ?</div>
+        <svg id="ml6" viewBox="-30 -30 360 480" style="left: 360px; top: 470px; width: 360px; height: 480px"></svg>
+        <svg id="hand6" viewBox="0 0 300 300" style="left: 700px; top: 520px; width: 300px; height: 300px"></svg>
+        <div class="stamp" id="vol6" style="left: 220px; top: 1050px; font-size: 120px">C'EST UN VOL</div>
+      </div></div>
+      <!-- 7. « Le lundi 21 août 1911, le Louvre est fermé » -->
+      <div class="scene" id="s7"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #f0c890 0%, #c8a070 50%, #6a5a4a 51%, #3a3028 100%)"></div>
+        <svg id="lv7" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <svg id="cal7" viewBox="0 0 300 340" style="left: 60px; top: 260px; width: 300px; height: 340px"></svg>
+        <div class="stamp" id="fe7" style="left: 560px; top: 330px; font-size: 110px">FERMÉ</div>
+      </div></div>
+      <!-- 8. « Un vitrier italien… Vincenzo Peruggia, décroche le tableau, le cache sous sa blouse blanche, et ressort » -->
+      <div class="scene" id="s8"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #3a2a22 0%, #5a3e30 60%, #2a1e14 61%, #1a120c 100%)"></div>
+        <svg id="room8" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="ml8" viewBox="-30 -30 360 480" style="left: 470px; top: 640px; width: 180px; height: 240px"></svg>
+        <svg id="man8" viewBox="0 0 120 300" style="left: 260px; top: 760px; width: 216px; height: 540px"></svg>
+        <div class="vig"></div>
+        <div class="med sm" id="pe8" style="left: 60px; top: 300px"></div>
+        <div class="plate" id="pn8" style="left: 300px; top: 360px; font-size: 44px">VINCENZO PERUGGIA</div>
+        <div class="plate red" id="vt8" style="left: 300px; top: 450px; font-size: 40px">VITRIER · ITALIEN</div>
+      </div></div>
+      <!-- 9. « Le lendemain, il ne reste au mur que les crochets » -->
+      <div class="scene" id="s9"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #5a2a2e 0%, #4a2226 100%)"></div>
+        <svg id="wall9" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g9" style="left: 0; right: 0; top: 230px; font-size: 120px">LE LENDEMAIN…</div>
+      </div></div>
+      <!-- 10. « Et là, c'est l'explosion. Le Louvre ferme une semaine. Les journaux du monde entier mettent le vol en une » -->
+      <div class="scene" id="s10"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a3a40 0%, #1a1a20 60%, #08080a 100%)"></div>
+        <svg id="rays10" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -40px; width: 2000px; height: 2000px; opacity: 0.18"></svg>
+        <svg id="press10" viewBox="0 0 600 400" style="left: 240px; top: 1020px; width: 600px; height: 400px"></svg>
+        <svg id="news10" data-layout-allow-overlap class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="plate red" id="fs10" style="left: 250px; top: 260px; font-size: 52px">LOUVRE FERMÉ 1 SEMAINE</div>
+      </div></div>
+      <!-- 11. « Et quand le musée rouvre, des foules font la queue pour regarder un mur vide » -->
+      <div class="scene" id="s11"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #5a2a2e 0%, #4a2226 60%, #2a1a14 61%, #1a100c 100%)"></div>
+        <svg id="wall11" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="q11" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g11" style="left: 0; right: 0; top: 200px; font-size: 120px">UN MUR VIDE</div>
+      </div></div>
+      <!-- 12. « La police cherche partout. Apollinaire est arrêté. Picasso est interrogé. Tous deux mis hors de cause » -->
+      <div class="scene" id="s12"><div class="cam">
+        <div class="bg" style="background: repeating-linear-gradient(0deg, #2a2e36 0 60px, #24282e 60px 120px)"></div>
+        <svg id="pol12" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="med" id="ap12" style="left: 80px; top: 420px"></div>
+        <div class="med" id="pi12" style="left: 700px; top: 420px"></div>
+        <div class="name" id="an12" style="left: 85px; top: 740px">APOLLINAIRE</div>
+        <div class="name" id="pn12" style="left: 705px; top: 740px">PICASSO</div>
+        <div class="stamp" id="ar12" style="left: 40px; top: 820px; font-size: 64px">ARRÊTÉ</div>
+        <div class="stamp" id="in12" style="left: 640px; top: 820px; font-size: 64px">INTERROGÉ</div>
+        <div class="plate" id="hc12" style="left: 230px; top: 1060px; font-size: 56px; background: #9be27a">HORS DE CAUSE</div>
+        <div class="plate red" id="po12" style="left: 400px; top: 260px; font-size: 52px">POLICE</div>
+      </div></div>
+      <!-- 13. « Pendant deux ans, cartes postales, chansons, articles… La Joconde est partout. Sauf au Louvre » -->
+      <div class="scene" id="s13"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #c98a1c 0%, #6b3d08 55%, #1b0f03 100%)"></div>
+        <svg id="rays13" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -40px; width: 2000px; height: 2000px; opacity: 0.25"></svg>
+        <svg id="pc13" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g13" style="left: 0; right: 0; top: 170px; font-size: 150px">PARTOUT</div>
+        <div class="stamp" id="sl13" style="left: 190px; top: 1150px; font-size: 100px">SAUF AU LOUVRE</div>
+      </div></div>
+      <!-- 14. « Et pendant ce temps-là ? Elle dort dans une malle à double fond, dans une petite chambre à Paris » -->
+      <div class="scene" id="s14"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #0e1424 0%, #1a2238 100%)"></div>
+        <svg id="att14" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="tr14" viewBox="0 0 600 420" style="left: 240px; top: 860px; width: 600px; height: 420px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q14" style="left: 0; right: 0; top: 170px; font-size: 100px">ET PENDANT CE TEMPS-LÀ ?</div>
+        <div class="plate" id="db14" style="left: 280px; top: 760px; font-size: 48px; background: #ffc93c">DOUBLE FOND</div>
+      </div></div>
+      <!-- 15. « En décembre 1913, Peruggia essaie de la vendre à un marchand d'art de Florence » -->
+      <div class="scene" id="s15"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #e8b070 0%, #f0d0a0 50%, #b08a5a 51%, #6a5034 100%)"></div>
+        <svg id="flo15" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="train15" viewBox="0 0 700 220" style="left: 0; top: 1100px; width: 700px; height: 220px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="y15" style="left: 0; right: 0; top: 170px; font-size: 140px">DÉC. 1913</div>
+        <div class="plate" id="fl15" style="left: 380px; top: 360px; background: #ffc93c">FLORENCE</div>
+        <div class="med sm" id="pe15" style="left: 60px; top: 330px"></div>
+      </div></div>
+      <!-- 16. « Le marchand prévient le directeur des Offices, qui prévient la police » -->
+      <div class="scene" id="s16"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #4a3020 0%, #6a4630 100%)"></div>
+        <svg id="shop16" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="med sm" id="ge16" style="left: 80px; top: 360px"></div>
+        <div class="plate" id="gl16" style="left: 40px; top: 600px; font-size: 40px">LE MARCHAND</div>
+        <div class="med sm" id="pg16" style="left: 780px; top: 360px"></div>
+        <div class="plate" id="ol16" style="left: 640px; top: 600px; font-size: 40px">DIR. DES OFFICES</div>
+        <svg id="ph16" viewBox="0 0 200 200" style="left: 440px; top: 380px; width: 200px; height: 200px"></svg>
+        <div class="stamp" id="po16" style="left: 290px; top: 980px; font-size: 120px">POLICE !</div>
+      </div></div>
+      <!-- 17. « Quand elle revient au Louvre, les foules ne viennent plus voir un tableau. Elles viennent voir une star » -->
+      <div class="scene" id="s17"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 40%, #6a1a2a 0%, #3a0c14 60%, #12040a 100%)"></div>
+        <svg id="rays17" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -260px; width: 2000px; height: 2000px; opacity: 0.25"></svg>
+        <svg id="ml17" viewBox="-30 -30 360 480" style="left: 390px; top: 380px; width: 300px; height: 400px"></svg>
+        <svg id="star17" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g17" style="left: 0; right: 0; top: 170px; font-size: 150px">UNE STAR</div>
+      </div></div>
+      <!-- 18. « Aujourd'hui, des millions de visiteurs font la queue pour elle chaque année » -->
+      <div class="scene" id="s18"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #2a2a34 0%, #3a3a46 60%, #1a1a20 61%, #0e0e12 100%)"></div>
+        <svg id="ml18" viewBox="-30 -30 360 480" style="left: 460px; top: 520px; width: 160px; height: 213px"></svg>
+        <svg id="mod18" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g18" style="left: 0; right: 0; top: 200px; font-size: 130px">DES MILLIONS</div>
+        <div class="plate" id="pa18" style="left: 380px; top: 360px; font-size: 48px">PAR AN</div>
+      </div></div>
+      <!-- 19. mirror line: the painting in gold light; then the empty hooks -->
+      <div class="scene" id="s19"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #c98a1c 0%, #6b3d08 55%, #1b0f03 100%)"></div>
+        <svg id="rays19" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -200px; width: 2000px; height: 2000px; opacity: 0.3"></svg>
+        <div class="vig"></div>
+        <svg id="ml19" viewBox="-30 -30 360 480" style="left: 360px; top: 520px; width: 360px; height: 480px"></svg>
+        <svg id="hk19" viewBox="-30 -30 360 480" style="left: 360px; top: 520px; width: 360px; height: 480px"></svg>
+        <div class="gold" id="f19a" style="left: 0; right: 0; top: 200px; font-size: 92px">PAS PARCE QU'ELLE EST BELLE</div>
+        <div class="gold" id="f19b" style="left: 0; right: 0; top: 200px; font-size: 104px">PARCE QU'ON L'A VOLÉE</div>
+      </div></div>
+
+      <div id="caps"></div>
+      <div id="progbg"></div>
+      <div id="prog"></div>
+
+      <!-- Son : un seul mixage (voix devant ; musique et bruitages baissés sous la voix par ../_engine/style-anime/mix_anime.py) -->
+      <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="73.7" data-track-index="10" data-volume="1"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const END = 73.7
+        const RAW = [0.0, 0.099, 0.719, 0.769, 0.84, 1.037, 1.234, 1.581, 1.679, 2.171, 2.221, 2.282, 2.381, 2.529, 2.726, 2.825, 3.072, 3.171, 3.575, 3.625, 3.772, 3.878, 4.098, 4.31, 4.416, 4.681, 4.987, 5.037, 5.17, 5.434, 5.851, 5.901, 5.951, 6.086, 6.193, 6.298, 6.823, 6.873, 6.923, 7.016, 7.104, 7.457, 7.657, 7.731, 8.06, 8.417, 8.986, 9.129, 9.271, 10.055, 10.268, 10.695, 10.909, 11.938, 11.988, 12.038, 12.353, 12.75, 13.08, 13.478, 13.742, 14.071, 14.175, 14.407, 14.638, 15.044, 15.159, 15.453, 15.503, 15.581, 15.755, 15.871, 16.218, 16.392, 16.507, 16.623, 16.97, 17.205, 17.513, 17.681, 17.89, 17.94, 18.113, 18.271, 18.589, 18.986, 19.144, 19.621, 19.859, 20.483, 20.623, 20.748, 21.136, 21.346, 21.415, 22.045, 22.185, 22.818, 23.129, 23.688, 23.921, 24.029, 24.466, 24.574, 24.847, 24.978, 25.087, 25.413, 25.794, 25.903, 26.282, 26.887, 27.182, 27.355, 27.558, 27.694, 27.928, 28.002, 28.205, 28.409, 28.612, 29.222, 29.522, 29.596, 29.887, 31.003, 31.053, 31.134, 31.414, 31.583, 32.044, 32.25, 32.573, 32.669, 32.95, 33.287, 33.679, 33.792, 33.96, 34.073, 34.445, 34.563, 34.856, 34.974, 35.11, 35.521, 35.698, 36.002, 36.217, 36.334, 36.628, 36.863, 37.334, 37.451, 37.628, 38.07, 38.193, 38.434, 38.679, 39.343, 39.393, 39.673, 39.909, 40.587, 40.773, 41.353, 41.502, 41.799, 41.952, 42.615, 42.821, 43.018, 43.076, 43.23, 43.436, 43.539, 44.213, 44.271, 44.378, 44.452, 44.502, 44.631, 44.792, 45.115, 45.903, 45.953, 46.031, 46.192, 46.447, 46.748, 47.016, 47.178, 47.579, 47.74, 48.063, 48.38, 48.966, 49.049, 49.759, 50.116, 50.285, 50.547, 50.707, 51.113, 51.163, 51.213, 51.62, 51.824, 51.874, 51.986, 52.282, 52.341, 52.698, 52.935, 53.173, 53.351, 53.707, 54.122, 54.181, 54.5, 54.55, 54.889, 55.174, 55.573, 55.915, 56.029, 56.095, 56.436, 56.494, 56.608, 57.063, 57.348, 57.462, 58.123, 58.246, 58.611, 58.85, 58.974, 59.529, 59.714, 60.209, 60.394, 60.888, 61.011, 61.554, 61.641, 61.691, 61.969, 62.059, 62.373, 62.507, 62.7, 62.788, 63.147, 63.326, 63.505, 63.595, 64.101, 64.358, 64.794, 65.09, 65.313, 65.545, 65.595, 65.976, 66.319, 66.404, 66.788, 66.96, 67.045, 67.259, 67.43, 67.6, 67.857, 68.345, 68.628, 68.863, 68.913, 69.004, 69.175, 69.338, 69.563, 69.96, 70.131, 70.619, 70.85, 71.024, 71.176, 71.465, 71.754, 71.862]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["La", "Joconde,", "c'est", "le", "plus", "beau", "tableau", "du", "monde.", "C'est", "pour", "ça", "que", "tout", "le", "monde", "la", "connaît.", "Ça,", "c'est", "ce", "qu'on", "veut", "te", "faire", "croire.", "Sauf", "que", "c'est", "faux,", "et", "je", "vais", "te", "le", "prouver.", "Tout", "le", "monde", "la", "connaît ?", "Avant", "1911,", "ce", "petit", "portrait", "de", "77", "centimètres", "est", "admiré", "des", "spécialistes.", "Mais", "le", "grand", "public", "passe", "devant", "sans", "s'arrêter.", "Le", "plus", "beau", "tableau", "du", "monde ?", "Ce", "n'est", "pas", "sa", "beauté", "qui", "va", "la", "rendre", "célèbre.", "C'est", "un", "vol.", "Le", "lundi", "21", "août", "1911,", "le", "Louvre", "est", "fermé.", "Un", "vitrier", "italien", "qui", "a", "travaillé", "au", "musée,", "Vincenzo", "Peruggia,", "décroche", "le", "tableau,", "le", "cache", "sous", "sa", "blouse", "blanche,", "et", "ressort", "tranquillement.", "Le", "lendemain,", "il", "ne", "reste", "au", "mur", "que", "les", "crochets.", "Et", "là,", "c'est", "l'explosion.", "Le", "Louvre", "ferme", "une", "semaine.", "Les", "journaux", "du", "monde", "entier", "mettent", "le", "vol", "en", "une.", "Et", "quand", "le", "musée", "rouvre,", "des", "foules", "font", "la", "queue", "pour", "regarder", "un", "mur", "vide.", "La", "police", "cherche", "partout.", "Le", "poète", "Guillaume", "Apollinaire", "est", "arrêté.", "Pablo", "Picasso", "est", "interrogé.", "Tous", "deux", "seront", "mis", "hors", "de", "cause.", "Pendant", "deux", "ans,", "on", "vend", "des", "cartes", "postales,", "on", "chante", "des", "chansons,", "on", "écrit", "des", "articles", "sur", "elle.", "La", "Joconde", "est", "partout.", "Sauf", "au", "Louvre.", "Et", "pendant", "ce", "temps-là ?", "Elle", "dort", "dans", "une", "malle", "à", "double", "fond,", "dans", "une", "petite", "chambre", "à", "Paris.", "En", "décembre", "1913,", "Peruggia", "essaie", "de", "la", "vendre", "à", "un", "marchand", "d'art", "de", "Florence.", "Le", "marchand", "prévient", "le", "directeur", "des", "Offices,", "qui", "prévient", "la", "police.", "Quand", "elle", "revient", "au", "Louvre,", "les", "foules", "ne", "viennent", "plus", "voir", "un", "tableau.", "Elles", "viennent", "voir", "une", "star.", "Aujourd'hui,", "des", "millions", "de", "visiteurs", "font", "la", "queue", "pour", "elle", "chaque", "année.", "Alors", "non.", "Elle", "n'est", "pas", "célèbre", "parce", "qu'elle", "est", "belle.", "Elle", "est", "célèbre", "parce", "qu'on", "l'a", "volée."]
+        let seed = 23
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+
+        // ---------- flat bust characters ----------
+        const HAT = {
+          crown: () => '<path d="M206,190 L222,104 L262,152 L300,86 L338,152 L378,104 L394,190Z" fill="#f2b705" stroke="#a87a10" stroke-width="6"/><circle cx="300" cy="140" r="12" fill="#d7263d"/><circle cx="252" cy="168" r="8" fill="#2c6fa8"/><circle cx="348" cy="168" r="8" fill="#2c6fa8"/>',
+          laurel: () => '<g fill="#4a8a3a">' + Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (1.05 + i * 0.1), x = 300 + Math.cos(a) * 135, y = 250 + Math.sin(a) * 115; return `<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="26" ry="11" transform="rotate(${((a * 180) / Math.PI + 60).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})"/>` }).join('') + '</g>',
+          babcap: (c) => `<path d="M186,206 C186,112 414,112 414,206Z" fill="${c}"/><rect x="180" y="192" width="240" height="26" fill="#c9962e"/>`,
+          turban: (c) => `<path d="M170,236 C150,100 450,100 430,236 C380,204 220,204 170,236Z" fill="${c}"/><path d="M190,190 C260,150 340,150 410,190 M184,214 C260,176 340,176 416,214" stroke="#00000022" stroke-width="10" fill="none"/><circle cx="300" cy="176" r="16" fill="#c0392b" stroke="#f2b705" stroke-width="5"/>`,
+          beret: (c) => `<path d="M176,214 C150,136 262,90 336,110 C430,132 446,192 424,216 C364,196 240,196 176,214Z" fill="${c}"/>`,
+          flatcap: (c) => `<path d="M176,214 C168,140 258,102 330,110 C410,118 442,168 432,212 C380,196 232,196 176,214Z" fill="${c}"/><path d="M176,214 C240,232 330,232 400,212 L370,246 C300,256 220,250 176,214Z" fill="#00000044"/>`,
+          bicorne: (c) => `<path d="M110,206 C190,96 410,96 490,206 C410,176 190,176 110,206Z" fill="${c}"/><path d="M110,206 C200,186 400,186 490,206" stroke="#c9962e" stroke-width="8" fill="none"/><circle cx="300" cy="150" r="22" fill="#1d3557"/><circle cx="300" cy="150" r="12" fill="#d7263d"/>`,
+        }
+        function bust(o) {
+          const skin = o.skin, dark = o.dark, hc = o.hairCol || '#1b1410'
+          const brow = { sad: ['M222,250 L282,236', 'M318,236 L378,250'], sure: ['M222,240 L282,246', 'M318,234 L378,226'], neutral: ['M222,242 L282,240', 'M318,240 L378,242'], angry: ['M222,232 L282,252', 'M318,252 L378,232'] }[o.mood]
+          const mouth = { sad: 'M262,382 Q300,356 338,382', sure: 'M258,366 Q300,404 342,362', neutral: 'M270,372 Q300,384 330,372', angry: 'M266,380 Q300,366 334,380' }[o.mood]
+          let hair = ''
+          if (o.hair === 'short' || o.hair === 'headband') hair = `<path d="M178,262 C170,150 240,112 300,112 C360,112 430,150 422,262 C410,214 380,190 300,188 C220,190 190,214 178,262Z" fill="${hc}"/>`
+          if (o.hair === 'headband') hair += '<path d="M180,236 C230,200 370,200 420,236 L418,262 C370,228 230,228 182,262Z" fill="#f4f1e8"/>' + [0, 1, 2, 3, 4, 5].map((i) => `<ellipse cx="${222 + i * 31}" cy="${226 - Math.sin((i / 5) * Math.PI) * 14}" rx="8" ry="11" fill="#e8d5a0" stroke="#a88a50" stroke-width="2"/>`).join('')
+          if (o.hair === 'swept') hair = `<path d="M180,250 C168,150 250,100 330,112 C400,124 432,170 422,250 C400,190 350,170 300,176 C250,178 210,200 180,250Z" fill="${hc}"/>`
+          if (o.hair === 'wrap') { const w = o.wrap || '#c0392b'; hair = `<path d="M170,278 C150,168 220,90 300,86 C380,90 450,168 430,278 C414,226 380,198 300,196 C220,198 186,226 170,278Z" fill="${w}"/><g stroke="#f2b705" stroke-width="7" opacity="0.8"><path d="M196,170 C250,140 350,140 404,170" fill="none"/><path d="M182,220 C250,180 350,180 418,220" fill="none"/></g><path d="M300,96 C262,30 236,66 262,104Z M300,96 C338,30 364,66 338,104Z" fill="${w}" stroke="#7a1a12" stroke-width="4"/>` }
+          const hat = o.hat ? HAT[o.hat](o.hatCol || '#1b1410') : ''
+          const beard = o.beardLong ? `<path d="M178,300 C170,470 240,560 300,568 C360,560 430,470 422,300 C410,360 380,352 300,354 C220,352 190,360 178,300Z" fill="${hc}"/>` : o.beard ? `<path d="M178,300 C176,420 230,478 300,478 C370,478 424,420 422,300 C410,360 380,350 300,352 C220,350 190,360 178,300Z" fill="${hc}"/>` : ''
+          const stache = o.stache ? `<path d="M244,352 C262,334 290,338 300,350 C310,338 338,334 356,352 C346,372 318,368 300,358 C282,368 254,372 244,352Z" fill="${hc}"/>` : ''
+          const old = o.old ? `<path d="M232,332 Q255,340 278,332 M322,332 Q345,340 368,332 M250,212 Q300,204 350,212 M256,198 Q300,190 344,198" stroke="${dark}" stroke-width="5" fill="none" opacity="0.8"/>` : ''
+          const fem = o.female ? `<path d="M226,288 L212,278 M232,282 L222,270 M374,288 L388,278 M368,282 L378,270" stroke="#1b1410" stroke-width="5" stroke-linecap="round"/><circle cx="182" cy="352" r="11" fill="#f2b705"/><circle cx="418" cy="352" r="11" fill="#f2b705"/>` : ''
+          const lips = o.female ? `<path d="${mouth}" stroke="#7a2a22" stroke-width="13" fill="none" stroke-linecap="round"/>` : `<path d="${mouth}" stroke="#3a1a12" stroke-width="9" fill="none" stroke-linecap="round"/>`
+          const ep = o.epaulettes ? '<g fill="#f2b705"><ellipse cx="96" cy="540" rx="80" ry="28"/><ellipse cx="504" cy="540" rx="80" ry="28"/></g><g stroke="#f2b705" stroke-width="7">' + [0, 1, 2, 3, 4, 5].map((i) => `<line x1="${36 + i * 22}" y1="560" x2="${34 + i * 22}" y2="600"/><line x1="${454 + i * 22}" y1="560" x2="${456 + i * 22}" y2="600"/>`).join('') + '</g>' : ''
+          const body = o.plain
+            ? `<path d="M40,700 C40,520 150,468 300,468 C450,468 560,520 560,700Z" fill="${o.coat}"/><path d="M240,472 C260,520 340,520 360,472" fill="none" stroke="${o.lapel}" stroke-width="10"/>${o.beads ? [0, 1, 2, 3, 4, 5, 6].map((i) => `<circle cx="${236 + i * 21}" cy="${494 + Math.sin((i / 6) * Math.PI) * 26}" r="8" fill="${i % 2 ? '#c0392b' : '#f4f1e8'}"/>`).join('') : ''}${o.stripes ? [0, 1, 2, 3].map((i) => `<path d="M${70 + i * 30},${700} L${150 + i * 30},${520}" stroke="#f4f1e8" stroke-width="12" opacity="0.6"/>`).join('') : ''}`
+            : `<path d="M40,700 C40,520 150,468 300,468 C450,468 560,520 560,700Z" fill="${o.coat}"/><path d="M300,468 L200,476 L268,640Z" fill="${o.lapel}"/><path d="M300,468 L400,476 L332,640Z" fill="${o.lapel}"/><path d="M252,470 L348,470 L300,600Z" fill="${o.shirt}"/>${[0, 1, 2].map((i) => `<circle cx="300" cy="${612 + i * 30}" r="8" fill="#f2b705"/>`).join('')}`
+          return `<svg viewBox="0 0 600 700" width="100%" height="100%" style="position:absolute;left:0;top:0">
+            ${body}${ep}
+            <rect x="262" y="392" width="76" height="92" rx="20" fill="${dark}"/>
+            <ellipse cx="180" cy="312" rx="24" ry="34" fill="${dark}"/><ellipse cx="420" cy="312" rx="24" ry="34" fill="${dark}"/>
+            <ellipse cx="300" cy="296" rx="124" ry="142" fill="${skin}"/>
+            <path d="M300,154 C380,160 424,226 424,300 C424,380 380,436 300,438 C352,410 380,360 380,296 C380,226 350,176 300,154Z" fill="${dark}" opacity="0.35"/>
+            ${hair}${beard}
+            <g class="eyes"><ellipse cx="255" cy="300" rx="26" ry="24" fill="#fff"/><ellipse cx="345" cy="300" rx="26" ry="24" fill="#fff"/>
+            <circle cx="258" cy="302" r="12" fill="#151515"/><circle cx="348" cy="302" r="12" fill="#151515"/>
+            <circle cx="262" cy="296" r="4" fill="#fff"/><circle cx="352" cy="296" r="4" fill="#fff"/></g>
+            <g class="lids" opacity="0"><rect x="224" y="274" width="62" height="52" fill="${skin}"/><rect x="314" y="274" width="62" height="52" fill="${skin}"/><path d="M230,302 Q255,312 280,302 M320,302 Q345,312 370,302" stroke="#1b1410" stroke-width="6" fill="none"/></g>
+            <path d="${brow[0]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/><path d="${brow[1]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/>
+            <path d="M296,320 Q290,342 304,346" stroke="${dark}" stroke-width="7" fill="none" stroke-linecap="round"/>
+            ${old}${fem}${stache}${lips}${hat}
+          </svg>`
+        }
+        const put = (id, o) => { $(id).innerHTML = bust(o) }
+        const med = (id, o, bg) => { $(id).innerHTML = `<div class="in">${bust(o)}</div>`; $(id).style.background = bg || '#e8d5b0' }
+        // ---------- full-body figures (feet at y=300, centred on x=60) ----------
+        function fig(o) {
+          const skin = o.skin || '#7a4a2e', top = o.top || '#2c4a7a', bot = o.bot || '#3a2a1a'
+          let s = ''
+          if (o.pose === 'run') s += `<path d="M54,200 L30,296" stroke="${o.skirt ? skin : bot}" stroke-width="15" stroke-linecap="round"/><path d="M66,200 L96,290" stroke="${o.skirt ? skin : bot}" stroke-width="15" stroke-linecap="round"/>`
+          else s += `<rect x="44" y="196" width="13" height="100" rx="6" fill="${o.skirt ? skin : bot}"/><rect x="63" y="196" width="13" height="100" rx="6" fill="${o.skirt ? skin : bot}"/>`
+          s += `<rect x="40" y="290" width="20" height="10" rx="4" fill="#1b1410"/><rect x="61" y="290" width="20" height="10" rx="4" fill="#1b1410"/>`
+          s += `<path d="M36,110 L84,110 L92,206 L28,206Z" fill="${top}"/>`
+          if (o.stripes) s += [0, 1, 2].map((i) => `<rect x="34" y="${126 + i * 26}" width="52" height="9" fill="#f4f1e8" opacity="0.75"/>`).join('')
+          if (o.skirt) s += `<path d="M28,196 L92,196 L100,250 L20,250Z" fill="${bot}"/>`
+          if (o.belt) s += '<rect x="30" y="180" width="60" height="12" fill="#5a3418"/>' + [0, 1, 2, 3].map((i) => `<rect x="${36 + i * 13}" y="178" width="8" height="16" fill="#c9962e"/>`).join('')
+          s += `<rect x="52" y="94" width="16" height="20" fill="${skin}"/><circle cx="60" cy="78" r="24" fill="${skin}"/>`
+          const h = o.hat
+          if (h === 'tricorne') s += '<path d="M28,70 C40,46 80,46 92,70 C80,62 40,62 28,70Z M36,62 C44,36 76,36 84,62Z" fill="#14141a"/>'
+          if (h === 'kepi') s += '<path d="M38,66 L82,66 L78,44 L42,44Z" fill="#1d3557"/><rect x="42" y="44" width="36" height="8" fill="#c0392b"/><path d="M38,66 L94,70 L82,64Z" fill="#111"/>'
+          if (h === 'band') s += '<path d="M36,74 C36,50 84,50 84,74 C76,62 44,62 36,74Z" fill="#1b1410"/><rect x="36" y="64" width="48" height="8" fill="#f4f1e8"/>'
+          if (h === 'wrap') s += `<path d="M34,80 C30,48 50,40 60,40 C70,40 90,48 86,80 C78,64 42,64 34,80Z" fill="${o.wrap || '#d7263d'}"/><circle cx="60" cy="40" r="10" fill="${o.wrap || '#d7263d'}"/>`
+          if (h === 'helmet') s += '<path d="M34,70 C34,40 86,40 86,70Z" fill="#e8e2d8"/><path d="M24,70 L96,70 L92,78 L28,78Z" fill="#d0c8b8"/>'
+          if (h === 'cap') s += '<path d="M36,68 C36,46 84,46 86,68Z" fill="#3a3a40"/><path d="M60,66 L98,70 L84,62Z" fill="#2a2a30"/>'
+          if (h === 'hair') s += '<path d="M36,74 C36,50 84,50 84,74 C76,62 44,62 36,74Z" fill="#1b1410"/>'
+          if (o.rifle === 'shoulder') s += '<path d="M80,40 L74,200" stroke="#5a3418" stroke-width="7"/><path d="M80,40 L79,20" stroke="#9aa4ae" stroke-width="4"/><rect x="74" y="110" width="16" height="30" rx="6" fill="' + skin + '"/>'
+          if (o.rifle === 'aim') s += `<path d="M44,112 L150,104" stroke="#5a3418" stroke-width="8"/><path d="M120,106 L168,102" stroke="#9aa4ae" stroke-width="4"/><rect x="62" y="104" width="34" height="14" rx="6" fill="${skin}"/><g class="mf" opacity="0"><path d="M170,102 L196,88 L188,102 L204,110 L186,110 L192,126Z" fill="#ffd36a"/></g>`
+          if (o.rifle === 'up') s += `<path d="M30,40 L96,200" stroke="#5a3418" stroke-width="8"/><path d="M30,40 L24,24" stroke="#9aa4ae" stroke-width="4"/><rect x="40" y="110" width="16" height="30" rx="6" fill="${skin}"/>`
+          return s
+        }
+        // outer group carries the GSAP motion, inner group the placement (GSAP x/y would overwrite a transform attribute)
+        const placeFig = (o, x, y, sc, flip, cls) => `<g class="${cls || ''}"><g transform="translate(${x},${y}) scale(${flip ? -sc : sc},${sc}) translate(-60,-300)">${fig(o)}</g></g>`
+
+        const W_ = { skin: '#f0c9a8', dark: '#d8a985' }
+        const PERU = Object.assign({}, W_, { skin: '#e8c0a0', dark: '#d0a080', hair: 'short', hairCol: '#2a1a10', stache: true, hat: 'flatcap', hatCol: '#3a3a40', plain: true, coat: '#f4f1e8', lapel: '#c8c0b0' })
+        med('cr4a', Object.assign({}, W_, { hair: 'swept', hairCol: '#a8a8a8', beard: true, coat: '#1e1e24', lapel: '#141418', shirt: '#f4f1e8', tie: '#1b1410', mood: 'sure' }), '#d8c8a8')
+        med('cr4b', Object.assign({}, W_, { hair: 'bald', hairCol: '#8a8a8a', stache: true, coat: '#2a2a30', lapel: '#1c1c22', shirt: '#f4f1e8', tie: '#5a1e22', mood: 'neutral' }), '#d8c8a8')
+        med('pe8', Object.assign({}, PERU, { mood: 'sure' }), '#c8d0d8')
+        med('ap12', Object.assign({}, W_, { hair: 'short', hairCol: '#5a3a22', coat: '#2a2a30', lapel: '#1c1c22', shirt: '#f4f1e8', tie: '#1b1410', mood: 'sad' }), '#c8ccd4')
+        med('pi12', Object.assign({}, W_, { skin: '#e0b088', dark: '#c09068', hair: 'short', hairCol: '#14100c', plain: true, coat: '#1d3557', lapel: '#f4f1e8', stripes: true, mood: 'neutral' }), '#c8ccd4')
+        med('pe15', Object.assign({}, PERU, { coat: '#3a3a40', lapel: '#2a2a30', mood: 'sure' }), '#f0d0a0')
+        med('ge16', Object.assign({}, W_, { hair: 'bald', hairCol: '#5a4a3a', stache: true, coat: '#5a3a2a', lapel: '#46281c', shirt: '#f4f1e8', tie: '#1b1410', mood: 'neutral' }), '#e8d0b0')
+        med('pg16', Object.assign({}, W_, { hair: 'short', hairCol: '#8a8a8a', beard: true, coat: '#1e1e24', lapel: '#141418', shirt: '#f4f1e8', tie: '#1b1410', mood: 'sure' }), '#e8d0b0')
+        const blink = (sel, times) => times.forEach((t) => tl.fromTo(sel + ' .lids', { opacity: 0 }, { opacity: 1, duration: 0.02, yoyo: true, repeat: 1, repeatDelay: 0.1, ease: 'none', immediateRender: false }, t))
+
+        // ---------- props ----------
+        function rays(id, n, c1, c2) {
+          let s = ''
+          for (let i = 0; i < n; i++) { const a0 = (i / n) * Math.PI * 2, a1 = ((i + 0.5) / n) * Math.PI * 2; s += `<path d="M0,0 L${(Math.cos(a0) * 1400).toFixed(0)},${(Math.sin(a0) * 1400).toFixed(0)} L${(Math.cos(a1) * 1400).toFixed(0)},${(Math.sin(a1) * 1400).toFixed(0)}Z" fill="${i % 2 ? c1 : c2}"/>` }
+          $(id).innerHTML = s
+        }
+        rays('rays6', 24, '#a87aa8', '#2a1a2a'); rays('rays10', 24, '#9aa4ae', '#1a1a20'); rays('rays13', 28, '#ffd36a', '#a8650f'); rays('rays17', 28, '#ff7a8a', '#3a0c14'); rays('rays19', 28, '#ffd36a', '#a8650f')
+        // the Mona Lisa, stylised (painting 0..300 × 0..420, gold frame around)
+        const FRAME = '<rect x="-30" y="-30" width="360" height="480" rx="6" fill="#c9962e"/><rect x="-20" y="-20" width="340" height="460" fill="none" stroke="#7a5418" stroke-width="6"/><rect x="-6" y="-6" width="312" height="432" fill="none" stroke="#f2d070" stroke-width="3"/>'
+        const MONA = FRAME + '<rect x="0" y="0" width="300" height="420" fill="#5a6a4a"/><path d="M0,120 C60,90 90,150 150,120 C210,90 250,140 300,110 L300,260 L0,260Z" fill="#7a8a7a"/><path d="M0,170 C70,150 110,200 170,170 C230,140 260,190 300,170 L300,280 L0,280Z" fill="#6a7a5a"/><path d="M240,280 C230,230 260,200 280,180" stroke="#a89a6a" stroke-width="6" fill="none"/><path d="M36,420 C40,330 80,262 150,256 C220,262 260,330 264,420Z" fill="#2a2418"/><path d="M110,262 C130,300 170,300 190,262 C170,270 130,270 110,262Z" fill="#d8a878"/><path d="M88,140 C80,90 110,62 150,62 C190,62 220,90 212,140 L224,300 C200,280 196,250 192,220 L108,220 C104,250 100,280 76,300Z" fill="#2a1a10"/><ellipse cx="150" cy="168" rx="46" ry="60" fill="#d8a878"/><path d="M150,110 C180,114 196,140 196,170 C196,204 178,224 150,228 C170,212 182,194 182,168 C182,140 170,120 150,110Z" fill="#b8885a" opacity="0.5"/><ellipse cx="132" cy="162" rx="8" ry="5" fill="#2a1a10"/><ellipse cx="168" cy="162" rx="8" ry="5" fill="#2a1a10"/><path d="M150,170 L146,192 L154,192" stroke="#a8784a" stroke-width="3" fill="none"/><path class="smile" d="M136,206 Q150,213 164,205" stroke="#7a3a2a" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="128" cy="388" rx="34" ry="18" fill="#d8a878"/><ellipse cx="172" cy="394" rx="34" ry="18" fill="#d8a878"/><path d="M88,96 C110,70 190,70 212,96" stroke="#1a1008" stroke-width="5" fill="none" opacity="0.6"/>'
+        const HOOKS = '<rect x="0" y="0" width="300" height="420" fill="#ffffff" opacity="0.08"/>' + [[20, 20], [280, 20], [20, 400], [280, 400]].map(([x, y]) => `<g><circle cx="${x}" cy="${y}" r="8" fill="#3a3a40"/><path d="M${x},${y} l0,18 q0,12 -10,8" stroke="#3a3a40" stroke-width="7" fill="none" stroke-linecap="round"/></g>`).join('')
+        ;['ml1', 'ml2', 'ml4', 'ml5', 'ml6', 'ml8', 'ml17', 'ml18', 'ml19'].forEach((id) => { $(id).innerHTML = MONA })
+        $('hk19').innerHTML = HOOKS
+        // gallery walls (Louvre), with other framed paintings
+        const gallery = (salon) => {
+          let s = '<rect x="0" y="1170" width="1080" height="750" fill="#3a2414"/><rect x="0" y="1150" width="1080" height="24" fill="#c9962e"/>' + [0, 1, 2, 3, 4, 5].map((i) => `<rect x="${i * 200 - 20}" y="1174" width="190" height="746" fill="${i % 2 ? '#4a2c18' : '#3a2414'}"/>`).join('') + '<path d="M0,280 L1080,280" stroke="#c9962e" stroke-width="10"/>'
+          const pics = salon ? [[40, 340, 260, 200], [330, 330, 190, 250], [560, 340, 300, 190], [890, 330, 160, 240], [40, 580, 180, 260], [250, 610, 190, 140], [660, 560, 230, 300], [920, 600, 140, 200], [60, 880, 220, 200], [800, 900, 240, 180]] : [[20, 520, 240, 320], [820, 520, 240, 320]]
+          pics.forEach(([x, y, w, h], i) => { s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#c9962e"/><rect x="${x + 12}" y="${y + 12}" width="${w - 24}" height="${h - 24}" fill="${['#5a4a3a', '#3a4a5a', '#6a4a2a', '#4a5a3a', '#5a3a3a'][i % 5]}"/><path d="M${x + 12},${y + h - 40} C${x + w / 3},${y + h / 2} ${x + (2 * w) / 3},${y + h - 60} ${x + w - 12},${y + h / 2}" stroke="#d8c8a8" stroke-width="5" fill="none" opacity="0.5"/>` })
+          return s
+        }
+        $('gal1').innerHTML = gallery(false) + '<path d="M470,0 L610,0 L760,980 L320,980Z" fill="#fff3c0" opacity="0.12"/>'
+        $('gal4').innerHTML = gallery(true)
+        $('gal5').innerHTML = gallery(true)
+        // phones held up by a crowd
+        const phones = (n, y0, big) => { let s = ''; for (let i = 0; i < n; i++) { const x = 40 + (i / (n - 1)) * 1000 + rnd() * 30, y = y0 + rnd() * 120, sc = big ? 1.2 : 1; s += `<g class="ph"><circle cx="${x}" cy="${y + 260 * sc}" r="${60 * sc}" fill="#1b1410"/><path d="M${x - 90 * sc},${y + 420 * sc} C${x - 90 * sc},${y + 320 * sc} ${x + 90 * sc},${y + 320 * sc} ${x + 90 * sc},${y + 420 * sc}Z" fill="#1b1410"/><path d="M${x + 30 * sc},${y + 300 * sc} L${x + 40 * sc},${y + 120 * sc}" stroke="#1b1410" stroke-width="${22 * sc}"/><rect x="${x + 10 * sc}" y="${y + 30 * sc}" width="${60 * sc}" height="${100 * sc}" rx="8" fill="#2a2e36"/><rect class="scr" x="${x + 16 * sc}" y="${y + 38 * sc}" width="${48 * sc}" height="${84 * sc}" rx="4" fill="#9ad0f0"/></g>` } return s }
+        $('cr2').innerHTML = phones(8, 1000, true)
+        // the museum guide
+        $('gd3').innerHTML = '<rect x="10" y="10" width="620" height="840" rx="16" fill="#1d3557"/><rect x="40" y="40" width="560" height="780" rx="10" fill="none" stroke="#ffc93c" stroke-width="5"/><text x="320" y="130" text-anchor="middle" font-family="Anton" font-size="66" fill="#ffc93c">GUIDE DU MUSÉE</text><g transform="translate(200,190) scale(0.8)">' + MONA + '</g><text x="320" y="640" text-anchor="middle" font-family="Anton" font-size="44" fill="#f4f1e8">LE PLUS BEAU</text><text x="320" y="700" text-anchor="middle" font-family="Anton" font-size="44" fill="#f4f1e8">TABLEAU DU MONDE</text>'
+        $('tape4').innerHTML = '<rect x="0" y="20" width="400" height="44" rx="6" fill="#f2b705" stroke="#a87a10" stroke-width="4"/>' + Array.from({ length: 21 }, (_, i) => `<line x1="${10 + i * 19}" y1="20" x2="${10 + i * 19}" y2="${i % 5 ? 34 : 46}" stroke="#3a2312" stroke-width="3"/>`).join('') + '<text x="200" y="58" text-anchor="middle" font-family="Anton" font-size="28" fill="#3a2312">77 CM</text>'
+        // 1900s visitors walking past
+        // outer group takes the GSAP motion, inner group the placement
+        const visitor = (x, y, k) => k ? `<g class="vz"><g transform="translate(${x},${y})"><path d="M-40,0 C-40,-120 40,-120 40,0Z" fill="#2a2420"/><path d="M-60,0 C-50,-60 50,-60 60,0 L80,170 L-80,170Z" fill="#3a2e3a"/><circle cx="0" cy="-150" r="30" fill="#e8c0a0"/><ellipse cx="0" cy="-176" rx="70" ry="16" fill="#5a3a4a"/><path d="M-30,-180 C-30,-220 30,-220 30,-180Z" fill="#5a3a4a"/></g></g>` : `<g class="vz"><g transform="translate(${x},${y})"><rect x="-40" y="-110" width="80" height="170" rx="20" fill="#2a2a30"/><rect x="-30" y="60" width="22" height="110" fill="#1b1b20"/><rect x="8" y="60" width="22" height="110" fill="#1b1b20"/><circle cx="0" cy="-140" r="30" fill="#e8c0a0"/><rect x="-28" y="-220" width="56" height="64" fill="#14141a"/><rect x="-44" y="-162" width="88" height="10" fill="#14141a"/></g></g>`
+        $('vis5').innerHTML = [0, 1, 2, 3, 4].map((i) => visitor(-100 - i * 230, 1300 + (i % 2) * 20, i % 2)).join('')
+        // the shadow hand
+        $('hand6').innerHTML = '<path d="M300,180 C240,170 200,160 170,150 C140,140 120,120 100,110 C80,100 60,108 70,120 C80,132 110,140 120,150 L60,150 C40,150 40,170 60,172 L130,176 L70,190 C50,194 54,214 74,212 L140,200 L90,222 C72,230 80,248 98,242 L170,216 C200,210 240,214 300,224Z" fill="#0a0608" opacity="0.85"/>'
+        // the Louvre façade (1911, no pyramid); the gate is closed
+        let lv = '<rect x="0" y="980" width="1080" height="940" fill="#4a4036"/>'
+        lv += '<g><rect x="40" y="620" width="1000" height="360" fill="#e8dcc0"/><path d="M40,620 L120,520 L960,520 L1040,620Z" fill="#5a6a7a"/>' + Array.from({ length: 12 }, (_, i) => `<rect x="${80 + i * 80}" y="${680}" width="40" height="90" rx="20" fill="#3a4a5a"/><rect x="${80 + i * 80}" y="${820}" width="40" height="100" fill="#3a4a5a"/>`).join('') + '<rect x="440" y="560" width="200" height="420" fill="#e8dcc0" stroke="#c8bca0" stroke-width="6"/><path d="M440,560 L540,470 L640,560Z" fill="#5a6a7a"/><rect x="490" y="820" width="100" height="160" rx="50" fill="#2a2420"/></g>'
+        lv += '<g id="gate7">' + Array.from({ length: 13 }, (_, i) => `<rect x="${350 + i * 30}" y="960" width="8" height="300" fill="#1b1b20"/>`).join('') + '<rect x="350" y="980" width="368" height="10" fill="#1b1b20"/><rect x="350" y="1220" width="368" height="10" fill="#1b1b20"/></g>'
+        $('lv7').innerHTML = lv
+        $('cal7').innerHTML = '<rect x="10" y="40" width="280" height="290" rx="16" fill="#f4f1e8"/><rect x="10" y="40" width="280" height="70" rx="16" fill="#d7263d"/><rect x="70" y="20" width="16" height="50" rx="8" fill="#9aa4ae"/><rect x="214" y="20" width="16" height="50" rx="8" fill="#9aa4ae"/><text x="150" y="96" text-anchor="middle" font-family="Anton" font-size="40" fill="#fff">LUNDI</text><text x="150" y="230" text-anchor="middle" font-family="Anton" font-size="130" fill="#1b1410">21</text><text x="150" y="300" text-anchor="middle" font-family="Anton" font-size="40" fill="#5a3a22">AOÛT 1911</text>'
+        // the gallery room with a door; the man in the white smock
+        $('room8').innerHTML = gallery(false) + '<g transform="translate(860,700)"><rect x="0" y="0" width="180" height="470" fill="#2a1a10"/><rect x="14" y="14" width="152" height="456" fill="#5a3a22"/><circle cx="140" cy="250" r="10" fill="#c9962e"/></g>'
+        $('man8').innerHTML = fig({ skin: '#e8c0a0', top: '#f4f1e8', bot: '#3a3a40', hat: 'cap' })
+        // the empty wall with its four hooks
+        $('wall9').innerHTML = '<path d="M470,0 L610,0 L760,1100 L320,1100Z" fill="#fff3c0" opacity="0.1"/><g transform="translate(390,560) scale(1)">' + HOOKS + '</g><rect x="0" y="1170" width="1080" height="750" fill="#3a2414"/>'
+        $('wall11').innerHTML = '<g transform="translate(450,420) scale(0.6)">' + HOOKS + '</g><rect x="0" y="1170" width="1080" height="750" fill="#2a1a10"/><path d="M80,1000 L1000,1000" stroke="#a8121e" stroke-width="12"/>' + [80, 380, 700, 1000].map((x) => `<rect x="${x - 8}" y="1000" width="16" height="180" fill="#c9962e"/>`).join('')
+        $('q11').innerHTML = [0, 1, 2, 3, 4, 5, 6].map((i) => visitor(100 + i * 150, 1340 + (i % 2) * 20, i % 2)).join('')
+        // the printing press and the newspapers
+        $('press10').innerHTML = '<rect x="40" y="120" width="520" height="260" rx="20" fill="#2a2e36"/><circle id="rl10a" cx="180" cy="220" r="80" fill="#4a4e56" stroke="#1b1b20" stroke-width="10"/><circle id="rl10b" cx="420" cy="220" r="80" fill="#4a4e56" stroke="#1b1b20" stroke-width="10"/><path d="M180,140 L180,300 M100,220 L260,220 M420,140 L420,300 M340,220 L500,220" stroke="#1b1b20" stroke-width="8"/><rect x="200" y="40" width="200" height="90" fill="#efe6cf"/>'
+        const PAPERS = [['LE JOURNAL', 'LA JOCONDE VOLÉE !'], ['NEW YORK HERALD', 'MONA LISA STOLEN'], ['LA PRESSE', 'LE LOUVRE SANS JOCONDE'], ['CORRIERE', 'RUBATA LA GIOCONDA'], ['LE MATIN', 'QUI A PRIS LA JOCONDE ?']]
+        $('news10').innerHTML = PAPERS.map(([m, h], i) => `<g class="np" transform="translate(${140 + (i % 3) * 280},${380 + Math.floor(i / 3) * 330}) rotate(${(i % 2 ? 1 : -1) * (4 + i * 2)})"><rect x="0" y="0" width="300" height="300" fill="#efe6cf" stroke="#b8a888" stroke-width="4"/><text x="150" y="46" text-anchor="middle" font-family="Anton" font-size="30" fill="#1b1410">${m}</text><line x1="20" y1="60" x2="280" y2="60" stroke="#1b1410" stroke-width="3"/><text x="150" y="100" text-anchor="middle" font-family="Anton" font-size="${h.length > 18 ? 24 : 30}" fill="#7a1e12">${h}</text><g transform="translate(110,120) scale(0.25)">${MONA}</g>${[250, 270].map((y) => `<line x1="20" y1="${y}" x2="90" y2="${y}" stroke="#8a7a5a" stroke-width="3"/><line x1="210" y1="${y}" x2="280" y2="${y}" stroke="#8a7a5a" stroke-width="3"/>`).join('')}</g>`).join('')
+        // the police: height chart behind the suspects
+        $('pol12').innerHTML = [0, 1].map((k) => `<g transform="translate(${k ? 640 : 20},360)">${Array.from({ length: 8 }, (_, i) => `<line x1="0" y1="${i * 60}" x2="420" y2="${i * 60}" stroke="#9aa4ae" stroke-width="3" opacity="0.5"/><text x="400" y="${i * 60 - 6}" text-anchor="end" font-family="Bebas" font-size="26" fill="#9aa4ae" opacity="0.6">${190 - i * 10}</text>`).join('')}</g>`).join('') + '<g transform="translate(470,1240)"><path d="M0,0 C0,-80 140,-80 140,0Z" fill="#1d3557"/><rect x="-10" y="-10" width="160" height="20" fill="#14284a"/><circle cx="70" cy="-90" r="40" fill="#e8c0a0"/><path d="M30,-118 L110,-118 L104,-150 L36,-150Z" fill="#1d3557"/><rect x="36" y="-150" width="68" height="10" fill="#c0392b"/></g>'
+        // postcards, songs, articles
+        let pc = ''
+        for (let i = 0; i < 14; i++) { const x = 60 + rnd() * 900, r = rnd() * 40 - 20; pc += `<g class="pc13" data-x="${x.toFixed(0)}" data-r="${r.toFixed(0)}"><rect x="-80" y="-60" width="160" height="120" fill="#efe6cf" stroke="#b8a888" stroke-width="3"/><g transform="translate(-26,-50) scale(0.17)">${MONA}</g><text x="30" y="44" font-family="Bebas" font-size="18" fill="#7a1e12">CARTE POSTALE</text></g>` }
+        pc += [0, 1, 2, 3, 4, 5].map((i) => `<text class="nt13" x="${120 + i * 170}" y="${900 + (i % 2) * 120}" font-family="Anton" font-size="90" fill="#fff3c0">♪</text>`).join('')
+        $('pc13').innerHTML = pc
+        // the attic room in Paris: Eiffel tower in the window, bed, the trunk with a false bottom
+        $('att14').innerHTML = '<path d="M0,300 L1080,700 L1080,1920 L0,1920Z" fill="#3a3028"/><rect x="0" y="1260" width="1080" height="660" fill="#2a2018"/><g transform="translate(120,560)"><rect x="0" y="0" width="300" height="300" fill="#0e1430" stroke="#5a4a3a" stroke-width="16"/><path d="M150,0 L150,300 M0,150 L300,150" stroke="#5a4a3a" stroke-width="8"/><circle cx="240" cy="60" r="26" fill="#f4f1e8"/><path d="M110,300 L140,140 L150,90 L160,140 L190,300 M125,230 L175,230 M118,270 L182,270" stroke="#1e2a4a" stroke-width="8" fill="none"/></g><g transform="translate(640,1100)"><rect x="0" y="80" width="400" height="80" rx="10" fill="#6a5a7a"/><rect x="0" y="40" width="80" height="120" rx="10" fill="#e8e2d8"/><rect x="0" y="160" width="20" height="60" fill="#3a2a1a"/><rect x="380" y="160" width="20" height="60" fill="#3a2a1a"/></g>'
+        $('tr14').innerHTML = '<rect x="40" y="180" width="520" height="220" rx="16" fill="#7a4a26" stroke="#4a2a14" stroke-width="8"/><rect id="fb14" x="60" y="200" width="480" height="40" fill="#5a3418"/><g id="hid14"><g transform="translate(240,220) scale(0.3)">' + MONA + '</g></g><rect x="40" y="180" width="520" height="40" fill="#8a5a30"/><g id="lid14" style="transform-origin:40px 180px"><path d="M40,180 C40,110 560,110 560,180Z" fill="#8a5a30" stroke="#4a2a14" stroke-width="8"/><rect x="270" y="150" width="60" height="40" rx="6" fill="#c9962e"/></g>' + [100, 500].map((x) => `<rect x="${x - 10}" y="180" width="20" height="220" fill="#4a2a14"/>`).join('')
+        // Florence: the Duomo, the Arno; the train
+        $('flo15').innerHTML = '<g fill="#b05a3a"><path d="M380,980 C380,800 640,800 640,980Z"/><rect x="370" y="970" width="280" height="120" fill="#e8dcc0"/><rect x="500" y="760" width="20" height="60"/><rect x="760" y="760" width="70" height="330" fill="#e8dcc0"/><path d="M760,760 L795,720 L830,760Z"/><rect x="150" y="900" width="160" height="190" fill="#e8dcc0"/><path d="M150,900 L230,860 L310,900Z"/></g><rect x="0" y="1090" width="1080" height="30" fill="#5a4a3a"/><rect x="0" y="1300" width="1080" height="130" fill="#3a8ab0"/><path d="M0,1320 Q90,1310 180,1320 T360,1320 T540,1320 T720,1320 T900,1320 T1080,1320" stroke="#7ac0e0" stroke-width="5" fill="none"/>'
+        $('train15').innerHTML = '<rect x="0" y="190" width="700" height="10" fill="#3a3a40"/><g id="tn15"><rect x="420" y="70" width="240" height="110" rx="10" fill="#2a2e36"/><rect x="600" y="20" width="40" height="60" fill="#1b1b20"/><rect x="440" y="90" width="60" height="40" fill="#ffd36a"/><circle cx="470" cy="190" r="26" fill="#1b1b20"/><circle cx="620" cy="190" r="26" fill="#1b1b20"/><rect x="140" y="80" width="260" height="100" rx="10" fill="#5a2a2a"/>' + [170, 240, 310].map((x) => `<rect x="${x}" y="100" width="50" height="40" fill="#ffd36a"/>`).join('') + '<circle cx="190" cy="190" r="22" fill="#1b1b20"/><circle cx="350" cy="190" r="22" fill="#1b1b20"/><circle class="smk15" cx="620" cy="0" r="30" fill="#e8e2d8" opacity="0.8"/><circle class="smk15" cx="650" cy="-40" r="40" fill="#e8e2d8" opacity="0.6"/></g>'
+        // the antique shop; the old telephone
+        $('shop16').innerHTML = gallery(false) + '<rect x="0" y="1080" width="1080" height="80" fill="#7a4a26"/><g transform="translate(470,820) scale(0.5)">' + MONA + '</g>'
+        $('ph16').innerHTML = '<rect x="80" y="40" width="40" height="120" fill="#1b1410"/><ellipse cx="100" cy="40" rx="30" ry="14" fill="#1b1410"/><ellipse cx="100" cy="170" rx="60" ry="20" fill="#1b1410"/><path d="M150,70 C180,60 190,90 170,110" stroke="#1b1410" stroke-width="10" fill="none"/><ellipse cx="172" cy="116" rx="16" ry="24" fill="#1b1410"/><g class="ring16" stroke="#ffc93c" stroke-width="6" fill="none"><path d="M30,30 l-20,-10 M20,60 l-24,0 M170,20 l20,-14"/></g>'
+        // the star: red carpet, velvet ropes, camera flashes
+        let st = '<path d="M380,1560 L700,1560 L620,800 L460,800Z" fill="#a8121e"/>' + [300, 780].map((x) => `<rect x="${x - 8}" y="1000" width="16" height="200" fill="#c9962e"/><circle cx="${x}" cy="996" r="14" fill="#ffd36a"/>`).join('') + '<path d="M300,1010 Q540,1080 780,1010" stroke="#a8121e" stroke-width="14" fill="none"/>'
+        st += [[120, 500], [960, 560], [180, 900], [900, 900], [100, 1200], [980, 1220], [300, 380], [780, 360]].map(([x, y]) => `<path class="fl17" style="transform-origin:${x}px ${y}px" d="M${x},${y - 60} L${x + 16},${y - 16} L${x + 60},${y} L${x + 16},${y + 16} L${x},${y + 60} L${x - 16},${y + 16} L${x - 60},${y} L${x - 16},${y - 16}Z" fill="#fff"/>`).join('')
+        $('star17').innerHTML = st
+        // today: glass box, rope barrier, a sea of phones
+        $('mod18').innerHTML = '<rect x="420" y="480" width="240" height="300" fill="#cfe4ee" opacity="0.18" stroke="#e8eef2" stroke-width="6"/><path d="M60,900 L1020,900" stroke="#1b1b20" stroke-width="10"/>' + [60, 380, 700, 1020].map((x) => `<rect x="${x - 7}" y="900" width="14" height="140" fill="#9aa4ae"/>`).join('') + phones(11, 940, false)
+
+        // ---------- scene cuts on the voice ----------
+        const at = (k) => Math.round((T[k] - 0.06) * 100) / 100
+        const CUT = [0, at(9), at(18), at(36), at(53), at(61), at(80), at(89), at(111), at(121), at(140), at(155), at(176), at(201), at(219), at(233), at(244), at(262), at(274), END]
+        const SC = Array.from({ length: 19 }, (_, i) => '#s' + (i + 1))
+        SC.forEach((s, i) => {
+          tl.set(s, { visibility: 'visible' }, CUT[i])
+          tl.set(s, { visibility: 'hidden' }, CUT[i + 1])
+          tl.fromTo(s + ' .cam', { scale: 1 }, { scale: 1.06, duration: CUT[i + 1] - CUT[i], ease: 'none', immediateRender: false }, CUT[i])
+          if (i) tl.fromTo(s + ' .cam', { y: 30 }, { y: 0, duration: 0.25, ease: 'power3.out', immediateRender: false }, CUT[i])
+        })
+        const pop = (sel, t, o) => { const { rot, ...from } = Object.assign({ autoAlpha: 0, scale: 0.4 }, o || {}); tl.fromTo(sel, from, { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: rot || 0, duration: 0.4, ease: 'back.out(1.8)' }, t) }
+        const out = (sel, t) => tl.to(sel, { autoAlpha: 0, scale: 0.7, duration: 0.18, ease: 'power2.in' }, t)
+        const count = (node, from, to, t0, t1, fmt) => { const o = { v: from }; tl.fromTo(o, { v: from }, { v: to, duration: t1 - t0, ease: 'power2.out', immediateRender: false, onUpdate: () => { node.textContent = (fmt || String)(Math.round(o.v)) } }, t0) }
+        const spin = (sel, t0, t1, deg) => tl.fromTo(sel, { rotation: 0 }, { rotation: deg, duration: t1 - t0, ease: 'none', immediateRender: false }, t0)
+        const stamp = (sel, t, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.6, rotation: 4 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.2, ease: 'power4.in' }, t)
+        const shake = (sel, t) => tl.fromTo(sel, { x: 0 }, { x: 14, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, t)
+        const flashes = (sel, t0, n) => document.querySelectorAll(sel).forEach((f, i) => tl.fromTo(f, { scale: 0, opacity: 0 }, { scale: 1.2, opacity: 1, duration: 0.08, yoyo: true, repeat: 1, ease: 'none', immediateRender: false }, t0 + ((i * 7) % (n || 8)) * 0.17))
+
+        // 1. the gallery; the Mona Lisa under the spotlight
+        pop('#ml1', 0.05, { scale: 0.6, y: 120 })
+        pop('#pb1', T[4] - 0.05, { rot: -3 })
+        tl.fromTo('#ml1', { filter: 'drop-shadow(0 0 0px rgba(255,220,120,0))' }, { filter: 'drop-shadow(0 0 40px rgba(255,220,120,0.8))', duration: 0.6, immediateRender: false }, 0.6)
+        // 2. a crowd of phones; flashes
+        pop('#ml2', CUT[1] + 0.02, { scale: 0.7 })
+        document.querySelectorAll('#cr2 .ph').forEach((p, i) => tl.fromTo(p, { y: 300 }, { y: 0, duration: 0.35, ease: 'back.out(1.6)', immediateRender: false }, CUT[1] + 0.1 + i * 0.07))
+        gsap.set('#cr2 .ph', { y: 300 })
+        document.querySelectorAll('#cr2 .scr').forEach((s, i) => tl.fromTo(s, { fill: '#9ad0f0' }, { fill: '#ffffff', duration: 0.06, yoyo: true, repeat: 1, ease: 'none', immediateRender: false }, T[13] + (i % 4) * 0.15))
+        // 3. the museum guide; FAUX
+        pop('#gd3', CUT[2] + 0.02, { y: 200, scale: 0.85, rot: -4 })
+        stamp('#faux3', T[29] - 0.04, -10)
+        shake('#s3 .cam', T[29] + 0.16)
+        // 4. TOUT LE MONDE ? ; 1911; a small painting among big ones; 77 CM; the specialists
+        pop('#q4', CUT[3] + 0.02, { scale: 0.6 })
+        out('#q4', T[42] - 0.2)
+        pop('#y4', T[42] - 0.05, { scale: 0.6 })
+        tl.fromTo('#ml4', { filter: 'drop-shadow(0 0 0px rgba(255,220,120,0))' }, { filter: 'drop-shadow(0 0 24px rgba(255,220,120,0.95))', duration: 0.3, immediateRender: false }, T[44])
+        pop('#tape4', T[47] - 0.05, { scale: 0.3 })
+        tl.fromTo('#tape4', { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.4, immediateRender: false }, T[47])
+        pop('#cr4a', T[50] - 0.05, { scale: 0.3 }); pop('#cr4b', T[50] + 0.1, { scale: 0.3 }); pop('#sp4', T[52] - 0.05, { rot: -3 })
+        blink('#cr4a', [T[51]])
+        // 5. visitors walk past without stopping
+        document.querySelectorAll('#vis5 .vz').forEach((v, i) => tl.fromTo(v, { x: 0 }, { x: 1500 + i * 230, duration: (CUT[5] - CUT[4]) * 1.1, ease: 'none', immediateRender: false }, CUT[4]))
+        // 6. LE PLUS BEAU ? ; the shadow hand; C'EST UN VOL
+        spin('#rays6', CUT[5], CUT[6], 18)
+        pop('#q6', CUT[5] + 0.02, { scale: 0.6 })
+        pop('#ml6', CUT[5] + 0.1, { scale: 0.7 })
+        tl.fromTo('#hand6', { x: 500, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.6, ease: 'power2.out' }, T[72])
+        stamp('#vol6', T[79] - 0.04, -6)
+        shake('#s6 .cam', T[79] + 0.16)
+        // 7. Monday 21 August 1911; the Louvre; FERMÉ, the gate comes down
+        pop('#cal7', CUT[6] + 0.02, { scale: 0.4, rot: -10 })
+        tl.fromTo('#gate7', { y: -400 }, { y: 0, duration: 0.35, ease: 'bounce.out' }, T[87])
+        gsap.set('#gate7', { y: -400 })
+        stamp('#fe7', T[88] - 0.04, 6)
+        // 8. Peruggia; he takes the painting down, hides it under his smock, walks out through the door
+        pop('#pe8', CUT[7] + 0.02, { scale: 0.3 })
+        pop('#pn8', T[97] - 0.05, { rot: -3 }); pop('#vt8', T[90] - 0.05, { rot: 2 })
+        tl.fromTo('#man8', { x: -400 }, { x: 0, duration: 0.6, ease: 'power2.out' }, CUT[7] + 0.1)
+        tl.to('#ml8', { y: 280, x: -150, rotation: -8, duration: 0.5, ease: 'power2.inOut' }, T[99] - 0.05)
+        tl.to('#ml8', { scale: 0.3, autoAlpha: 0, duration: 0.4, ease: 'power2.in' }, T[103] - 0.05)
+        tl.to('#man8', { x: 640, duration: 1.2, ease: 'power1.in' }, T[108])
+        blink('#pe8', [T[101]])
+        // 9. the next day: the empty wall, four hooks
+        pop('#g9', CUT[8] + 0.02, { scale: 0.6 })
+        tl.fromTo('#wall9 g', { opacity: 0 }, { opacity: 1, duration: 0.5, immediateRender: false }, CUT[8] + 0.2)
+        // 10. explosion: the press runs, newspapers burst out; the Louvre closed for a week
+        spin('#rays10', CUT[9], CUT[10], 25)
+        pop('#press10', CUT[9] + 0.02, { y: 200 })
+        spin('#rl10a', CUT[9], CUT[10], 720); spin('#rl10b', CUT[9], CUT[10], -720)
+        pop('#fs10', T[125] - 0.05, { rot: -3 })
+        document.querySelectorAll('#news10 .np').forEach((n, i) => tl.fromTo(n, { autoAlpha: 0, y: 600, scale: 0.3 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.35, ease: 'back.out(1.6)', immediateRender: false }, T[130] + i * 0.16))
+        gsap.set('#news10 .np', { autoAlpha: 0 })
+        // 11. the queue in front of an empty wall
+        document.querySelectorAll('#q11 .vz').forEach((v, i) => tl.fromTo(v, { autoAlpha: 0, y: 60 }, { autoAlpha: 1, y: 0, duration: 0.3, ease: 'back.out(2)', immediateRender: false }, CUT[10] + 0.1 + i * 0.12))
+        gsap.set('#q11 .vz', { autoAlpha: 0 })
+        pop('#g11', T[151] - 0.05, { scale: 0.6 })
+        // 12. POLICE; Apollinaire arrested; Picasso questioned; both cleared
+        pop('#po12', CUT[11] + 0.02, { rot: -3 })
+        pop('#ap12', T[161] - 0.05, { scale: 0.3 }); pop('#an12', T[162] - 0.05, { y: 20 })
+        stamp('#ar12', T[164] - 0.04, -8)
+        pop('#pi12', T[165] - 0.05, { scale: 0.3 }); pop('#pn12', T[166] - 0.05, { y: 20 })
+        stamp('#in12', T[168] - 0.04, 6)
+        out('#ar12', T[172] - 0.15); out('#in12', T[172] - 0.15)
+        pop('#hc12', T[173] - 0.05, { scale: 0.5 })
+        blink('#ap12', [T[166]]); blink('#pi12', [T[170]])
+        // 13. postcards rain down, music notes; PARTOUT; SAUF AU LOUVRE
+        spin('#rays13', CUT[12], CUT[13], 20)
+        document.querySelectorAll('#pc13 .pc13').forEach((p, i) => { const x = +p.dataset.x, r = +p.dataset.r; tl.fromTo(p, { x, y: -200, rotation: r }, { x, y: 400 + (i % 5) * 200, rotation: -r, duration: 1.0, ease: 'power1.out', immediateRender: false }, T[182] - 0.2 + (i % 7) * 0.12) })
+        gsap.set('#pc13 .pc13', { y: -400 })
+        document.querySelectorAll('#pc13 .nt13').forEach((n, i) => tl.fromTo(n, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: -40, duration: 0.6, ease: 'sine.out', immediateRender: false }, T[185] + i * 0.1))
+        gsap.set('#pc13 .nt13', { autoAlpha: 0 })
+        pop('#g13', T[197] - 0.05, { scale: 0.6 })
+        stamp('#sl13', T[198] - 0.04, -6)
+        // 14. ET PENDANT CE TEMPS-LÀ ? ; the attic; the trunk opens, the false bottom slides away, the painting is there
+        pop('#q14', CUT[13] + 0.02, { scale: 0.6 })
+        out('#q14', T[208] - 0.15)
+        pop('#tr14', T[208] - 0.05, { y: 120 })
+        tl.fromTo('#lid14', { rotation: 0 }, { rotation: -70, duration: 0.5, ease: 'power2.out', immediateRender: false }, T[209])
+        tl.fromTo('#fb14', { x: 0 }, { x: 420, duration: 0.5, ease: 'power2.inOut', immediateRender: false }, T[211])
+        pop('#db14', T[211] - 0.05, { rot: -3 })
+        tl.fromTo('#hid14', { filter: 'drop-shadow(0 0 0px rgba(255,220,120,0))' }, { filter: 'drop-shadow(0 0 30px rgba(255,220,120,0.95))', duration: 0.3, immediateRender: false }, T[212])
+        // 15. December 1913; the train to Florence; Peruggia
+        pop('#y15', CUT[14] + 0.02, { scale: 0.6 })
+        tl.fromTo('#tn15', { x: -700 }, { x: 300, duration: CUT[15] - CUT[14], ease: 'power1.out', immediateRender: false }, CUT[14])
+        document.querySelectorAll('#train15 .smk15').forEach((s, i) => tl.fromTo(s, { scale: 0.5, y: 0 }, { scale: 1.6, y: -80, opacity: 0, duration: 0.8, repeat: 3, ease: 'none', immediateRender: false }, CUT[14] + i * 0.3))
+        pop('#pe15', T[222] - 0.05, { scale: 0.3 })
+        pop('#fl15', T[232] - 0.05, { rot: -3 })
+        // 16. the dealer; the director of the Uffizi; the phone rings; POLICE !
+        pop('#ge16', CUT[15] + 0.02, { scale: 0.3 }); pop('#gl16', T[234] - 0.05, { rot: -3 })
+        pop('#ph16', T[235] - 0.05, { scale: 0.3 })
+        tl.fromTo('#ph16', { rotation: -6 }, { rotation: 6, duration: 0.06, yoyo: true, repeat: 9, ease: 'none', immediateRender: false }, T[235] + 0.3)
+        pop('#pg16', T[237] - 0.05, { scale: 0.3 }); pop('#ol16', T[239] - 0.05, { rot: 3 })
+        stamp('#po16', T[243] - 0.04, -6)
+        shake('#s16 .cam', T[243] + 0.16)
+        // 17. the return: red carpet, flashes, UNE STAR
+        spin('#rays17', CUT[16], CUT[17], 22)
+        pop('#ml17', CUT[16] + 0.02, { scale: 0.6, y: 100 })
+        flashes('#star17 .fl17', T[249], 8)
+        flashes('#star17 .fl17', T[257], 8)
+        pop('#g17', T[261] - 0.05, { scale: 0.5 })
+        // 18. today: the glass box, the sea of phones, DES MILLIONS
+        document.querySelectorAll('#mod18 .ph').forEach((p, i) => tl.fromTo(p, { y: 300 }, { y: 0, duration: 0.35, ease: 'back.out(1.6)', immediateRender: false }, CUT[17] + 0.05 + i * 0.05))
+        gsap.set('#mod18 .ph', { y: 300 })
+        pop('#g18', T[264] - 0.05, { scale: 0.6 })
+        pop('#pa18', T[272] - 0.05, { rot: -3 })
+        document.querySelectorAll('#mod18 .scr').forEach((s, i) => tl.fromTo(s, { fill: '#9ad0f0' }, { fill: '#ffffff', duration: 0.06, yoyo: true, repeat: 1, ease: 'none', immediateRender: false }, T[266] + (i % 5) * 0.14))
+        // 19. mirror: the painting in gold light… then only the hooks remain
+        spin('#rays19', CUT[18], END, 22)
+        pop('#ml19', CUT[18] + 0.02, { scale: 0.7 })
+        gsap.set('#hk19', { autoAlpha: 0 })
+        pop('#f19a', T[276] - 0.05, { scale: 0.6 })
+        out('#f19a', T[284] - 0.15)
+        tl.to('#ml19', { autoAlpha: 0, duration: 0.35, ease: 'power2.in' }, T[288] - 0.1)
+        tl.to('#hk19', { autoAlpha: 1, duration: 0.3 }, T[288])
+        pop('#f19b', T[284] - 0.05, { scale: 0.5 })
+
+        // ---------- captions: groups of 2-4 words, the spoken word in a red box ----------
+        const caps = $('caps')
+        const G = []
+        let cur = []
+        WORDS.forEach((w, k) => {
+          if (!w) return
+          cur.push(k)
+          const len = cur.reduce((n, j) => n + WORDS[j].length + 1, 0)
+          if (/[.,:;?!…]$/.test(w) || cur.length >= 4 || len > 20) { G.push(cur); cur = [] }
+        })
+        if (cur.length) G.push(cur)
+        G.forEach((g, gi) => {
+          const box = document.createElement('div'); box.className = 'grp'; caps.appendChild(box)
+          const t0 = T[g[0]] - 0.04, t1 = gi < G.length - 1 ? T[G[gi + 1][0]] - 0.04 : END
+          tl.set(box, { visibility: 'visible' }, t0)
+          tl.set(box, { visibility: 'hidden' }, t1)
+          tl.fromTo(box, { scale: 0.92 }, { scale: 1, duration: 0.12, ease: 'power2.out', immediateRender: false }, t0)
+          g.forEach((k, j) => {
+            const s = document.createElement('span'); s.className = 'cw'; s.textContent = WORDS[k]; box.appendChild(s)
+            const next = j < g.length - 1 ? T[g[j + 1]] - 0.04 : t1
+            tl.set(s, { '--on': 1 }, T[k] - 0.04)
+            tl.set(s, { '--on': 0 }, next)
+          })
+        })
+        tl.fromTo('#prog', { scaleX: 0 }, { scaleX: 1, duration: END, ease: 'none', immediateRender: false }, 0)
+        gsap.set('#prog', { scaleX: 0 })
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
