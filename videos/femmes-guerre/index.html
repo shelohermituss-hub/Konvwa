@@ -12,7 +12,7 @@
       Marie-Jeanne Lamartinière ; Sanité Bélair (lieutenante, condamnée en 1802, refuse le bandeau, billet de 10 gourdes) →
       « pourquoi tu n'as jamais appris leurs noms » → phrase miroir.
       Tout est dessiné en SVG et CSS dans ce fichier : décors illustrés à chaque scène, personnages en médaillons ;
-      cartes Natural Earth (domaine public). Voix Gabriel Dubois (Magnific / ElevenLabs), bruitages de la banque du style ANIMÉ.
+      cartes Natural Earth (domaine public). Voix Gabriel Dubois (Magnific / ElevenLabs), bruitages de la banque du style ANIMÉ, mixés sous la voix.
     -->
     <style>
       @font-face { font-family: "Bebas"; src: url("assets/fonts/bebas-neue.woff2") format("woff2"); }
@@ -47,7 +47,7 @@
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="55.6" data-width="1080" data-height="1920">
+    <div id="root" data-composition-id="main" data-start="0" data-duration="66.6" data-width="1080" data-height="1920">
       <!-- 1. hook: an army of men marches at sunset; a recruitment poster « HOMMES SEULEMENT » -->
       <div class="scene" id="s1"><div class="cam">
         <div class="bg" style="background: linear-gradient(180deg, #2a1830 0%, #8a3a2a 40%, #e08a3a 60%, #3a2414 61%, #1e140c 100%)"></div>
@@ -102,6 +102,55 @@
         <svg id="smk6" class="full" viewBox="0 0 1080 1920"></svg>
         <div class="vig"></div>
         <div class="gold" id="y6" style="left: 0; right: 0; top: 170px; font-size: 200px">1890</div>
+      </div></div>
+      <!-- 6b. « Les Français les surnommaient les Amazones » : an illustrated newspaper of the 1890s -->
+      <div class="scene" id="s6b"><div class="cam">
+        <div class="bg" style="background: repeating-linear-gradient(90deg, #3a2a1c 0 46px, #33251a 46px 52px, #423020 52px 98px, #33251a 98px 104px)"></div><div class="vig"></div>
+        <svg id="news6b" viewBox="0 0 760 980" style="left: 160px; top: 280px; width: 760px; height: 980px"></svg>
+      </div></div>
+      <!-- 6c. « La dernière, Nawi, serait morte en 1979, à plus de cent ans » : an old sepia photograph -->
+      <div class="scene" id="s6c"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 50%, #5a4a36 0%, #2a2218 60%, #0e0b08 100%)"></div><div class="vig"></div>
+        <div id="ph6c" style="position: absolute; left: 230px; top: 470px; width: 620px; height: 720px; background: #f4ecd8; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6)">
+          <div style="position: absolute; left: 34px; top: 34px; width: 552px; height: 560px; overflow: hidden; background: #c8b48c"><div class="bust" id="nw6c" style="left: -34px; top: 40px; filter: sepia(1) saturate(0.55) brightness(0.95)"></div></div>
+          <div style="position: absolute; left: 0; right: 0; top: 618px; text-align: center; font-family: Anton, sans-serif; font-size: 58px; color: #3a2a1a; letter-spacing: 0.06em">NAWI</div>
+        </div>
+        <div class="gold" id="y6c" style="left: 0; right: 0; top: 170px; font-size: 200px">1979</div>
+        <div class="plate red" id="c6c" style="left: 330px; top: 1230px; font-size: 52px">+ DE 100 ANS</div>
+      </div></div>
+      <!-- 6d. « Et au Ghana, en 1900, la reine-mère Yaa Asantewaa, environ soixante ans… » -->
+      <div class="scene" id="s6d"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 70% 55% at 40% 45%, #2a2418 0%, #14100c 60%, #08070a 100%)"></div>
+        <svg id="map6d" viewBox="0 0 1080 1197" style="left: 54px; top: 300px; width: 972px; height: 1077px"></svg>
+        <svg id="ping6d" class="full" viewBox="0 0 1080 1920"><circle id="pg6d" cx="297" cy="748" r="20" fill="none" stroke="#ffc93c" stroke-width="8" /><circle cx="297" cy="748" r="12" fill="#ffc93c" /></svg>
+        <div class="vig"></div>
+        <div class="gold" id="y6d" style="left: 0; right: 0; top: 160px; font-size: 200px">1900</div>
+        <div class="plate" id="gh6d" style="left: 120px; top: 800px; font-size: 46px; background: #ffc93c">GHANA</div>
+        <div class="med" id="ya6d" style="left: 650px; top: 400px"></div>
+        <div class="plate" id="yn6d" style="left: 560px; top: 720px; font-size: 46px">YAA ASANTEWAA</div>
+        <div class="plate red" id="ys6d" style="left: 650px; top: 820px; font-size: 46px">≈ 60 ANS</div>
+      </div></div>
+      <!-- 6e. « …prend la tête de l'armée ashanti contre les Britanniques » -->
+      <div class="scene" id="s6e"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #3a5a3a 0%, #6a8a4a 46%, #4a3a1e 47%, #2a2010 100%)"></div>
+        <svg id="for6e" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="br6e" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="as6e" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="smk6e" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="plate" id="as6el" style="left: 60px; top: 300px; font-size: 48px; background: #ffc93c">ARMÉE ASHANTI</div>
+        <div class="plate red" id="br6el" style="left: 640px; top: 400px; font-size: 48px">BRITANNIQUES</div>
+      </div></div>
+      <!-- 6f. « Ils ne trouveront jamais le Tabouret d'or » : the Golden Stool hidden in the forest -->
+      <div class="scene" id="s6f"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #0c1a10 0%, #16301c 60%, #0a140c 100%)"></div>
+        <svg id="trees6f" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="stool6f" viewBox="0 0 400 360" style="left: 340px; top: 760px; width: 400px; height: 360px"></svg>
+        <svg id="leaf6f" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="lamp6f" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g6f" style="left: 0; right: 0; top: 200px; font-size: 120px">LE TABOURET D'OR</div>
+        <div class="stamp" id="j6f" style="left: 250px; top: 420px; font-size: 92px">JAMAIS TROUVÉ</div>
       </div></div>
       <!-- 7. « Une affaire d'hommes ? Haïti, mars 1802. Le fort de la Crête-à-Pierrot » -->
       <div class="scene" id="s7"><div class="cam">
@@ -216,108 +265,17 @@
       <div id="progbg"></div>
       <div id="prog"></div>
 
-      <audio id="vo" src="assets/vo/vo.wav" data-start="0.2" data-duration="54.46" data-track-index="10" data-volume="1"></audio>
-      <audio id="music" src="assets/music/bed.mp3" data-start="0" data-duration="55.6" data-track-index="11" data-volume="0.3"></audio>
-      <!-- Sons : calés sur les mots de la voix (mêmes temps que T dans le script) -->
-      <audio id="sx0" src="assets/sfx/boom-cine.mp3" data-start="0" data-duration="2.04" data-track-index="20" data-volume="0.42"></audio>
-      <audio id="sx1" src="assets/sfx/tambour.mp3" data-start="0" data-duration="2.04" data-track-index="21" data-volume="0.35"></audio>
-      <audio id="sx2" src="assets/sfx/papier.mp3" data-start="1.52" data-duration="1.04" data-track-index="22" data-volume="0.3"></audio>
-      <audio id="sx3" src="assets/sfx/boom-cine.mp3" data-start="1.59" data-duration="2.04" data-track-index="23" data-volume="0.35"></audio>
-      <audio id="sx4" src="assets/sfx/whoosh.mp3" data-start="3.01" data-duration="1.04" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx5" src="assets/sfx/pages.mp3" data-start="3.09" data-duration="1.04" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx6" src="assets/sfx/boom-cine.mp3" data-start="5.2" data-duration="2.04" data-track-index="20" data-volume="0.38"></audio>
-      <audio id="sx7" src="assets/sfx/tampon.mp3" data-start="5.21" data-duration="1.04" data-track-index="21" data-volume="0.5"></audio>
-      <audio id="sx8" src="assets/sfx/whoosh.mp3" data-start="6.25" data-duration="1.04" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx9" src="assets/sfx/boom-cine.mp3" data-start="6.3" data-duration="2.04" data-track-index="21" data-volume="0.32"></audio>
-      <audio id="sx10" src="assets/sfx/ping-carte.mp3" data-start="7.18" data-duration="1.04" data-track-index="23" data-volume="0.35"></audio>
-      <audio id="sx11" src="assets/sfx/pop.mp3" data-start="7.76" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx12" src="assets/sfx/scintille.mp3" data-start="8.52" data-duration="2.04" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx13" src="assets/sfx/pop.mp3" data-start="8.57" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx14" src="assets/sfx/whoosh.mp3" data-start="10.12" data-duration="1.04" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx15" src="assets/sfx/tambour.mp3" data-start="10.2" data-duration="2.04" data-track-index="22" data-volume="0.3"></audio>
-      <audio id="sx16" src="assets/sfx/boom-cine.mp3" data-start="10.73" data-duration="2.04" data-track-index="20" data-volume="0.35"></audio>
-      <audio id="sx17" src="assets/sfx/compteur.mp3" data-start="11.44" data-duration="1.04" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx18" src="assets/sfx/whoosh.mp3" data-start="12.78" data-duration="1.04" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx19" src="assets/sfx/pop.mp3" data-start="12.84" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx20" src="assets/sfx/course-nuit.mp3" data-start="13.72" data-duration="1.4" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx21" src="assets/sfx/whoosh.mp3" data-start="14.38" data-duration="1.04" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx22" src="assets/sfx/epines.mp3" data-start="14.61" data-duration="2.04" data-track-index="22" data-volume="0.45"></audio>
-      <audio id="sx23" src="assets/sfx/pop.mp3" data-start="15.23" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx24" src="assets/sfx/whoosh.mp3" data-start="16.08" data-duration="1.04" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx25" src="assets/sfx/compteur.mp3" data-start="16.16" data-duration="1.04" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx26" src="assets/sfx/whoosh.mp3" data-start="16.84" data-duration="1.04" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx27" src="assets/sfx/tambour.mp3" data-start="16.89" data-duration="1.2" data-track-index="23" data-volume="0.22"></audio>
-      <audio id="sx28" src="assets/sfx/salve.mp3" data-start="18.09" data-duration="2.04" data-track-index="20" data-volume="0.5"></audio>
-      <audio id="sx29" src="assets/sfx/boom-cine.mp3" data-start="18.14" data-duration="2.04" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx30" src="assets/sfx/whoosh.mp3" data-start="18.94" data-duration="1.04" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx31" src="assets/sfx/boom-cine.mp3" data-start="18.99" data-duration="2.04" data-track-index="23" data-volume="0.35"></audio>
-      <audio id="sx32" src="assets/sfx/ping-carte.mp3" data-start="19.71" data-duration="1.04" data-track-index="24" data-volume="0.3"></audio>
-      <audio id="sx33" src="assets/sfx/pop.mp3" data-start="20.25" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx34" src="assets/sfx/ping-carte.mp3" data-start="20.77" data-duration="1.04" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx35" src="assets/sfx/pop.mp3" data-start="20.91" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx36" src="assets/sfx/pop.mp3" data-start="21.37" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx37" src="assets/sfx/whoosh.mp3" data-start="22.3" data-duration="1.04" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx38" src="assets/sfx/compteur.mp3" data-start="22.75" data-duration="1.04" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx39" src="assets/sfx/riser.mp3" data-start="23.11" data-duration="1.2" data-track-index="22" data-volume="0.12"></audio>
-      <audio id="sx40" src="assets/sfx/tambour.mp3" data-start="23.71" data-duration="2.04" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx41" src="assets/sfx/boom-cine.mp3" data-start="23.73" data-duration="2.04" data-track-index="23" data-volume="0.4"></audio>
-      <audio id="sx42" src="assets/sfx/pop.mp3" data-start="24.58" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx43" src="assets/sfx/whoosh.mp3" data-start="26.05" data-duration="1.04" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx44" src="assets/sfx/whoosh.mp3" data-start="26.16" data-duration="1.04" data-track-index="21" data-volume="0.15"></audio>
-      <audio id="sx45" src="assets/sfx/pop.mp3" data-start="26.87" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx46" src="assets/sfx/balance.mp3" data-start="28.2" data-duration="1.04" data-track-index="20" data-volume="0.3"></audio>
-      <audio id="sx47" src="assets/sfx/papier.mp3" data-start="29.04" data-duration="1.04" data-track-index="21" data-volume="0.25"></audio>
-      <audio id="sx48" src="assets/sfx/mousquet.mp3" data-start="29.91" data-duration="1.04" data-track-index="20" data-volume="0.5"></audio>
-      <audio id="sx49" src="assets/sfx/ding.mp3" data-start="30.4" data-duration="1.04" data-track-index="21" data-volume="0.25"></audio>
-      <audio id="sx50" src="assets/sfx/boulet.mp3" data-start="30.88" data-duration="1.3" data-track-index="22" data-volume="0.35"></audio>
-      <audio id="sx51" src="assets/sfx/boulet.mp3" data-start="31.16" data-duration="1.3" data-track-index="20" data-volume="0.22"></audio>
-      <audio id="sx52" src="assets/sfx/boulet.mp3" data-start="31.44" data-duration="1.3" data-track-index="23" data-volume="0.22"></audio>
-      <audio id="sx53" src="assets/sfx/whoosh.mp3" data-start="31.64" data-duration="1.04" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx54" src="assets/sfx/horloge.mp3" data-start="31.75" data-duration="1.6" data-track-index="24" data-volume="0.3"></audio>
-      <audio id="sx55" src="assets/sfx/pop.mp3" data-start="31.92" data-duration="0.72" data-track-index="25" data-volume="0.2"></audio>
-      <audio id="sx56" src="assets/sfx/course-nuit.mp3" data-start="33.37" data-duration="2.04" data-track-index="20" data-volume="0.45"></audio>
-      <audio id="sx57" src="assets/sfx/whoosh.mp3" data-start="33.37" data-duration="1.04" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx58" src="assets/sfx/whoosh.mp3" data-start="35.31" data-duration="1.04" data-track-index="21" data-volume="0.18"></audio>
-      <audio id="sx59" src="assets/sfx/pop.mp3" data-start="35.35" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx60" src="assets/sfx/pop.mp3" data-start="35.44" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx61" src="assets/sfx/scintille.mp3" data-start="36.25" data-duration="2.04" data-track-index="20" data-volume="0.25"></audio>
-      <audio id="sx62" src="assets/sfx/tambour.mp3" data-start="37.39" data-duration="1.2" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx63" src="assets/sfx/whoosh.mp3" data-start="37.94" data-duration="1.04" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx64" src="assets/sfx/chaines.mp3" data-start="38.12" data-duration="2.04" data-track-index="23" data-volume="0.4"></audio>
-      <audio id="sx65" src="assets/sfx/boom-cine.mp3" data-start="39.81" data-duration="2.04" data-track-index="20" data-volume="0.38"></audio>
-      <audio id="sx66" src="assets/sfx/tampon.mp3" data-start="39.82" data-duration="1.04" data-track-index="21" data-volume="0.5"></audio>
-      <audio id="sx67" src="assets/sfx/tambour.mp3" data-start="41.21" data-duration="2.04" data-track-index="21" data-volume="0.3"></audio>
-      <audio id="sx68" src="assets/sfx/pop.mp3" data-start="42.21" data-duration="0.72" data-track-index="20" data-volume="0.2"></audio>
-      <audio id="sx69" src="assets/sfx/whoosh.mp3" data-start="42.8" data-duration="1.04" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx70" src="assets/sfx/frottement.mp3" data-start="43.4" data-duration="1.04" data-track-index="20" data-volume="0.4"></audio>
-      <audio id="sx71" src="assets/sfx/boom-cine.mp3" data-start="43.99" data-duration="2.04" data-track-index="21" data-volume="0.42"></audio>
-      <audio id="sx72" src="assets/sfx/whoosh.mp3" data-start="44.02" data-duration="1.04" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx73" src="assets/sfx/whoosh.mp3" data-start="45.03" data-duration="1.04" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx74" src="assets/sfx/pop.mp3" data-start="45.1" data-duration="0.72" data-track-index="22" data-volume="0.2"></audio>
-      <audio id="sx75" src="assets/sfx/scintille.mp3" data-start="45.75" data-duration="2.04" data-track-index="23" data-volume="0.25"></audio>
-      <audio id="sx76" src="assets/sfx/pieces.mp3" data-start="46.51" data-duration="2.04" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx77" src="assets/sfx/pop.mp3" data-start="46.95" data-duration="0.72" data-track-index="21" data-volume="0.2"></audio>
-      <audio id="sx78" src="assets/sfx/whoosh.mp3" data-start="47.3" data-duration="1.04" data-track-index="22" data-volume="0.18"></audio>
-      <audio id="sx79" src="assets/sfx/craie.mp3" data-start="48.5" data-duration="2.04" data-track-index="21" data-volume="0.4"></audio>
-      <audio id="sx80" src="assets/sfx/frottement.mp3" data-start="49.66" data-duration="1.04" data-track-index="20" data-volume="0.35"></audio>
-      <audio id="sx81" src="assets/sfx/pages.mp3" data-start="49.99" data-duration="1.04" data-track-index="22" data-volume="0.3"></audio>
-      <audio id="sx82" src="assets/sfx/whoosh.mp3" data-start="51.74" data-duration="1.04" data-track-index="20" data-volume="0.18"></audio>
-      <audio id="sx83" src="assets/sfx/pop.mp3" data-start="51.85" data-duration="0.72" data-track-index="21" data-volume="0.15"></audio>
-      <audio id="sx84" src="assets/sfx/pop.mp3" data-start="52.01" data-duration="0.72" data-track-index="22" data-volume="0.15"></audio>
-      <audio id="sx85" src="assets/sfx/pop.mp3" data-start="52.17" data-duration="0.72" data-track-index="23" data-volume="0.15"></audio>
-      <audio id="sx86" src="assets/sfx/boom-cine.mp3" data-start="52.2" data-duration="2.04" data-track-index="24" data-volume="0.35"></audio>
-      <audio id="sx87" src="assets/sfx/plume.mp3" data-start="53.81" data-duration="1.79" data-track-index="20" data-volume="0.35"></audio>
-      <audio id="sx88" src="assets/sfx/boom-cine.mp3" data-start="54.09" data-duration="1.51" data-track-index="21" data-volume="0.45"></audio>
-      <audio id="sx89" src="assets/sfx/scintille.mp3" data-start="54.09" data-duration="1.51" data-track-index="22" data-volume="0.22"></audio>
+      <!-- Son : un seul mixage (voix devant ; musique et bruitages baissés sous la voix par ../_engine/style-anime/mix_anime.py) -->
+      <audio id="mix" src="assets/audio/mix.wav" data-start="0" data-duration="66.6" data-track-index="10" data-volume="1"></audio>
     </div>
     <script>
       ;(function () {
         const tl = gsap.timeline({ paused: true })
         const $ = (id) => document.getElementById(id)
-        const END = 55.6
-        const RAW = [0.0, 0.145, 0.437, 0.68, 0.971, 1.166, 1.263, 1.44, 1.52, 2.003, 2.103, 2.248, 2.589, 2.926, 2.976, 3.255, 3.352, 3.595, 3.789, 3.886, 4.129, 4.35, 4.473, 4.638, 4.912, 5.256, 5.306, 5.356, 5.523, 5.632, 5.742, 6.171, 6.42, 6.64, 6.749, 6.98, 7.03, 7.613, 7.914, 8.374, 8.424, 8.483, 8.783, 8.963, 9.504, 9.924, 10.044, 10.25, 10.576, 10.934, 11.291, 11.832, 12.312, 12.432, 12.701, 12.795, 13.182, 13.625, 14.401, 14.511, 15.01, 15.078, 15.355, 16.001, 16.112, 16.223, 16.631, 16.743, 17.297, 17.685, 17.967, 18.515, 18.571, 18.652, 18.865, 18.936, 19.325, 19.558, 20.099, 20.149, 20.624, 20.761, 21.033, 21.169, 21.219, 22.223, 22.603, 22.658, 23.407, 24.02, 24.225, 24.428, 24.973, 25.11, 25.586, 25.97, 26.025, 26.14, 26.723, 27.291, 27.854, 28.046, 28.392, 28.564, 28.887, 29.485, 29.6, 29.771, 30.201, 30.251, 30.504, 30.676, 31.079, 31.309, 31.481, 31.563, 31.766, 31.884, 32.181, 32.3, 32.731, 32.793, 33.268, 33.565, 33.742, 34.099, 34.615, 34.817, 35.018, 35.231, 35.286, 35.715, 36.1, 36.574, 36.795, 37.182, 37.293, 37.613, 37.863, 38.65, 38.816, 38.982, 39.425, 39.475, 39.524, 40.001, 40.06, 40.294, 40.821, 41.058, 41.35, 41.702, 42.059, 42.45, 42.567, 42.722, 42.772, 43.048, 43.22, 43.58, 43.769, 44.113, 44.229, 44.632, 44.804, 44.88, 44.954, 45.503, 45.595, 45.923, 46.088, 46.252, 46.361, 46.69, 46.8, 46.909, 47.221, 47.368, 47.762, 47.861, 48.058, 48.353, 48.649, 48.846, 48.993, 49.042, 49.213, 49.361, 49.505, 49.697, 49.841, 50.321, 50.801, 50.898, 51.041, 51.186, 51.329, 51.657, 51.734, 52.046, 52.514, 52.671, 53.088, 53.191, 53.241, 53.315, 53.63, 53.786, 53.943, 54.359, 54.409]
+        const END = 66.6
+        const RAW = [0.0, 0.149, 0.446, 0.694, 0.99, 1.189, 1.288, 1.492, 1.542, 1.989, 2.058, 2.197, 2.521, 2.861, 2.911, 3.175, 3.27, 3.507, 3.697, 3.792, 4.029, 4.232, 4.406, 4.575, 4.857, 5.069, 5.127, 5.24, 5.466, 5.578, 5.691, 6.013, 6.324, 6.574, 6.698, 7.02, 7.089, 7.619, 7.969, 8.375, 8.425, 8.475, 8.711, 8.875, 9.37, 9.755, 9.865, 10.178, 10.337, 10.863, 11.037, 11.62, 12.139, 12.268, 12.755, 12.798, 13.066, 13.372, 13.908, 13.984, 14.367, 14.482, 14.673, 14.856, 14.962, 15.096, 15.43, 15.766, 16.436, 16.904, 17.453, 17.909, 17.976, 18.109, 18.178, 18.293, 18.674, 18.817, 19.388, 19.531, 19.742, 19.87, 20.81, 20.86, 21.496, 21.935, 22.11, 22.483, 22.608, 22.959, 23.134, 23.33, 23.399, 23.52, 23.658, 23.99, 24.209, 24.671, 24.721, 25.381, 25.431, 26.099, 26.69, 26.828, 27.148, 27.345, 27.442, 27.635, 27.732, 28.069, 28.407, 28.697, 28.841, 29.222, 29.347, 29.455, 29.992, 30.314, 30.42, 30.644, 30.844, 30.962, 31.321, 31.546, 32.141, 32.349, 32.768, 33.075, 33.218, 33.385, 33.553, 34.484, 34.849, 35.076, 35.935, 36.214, 36.384, 36.555, 37.01, 37.124, 37.521, 37.786, 37.916, 38.035, 38.525, 39.085, 39.759, 39.938, 40.253, 40.41, 40.686, 41.204, 41.308, 41.616, 41.666, 41.887, 42.135, 42.292, 42.659, 42.869, 43.025, 43.28, 43.576, 43.688, 43.969, 44.082, 44.424, 44.533, 44.982, 45.264, 45.433, 45.77, 46.202, 46.433, 46.59, 46.79, 46.899, 47.317, 47.627, 48.045, 48.207, 48.493, 48.575, 48.625, 49.282, 49.767, 49.969, 50.17, 50.707, 50.842, 50.933, 51.399, 51.454, 51.679, 52.176, 52.436, 52.717, 53.054, 53.426, 53.794, 53.906, 54.058, 54.144, 54.41, 54.57, 54.888, 55.051, 55.37, 55.477, 55.85, 56.01, 56.109, 56.179, 56.696, 56.884, 57.212, 57.376, 57.54, 57.65, 57.978, 58.088, 58.158, 58.358, 58.562, 58.941, 59.036, 59.225, 59.51, 59.794, 59.983, 60.125, 60.175, 60.234, 60.445, 60.587, 60.774, 60.915, 61.386, 61.856, 61.95, 62.091, 62.232, 62.373, 62.707, 62.767, 63.028, 63.419, 63.55, 63.897, 63.984, 64.06, 64.129, 64.363, 64.543, 64.723, 65.202, 65.382]
         const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
-        const WORDS = ["Les", "femmes", "n'ont", "jamais", "fait", "la", "guerre.", "La", "guerre,", "c'est", "une", "affaire", "d'hommes.", "Ça,", "c'est", "ce", "qu'on", "veut", "te", "faire", "croire.", "Sauf", "que", "c'est", "faux,", "et", "je", "vais", "te", "le", "prouver.", "Jamais", "fait", "la", "guerre ?", "Au", "Dahomey,", "l'actuel", "Bénin,", "le", "roi", "avait", "des", "régiments", "entiers", "de", "femmes :", "les", "Agojie.", "Jusqu'à", "plusieurs", "milliers", "de", "soldates.", "On", "raconte", "qu'elles", "s'entraînaient", "en", "traversant", "des", "haies", "d'épines.", "Et", "en", "1890,", "elles", "affrontent", "l'armée", "française,", "fusil", "à", "la", "main.", "Une", "affaire", "d'hommes ?", "Haïti,", "mars", "1802.", "Le", "fort", "de", "la", "Crête-à-Pierrot.", "Environ", "1 200", "défenseurs,", "encerclés", "par", "des", "milliers", "de", "soldats", "français.", "Sur", "le", "rempart,", "Marie-Jeanne", "Lamartinière.", "Elle", "charge", "les", "fusils,", "distribue", "la", "poudre,", "tire,", "et", "soigne", "les", "blessés", "sous", "les", "boulets.", "Après", "vingt", "jours", "de", "siège,", "la", "garnison", "perce", "les", "lignes", "françaises,", "en", "pleine", "nuit.", "Et", "Sanité", "Bélair ?", "Lieutenante", "dans", "l'armée", "de", "Toussaint", "Louverture.", "Capturée", "par", "les", "Français", "en", "1802.", "Condamnée", "à", "être", "décapitée,", "elle", "exige", "d'être", "fusillée,", "comme", "un", "soldat.", "Et", "selon", "les", "récits,", "elle", "refuse", "le", "bandeau", "sur", "les", "yeux.", "Aujourd'hui,", "son", "visage", "est", "sur", "un", "billet", "de", "10", "gourdes.", "Alors", "pourquoi", "tu", "n'as", "jamais", "appris", "leurs", "noms", "à", "l'école ?", "Parce", "que", "ceux", "qui", "écrivaient", "l'histoire", "ne", "les", "ont", "pas", "racontées.", "Les", "femmes", "n'étaient", "pas", "absentes", "de", "la", "guerre.", "Elles", "ont", "été", "absentes", "des", "livres."]
+        const WORDS = ["Les", "femmes", "n'ont", "jamais", "fait", "la", "guerre.", "La", "guerre,", "c'est", "une", "affaire", "d'hommes.", "Ça,", "c'est", "ce", "qu'on", "veut", "te", "faire", "croire.", "Sauf", "que", "c'est", "faux,", "et", "je", "vais", "te", "le", "prouver.", "Jamais", "fait", "la", "guerre ?", "Au", "Dahomey,", "l'actuel", "Bénin,", "le", "roi", "avait", "des", "régiments", "entiers", "de", "femmes :", "les", "Agojie.", "Jusqu'à", "plusieurs", "milliers", "de", "soldates.", "On", "raconte", "qu'elles", "s'entraînaient", "en", "traversant", "des", "haies", "d'épines.", "Et", "en", "1890,", "elles", "affrontent", "l'armée", "française,", "fusil", "à", "la", "main.", "Les", "Français", "les", "surnommaient", "les", "Amazones.", "La", "dernière,", "Nawi,", "serait", "morte", "en", "1979,", "à", "plus", "de", "100", "ans.", "Et", "au", "Ghana,", "en", "1900,", "la", "reine-mère", "Yaa", "Asantewaa,", "environ", "60", "ans,", "prend", "la", "tête", "de", "l'armée", "ashanti", "contre", "les", "Britanniques.", "Ils", "ne", "trouveront", "jamais", "le", "Tabouret", "d'or.", "Une", "affaire", "d'hommes ?", "Haïti,", "mars", "1802.", "Le", "fort", "de", "la", "Crête-à-Pierrot.", "Environ", "1 200", "défenseurs,", "encerclés", "par", "des", "milliers", "de", "soldats", "français.", "Sur", "le", "rempart,", "Marie-Jeanne", "Lamartinière.", "Elle", "charge", "les", "fusils,", "distribue", "la", "poudre,", "tire,", "et", "soigne", "les", "blessés", "sous", "les", "boulets.", "Après", "vingt", "jours", "de", "siège,", "la", "garnison", "perce", "les", "lignes", "françaises,", "en", "pleine", "nuit.", "Et", "Sanité", "Bélair ?", "Lieutenante", "dans", "l'armée", "de", "Toussaint", "Louverture.", "Capturée", "par", "les", "Français", "en", "1802.", "Condamnée", "à", "être", "décapitée,", "elle", "exige", "d'être", "fusillée,", "comme", "un", "soldat.", "Et", "selon", "les", "récits,", "elle", "refuse", "le", "bandeau", "sur", "les", "yeux.", "Aujourd'hui,", "son", "visage", "est", "sur", "un", "billet", "de", "10", "gourdes.", "Alors", "pourquoi", "tu", "n'as", "jamais", "appris", "leurs", "noms", "à", "l'école ?", "Parce", "que", "ceux", "qui", "écrivaient", "l'histoire", "ne", "les", "ont", "pas", "racontées.", "Les", "femmes", "n'étaient", "pas", "absentes", "de", "la", "guerre.", "Elles", "ont", "été", "absentes", "des", "livres."]
         let seed = 23
         const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
 
@@ -338,6 +296,7 @@
           const hat = o.hat ? HAT[o.hat](o.hatCol || '#1b1410') : ''
           const beard = o.beard ? `<path d="M178,300 C176,420 230,478 300,478 C370,478 424,420 422,300 C410,360 380,350 300,352 C220,350 190,360 178,300Z" fill="${hc}"/>` : ''
           const stache = o.stache ? `<path d="M244,352 C262,334 290,338 300,350 C310,338 338,334 356,352 C346,372 318,368 300,358 C282,368 254,372 244,352Z" fill="${hc}"/>` : ''
+          const old = o.old ? `<path d="M232,332 Q255,340 278,332 M322,332 Q345,340 368,332 M250,212 Q300,204 350,212 M256,198 Q300,190 344,198" stroke="${dark}" stroke-width="5" fill="none" opacity="0.8"/>` : ''
           const fem = o.female ? `<path d="M226,288 L212,278 M232,282 L222,270 M374,288 L388,278 M368,282 L378,270" stroke="#1b1410" stroke-width="5" stroke-linecap="round"/><circle cx="182" cy="352" r="11" fill="#f2b705"/><circle cx="418" cy="352" r="11" fill="#f2b705"/>` : ''
           const lips = o.female ? `<path d="${mouth}" stroke="#7a2a22" stroke-width="13" fill="none" stroke-linecap="round"/>` : `<path d="${mouth}" stroke="#3a1a12" stroke-width="9" fill="none" stroke-linecap="round"/>`
           const ep = o.epaulettes ? '<g fill="#f2b705"><ellipse cx="96" cy="540" rx="80" ry="28"/><ellipse cx="504" cy="540" rx="80" ry="28"/></g><g stroke="#f2b705" stroke-width="7">' + [0, 1, 2, 3, 4, 5].map((i) => `<line x1="${36 + i * 22}" y1="560" x2="${34 + i * 22}" y2="600"/><line x1="${454 + i * 22}" y1="560" x2="${456 + i * 22}" y2="600"/>`).join('') + '</g>' : ''
@@ -357,7 +316,7 @@
             <g class="lids" opacity="0"><rect x="224" y="274" width="62" height="52" fill="${skin}"/><rect x="314" y="274" width="62" height="52" fill="${skin}"/><path d="M230,302 Q255,312 280,302 M320,302 Q345,312 370,302" stroke="#1b1410" stroke-width="6" fill="none"/></g>
             <path d="${brow[0]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/><path d="${brow[1]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/>
             <path d="M296,320 Q290,342 304,346" stroke="${dark}" stroke-width="7" fill="none" stroke-linecap="round"/>
-            ${fem}${stache}${lips}${hat}
+            ${old}${fem}${stache}${lips}${hat}
           </svg>`
         }
         const put = (id, o) => { $(id).innerHTML = bust(o) }
@@ -373,6 +332,8 @@
         med('med12', Object.assign({}, SANITE, { mood: 'neutral' }), '#8a8a90')
         put('sb13', Object.assign({}, SANITE, { mood: 'sure' }))
         $('po14').innerHTML = bust(Object.assign({}, SANITE, { mood: 'neutral' }))
+        med('ya6d', Object.assign({}, BLACK, { skin: '#6a3e26', dark: '#4e2c1a', female: true, old: true, hair: 'wrap', wrap: '#2e7d32', plain: true, coat: '#c9962e', lapel: '#2e7d32', stripes: true, beads: true, mood: 'sure' }), '#f0d890')
+        put('nw6c', Object.assign({}, BLACK, { female: true, old: true, hair: 'short', hairCol: '#d8d4ca', plain: true, coat: '#6a5a4a', lapel: '#4a3a2a', beads: true, mood: 'neutral' }))
         put('g16a', Object.assign({}, AGOJIE, { mood: 'sure' })); put('g16b', Object.assign({}, MJ, { mood: 'sure' })); put('g16c', Object.assign({}, SANITE, { mood: 'sure' }))
         const blink = (sel, times) => times.forEach((t) => tl.fromTo(sel + ' .lids', { opacity: 0 }, { opacity: 1, duration: 0.02, yoyo: true, repeat: 1, repeatDelay: 0.1, ease: 'none', immediateRender: false }, t))
 
@@ -393,6 +354,7 @@
           if (h === 'kepi') s += '<path d="M38,66 L82,66 L78,44 L42,44Z" fill="#1d3557"/><rect x="42" y="44" width="36" height="8" fill="#c0392b"/><path d="M38,66 L94,70 L82,64Z" fill="#111"/>'
           if (h === 'band') s += '<path d="M36,74 C36,50 84,50 84,74 C76,62 44,62 36,74Z" fill="#1b1410"/><rect x="36" y="64" width="48" height="8" fill="#f4f1e8"/>'
           if (h === 'wrap') s += `<path d="M34,80 C30,48 50,40 60,40 C70,40 90,48 86,80 C78,64 42,64 34,80Z" fill="${o.wrap || '#d7263d'}"/><circle cx="60" cy="40" r="10" fill="${o.wrap || '#d7263d'}"/>`
+          if (h === 'helmet') s += '<path d="M34,70 C34,40 86,40 86,70Z" fill="#e8e2d8"/><path d="M24,70 L96,70 L92,78 L28,78Z" fill="#d0c8b8"/>'
           if (h === 'hair') s += '<path d="M36,74 C36,50 84,50 84,74 C76,62 44,62 36,74Z" fill="#1b1410"/>'
           if (o.rifle === 'shoulder') s += '<path d="M80,40 L74,200" stroke="#5a3418" stroke-width="7"/><path d="M80,40 L79,20" stroke="#9aa4ae" stroke-width="4"/><rect x="74" y="110" width="16" height="30" rx="6" fill="' + skin + '"/>'
           if (o.rifle === 'aim') s += `<path d="M44,112 L150,104" stroke="#5a3418" stroke-width="8"/><path d="M120,106 L168,102" stroke="#9aa4ae" stroke-width="4"/><rect x="62" y="104" width="34" height="14" rx="6" fill="${skin}"/><g class="mf" opacity="0"><path d="M170,102 L196,88 L188,102 L204,110 L186,110 L192,126Z" fill="#ffd36a"/></g>`
@@ -453,6 +415,33 @@
         let sk = ''
         for (let i = 0; i < 12; i++) sk += `<circle class="pf6" cx="${(380 + rnd() * 380).toFixed(0)}" cy="${(980 + rnd() * 160).toFixed(0)}" r="${(40 + rnd() * 50).toFixed(0)}" fill="#e8e2d8" opacity="0.75"/>`
         $('smk6').innerHTML = sk
+        // 6b. the illustrated newspaper
+        $('news6b').innerHTML = '<rect x="0" y="0" width="760" height="980" fill="#efe6cf"/><rect x="0" y="0" width="760" height="980" fill="none" stroke="#b8a888" stroke-width="10"/><text x="380" y="96" text-anchor="middle" font-family="Anton" font-size="66" fill="#1b1410" letter-spacing="3">LE JOURNAL ILLUSTRÉ</text><line x1="40" y1="120" x2="720" y2="120" stroke="#1b1410" stroke-width="5"/><text x="380" y="156" text-anchor="middle" font-family="Bebas" font-size="34" fill="#3a2a1a" letter-spacing="4">PARIS · 1890</text><line x1="40" y1="172" x2="720" y2="172" stroke="#1b1410" stroke-width="3"/><text id="hd6b" x="380" y="250" text-anchor="middle" font-family="Anton" font-size="62" fill="#7a1e12">LES AMAZONES DU DAHOMEY</text><rect x="60" y="290" width="640" height="460" fill="#d8ccb0" stroke="#1b1410" stroke-width="4"/><rect x="60" y="560" width="640" height="190" fill="#b8a888"/>' + [0, 1, 2].map((i) => `<g transform="translate(${190 + i * 190},740) scale(1.25) translate(-60,-300)" opacity="0.92">${fig(Object.assign({}, AGF, { skin: '#3a2a1a', top: '#3a3a3a', bot: '#2a2a2a', stripes: true, rifle: i === 1 ? 'up' : 'shoulder' }))}</g>`).join('') + '<g stroke="#8a7a5a" stroke-width="5">' + [790, 830, 870, 910].map((y) => `<line x1="60" y1="${y}" x2="340" y2="${y}"/><line x1="420" y1="${y}" x2="700" y2="${y}"/>`).join('') + '</g>'
+        // 6d. Africa again, Ghana
+        let m6 = ''
+        for (const [k, d] of Object.entries(AF.paths)) m6 += `<path id="b-${k}" d="${d}" fill="#3a3326" stroke="#5a5040" stroke-width="2"/>`
+        $('map6d').innerHTML = m6
+        // 6e. forest edge; the Ashanti line led by Yaa Asantewaa; the British line
+        $('for6e').innerHTML = '<g fill="#244a24">' + [60, 180, 300, 780, 900, 1020].map((x, i) => `<rect x="${x - 14}" y="${600 + (i % 2) * 40}" width="28" height="320" fill="#3a2a14"/><ellipse cx="${x}" cy="${590 + (i % 2) * 40}" rx="110" ry="140"/>`).join('') + '</g><path d="M0,900 Q300,860 600,890 T1080,880 L1080,910 L0,910Z" fill="#3a2a14"/>'
+        const ASH = { skin: '#6a3e26', top: '#c9962e', bot: '#2e7d32', hat: 'hair', rifle: 'aim', stripes: true, belt: true }
+        let a6e = placeFig({ skin: '#6a3e26', top: '#c9962e', bot: '#2e7d32', hat: 'wrap', wrap: '#2e7d32', rifle: 'up', skirt: true, stripes: true }, 140, 1230, 1.6, false, 'yaa6e')
+        for (let i = 0; i < 4; i++) a6e += placeFig(ASH, 250 + i * 80, 1150 + (i % 2) * 30, 1.15, false, 'ash6e')
+        $('as6e').innerHTML = a6e
+        let b6e = ''
+        for (let i = 0; i < 5; i++) b6e += placeFig({ skin: '#e8b890', top: '#c0392b', bot: '#2a2a30', hat: 'helmet', rifle: 'aim', belt: true }, 1010 - i * 85, 1100 + (i % 2) * 30, 1.05, true, 'br6e')
+        $('br6e').innerHTML = b6e
+        let sk6e = ''
+        for (let i = 0; i < 10; i++) sk6e += `<circle class="pf6e" cx="${(420 + rnd() * 320).toFixed(0)}" cy="${(960 + rnd() * 160).toFixed(0)}" r="${(40 + rnd() * 50).toFixed(0)}" fill="#e8e2d8" opacity="0.75"/>`
+        $('smk6e').innerHTML = sk6e
+        // 6f. the Golden Stool in the forest; leaves; British lanterns searching
+        let tr = ''
+        for (let i = 0; i < 9; i++) { const x = (i / 8) * 1080 + rnd() * 40 - 20; tr += `<rect x="${x.toFixed(0)}" y="${(300 + rnd() * 200).toFixed(0)}" width="${(40 + rnd() * 30).toFixed(0)}" height="1300" fill="#0e2010"/>` }
+        $('trees6f').innerHTML = tr + '<rect x="0" y="1120" width="1080" height="800" fill="#0a160c"/>'
+        $('stool6f').innerHTML = '<path d="M30,60 C120,120 280,120 370,60 L360,100 C280,150 120,150 40,100Z" fill="#f2b705" stroke="#a87a10" stroke-width="6"/><path d="M150,130 C150,180 130,220 110,250 L290,250 C270,220 250,180 250,130Z" fill="#e0a800" stroke="#a87a10" stroke-width="6"/><path d="M70,250 L330,250 L350,300 L50,300Z" fill="#f2b705" stroke="#a87a10" stroke-width="6"/>' + [90, 170, 230, 310].map((x) => `<path d="M${x},${100} L${x},${150}" stroke="#a87a10" stroke-width="4"/><circle cx="${x}" cy="160" r="12" fill="#f2b705" stroke="#a87a10" stroke-width="3"/>`).join('')
+        let lv = ''
+        for (let i = 0; i < 26; i++) { const x = 260 + rnd() * 560, y = 700 + rnd() * 460, r = 60 + rnd() * 70, a = rnd() * 180; lv += `<ellipse class="lf6f" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${r.toFixed(0)}" ry="${(r * 0.45).toFixed(0)}" fill="${i % 2 ? '#1e4a22' : '#2a5a2a'}" transform="rotate(${a.toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})"/>` }
+        $('leaf6f').innerHTML = lv
+        $('lamp6f').innerHTML = [0, 1].map((i) => `<g class="lp6f">${placeFig({ skin: '#2a2420', top: '#2a2420', bot: '#2a2420', hat: 'helmet' }, 0, 1300, 1.0, false, '')}<circle cx="40" cy="1130" r="60" fill="#ffd36a" opacity="0.25"/><rect x="30" y="1120" width="20" height="26" rx="4" fill="#ffd36a"/></g>`).join('')
         // 7. Hispaniola; the hill fort
         const HI = {"W": 1080, "H": 499, "paths": {"HTI": "M480,88L481,93L482,96L482,99L481,104L482,108L487,119L489,133L489,141L487,145L486,146L484,151L482,153L478,155L476,156L477,160L480,164L481,165L487,171L498,176L500,177L499,188L498,191L496,194L490,198L488,200L483,207L475,216L473,217L464,219L461,221L462,224L465,224L469,222L473,223L475,224L477,229L479,231L482,234L484,236L485,239L485,246L486,253L486,257L485,260L484,263L482,266L480,268L475,271L474,272L473,272L471,275L468,281L465,283L459,285L446,283L440,284L437,286L439,289L454,305L455,307L455,309L454,310L453,311L453,313L454,316L456,318L463,319L464,321L467,325L468,326L474,330L483,334L486,335L487,337L488,337L486,341L486,341L478,354L477,357L476,361L477,362L478,367L479,369L479,372L479,378L479,381L477,386L474,384L462,369L457,364L451,360L438,356L432,353L427,351L420,351L407,353L389,353L364,353L351,356L348,354L346,353L345,354L346,361L344,362L342,362L338,361L335,360L315,362L311,362L312,362L312,364L312,365L310,365L309,365L308,364L303,367L294,366L289,368L285,365L279,363L272,361L255,359L250,359L249,359L244,356L242,356L220,352L210,353L208,353L209,350L212,349L218,349L218,348L206,347L193,347L189,348L183,352L181,352L180,351L178,348L177,347L175,348L174,352L172,354L170,353L169,353L167,354L165,354L165,351L166,348L163,349L161,354L159,356L159,353L159,351L161,347L160,348L158,351L156,352L156,351L155,351L153,351L153,351L153,352L153,353L153,353L145,359L133,365L130,368L127,373L135,380L136,383L136,386L136,388L134,388L123,388L121,388L119,387L118,386L117,383L107,368L106,367L105,367L104,366L104,366L104,365L103,365L103,364L100,361L84,349L81,348L75,347L73,346L71,344L71,343L70,341L69,340L68,340L66,340L62,338L60,337L59,338L56,337L53,339L49,341L45,342L42,341L38,340L35,338L34,337L32,335L26,331L25,328L24,325L23,322L19,317L25,308L24,307L23,306L26,303L28,295L31,293L31,292L31,290L30,288L30,287L29,285L31,283L36,280L44,277L47,276L51,277L53,277L53,276L54,274L56,274L58,274L68,274L74,276L96,286L106,286L106,286L108,288L108,288L108,289L109,289L110,289L111,288L116,291L118,292L126,292L128,292L130,293L133,296L134,297L136,297L137,297L138,296L138,296L140,296L142,297L144,297L145,297L147,295L148,295L148,294L150,292L151,291L152,291L154,291L155,291L163,289L165,288L171,290L171,293L168,295L163,295L163,296L160,295L156,294L153,294L149,296L151,297L153,298L156,299L156,300L156,301L157,302L160,304L165,303L168,304L174,301L181,300L208,302L211,303L218,306L222,307L235,306L242,307L248,309L251,311L253,312L256,312L261,311L272,309L287,313L286,316L289,315L294,314L297,314L299,315L311,317L318,315L322,311L326,306L329,300L333,294L338,293L366,296L367,295L368,295L368,294L369,293L370,294L370,294L370,294L371,295L374,299L376,300L379,299L380,296L381,292L381,281L381,279L382,276L383,275L384,274L383,271L381,270L374,267L372,266L368,266L366,265L362,263L359,259L356,256L352,257L346,253L345,252L343,248L334,235L332,232L329,229L325,227L322,226L319,225L301,206L301,201L308,198L314,198L318,196L319,194L318,190L316,189L313,187L310,186L308,184L304,176L303,174L304,173L304,172L304,172L304,171L306,170L308,165L309,164L311,163L314,162L316,162L318,163L316,158L314,157L311,156L309,155L308,151L308,148L309,145L310,147L312,148L313,148L315,148L317,146L317,145L316,144L316,140L315,139L316,139L318,139L319,140L320,141L322,142L324,142L321,135L319,134L310,134L308,132L307,130L304,127L301,125L291,120L282,114L278,113L276,112L270,107L269,107L267,108L256,104L255,103L251,103L250,102L249,102L249,103L248,104L247,105L245,105L242,104L239,103L235,101L233,99L229,102L222,103L206,102L203,101L201,101L200,100L197,97L195,96L193,95L192,91L191,87L191,85L197,76L198,74L200,74L208,69L208,68L199,68L202,66L205,66L208,66L212,66L232,56L238,52L242,47L244,50L246,50L251,50L253,50L257,52L260,52L262,52L263,52L266,51L269,51L271,51L274,52L276,53L277,51L280,49L284,48L287,50L292,48L297,46L303,46L308,46L325,50L329,53L333,54L343,58L343,58L347,63L351,66L356,67L359,66L362,67L367,69L372,71L374,70L375,73L383,80L383,82L382,81L380,80L382,86L382,86L385,87L386,87L385,85L388,83L387,83L386,83L385,83L385,83L386,82L386,81L386,82L386,80L386,80L385,78L386,78L389,79L392,80L395,79L397,76L399,74L402,74L404,76L403,80L406,82L408,82L415,81L416,81L417,82L418,82L420,85L422,85L428,85L429,86L430,87L430,87L432,88L434,90L436,90L437,90L438,88L439,87L441,86L444,84L449,84L457,86L462,87L463,88L462,90L460,91L458,92L454,91L455,95L458,95L461,94L464,94L467,96L469,98L470,97L471,94L470,93L467,92L465,91L465,90L465,88L466,87L468,87L473,88L480,88ZM164,376L167,376L170,377L172,379L172,381L170,382L167,383L160,382L157,382L155,380L151,376L151,374L152,374L153,374L154,375L156,374L157,374L157,375L159,376L164,376ZM136,281L140,279L145,280L149,282L149,286L146,288L140,288L136,286L136,281ZM295,20L300,20L303,20L306,22L310,24L326,30L333,34L331,39L328,37L314,36L307,33L299,31L296,30L294,30L292,31L291,31L287,30L283,29L279,27L277,25L277,25L278,25L279,24L287,21L295,20ZM226,237L223,234L222,234L221,232L220,230L219,228L220,226L222,224L225,222L228,221L232,220L236,221L260,230L271,234L284,241L296,246L301,252L302,256L303,260L302,265L300,268L298,269L297,268L296,265L294,264L293,263L289,263L274,260L269,259L264,258L249,248L234,244L230,241L226,237Z", "DOM": "M480,88L483,89L486,90L485,87L482,80L482,78L482,77L478,76L477,74L479,72L482,69L483,68L483,68L485,68L487,68L488,65L489,64L491,64L493,63L494,63L496,61L495,58L495,56L496,55L498,54L499,55L501,56L503,56L503,55L504,54L505,53L522,52L527,53L531,54L547,63L552,64L556,62L560,64L562,65L570,66L572,65L572,64L572,62L573,60L575,59L577,61L578,66L580,65L581,64L581,63L582,62L580,61L580,61L580,61L580,59L582,61L584,60L587,60L589,59L591,58L594,52L596,51L599,50L604,48L607,47L610,48L613,49L614,52L613,54L616,56L618,56L617,53L616,52L625,53L627,53L632,52L634,52L636,53L643,62L644,64L643,66L650,66L652,67L658,72L665,76L671,78L679,79L689,79L690,79L690,77L692,76L695,75L696,74L703,76L713,87L720,94L722,96L725,97L729,98L737,99L743,101L754,104L757,104L758,103L760,102L766,95L769,94L778,94L783,93L785,94L788,95L793,101L795,105L795,110L792,120L796,121L797,124L797,133L797,136L799,139L810,156L815,161L815,161L821,164L825,163L831,161L835,160L842,160L846,159L849,158L854,154L856,154L858,154L861,156L863,156L868,155L869,155L870,155L871,155L872,156L872,157L873,158L874,158L876,156L885,160L888,163L890,159L893,156L901,152L906,150L907,152L906,156L903,161L907,163L911,163L914,162L917,160L918,164L916,167L913,170L912,173L911,176L909,179L906,181L902,182L889,180L874,181L871,180L865,177L843,174L841,175L840,177L839,186L838,193L839,196L840,197L842,198L852,197L855,198L859,197L867,200L871,199L870,198L869,198L867,197L865,197L865,196L874,195L877,196L880,198L882,203L885,205L888,206L894,207L909,211L916,213L918,213L922,211L921,210L918,208L918,207L921,206L924,208L928,214L930,215L932,216L935,217L936,219L938,217L942,215L944,214L943,213L943,212L945,212L946,212L948,210L948,209L949,209L955,209L959,210L962,211L965,213L965,213L965,214L965,215L966,215L969,216L970,216L976,218L979,218L981,218L981,219L983,220L984,220L987,221L989,221L1009,240L1016,248L1026,256L1033,261L1035,262L1036,263L1044,270L1054,276L1058,283L1057,290L1042,315L1040,315L1039,317L1039,318L1039,325L1039,326L1037,329L1034,331L1031,331L1027,331L1023,330L1017,326L1014,325L1012,327L1012,330L1013,333L1011,337L1009,339L1008,343L1005,353L1005,355L1003,355L988,357L985,356L985,349L981,340L975,332L970,326L965,323L958,320L951,319L943,322L931,323L927,322L920,319L917,319L914,318L909,314L905,313L902,314L899,315L895,315L892,313L888,316L866,318L860,320L856,320L847,314L843,312L841,312L840,313L840,315L840,317L840,319L838,319L836,319L834,319L833,318L830,314L829,312L827,312L801,309L797,309L796,309L793,310L788,313L783,316L782,316L777,318L776,319L773,320L770,323L767,328L766,333L765,334L761,337L760,338L759,340L754,345L750,350L747,352L746,351L742,351L739,352L737,353L734,351L731,351L709,351L706,352L699,356L695,357L683,357L680,356L680,354L681,353L683,352L684,351L683,349L682,348L681,347L680,345L676,343L676,342L676,340L677,339L678,338L679,337L680,334L680,330L679,327L678,324L675,320L673,318L669,317L665,316L661,316L657,316L656,320L657,323L656,325L651,330L650,331L648,331L646,331L642,330L641,330L640,330L637,332L636,332L633,332L633,333L631,334L631,335L630,337L629,338L629,339L627,339L626,340L621,345L619,346L615,347L613,346L612,345L611,343L610,342L608,340L607,339L599,338L596,338L593,339L592,342L592,343L590,346L590,348L590,350L591,351L592,352L594,354L596,364L597,366L597,368L594,373L591,380L575,403L574,407L573,409L571,410L568,412L566,413L565,415L563,417L562,420L561,420L561,419L560,419L560,420L559,421L559,421L560,421L559,423L558,424L557,424L556,425L555,425L554,429L554,430L551,433L546,450L544,453L537,463L535,462L534,461L534,460L532,459L521,439L518,436L512,434L499,436L493,435L494,433L500,428L501,425L501,422L500,419L497,414L496,411L495,410L495,408L496,401L495,398L492,395L486,390L477,386L479,381L479,378L479,372L479,369L478,367L477,362L476,361L477,357L478,354L486,341L486,341L488,337L487,337L486,335L483,334L474,330L468,326L467,325L464,321L463,319L456,318L454,316L453,313L453,311L454,310L455,309L455,307L454,305L439,289L437,286L440,284L446,283L459,285L465,283L468,281L471,275L473,272L474,272L475,271L480,268L482,266L484,263L485,260L486,257L486,253L485,246L485,239L484,236L482,234L479,231L477,229L475,224L473,223L469,222L465,224L462,224L461,221L464,219L473,217L475,216L483,207L488,200L490,198L496,194L498,191L499,188L500,177L498,176L487,171L481,165L480,164L477,160L476,156L478,155L482,153L484,151L486,146L487,145L489,141L489,133L487,119L482,108L481,104L482,99L482,96L481,93L480,88ZM519,473L516,472L516,468L518,464L520,460L522,461L524,463L529,467L526,468L522,472L519,473ZM1002,363L1010,363L1013,363L1014,366L1016,369L1018,372L1017,374L1015,373L1009,371L1006,370L1003,370L998,372L995,373L989,371L985,367L982,362L981,358L983,357L986,358L989,359L992,361L994,362L1002,363Z"}, "pts": {"CP": [349, 183]}}
         let hs = ''
@@ -513,8 +502,8 @@
 
         // ---------- scene cuts on the voice ----------
         const at = (k) => Math.round((T[k] - 0.06) * 100) / 100
-        const CUT = [0, at(13), at(31), at(46), at(54), at(63), at(74), at(85), at(95), at(115), at(129), at(138), at(155), at(166), at(176), at(197), END]
-        const SC = Array.from({ length: 16 }, (_, i) => '#s' + (i + 1))
+        const CUT = [0, at(13), at(31), at(46), at(54), at(63), at(74), at(80), at(92), at(104), at(113), at(120), at(131), at(141), at(161), at(175), at(184), at(201), at(212), at(222), at(243), END]
+        const SC = ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s6b', '#s6c', '#s6d', '#s6e', '#s6f', '#s7', '#s8', '#s9', '#s10', '#s11', '#s12', '#s13', '#s14', '#s15', '#s16']
         SC.forEach((s, i) => {
           tl.set(s, { visibility: 'visible' }, CUT[i])
           tl.set(s, { visibility: 'hidden' }, CUT[i + 1])
@@ -572,101 +561,142 @@
         document.querySelectorAll('#smk6 .pf6').forEach((p, i) => tl.fromTo(p, { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, x: (i % 3) * 30, duration: 0.6, ease: 'power2.out', immediateRender: false }, T[70] + i * 0.03))
         gsap.set('#smk6 .pf6', { scale: 0, transformOrigin: '50% 50%' })
         shake('#s6 .cam', T[70] + 0.05)
+        // 6b. the newspaper: LES AMAZONES DU DAHOMEY
+        pop('#news6b', CUT[6] + 0.02, { y: 200, scale: 0.8, rot: -6 })
+        tl.fromTo('#hd6b', { opacity: 0 }, { opacity: 1, duration: 0.15, immediateRender: false }, T[79] - 0.1)
+        gsap.set('#hd6b', { opacity: 0 })
+        shake('#s6b .cam', T[79] + 0.05)
+        // 6c. Nawi's photograph; 1979; + DE 100 ANS
+        pop('#ph6c', CUT[7] + 0.02, { y: 160, scale: 0.8, rot: 5 })
+        pop('#y6c', T[86] - 0.05, { scale: 0.6 })
+        count($('y6c'), 1890, 1979, T[86] - 0.05, T[86] + 0.6)
+        pop('#c6c', T[88] - 0.05, { rot: -3 })
+        blink('#nw6c', [CUT[7] + 0.8])
+        // 6d. Ghana lights up; 1900; Yaa Asantewaa, about 60
+        tl.fromTo('#map6d', { autoAlpha: 0, scale: 0.9 }, { autoAlpha: 1, scale: 1, duration: 0.4 }, CUT[8] + 0.02)
+        tl.fromTo('#b-GHA', { fill: '#3a3326' }, { fill: '#ffc93c', duration: 0.3, immediateRender: false }, T[94] - 0.05)
+        tl.fromTo('#b-GHA', { filter: 'drop-shadow(0 0 0px rgba(255,190,40,0))' }, { filter: 'drop-shadow(0 0 16px rgba(255,190,40,0.95))', duration: 0.3, immediateRender: false }, T[94] - 0.05)
+        tl.fromTo('#ping6d', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01, immediateRender: false }, T[94] - 0.05); gsap.set('#ping6d', { autoAlpha: 0 })
+        ping('#pg6d', T[94] - 0.05)
+        pop('#gh6d', T[94], { rot: -3 })
+        pop('#y6d', T[96] - 0.05, { scale: 0.6 })
+        count($('y6d'), 1850, 1900, T[96] - 0.05, T[96] + 0.5)
+        pop('#ya6d', T[98] - 0.05, { scale: 0.3 })
+        pop('#yn6d', T[99] - 0.05, { rot: -3 })
+        pop('#ys6d', T[101] - 0.05, { rot: 3 })
+        blink('#ya6d', [T[102]])
+        // 6e. she leads the Ashanti army; the British line; the volley
+        tl.fromTo('#as6e', { x: -600 }, { x: 0, duration: 0.5, ease: 'power2.out' }, CUT[9] + 0.02)
+        tl.fromTo('#as6e .yaa6e', { y: 0 }, { y: -14, duration: 0.25, yoyo: true, repeat: 5, ease: 'sine.inOut', immediateRender: false }, CUT[9] + 0.5)
+        pop('#as6el', T[108] - 0.05, { rot: -3 })
+        tl.fromTo('#br6e', { x: 600 }, { x: 0, duration: 0.5, ease: 'power2.out' }, T[110] - 0.1)
+        pop('#br6el', T[111] - 0.05, { rot: 3 })
+        document.querySelectorAll('#as6e .mf').forEach((m, i) => tl.fromTo(m, { opacity: 0 }, { opacity: 1, duration: 0.05, yoyo: true, repeat: 1, ease: 'none', immediateRender: false }, T[112] - 0.05 + i * 0.05))
+        document.querySelectorAll('#smk6e .pf6e').forEach((p, i) => tl.fromTo(p, { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, x: (i % 3) * 30, duration: 0.6, ease: 'power2.out', immediateRender: false }, T[112] + i * 0.03))
+        gsap.set('#smk6e .pf6e', { scale: 0, transformOrigin: '50% 50%' })
+        shake('#s6e .cam', T[112] + 0.05)
+        // 6f. the lanterns search, the leaves part, the stool glows; JAMAIS TROUVÉ
+        document.querySelectorAll('#lamp6f .lp6f').forEach((l, i) => tl.fromTo(l, { x: i ? 1200 : -200 }, { x: i ? 760 : 180, duration: 1.4, ease: 'sine.inOut', immediateRender: false }, CUT[10] + 0.05))
+        gsap.set('#lamp6f .lp6f', { x: -400 })
+        tl.fromTo('#stool6f', { filter: 'drop-shadow(0 0 0px rgba(255,200,40,0))' }, { filter: 'drop-shadow(0 0 40px rgba(255,200,40,0.95))', duration: 0.4, immediateRender: false }, T[118] - 0.1)
+        document.querySelectorAll('#leaf6f .lf6f').forEach((l, i) => tl.to(l, { x: (i % 2 ? 1 : -1) * (120 + (i % 5) * 30), opacity: 0.5, duration: 0.5, ease: 'power2.out' }, T[118] - 0.1))
+        pop('#g6f', T[118] - 0.05, { scale: 0.6 })
+        stamp('#j6f', T[116] - 0.04, -6)
         // 7. UNE AFFAIRE D'HOMMES ? ; Haiti lights up; MARS 1802; the fort, the ping
-        pop('#q7', CUT[6] + 0.02, { scale: 0.6 })
-        tl.fromTo('#map7', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, CUT[6] + 0.05)
-        out('#q7', T[77] - 0.15)
-        tl.fromTo('#h-HTI', { fill: '#2a3140' }, { fill: '#ffc93c', duration: 0.3, immediateRender: false }, T[77] - 0.05)
-        tl.fromTo('#h-HTI', { filter: 'drop-shadow(0 0 0px rgba(255,190,40,0))' }, { filter: 'drop-shadow(0 0 16px rgba(255,190,40,0.95))', duration: 0.3, immediateRender: false }, T[77] - 0.05)
-        pop('#y7', T[78] - 0.05, { scale: 0.6 })
-        tl.fromTo('#ping7', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01, immediateRender: false }, T[80] - 0.05); gsap.set('#ping7', { autoAlpha: 0 })
-        ping('#pg7', T[80] - 0.05)
-        pop('#fort7', T[81] - 0.05, { y: 120, scale: 0.5 })
-        pop('#cp7', T[84] - 0.1, { rot: -3 })
+        pop('#q7', CUT[11] + 0.02, { scale: 0.6 })
+        tl.fromTo('#map7', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, CUT[11] + 0.05)
+        out('#q7', T[123] - 0.15)
+        tl.fromTo('#h-HTI', { fill: '#2a3140' }, { fill: '#ffc93c', duration: 0.3, immediateRender: false }, T[123] - 0.05)
+        tl.fromTo('#h-HTI', { filter: 'drop-shadow(0 0 0px rgba(255,190,40,0))' }, { filter: 'drop-shadow(0 0 16px rgba(255,190,40,0.95))', duration: 0.3, immediateRender: false }, T[123] - 0.05)
+        pop('#y7', T[124] - 0.05, { scale: 0.6 })
+        tl.fromTo('#ping7', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01, immediateRender: false }, T[126] - 0.05); gsap.set('#ping7', { autoAlpha: 0 })
+        ping('#pg7', T[126] - 0.05)
+        pop('#fort7', T[127] - 0.05, { y: 120, scale: 0.5 })
+        pop('#cp7', T[130] - 0.1, { rot: -3 })
         // 8. 1 200 defenders, then encircled by thousands
-        document.querySelectorAll('#sg8 .dfd').forEach((d, i) => tl.fromTo(d, { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.2, ease: 'back.out(3)', immediateRender: false }, CUT[7] + 0.05 + (i % 24) * 0.02))
+        document.querySelectorAll('#sg8 .dfd').forEach((d, i) => tl.fromTo(d, { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.2, ease: 'back.out(3)', immediateRender: false }, CUT[12] + 0.05 + (i % 24) * 0.02))
         gsap.set('#sg8 .dfd', { scale: 0, transformOrigin: '50% 50%' })
-        pop('#d8', T[86] - 0.05, { scale: 0.6 })
-        count($('d8'), 0, 1200, T[86] - 0.05, T[87] + 0.3, (v) => (v >= 1000 ? Math.floor(v / 1000) + ' ' + String(v % 1000).padStart(3, '0') : String(v)))
-        document.querySelectorAll('#sg8 .fra').forEach((d, i) => tl.fromTo(d, { autoAlpha: 0, scale: 0, transformOrigin: '50% 50%' }, { autoAlpha: 1, scale: 1, duration: 0.15, immediateRender: false }, T[88] - 0.05 + (i / 260) * 1.0))
+        pop('#d8', T[132] - 0.05, { scale: 0.6 })
+        count($('d8'), 0, 1200, T[132] - 0.05, T[133] + 0.3, (v) => (v >= 1000 ? Math.floor(v / 1000) + ' ' + String(v % 1000).padStart(3, '0') : String(v)))
+        document.querySelectorAll('#sg8 .fra').forEach((d, i) => tl.fromTo(d, { autoAlpha: 0, scale: 0, transformOrigin: '50% 50%' }, { autoAlpha: 1, scale: 1, duration: 0.15, immediateRender: false }, T[134] - 0.05 + (i / 260) * 1.0))
         gsap.set('#sg8 .fra', { autoAlpha: 0 })
-        pop('#m8', T[91] - 0.05, { rot: -3 })
-        shake('#s8 .cam', T[88] + 0.2)
+        pop('#m8', T[137] - 0.05, { rot: -3 })
+        shake('#s8 .cam', T[134] + 0.2)
         // 9. the rampart: Marie-Jeanne; rifle, powder, fire, care; cannonballs
-        tl.fromTo('#mj9', { y: 300, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4, ease: 'back.out(1.6)' }, CUT[8] + 0.05)
-        pop('#med9', T[98] - 0.05, { scale: 0.3 })
-        pop('#ml9', T[98] - 0.05, { rot: -2 })
-        pop('#i9a', T[101] - 0.05, { rot: -20 }); pop('#i9b', T[104] - 0.05, { y: 60 }); pop('#i9c', T[107] - 0.05, { scale: 0.2 }); pop('#i9d', T[109] - 0.05, { rot: 12 })
-        tl.fromTo('#mj9 .mf', { opacity: 0 }, { opacity: 1, duration: 0.05, yoyo: true, repeat: 3, ease: 'none', immediateRender: false }, T[107] - 0.05)
-        document.querySelectorAll('#balls9 .cb9').forEach((b, i) => { const t0 = T[112] - 0.2 + i * 0.28, x1 = 520 - i * 180; tl.fromTo(b, { x: 1200, y: 400, autoAlpha: 1 }, { keyframes: { x: [1200, 860, x1], y: [400, 300, 1040] }, duration: 0.6, ease: 'none', immediateRender: false }, t0); tl.to(b, { autoAlpha: 0, duration: 0.05 }, t0 + 0.6) })
-        document.querySelectorAll('#balls9 .dirt9').forEach((d, i) => { const t0 = T[112] - 0.2 + i * 0.28 + 0.6, x1 = 520 - i * 180; tl.fromTo(d, { x: x1, y: 1040, opacity: 0, scale: 0.3, transformOrigin: '50% 100%' }, { opacity: 1, scale: 1.2, duration: 0.25, ease: 'power2.out', immediateRender: false }, t0); tl.to(d, { opacity: 0, duration: 0.4 }, t0 + 0.3) })
+        tl.fromTo('#mj9', { y: 300, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.4, ease: 'back.out(1.6)' }, CUT[13] + 0.05)
+        pop('#med9', T[144] - 0.05, { scale: 0.3 })
+        pop('#ml9', T[144] - 0.05, { rot: -2 })
+        pop('#i9a', T[147] - 0.05, { rot: -20 }); pop('#i9b', T[150] - 0.05, { y: 60 }); pop('#i9c', T[153] - 0.05, { scale: 0.2 }); pop('#i9d', T[155] - 0.05, { rot: 12 })
+        tl.fromTo('#mj9 .mf', { opacity: 0 }, { opacity: 1, duration: 0.05, yoyo: true, repeat: 3, ease: 'none', immediateRender: false }, T[153] - 0.05)
+        document.querySelectorAll('#balls9 .cb9').forEach((b, i) => { const t0 = T[158] - 0.2 + i * 0.28, x1 = 520 - i * 180; tl.fromTo(b, { x: 1200, y: 400, autoAlpha: 1 }, { keyframes: { x: [1200, 860, x1], y: [400, 300, 1040] }, duration: 0.6, ease: 'none', immediateRender: false }, t0); tl.to(b, { autoAlpha: 0, duration: 0.05 }, t0 + 0.6) })
+        document.querySelectorAll('#balls9 .dirt9').forEach((d, i) => { const t0 = T[158] - 0.2 + i * 0.28 + 0.6, x1 = 520 - i * 180; tl.fromTo(d, { x: x1, y: 1040, opacity: 0, scale: 0.3, transformOrigin: '50% 100%' }, { opacity: 1, scale: 1.2, duration: 0.25, ease: 'power2.out', immediateRender: false }, t0); tl.to(d, { opacity: 0, duration: 0.4 }, t0 + 0.3) })
         gsap.set('#balls9 .cb9', { autoAlpha: 0 })
-        shake('#s9 .cam', T[112] + 0.45)
-        blink('#med9', [T[100]])
+        shake('#s9 .cam', T[158] + 0.45)
+        blink('#med9', [T[146]])
         // 10. the calendar runs to 20; night breakout through the French camp
-        pop('#cal10', CUT[9] + 0.02, { scale: 0.5 })
-        count(document.getElementById('cd10'), 1, 20, CUT[9] + 0.1, T[117] + 0.2)
-        pop('#j10', T[116] - 0.05, { scale: 0.6 })
-        out('#cal10', T[120] - 0.15)
-        tl.fromTo('#night10', { autoAlpha: 0.0 }, { autoAlpha: 1, duration: 0.3 }, CUT[9]); gsap.set('#night10', { autoAlpha: 0 })
-        document.querySelectorAll('#night10 .fire10').forEach((f, i) => tl.fromTo(f, { scale: 0.8, transformOrigin: '50% 50%' }, { scale: 1.2, duration: 0.15, yoyo: true, repeat: 15, ease: 'none', immediateRender: false }, CUT[9] + i * 0.05))
+        pop('#cal10', CUT[14] + 0.02, { scale: 0.5 })
+        count(document.getElementById('cd10'), 1, 20, CUT[14] + 0.1, T[163] + 0.2)
+        pop('#j10', T[162] - 0.05, { scale: 0.6 })
+        out('#cal10', T[166] - 0.15)
+        tl.fromTo('#night10', { autoAlpha: 0.0 }, { autoAlpha: 1, duration: 0.3 }, CUT[14]); gsap.set('#night10', { autoAlpha: 0 })
+        document.querySelectorAll('#night10 .fire10').forEach((f, i) => tl.fromTo(f, { scale: 0.8, transformOrigin: '50% 50%' }, { scale: 1.2, duration: 0.15, yoyo: true, repeat: 15, ease: 'none', immediateRender: false }, CUT[14] + i * 0.05))
         const arr = $('arr10'), L10 = 900
         gsap.set(arr, { attr: { 'stroke-dasharray': L10, 'stroke-dashoffset': L10 } }); gsap.set('#arh10', { autoAlpha: 0 })
-        tl.fromTo(arr, { attr: { 'stroke-dashoffset': L10 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 0.6, ease: 'power2.inOut', immediateRender: false }, T[122] - 0.1)
-        tl.to('#arh10', { autoAlpha: 1, duration: 0.1 }, T[122] + 0.45)
-        document.querySelectorAll('#night10 .rn10').forEach((r, i) => tl.fromTo(r, { x: 120 - i * 60 }, { x: 1250 - i * 60, duration: 2.0, ease: 'none', immediateRender: false }, T[122] - 0.1 + i * 0.12))
+        tl.fromTo(arr, { attr: { 'stroke-dashoffset': L10 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 0.6, ease: 'power2.inOut', immediateRender: false }, T[168] - 0.1)
+        tl.to('#arh10', { autoAlpha: 1, duration: 0.1 }, T[168] + 0.45)
+        document.querySelectorAll('#night10 .rn10').forEach((r, i) => tl.fromTo(r, { x: 120 - i * 60 }, { x: 1250 - i * 60, duration: 2.0, ease: 'none', immediateRender: false }, T[168] - 0.1 + i * 0.12))
         // 11. Sanité Bélair; LIEUTENANTE; Toussaint Louverture
-        pop('#med11', CUT[10] + 0.02, { scale: 0.3 })
-        pop('#sb11', T[130] - 0.05, { rot: -3 })
-        pop('#ep11', T[132] - 0.05, { scale: 0.2, rot: -20 })
-        pop('#lt11', T[132] - 0.05, { rot: 3 })
-        pop('#tl11', T[136] - 0.1, { scale: 0.3 })
-        pop('#tn11', T[136] - 0.05, { rot: -2 })
-        blink('#med11', [T[133]])
+        pop('#med11', CUT[15] + 0.02, { scale: 0.3 })
+        pop('#sb11', T[176] - 0.05, { rot: -3 })
+        pop('#ep11', T[178] - 0.05, { scale: 0.2, rot: -20 })
+        pop('#lt11', T[178] - 0.05, { rot: 3 })
+        pop('#tl11', T[182] - 0.1, { scale: 0.3 })
+        pop('#tn11', T[182] - 0.05, { rot: -2 })
+        blink('#med11', [T[179]])
         // 12. captured: the bars come down; 1802; CONDAMNÉE; COMME UN SOLDAT
-        pop('#med12', CUT[11] + 0.02, { scale: 0.5 })
-        tl.fromTo('#bg12', { y: -900 }, { y: 0, duration: 0.35, ease: 'bounce.out' }, CUT[11] + 0.15)
+        pop('#med12', CUT[16] + 0.02, { scale: 0.5 })
+        tl.fromTo('#bg12', { y: -900 }, { y: 0, duration: 0.35, ease: 'bounce.out' }, CUT[16] + 0.15)
         gsap.set('#bg12', { y: -900 })
-        pop('#y12', T[142] - 0.1, { scale: 0.6 })
-        stamp('#cd12', T[144] - 0.04, -8)
-        shake('#s12 .cam', T[144] + 0.16)
-        out('#cd12', T[149] - 0.2)
-        pop('#cs12', T[152] - 0.05, { rot: -3 })
-        blink('#med12', [T[148]])
+        pop('#y12', T[188] - 0.1, { scale: 0.6 })
+        stamp('#cd12', T[190] - 0.04, -8)
+        shake('#s12 .cam', T[190] + 0.16)
+        out('#cd12', T[195] - 0.2)
+        pop('#cs12', T[198] - 0.05, { rot: -3 })
+        blink('#med12', [T[194]])
         // 13. SELON LES RÉCITS ; the blindfold comes, she refuses it: it falls away
-        spin('#rays13', CUT[12], CUT[13], 18)
-        tl.fromTo('#sb13', { y: 260 }, { y: 0, duration: 0.45, ease: 'expo.out' }, CUT[12])
-        pop('#rc13', CUT[12] + 0.1, { rot: -3 })
-        out('#rc13', T[159] - 0.2)
-        tl.fromTo('#band13', { x: -900, y: 760, rotation: -10 }, { x: 0, y: 780, rotation: 0, duration: 0.5, ease: 'power2.out' }, T[158])
+        spin('#rays13', CUT[17], CUT[18], 18)
+        tl.fromTo('#sb13', { y: 260 }, { y: 0, duration: 0.45, ease: 'expo.out' }, CUT[17])
+        pop('#rc13', CUT[17] + 0.1, { rot: -3 })
+        out('#rc13', T[205] - 0.2)
+        tl.fromTo('#band13', { x: -900, y: 760, rotation: -10 }, { x: 0, y: 780, rotation: 0, duration: 0.5, ease: 'power2.out' }, T[204])
         gsap.set('#band13', { x: -900, y: 760 })
-        tl.to('#band13', { y: 1500, rotation: 50, x: 200, duration: 0.7, ease: 'power2.in' }, T[160] + 0.05)
-        shake('#s13 .cam', T[160] + 0.1)
-        blink('#sb13', [CUT[12] + 0.5])
+        tl.to('#band13', { y: 1500, rotation: 50, x: 200, duration: 0.7, ease: 'power2.in' }, T[206] + 0.05)
+        shake('#s13 .cam', T[206] + 0.1)
+        blink('#sb13', [CUT[17] + 0.5])
         // 14. the 10 gourdes banknote
-        spin('#rays14', CUT[13], CUT[14], 18)
-        pop('#note14', CUT[13] + 0.05, { y: 200, scale: 0.6, rot: -6 })
-        document.querySelectorAll('#spk14 .sp14').forEach((p, i) => tl.fromTo(p, { scale: 0, rotation: 0 }, { scale: 1, rotation: 45, duration: 0.3, yoyo: true, repeat: 3, ease: 'sine.inOut', immediateRender: false }, T[168] - 0.05 + 0.08 * i))
+        spin('#rays14', CUT[18], CUT[19], 18)
+        pop('#note14', CUT[18] + 0.05, { y: 200, scale: 0.6, rot: -6 })
+        document.querySelectorAll('#spk14 .sp14').forEach((p, i) => tl.fromTo(p, { scale: 0, rotation: 0 }, { scale: 1, rotation: 45, duration: 0.3, yoyo: true, repeat: 3, ease: 'sine.inOut', immediateRender: false }, T[214] - 0.05 + 0.08 * i))
         gsap.set('#spk14 .sp14', { scale: 0 })
-        pop('#g14', T[174] - 0.05, { scale: 0.6 })
+        pop('#g14', T[220] - 0.05, { scale: 0.6 })
         // 15. the names are written on the blackboard, then erased; the history book of men
-        pop('#board15', CUT[14] + 0.02, { y: -160, scale: 0.9 })
-        reveal('#names15', T[181] - 0.05, (T[184] - T[181]) * 0.9)
-        tl.fromTo('#er15', { x: -200, y: 60 }, { keyframes: { x: [-200, 760, 40, 760, 40, 760], y: [60, 60, 180, 180, 300, 300] }, duration: (T[192] - T[188]) * 0.9, ease: 'none' }, T[188] - 0.05)
+        pop('#board15', CUT[19] + 0.02, { y: -160, scale: 0.9 })
+        reveal('#names15', T[227] - 0.05, (T[230] - T[227]) * 0.9)
+        tl.fromTo('#er15', { x: -200, y: 60 }, { keyframes: { x: [-200, 760, 40, 760, 40, 760], y: [60, 60, 180, 180, 300, 300] }, duration: (T[238] - T[234]) * 0.9, ease: 'none' }, T[234] - 0.05)
         gsap.set('#er15', { x: -200, y: 60 })
-        tl.to('#names15', { opacity: 0.06, duration: (T[192] - T[188]) * 0.9, ease: 'none' }, T[188] - 0.05)
-        pop('#book15', T[190] - 0.05, { y: 200, scale: 0.85 })
+        tl.to('#names15', { opacity: 0.06, duration: (T[238] - T[234]) * 0.9, ease: 'none' }, T[234] - 0.05)
+        pop('#book15', T[236] - 0.05, { y: 200, scale: 0.85 })
         // 16. mirror: three gold frames; PAS ABSENTES DE LA GUERRE → ABSENTES DES LIVRES; the names are written into the book
-        spin('#rays16', CUT[15], END, 22)
-        ;['#fr16a', '#fr16b', '#fr16c'].forEach((f, i) => pop(f, CUT[15] + 0.05 + i * 0.16, { y: 120, scale: 0.6 }))
-        ;['#n16a', '#n16b', '#n16c'].forEach((n, i) => pop(n, CUT[15] + 0.3 + i * 0.16, { y: 20 }))
-        pop('#f16a', T[199] - 0.05, { scale: 0.6 })
-        out('#f16a', T[205] - 0.15)
-        pop('#book16', T[205] - 0.05, { y: 160, scale: 0.85 })
-        document.querySelectorAll('#book16 .w16').forEach((w, i) => { tl.fromTo(w, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01, immediateRender: false }, T[206] + i * 0.16); reveal(w, T[206] + i * 0.16, 0.3) })
+        spin('#rays16', CUT[20], END, 22)
+        ;['#fr16a', '#fr16b', '#fr16c'].forEach((f, i) => pop(f, CUT[20] + 0.05 + i * 0.16, { y: 120, scale: 0.6 }))
+        ;['#n16a', '#n16b', '#n16c'].forEach((n, i) => pop(n, CUT[20] + 0.3 + i * 0.16, { y: 20 }))
+        pop('#f16a', T[245] - 0.05, { scale: 0.6 })
+        out('#f16a', T[251] - 0.15)
+        pop('#book16', T[251] - 0.05, { y: 160, scale: 0.85 })
+        document.querySelectorAll('#book16 .w16').forEach((w, i) => { tl.fromTo(w, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01, immediateRender: false }, T[252] + i * 0.16); reveal(w, T[252] + i * 0.16, 0.3) })
         gsap.set('#book16 .w16', { autoAlpha: 0 })
-        pop('#f16b', T[208] - 0.05, { scale: 0.6 })
-        blink('#fr16b', [CUT[15] + 1.2]); blink('#fr16c', [CUT[15] + 2.0])
+        pop('#f16b', T[254] - 0.05, { scale: 0.6 })
+        blink('#fr16b', [CUT[20] + 1.2]); blink('#fr16c', [CUT[20] + 2.0])
 
         // ---------- captions: groups of 2-4 words, the spoken word in a red box ----------
         const caps = $('caps')

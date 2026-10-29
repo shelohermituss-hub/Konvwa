@@ -6,7 +6,7 @@ La règle « images réelles uniquement » du style RÉEL **ne s'applique pas** 
 
 ## 1. Gabarit de script (à suivre pour chaque vidéo)
 
-Le format est « mythe contre réalité ». Le script doit permettre une image par phrase. Viser **60 à 100 s**, soit environ 230 à 380 mots à un débit d'environ 220 mots/min.
+Le format est « mythe contre réalité ». Le script doit permettre une image par phrase. Viser **60 à 100 s, jamais moins de 60 s** (demande du client), soit **au moins 250 mots** et jusqu'à environ 380, à un débit d'environ 235 mots/min (celui de la référence).
 
 | # | Temps | Rôle | Règle | Exemple de la référence |
 |---|---|---|---|---|
@@ -97,7 +97,13 @@ Et [l'accusateur], alors ? [Ce qu'il doit à l'accusé, en rafale.]
   3. **Liaisons** : souffle (whoosh) court sur les coupes, montée (riser) avant un retournement.
 - **Banque de sons** : `sfx/` contient 25 sons générés avec Magnific (ElevenLabs SFX, environ 225 crédits), normalisés à −1 dB crête. Le fichier porte le nom du son : `boom-cine`, `riser`, `whoosh`, `tampon`, `ding`, `scintille`, `compteur`, `ping-carte`, `papier`, `plume`, `balance`, `horloge`, `goutte`, `eclaboussure`, `spray`, `frottement`, `mouches`, `chaines`, `pieces`, `forge`, `usine`, `feu`, `tonnerre`, `canon`, `pluie`, ainsi que `tambour`, `mousquet`, `salve`, `boulet`, `epines`, `course-nuit`, `pages`, `craie` (ajoutés pour `videos/femmes-guerre/`).
   - Un son manque pour un nouveau dessin ? Le générer avec `audio_sfx_generate` (1–3 s, 5 crédits par seconde) et l'ajouter ici.
-  - Volumes conseillés : bruitages 0,25–0,4, boom 0,35–0,45, whoosh 0,2.
+  - **Mixage obligatoire avec `mix_anime.py`** (retour client : « les effets couvrent la voix ») :
+    - on ne met plus les sons en pistes séparées dans `index.html` ; le script de construction écrit un plan (voix, musique, liste des sons avec début et volume) ;
+    - `python3 -I mix_anime.py plan.json assets/audio/mix.wav` produit un seul fichier son, placé sur une seule piste ;
+    - réglages calés sur la référence : pendant la parole, le fond est environ 17 dB sous la voix et environ 9 LU sous elle sur l'ensemble ;
+    - les gros sons (booms, salves, tampons) se placent **entre les phrases** : pendant la parole, ils sont baissés automatiquement ;
+    - volumes du plan : bruitages 0,25–0,6, boom 0,4–0,55, whoosh 0,25, `sfx_gain` 1,6.
+    Modèle : `videos/femmes-guerre/`.
 - **Rendu** :
   1. `npx --yes hyperframes@0.8.168 render --fps 120 --quality looks --output renders/raw120.mp4`
   2. `python3 -I ../_engine/style-histoire/finish.py …` (60 i/s, −14 LUFS)
