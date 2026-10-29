@@ -95,7 +95,7 @@ Et [l'accusateur], alors ? [Ce qu'il doit à l'accusé, en rafale.]
      - frottement, éclaboussure, forge, pièces, usine, canon, pluie.
   2. **Boom grave de cinéma** (sous-basse 55–67 Hz, environ 1,2 s, +25 dB au-dessus de la musique), environ 16 par vidéo, uniquement sur les phrases fortes : les deux affirmations de l'accroche, « FAUX », « Aucune preuve », les questions d'ouverture, les grands chiffres, la phrase miroir.
   3. **Liaisons** : souffle (whoosh) court sur les coupes, montée (riser) avant un retournement.
-- **Banque de sons** : `sfx/` contient 25 sons générés avec Magnific (ElevenLabs SFX, environ 225 crédits), normalisés à −1 dB crête. Le fichier porte le nom du son : `boom-cine`, `riser`, `whoosh`, `tampon`, `ding`, `scintille`, `compteur`, `ping-carte`, `papier`, `plume`, `balance`, `horloge`, `goutte`, `eclaboussure`, `spray`, `frottement`, `mouches`, `chaines`, `pieces`, `forge`, `usine`, `feu`, `tonnerre`, `canon`, `pluie`.
+- **Banque de sons** : `sfx/` contient 25 sons générés avec Magnific (ElevenLabs SFX, environ 225 crédits), normalisés à −1 dB crête. Le fichier porte le nom du son : `boom-cine`, `riser`, `whoosh`, `tampon`, `ding`, `scintille`, `compteur`, `ping-carte`, `papier`, `plume`, `balance`, `horloge`, `goutte`, `eclaboussure`, `spray`, `frottement`, `mouches`, `chaines`, `pieces`, `forge`, `usine`, `feu`, `tonnerre`, `canon`, `pluie`, ainsi que `tambour`, `mousquet`, `salve`, `boulet`, `epines`, `course-nuit`, `pages`, `craie` (ajoutés pour `videos/femmes-guerre/`).
   - Un son manque pour un nouveau dessin ? Le générer avec `audio_sfx_generate` (1–3 s, 5 crédits par seconde) et l'ajouter ici.
   - Volumes conseillés : bruitages 0,25–0,4, boom 0,35–0,45, whoosh 0,2.
 - **Rendu** :
