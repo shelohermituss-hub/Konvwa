@@ -3,7 +3,7 @@
 // Admin tool: `find` (looks a ship up by name) and `refresh` (reads one shipment now; the live feed listens up to 100 seconds).
 // `live` (a client with the page open): reads the ship, at most once every 3 minutes (20 with MyShipTracking, which is paid by credits) per shipment, for the clients whose shipment it is.
 // The job (pg_cron -> database function -> here, header x-cron-secret): `tick` refreshes every shipment not arrived yet.
-// Needs the secret MYSHIPTRACKING_API_KEY or AISSTREAM_API_KEY (Supabase > Edge Functions > Secrets). The live feed allows one connection per key: calls wait their turn.
+// Needs the secrets MYSHIPTRACKING_API_KEY (+ MYSHIPTRACKING_API_SECRET) or AISSTREAM_API_KEY (Supabase > Edge Functions > Secrets). The live feed allows one connection per key: calls wait their turn.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { parseMstSearch, parseMstVessel } from './mst.ts'
 import { nameMatches, parseAisMessage, shouldRecord, vesselEvent, type AisFix, type AisMessage, type AisStatic, type LastPosition } from './ais.ts'
@@ -130,25 +130,33 @@ type Reading = { results: Record<string, { fix: AisFix | null; saved: boolean }>
 
 const MST = 'https://api.myshiptracking.com/api/v2'
 
+// MyShipTracking gives a key and a secret; which one is the access token is not told here, so both are tried (a refused attempt costs nothing) and the one that works is kept
+let mstPreferred = 0
+
 /** One call to MyShipTracking: the answer, or what to tell the team. */
-async function mstGet(key: string, path: string, params: Record<string, string>): Promise<{ body: unknown } | { error: string }> {
-  try {
-    const res = await fetch(`${MST}${path}?${new URLSearchParams(params)}`, { headers: { Authorization: `Bearer ${key}`, 'x-api-key': key, Accept: 'application/json' }, signal: AbortSignal.timeout(20_000) })
-    const text = await res.text()
-    if (res.status === 401 || res.status === 403) return { error: 'La clé MyShipTracking est refusée : vérifiez le secret MYSHIPTRACKING_API_KEY.' }
-    if (res.status === 402 || res.status === 429) return { error: 'Crédits MyShipTracking épuisés, ou limite de requêtes atteinte.' }
-    if (res.status === 404) return { error: 'Bateau introuvable chez MyShipTracking.' }
-    if (!res.ok) return { error: `Erreur MyShipTracking (${res.status}) : ${text.slice(0, 160)}` }
-    let body: unknown = null
-    try { body = JSON.parse(text) } catch { /* not JSON: reported below */ }
-    return { body }
-  } catch {
-    return { error: 'MyShipTracking ne répond pas.' }
+async function mstGet(tokens: string[], path: string, params: Record<string, string>): Promise<{ body: unknown } | { error: string }> {
+  for (let n = 0; n < tokens.length; n++) {
+    const i = (mstPreferred + n) % tokens.length
+    try {
+      const res = await fetch(`${MST}${path}?${new URLSearchParams(params)}`, { headers: { Authorization: `Bearer ${tokens[i]}`, 'x-api-key': tokens[i], Accept: 'application/json' }, signal: AbortSignal.timeout(20_000) })
+      const text = await res.text()
+      if (res.status === 401 || res.status === 403) continue
+      mstPreferred = i
+      if (res.status === 402 || res.status === 429) return { error: 'Crédits MyShipTracking épuisés, ou limite de requêtes atteinte.' }
+      if (res.status === 404) return { error: 'Bateau introuvable chez MyShipTracking.' }
+      if (!res.ok) return { error: `Erreur MyShipTracking (${res.status}) : ${text.slice(0, 160)}` }
+      let body: unknown = null
+      try { body = JSON.parse(text) } catch { /* not JSON: reported by the caller */ }
+      return { body }
+    } catch {
+      return { error: 'MyShipTracking ne répond pas.' }
+    }
   }
+  return { error: 'La clé MyShipTracking est refusée : vérifiez les secrets MYSHIPTRACKING_API_KEY et MYSHIPTRACKING_API_SECRET.' }
 }
 
 /** Reads the latest known position of each ship from MyShipTracking (1 credit; 3 for the extended answer, which also gives the destination and ETA: asked for the first reading and on the team's request). */
-async function trackMst(admin: Admin, key: string, ships: Ship[], extended: boolean): Promise<Reading> {
+async function trackMst(admin: Admin, key: string[], ships: Ship[], extended: boolean): Promise<Reading> {
   const results: Reading['results'] = {}
   let lastError: string | null = null
   for (const ship of ships) {
@@ -174,7 +182,7 @@ async function trackMst(admin: Admin, key: string, ships: Ship[], extended: bool
 }
 
 /** MyShipTracking when its key is set, else the live feed. */
-function read(admin: Admin, keys: { ais?: string; mst?: string }, ships: Ship[], ms: number, extended = false): Promise<Reading> {
+function read(admin: Admin, keys: { ais?: string; mst?: string[] }, ships: Ship[], ms: number, extended = false): Promise<Reading> {
   return keys.mst ? trackMst(admin, keys.mst, ships, extended) : track(admin, keys.ais!, ships, ms)
 }
 
@@ -192,7 +200,8 @@ Deno.serve(async (req) => {
   try {
     const supaUrl = Deno.env.get('SUPABASE_URL')!
     const admin = createClient(supaUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-    const keys = { ais: Deno.env.get('AISSTREAM_API_KEY') || undefined, mst: Deno.env.get('MYSHIPTRACKING_API_KEY') || undefined }
+    const mstTokens = [Deno.env.get('MYSHIPTRACKING_API_KEY'), Deno.env.get('MYSHIPTRACKING_API_SECRET')].filter((v): v is string => !!v)
+    const keys = { ais: Deno.env.get('AISSTREAM_API_KEY') || undefined, mst: mstTokens.length ? mstTokens : undefined }
     const configured = !!(keys.ais || keys.mst)
     const notConfigured = () => json({ error: 'Le suivi du bateau n\'est pas configuré : ajoutez le secret MYSHIPTRACKING_API_KEY (ou AISSTREAM_API_KEY) dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
 
