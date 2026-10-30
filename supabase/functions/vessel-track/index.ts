@@ -1,6 +1,6 @@
 // Follows the ship of a shipment from the free aisstream.io feed (the position signals ships broadcast, AIS).
-// Admin tool: `find` (looks a ship up by name: it listens to the feed for a minute) and `refresh` (reads one shipment now).
-// `live` (a client with the page open): reads the ship now, at most once every 3 minutes per shipment, for the clients whose shipment it is.
+// Admin tool: `find` (looks a ship up by name: it listens to the feed for up to 90 seconds) and `refresh` (reads one shipment, up to 100 seconds).
+// `live` (a client with the page open): reads the ship for a few seconds, at most once every 3 minutes per shipment, for the clients whose shipment it is.
 // The job (pg_cron -> database function -> here, header x-cron-secret): `tick` refreshes every shipment that is at sea.
 // Needs the secret AISSTREAM_API_KEY (Supabase > Edge Functions > Secrets). The feed allows one connection per key: calls wait their turn.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -20,7 +20,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 interface Filters { FiltersShipMMSI?: string[]; FilterMessageTypes: string[] }
 
 /** Opens the feed, subscribes, and gives every message to `onMessage` until it answers true or `ms` have gone by. Resolves with what went wrong (null: nothing). */
-function listen(key: string, filters: Filters, ms: number, onMessage: (m: AisMessage) => boolean): Promise<string | null> {
+function listen(key: string, filters: Filters, ms: number, onMessage: (m: AisMessage) => boolean, stats?: { raw: number }, ctl?: { stop?: () => void }): Promise<string | null> {
   return new Promise((resolve) => {
     let over = false
     let timer: number | undefined
@@ -34,11 +34,13 @@ function listen(key: string, filters: Filters, ms: number, onMessage: (m: AisMes
       resolve(why)
     }
     timer = setTimeout(() => end(null), ms)
+    if (ctl) ctl.stop = () => end(null)
     ws.onopen = () => ws.send(JSON.stringify({ APIKey: key, BoundingBoxes: WORLD, ...filters }))
     ws.onmessage = (e) => {
       let data: unknown
       try { data = JSON.parse(typeof e.data === 'string' ? e.data : new TextDecoder().decode(e.data as ArrayBuffer)) } catch { return }
       if (data && typeof data === 'object' && 'error' in data) return end(String((data as { error: unknown }).error))
+      if (stats) stats.raw += 1
       const m = parseAisMessage(data)
       if (m && onMessage(m)) end(null)
     }
@@ -49,37 +51,49 @@ function listen(key: string, filters: Filters, ms: number, onMessage: (m: AisMes
 
 interface Candidate { mmsi: string; name: string; imo: string | null; destination: string | null; lat: number | null; lng: number | null; speed_kn: number | null; at: string | null }
 
-/** Ships whose name contains `query`, among the ones heard on the feed for up to 45 seconds. */
+/** Ships whose name contains `query`, among the ones heard on the feed for up to 90 seconds (a ship at the quay only sends a position every 3 minutes). */
 async function find(key: string, query: string): Promise<Response> {
   const found = new Map<string, Candidate>()
+  const seen = new Set<string>()
+  const stats = { raw: 0 }
   const started = Date.now()
-  const why = await listen(key, { FilterMessageTypes: ['PositionReport', 'ShipStaticData'] }, 45_000, (m) => {
+  const why = await listen(key, { FilterMessageTypes: ['PositionReport', 'ShipStaticData'] }, 90_000, (m) => {
     const mmsi = m.kind === 'position' ? m.fix.mmsi : m.info.mmsi
     const name = m.kind === 'position' ? m.fix.name : m.info.name
-    if (!nameMatches(query, name)) return found.size > 0 && Date.now() - started > 20_000
+    seen.add(mmsi)
+    if (!nameMatches(query, name)) return found.size > 0 && Date.now() - started > 15_000
     const c = found.get(mmsi) ?? { mmsi, name, imo: null, destination: null, lat: null, lng: null, speed_kn: null, at: null }
     if (m.kind === 'position') Object.assign(c, { lat: m.fix.lat, lng: m.fix.lng, speed_kn: m.fix.speed_kn, at: m.fix.at })
     else Object.assign(c, { imo: m.info.imo ?? c.imo, destination: m.info.destination ?? c.destination, name: m.info.name || c.name })
     found.set(mmsi, c)
-    return found.size > 0 && Date.now() - started > 20_000
-  })
+    return found.size > 0 && Date.now() - started > 15_000
+  }, stats)
   if (why && found.size === 0) return json({ error: why }, 502)
-  return json({ candidates: [...found.values()].slice(0, 8) })
+  return json({ candidates: [...found.values()].slice(0, 8), heard: { messages: stats.raw, ships: seen.size } })
 }
 
 interface Ship { id: string; vessel_mmsi: string; vessel_imo: string | null }
 type Admin = ReturnType<typeof createClient>
 
 /** Listens for the given ships, then saves what is new (the position, with the destination and ETA the ship announced). Returns what was heard for each. */
-async function track(admin: Admin, key: string, ships: Ship[], ms: number): Promise<{ results: Record<string, { fix: AisFix | null; saved: boolean }>; error: string | null }> {
+async function track(admin: Admin, key: string, ships: Ship[], ms: number): Promise<{ results: Record<string, { fix: AisFix | null; saved: boolean }>; error: string | null; messages: number }> {
   const wanted = new Set(ships.map((s) => s.vessel_mmsi))
   const fixes = new Map<string, AisFix>()
   const infos = new Map<string, AisStatic>()
+  const stats = { raw: 0 }
+  const ctl: { stop?: () => void } = {}
+  let grace: number | undefined
   const error = await listen(key, { FiltersShipMMSI: [...wanted], FilterMessageTypes: ['PositionReport', 'ShipStaticData'] }, ms, (m) => {
     if (m.kind === 'position') { const old = fixes.get(m.fix.mmsi); if (!old || m.fix.at > old.at) fixes.set(m.fix.mmsi, m.fix) }
     else infos.set(m.info.mmsi, m.info)
-    return fixes.size >= wanted.size && infos.size >= wanted.size
-  })
+    // the position is what matters: once every ship has one, wait a few more seconds for the destination (sent only every 6 minutes), then stop
+    if (fixes.size >= wanted.size) {
+      grace ??= setTimeout(() => ctl.stop?.(), 15_000)
+      return infos.size >= wanted.size
+    }
+    return false
+  }, stats, ctl)
+  clearTimeout(grace)
 
   const results: Record<string, { fix: AisFix | null; saved: boolean }> = {}
   for (const ship of ships) {
@@ -106,7 +120,7 @@ async function track(admin: Admin, key: string, ships: Ship[], ms: number): Prom
     await admin.from('shipments').update(patch).eq('id', ship.id)
     results[ship.id] = { fix, saved }
   }
-  return { results, error }
+  return { results, error, messages: stats.raw }
 }
 
 function sameSecret(a: string, b: string): boolean {
@@ -134,7 +148,7 @@ Deno.serve(async (req) => {
       if (!key) return notConfigured()
       const { data: ships } = await admin.from('shipments').select(SHIP_FIELDS).eq('ais_enabled', true).not('vessel_mmsi', 'is', null).in('status', ['shipped', 'in_transit']).limit(50)
       if (!ships?.length) return json({ tracked: 0 })
-      const { results } = await track(admin, key, ships as Ship[], 60_000)
+      const { results } = await track(admin, key, ships as Ship[], 90_000)
       return json({ tracked: ships.length, heard: Object.values(results).filter((r) => r.fix).length })
     }
 
@@ -183,10 +197,10 @@ Deno.serve(async (req) => {
       if (!UUID.test(id)) return json({ error: 'Expédition inconnue.' }, 400)
       const { data: ship } = await admin.from('shipments').select(SHIP_FIELDS).eq('id', id).maybeSingle()
       if (!ship?.vessel_mmsi) return json({ error: 'Choisissez d\'abord le bateau (son MMSI) pour cette expédition.' }, 400)
-      const { results, error } = await track(admin, key, [ship as Ship], 40_000)
+      const { results, error, messages } = await track(admin, key, [ship as Ship], 100_000)
       const r = results[id]
       if (!r.fix && error) return json({ error }, 502)
-      return json({ heard: !!r.fix, saved: r.saved, lat: r.fix?.lat ?? null, lng: r.fix?.lng ?? null, at: r.fix?.at ?? null })
+      return json({ heard: !!r.fix, saved: r.saved, messages, lat: r.fix?.lat ?? null, lng: r.fix?.lng ?? null, at: r.fix?.at ?? null })
     }
 
     return json({ error: 'Action inconnue.' }, 400)

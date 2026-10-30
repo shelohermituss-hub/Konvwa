@@ -52,6 +52,7 @@ export function ShipmentVesselDialog({ shipment, onClose, onSaved }: Props) {
   const [enabled, setEnabled] = useState(shipment?.ais_enabled ?? false)
   const [show, setShow] = useState<Record<string, boolean>>({ position: true, speed: true, destination: true, eta: true, history: true, ...(shipment?.ais_show ?? {}) })
   const [candidates, setCandidates] = useState<VesselCandidate[] | null>(null)
+  const [heard, setHeard] = useState<{ messages: number; ships: number } | null>(null)
   const [busy, setBusy] = useState<'find' | 'save' | 'refresh' | null>(null)
   const [synced, setSynced] = useState({ at: shipment?.ais_synced_at ?? null, error: shipment?.ais_error ?? null })
 
@@ -60,9 +61,11 @@ export function ShipmentVesselDialog({ shipment, onClose, onSaved }: Props) {
   async function search() {
     setBusy('find')
     setCandidates(null)
+    setHeard(null)
     try {
-      const { candidates: found } = await findVessel(name)
+      const { candidates: found, heard: stats } = await findVessel(name)
       setCandidates(found)
+      setHeard(stats ?? null)
     } catch (e) {
       toast.error(e instanceof Error ? e.message : tr('Erreur réseau'))
     }
@@ -132,13 +135,15 @@ export function ShipmentVesselDialog({ shipment, onClose, onSaved }: Props) {
                 {busy === 'find' ? tr('Écoute…') : tr('Rechercher')}
               </Button>
             </div>
-            {busy === 'find' && <p className="text-xs text-muted-foreground">{tr('Le serveur écoute le flux AIS pendant environ 45 secondes.')}</p>}
+            {busy === 'find' && <p className="text-xs text-muted-foreground">{tr('Le serveur écoute le flux AIS, jusqu\'à 90 secondes : un bateau à quai n\'émet qu\'un signal toutes les 3 minutes.')}</p>}
           </div>
 
           {candidates && (
             candidates.length === 0 ? (
               <p className="rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
-                {tr('Aucun bateau de ce nom n\'a été entendu. Il est peut-être hors de portée des récepteurs AIS (en pleine mer) : réessayez quand il est près d\'un port, ou saisissez directement son MMSI ci-dessous (visible sur VesselFinder ou MarineTraffic).')}
+                {heard && heard.messages === 0
+                  ? tr('Le flux AIS n\'a envoyé aucun message : vérifiez la clé AISSTREAM_API_KEY ou réessayez dans un instant.')
+                  : tr('Aucun bateau de ce nom parmi les {0} bateaux entendus. Un bateau à quai n\'émet qu\'un signal toutes les 3 minutes, et en port ou en pleine mer il peut être hors de portée des récepteurs : réessayez, ou saisissez directement son MMSI ci-dessous (visible sur VesselFinder ou MarineTraffic) puis cliquez sur « Lire la position maintenant ».', heard?.ships ?? 0)}
               </p>
             ) : (
               <div className="space-y-2" role="listbox" aria-label={tr('Bateaux trouvés')}>
@@ -172,6 +177,11 @@ export function ShipmentVesselDialog({ shipment, onClose, onSaved }: Props) {
               <Input id="vessel-voyage" maxLength={30} value={voyage} onChange={(e) => setVoyage(e.target.value)} placeholder="026E" className="rounded-xl font-mono text-sm" />
             </div>
           </div>
+
+          <Button type="button" variant="outline" onClick={saveAndRefresh} disabled={busy !== null || !/^\d{9}$/.test(mmsi)} className="w-full gap-1.5 rounded-xl">
+            {busy === 'refresh' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <RefreshCw className="h-4 w-4" aria-hidden />}
+            {busy === 'refresh' ? tr('Lecture… (jusqu\'à 2 minutes)') : tr('Lire la position maintenant')}
+          </Button>
 
           <div className="space-y-3 rounded-2xl border border-gray-100 p-3">
             <label className="flex items-center justify-between gap-3">
