@@ -90,6 +90,7 @@ export function ShipmentDetailPage() {
   const [req,           setReq]           = useState<ShippingRequest | null>(null)
   const [loading,       setLoading]       = useState(true)
   const [walletBalance, setWalletBalance] = useState(0)
+  const [vesselShown,  setVesselShown]  = useState(false)
 
   async function load() {
     if (!user || !id) return
@@ -159,7 +160,22 @@ export function ShipmentDetailPage() {
   const isQuoted      = req.status === 'quoted'
   const isInvoiced    = req.status === 'invoiced'
   const isDeposit     = req.status === 'deposit_paid'
+  // once paid, the goods are at the warehouse: the page is about the voyage, not about where to send the parcels
+  const paid          = isInvoiced || isDeposit
   const estimate      = cargoEstimate(req)
+
+  // Tracking: same statuses as order tracking
+  const cargoTracking = (
+  <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+    <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+      <Clock className="h-4 w-4 text-muted-foreground" />
+      <p className="text-sm font-bold text-foreground">{tr('Suivi de la cargaison')}</p>
+    </div>
+    <div className="px-4 py-4">
+      <TimelineList steps={cargoSteps(req)} currentIndex={cargoActiveIndex(req)} />
+    </div>
+  </div>
+  )
 
   return (
     <div className="min-h-full bg-[#F4F5F7] pb-10">
@@ -233,7 +249,7 @@ export function ShipmentDetailPage() {
           </div>
         )}
 
-        {estimate && (
+        {estimate && !vesselShown && (
           <div className="flex items-center gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
             <Clock className="h-4 w-4 shrink-0 text-sky-700" aria-hidden />
             <p className="text-sm font-medium text-sky-900">
@@ -244,10 +260,12 @@ export function ShipmentDetailPage() {
           </div>
         )}
 
-        {req.shipment && <VesselCard shipmentId={req.shipment.id} />}
+        {req.shipment && <VesselCard shipmentId={req.shipment.id} onShown={setVesselShown} />}
 
-        {/* Warehouse address */}
-        {req.warehouse && (
+        {paid && cargoTracking}
+
+        {/* Warehouse address: only while the parcels still have to be sent */}
+        {req.warehouse && !paid && (
           <div className="rounded-2xl border border-sky-200 bg-sky-50/60 shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -437,16 +455,7 @@ export function ShipmentDetailPage() {
           </div>
         </div>
 
-        {/* Tracking — same statuses as order tracking */}
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm font-bold text-foreground">{tr('Suivi de la cargaison')}</p>
-          </div>
-          <div className="px-4 py-4">
-            <TimelineList steps={cargoSteps(req)} currentIndex={cargoActiveIndex(req)} />
-          </div>
-        </div>
+        {!paid && cargoTracking}
 
         {/* Notes */}
         {req.notes && (
