@@ -56,8 +56,9 @@ export function VesselCard({ shipmentId }: { shipmentId: string }) {
   }
 
   if (!vessel) return null
-  const stale = Date.now() - Date.parse(vessel.at) > 48 * 3_600_000
-  const recent = Date.now() - Date.parse(vessel.at) < 30 * 60_000
+  const stale = !!vessel.at && Date.now() - Date.parse(vessel.at) > 48 * 3_600_000
+  const recent = !!vessel.at && Date.now() - Date.parse(vessel.at) < 30 * 60_000
+  const day = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString(DATE_LOCALE, { day: 'numeric', month: 'long' })
 
   return (
     <section className="rounded-2xl border border-sky-200 bg-white p-4 shadow-sm" aria-label={tr('Position du bateau')}>
@@ -68,15 +69,47 @@ export function VesselCard({ shipmentId }: { shipmentId: string }) {
             {tr('Position du bateau')}
             {recent && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] text-emerald-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" aria-hidden />{tr('En direct')}</span>}
           </p>
-          <p className="truncate text-sm font-bold">{vessel.vessel || tr('Bateau')}{vessel.voyage ? <span className="ml-2 font-mono text-xs font-medium text-muted-foreground">{tr('Voyage')} {vessel.voyage}</span> : null}</p>
-          <p className={stale ? 'text-xs font-medium text-amber-700' : 'text-xs text-muted-foreground'}>
-            {tr('Dernier signal : {0} (il y a {1})', when(vessel.at), age(vessel.at))}
-          </p>
+          <p className="truncate text-sm font-bold">{vessel.vessel || tr('Bateau')}</p>
+          {(vessel.voyage || vessel.imo) && (
+            <p className="text-xs text-muted-foreground">
+              {vessel.voyage && <>{tr('Voyage')} <span className="font-mono">{vessel.voyage}</span></>}
+              {vessel.voyage && vessel.imo && ' · '}
+              {vessel.imo && <>IMO <span className="font-mono">{vessel.imo}</span></>}
+            </p>
+          )}
+          {vessel.at && (
+            <p className={stale ? 'text-xs font-medium text-amber-700' : 'text-xs text-muted-foreground'}>
+              {tr('Dernier signal : {0} (il y a {1})', when(vessel.at), age(vessel.at))}
+            </p>
+          )}
         </div>
         <button type="button" onClick={refresh} disabled={busy} aria-label={tr('Actualiser la position')} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-muted-foreground transition-colors hover:text-foreground active:scale-95 disabled:opacity-60">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <RefreshCw className="h-4 w-4" aria-hidden />}
         </button>
       </div>
+
+      {(vessel.depart || vessel.arrive) && (
+        <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+          {vessel.depart && (
+            <div className="rounded-xl bg-muted/40 p-2.5">
+              <dt className="text-[11px] text-muted-foreground">{tr('Départ prévu')}</dt>
+              <dd className="font-semibold">{day(vessel.depart)}</dd>
+            </div>
+          )}
+          {vessel.arrive && (
+            <div className="rounded-xl bg-muted/40 p-2.5">
+              <dt className="text-[11px] text-muted-foreground">{tr('Arrivée estimée en Haïti')}</dt>
+              <dd className="font-semibold">{day(vessel.arrive)}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+
+      {vessel.waiting && (
+        <p className="mt-3 rounded-xl bg-sky-50 p-3 text-xs leading-relaxed text-sky-900">
+          {tr('En attente du premier signal du bateau : sa position apparaîtra ici automatiquement dès qu\'il sera à portée des récepteurs AIS.')}
+        </p>
+      )}
 
       {vessel.lat !== undefined && vessel.lng !== undefined && (
         <div className="mt-3">
@@ -123,7 +156,7 @@ export function VesselCard({ shipmentId }: { shipmentId: string }) {
         </ol>
       )}
 
-      <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">{tr('Position issue des signaux AIS du bateau : elle peut avoir quelques heures de retard et la destination est annoncée par le bateau lui-même.')}</p>
+      {!vessel.waiting && <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">{tr('Position issue des signaux AIS du bateau : elle peut avoir quelques heures de retard et la destination est annoncée par le bateau lui-même.')}</p>}
     </section>
   )
 }

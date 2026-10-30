@@ -1144,10 +1144,29 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   RESET ROLE;
 
   -- the job does nothing when no shipment is at sea, and is not callable from the API
-  UPDATE shipments SET status = 'in_china_warehouse' WHERE id = sid;
+  -- a shipment without any position yet: the ship and the voyage show, waiting for the first signal
+  DELETE FROM vessel_positions WHERE shipment_id = sid;
+  UPDATE shipments SET ais_show = '{"position":true,"speed":true,"destination":true,"eta":true,"history":true}', voyage_number = '0801-044E', vessel_imo = '9737462', departure_date = '2026-11-02', estimated_arrival = '2026-12-10' WHERE id = sid;
+  PERFORM pg_temp.as_user(a);
+  r := public.get_shipment_vessel(sid);
+  RESET ROLE;
+  ASSERT (r ->> 'waiting')::boolean AND r ->> 'voyage' = '0801-044E' AND r ->> 'imo' = '9737462' AND r ->> 'arrive' = '2026-12-10' AND NOT (r ? 'lat'), 'the ship and voyage do not show before the first signal: ' || coalesce(r::text, 'null');
+  UPDATE shipments SET ais_show = '{"eta":false}' WHERE id = sid;
+  PERFORM pg_temp.as_user(a);
+  r := public.get_shipment_vessel(sid);
+  RESET ROLE;
+  ASSERT NOT (r ? 'arrive') AND NOT (r ? 'depart'), 'the dates were sent although the team hides them';
+  PERFORM pg_temp.as_user(b);
+  ASSERT public.get_shipment_vessel(sid) IS NULL, 'another client sees the voyage of this shipment';
+  RESET ROLE;
+
+  -- the job: nothing to do once the goods have arrived; from the warehouse on, the ship is followed
   UPDATE shipments SET ais_enabled = false WHERE ais_enabled AND id <> sid;
-  UPDATE shipments SET ais_enabled = false WHERE id = sid;
+  UPDATE shipments SET ais_enabled = true, status = 'arrived_haiti' WHERE id = sid;
   ASSERT public.vessel_track_tick() = 'nothing_to_track', 'the vessel job runs with nothing at sea';
+  UPDATE shipments SET status = 'in_china_warehouse' WHERE id = sid;
+  ASSERT public.vessel_track_tick() IN ('sent', 'no_secret'), 'the vessel job does not follow a ship loading in the warehouse';
+  UPDATE shipments SET ais_enabled = false WHERE id = sid;
   BEGIN SET LOCAL ROLE authenticated; PERFORM public.vessel_track_tick(); ASSERT false, 'a client can run the vessel job'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
   RESET ROLE;
 END $$;

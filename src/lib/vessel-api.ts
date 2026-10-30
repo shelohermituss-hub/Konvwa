@@ -37,7 +37,14 @@ export const liveVessel = (shipmentId: string) => call<{ throttled?: boolean; he
 export interface ShipmentVessel {
   vessel: string | null
   voyage: string | null
-  at: string
+  imo?: string
+  /** Dates of the shipment (YYYY-MM-DD), when the team shows the dates. */
+  depart?: string
+  arrive?: string
+  /** The ship has not been heard yet: only the ship and the voyage are known. */
+  waiting?: boolean
+  /** When the ship sent its last position (absent while `waiting`). */
+  at?: string
   lat?: number
   lng?: number
   /** Heading in degrees (0 = north). */

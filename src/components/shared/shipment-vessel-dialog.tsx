@@ -187,7 +187,7 @@ export function ShipmentVesselDialog({ shipment, onClose, onSaved }: Props) {
             <label className="flex items-center justify-between gap-3">
               <span>
                 <span className="block text-sm font-semibold">{tr('Suivi automatique')}</span>
-                <span className="block text-xs text-muted-foreground">{tr('Toutes les 30 minutes tant que l\'expédition est « Expédié » ou « En transit ».')}</span>
+                <span className="block text-xs text-muted-foreground">{tr('Toutes les 30 minutes, de l\'entrepôt jusqu\'à l\'arrivée : le premier signal du bateau est enregistré dès qu\'il est entendu.')}</span>
               </span>
               <Switch checked={enabled} onCheckedChange={setEnabled} aria-label={tr('Suivi automatique')} />
             </label>

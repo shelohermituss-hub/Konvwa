@@ -140,13 +140,13 @@ Deno.serve(async (req) => {
     const key = Deno.env.get('AISSTREAM_API_KEY')
     const notConfigured = () => json({ error: 'Le suivi AIS n\'est pas configuré : ajoutez le secret AISSTREAM_API_KEY dans Supabase (Edge Functions > Secrets).', code: 'not_configured' }, 503)
 
-    // the job: proved by the shared secret, never by a user session. Only the ships at sea, one minute of listening for all of them.
+    // the job: proved by the shared secret, never by a user session. The ships not arrived yet (from the warehouse on), 90 seconds of listening for all of them.
     const cron = req.headers.get('x-cron-secret')
     if (cron) {
       const { data: s } = await admin.from('app_settings').select('value').eq('key', 'auto_post_secret').maybeSingle()
       if (!s?.value || !sameSecret(cron, String(s.value))) return json({ error: 'Unauthorized' }, 401)
       if (!key) return notConfigured()
-      const { data: ships } = await admin.from('shipments').select(SHIP_FIELDS).eq('ais_enabled', true).not('vessel_mmsi', 'is', null).in('status', ['shipped', 'in_transit']).limit(50)
+      const { data: ships } = await admin.from('shipments').select(SHIP_FIELDS).eq('ais_enabled', true).not('vessel_mmsi', 'is', null).in('status', ['in_china_warehouse', 'shipped', 'in_transit']).limit(50)
       if (!ships?.length) return json({ tracked: 0 })
       const { results } = await track(admin, key, ships as Ship[], 90_000)
       return json({ tracked: ships.length, heard: Object.values(results).filter((r) => r.fix).length })
