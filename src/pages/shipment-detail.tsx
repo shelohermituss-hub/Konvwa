@@ -16,6 +16,7 @@ import { ShippingQuotePanel, ShippingBalancePanel } from '@/components/shared/sh
 import { PackagePhotos } from '@/components/shared/package-photos'
 import { ShippingInsurance } from '@/components/shared/shipping-insurance'
 import { TimelineList } from '@/components/shared/timeline-step'
+import { VesselCard } from '@/components/shared/vessel-card'
 import { cargoSteps, cargoActiveIndex, cargoStatusLabel, cargoEstimate } from '@/lib/cargo-tracking'
 
 import { tr, DATE_LOCALE } from '@/lib/i18n'
@@ -242,6 +243,8 @@ export function ShipmentDetailPage() {
             </p>
           </div>
         )}
+
+        {req.shipment && <VesselCard shipmentId={req.shipment.id} />}
 
         {/* Warehouse address */}
         {req.warehouse && (

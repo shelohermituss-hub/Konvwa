@@ -8,10 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Ship, Plus, MoreHorizontal, Package, Search, Edit, CheckCircle2 } from 'lucide-react'
+import { Ship, Plus, MoreHorizontal, Package, Search, Edit, CheckCircle2, Radar } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { ShipmentVesselDialog } from '@/components/shared/shipment-vessel-dialog'
 import type { ShipmentStatus } from '@/types'
 
 import { tr, DATE_LOCALE } from '@/lib/i18n'
@@ -24,6 +25,13 @@ interface Shipment {
   estimated_arrival: string | null
   actual_arrival: string | null
   container_number: string | null
+  vessel_mmsi: string | null
+  vessel_imo: string | null
+  voyage_number: string | null
+  ais_enabled: boolean
+  ais_show: Record<string, boolean>
+  ais_synced_at: string | null
+  ais_error: string | null
   weight_kg: number | null
   volume_m3: number | null
   notes: string | null
@@ -54,7 +62,7 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string }> =
 }
 
 const emptyForm = {
-  vessel_info: '', container_number: '', departure_date: '',
+  vessel_info: '', container_number: '', voyage_number: '', departure_date: '',
   estimated_arrival: '', weight_kg: '', volume_m3: '', notes: '',
 }
 
@@ -79,6 +87,7 @@ export function AdminShipmentsPage() {
   const [assignCargoOpen, setAssignCargoOpen] = useState<Shipment | null>(null)
   const [pendingCargo, setPendingCargo] = useState<{ id: string; client: string; origin: string | null; paid: boolean }[]>([])
   const [selectedCargo, setSelectedCargo] = useState<string[]>([])
+  const [vesselOpen, setVesselOpen] = useState<Shipment | null>(null)
 
   async function loadShipments() {
     const { data: shipmentsData } = await supabase.from('shipments').select('*').order('created_at', { ascending: false })
@@ -150,6 +159,7 @@ export function AdminShipmentsPage() {
       status: 'in_china_warehouse',
       vessel_info: form.vessel_info || null,
       container_number: form.container_number || null,
+      voyage_number: form.voyage_number.trim() || null,
       departure_date: form.departure_date || null,
       estimated_arrival: form.estimated_arrival || null,
       weight_kg: form.weight_kg ? parseFloat(form.weight_kg) : null,
@@ -275,6 +285,7 @@ export function AdminShipmentsPage() {
                     <TableCell className="font-mono font-medium text-xs">{s.batch_code}</TableCell>
                     <TableCell className="hidden sm:table-cell text-sm text-muted-foreground max-w-[120px] truncate">
                       {s.vessel_info || '—'}
+                      {s.ais_enabled && <Radar className="ml-1 inline h-3 w-3 text-emerald-600" aria-label={tr('Suivi du bateau')} />}
                     </TableCell>
                     <TableCell>
                       <span className={cn('inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-1', cfg.bg, cfg.text)}>
@@ -306,6 +317,9 @@ export function AdminShipmentsPage() {
                           <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => { setEditShipment(s); setEditStatus(s.status) }}>
                             <Edit className="mr-2 h-4 w-4" />{tr('Modifier statut')}
                           </DropdownMenuItem>
+                          <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => setVesselOpen(s)}>
+                            <Radar className="mr-2 h-4 w-4" />{tr('Suivi du bateau')}
+                          </DropdownMenuItem>
                           <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={async () => { await loadPendingOrders(); setAssignOpen(s) }}>
                             <Package className="mr-2 h-4 w-4" />{tr('Assigner commandes')}
                           </DropdownMenuItem>
@@ -334,6 +348,7 @@ export function AdminShipmentsPage() {
             {[
               { label: tr('Nom du bateau'),    key: 'vessel_info' as const,       placeholder: 'MV Atlantic Star', type: 'text' },
               { label: tr('N° Conteneur'),     key: 'container_number' as const,  placeholder: 'TCKU1234567',      type: 'text' },
+              { label: tr('N° de voyage'),     key: 'voyage_number' as const,     placeholder: '026E',             type: 'text' },
               { label: tr('Date de départ'),   key: 'departure_date' as const,    placeholder: '',                 type: 'date' },
               { label: tr('Arrivée estimée'),  key: 'estimated_arrival' as const, placeholder: '',                 type: 'date' },
               { label: tr('Poids (kg)'),       key: 'weight_kg' as const,         placeholder: '0',                type: 'number' },
@@ -490,6 +505,15 @@ export function AdminShipmentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {vesselOpen && (
+        <ShipmentVesselDialog
+          key={vesselOpen.id}
+          shipment={vesselOpen}
+          onClose={() => setVesselOpen(null)}
+          onSaved={(id, patch) => setShipments(prev => prev.map(x => x.id === id ? { ...x, ...patch } : x))}
+        />
+      )}
     </div>
   )
 }

@@ -1090,5 +1090,66 @@ DO $$ DECLARE adm uuid := (SELECT admin_id FROM ctx); cl uuid := (SELECT client_
   ASSERT public.autopost_tick() IN ('done_today', 'sent'), 'a product poster was not due after its time';
 END $$;
 
+-- 35. vessel tracking: positions are written by the server only; a client sees the ship of THEIR shipment, minus what the team hides
+DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b FROM ctx); adm uuid := (SELECT admin_id FROM ctx);
+  sid uuid; r jsonb; n integer; BEGIN
+  INSERT INTO shipments (vessel_info, vessel_mmsi, ais_enabled) VALUES ('MV TEST SHIP', '477123400', true) RETURNING id INTO sid;
+  INSERT INTO product_requests (user_id, request_type, status, product_name, shipment_id) VALUES (a, 'shipping', 'invoiced', 'test vessel', sid);
+  INSERT INTO vessel_positions (shipment_id, recorded_at, lat, lng, speed_kn, destination, eta, event) VALUES
+    (sid, now() - interval '2 hours', 22.5, 114.3, 0.1, 'CN YTN', NULL, 'first'),
+    (sid, now() - interval '1 hour', 22.4, 114.5, 12.0, 'HT PAP', now() + interval '20 days', 'departed');
+  -- the columns are checked by the database
+  BEGIN UPDATE shipments SET vessel_mmsi = '123' WHERE id = sid; ASSERT false, 'a short MMSI was accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+  BEGIN INSERT INTO vessel_positions (shipment_id, recorded_at, lat, lng) VALUES (sid, now(), 95, 0); ASSERT false, 'an impossible latitude was accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+  BEGIN INSERT INTO vessel_positions (shipment_id, recorded_at, lat, lng, event) VALUES (sid, now(), 1, 1, 'sunk'); ASSERT false, 'an unknown event was accepted'; EXCEPTION WHEN check_violation THEN NULL; END;
+
+  -- the owner of the cargo sees the ship, the history and what the team shows
+  PERFORM pg_temp.as_user(a);
+  r := public.get_shipment_vessel(sid);
+  RESET ROLE;
+  ASSERT r ->> 'vessel' = 'MV TEST SHIP' AND (r ->> 'lat')::numeric = 22.4 AND (r ->> 'speed_kn')::numeric = 12.0, 'the owner does not see the ship: ' || coalesce(r::text, 'null');
+  ASSERT r ->> 'destination' = 'HT PAP' AND jsonb_array_length(r -> 'history') = 2, 'the destination or the history is missing';
+
+  -- what the team hides is not sent at all
+  UPDATE shipments SET ais_show = '{"position":false,"speed":false,"destination":true,"eta":false,"history":false}' WHERE id = sid;
+  PERFORM pg_temp.as_user(a);
+  r := public.get_shipment_vessel(sid);
+  RESET ROLE;
+  ASSERT NOT (r ? 'lat') AND NOT (r ? 'lng') AND NOT (r ? 'speed_kn') AND NOT (r ? 'eta') AND NOT (r ? 'history'), 'a hidden parameter was sent: ' || r::text;
+  ASSERT r ->> 'destination' = 'HT PAP', 'a shown parameter is missing';
+
+  -- someone else's cargo, a switched-off follow-up, anonymous visitors
+  PERFORM pg_temp.as_user(b);
+  ASSERT public.get_shipment_vessel(sid) IS NULL, 'another client sees the ship of this shipment';
+  RESET ROLE;
+  UPDATE shipments SET ais_enabled = false WHERE id = sid;
+  PERFORM pg_temp.as_user(a);
+  ASSERT public.get_shipment_vessel(sid) IS NULL, 'a switched-off follow-up is still shown';
+  RESET ROLE;
+  UPDATE shipments SET ais_enabled = true WHERE id = sid;
+  BEGIN SET LOCAL ROLE anon; PERFORM public.get_shipment_vessel(sid); ASSERT false, 'a visitor can call get_shipment_vessel'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+
+  -- the table itself: the team reads, a client reads nothing and writes nothing
+  PERFORM pg_temp.as_user(a);
+  SELECT count(*) INTO n FROM vessel_positions;
+  ASSERT n = 0, 'a client reads the raw positions';
+  BEGIN INSERT INTO vessel_positions (shipment_id, recorded_at, lat, lng) VALUES (sid, now(), 1, 1); ASSERT false, 'a client wrote a position'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+  PERFORM pg_temp.as_user(adm, 'aal2');
+  SELECT count(*) INTO n FROM vessel_positions WHERE shipment_id = sid;
+  ASSERT n = 2, 'the team cannot read the positions';
+  BEGIN INSERT INTO vessel_positions (shipment_id, recorded_at, lat, lng) VALUES (sid, now(), 1, 1); ASSERT false, 'the browser of the team wrote a position'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+
+  -- the job does nothing when no shipment is at sea, and is not callable from the API
+  UPDATE shipments SET status = 'in_china_warehouse' WHERE id = sid;
+  UPDATE shipments SET ais_enabled = false WHERE ais_enabled AND id <> sid;
+  UPDATE shipments SET ais_enabled = false WHERE id = sid;
+  ASSERT public.vessel_track_tick() = 'nothing_to_track', 'the vessel job runs with nothing at sea';
+  BEGIN SET LOCAL ROLE authenticated; PERFORM public.vessel_track_tick(); ASSERT false, 'a client can run the vessel job'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  RESET ROLE;
+END $$;
+
 SELECT 'all security tests passed' AS result;
 ROLLBACK;
