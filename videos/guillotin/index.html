@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Guillotin a inventé la guillotine ? Faux.</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Style ANIMÉ (videos/_engine/style-anime/README.md), en français, sur le gabarit de script :
+      mythe (« Guillotin a inventé la guillotine », « il lui a donné son nom ») → « c'est faux » → « il l'a inventée ? »
+      (1er décembre 1789 : la même peine pour tous, une loi, pas une lame) → « qui l'a conçue ? » (Antoine Louis, le plan de 1792,
+      Tobias Schmidt, « la Louison ») → « et pendant ce temps-là » (la chanson royaliste, le surnom) → l'idée n'était pas neuve
+      (Halifax, « la Vierge » 1564, la mannaia) → « il a fini guillotiné ? » non, 1814 → la famille change de nom → phrase miroir.
+      Animation sobre : la machine n'est jamais montrée en usage. Tout est dessiné en SVG et CSS.
+      Voix Gabriel Dubois (Magnific / ElevenLabs) ; bruitages de la banque du style ANIMÉ mixés sous la voix (mix_anime.py).
+    -->
+    <style>
+      @font-face { font-family: "Bebas"; src: url("assets/fonts/bebas-neue.woff2") format("woff2"); }
+      @font-face { font-family: "Anton"; src: url("assets/fonts/anton.woff2") format("woff2"); }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0d0d12; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #0d0d12; font-family: "Bebas", sans-serif; }
+      .scene { position: absolute; inset: 0; overflow: hidden; visibility: hidden; }
+      .cam { position: absolute; inset: 0; transform-origin: 50% 55%; }
+      .bg { position: absolute; inset: 0; }
+      .vig { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 60% at 50% 48%, transparent 40%, rgba(0, 0, 0, 0.72) 100%); pointer-events: none; }
+      svg { position: absolute; overflow: visible; }
+      .full { left: 0; top: 0; width: 1080px; height: 1920px; }
+      .bust { position: absolute; width: 620px; height: 723px; }
+      .frame { position: absolute; width: 290px; height: 350px; box-sizing: border-box; border: 16px solid #c9962e; border-radius: 8px; background: #e8d5b0; box-shadow: inset 0 0 0 4px #7a5418, 0 14px 30px rgba(0, 0, 0, 0.6); overflow: hidden; }
+      .frame .in { position: absolute; left: -12px; top: 22px; width: 282px; height: 329px; }
+      .med { position: absolute; width: 300px; height: 300px; box-sizing: border-box; border-radius: 50%; border: 12px solid #c9962e; overflow: hidden; box-shadow: inset 0 0 0 4px #7a5418, 0 12px 30px rgba(0, 0, 0, 0.55); }
+      .med .in { position: absolute; left: -36px; top: 6px; width: 348px; height: 406px; }
+      .med.sm { width: 220px; height: 220px; border-width: 9px; }
+      .med.sm .in { left: -27px; top: 4px; width: 256px; height: 299px; }
+      .ic { position: absolute; width: 150px; height: 150px; }
+      #caps { position: absolute; left: 40px; right: 40px; top: 1420px; height: 120px; z-index: 50; }
+      .grp { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: center; align-items: center; column-gap: 6px; visibility: hidden; }
+      .cw { position: relative; font-size: 84px; line-height: 1; color: #fff; letter-spacing: 0.01em; text-transform: uppercase; padding: 6px 10px 2px; -webkit-text-stroke: 3px #111; paint-order: stroke fill; text-shadow: 0 5px 0 rgba(0, 0, 0, 0.7), 0 0 22px rgba(0, 0, 0, 0.8); white-space: nowrap; }
+      .cw::before { content: ""; position: absolute; inset: 0; border-radius: 12px; background: #d7263d; opacity: var(--on, 0); z-index: -1; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35); }
+      #prog { position: absolute; left: 0; top: 0; height: 9px; width: 1080px; background: #f2b705; transform-origin: 0 50%; z-index: 60; box-shadow: 0 0 12px rgba(242, 183, 5, 0.7); }
+      #progbg { position: absolute; left: 0; top: 0; height: 9px; width: 1080px; background: rgba(255, 255, 255, 0.12); z-index: 59; }
+      .gold { position: absolute; font-family: "Anton", sans-serif; color: #ffc93c; text-shadow: 0 0 30px rgba(255, 190, 40, 0.75), 0 0 80px rgba(255, 150, 0, 0.45), 0 6px 0 #9a5b00; letter-spacing: 0.01em; line-height: 1; text-align: center; white-space: nowrap; }
+      .stamp { position: absolute; padding: 8px 34px 2px; border: 12px solid #d7263d; border-radius: 18px; color: #d7263d; font-family: "Anton", sans-serif; font-size: 130px; line-height: 1; letter-spacing: 0.04em; background: #fff5e6; white-space: nowrap; }
+      .plate { position: absolute; padding: 10px 30px 4px; border-radius: 14px; background: #f3e3c3; color: #3a2312; font-family: "Anton", sans-serif; font-size: 52px; letter-spacing: 0.05em; box-shadow: 0 10px 0 #b38a55, 0 20px 40px rgba(0, 0, 0, 0.5); white-space: nowrap; }
+      .red { background: #d7263d; color: #fff; box-shadow: 0 10px 0 #8a1020, 0 20px 40px rgba(0, 0, 0, 0.5); }
+      .name { position: absolute; width: 290px; text-align: center; font-family: "Anton", sans-serif; font-size: 40px; color: #ffe6a0; letter-spacing: 0.03em; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.7); white-space: nowrap; }
+    </style>
+
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="71.4" data-width="1080" data-height="1920">
+      <!-- 1. hook: Dr Guillotin, the machine's shadow behind him -->
+      <div class="scene" id="s1"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 40%, #2a3a5a 0%, #141c30 60%, #070a12 100%)"></div>
+        <svg id="sh1" viewBox="0 0 400 760" style="left: 290px; top: 180px; width: 500px; height: 950px; opacity: 0.28"></svg>
+        <div class="vig"></div>
+        <div class="bust" id="gu1" style="left: 230px; top: 640px"></div>
+        <div class="plate" id="dr1" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 300px; font-size: 64px">DOCTEUR GUILLOTIN</div>
+        <div class="plate" id="in1" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 430px; font-size: 56px; background: #ffc93c">INVENTEUR</div>
+      </div></div>
+      <!-- 2. « Il lui a même donné son nom » : a brass plate, GUILLOTIN + E -->
+      <div class="scene" id="s2"><div class="cam">
+        <div class="bg" style="background: repeating-linear-gradient(90deg, #4a2f1c 0 46px, #3d2616 46px 52px, #53351f 52px 98px, #3d2616 98px 104px)"></div><div class="vig"></div>
+        <div class="med" id="gu2" style="left: 390px; top: 300px"></div>
+        <svg id="np2" viewBox="0 0 900 260" style="left: 90px; top: 820px; width: 900px; height: 260px"></svg>
+      </div></div>
+      <!-- 3. « Ça, c'est ce qu'on veut te faire croire… » : the history book; FAUX -->
+      <div class="scene" id="s3"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a3a46 0%, #1a1a22 60%, #08080c 100%)"></div><div class="vig"></div>
+        <svg id="bk3" viewBox="0 0 900 640" style="left: 90px; top: 440px; width: 900px; height: 640px"></svg>
+        <div class="stamp" id="faux3" style="left: 330px; top: 700px">FAUX</div>
+      </div></div>
+      <!-- 4. « Il l'a inventée ? 1er décembre 1789, à l'Assemblée » -->
+      <div class="scene" id="s4"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #2a2230 0%, #3a2e3a 55%, #2a1e1a 56%, #1a120e 100%)"></div>
+        <svg id="as4" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q4" style="left: 0; right: 0; top: 190px; font-size: 104px">IL L'A INVENTÉE ?</div>
+        <div class="gold" id="y4" style="left: 0; right: 0; top: 190px; font-size: 120px">1ER DÉCEMBRE 1789</div>
+        <div class="plate" id="an4" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 360px; font-size: 50px">ASSEMBLÉE NATIONALE</div>
+      </div></div>
+      <!-- 5. « Le député Joseph-Ignace Guillotin est médecin » -->
+      <div class="scene" id="s5"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #2a2230 0%, #3a2e3a 55%, #2a1e1a 56%, #1a120e 100%)"></div>
+        <svg id="as5" class="full" viewBox="0 0 1080 1920" style="opacity: 0.45"></svg>
+        <div class="vig"></div>
+        <div class="med" id="gu5" style="left: 390px; top: 330px"></div>
+        <div class="plate" id="nm5" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 680px; font-size: 56px">JOSEPH-IGNACE GUILLOTIN</div>
+        <div class="plate red" id="dp5" style="left: 150px; top: 820px; font-size: 48px">DÉPUTÉ</div>
+        <div class="plate" id="md5" style="left: 600px; top: 820px; font-size: 48px; background: #9be27a">MÉDECIN</div>
+        <svg id="bag5" viewBox="0 0 300 240" style="left: 390px; top: 1000px; width: 300px; height: 240px"></svg>
+      </div></div>
+      <!-- 6. « Et il propose une idée simple : la même peine pour tous » -->
+      <div class="scene" id="s6"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #4a3a26 0%, #241a10 60%, #0c0805 100%)"></div><div class="vig"></div>
+        <svg id="pj6" viewBox="0 0 500 620" style="left: 60px; top: 300px; width: 420px; height: 520px"></svg>
+        <svg id="bal6" viewBox="0 0 500 460" style="left: 520px; top: 380px; width: 500px; height: 460px"></svg>
+        <div class="plate" id="pt6" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 1000px; font-size: 60px; background: #ffc93c">LA MÊME PEINE POUR TOUS</div>
+      </div></div>
+      <!-- 7. « À l'époque, un noble… l'épée. Un pauvre est pendu, ou roué » -->
+      <div class="scene" id="s7"><div class="cam">
+        <div class="bg" style="background: linear-gradient(90deg, #3a1e2a 0%, #3a1e2a 50%, #2a2a22 50%, #2a2a22 100%)"></div><div class="vig"></div>
+        <div class="gold" id="g7" style="left: 0; right: 0; top: 190px; font-size: 110px">À L'ÉPOQUE</div>
+        <div class="med" id="nb7" style="left: 90px; top: 400px"></div>
+        <div class="med" id="pv7" style="left: 690px; top: 400px"></div>
+        <div class="name" id="nn7" style="left: 95px; top: 720px">UN NOBLE</div>
+        <div class="name" id="pn7" style="left: 695px; top: 720px">UN PAUVRE</div>
+        <svg id="sw7" viewBox="0 0 300 300" style="left: 90px; top: 830px; width: 300px; height: 300px"></svg>
+        <svg id="rp7" viewBox="0 0 300 300" style="left: 600px; top: 830px; width: 220px; height: 300px"></svg>
+        <svg id="wh7" viewBox="0 0 300 300" style="left: 810px; top: 880px; width: 220px; height: 220px"></svg>
+        <div class="plate" id="ep7" style="left: 140px; top: 1170px; font-size: 44px">L'ÉPÉE</div>
+        <div class="plate" id="pd7" style="left: 610px; top: 1170px; font-size: 44px">PENDU, ROUÉ</div>
+      </div></div>
+      <!-- 8. « Guillotin veut que le rang ne compte plus » : the steps flatten -->
+      <div class="scene" id="s8"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #2a3a5a 0%, #141c30 60%, #070a12 100%)"></div>
+        <svg id="st8" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g8" style="left: 0; right: 0; top: 190px; font-size: 110px">LE RANG ?</div>
+        <div class="plate" id="eg8" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 1180px; font-size: 60px; background: #ffc93c">ÉGAUX DEVANT LA PEINE</div>
+      </div></div>
+      <!-- 9. « Il parle d'une machine, mais il n'en dessine aucune » : the blank sheet -->
+      <div class="scene" id="s9"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #2a1e14 0%, #3a2a1c 100%)"></div>
+        <svg id="dk9" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g9" style="left: 0; right: 0; top: 190px; font-size: 110px">UNE MACHINE ?</div>
+        <div class="stamp" id="ap9" style="left: 200px; top: 760px; font-size: 100px">AUCUN PLAN</div>
+      </div></div>
+      <!-- 10. « Il proposait une loi, pas une lame » -->
+      <div class="scene" id="s10"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a3a46 0%, #1a1a22 60%, #08080c 100%)"></div><div class="vig"></div>
+        <svg id="lo10" viewBox="0 0 400 500" style="left: 80px; top: 470px; width: 400px; height: 500px"></svg>
+        <svg id="la10" viewBox="0 0 400 500" style="left: 600px; top: 470px; width: 400px; height: 500px"></svg>
+        <div class="gold" id="g10" style="left: 0; right: 0; top: 200px; font-size: 96px">UNE LOI, PAS UNE LAME</div>
+      </div></div>
+      <!-- 11. « Alors, qui l'a conçue ? Antoine Louis, chirurgien, secrétaire de l'Académie de chirurgie » -->
+      <div class="scene" id="s11"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #1e2a3a 0%, #2a3a4a 60%, #3a3a3a 61%, #1e1e1e 100%)"></div>
+        <svg id="ac11" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q11" style="left: 0; right: 0; top: 190px; font-size: 110px">QUI L'A CONÇUE ?</div>
+        <div class="med" id="lo11" style="left: 390px; top: 300px"></div>
+        <div class="plate" id="nm11" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 650px; font-size: 60px">ANTOINE LOUIS</div>
+        <div class="plate" id="ch11" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 770px; font-size: 46px; background: #9be27a">CHIRURGIEN</div>
+      </div></div>
+      <!-- 12. « En 1792, c'est lui qui écrit le plan : deux montants de bois, une lame en biais, une corde » -->
+      <div class="scene" id="s12"><div class="cam">
+        <div class="bg" style="background-color: #123a66; background-image: linear-gradient(rgba(255,255,255,0.08) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,0.08) 2px, transparent 2px); background-size: 60px 60px"></div>
+        <svg id="bp12" viewBox="0 0 400 760" style="left: 250px; top: 330px; width: 580px; height: 1100px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="y12" style="left: 60px; top: 150px; font-size: 140px">1792</div>
+        <div class="plate" id="pl12" style="left: 520px; top: 180px; font-size: 52px; background: #e8f0ff; color: #123a66">LE PLAN</div>
+        <div class="plate" id="l12a" style="left: 30px; top: 760px; font-size: 40px; background: #e8f0ff; color: #123a66">2 MONTANTS</div>
+        <div class="plate" id="l12b" style="left: 700px; top: 520px; font-size: 40px; background: #e8f0ff; color: #123a66">LAME EN BIAIS</div>
+        <div class="plate" id="l12c" style="left: 790px; top: 900px; font-size: 40px; background: #e8f0ff; color: #123a66">CORDE</div>
+      </div></div>
+      <!-- 13. « Un facteur de clavecins allemand, Tobias Schmidt, construit le prototype » -->
+      <div class="scene" id="s13"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #3a2a1c 0%, #4a3624 60%, #2a1c12 61%, #1a120a 100%)"></div>
+        <svg id="hp13" viewBox="0 0 500 300" style="left: 40px; top: 900px; width: 500px; height: 300px"></svg>
+        <svg id="pr13" viewBox="0 0 400 760" style="left: 640px; top: 640px; width: 320px; height: 608px"></svg>
+        <svg id="hm13" viewBox="0 0 200 200" style="left: 880px; top: 760px; width: 160px; height: 160px"></svg>
+        <div class="vig"></div>
+        <div class="med" id="sc13" style="left: 80px; top: 300px"></div>
+        <div class="plate" id="nm13" style="left: 420px; top: 340px; font-size: 52px">TOBIAS SCHMIDT</div>
+        <div class="plate" id="fc13" style="left: 420px; top: 460px; font-size: 38px; background: #ffc93c">FACTEUR DE CLAVECINS</div>
+        <div class="plate red" id="de13" style="left: 420px; top: 570px; font-size: 36px">ALLEMAND</div>
+      </div></div>
+      <!-- 14. « Et au début, on l'appelle la Louison. Du nom de Louis » -->
+      <div class="scene" id="s14"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a3a46 0%, #1a1a22 60%, #08080c 100%)"></div>
+        <svg id="gm14" viewBox="0 0 400 760" style="left: 290px; top: 300px; width: 500px; height: 950px"></svg>
+        <div class="vig"></div>
+        <div class="med sm" id="lo14" style="left: 60px; top: 260px"></div>
+        <svg id="ar14" viewBox="0 0 400 400" style="left: 160px; top: 500px; width: 400px; height: 560px"></svg>
+        <div class="plate" id="dn14" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 1260px; font-size: 48px; background: #ffc93c">DU NOM DE LOUIS</div>
+      </div></div>
+      <!-- 15. « Et pendant ce temps-là, Guillotin ? Un journal royaliste se moque de lui en chanson. Et le surnom lui colle à la peau » -->
+      <div class="scene" id="s15"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #24202a 0%, #34303a 100%)"></div>
+        <svg id="jn15" viewBox="0 0 520 640" style="left: 60px; top: 520px; width: 520px; height: 640px"></svg>
+        <svg id="nt15" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q15" style="left: 0; right: 0; top: 190px; font-size: 86px">ET PENDANT CE TEMPS-LÀ ?</div>
+        <div class="med" id="gu15" style="left: 680px; top: 520px"></div>
+        <div class="plate" data-layout-allow-overlap id="lz15" style="left: 650px; top: 880px; font-size: 52px">LOUISON</div>
+        <div class="plate red" data-layout-allow-overlap id="gz15" style="left: 620px; top: 870px; font-size: 52px">GUILLOTINE</div>
+        <div class="plate" id="sn15" style="left: 650px; top: 1010px; font-size: 40px">LE SURNOM</div>
+      </div></div>
+      <!-- 16. « Et l'idée, au moins, était nouvelle ? Même pas » -->
+      <div class="scene" id="s16"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a2a3a 0%, #1a121a 60%, #08060a 100%)"></div>
+        <svg id="bulb16" viewBox="0 0 300 400" style="left: 390px; top: 420px; width: 300px; height: 400px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q16" style="left: 0; right: 0; top: 190px; font-size: 110px">NOUVELLE ?</div>
+        <div class="stamp" id="mp16" style="left: 220px; top: 900px; font-size: 120px">MÊME PAS</div>
+      </div></div>
+      <!-- 17. Halifax (XVIe s.), « la Vierge » in Scotland (1564), the mannaia in Italy -->
+      <div class="scene" id="s17"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #1a2430 0%, #2a3440 100%)"></div><div class="vig"></div>
+        <svg id="ca17" viewBox="0 0 320 560" style="top: 560px; left: 40px; width: 320px; height: 560px"></svg>
+        <svg id="cb17" viewBox="0 0 320 560" style="top: 560px; left: 380px; width: 320px; height: 560px"></svg>
+        <svg id="cc17" viewBox="0 0 320 560" style="top: 560px; left: 720px; width: 320px; height: 560px"></svg>
+        <div class="gold" id="g17" style="left: 0; right: 0; top: 170px; font-size: 100px">AVANT 1789</div>
+      </div></div>
+      <!-- 18. « Trois pays, trois machines, deux siècles avant lui » : timeline -->
+      <div class="scene" id="s18"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #2a3a5a 0%, #141c30 60%, #070a12 100%)"></div>
+        <svg id="tm18" viewBox="0 0 1000 400" style="left: 40px; top: 700px; width: 1000px; height: 400px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g18a" style="left: 0; right: 0; top: 190px; font-size: 96px">3 PAYS · 3 MACHINES</div>
+        <div class="gold" id="g18b" style="left: 0; right: 0; top: 420px; font-size: 120px">+ 2 SIÈCLES</div>
+      </div></div>
+      <!-- 19. « Et lui, alors ? Il a fini guillotiné ? Non. Il meurt dans son lit, en 1814 » -->
+      <div class="scene" id="s19"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #141a2a 0%, #1e2436 60%, #2a1e16 61%, #1a120c 100%)"></div>
+        <svg id="bd19" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q19" style="left: 0; right: 0; top: 190px; font-size: 110px">GUILLOTINÉ ?</div>
+        <div class="stamp" id="no19" style="left: 390px; top: 420px; font-size: 130px">NON</div>
+        <div class="gold" id="y19" style="left: 0; right: 0; top: 190px; font-size: 150px">1814</div>
+        <div class="plate" id="lt19" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 420px; font-size: 52px; background: #9be27a">DANS SON LIT</div>
+      </div></div>
+      <!-- 20. « Il appelait cette machine la tache involontaire de sa vie » : an ink stain spreads -->
+      <div class="scene" id="s20"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #4a3a26 0%, #241a10 60%, #0c0805 100%)"></div>
+        <svg id="pa20" viewBox="0 0 600 700" style="left: 240px; top: 560px; width: 600px; height: 700px"></svg>
+        <div class="vig"></div>
+        <div class="med sm" id="gu20" style="left: 60px; top: 280px"></div>
+        <div class="plate" id="q20a" style="left: 320px; top: 300px; font-size: 44px">« LA TACHE INVOLONTAIRE</div>
+        <div class="plate" id="q20b" style="left: 320px; top: 400px; font-size: 44px">DE MA VIE »</div>
+      </div></div>
+      <!-- 21. « Après sa mort, dit-on, sa famille demande qu'on la rebaptise. Refus. Alors c'est la famille qui change de nom » -->
+      <div class="scene" id="s21"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #2a2420 0%, #3a3028 100%)"></div>
+        <svg id="dr21" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="lt21" viewBox="0 0 440 520" style="left: 60px; top: 330px; width: 440px; height: 520px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g21" style="left: 0; right: 0; top: 150px; font-size: 90px">DIT-ON…</div>
+        <div class="stamp" id="rf21" style="left: 70px; top: 560px; font-size: 90px">REFUSÉ</div>
+        <svg id="pq21" viewBox="0 0 440 150" style="left: 580px; top: 820px; width: 440px; height: 150px"></svg>
+        <div class="plate" id="nn21" style="left: 600px; top: 1020px; font-size: 44px; background: #ffc93c">NOUVEAU NOM</div>
+      </div></div>
+      <!-- 22. mirror: « Il n'a pas inventé la machine. La machine a pris son nom » -->
+      <div class="scene" id="s22"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #6a5022 0%, #3a2a10 55%, #120c04 100%)"></div>
+        <svg id="rays22" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -100px; width: 2000px; height: 2000px; opacity: 0.18"></svg>
+        <svg id="gm22" viewBox="0 0 400 760" style="left: 340px; top: 440px; width: 400px; height: 760px"></svg>
+        <div class="vig"></div>
+        <div class="med sm" id="gu22" style="left: 60px; top: 380px"></div>
+        <div class="gold" id="f22a" style="left: 0; right: 0; top: 190px; font-size: 76px">IL N'A PAS INVENTÉ LA MACHINE</div>
+        <div class="gold" id="f22b" style="left: 0; right: 0; top: 190px; font-size: 82px">LA MACHINE A PRIS SON NOM</div>
+      </div></div>
+
+      <div id="caps"></div>
+      <div id="progbg"></div>
+      <div id="prog"></div>
+
+      <!-- Son : un seul mixage (voix devant ; musique et bruitages baissés sous la voix par ../_engine/style-anime/mix_anime.py) -->
+      <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="71.4" data-track-index="10" data-volume="1"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const END = 71.4
+        const RAW = [0.0, 0.112, 0.504, 1.006, 1.063, 1.454, 1.565, 2.222, 2.272, 2.361, 2.418, 2.641, 2.92, 3.089, 3.281, 3.331, 3.527, 3.638, 3.918, 4.142, 4.254, 4.533, 4.774, 4.928, 5.099, 5.384, 5.602, 5.678, 5.793, 6.021, 6.192, 6.306, 6.591, 6.814, 6.985, 7.282, 7.423, 7.986, 8.339, 8.409, 9.167, 9.396, 9.696, 10.481, 11.116, 11.327, 12.083, 12.133, 12.183, 12.53, 12.741, 13.023, 13.462, 13.523, 13.805, 14.158, 14.44, 14.672, 14.722, 15.228, 15.32, 15.632, 16.133, 16.196, 16.321, 16.571, 17.073, 17.123, 17.168, 17.522, 17.898, 18.086, 18.217, 18.531, 18.7, 19.163, 19.399, 19.576, 19.694, 19.929, 20.047, 20.286, 20.358, 20.617, 20.911, 21.206, 21.418, 21.795, 21.913, 22.149, 22.539, 22.612, 22.896, 23.426, 23.536, 23.609, 23.879, 24.057, 24.359, 24.751, 24.801, 24.919, 25.272, 25.617, 26.207, 26.257, 27.129, 27.247, 27.835, 27.953, 28.511, 28.559, 28.903, 29.246, 29.453, 29.659, 30.003, 30.14, 30.484, 30.896, 31.36, 31.497, 31.919, 31.976, 32.251, 32.389, 32.703, 32.917, 33.241, 33.291, 33.631, 33.74, 34.174, 34.578, 34.954, 35.367, 35.877, 35.987, 36.259, 36.413, 36.521, 36.835, 36.957, 37.446, 37.555, 37.834, 37.978, 38.141, 38.25, 38.646, 38.696, 39.035, 39.142, 39.531, 40.048, 40.098, 40.438, 40.921, 41.028, 41.296, 41.403, 41.564, 41.671, 42.061, 42.144, 42.251, 42.572, 42.733, 43.001, 43.055, 43.162, 43.485, 43.535, 43.937, 44.052, 44.395, 44.682, 45.005, 45.31, 45.602, 45.652, 46.103, 46.217, 46.504, 46.963, 47.25, 47.364, 47.765, 47.823, 48.052, 48.511, 48.683, 48.797, 49.084, 49.386, 49.477, 49.957, 50.152, 50.826, 50.976, 51.426, 51.651, 52.171, 52.321, 52.627, 52.783, 53.23, 53.649, 53.887, 54.242, 54.557, 55.17, 55.694, 56.069, 56.438, 56.488, 56.538, 57.089, 57.18, 57.247, 57.516, 58.023, 58.363, 58.413, 58.652, 58.921, 59.124, 59.278, 59.452, 59.789, 60.07, 60.398, 60.735, 61.206, 61.341, 61.678, 62.485, 62.621, 62.755, 62.836, 63.008, 63.115, 63.379, 63.885, 63.935, 64.153, 64.524, 64.788, 64.895, 65.382, 65.432, 65.784, 66.0, 66.106, 66.477, 66.636, 66.953, 67.059, 67.531, 67.581, 67.786, 68.001, 68.505, 68.649, 68.956, 69.13, 69.592, 69.664, 69.952, 70.167]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Le", "docteur", "Guillotin", "a", "inventé", "la", "guillotine.", "Il", "lui", "a", "même", "donné", "son", "nom.", "Ça,", "c'est", "ce", "qu'on", "veut", "te", "faire", "croire.", "Sauf", "que", "c'est", "faux,", "et", "je", "vais", "te", "le", "prouver.", "Il", "l'a", "inventée ?", "1er", "décembre", "1789,", "à", "l'Assemblée.", "Le", "député", "Joseph-Ignace", "Guillotin", "est", "médecin.", "Et", "il", "propose", "une", "idée", "simple :", "la", "même", "peine", "pour", "tous.", "À", "l'époque,", "un", "noble", "condamné", "a", "la", "tête", "tranchée", "à", "l'épée.", "Un", "pauvre", "est", "pendu,", "ou", "roué.", "Guillotin", "veut", "que", "le", "rang", "ne", "compte", "plus.", "Il", "parle", "d'une", "machine,", "mais", "il", "n'en", "dessine", "aucune.", "Il", "proposait", "une", "loi,", "pas", "une", "lame.", "Alors,", "qui", "l'a", "conçue ?", "Antoine", "Louis,", "chirurgien,", "secrétaire", "de", "l'Académie", "de", "chirurgie.", "En", "1792,", "c'est", "lui", "qui", "écrit", "le", "plan :", "deux", "montants", "de", "bois,", "une", "lame", "en", "biais,", "une", "corde.", "Un", "facteur", "de", "clavecins", "allemand,", "Tobias", "Schmidt,", "construit", "le", "prototype.", "Et", "au", "début,", "on", "l'appelle", "la", "Louison.", "Du", "nom", "de", "Louis.", "Et", "pendant", "ce", "temps-là,", "Guillotin ?", "Un", "journal", "royaliste", "se", "moque", "de", "lui", "en", "chanson.", "Et", "le", "surnom", "lui", "colle", "à", "la", "peau.", "Et", "l'idée,", "au", "moins,", "était", "nouvelle ?", "Même", "pas.", "En", "Angleterre,", "la", "ville", "d'Halifax", "avait", "sa", "machine", "à", "lame", "tombante", "dès", "le", "XVIe", "siècle.", "En", "Écosse,", "on", "utilisait", "« la", "Vierge »", "dès", "1564.", "En", "Italie,", "la", "mannaia.", "Trois", "pays,", "trois", "machines,", "deux", "siècles", "avant", "lui.", "Et", "lui,", "alors ?", "Il", "a", "fini", "guillotiné ?", "Non.", "Il", "meurt", "dans", "son", "lit,", "en", "1814.", "Il", "appelait", "cette", "machine", "la", "tache", "involontaire", "de", "sa", "vie.", "Après", "sa", "mort,", "dit-on,", "sa", "famille", "demande", "qu'on", "la", "rebaptise.", "Refus.", "Alors", "c'est", "la", "famille", "qui", "change", "de", "nom.", "Il", "n'a", "pas", "inventé", "la", "machine.", "La", "machine", "a", "pris", "son", "nom."]
+        let seed = 23
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+
+        // ---------- flat bust characters ----------
+        const HAT = {
+          crown: () => '<path d="M206,190 L222,104 L262,152 L300,86 L338,152 L378,104 L394,190Z" fill="#f2b705" stroke="#a87a10" stroke-width="6"/><circle cx="300" cy="140" r="12" fill="#d7263d"/><circle cx="252" cy="168" r="8" fill="#2c6fa8"/><circle cx="348" cy="168" r="8" fill="#2c6fa8"/>',
+          laurel: () => '<g fill="#4a8a3a">' + Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (1.05 + i * 0.1), x = 300 + Math.cos(a) * 135, y = 250 + Math.sin(a) * 115; return `<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="26" ry="11" transform="rotate(${((a * 180) / Math.PI + 60).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})"/>` }).join('') + '</g>',
+          babcap: (c) => `<path d="M186,206 C186,112 414,112 414,206Z" fill="${c}"/><rect x="180" y="192" width="240" height="26" fill="#c9962e"/>`,
+          turban: (c) => `<path d="M170,236 C150,100 450,100 430,236 C380,204 220,204 170,236Z" fill="${c}"/><path d="M190,190 C260,150 340,150 410,190 M184,214 C260,176 340,176 416,214" stroke="#00000022" stroke-width="10" fill="none"/><circle cx="300" cy="176" r="16" fill="#c0392b" stroke="#f2b705" stroke-width="5"/>`,
+          beret: (c) => `<path d="M176,214 C150,136 262,90 336,110 C430,132 446,192 424,216 C364,196 240,196 176,214Z" fill="${c}"/>`,
+          flatcap: (c) => `<path d="M176,214 C168,140 258,102 330,110 C410,118 442,168 432,212 C380,196 232,196 176,214Z" fill="${c}"/><path d="M176,214 C240,232 330,232 400,212 L370,246 C300,256 220,250 176,214Z" fill="#00000044"/>`,
+          bicorne: (c) => `<path d="M110,206 C190,96 410,96 490,206 C410,176 190,176 110,206Z" fill="${c}"/><path d="M110,206 C200,186 400,186 490,206" stroke="#c9962e" stroke-width="8" fill="none"/><circle cx="300" cy="150" r="22" fill="#1d3557"/><circle cx="300" cy="150" r="12" fill="#d7263d"/>`,
+        }
+        function bust(o) {
+          const skin = o.skin, dark = o.dark, hc = o.hairCol || '#1b1410'
+          const brow = { sad: ['M222,250 L282,236', 'M318,236 L378,250'], sure: ['M222,240 L282,246', 'M318,234 L378,226'], neutral: ['M222,242 L282,240', 'M318,240 L378,242'], angry: ['M222,232 L282,252', 'M318,252 L378,232'] }[o.mood]
+          const mouth = { sad: 'M262,382 Q300,356 338,382', sure: 'M258,366 Q300,404 342,362', neutral: 'M270,372 Q300,384 330,372', angry: 'M266,380 Q300,366 334,380' }[o.mood]
+          let hair = ''
+          if (o.hair === 'short' || o.hair === 'headband') hair = `<path d="M178,262 C170,150 240,112 300,112 C360,112 430,150 422,262 C410,214 380,190 300,188 C220,190 190,214 178,262Z" fill="${hc}"/>`
+          if (o.hair === 'headband') hair += '<path d="M180,236 C230,200 370,200 420,236 L418,262 C370,228 230,228 182,262Z" fill="#f4f1e8"/>' + [0, 1, 2, 3, 4, 5].map((i) => `<ellipse cx="${222 + i * 31}" cy="${226 - Math.sin((i / 5) * Math.PI) * 14}" rx="8" ry="11" fill="#e8d5a0" stroke="#a88a50" stroke-width="2"/>`).join('')
+          if (o.hair === 'wig') hair = `<path d="M170,290 C156,150 230,100 300,100 C370,100 444,150 430,290 C420,224 384,196 300,194 C216,196 180,224 170,290Z" fill="${hc}"/>` + [254, 304].map((y) => `<ellipse cx="164" cy="${y}" rx="30" ry="21" fill="${hc}" stroke="#b8b0a4" stroke-width="4"/><ellipse cx="436" cy="${y}" rx="30" ry="21" fill="${hc}" stroke="#b8b0a4" stroke-width="4"/>`).join('')
+          if (o.hair === 'swept') hair = `<path d="M180,250 C168,150 250,100 330,112 C400,124 432,170 422,250 C400,190 350,170 300,176 C250,178 210,200 180,250Z" fill="${hc}"/>`
+          if (o.hair === 'wrap') { const w = o.wrap || '#c0392b'; hair = `<path d="M170,278 C150,168 220,90 300,86 C380,90 450,168 430,278 C414,226 380,198 300,196 C220,198 186,226 170,278Z" fill="${w}"/><g stroke="#f2b705" stroke-width="7" opacity="0.8"><path d="M196,170 C250,140 350,140 404,170" fill="none"/><path d="M182,220 C250,180 350,180 418,220" fill="none"/></g><path d="M300,96 C262,30 236,66 262,104Z M300,96 C338,30 364,66 338,104Z" fill="${w}" stroke="#7a1a12" stroke-width="4"/>` }
+          const hat = o.hat ? HAT[o.hat](o.hatCol || '#1b1410') : ''
+          const beard = o.beardLong ? `<path d="M178,300 C170,470 240,560 300,568 C360,560 430,470 422,300 C410,360 380,352 300,354 C220,352 190,360 178,300Z" fill="${hc}"/>` : o.beard ? `<path d="M178,300 C176,420 230,478 300,478 C370,478 424,420 422,300 C410,360 380,350 300,352 C220,350 190,360 178,300Z" fill="${hc}"/>` : ''
+          const stache = o.stache ? `<path d="M244,352 C262,334 290,338 300,350 C310,338 338,334 356,352 C346,372 318,368 300,358 C282,368 254,372 244,352Z" fill="${hc}"/>` : ''
+          const old = o.old ? `<path d="M232,332 Q255,340 278,332 M322,332 Q345,340 368,332 M250,212 Q300,204 350,212 M256,198 Q300,190 344,198" stroke="${dark}" stroke-width="5" fill="none" opacity="0.8"/>` : ''
+          const fem = o.female ? `<path d="M226,288 L212,278 M232,282 L222,270 M374,288 L388,278 M368,282 L378,270" stroke="#1b1410" stroke-width="5" stroke-linecap="round"/><circle cx="182" cy="352" r="11" fill="#f2b705"/><circle cx="418" cy="352" r="11" fill="#f2b705"/>` : ''
+          const lips = o.female ? `<path d="${mouth}" stroke="#7a2a22" stroke-width="13" fill="none" stroke-linecap="round"/>` : `<path d="${mouth}" stroke="#3a1a12" stroke-width="9" fill="none" stroke-linecap="round"/>`
+          const ep = o.epaulettes ? '<g fill="#f2b705"><ellipse cx="96" cy="540" rx="80" ry="28"/><ellipse cx="504" cy="540" rx="80" ry="28"/></g><g stroke="#f2b705" stroke-width="7">' + [0, 1, 2, 3, 4, 5].map((i) => `<line x1="${36 + i * 22}" y1="560" x2="${34 + i * 22}" y2="600"/><line x1="${454 + i * 22}" y1="560" x2="${456 + i * 22}" y2="600"/>`).join('') + '</g>' : ''
+          const body = o.plain
+            ? `<path d="M40,700 C40,520 150,468 300,468 C450,468 560,520 560,700Z" fill="${o.coat}"/><path d="M240,472 C260,520 340,520 360,472" fill="none" stroke="${o.lapel}" stroke-width="10"/>${o.beads ? [0, 1, 2, 3, 4, 5, 6].map((i) => `<circle cx="${236 + i * 21}" cy="${494 + Math.sin((i / 6) * Math.PI) * 26}" r="8" fill="${i % 2 ? '#c0392b' : '#f4f1e8'}"/>`).join('') : ''}${o.stripes ? [0, 1, 2, 3].map((i) => `<path d="M${70 + i * 30},${700} L${150 + i * 30},${520}" stroke="#f4f1e8" stroke-width="12" opacity="0.6"/>`).join('') : ''}`
+            : `<path d="M40,700 C40,520 150,468 300,468 C450,468 560,520 560,700Z" fill="${o.coat}"/><path d="M300,468 L200,476 L268,640Z" fill="${o.lapel}"/><path d="M300,468 L400,476 L332,640Z" fill="${o.lapel}"/><path d="M252,470 L348,470 L300,600Z" fill="${o.shirt}"/>${[0, 1, 2].map((i) => `<circle cx="300" cy="${612 + i * 30}" r="8" fill="#f2b705"/>`).join('')}`
+          return `<svg viewBox="0 0 600 700" width="100%" height="100%" style="position:absolute;left:0;top:0">
+            ${body}${ep}${o.jabot ? '<path d="M274,470 C258,520 280,566 300,604 C320,566 342,520 326,470Z" fill="#fff" stroke="#d8d0c4" stroke-width="4"/>' : ''}
+            <rect x="262" y="392" width="76" height="92" rx="20" fill="${dark}"/>
+            <ellipse cx="180" cy="312" rx="24" ry="34" fill="${dark}"/><ellipse cx="420" cy="312" rx="24" ry="34" fill="${dark}"/>
+            <ellipse cx="300" cy="296" rx="124" ry="142" fill="${skin}"/>
+            <path d="M300,154 C380,160 424,226 424,300 C424,380 380,436 300,438 C352,410 380,360 380,296 C380,226 350,176 300,154Z" fill="${dark}" opacity="0.35"/>
+            ${hair}${beard}
+            <g class="eyes"><ellipse cx="255" cy="300" rx="26" ry="24" fill="#fff"/><ellipse cx="345" cy="300" rx="26" ry="24" fill="#fff"/>
+            <circle cx="258" cy="302" r="12" fill="#151515"/><circle cx="348" cy="302" r="12" fill="#151515"/>
+            <circle cx="262" cy="296" r="4" fill="#fff"/><circle cx="352" cy="296" r="4" fill="#fff"/></g>
+            <g class="lids" opacity="0"><rect x="224" y="274" width="62" height="52" fill="${skin}"/><rect x="314" y="274" width="62" height="52" fill="${skin}"/><path d="M230,302 Q255,312 280,302 M320,302 Q345,312 370,302" stroke="#1b1410" stroke-width="6" fill="none"/></g>
+            <path d="${brow[0]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/><path d="${brow[1]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/>
+            <path d="M296,320 Q290,342 304,346" stroke="${dark}" stroke-width="7" fill="none" stroke-linecap="round"/>
+            ${old}${fem}${stache}${lips}${hat}
+          </svg>`
+        }
+        const put = (id, o) => { $(id).innerHTML = bust(o) }
+        const med = (id, o, bg) => { $(id).innerHTML = `<div class="in">${bust(o)}</div>`; $(id).style.background = bg || '#e8d5b0' }
+        // ---------- full-body figures (feet at y=300, centred on x=60) ----------
+        function fig(o) {
+          const skin = o.skin || '#7a4a2e', top = o.top || '#2c4a7a', bot = o.bot || '#3a2a1a'
+          let s = ''
+          if (o.pose === 'run') s += `<path d="M54,200 L30,296" stroke="${o.skirt ? skin : bot}" stroke-width="15" stroke-linecap="round"/><path d="M66,200 L96,290" stroke="${o.skirt ? skin : bot}" stroke-width="15" stroke-linecap="round"/>`
+          else s += `<rect x="44" y="196" width="13" height="100" rx="6" fill="${o.skirt ? skin : bot}"/><rect x="63" y="196" width="13" height="100" rx="6" fill="${o.skirt ? skin : bot}"/>`
+          s += `<rect x="40" y="290" width="20" height="10" rx="4" fill="#1b1410"/><rect x="61" y="290" width="20" height="10" rx="4" fill="#1b1410"/>`
+          s += `<path d="M36,110 L84,110 L92,206 L28,206Z" fill="${top}"/>`
+          if (o.stripes) s += [0, 1, 2].map((i) => `<rect x="34" y="${126 + i * 26}" width="52" height="9" fill="#f4f1e8" opacity="0.75"/>`).join('')
+          if (o.skirt) s += `<path d="M28,196 L92,196 L100,250 L20,250Z" fill="${bot}"/>`
+          if (o.belt) s += '<rect x="30" y="180" width="60" height="12" fill="#5a3418"/>' + [0, 1, 2, 3].map((i) => `<rect x="${36 + i * 13}" y="178" width="8" height="16" fill="#c9962e"/>`).join('')
+          s += `<rect x="52" y="94" width="16" height="20" fill="${skin}"/><circle cx="60" cy="78" r="24" fill="${skin}"/>`
+          const h = o.hat
+          if (h === 'tricorne') s += '<path d="M28,70 C40,46 80,46 92,70 C80,62 40,62 28,70Z M36,62 C44,36 76,36 84,62Z" fill="#14141a"/>'
+          if (h === 'kepi') s += '<path d="M38,66 L82,66 L78,44 L42,44Z" fill="#1d3557"/><rect x="42" y="44" width="36" height="8" fill="#c0392b"/><path d="M38,66 L94,70 L82,64Z" fill="#111"/>'
+          if (h === 'band') s += '<path d="M36,74 C36,50 84,50 84,74 C76,62 44,62 36,74Z" fill="#1b1410"/><rect x="36" y="64" width="48" height="8" fill="#f4f1e8"/>'
+          if (h === 'wrap') s += `<path d="M34,80 C30,48 50,40 60,40 C70,40 90,48 86,80 C78,64 42,64 34,80Z" fill="${o.wrap || '#d7263d'}"/><circle cx="60" cy="40" r="10" fill="${o.wrap || '#d7263d'}"/>`
+          if (h === 'helmet') s += '<path d="M34,70 C34,40 86,40 86,70Z" fill="#e8e2d8"/><path d="M24,70 L96,70 L92,78 L28,78Z" fill="#d0c8b8"/>'
+          if (h === 'cap') s += '<path d="M36,68 C36,46 84,46 86,68Z" fill="#3a3a40"/><path d="M60,66 L98,70 L84,62Z" fill="#2a2a30"/>'
+          if (h === 'hair') s += '<path d="M36,74 C36,50 84,50 84,74 C76,62 44,62 36,74Z" fill="#1b1410"/>'
+          if (o.rifle === 'shoulder') s += '<path d="M80,40 L74,200" stroke="#5a3418" stroke-width="7"/><path d="M80,40 L79,20" stroke="#9aa4ae" stroke-width="4"/><rect x="74" y="110" width="16" height="30" rx="6" fill="' + skin + '"/>'
+          if (o.rifle === 'aim') s += `<path d="M44,112 L150,104" stroke="#5a3418" stroke-width="8"/><path d="M120,106 L168,102" stroke="#9aa4ae" stroke-width="4"/><rect x="62" y="104" width="34" height="14" rx="6" fill="${skin}"/><g class="mf" opacity="0"><path d="M170,102 L196,88 L188,102 L204,110 L186,110 L192,126Z" fill="#ffd36a"/></g>`
+          if (o.rifle === 'up') s += `<path d="M30,40 L96,200" stroke="#5a3418" stroke-width="8"/><path d="M30,40 L24,24" stroke="#9aa4ae" stroke-width="4"/><rect x="40" y="110" width="16" height="30" rx="6" fill="${skin}"/>`
+          return s
+        }
+        // outer group carries the GSAP motion, inner group the placement (GSAP x/y would overwrite a transform attribute)
+        const placeFig = (o, x, y, sc, flip, cls) => `<g class="${cls || ''}"><g transform="translate(${x},${y}) scale(${flip ? -sc : sc},${sc}) translate(-60,-300)">${fig(o)}</g></g>`
+
+        const blink = (sel, times) => times.forEach((t) => tl.fromTo(sel + ' .lids', { opacity: 0 }, { opacity: 1, duration: 0.02, yoyo: true, repeat: 1, repeatDelay: 0.1, ease: 'none', immediateRender: false }, t))
+
+
+        function rays(id, n, c1, c2) {
+          let s = ''
+          for (let i = 0; i < n; i++) { const a0 = (i / n) * Math.PI * 2, a1 = ((i + 0.5) / n) * Math.PI * 2; s += `<path d="M0,0 L${(Math.cos(a0) * 1400).toFixed(0)},${(Math.sin(a0) * 1400).toFixed(0)} L${(Math.cos(a1) * 1400).toFixed(0)},${(Math.sin(a1) * 1400).toFixed(0)}Z" fill="${i % 2 ? c1 : c2}"/>` }
+          $(id).innerHTML = s
+        }
+
+        // ---------- characters (1789: powdered wigs) ----------
+        const W_ = { skin: '#f0c9a8', dark: '#d8a985' }
+        const GUI = Object.assign({}, W_, { hair: 'wig', hairCol: '#e4e0d8', coat: '#1d2a44', lapel: '#141d30', shirt: '#f4f1e8', jabot: true, mood: 'neutral' })
+        const LOUIS = Object.assign({}, W_, { skin: '#ecc4a0', hair: 'wig', hairCol: '#c8c4bc', coat: '#4a2a2a', lapel: '#341c1c', shirt: '#f4f1e8', jabot: true, old: true, mood: 'sure' })
+        const SCHMIDT = Object.assign({}, W_, { hair: 'short', hairCol: '#5a3a22', coat: '#3a4a3a', lapel: '#2a362a', shirt: '#f4f1e8', mood: 'sure' })
+        const NOBLE = Object.assign({}, W_, { hair: 'wig', hairCol: '#f0ece4', coat: '#6a1a2a', lapel: '#c9962e', shirt: '#f4f1e8', jabot: true, mood: 'sure' })
+        const PAUVRE = Object.assign({}, W_, { skin: '#d8a880', dark: '#b8885a', hair: 'short', hairCol: '#2a1a10', plain: true, coat: '#5a4a3a', lapel: '#3a2e22', mood: 'sad' })
+        put('gu1', Object.assign({}, GUI, { mood: 'sure' }))
+        med('gu2', GUI, '#d8c8a8'); med('gu5', Object.assign({}, GUI, { mood: 'sure' }), '#c8ccd8'); med('gu15', Object.assign({}, GUI, { mood: 'sad' }), '#c8c4cc')
+        med('gu20', Object.assign({}, GUI, { mood: 'sad', old: true }), '#d8c8a8'); med('gu22', GUI, '#e8d0a0')
+        med('lo11', LOUIS, '#c8d4e0'); med('lo14', LOUIS, '#c8d4e0'); med('sc13', SCHMIDT, '#e0d0b8')
+        med('nb7', NOBLE, '#e0c8cc'); med('pv7', PAUVRE, '#d8d4c4')
+
+        // ---------- the machine, drawn soberly: never anyone under it ----------
+        const WOOD = '#7a4a26', WD = '#4a2a14'
+        const GUILLO = (plate, dim) => `
+          <rect x="20" y="690" width="360" height="56" rx="6" fill="#5a3418" stroke="${WD}" stroke-width="6"/>
+          <rect x="80" y="70" width="36" height="630" fill="${WOOD}" stroke="${WD}" stroke-width="6"/>
+          <rect x="284" y="70" width="36" height="630" fill="${WOOD}" stroke="${WD}" stroke-width="6"/>
+          <rect x="56" y="36" width="288" height="44" rx="6" fill="${WOOD}" stroke="${WD}" stroke-width="6"/>
+          <g class="bl"><rect x="116" y="96" width="168" height="34" fill="#5a3418" stroke="${WD}" stroke-width="4"/>
+          <path d="M116,130 L284,130 L284,196 L116,246Z" fill="#c8d0d8" stroke="#6a7580" stroke-width="5"/>
+          <path d="M122,238 L278,192" stroke="#f4f8fa" stroke-width="5"/></g>
+          <rect x="116" y="560" width="168" height="54" fill="#6a3e1e" stroke="${WD}" stroke-width="5"/>
+          <circle cx="344" cy="58" r="14" fill="#3a3a40"/><path class="rp" d="M200,96 L200,58 L344,44 M354,60 L354,650" stroke="#c8b07a" stroke-width="5" fill="none"/>
+          <rect x="350" y="640" width="22" height="14" fill="#3a3a40"/>
+          <rect x="100" y="700" width="200" height="38" rx="5" fill="#c9962e" stroke="#7a5418" stroke-width="4"/>
+          <text class="pt" x="200" y="729" text-anchor="middle" font-family="Anton" font-size="26" fill="#3a2312">${plate || ''}</text>`
+        $('sh1').innerHTML = GUILLO('')
+        $('gm14').innerHTML = GUILLO('LOUISON')
+        $('gm22').innerHTML = GUILLO('') + '<text id="p22a" x="200" y="729" text-anchor="middle" font-family="Anton" font-size="32" fill="#3a2312">GUILLOTIN</text><text id="p22b" x="200" y="729" text-anchor="middle" font-family="Anton" font-size="32" fill="#3a2312">GUILLOTIN<tspan fill="#a8121e">E</tspan></text>'
+        $('pr13').innerHTML = GUILLO('')
+        // the blueprint (white lines on blue), drawn stroke by stroke
+        const ln = (cls, d, w) => `<path class="dr ${cls}" pathLength="1" d="${d}" stroke="#e8f0ff" stroke-width="${w || 5}" fill="none" stroke-linejoin="round"/>`
+        $('bp12').innerHTML = ln('u', 'M20,690 L380,690 L380,746 L20,746Z') + ln('u', 'M80,700 L80,70 L116,70 L116,700') + ln('u', 'M284,700 L284,70 L320,70 L320,700') + ln('u', 'M56,80 L56,36 L344,36 L344,80Z')
+          + ln('b', 'M116,96 L284,96 L284,130 L116,130Z') + ln('b', 'M116,130 L284,130 L284,196 L116,246Z', 6) + ln('b', 'M300,196 L360,196 M300,246 L360,246 M340,196 L340,246', 3)
+          + ln('c', 'M200,96 L200,58 L344,44', 4) + ln('c', 'M354,60 L354,650', 4) + '<circle class="dr c" pathLength="1" cx="344" cy="58" r="14" stroke="#e8f0ff" stroke-width="4" fill="none"/>'
+          + '<path d="M40,20 L40,760" stroke="#e8f0ff" stroke-width="2" stroke-dasharray="8 8" opacity="0.4"/><text x="30" y="400" font-family="Bebas" font-size="30" fill="#e8f0ff" opacity="0.6" transform="rotate(-90 30 400)">4,5 M</text>'
+        gsap.set('#bp12 .dr', { strokeDasharray: 1, strokeDashoffset: 1 })
+
+        // 2. brass name plate: GUILLOTIN + E
+        $('np2').innerHTML = '<rect x="10" y="10" width="880" height="240" rx="24" fill="#c9962e" stroke="#7a5418" stroke-width="10"/><rect x="34" y="34" width="832" height="192" rx="14" fill="none" stroke="#f2d070" stroke-width="4"/>' + [60, 840].map((x) => [60, 200].map((y) => `<circle cx="${x}" cy="${y}" r="10" fill="#7a5418"/>`).join('')).join('') + '<text x="430" y="172" text-anchor="middle" font-family="Anton" font-size="128" fill="#3a2312" letter-spacing="6">GUILLOTIN</text><text id="e2" x="774" y="172" font-family="Anton" font-size="128" fill="#a8121e">E</text>'
+        // 3. the history book
+        $('bk3').innerHTML = '<path d="M450,40 C330,10 140,10 20,40 L20,620 C140,590 330,590 450,620Z" fill="#efe6cf" stroke="#8a7a5a" stroke-width="6"/><path d="M450,40 C570,10 760,10 880,40 L880,620 C760,590 570,590 450,620Z" fill="#f4ecd8" stroke="#8a7a5a" stroke-width="6"/><path d="M450,40 L450,620" stroke="#8a7a5a" stroke-width="6"/><text x="235" y="130" text-anchor="middle" font-family="Anton" font-size="48" fill="#1d3557">HISTOIRE</text><text x="235" y="186" text-anchor="middle" font-family="Anton" font-size="48" fill="#1d3557">DE FRANCE</text>' + [250, 290, 330, 370, 410, 450, 490].map((y) => `<line x1="70" y1="${y}" x2="400" y2="${y}" stroke="#b8a888" stroke-width="5"/>`).join('') + '<text x="665" y="120" text-anchor="middle" font-family="Anton" font-size="40" fill="#3a2312">LE DR GUILLOTIN</text><text x="665" y="170" text-anchor="middle" font-family="Anton" font-size="40" fill="#3a2312">INVENTE</text><text x="665" y="220" text-anchor="middle" font-family="Anton" font-size="40" fill="#a8121e">LA GUILLOTINE</text><g transform="translate(600,250) scale(0.42)">' + GUILLO('') + '</g>'
+        // 4-5. the Assemblée: hemicycle, deputies, the tribune, tricolour drapes
+        const hemi = () => {
+          let s = '<path d="M0,280 L1080,280" stroke="#c9962e" stroke-width="8"/>' + [0, 1, 2].map((i) => `<rect x="${60 + i * 50}" y="290" width="50" height="420" fill="${['#2a4a8a', '#f4f1e8', '#b8222e'][i]}" opacity="0.8"/><rect x="${870 + i * 50}" y="290" width="50" height="420" fill="${['#2a4a8a', '#f4f1e8', '#b8222e'][i]}" opacity="0.8"/>`).join('')
+          for (let r = 0; r < 5; r++) { const R = 260 + r * 90; s += `<path d="M${540 - R},1300 A${R},${R * 0.55} 0 0 1 ${540 + R},1300" stroke="#5a3a26" stroke-width="40" fill="none"/>`; const n = 9 + r * 3; for (let i = 0; i <= n; i++) { const a = Math.PI * (0.06 + (0.88 * i) / n), x = 540 - Math.cos(a) * R, y = 1300 - Math.sin(a) * R * 0.55 - 40; s += `<path d="M${(x - 20).toFixed(0)},${(y + 40).toFixed(0)} C${(x - 20).toFixed(0)},${(y + 10).toFixed(0)} ${(x + 20).toFixed(0)},${(y + 10).toFixed(0)} ${(x + 20).toFixed(0)},${(y + 40).toFixed(0)}Z" fill="${['#1b1b24', '#2a2030', '#1e2a3a'][(i + r) % 3]}"/><circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="15" fill="${(i + r) % 4 ? '#e4e0d8' : '#f0c9a8'}"/>` } }
+          s += '<rect x="440" y="1180" width="200" height="200" fill="#6a4228" stroke="#3a2214" stroke-width="8"/><rect x="420" y="1170" width="240" height="24" fill="#c9962e"/><circle cx="540" cy="1140" r="26" fill="#f0c9a8"/><path d="M500,1180 C500,1150 580,1150 580,1180Z" fill="#1d2a44"/>'
+          return s
+        }
+        $('as4').innerHTML = hemi(); $('as5').innerHTML = hemi()
+        $('bag5').innerHTML = '<path d="M60,90 L240,90 L270,230 L30,230Z" fill="#3a2014" stroke="#1a0c06" stroke-width="6"/><path d="M110,90 C110,40 190,40 190,90" stroke="#1a0c06" stroke-width="12" fill="none"/><rect x="128" y="130" width="44" height="80" fill="#f4f1e8"/><rect x="110" y="148" width="80" height="44" fill="#f4f1e8"/>'
+        // 6. the bill on parchment; the balance
+        $('pj6').innerHTML = '<rect x="20" y="20" width="460" height="580" rx="10" fill="#efe2c0" stroke="#a88a5a" stroke-width="6"/><text x="250" y="100" text-anchor="middle" font-family="Anton" font-size="52" fill="#3a2312">PROJET DE LOI</text><text x="250" y="150" text-anchor="middle" font-family="Bebas" font-size="36" fill="#7a5a3a">1ER DÉCEMBRE 1789</text>' + [220, 270, 320, 370, 420, 470].map((y, i) => `<line class="wl" x1="60" y1="${y}" x2="${i % 2 ? 380 : 440}" y2="${y}" stroke="#5a4a3a" stroke-width="7" stroke-linecap="round"/>`).join('') + '<g id="ql6"><path d="M420,520 C470,420 500,330 520,260 C470,330 430,420 410,520Z" fill="#f4f1e8" stroke="#8a7a5a" stroke-width="3"/><path d="M410,520 L404,560" stroke="#1b1410" stroke-width="5"/></g>'
+        $('bal6').innerHTML = '<rect x="236" y="80" width="28" height="330" fill="#c9962e"/><rect x="160" y="400" width="180" height="30" rx="8" fill="#a87a10"/><circle cx="250" cy="76" r="18" fill="#f2b705"/><g id="bm6" style="transform-origin:250px 90px"><rect x="40" y="82" width="420" height="16" rx="8" fill="#f2b705"/><path d="M60,98 L30,230 M60,98 L90,230 M440,98 L410,230 M440,98 L470,230" stroke="#c9962e" stroke-width="4"/><path d="M10,230 L110,230 C100,270 20,270 10,230Z" fill="#f2b705"/><path d="M390,230 L490,230 C480,270 400,270 390,230Z" fill="#f2b705"/><path d="M60,200 L44,214 L76,214Z" fill="#1d2a44"/><text x="60" y="200" text-anchor="middle" font-family="Anton" font-size="34" fill="#f4f1e8">NOBLE</text><text x="440" y="200" text-anchor="middle" font-family="Anton" font-size="34" fill="#f4f1e8">PAUVRE</text></g>'
+        // 7. the icons: sword; rope; the wheel
+        $('sw7').innerHTML = '<g transform="rotate(-35 150 150)"><rect x="140" y="10" width="20" height="200" fill="#c8d0d8" stroke="#6a7580" stroke-width="4"/><path d="M140,10 L150,-14 L160,10Z" fill="#c8d0d8"/><rect x="100" y="206" width="100" height="18" rx="6" fill="#c9962e"/><rect x="142" y="222" width="16" height="50" fill="#5a3418"/><circle cx="150" cy="280" r="12" fill="#c9962e"/></g>'
+        $('rp7').innerHTML = '<path d="M150,0 L150,150" stroke="#c8b07a" stroke-width="10"/><ellipse cx="150" cy="190" rx="44" ry="54" fill="none" stroke="#c8b07a" stroke-width="10"/><rect x="134" y="140" width="32" height="30" rx="6" fill="#a88a5a"/>'
+        $('wh7').innerHTML = '<g id="wg7" style="transform-origin:150px 150px"><circle cx="150" cy="150" r="120" fill="none" stroke="#7a4a26" stroke-width="18"/><circle cx="150" cy="150" r="22" fill="#5a3418"/>' + Array.from({ length: 8 }, (_, i) => { const a = (i / 8) * Math.PI * 2; return `<line x1="150" y1="150" x2="${(150 + Math.cos(a) * 112).toFixed(0)}" y2="${(150 + Math.sin(a) * 112).toFixed(0)}" stroke="#7a4a26" stroke-width="10"/>` }).join('') + '</g>'
+        // 8. steps of rank: three people on three heights, the steps sink to one level
+        $('st8').innerHTML = [0, 1, 2].map((i) => `<g class="stp" data-h="${[420, 260, 100][i]}"><rect x="${120 + i * 300}" y="${1150 - [420, 260, 100][i]}" width="240" height="${[420, 260, 100][i]}" fill="${['#c9962e', '#8a7a6a', '#5a4a3a'][i]}" stroke="#2a1e14" stroke-width="6"/>${placeFig(i === 0 ? { skin: '#f0c9a8', top: '#6a1a2a', bot: '#2a1a1a', hat: 'tricorne' } : i === 1 ? { skin: '#f0c9a8', top: '#1d3557', bot: '#3a3a40', hat: 'band' } : { skin: '#d8a880', top: '#5a4a3a', bot: '#3a2a1a', hat: 'hair' }, 240 + i * 300, 1150 - [420, 260, 100][i], 1.15)}</g>`).join('') + '<rect x="0" y="1150" width="1080" height="770" fill="#141c30"/><path d="M80,1150 L1000,1150" stroke="#ffc93c" stroke-width="6"/>'
+        // 9. the desk: blank sheet, inkwell, quill
+        $('dk9').innerHTML = '<rect x="0" y="1100" width="1080" height="820" fill="#5a3418"/><rect x="0" y="1090" width="1080" height="20" fill="#7a4a26"/><rect x="270" y="600" width="540" height="660" fill="#f4ecd8" stroke="#b8a888" stroke-width="5" transform="rotate(-3 540 930)"/><g transform="translate(860,1040)"><path d="M-50,60 L50,60 L40,0 L-40,0Z" fill="#1b1b24"/><ellipse cx="0" cy="0" rx="40" ry="10" fill="#0a0a10"/></g><g id="ql9"><path d="M860,1030 C900,900 940,780 980,690 C910,780 870,900 850,1030Z" fill="#f4f1e8" stroke="#8a7a5a" stroke-width="3"/></g>'
+        // 10. the law (a scroll) / the blade, crossed out
+        $('lo10').innerHTML = '<rect x="60" y="60" width="280" height="380" fill="#efe2c0" stroke="#a88a5a" stroke-width="6"/><ellipse cx="200" cy="60" rx="150" ry="24" fill="#d8c8a0" stroke="#a88a5a" stroke-width="6"/><ellipse cx="200" cy="440" rx="150" ry="24" fill="#d8c8a0" stroke="#a88a5a" stroke-width="6"/><text x="200" y="200" text-anchor="middle" font-family="Anton" font-size="100" fill="#1d3557">LOI</text>' + [260, 300, 340, 380].map((y) => `<line x1="100" y1="${y}" x2="300" y2="${y}" stroke="#8a7a5a" stroke-width="6"/>`).join('')
+        $('la10').innerHTML = '<path d="M60,160 L340,160 L340,270 L60,350Z" fill="#c8d0d8" stroke="#6a7580" stroke-width="8"/><rect x="60" y="110" width="280" height="50" fill="#5a3418"/><g id="x10" stroke="#d7263d" stroke-width="30" stroke-linecap="round"><line x1="40" y1="60" x2="360" y2="440"/><line x1="360" y1="60" x2="40" y2="440"/></g>'
+        // 11. the Académie de chirurgie (colonnade)
+        $('ac11').innerHTML = '<g id="acg11"><g transform="translate(81,880) scale(0.85)"><rect x="80" y="160" width="920" height="420" fill="#d8d0c0"/><path d="M60,170 L540,20 L1020,170Z" fill="#c8c0b0" stroke="#a89a88" stroke-width="8"/>' + Array.from({ length: 8 }, (_, i) => `<rect x="${130 + i * 112}" y="200" width="44" height="360" fill="#ece6da"/><rect x="${122 + i * 112}" y="190" width="60" height="16" fill="#c8c0b0"/>`).join('') + '<text x="540" y="140" text-anchor="middle" font-family="Anton" font-size="34" fill="#5a4a3a">ACADÉMIE DE CHIRURGIE</text><rect x="0" y="580" width="1080" height="40" fill="#a89a88"/></g></g>'
+        // 13. the harpsichord; the hammer
+        $('hp13').innerHTML = '<path d="M20,60 L300,60 C380,60 480,110 480,170 L20,170Z" fill="#2a1a10" stroke="#c9962e" stroke-width="6"/><path d="M20,60 L300,20 C400,10 470,90 480,170" fill="#3a2414" stroke="#c9962e" stroke-width="5" opacity="0.8"/><rect x="20" y="170" width="300" height="40" fill="#efe6cf"/>' + Array.from({ length: 14 }, (_, i) => `<rect x="${24 + i * 21}" y="170" width="10" height="24" fill="#1b1410"/>`).join('') + [60, 300, 440].map((x) => `<rect x="${x}" y="210" width="16" height="90" fill="#2a1a10"/>`).join('')
+        $('hm13').innerHTML = '<g id="hg13" style="transform-origin:40px 170px"><rect x="30" y="60" width="20" height="120" rx="6" fill="#7a4a26"/><rect x="0" y="30" width="90" height="44" rx="8" fill="#3a3a40"/></g>'
+        // 14. arrow from Louis to the plate
+        $('ar14').innerHTML = '<path id="ap14" pathLength="1" d="M40,20 C40,250 120,420 300,530" stroke="#ffc93c" stroke-width="10" fill="none" stroke-dasharray="1" stroke-dashoffset="1" stroke-linecap="round"/><path d="M270,500 L310,536 L262,546" stroke="#ffc93c" stroke-width="10" fill="none" stroke-linecap="round" id="ah14"/>'
+        // 15. the royalist paper; music notes
+        $('jn15').innerHTML = '<rect x="10" y="10" width="500" height="620" fill="#efe6cf" stroke="#b8a888" stroke-width="5"/><text x="260" y="74" text-anchor="middle" font-family="Anton" font-size="40" fill="#1b1410">LES ACTES</text><text x="260" y="136" text-anchor="middle" font-family="Anton" font-size="40" fill="#1b1410">DES APÔTRES</text><line x1="40" y1="150" x2="480" y2="150" stroke="#1b1410" stroke-width="4"/><text x="260" y="210" text-anchor="middle" font-family="Anton" font-size="38" fill="#7a1e12">CHANSON</text>' + [260, 300, 340, 380, 420, 460, 500, 540, 580].map((y, i) => `<line x1="50" y1="${y}" x2="${i % 3 === 2 ? 330 : 470}" y2="${y}" stroke="#8a7a5a" stroke-width="5"/>`).join('') + '<g transform="translate(380,330)"><circle r="12" fill="#1b1410"/><path d="M12,0 L12,-70 L40,-58" stroke="#1b1410" stroke-width="5" fill="none"/></g>'
+        $('nt15').innerHTML = [0, 1, 2, 3, 4].map((i) => `<text class="nt" x="${120 + i * 100}" y="${560 - (i % 2) * 60}" font-family="Anton" font-size="80" fill="#f4e8c8">♪</text>`).join('')
+        // 16. the idea bulb, dim
+        $('bulb16').innerHTML = '<path d="M150,30 C70,30 30,90 30,150 C30,210 80,240 96,300 L204,300 C220,240 270,210 270,150 C270,90 230,30 150,30Z" fill="#ffe7a0" stroke="#a88a40" stroke-width="8" id="bg16"/><rect x="100" y="300" width="100" height="60" rx="8" fill="#9aa4ae"/><path d="M110,320 L190,320 M110,340 L190,340" stroke="#6a7480" stroke-width="5"/><path d="M120,200 L150,150 L180,200" stroke="#a88a40" stroke-width="6" fill="none"/>'
+        // 17. three cards: England, Scotland, Italy
+        const card = (top, band, place, date, name) => `<rect x="6" y="6" width="308" height="548" rx="20" fill="#efe6cf" stroke="#b8a888" stroke-width="5"/><rect x="6" y="6" width="308" height="90" rx="20" fill="${band}"/><text x="160" y="68" text-anchor="middle" font-family="Anton" font-size="40" fill="#fff">${top}</text><g transform="translate(90,120) scale(0.35)">${GUILLO('')}</g><text x="160" y="430" text-anchor="middle" font-family="Anton" font-size="${name.length > 9 ? 34 : 42}" fill="#3a2312">${name}</text><text x="160" y="480" text-anchor="middle" font-family="Bebas" font-size="38" fill="#7a5a3a">${place}</text><text x="160" y="530" text-anchor="middle" font-family="Anton" font-size="42" fill="#a8121e">${date}</text>`
+        $('ca17').innerHTML = card('ANGLETERRE', '#a8121e', 'HALIFAX', 'XVIE SIÈCLE', 'LE GIBET')
+        $('cb17').innerHTML = card('ÉCOSSE', '#1d3a7a', 'ÉDIMBOURG', '1564', '« LA VIERGE »')
+        $('cc17').innerHTML = card('ITALIE', '#2a7a3a', 'XVIE SIÈCLE', 'AVANT 1792', 'MANNAIA')
+        // 18. timeline 1564 → 1792
+        $('tm18').innerHTML = '<line x1="60" y1="200" x2="940" y2="200" stroke="#f4f1e8" stroke-width="10" stroke-linecap="round"/><g id="tk18a"><circle cx="100" cy="200" r="22" fill="#ffc93c"/><text x="100" y="300" text-anchor="middle" font-family="Anton" font-size="64" fill="#ffc93c">1564</text></g><g id="tk18b"><circle cx="900" cy="200" r="22" fill="#d7263d"/><text x="900" y="300" text-anchor="middle" font-family="Anton" font-size="64" fill="#f4f1e8">1792</text></g><path id="br18" d="M100,140 C100,60 900,60 900,140" stroke="#ffc93c" stroke-width="8" fill="none" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>'
+        // 19. the bedroom: bed, candle, window
+        $('bd19').innerHTML = '<rect x="0" y="1180" width="1080" height="740" fill="#2a1e16"/><g transform="translate(720,620)"><rect x="0" y="0" width="260" height="320" fill="#0e1430" stroke="#5a4a3a" stroke-width="14"/><path d="M130,0 L130,320 M0,160 L260,160" stroke="#5a4a3a" stroke-width="8"/><circle cx="190" cy="70" r="26" fill="#f4f1e8"/></g><g transform="translate(120,860)"><rect x="0" y="120" width="560" height="160" rx="16" fill="#e8e2d8"/><rect x="0" y="40" width="40" height="320" fill="#5a3418"/><rect x="520" y="140" width="40" height="220" fill="#5a3418"/><rect x="40" y="100" width="160" height="60" rx="20" fill="#f4f1e8"/><path d="M200,120 L520,120 L520,200 L200,210Z" fill="#6a2a3a"/></g><g transform="translate(800,1060)"><rect x="-60" y="60" width="120" height="16" fill="#5a3418"/><rect x="-16" y="0" width="32" height="64" fill="#f4f1e8"/><path class="fl19" d="M0,-40 C14,-20 10,-4 0,0 C-10,-4 -14,-20 0,-40Z" fill="#ffc93c"/></g>'
+        // 20. parchment and the ink stain
+        $('pa20').innerHTML = '<rect x="20" y="20" width="560" height="660" fill="#efe2c0" stroke="#a88a5a" stroke-width="6"/>' + [100, 150, 200, 250, 300, 350].map((y) => `<line x1="70" y1="${y}" x2="530" y2="${y}" stroke="#8a7a5a" stroke-width="6"/>`).join('') + '<g id="ink20" style="transform-origin:300px 500px"><path d="M300,420 C360,410 400,450 390,500 C420,520 410,560 370,566 C350,600 290,600 270,570 C220,580 200,530 230,500 C200,460 250,420 300,420Z" fill="#14101a"/><circle cx="420" cy="460" r="14" fill="#14101a"/><circle cx="200" cy="570" r="10" fill="#14101a"/><circle cx="350" cy="620" r="8" fill="#14101a"/></g>'
+        // 21. the petition letter; the family's front door with its name plate
+        $('lt21').innerHTML = '<rect x="10" y="10" width="420" height="500" fill="#efe6cf" stroke="#b8a888" stroke-width="5"/><text x="220" y="80" text-anchor="middle" font-family="Anton" font-size="42" fill="#1d3557">PÉTITION</text><text x="220" y="130" text-anchor="middle" font-family="Bebas" font-size="34" fill="#5a4a3a">RENOMMER LA MACHINE</text>' + [190, 230, 270, 310, 350].map((y) => `<line x1="50" y1="${y}" x2="390" y2="${y}" stroke="#8a7a5a" stroke-width="5"/>`).join('') + '<text x="300" y="440" font-family="Bebas" font-size="40" fill="#1b1410">LA FAMILLE</text>'
+        $('dr21').innerHTML = '<rect x="580" y="560" width="440" height="1000" fill="#3a2414" stroke="#1e120a" stroke-width="12"/><rect x="620" y="1000" width="360" height="520" fill="#4a2e1a" stroke="#2a1a0e" stroke-width="6"/><circle cx="950" cy="1260" r="16" fill="#c9962e"/><rect x="0" y="1560" width="1080" height="360" fill="#2a2018"/>'
+        $('pq21').innerHTML = '<rect x="10" y="10" width="420" height="130" rx="14" fill="#c9962e" stroke="#7a5418" stroke-width="6"/><text x="220" y="62" text-anchor="middle" font-family="Anton" font-size="38" fill="#3a2312">FAMILLE</text><text x="220" y="116" text-anchor="middle" font-family="Anton" font-size="46" fill="#3a2312">GUILLOTIN</text><line id="ln21" x1="40" y1="100" x2="400" y2="100" stroke="#a8121e" stroke-width="10" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>'
+        rays('rays22', 28, '#ffd36a', '#a8650f')
+
+        // ---------- scene cuts on the voice ----------
+        const at = (k) => Math.round((T[k] - 0.06) * 100) / 100
+        const CUT = [0, at(7), at(14), at(32), at(40), at(46), at(57), at(74), at(82), at(91), at(98), at(110), at(128), at(138), at(149), at(171), at(179), at(206), at(214), at(229), at(239), at(258), END]
+        const SC = Array.from({ length: 22 }, (_, i) => '#s' + (i + 1))
+        SC.forEach((s, i) => {
+          tl.set(s, { visibility: 'visible' }, CUT[i])
+          tl.set(s, { visibility: 'hidden' }, CUT[i + 1])
+          tl.fromTo(s + ' .cam', { scale: 1 }, { scale: 1.06, duration: CUT[i + 1] - CUT[i], ease: 'none', immediateRender: false }, CUT[i])
+          if (i) tl.fromTo(s + ' .cam', { y: 30 }, { y: 0, duration: 0.25, ease: 'power3.out', immediateRender: false }, CUT[i])
+        })
+        const pop = (sel, t, o) => { const { rot, ...from } = Object.assign({ autoAlpha: 0, scale: 0.4 }, o || {}); tl.fromTo(sel, from, { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: rot || 0, duration: 0.4, ease: 'back.out(1.8)' }, t) }
+        const out = (sel, t) => tl.to(sel, { autoAlpha: 0, scale: 0.7, duration: 0.18, ease: 'power2.in' }, t)
+        const spin = (sel, t0, t1, deg) => tl.fromTo(sel, { rotation: 0 }, { rotation: deg, duration: t1 - t0, ease: 'none', immediateRender: false }, t0)
+        const stamp = (sel, t, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.6, rotation: 4 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.2, ease: 'power4.in' }, t)
+        const shake = (sel, t) => tl.fromTo(sel, { x: 0 }, { x: 14, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, t)
+        const draw = (sel, t, d) => tl.fromTo(sel, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: d || 0.5, ease: 'power1.inOut', immediateRender: false }, t)
+
+        // 1. Dr Guillotin; the machine rises behind him; INVENTEUR
+        tl.fromTo('#sh1', { y: 300, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.8, ease: 'power2.out' }, 0.02)
+        pop('#gu1', 0.02, { y: 200, scale: 0.8 })
+        pop('#dr1', T[1] - 0.05, { rot: -2 })
+        pop('#in1', T[4] - 0.05, { scale: 0.5, rot: 3 })
+        blink('#gu1', [1.4])
+        // 2. the plate: GUILLOTIN, then the E
+        pop('#gu2', CUT[1] + 0.02, { scale: 0.3 })
+        pop('#np2', T[11] - 0.1, { y: 120, scale: 0.8 })
+        pop('#e2', T[13] - 0.05, { scale: 3 })
+        // 3. the history book; FAUX
+        pop('#bk3', CUT[2] + 0.02, { y: 200, scale: 0.85, rot: -2 })
+        stamp('#faux3', T[25] - 0.04, -10)
+        shake('#s3 .cam', T[25] + 0.16)
+        // 4. IL L'A INVENTÉE ? ; 1er décembre 1789; the Assembly
+        pop('#q4', CUT[3] + 0.02, { scale: 0.6 })
+        out('#q4', T[35] - 0.2)
+        pop('#y4', T[35] - 0.05, { scale: 0.6 })
+        pop('#an4', T[39] - 0.05, { rot: -2 })
+        // 5. the deputy, doctor
+        pop('#gu5', CUT[4] + 0.02, { scale: 0.3 })
+        pop('#nm5', T[42] - 0.05, { y: 30 })
+        pop('#dp5', T[41] - 0.05, { rot: -4 })
+        pop('#md5', T[45] - 0.05, { rot: 3 })
+        pop('#bag5', T[45] + 0.1, { y: 80 })
+        blink('#gu5', [T[43]])
+        // 6. the bill is written; the balance levels
+        pop('#pj6', CUT[5] + 0.02, { y: 150, rot: -3 })
+        document.querySelectorAll('#pj6 .wl').forEach((l, i) => tl.fromTo(l, { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.25, ease: 'none', immediateRender: false }, T[48] + i * 0.18))
+        gsap.set('#pj6 .wl', { scaleX: 0, transformOrigin: '0% 50%' })
+        tl.fromTo('#ql6', { rotation: -6 }, { rotation: 6, duration: 0.18, yoyo: true, repeat: 7, ease: 'sine.inOut', immediateRender: false, transformOrigin: '50% 100%' }, T[48])
+        pop('#bal6', T[50] - 0.05, { y: 100 })
+        tl.fromTo('#bm6', { rotation: -14 }, { rotation: 0, duration: 0.7, ease: 'elastic.out(1, 0.4)', immediateRender: false }, T[53])
+        gsap.set('#bm6', { rotation: -14 })
+        pop('#pt6', T[53] - 0.05, { scale: 0.5 })
+        // 7. back then: the noble (sword); the poor (rope, wheel)
+        pop('#g7', CUT[6] + 0.02, { scale: 0.6 })
+        pop('#nb7', T[59] - 0.05, { scale: 0.3 }); pop('#nn7', T[60] - 0.05, { y: 20 })
+        pop('#sw7', T[65] - 0.05, { scale: 0.3, rot: 0 }); pop('#ep7', T[67] - 0.05, { rot: -3 })
+        pop('#pv7', T[68] - 0.05, { scale: 0.3 }); pop('#pn7', T[69] - 0.05, { y: 20 })
+        pop('#rp7', T[71] - 0.05, { y: -200 }); pop('#wh7', T[73] - 0.05, { scale: 0.3 }); pop('#pd7', T[71] + 0.1, { rot: 3 })
+        spin('#wg7', T[73], CUT[7], 90)
+        blink('#nb7', [T[63]]); blink('#pv7', [T[72]])
+        // 8. the steps of rank sink to one level
+        pop('#g8', CUT[7] + 0.02, { scale: 0.6 })
+        document.querySelectorAll('#st8 .stp').forEach((g, i) => { tl.fromTo(g, { y: 0 }, { y: +g.dataset.h - 100, duration: 0.6, ease: 'power2.inOut', immediateRender: false }, T[79] + i * 0.08) })
+        pop('#eg8', T[80] - 0.05, { scale: 0.5 })
+        // 9. a machine? the sheet stays blank; AUCUN PLAN
+        pop('#g9', T[85] - 0.05, { scale: 0.6 })
+        tl.fromTo('#ql9', { y: 0, rotation: 0 }, { y: -30, rotation: -4, duration: 0.3, yoyo: true, repeat: 3, ease: 'sine.inOut', immediateRender: false }, CUT[8] + 0.2)
+        stamp('#ap9', T[89] - 0.04, -8)
+        // 10. a law, not a blade
+        pop('#lo10', CUT[9] + 0.1, { scale: 0.4, rot: -4 })
+        pop('#la10', T[95] - 0.05, { scale: 0.4 })
+        tl.fromTo('#x10 line', { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.18, ease: 'power3.out', stagger: 0.08, immediateRender: false }, T[97])
+        gsap.set('#x10 line', { scale: 0, transformOrigin: '50% 50%' })
+        pop('#g10', CUT[9] + 0.02, { scale: 0.6 })
+        // 11. who designed it? Antoine Louis, surgeon; the Académie
+        pop('#q11', CUT[10] + 0.02, { scale: 0.6 })
+        out('#q11', T[102] - 0.15)
+        pop('#lo11', T[102] - 0.05, { scale: 0.3 }); pop('#nm11', T[103] - 0.05, { y: 30 })
+        pop('#ch11', T[104] - 0.05, { rot: -3 })
+        tl.fromTo('#acg11', { y: 500, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5, ease: 'power3.out', immediateRender: false }, T[107] - 0.1)
+        gsap.set('#acg11', { autoAlpha: 0 })
+        blink('#lo11', [T[106]])
+        // 12. 1792, the blueprint is drawn: uprights, oblique blade, rope
+        pop('#y12', CUT[11] + 0.02, { scale: 0.5 })
+        pop('#pl12', T[117] - 0.05, { rot: -3 })
+        draw('#bp12 .u', T[118] - 0.05, 0.6); pop('#l12a', T[119] - 0.05, { x: -60 })
+        draw('#bp12 .b', T[123] - 0.05, 0.5); pop('#l12b', T[123] + 0.05, { x: 60 })
+        draw('#bp12 .c', T[126] - 0.05, 0.5); pop('#l12c', T[127] - 0.05, { x: 60 })
+        // 13. Tobias Schmidt, harpsichord maker, builds the prototype
+        pop('#hp13', T[129] - 0.05, { y: 120 })
+        pop('#sc13', T[133] - 0.05, { scale: 0.3 }); pop('#nm13', T[133] + 0.05, { x: 60 })
+        pop('#fc13', T[129] - 0.05, { x: 60 }); pop('#de13', T[132] - 0.05, { rot: -3 })
+        tl.fromTo('#pr13', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.0, ease: 'steps(5)', immediateRender: false }, T[135])
+        gsap.set('#pr13', { clipPath: 'inset(100% 0% 0% 0%)' })
+        pop('#hm13', T[135] - 0.1, { scale: 0.3 })
+        tl.fromTo('#hg13', { rotation: 0 }, { rotation: -40, duration: 0.1, yoyo: true, repeat: 5, ease: 'power2.in', immediateRender: false }, T[135])
+        blink('#sc13', [T[136]])
+        // 14. « la Louison », from Louis
+        pop('#gm14', CUT[13] + 0.02, { y: 150, scale: 0.9 })
+        tl.fromTo('#gm14 .pt', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2, immediateRender: false }, T[144] - 0.05)
+        gsap.set('#gm14 .pt', { autoAlpha: 0 })
+        tl.fromTo('#gm14', { filter: 'drop-shadow(0 0 0px rgba(255,220,120,0))' }, { filter: 'drop-shadow(0 0 26px rgba(255,220,120,0.6))', duration: 0.3, immediateRender: false }, T[144])
+        pop('#lo14', T[145] - 0.05, { scale: 0.3 })
+        draw('#ap14', T[146] - 0.05, 0.4); pop('#ah14', T[147], { scale: 0.3 })
+        pop('#dn14', T[148] - 0.05, { rot: -2 })
+        // 15. meanwhile: the royalist paper, the song; the nickname sticks
+        pop('#q15', CUT[14] + 0.02, { scale: 0.6 })
+        out('#q15', T[154] - 0.15)
+        pop('#gu15', T[153] - 0.1, { scale: 0.3 })
+        pop('#jn15', T[155] - 0.05, { y: 150, rot: -4 })
+        document.querySelectorAll('#nt15 .nt').forEach((n, i) => tl.fromTo(n, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: -80, duration: 0.8, ease: 'sine.out', immediateRender: false }, T[161] + i * 0.12))
+        gsap.set('#nt15 .nt', { autoAlpha: 0 })
+        pop('#lz15', T[158] - 0.05, { rot: -2 })
+        pop('#sn15', T[165] - 0.05, { y: 20 })
+        tl.fromTo('#gz15', { autoAlpha: 0, scale: 2.2, rotation: 8 }, { autoAlpha: 1, scale: 1, rotation: -4, duration: 0.2, ease: 'power4.in' }, T[167] - 0.05)
+        blink('#gu15', [T[160]])
+        // 16. new idea? MÊME PAS; the bulb goes out
+        pop('#q16', CUT[15] + 0.02, { scale: 0.6 })
+        pop('#bulb16', CUT[15] + 0.1, { scale: 0.5 })
+        tl.fromTo('#bg16', { fill: '#ffe7a0' }, { fill: '#3a3a40', duration: 0.15, immediateRender: false }, T[177])
+        stamp('#mp16', T[177] - 0.04, -6)
+        // 17. three earlier machines
+        pop('#g17', CUT[16] + 0.02, { scale: 0.6 })
+        pop('#ca17', T[180] - 0.05, { y: 200, rot: -3 })
+        pop('#cb17', T[195] - 0.05, { y: 200, rot: 2 })
+        pop('#cc17', T[203] - 0.05, { y: 200, rot: -2 })
+        // 18. 3 countries, 3 machines; 1564 → 1792: + 2 centuries
+        pop('#g18a', CUT[17] + 0.02, { scale: 0.6 })
+        pop('#tk18a', T[206] + 0.1, { scale: 0.3 }); pop('#tk18b', T[209] - 0.05, { scale: 0.3 })
+        draw('#br18', T[210] - 0.05, 0.6)
+        pop('#g18b', T[211] - 0.05, { scale: 0.5 })
+        // 19. guillotined? NON. He dies in his bed, in 1814
+        pop('#q19', T[217] - 0.05, { scale: 0.6 })
+        stamp('#no19', T[221] - 0.04, -8)
+        out('#q19', T[222] - 0.15); out('#no19', T[222] - 0.15)
+        tl.fromTo('#bd19 > g', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, stagger: 0.1, ease: 'power2.out', immediateRender: false }, T[222])
+        gsap.set('#bd19 > g', { autoAlpha: 0 })
+        pop('#lt19', T[226] - 0.05, { rot: -2 })
+        pop('#y19', T[228] - 0.05, { scale: 0.6 })
+        tl.fromTo('#bd19 .fl19', { scaleY: 1 }, { scaleY: 1.3, duration: 0.2, yoyo: true, repeat: 15, ease: 'sine.inOut', transformOrigin: '50% 100%', immediateRender: false }, T[222])
+        // 20. « la tache involontaire de ma vie » : the ink stain spreads
+        pop('#gu20', CUT[19] + 0.02, { scale: 0.3 })
+        pop('#pa20', CUT[19] + 0.1, { y: 150 })
+        tl.fromTo('#ink20', { scale: 0 }, { scale: 1.6, duration: 1.2, ease: 'power2.out', immediateRender: false }, T[234] - 0.05)
+        gsap.set('#ink20', { scale: 0 })
+        pop('#q20a', T[233] - 0.05, { x: 60 }); pop('#q20b', T[236] - 0.05, { x: 60 })
+        blink('#gu20', [T[231]])
+        // 21. the petition; REFUSÉ; the family name plate struck out; a new name
+        pop('#g21', T[242] - 0.05, { scale: 0.6 })
+        pop('#lt21', T[243] - 0.05, { y: 150, rot: -3 })
+        stamp('#rf21', T[249] - 0.04, -10)
+        tl.fromTo('#dr21', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, immediateRender: false }, T[250] - 0.1)
+        gsap.set('#dr21', { autoAlpha: 0 })
+        pop('#pq21', T[253] - 0.05, { scale: 0.4 })
+        draw('#ln21', T[255] - 0.05, 0.3)
+        pop('#nn21', T[257] - 0.05, { scale: 0.4, rot: -3 })
+        // 22. mirror: the machine in gold light; the plate takes his name
+        spin('#rays22', CUT[21], END, 20)
+        pop('#gm22', CUT[21] + 0.02, { scale: 0.8, y: 100 })
+        pop('#gu22', CUT[21] + 0.1, { scale: 0.3 })
+        pop('#f22a', T[258] - 0.05, { scale: 0.6 })
+        out('#f22a', T[264] - 0.15)
+        pop('#f22b', T[264] - 0.05, { scale: 0.5 })
+        gsap.set(['#p22a', '#p22b'], { autoAlpha: 0 })
+        tl.set('#p22a', { autoAlpha: 1 }, T[267] - 0.05)
+        tl.set('#p22a', { autoAlpha: 0 }, T[269] - 0.05)
+        tl.set('#p22b', { autoAlpha: 1 }, T[269] - 0.05)
+        tl.fromTo('#gm22', { filter: 'drop-shadow(0 0 0px rgba(255,220,120,0))' }, { filter: 'drop-shadow(0 0 34px rgba(255,220,120,0.8))', duration: 0.4, immediateRender: false }, T[267])
+
+        // ---------- captions: groups of 2-4 words, the spoken word in a red box ----------
+        const caps = $('caps')
+        const G = []
+        let cur = []
+        WORDS.forEach((w, k) => {
+          if (!w) return
+          cur.push(k)
+          const len = cur.reduce((n, j) => n + WORDS[j].length + 1, 0)
+          if (/[.,:;?!…]$/.test(w) || cur.length >= 4 || len > 20) { G.push(cur); cur = [] }
+        })
+        if (cur.length) G.push(cur)
+        G.forEach((g, gi) => {
+          const box = document.createElement('div'); box.className = 'grp'; caps.appendChild(box)
+          const t0 = T[g[0]] - 0.04, t1 = gi < G.length - 1 ? T[G[gi + 1][0]] - 0.04 : END
+          tl.set(box, { visibility: 'visible' }, t0)
+          tl.set(box, { visibility: 'hidden' }, t1)
+          tl.fromTo(box, { scale: 0.92 }, { scale: 1, duration: 0.12, ease: 'power2.out', immediateRender: false }, t0)
+          g.forEach((k, j) => {
+            const s = document.createElement('span'); s.className = 'cw'; s.textContent = WORDS[k]; box.appendChild(s)
+            const next = j < g.length - 1 ? T[g[j + 1]] - 0.04 : t1
+            tl.set(s, { '--on': 1 }, T[k] - 0.04)
+            tl.set(s, { '--on': 0 }, next)
+          })
+        })
+        tl.fromTo('#prog', { scaleX: 0 }, { scaleX: 1, duration: END, ease: 'none', immediateRender: false }, 0)
+        gsap.set('#prog', { scaleX: 0 })
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+
+    </script>
+  </body>
+</html>
