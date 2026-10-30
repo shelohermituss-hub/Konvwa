@@ -52,7 +52,7 @@ export function ShipmentVesselDialog({ shipment, onClose, onSaved }: Props) {
   const [enabled, setEnabled] = useState(shipment?.ais_enabled ?? false)
   const [show, setShow] = useState<Record<string, boolean>>({ position: true, speed: true, destination: true, eta: true, history: true, ...(shipment?.ais_show ?? {}) })
   const [candidates, setCandidates] = useState<VesselCandidate[] | null>(null)
-  const [heard, setHeard] = useState<{ messages: number; ships: number } | null>(null)
+  const [heard, setHeard] = useState<{ messages: number; ships: number; source?: string } | null>(null)
   const [busy, setBusy] = useState<'find' | 'save' | 'refresh' | null>(null)
   const [synced, setSynced] = useState({ at: shipment?.ais_synced_at ?? null, error: shipment?.ais_error ?? null })
 
@@ -141,7 +141,9 @@ export function ShipmentVesselDialog({ shipment, onClose, onSaved }: Props) {
           {candidates && (
             candidates.length === 0 ? (
               <p className="rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
-                {heard && heard.messages === 0
+                {heard?.source === 'myshiptracking'
+                  ? tr('MyShipTracking ne connaît aucun bateau de ce nom : vérifiez l\'orthographe, ou saisissez directement son MMSI ci-dessous (visible sur VesselFinder) puis cliquez sur « Lire la position maintenant ».')
+                  : heard && heard.messages === 0
                   ? tr('Le flux AIS n\'a envoyé aucun message : vérifiez la clé AISSTREAM_API_KEY ou réessayez dans un instant.')
                   : tr('Aucun bateau de ce nom parmi les {0} bateaux entendus. Un bateau à quai n\'émet qu\'un signal toutes les 3 minutes, et en port ou en pleine mer il peut être hors de portée des récepteurs : réessayez, ou saisissez directement son MMSI ci-dessous (visible sur VesselFinder ou MarineTraffic) puis cliquez sur « Lire la position maintenant ».', heard?.ships ?? 0)}
               </p>

@@ -595,6 +595,7 @@ export const CLIENT_EN: Record<string, string> = {
   'Position du bateau': 'Ship position',
   'Voyage': 'Voyage',
   'En direct': 'Live',
+  'MyShipTracking ne connaît aucun bateau de ce nom : vérifiez l\'orthographe, ou saisissez directement son MMSI ci-dessous (visible sur VesselFinder) puis cliquez sur « Lire la position maintenant ».': 'MyShipTracking does not know any ship with this name: check the spelling, or enter its MMSI below (shown on VesselFinder) then click “Read the position now”.',
   'Toutes les 30 minutes, de l\'entrepôt jusqu\'à l\'arrivée : le premier signal du bateau est enregistré dès qu\'il est entendu.': 'Every 30 minutes, from the warehouse until arrival: the first signal of the ship is saved as soon as it is heard.',
   'Départ prévu': 'Planned departure',
   'Arrivée estimée en Haïti': 'Estimated arrival in Haiti',

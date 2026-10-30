@@ -25,7 +25,7 @@ export interface VesselCandidate {
 }
 
 /** Ships of the AIS feed whose name contains `name` (the server listens for up to 90 seconds); `heard` says how much the feed sent, to tell "nothing found" from "nothing received". */
-export const findVessel = (name: string) => call<{ candidates: VesselCandidate[]; heard: { messages: number; ships: number } }>({ action: 'find', name })
+export const findVessel = (name: string) => call<{ candidates: VesselCandidate[]; heard: { messages: number; ships: number; source?: string } }>({ action: 'find', name })
 
 /** Reads the position of the ship of a shipment now (up to 100 seconds: it stops as soon as the ship is heard). */
 export const refreshVessel = (shipmentId: string) => call<{ heard: boolean; saved: boolean; messages: number; lat: number | null; lng: number | null; at: string | null }>({ action: 'refresh', shipment_id: shipmentId })
