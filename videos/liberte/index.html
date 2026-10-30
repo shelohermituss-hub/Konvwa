@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>La Statue de la Liberté, pour les immigrants ? Faux.</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!--
+      Style ANIMÉ (videos/_engine/style-anime/README.md), en français, sur le gabarit de script :
+      mythe (« construite pour accueillir les immigrants », « c'est pour eux qu'elle lève sa torche ») → « c'est faux » →
+      « construite pour les immigrants ? » (1865 : fin de la guerre de Sécession, Laboulaye abolitionniste, un cadeau pour la fin de
+      l'esclavage) → Bartholdi : les chaînes dans la main, remplacées par la tablette → la statue se construit (fer, cuivre) →
+      la caméra descend vers les chaînes cachées à ses pieds → « et le poème ? » (1883, oublié, 1886, Ellis Island 1892, plaque 1903)
+      → son vrai nom → phrase miroir. Tout est dessiné en SVG et CSS.
+      Voix Gabriel Dubois (Magnific / ElevenLabs) ; bruitages de la banque du style ANIMÉ mixés sous la voix (mix_anime.py).
+    -->
+    <style>
+      @font-face { font-family: "Bebas"; src: url("assets/fonts/bebas-neue.woff2") format("woff2"); }
+      @font-face { font-family: "Anton"; src: url("assets/fonts/anton.woff2") format("woff2"); }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0d0d12; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #0d0d12; font-family: "Bebas", sans-serif; }
+      .scene { position: absolute; inset: 0; overflow: hidden; visibility: hidden; }
+      .cam { position: absolute; inset: 0; transform-origin: 50% 55%; }
+      .bg { position: absolute; inset: 0; }
+      .vig { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 60% at 50% 48%, transparent 40%, rgba(0, 0, 0, 0.72) 100%); pointer-events: none; }
+      svg { position: absolute; overflow: visible; }
+      .full { left: 0; top: 0; width: 1080px; height: 1920px; }
+      .bust { position: absolute; width: 620px; height: 723px; }
+      .frame { position: absolute; width: 290px; height: 350px; box-sizing: border-box; border: 16px solid #c9962e; border-radius: 8px; background: #e8d5b0; box-shadow: inset 0 0 0 4px #7a5418, 0 14px 30px rgba(0, 0, 0, 0.6); overflow: hidden; }
+      .frame .in { position: absolute; left: -12px; top: 22px; width: 282px; height: 329px; }
+      .med { position: absolute; width: 300px; height: 300px; box-sizing: border-box; border-radius: 50%; border: 12px solid #c9962e; overflow: hidden; box-shadow: inset 0 0 0 4px #7a5418, 0 12px 30px rgba(0, 0, 0, 0.55); }
+      .med .in { position: absolute; left: -36px; top: 6px; width: 348px; height: 406px; }
+      .med.sm { width: 220px; height: 220px; border-width: 9px; }
+      .med.sm .in { left: -27px; top: 4px; width: 256px; height: 299px; }
+      .ic { position: absolute; width: 150px; height: 150px; }
+      #caps { position: absolute; left: 40px; right: 40px; top: 1420px; height: 120px; z-index: 50; }
+      .grp { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: center; align-items: center; column-gap: 6px; visibility: hidden; }
+      .cw { position: relative; font-size: 84px; line-height: 1; color: #fff; letter-spacing: 0.01em; text-transform: uppercase; padding: 6px 10px 2px; -webkit-text-stroke: 3px #111; paint-order: stroke fill; text-shadow: 0 5px 0 rgba(0, 0, 0, 0.7), 0 0 22px rgba(0, 0, 0, 0.8); white-space: nowrap; }
+      .cw::before { content: ""; position: absolute; inset: 0; border-radius: 12px; background: #d7263d; opacity: var(--on, 0); z-index: -1; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35); }
+      #prog { position: absolute; left: 0; top: 0; height: 9px; width: 1080px; background: #f2b705; transform-origin: 0 50%; z-index: 60; box-shadow: 0 0 12px rgba(242, 183, 5, 0.7); }
+      #progbg { position: absolute; left: 0; top: 0; height: 9px; width: 1080px; background: rgba(255, 255, 255, 0.12); z-index: 59; }
+      .gold { position: absolute; font-family: "Anton", sans-serif; color: #ffc93c; text-shadow: 0 0 30px rgba(255, 190, 40, 0.75), 0 0 80px rgba(255, 150, 0, 0.45), 0 6px 0 #9a5b00; letter-spacing: 0.01em; line-height: 1; text-align: center; white-space: nowrap; }
+      .stamp { position: absolute; padding: 8px 34px 2px; border: 12px solid #d7263d; border-radius: 18px; color: #d7263d; font-family: "Anton", sans-serif; font-size: 130px; line-height: 1; letter-spacing: 0.04em; background: #fff5e6; white-space: nowrap; }
+      .plate { position: absolute; padding: 10px 30px 4px; border-radius: 14px; background: #f3e3c3; color: #3a2312; font-family: "Anton", sans-serif; font-size: 52px; letter-spacing: 0.05em; box-shadow: 0 10px 0 #b38a55, 0 20px 40px rgba(0, 0, 0, 0.5); white-space: nowrap; }
+      .red { background: #d7263d; color: #fff; box-shadow: 0 10px 0 #8a1020, 0 20px 40px rgba(0, 0, 0, 0.5); }
+      .name { position: absolute; width: 290px; text-align: center; font-family: "Anton", sans-serif; font-size: 40px; color: #ffe6a0; letter-spacing: 0.03em; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.7); white-space: nowrap; }
+    </style>
+
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="73.7" data-width="1080" data-height="1920">
+      <!-- 1. hook: the statue at night, a boat of immigrants -->
+      <div class="scene" id="s1"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #0e1a34 0%, #1e3050 55%, #16324a 56%, #0a1a2a 100%)"></div>
+        <svg id="hb1" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="st1" viewBox="0 0 400 1000" style="left: 300px; top: 260px; width: 480px; height: 1200px"></svg>
+        <svg id="bt1" viewBox="0 0 500 220" style="left: 560px; top: 1180px; width: 500px; height: 220px"></svg>
+        <div class="vig"></div>
+        <div class="plate" id="im1" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 180px; font-size: 58px; background: #ffc93c">POUR LES IMMIGRANTS</div>
+      </div></div>
+      <!-- 2. « C'est pour eux qu'elle lève sa torche » -->
+      <div class="scene" id="s2"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 30%, #3a4a6a 0%, #141c30 60%, #070a12 100%)"></div>
+        <svg id="tc2" viewBox="0 0 400 1000" style="left: 198px; top: 300px; width: 1140px; height: 2850px"></svg>
+        <svg id="bt2" viewBox="0 0 500 220" style="left: 290px; top: 1100px; width: 500px; height: 220px"></svg>
+        <div class="vig"></div>
+      </div></div>
+      <!-- 3. « Ça, c'est ce qu'on veut te faire croire… » : the tourist postcard; FAUX -->
+      <div class="scene" id="s3"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a3a46 0%, #1a1a22 60%, #08080c 100%)"></div><div class="vig"></div>
+        <svg id="pc3" viewBox="0 0 800 560" style="left: 140px; top: 520px; width: 800px; height: 560px"></svg>
+        <div class="stamp" id="faux3" style="left: 330px; top: 700px">FAUX</div>
+      </div></div>
+      <!-- 4. « Construite pour les immigrants ? Remontons en 1865 » -->
+      <div class="scene" id="s4"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a2a3a 0%, #1a121a 60%, #08060a 100%)"></div>
+        <svg id="rays4" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -40px; width: 2000px; height: 2000px; opacity: 0.16"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q4" style="left: 0; right: 0; top: 600px; font-size: 96px">POUR LES IMMIGRANTS ?</div>
+        <svg id="cal4" viewBox="0 0 300 340" style="left: 390px; top: 560px; width: 300px; height: 340px"></svg>
+      </div></div>
+      <!-- 5. « Aux États-Unis, la guerre de Sécession se termine, et l'esclavage est aboli » -->
+      <div class="scene" id="s5"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #4a3a2a 0%, #6a5236 60%, #3a2a1a 61%, #241a10 100%)"></div>
+        <svg id="us5" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="ch5" viewBox="0 0 600 240" style="left: 240px; top: 900px; width: 600px; height: 240px"></svg>
+        <div class="vig"></div>
+        <div class="plate red" id="gs5" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 230px; font-size: 52px">FIN DE LA GUERRE DE SÉCESSION</div>
+        <div class="plate" id="ab5" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 1220px; font-size: 60px; background: #ffc93c">ESCLAVAGE ABOLI</div>
+      </div></div>
+      <!-- 6. « En France, un juriste, Édouard de Laboulaye, fête la victoire du Nord » -->
+      <div class="scene" id="s6"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #2a3a5a 0%, #4a5a7a 60%, #3a3028 61%, #241c14 100%)"></div>
+        <svg id="pa6" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="med" id="lb6" style="left: 390px; top: 300px"></div>
+        <div class="plate" id="nm6" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 650px; font-size: 54px">ÉDOUARD DE LABOULAYE</div>
+        <div class="plate red" id="ju6" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 770px; font-size: 44px">JURISTE FRANÇAIS</div>
+        <div class="plate" id="vn6" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 1200px; font-size: 50px; background: #9be27a">VICTOIRE DU NORD</div>
+      </div></div>
+      <!-- 7. « Laboulaye cofonde la Société française contre l'esclavage, et il en devient le président » -->
+      <div class="scene" id="s7"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #4a3a26 0%, #241a10 60%, #0c0805 100%)"></div><div class="vig"></div>
+        <svg id="dc7" viewBox="0 0 560 700" style="left: 260px; top: 420px; width: 560px; height: 700px"></svg>
+        <div class="med sm" id="lb7" style="left: 60px; top: 260px"></div>
+        <div class="stamp" id="pr7" style="left: 470px; top: 980px; font-size: 80px">PRÉSIDENT</div>
+      </div></div>
+      <!-- 8. « Et c'est lui, raconte-t-on, qui lance l'idée : offrir aux Américains un monument à la liberté » -->
+      <div class="scene" id="s8"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #2a1e1a 0%, #3a2a22 100%)"></div>
+        <svg id="dn8" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g8" style="left: 0; right: 0; top: 190px; font-size: 90px">RACONTE-T-ON…</div>
+        <svg id="bulb8" viewBox="0 0 300 400" style="left: 420px; top: 380px; width: 240px; height: 320px"></svg>
+        <div class="plate" id="mo8" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 760px; font-size: 52px; background: #ffc93c">UN MONUMENT À LA LIBERTÉ</div>
+      </div></div>
+      <!-- 9. « Un cadeau pour la fin de l'esclavage. Pas une porte d'entrée » -->
+      <div class="scene" id="s9"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a3a46 0%, #1a1a22 60%, #08080c 100%)"></div><div class="vig"></div>
+        <svg id="gf9" viewBox="0 0 400 420" style="left: 80px; top: 520px; width: 400px; height: 420px"></svg>
+        <svg id="dr9" viewBox="0 0 400 420" style="left: 600px; top: 520px; width: 400px; height: 420px"></svg>
+        <div class="plate" id="cd9" style="left: 90px; top: 990px; font-size: 40px; background: #ffc93c">FIN DE L'ESCLAVAGE</div>
+        <div class="plate" id="po9" style="left: 640px; top: 990px; font-size: 40px">PORTE D'ENTRÉE</div>
+      </div></div>
+      <!-- 10. « Le sculpteur, Auguste Bartholdi, fait des maquettes » -->
+      <div class="scene" id="s10"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #3a2a1c 0%, #4a3624 60%, #2a1c12 61%, #1a120a 100%)"></div>
+        <svg id="ws10" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="med" id="ba10" style="left: 80px; top: 280px"></div>
+        <div class="plate" id="nm10" style="left: 420px; top: 330px; font-size: 52px">AUGUSTE BARTHOLDI</div>
+        <div class="plate red" id="sc10" style="left: 420px; top: 450px; font-size: 42px">SCULPTEUR</div>
+      </div></div>
+      <!-- 11. « Sur l'une d'elles, selon plusieurs historiens, elle tient des chaînes brisées dans la main gauche » -->
+      <div class="scene" id="s11"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #e8d8b8 0%, #d8c4a0 100%)"></div>
+        <svg id="sk11" viewBox="0 0 400 1000" style="left: 280px; top: 330px; width: 520px; height: 1300px"></svg>
+        <div class="vig" style="opacity: 0.5"></div>
+        <div class="plate" id="mq11" style="left: 60px; top: 220px; font-size: 44px">MAQUETTE · VERS 1870</div>
+        <div class="plate red" id="hi11" style="left: 520px; top: 340px; font-size: 34px">SELON PLUSIEURS HISTORIENS</div>
+        <div class="plate" id="cb11" style="left: 700px; top: 760px; font-size: 40px; background: #ffc93c">CHAÎNES BRISÉES</div>
+      </div></div>
+      <!-- 12. « Finalement, il les remplace par une tablette, avec une date : le 4 juillet 1776 » -->
+      <div class="scene" id="s12"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #2a4a4a 0%, #142424 60%, #070c0c 100%)"></div>
+        <svg id="tb12" viewBox="0 0 300 420" style="left: 340px; top: 480px; width: 400px; height: 560px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g12" style="left: 0; right: 0; top: 190px; font-size: 110px">UNE TABLETTE</div>
+        <div class="gold" id="d12" style="left: 0; right: 0; top: 1150px; font-size: 110px">4 JUILLET 1776</div>
+      </div></div>
+      <!-- 13. « À Paris, Gustave Eiffel lui fabrique un squelette de fer. Des plaques de cuivre l'habillent, pièce par pièce » : the statue builds itself -->
+      <div class="scene" id="s13"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #4a4a54 0%, #6a6a74 60%, #3a3430 61%, #241e1a 100%)"></div>
+        <svg id="pr13" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="bd13" viewBox="0 0 400 1000" style="left: 300px; top: 230px; width: 480px; height: 1200px"></svg>
+        <div class="vig"></div>
+        <div class="med sm" id="ei13" style="left: 50px; top: 240px"></div>
+        <div class="plate" id="nm13" style="left: 40px; top: 480px; font-size: 40px">GUSTAVE EIFFEL</div>
+        <div class="plate" id="fe13" style="left: 400px; top: 160px; font-size: 40px; background: #c8ccd4">SQUELETTE DE FER</div>
+        <div class="plate" id="cu13" style="left: 400px; top: 260px; font-size: 40px; background: #e0a060">PLAQUES DE CUIVRE</div>
+      </div></div>
+      <!-- 14. « Mais les chaînes n'ont pas disparu. Bartholdi les a cachées à ses pieds » : the camera goes down the statue -->
+      <div class="scene" id="s14"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #1e3050 0%, #3a5a7a 100%)"></div>
+        <svg id="big14" viewBox="0 0 400 1000" style="left: 0; top: 0; width: 1080px; height: 2700px"></svg>
+        <div class="vig"></div>
+      </div></div>
+      <!-- 15. « Un fer ouvert, une chaîne brisée, et son pied droit qui avance, comme si elle s'en allait » -->
+      <div class="scene" id="s15"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 70% 50% at 50% 55%, #3a6a7a 0%, #1a3040 60%, #0a141c 100%)"></div>
+        <svg id="ft15" viewBox="0 0 1080 1100" style="left: 0; top: 420px; width: 1080px; height: 1100px"></svg>
+        <div class="vig"></div>
+        <div class="plate" id="fo15" style="left: 640px; top: 300px; font-size: 44px">FER OUVERT</div>
+        <div class="plate red" id="cb15" style="left: 60px; top: 300px; font-size: 44px">CHAÎNE BRISÉE</div>
+        <div class="plate" id="pd15" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 190px; font-size: 44px; background: #ffc93c">LE PIED QUI AVANCE</div>
+      </div></div>
+      <!-- 16. « Depuis le sol, on ne les voit presque pas. Il faut les regarder d'en haut » -->
+      <div class="scene" id="s16"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #4a7aa0 0%, #8ab0c8 60%, #5a6a5a 61%, #3a4a3a 100%)"></div>
+        <svg id="gr16" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="plate red" id="in16" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 190px; font-size: 52px">INVISIBLES DEPUIS LE SOL</div>
+        <svg id="hl16" viewBox="0 0 300 160" style="left: 700px; top: 300px; width: 300px; height: 160px"></svg>
+        <div class="plate" id="eh16" style="left: 640px; top: 480px; font-size: 44px; background: #ffc93c">VUE D'EN HAUT</div>
+      </div></div>
+      <!-- 17. « Et le poème sur les immigrants, alors ? Emma Lazarus, 1883, pour le socle » -->
+      <div class="scene" id="s17"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #2a2420 0%, #3a3028 100%)"></div><div class="vig"></div>
+        <div class="gold" id="q17" style="left: 0; right: 0; top: 190px; font-size: 104px">ET LE POÈME ?</div>
+        <div class="med" id="em17" style="left: 80px; top: 360px"></div>
+        <div class="plate" id="nm17" style="left: 60px; top: 700px; font-size: 48px">EMMA LAZARUS</div>
+        <svg id="pm17" viewBox="0 0 420 520" style="left: 560px; top: 330px; width: 420px; height: 520px"></svg>
+        <div class="gold" id="y17" style="left: 560px; top: 870px; width: 420px; text-align: center; font-size: 110px; -webkit-text-stroke: 3px #3a2312; paint-order: stroke fill">1883</div>
+        <svg id="sk17" viewBox="0 0 600 300" style="left: 240px; top: 1060px; width: 600px; height: 300px"></svg>
+      </div></div>
+      <!-- 18. « Et pendant ce temps-là ? Le poème tombe dans l'oubli » -->
+      <div class="scene" id="s18"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #2a2a30 0%, #141418 60%, #060608 100%)"></div>
+        <svg id="dw18" viewBox="0 0 600 600" style="left: 240px; top: 560px; width: 600px; height: 600px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q18" style="left: 0; right: 0; top: 190px; font-size: 86px">ET PENDANT CE TEMPS-LÀ ?</div>
+        <div class="stamp" id="ou18" style="left: 330px; top: 1120px; font-size: 100px">OUBLIÉ</div>
+      </div></div>
+      <!-- 19. « La statue est inaugurée en 1886, sans lui » -->
+      <div class="scene" id="s19"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #1a2a4a 0%, #2a4a6a 55%, #1e3a52 56%, #0e1e2e 100%)"></div>
+        <svg id="fw19" class="full" viewBox="0 0 1080 1920"></svg>
+        <svg id="st19" viewBox="0 0 400 1000" style="left: 400px; top: 420px; width: 280px; height: 700px"></svg>
+        <svg id="pd19" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="y19" style="left: 0; right: 0; top: 190px; font-size: 130px">28 OCT. 1886</div>
+        <div class="stamp" id="sp19" style="left: 230px; top: 1220px; font-size: 64px">SANS LE POÈME</div>
+      </div></div>
+      <!-- 20. « Ellis Island n'ouvre qu'en 1892 » -->
+      <div class="scene" id="s20"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #8ab0c8 0%, #c8d8e0 55%, #3a6a8a 56%, #1e4a6a 100%)"></div>
+        <svg id="el20" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="vig"></div>
+        <div class="plate" id="nm20" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 360px; font-size: 56px">ELLIS ISLAND</div>
+        <div class="gold" id="y20" style="left: 0; right: 0; top: 190px; font-size: 130px">1892</div>
+      </div></div>
+      <!-- 21. « Et la plaque avec le poème n'est posée qu'en 1903. 17 ans après l'inauguration » -->
+      <div class="scene" id="s21"><div class="cam">
+        <div class="bg" style="background: linear-gradient(180deg, #4a4438 0%, #5a5444 100%)"></div>
+        <svg id="pl21" viewBox="0 0 600 420" style="left: 240px; top: 380px; width: 600px; height: 420px"></svg>
+        <svg id="tm21" viewBox="0 0 1000 400" style="left: 40px; top: 880px; width: 1000px; height: 400px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="g21" style="left: 0; right: 0; top: 160px; font-size: 120px">1903</div>
+        <div class="gold" id="a21" style="left: 0; right: 0; top: 1240px; font-size: 100px">+ 17 ANS</div>
+      </div></div>
+      <!-- 22. « Son vrai nom ? La Liberté éclairant le monde » -->
+      <div class="scene" id="s22"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 40%, #3a5a7a 0%, #1a2a40 60%, #0a121c 100%)"></div>
+        <svg id="st22" viewBox="0 0 400 1000" style="left: 380px; top: 470px; width: 320px; height: 800px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q22" style="left: 0; right: 0; top: 190px; font-size: 110px">SON VRAI NOM ?</div>
+        <div class="plate" id="vn22a" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 190px; font-size: 54px; background: #ffc93c">LA LIBERTÉ</div>
+        <div class="plate" id="vn22b" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 300px; font-size: 54px; background: #ffc93c">ÉCLAIRANT LE MONDE</div>
+      </div></div>
+      <!-- 23. mirror: the statue in gold light; the camera goes down to the broken chains -->
+      <div class="scene" id="s23"><div class="cam">
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #6a5022 0%, #3a2a10 55%, #120c04 100%)"></div>
+        <svg id="rays23" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -100px; width: 2000px; height: 2000px; opacity: 0.2"></svg>
+        <svg id="st23" viewBox="0 0 400 1000" style="left: 340px; top: 420px; width: 400px; height: 1000px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="f23a" style="left: 0; right: 0; top: 190px; font-size: 64px">PAS POUR ACCUEILLIR LES IMMIGRANTS</div>
+        <div class="gold" id="f23b" style="left: 0; right: 0; top: 190px; font-size: 76px">POUR DES CHAÎNES BRISÉES</div>
+      </div></div>
+
+      <div id="caps"></div>
+      <div id="progbg"></div>
+      <div id="prog"></div>
+
+      <!-- Son : un seul mixage (voix devant ; musique et bruitages baissés sous la voix par ../_engine/style-anime/mix_anime.py) -->
+      <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="73.7" data-track-index="10" data-volume="1"></audio>
+    </div>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const $ = (id) => document.getElementById(id)
+        const END = 73.7
+        const RAW = [0.0, 0.101, 0.405, 0.506, 0.608, 0.963, 1.014, 1.165, 1.672, 1.875, 2.382, 2.534, 2.933, 3.135, 3.33, 3.477, 3.818, 4.014, 4.112, 4.356, 4.406, 4.69, 4.761, 5.009, 5.207, 5.306, 5.555, 5.785, 5.946, 6.125, 6.423, 6.625, 6.697, 6.816, 7.054, 7.173, 7.293, 7.411, 7.969, 8.151, 8.287, 8.623, 9.718, 9.977, 10.38, 10.498, 11.11, 11.221, 11.556, 11.667, 12.168, 12.279, 12.533, 12.78, 13.393, 13.436, 13.508, 13.576, 14.07, 14.117, 14.678, 15.02, 15.141, 15.683, 15.923, 16.044, 16.526, 16.576, 16.626, 16.976, 17.342, 17.447, 17.813, 18.285, 18.598, 19.116, 19.279, 19.384, 19.489, 19.856, 19.96, 20.177, 20.239, 20.533, 20.696, 21.298, 21.588, 21.88, 22.072, 22.491, 22.667, 23.254, 23.371, 23.84, 23.898, 24.015, 24.296, 24.342, 24.693, 24.927, 25.043, 25.218, 25.336, 25.623, 25.889, 26.064, 26.356, 26.502, 26.552, 27.046, 27.44, 27.679, 28.17, 28.339, 28.608, 28.68, 28.904, 29.509, 29.559, 29.895, 30.28, 30.418, 30.643, 30.778, 31.093, 31.408, 31.588, 31.678, 31.858, 31.943, 32.988, 33.038, 33.177, 33.785, 34.028, 34.226, 34.486, 34.862, 35.105, 35.657, 35.818, 35.899, 36.231, 36.304, 36.354, 36.404, 37.04, 37.375, 37.542, 37.988, 38.1, 38.541, 38.591, 38.641, 38.813, 39.203, 39.315, 39.65, 40.102, 40.346, 40.514, 40.776, 40.902, 41.043, 41.374, 41.611, 41.753, 41.881, 42.351, 42.53, 42.589, 43.005, 43.064, 43.242, 43.347, 43.45, 43.629, 44.143, 44.193, 44.521, 44.995, 45.045, 45.095, 45.241, 45.54, 45.72, 46.2, 46.373, 46.493, 46.732, 46.905, 46.978, 47.241, 47.347, 47.654, 47.704, 47.769, 47.927, 48.138, 48.482, 48.555, 48.632, 48.843, 49.001, 49.395, 49.445, 49.769, 49.823, 49.927, 50.189, 50.346, 50.503, 51.127, 51.177, 51.227, 51.414, 51.741, 51.937, 52.199, 52.657, 52.788, 53.116, 53.377, 53.824, 53.955, 54.479, 54.741, 54.872, 55.096, 55.174, 55.58, 55.695, 55.803, 56.055, 56.344, 56.633, 56.865, 57.022, 57.176, 57.7, 57.962, 58.747, 58.922, 59.187, 59.633, 59.706, 60.096, 60.602, 61.193, 61.616, 61.865, 61.964, 62.099, 62.503, 62.773, 62.907, 63.245, 63.582, 63.919, 64.255, 64.449, 64.581, 64.809, 65.187, 66.089, 66.291, 66.597, 66.67, 66.755, 67.292, 67.982, 68.127, 68.518, 68.637, 68.765, 68.894, 69.023, 69.45, 69.622, 70.049, 70.177, 70.437, 70.601, 70.651, 70.801, 71.197, 71.397, 71.797, 71.947, 72.297]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["La", "Statue", "de", "la", "Liberté", "a", "été", "construite", "pour", "accueillir", "les", "immigrants.", "C'est", "pour", "eux", "qu'elle", "lève", "sa", "torche.", "Ça,", "c'est", "ce", "qu'on", "veut", "te", "faire", "croire.", "Sauf", "que", "c'est", "faux,", "et", "je", "vais", "te", "le", "prouver.", "Construite", "pour", "les", "immigrants ?", "Remontons", "en", "1865.", "Aux", "États-Unis,", "la", "guerre", "de", "Sécession", "se", "termine,", "et", "l'esclavage", "est", "aboli.", "En", "France,", "un", "juriste,", "Édouard", "de", "Laboulaye,", "fête", "la", "victoire", "du", "Nord.", "Laboulaye", "cofonde", "la", "Société", "française", "contre", "l'esclavage,", "et", "il", "en", "devient", "le", "président.", "Et", "c'est", "lui,", "raconte-t-on,", "qui", "lance", "l'idée :", "offrir", "aux", "Américains", "un", "monument", "à", "la", "liberté.", "Un", "cadeau", "pour", "la", "fin", "de", "l'esclavage.", "Pas", "une", "porte", "d'entrée.", "Le", "sculpteur,", "Auguste", "Bartholdi,", "fait", "des", "maquettes.", "Sur", "l'une", "d'elles,", "selon", "plusieurs", "historiens,", "elle", "tient", "des", "chaînes", "brisées", "dans", "la", "main", "gauche.", "Finalement,", "il", "les", "remplace", "par", "une", "tablette,", "avec", "une", "date :", "le", "4", "juillet", "1776.", "À", "Paris,", "Gustave", "Eiffel", "lui", "fabrique", "un", "squelette", "de", "fer.", "Des", "plaques", "de", "cuivre", "l'habillent,", "pièce", "par", "pièce.", "Mais", "les", "chaînes", "n'ont", "pas", "disparu.", "Bartholdi", "les", "a", "cachées", "à", "ses", "pieds.", "Un", "fer", "ouvert,", "une", "chaîne", "brisée,", "et", "son", "pied", "droit", "qui", "avance,", "comme", "si", "elle", "s'en", "allait.", "Depuis", "le", "sol,", "on", "ne", "les", "voit", "presque", "pas.", "Il", "faut", "les", "regarder", "d'en", "haut.", "Et", "le", "poème", "sur", "les", "immigrants,", "alors ?", "Il", "est", "écrit", "par", "Emma", "Lazarus", "en", "1883,", "pour", "récolter", "de", "l'argent", "pour", "le", "socle.", "Et", "pendant", "ce", "temps-là ?", "Le", "poème", "tombe", "dans", "l'oubli.", "La", "statue", "est", "inaugurée", "en", "1886,", "sans", "lui.", "Ellis", "Island", "n'ouvre", "qu'en", "1892.", "Et", "la", "plaque", "avec", "le", "poème", "n'est", "posée", "qu'en", "1903.", "17", "ans", "après", "l'inauguration.", "Son", "vrai", "nom ?", "La", "Liberté", "éclairant", "le", "monde.", "Elle", "n'a", "pas", "été", "construite", "pour", "accueillir", "les", "immigrants.", "Elle", "a", "été", "construite", "pour", "célébrer", "des", "chaînes", "brisées."]
+        let seed = 23
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+
+        // ---------- flat bust characters ----------
+        const HAT = {
+          crown: () => '<path d="M206,190 L222,104 L262,152 L300,86 L338,152 L378,104 L394,190Z" fill="#f2b705" stroke="#a87a10" stroke-width="6"/><circle cx="300" cy="140" r="12" fill="#d7263d"/><circle cx="252" cy="168" r="8" fill="#2c6fa8"/><circle cx="348" cy="168" r="8" fill="#2c6fa8"/>',
+          laurel: () => '<g fill="#4a8a3a">' + Array.from({ length: 9 }, (_, i) => { const a = Math.PI * (1.05 + i * 0.1), x = 300 + Math.cos(a) * 135, y = 250 + Math.sin(a) * 115; return `<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="26" ry="11" transform="rotate(${((a * 180) / Math.PI + 60).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})"/>` }).join('') + '</g>',
+          babcap: (c) => `<path d="M186,206 C186,112 414,112 414,206Z" fill="${c}"/><rect x="180" y="192" width="240" height="26" fill="#c9962e"/>`,
+          turban: (c) => `<path d="M170,236 C150,100 450,100 430,236 C380,204 220,204 170,236Z" fill="${c}"/><path d="M190,190 C260,150 340,150 410,190 M184,214 C260,176 340,176 416,214" stroke="#00000022" stroke-width="10" fill="none"/><circle cx="300" cy="176" r="16" fill="#c0392b" stroke="#f2b705" stroke-width="5"/>`,
+          beret: (c) => `<path d="M176,214 C150,136 262,90 336,110 C430,132 446,192 424,216 C364,196 240,196 176,214Z" fill="${c}"/>`,
+          flatcap: (c) => `<path d="M176,214 C168,140 258,102 330,110 C410,118 442,168 432,212 C380,196 232,196 176,214Z" fill="${c}"/><path d="M176,214 C240,232 330,232 400,212 L370,246 C300,256 220,250 176,214Z" fill="#00000044"/>`,
+          bicorne: (c) => `<path d="M110,206 C190,96 410,96 490,206 C410,176 190,176 110,206Z" fill="${c}"/><path d="M110,206 C200,186 400,186 490,206" stroke="#c9962e" stroke-width="8" fill="none"/><circle cx="300" cy="150" r="22" fill="#1d3557"/><circle cx="300" cy="150" r="12" fill="#d7263d"/>`,
+        }
+        function bust(o) {
+          const skin = o.skin, dark = o.dark, hc = o.hairCol || '#1b1410'
+          const brow = { sad: ['M222,250 L282,236', 'M318,236 L378,250'], sure: ['M222,240 L282,246', 'M318,234 L378,226'], neutral: ['M222,242 L282,240', 'M318,240 L378,242'], angry: ['M222,232 L282,252', 'M318,252 L378,232'] }[o.mood]
+          const mouth = { sad: 'M262,382 Q300,356 338,382', sure: 'M258,366 Q300,404 342,362', neutral: 'M270,372 Q300,384 330,372', angry: 'M266,380 Q300,366 334,380' }[o.mood]
+          let hair = ''
+          if (o.hair === 'short' || o.hair === 'headband') hair = `<path d="M178,262 C170,150 240,112 300,112 C360,112 430,150 422,262 C410,214 380,190 300,188 C220,190 190,214 178,262Z" fill="${hc}"/>`
+          if (o.hair === 'headband') hair += '<path d="M180,236 C230,200 370,200 420,236 L418,262 C370,228 230,228 182,262Z" fill="#f4f1e8"/>' + [0, 1, 2, 3, 4, 5].map((i) => `<ellipse cx="${222 + i * 31}" cy="${226 - Math.sin((i / 5) * Math.PI) * 14}" rx="8" ry="11" fill="#e8d5a0" stroke="#a88a50" stroke-width="2"/>`).join('')
+          if (o.hair === 'wig') hair = `<path d="M170,290 C156,150 230,100 300,100 C370,100 444,150 430,290 C420,224 384,196 300,194 C216,196 180,224 170,290Z" fill="${hc}"/>` + [254, 304].map((y) => `<ellipse cx="164" cy="${y}" rx="30" ry="21" fill="${hc}" stroke="#b8b0a4" stroke-width="4"/><ellipse cx="436" cy="${y}" rx="30" ry="21" fill="${hc}" stroke="#b8b0a4" stroke-width="4"/>`).join('')
+          if (o.hair === 'swept') hair = `<path d="M180,250 C168,150 250,100 330,112 C400,124 432,170 422,250 C400,190 350,170 300,176 C250,178 210,200 180,250Z" fill="${hc}"/>`
+          if (o.hair === 'wrap') { const w = o.wrap || '#c0392b'; hair = `<path d="M170,278 C150,168 220,90 300,86 C380,90 450,168 430,278 C414,226 380,198 300,196 C220,198 186,226 170,278Z" fill="${w}"/><g stroke="#f2b705" stroke-width="7" opacity="0.8"><path d="M196,170 C250,140 350,140 404,170" fill="none"/><path d="M182,220 C250,180 350,180 418,220" fill="none"/></g><path d="M300,96 C262,30 236,66 262,104Z M300,96 C338,30 364,66 338,104Z" fill="${w}" stroke="#7a1a12" stroke-width="4"/>` }
+          const hat = o.hat ? HAT[o.hat](o.hatCol || '#1b1410') : ''
+          const beard = o.beardLong ? `<path d="M178,300 C170,470 240,560 300,568 C360,560 430,470 422,300 C410,360 380,352 300,354 C220,352 190,360 178,300Z" fill="${hc}"/>` : o.beard ? `<path d="M178,300 C176,420 230,478 300,478 C370,478 424,420 422,300 C410,360 380,350 300,352 C220,350 190,360 178,300Z" fill="${hc}"/>` : ''
+          const stache = o.stache ? `<path d="M244,352 C262,334 290,338 300,350 C310,338 338,334 356,352 C346,372 318,368 300,358 C282,368 254,372 244,352Z" fill="${hc}"/>` : ''
+          const old = o.old ? `<path d="M232,332 Q255,340 278,332 M322,332 Q345,340 368,332 M250,212 Q300,204 350,212 M256,198 Q300,190 344,198" stroke="${dark}" stroke-width="5" fill="none" opacity="0.8"/>` : ''
+          const fem = o.female ? `<path d="M226,288 L212,278 M232,282 L222,270 M374,288 L388,278 M368,282 L378,270" stroke="#1b1410" stroke-width="5" stroke-linecap="round"/><circle cx="182" cy="352" r="11" fill="#f2b705"/><circle cx="418" cy="352" r="11" fill="#f2b705"/>` : ''
+          const lips = o.female ? `<path d="${mouth}" stroke="#7a2a22" stroke-width="13" fill="none" stroke-linecap="round"/>` : `<path d="${mouth}" stroke="#3a1a12" stroke-width="9" fill="none" stroke-linecap="round"/>`
+          const ep = o.epaulettes ? '<g fill="#f2b705"><ellipse cx="96" cy="540" rx="80" ry="28"/><ellipse cx="504" cy="540" rx="80" ry="28"/></g><g stroke="#f2b705" stroke-width="7">' + [0, 1, 2, 3, 4, 5].map((i) => `<line x1="${36 + i * 22}" y1="560" x2="${34 + i * 22}" y2="600"/><line x1="${454 + i * 22}" y1="560" x2="${456 + i * 22}" y2="600"/>`).join('') + '</g>' : ''
+          const body = o.plain
+            ? `<path d="M40,700 C40,520 150,468 300,468 C450,468 560,520 560,700Z" fill="${o.coat}"/><path d="M240,472 C260,520 340,520 360,472" fill="none" stroke="${o.lapel}" stroke-width="10"/>${o.beads ? [0, 1, 2, 3, 4, 5, 6].map((i) => `<circle cx="${236 + i * 21}" cy="${494 + Math.sin((i / 6) * Math.PI) * 26}" r="8" fill="${i % 2 ? '#c0392b' : '#f4f1e8'}"/>`).join('') : ''}${o.stripes ? [0, 1, 2, 3].map((i) => `<path d="M${70 + i * 30},${700} L${150 + i * 30},${520}" stroke="#f4f1e8" stroke-width="12" opacity="0.6"/>`).join('') : ''}`
+            : `<path d="M40,700 C40,520 150,468 300,468 C450,468 560,520 560,700Z" fill="${o.coat}"/><path d="M300,468 L200,476 L268,640Z" fill="${o.lapel}"/><path d="M300,468 L400,476 L332,640Z" fill="${o.lapel}"/><path d="M252,470 L348,470 L300,600Z" fill="${o.shirt}"/>${[0, 1, 2].map((i) => `<circle cx="300" cy="${612 + i * 30}" r="8" fill="#f2b705"/>`).join('')}`
+          return `<svg viewBox="0 0 600 700" width="100%" height="100%" style="position:absolute;left:0;top:0">
+            ${body}${ep}${o.jabot ? '<path d="M274,470 C258,520 280,566 300,604 C320,566 342,520 326,470Z" fill="#fff" stroke="#d8d0c4" stroke-width="4"/>' : ''}
+            <rect x="262" y="392" width="76" height="92" rx="20" fill="${dark}"/>
+            <ellipse cx="180" cy="312" rx="24" ry="34" fill="${dark}"/><ellipse cx="420" cy="312" rx="24" ry="34" fill="${dark}"/>
+            <ellipse cx="300" cy="296" rx="124" ry="142" fill="${skin}"/>
+            <path d="M300,154 C380,160 424,226 424,300 C424,380 380,436 300,438 C352,410 380,360 380,296 C380,226 350,176 300,154Z" fill="${dark}" opacity="0.35"/>
+            ${hair}${beard}
+            <g class="eyes"><ellipse cx="255" cy="300" rx="26" ry="24" fill="#fff"/><ellipse cx="345" cy="300" rx="26" ry="24" fill="#fff"/>
+            <circle cx="258" cy="302" r="12" fill="#151515"/><circle cx="348" cy="302" r="12" fill="#151515"/>
+            <circle cx="262" cy="296" r="4" fill="#fff"/><circle cx="352" cy="296" r="4" fill="#fff"/></g>
+            <g class="lids" opacity="0"><rect x="224" y="274" width="62" height="52" fill="${skin}"/><rect x="314" y="274" width="62" height="52" fill="${skin}"/><path d="M230,302 Q255,312 280,302 M320,302 Q345,312 370,302" stroke="#1b1410" stroke-width="6" fill="none"/></g>
+            <path d="${brow[0]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/><path d="${brow[1]}" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/>
+            <path d="M296,320 Q290,342 304,346" stroke="${dark}" stroke-width="7" fill="none" stroke-linecap="round"/>
+            ${old}${fem}${stache}${lips}${hat}
+          </svg>`
+        }
+        const put = (id, o) => { $(id).innerHTML = bust(o) }
+        const med = (id, o, bg) => { $(id).innerHTML = `<div class="in">${bust(o)}</div>`; $(id).style.background = bg || '#e8d5b0' }
+        // ---------- full-body figures (feet at y=300, centred on x=60) ----------
+        function fig(o) {
+          const skin = o.skin || '#7a4a2e', top = o.top || '#2c4a7a', bot = o.bot || '#3a2a1a'
+          let s = ''
+          if (o.pose === 'run') s += `<path d="M54,200 L30,296" stroke="${o.skirt ? skin : bot}" stroke-width="15" stroke-linecap="round"/><path d="M66,200 L96,290" stroke="${o.skirt ? skin : bot}" stroke-width="15" stroke-linecap="round"/>`
+          else s += `<rect x="44" y="196" width="13" height="100" rx="6" fill="${o.skirt ? skin : bot}"/><rect x="63" y="196" width="13" height="100" rx="6" fill="${o.skirt ? skin : bot}"/>`
+          s += `<rect x="40" y="290" width="20" height="10" rx="4" fill="#1b1410"/><rect x="61" y="290" width="20" height="10" rx="4" fill="#1b1410"/>`
+          s += `<path d="M36,110 L84,110 L92,206 L28,206Z" fill="${top}"/>`
+          if (o.stripes) s += [0, 1, 2].map((i) => `<rect x="34" y="${126 + i * 26}" width="52" height="9" fill="#f4f1e8" opacity="0.75"/>`).join('')
+          if (o.skirt) s += `<path d="M28,196 L92,196 L100,250 L20,250Z" fill="${bot}"/>`
+          if (o.belt) s += '<rect x="30" y="180" width="60" height="12" fill="#5a3418"/>' + [0, 1, 2, 3].map((i) => `<rect x="${36 + i * 13}" y="178" width="8" height="16" fill="#c9962e"/>`).join('')
+          s += `<rect x="52" y="94" width="16" height="20" fill="${skin}"/><circle cx="60" cy="78" r="24" fill="${skin}"/>`
+          const h = o.hat
+          if (h === 'tricorne') s += '<path d="M28,70 C40,46 80,46 92,70 C80,62 40,62 28,70Z M36,62 C44,36 76,36 84,62Z" fill="#14141a"/>'
+          if (h === 'kepi') s += '<path d="M38,66 L82,66 L78,44 L42,44Z" fill="#1d3557"/><rect x="42" y="44" width="36" height="8" fill="#c0392b"/><path d="M38,66 L94,70 L82,64Z" fill="#111"/>'
+          if (h === 'band') s += '<path d="M36,74 C36,50 84,50 84,74 C76,62 44,62 36,74Z" fill="#1b1410"/><rect x="36" y="64" width="48" height="8" fill="#f4f1e8"/>'
+          if (h === 'wrap') s += `<path d="M34,80 C30,48 50,40 60,40 C70,40 90,48 86,80 C78,64 42,64 34,80Z" fill="${o.wrap || '#d7263d'}"/><circle cx="60" cy="40" r="10" fill="${o.wrap || '#d7263d'}"/>`
+          if (h === 'helmet') s += '<path d="M34,70 C34,40 86,40 86,70Z" fill="#e8e2d8"/><path d="M24,70 L96,70 L92,78 L28,78Z" fill="#d0c8b8"/>'
+          if (h === 'cap') s += '<path d="M36,68 C36,46 84,46 86,68Z" fill="#3a3a40"/><path d="M60,66 L98,70 L84,62Z" fill="#2a2a30"/>'
+          if (h === 'hair') s += '<path d="M36,74 C36,50 84,50 84,74 C76,62 44,62 36,74Z" fill="#1b1410"/>'
+          if (o.rifle === 'shoulder') s += '<path d="M80,40 L74,200" stroke="#5a3418" stroke-width="7"/><path d="M80,40 L79,20" stroke="#9aa4ae" stroke-width="4"/><rect x="74" y="110" width="16" height="30" rx="6" fill="' + skin + '"/>'
+          if (o.rifle === 'aim') s += `<path d="M44,112 L150,104" stroke="#5a3418" stroke-width="8"/><path d="M120,106 L168,102" stroke="#9aa4ae" stroke-width="4"/><rect x="62" y="104" width="34" height="14" rx="6" fill="${skin}"/><g class="mf" opacity="0"><path d="M170,102 L196,88 L188,102 L204,110 L186,110 L192,126Z" fill="#ffd36a"/></g>`
+          if (o.rifle === 'up') s += `<path d="M30,40 L96,200" stroke="#5a3418" stroke-width="8"/><path d="M30,40 L24,24" stroke="#9aa4ae" stroke-width="4"/><rect x="40" y="110" width="16" height="30" rx="6" fill="${skin}"/>`
+          return s
+        }
+        // outer group carries the GSAP motion, inner group the placement (GSAP x/y would overwrite a transform attribute)
+        const placeFig = (o, x, y, sc, flip, cls) => `<g class="${cls || ''}"><g transform="translate(${x},${y}) scale(${flip ? -sc : sc},${sc}) translate(-60,-300)">${fig(o)}</g></g>`
+
+        const blink = (sel, times) => times.forEach((t) => tl.fromTo(sel + ' .lids', { opacity: 0 }, { opacity: 1, duration: 0.02, yoyo: true, repeat: 1, repeatDelay: 0.1, ease: 'none', immediateRender: false }, t))
+
+
+        function rays(id, n, c1, c2) {
+          let s = ''
+          for (let i = 0; i < n; i++) { const a0 = (i / n) * Math.PI * 2, a1 = ((i + 0.5) / n) * Math.PI * 2; s += `<path d="M0,0 L${(Math.cos(a0) * 1400).toFixed(0)},${(Math.sin(a0) * 1400).toFixed(0)} L${(Math.cos(a1) * 1400).toFixed(0)},${(Math.sin(a1) * 1400).toFixed(0)}Z" fill="${i % 2 ? c1 : c2}"/>` }
+          $(id).innerHTML = s
+        }
+
+        // ---------- characters ----------
+        const W_ = { skin: '#f0c9a8', dark: '#d8a985' }
+        med('lb6', Object.assign({}, W_, { hair: 'short', hairCol: '#4a3a30', old: true, coat: '#1e1e24', lapel: '#141418', shirt: '#f4f1e8', mood: 'sure' }), '#c8d4e0')
+        med('lb7', Object.assign({}, W_, { hair: 'short', hairCol: '#4a3a30', old: true, coat: '#1e1e24', lapel: '#141418', shirt: '#f4f1e8', mood: 'sure' }), '#e0d0b8')
+        med('ba10', Object.assign({}, W_, { hair: 'short', hairCol: '#2a1a10', beard: true, stache: true, coat: '#2a2a30', lapel: '#1c1c22', shirt: '#f4f1e8', mood: 'sure' }), '#e0d0b8')
+        med('ei13', Object.assign({}, W_, { hair: 'short', hairCol: '#8a8a8a', beard: true, stache: true, coat: '#1e1e24', lapel: '#141418', shirt: '#f4f1e8', mood: 'neutral' }), '#d8d8e0')
+        med('em17', Object.assign({}, W_, { hair: 'swept', hairCol: '#2a1a10', female: true, plain: true, coat: '#3a2a4a', lapel: '#f4f1e8', mood: 'neutral' }), '#e0d0c0')
+
+        // ---------- the statue (viewBox 0 0 400 1000; feet ~935, chains ~955) ----------
+        const PAL = { green: ['#5aa592', '#3d7f6f', '#86c9b4', '#2a5a50'], copper: ['#c07a40', '#8a5028', '#e0a060', '#5a3418'] }
+        const spikes = (fill, line) => Array.from({ length: 7 }, (_, i) => { const a = ((200 + i * (140 / 6)) * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a), px = -s, py = c; const bx = 200 + c * 34, by = 260 + s * 34, tx = 200 + c * 92, ty = 260 + s * 92; return `<path d="M${(bx + px * 7).toFixed(1)},${(by + py * 7).toFixed(1)} L${tx.toFixed(1)},${ty.toFixed(1)} L${(bx - px * 7).toFixed(1)},${(by - py * 7).toFixed(1)}Z" fill="${fill}" stroke="${line}" stroke-width="3"/>` }).join('')
+        const ROBE = 'M150,330 C142,420 134,520 126,620 C118,740 110,840 100,935 L300,935 C292,840 284,740 276,620 C268,520 260,420 252,330 Z'
+        const ARM = 'M150,345 L176,332 L132,118 L106,126 Z'
+        const SIL = (f) => `<path d="${ROBE}" fill="${f}"/><path d="${ARM}" fill="${f}"/><circle cx="200" cy="272" r="34" fill="${f}"/><rect x="186" y="296" width="28" height="40" fill="${f}"/><path d="M112,128 L128,124 L126,64 L112,66 Z M100,66 L138,60 L134,48 L104,52Z" fill="${f}"/><rect x="238" y="400" width="74" height="150" rx="6" transform="rotate(14 275 475)" fill="${f}"/>${spikes(f, f)}`
+        const CHAINS = (c, line) => `<g class="chn"><path d="M74,958 L104,956" stroke="${line}" stroke-width="5"/>${[118, 142, 166, 190, 214, 238, 262, 286].map((x, i) => (i === 1 ? '' : `<ellipse cx="${x}" cy="${956 + (i % 2) * 4}" rx="13" ry="7" fill="none" stroke="${c}" stroke-width="6"/>`)).join('')}<path d="M300,946 C330,930 344,968 316,972" fill="none" stroke="${c}" stroke-width="9" stroke-linecap="round"/><path d="M128,950 l6,-10 M150,964 l6,10" stroke="${c}" stroke-width="5"/></g>`
+        function STATUE(pal, o) {
+          o = o || {}
+          const [b, d, l, ln] = PAL[pal]
+          let s = `<path d="M119,48 C100,30 110,10 120,-6 C130,12 140,30 121,48Z" fill="#ffc93c" class="flame"/>`
+          s += `<path d="${ARM}" fill="${b}" stroke="${ln}" stroke-width="4"/><path d="M112,128 L128,124 L126,64 L112,66 Z" fill="${d}" stroke="${ln}" stroke-width="3"/><path d="M100,66 L138,60 L134,48 L104,52Z" fill="${l}" stroke="${ln}" stroke-width="3"/>`
+          s += `<path d="${ROBE}" fill="${b}" stroke="${ln}" stroke-width="5"/>`
+          s += `<path d="M150,340 L256,476 L254,512 L146,372Z" fill="${d}"/>` + [[160, 520, 150, 930], [190, 520, 186, 932], [220, 540, 226, 932], [250, 560, 262, 932], [140, 640, 128, 930]].map(([x1, y1, x2, y2]) => `<path d="M${x1},${y1} C${x1 - 6},${(y1 + y2) / 2} ${x2 + 6},${(y1 + y2) / 2} ${x2},${y2}" stroke="${d}" stroke-width="6" fill="none"/>`).join('')
+          s += `<rect x="186" y="296" width="28" height="40" fill="${b}" stroke="${ln}" stroke-width="3"/><circle cx="200" cy="272" r="34" fill="${b}" stroke="${ln}" stroke-width="4"/><path d="M186,270 l10,0 M206,270 l10,0 M200,276 l-3,12 l5,0 M192,294 q8,4 16,0" stroke="${ln}" stroke-width="3" fill="none"/><path d="M164,258 Q200,240 236,258 L236,268 Q200,252 164,268Z" fill="${l}" stroke="${ln}" stroke-width="3"/>${spikes(l, ln)}`
+          if (o.handChains) s += `<path d="M246,340 C268,380 272,430 262,470 L248,468 C256,430 252,385 234,350Z" fill="${b}" stroke="${ln}" stroke-width="4"/><g class="hc">${[0, 1, 2, 3, 4, 5].map((i) => `<ellipse cx="${262 + (i % 2) * 4}" cy="${486 + i * 24}" rx="${i % 2 ? 6 : 10}" ry="13" fill="none" stroke="${ln}" stroke-width="6"/>`).join('')}<path d="M256,628 l-14,18 M272,628 l16,16" stroke="${ln}" stroke-width="6"/></g>`
+          else s += `<g class="tab"><rect x="238" y="400" width="74" height="150" rx="6" transform="rotate(14 275 475)" fill="${l}" stroke="${ln}" stroke-width="4"/><path d="M252,450 l50,12 M248,470 l50,12 M244,490 l50,12" stroke="${d}" stroke-width="4" transform="rotate(4 275 475)"/></g><path d="M246,340 C268,380 272,430 262,470 L248,468 C256,430 252,385 234,350Z" fill="${b}" stroke="${ln}" stroke-width="4"/>`
+          s += `<path d="M140,935 L186,935 L182,956 L152,948Z" fill="${d}" stroke="${ln}" stroke-width="3"/><path d="M210,935 L262,935 L268,962 L212,962Z" fill="${b}" stroke="${ln}" stroke-width="3"/>`
+          if (o.chains !== false) s += CHAINS(d, ln)
+          return s
+        }
+        const SKETCH = (o) => STATUE('green', o).replace(/fill="#[0-9a-f]{6}"/g, 'fill="none"').replace(/stroke="#[0-9a-f]{6}"/g, 'stroke="#5a3a22"').replace('class="flame"', 'class="flame" stroke="#5a3a22"')
+        ;['st1', 'st19', 'st22', 'st23'].forEach((id) => { $(id).innerHTML = STATUE('green') })
+        $('tc2').innerHTML = STATUE('green', { chains: false })
+        $('big14').innerHTML = STATUE('green') + '<rect x="40" y="985" width="320" height="200" fill="#8a8478"/><rect x="30" y="975" width="340" height="16" fill="#a8a294"/>'
+        $('sk11').innerHTML = SKETCH({ handChains: true, chains: false })
+        // the build: iron skeleton (clipped to the silhouette), copper plates row by row, then the finished copper statue
+        $('bd13').innerHTML = `<defs><clipPath id="clip13">${SIL('#000')}</clipPath></defs><g clip-path="url(#clip13)"><g class="skel"><rect x="188" y="-20" width="24" height="980" fill="#6a6e78"/>${Array.from({ length: 26 }, (_, i) => `<path d="M60,${i * 40} L340,${i * 40 + 120} M340,${i * 40} L60,${i * 40 + 120}" stroke="#8a8e98" stroke-width="5"/>`).join('')}${Array.from({ length: 26 }, (_, i) => `<path d="M60,${i * 40} L340,${i * 40}" stroke="#5a5e68" stroke-width="3"/>`).join('')}</g>${Array.from({ length: 12 }, (_, i) => `<rect class="band" x="40" y="${960 - (i + 1) * 84}" width="320" height="86" fill="${i % 2 ? '#c07a40' : '#b87038'}" stroke="#7a4a22" stroke-width="4"/>`).join('')}</g><g class="cu">${STATUE('copper')}</g>`
+        rays('rays4', 24, '#a87aa8', '#2a1a2a'); rays('rays23', 28, '#ffd36a', '#a8650f')
+
+        // 1. the harbour at night: skyline, island, pedestal; the boat
+        $('hb1').innerHTML = '<g fill="#14203a">' + [[0, 980, 80, 95], [90, 1000, 60, 75], [160, 960, 50, 115], [220, 1010, 90, 65], [820, 990, 70, 85], [900, 960, 60, 115], [970, 1000, 110, 75]].map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}"/>`).join('') + '</g>' + Array.from({ length: 10 }, (_, i) => `<path d="M${(i * 137) % 1000},${1120 + i * 40} l${80 + (i % 3) * 40},0" stroke="#3a6a8a" stroke-width="4" opacity="0.5"/>`).join('') + '<path d="M340,1620 L740,1620 L800,1700 L280,1700Z" fill="#3a3a32"/><path d="M430,1382 L650,1382 L670,1620 L410,1620Z" fill="#b8b0a0" stroke="#7a7468" stroke-width="6"/><rect x="420" y="1370" width="240" height="20" fill="#d0c8b8"/>'
+        const BOAT = '<path d="M20,120 L480,120 L440,200 L60,200Z" fill="#2a2a30"/><rect x="300" y="40" width="40" height="80" fill="#a8121e"/><rect x="300" y="40" width="40" height="14" fill="#1b1b20"/>' + Array.from({ length: 11 }, (_, i) => `<circle cx="${60 + i * 22}" cy="${104 - (i % 2) * 4}" r="10" fill="#e8c0a0"/><rect x="${52 + i * 22}" y="${112 - (i % 2) * 4}" width="16" height="10" fill="${['#5a3a2a', '#3a4a6a', '#6a2a2a'][i % 3]}"/>`).join('') + '<circle class="smk" cx="320" cy="20" r="20" fill="#9aa4ae" opacity="0.6"/>'
+        $('bt1').innerHTML = BOAT
+        $('bt2').innerHTML = ''
+        // 3. the tourist postcard
+        $('pc3').innerHTML = '<rect x="10" y="10" width="780" height="540" rx="12" fill="#efe6cf" stroke="#b8a888" stroke-width="6"/><rect x="40" y="40" width="300" height="480" fill="#7ab0d0"/><g transform="translate(120,90) scale(0.4)">' + STATUE('green') + '</g><rect x="40" y="440" width="300" height="80" fill="#3a6a8a"/><text x="560" y="110" text-anchor="middle" font-family="Anton" font-size="44" fill="#1d3557">GREETINGS FROM</text><text x="560" y="166" text-anchor="middle" font-family="Anton" font-size="52" fill="#a8121e">NEW YORK</text><text x="560" y="260" text-anchor="middle" font-family="Anton" font-size="38" fill="#3a2312">BIENVENUE</text><text x="560" y="306" text-anchor="middle" font-family="Anton" font-size="38" fill="#3a2312">AUX IMMIGRANTS</text>' + [380, 420, 460].map((y) => `<line x1="400" y1="${y}" x2="720" y2="${y}" stroke="#8a7a5a" stroke-width="4"/>`).join('')
+        // 4. calendar 1865
+        $('cal4').innerHTML = '<rect x="10" y="40" width="280" height="290" rx="16" fill="#f4f1e8"/><rect x="10" y="40" width="280" height="70" rx="16" fill="#d7263d"/><rect x="70" y="20" width="16" height="50" rx="8" fill="#9aa4ae"/><rect x="214" y="20" width="16" height="50" rx="8" fill="#9aa4ae"/><text x="150" y="96" text-anchor="middle" font-family="Anton" font-size="40" fill="#fff">ANNÉE</text><text x="150" y="250" text-anchor="middle" font-family="Anton" font-size="110" fill="#1b1410">1865</text>'
+        // 5. the war ends: two flags, the cannon falls silent; the chain breaks
+        $('us5').innerHTML = '<rect x="0" y="1170" width="1080" height="750" fill="#3a2a1a"/><g transform="translate(150,520)"><rect x="0" y="0" width="12" height="660" fill="#5a3418"/><rect x="12" y="10" width="300" height="190" fill="#f4f1e8"/>' + [0, 1, 2, 3, 4, 5, 6].map((i) => `<rect x="12" y="${10 + i * 27}" width="300" height="14" fill="#b8222e"/>`).join('') + '<rect x="12" y="10" width="130" height="100" fill="#1d3a7a"/></g><g transform="translate(640,1000)"><rect x="0" y="60" width="260" height="50" rx="20" fill="#2a2a30" transform="rotate(-12 130 85)"/><circle cx="70" cy="140" r="46" fill="#5a3418" stroke="#2a1a0c" stroke-width="8"/><circle cx="200" cy="140" r="46" fill="#5a3418" stroke="#2a1a0c" stroke-width="8"/></g>'
+        const link = (x, y, r) => `<ellipse cx="${x}" cy="${y}" rx="46" ry="26" fill="none" stroke="#9aa4ae" stroke-width="16" transform="rotate(${r || 0} ${x} ${y})"/>`
+        $('ch5').innerHTML = `<g id="cl5">${link(60, 120)}${link(140, 120, 90)}${link(220, 120)}</g><g id="cr5">${link(380, 120)}${link(460, 120, 90)}${link(540, 120)}</g><path id="sp5" d="M300,60 l-20,40 l30,0 l-20,50" stroke="#ffc93c" stroke-width="10" fill="none"/>`
+        // 6. Paris roofs; two raised glasses
+        $('pa6').innerHTML = '<g fill="#3a4258">' + [[0, 980, 160, 200], [150, 940, 140, 240], [300, 1000, 180, 180], [470, 960, 130, 220], [610, 990, 170, 190], [790, 950, 150, 230], [940, 1000, 140, 180]].map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}"/><path d="M${x},${y} L${x + w / 2},${y - 50} L${x + w},${y}Z"/>`).join('') + '</g><path d="M540,940 L520,700 L560,700Z" fill="#3a4258"/>' + [[420, 1, -14], [660, -1, 14]].map(([x, f, r]) => `<g class="gl6" transform="translate(${x},900) rotate(${r})"><path d="M-40,0 L40,0 L20,80 L-20,80Z" fill="#e8f4ff" opacity="0.85" stroke="#9ab0c0" stroke-width="4"/><path d="M-34,24 L34,24 L20,80 L-20,80Z" fill="#ffd36a"/><rect x="-4" y="80" width="8" height="90" fill="#e8f4ff"/><rect x="-36" y="168" width="72" height="10" rx="4" fill="#e8f4ff"/></g>`).join('')
+        // 7. the society's founding document
+        $('dc7').innerHTML = '<rect x="10" y="10" width="540" height="680" fill="#efe2c0" stroke="#a88a5a" stroke-width="6"/><text x="280" y="90" text-anchor="middle" font-family="Anton" font-size="48" fill="#1d3557">SOCIÉTÉ FRANÇAISE</text><text x="280" y="150" text-anchor="middle" font-family="Anton" font-size="48" fill="#1d3557">CONTRE L\'ESCLAVAGE</text><text x="280" y="200" text-anchor="middle" font-family="Bebas" font-size="40" fill="#7a5a3a">PARIS · 1865</text><g transform="translate(150,250) scale(0.5)">' + link(60, 120) + link(140, 120, 90) + link(380, 120) + link(460, 120, 90) + '</g>' + [430, 470, 510, 550, 590].map((y) => `<line x1="60" y1="${y}" x2="500" y2="${y}" stroke="#8a7a5a" stroke-width="5"/>`).join('')
+        // 8. dinner table, candles; the idea bulb
+        $('dn8').innerHTML = '<rect x="0" y="1100" width="1080" height="820" fill="#5a3418"/><path d="M60,1100 L1020,1100 L1080,1240 L0,1240Z" fill="#f4f1e8"/>' + [220, 540, 860].map((x) => `<rect x="${x - 10}" y="980" width="20" height="120" fill="#f4f1e8"/><path class="fl8" d="M${x},940 C${x + 14},960 ${x + 10},976 ${x},980 C${x - 10},976 ${x - 14},960 ${x},940Z" fill="#ffc93c"/>`).join('') + [380, 700].map((x) => `<ellipse cx="${x}" cy="1150" rx="70" ry="18" fill="#e8e2d8" stroke="#b8b0a0" stroke-width="4"/>`).join('')
+        $('bulb8').innerHTML = '<path d="M150,30 C70,30 30,90 30,150 C30,210 80,240 96,300 L204,300 C220,240 270,210 270,150 C270,90 230,30 150,30Z" fill="#ffe7a0" stroke="#a88a40" stroke-width="8"/><rect x="100" y="300" width="100" height="60" rx="8" fill="#9aa4ae"/><path d="M120,200 L150,150 L180,200" stroke="#a88a40" stroke-width="6" fill="none"/>'
+        // 9. the gift (broken chain on the lid) / the door, crossed out
+        $('gf9').innerHTML = '<rect x="40" y="140" width="320" height="260" fill="#1d3a7a"/><rect x="20" y="100" width="360" height="60" fill="#2a4a8a"/><rect x="185" y="100" width="30" height="300" fill="#ffc93c"/><path d="M200,100 C140,40 110,80 196,100 M200,100 C260,40 290,80 204,100" stroke="#ffc93c" stroke-width="14" fill="none"/><g transform="translate(80,210) scale(0.4)">' + link(60, 120) + link(140, 120, 90) + link(380, 120) + link(460, 120, 90) + '</g>'
+        $('dr9').innerHTML = '<rect x="90" y="40" width="220" height="360" fill="#5a3418" stroke="#2a1a0c" stroke-width="10"/><rect x="120" y="70" width="160" height="140" fill="#6a4228"/><rect x="120" y="230" width="160" height="140" fill="#6a4228"/><circle cx="280" cy="230" r="10" fill="#c9962e"/><g id="x9" stroke="#d7263d" stroke-width="30" stroke-linecap="round"><line x1="40" y1="20" x2="360" y2="400"/><line x1="360" y1="20" x2="40" y2="400"/></g>'
+        // 10. the workshop with three small maquettes on a shelf
+        $('ws10').innerHTML = '<rect x="0" y="1180" width="1080" height="740" fill="#2a1c12"/><rect x="60" y="1060" width="960" height="24" fill="#7a4a26"/>' + [200, 540, 880].map((x, i) => `<g class="mq" transform="translate(${x - 70},${700}) scale(0.36)">${STATUE('green').replace(/#5aa592/g, '#d8c8b0').replace(/#3d7f6f/g, '#b8a888').replace(/#86c9b4/g, '#ece0cc').replace(/#2a5a50/g, '#7a6a5a')}</g>`).join('')
+        // 12. the tablet: JULY IV MDCCLXXVI
+        $('tb12').innerHTML = '<rect x="20" y="20" width="260" height="380" rx="14" fill="#86c9b4" stroke="#2a5a50" stroke-width="8"/><text x="150" y="160" text-anchor="middle" font-family="Anton" font-size="56" fill="#2a5a50">JULY IV</text><text x="150" y="250" text-anchor="middle" font-family="Anton" font-size="44" fill="#2a5a50">MDCCLXXVI</text>'
+        // 13. the Paris workshop: scaffolding, roofs
+        $('pr13').innerHTML = '<rect x="0" y="1170" width="1080" height="750" fill="#3a3430"/>' + [260, 820].map((x) => `<rect x="${x}" y="200" width="14" height="980" fill="#7a5a3a"/>`).join('') + Array.from({ length: 9 }, (_, i) => `<rect x="260" y="${260 + i * 110}" width="574" height="10" fill="#7a5a3a" opacity="0.8"/>`).join('')
+        // 15. the feet, big: robe hem, the heel lifting, the broken chain, the open shackle
+        $('ft15').innerHTML = '<rect x="0" y="760" width="1080" height="340" fill="#8a8478"/><path d="M0,0 L1080,0 L1080,560 C900,620 700,560 540,600 C380,640 180,580 0,620Z" fill="#5aa592" stroke="#2a5a50" stroke-width="8"/>' + [140, 340, 560, 780, 960].map((x) => `<path d="M${x},0 C${x - 30},300 ${x + 30},420 ${x},600" stroke="#3d7f6f" stroke-width="16" fill="none"/>`).join('') + '<g id="hl15" style="transform-origin:420px 760px"><path d="M180,600 C220,580 400,600 430,640 L420,760 C340,740 240,720 170,690Z" fill="#3d7f6f" stroke="#2a5a50" stroke-width="8"/></g><path d="M560,620 C620,600 860,620 900,680 L920,780 L560,780Z" fill="#5aa592" stroke="#2a5a50" stroke-width="8"/>' + '<g id="cn15">' + [100, 230, 360, 490, 620, 750].map((x, i) => `<ellipse cx="${x}" cy="${850 + (i % 2) * 14}" rx="60" ry="30" fill="none" stroke="#2a5a50" stroke-width="22"/>`).join('') + '</g><g id="br15"><path d="M840,830 C880,800 920,820 910,850" stroke="#2a5a50" stroke-width="22" fill="none" stroke-linecap="round"/><path d="M930,880 C960,900 980,880 980,860" stroke="#2a5a50" stroke-width="22" fill="none" stroke-linecap="round"/></g><g id="sh15"><path d="M60,920 C40,1000 160,1040 200,960" stroke="#3d7f6f" stroke-width="28" fill="none" stroke-linecap="round"/><circle cx="60" cy="920" r="16" fill="#2a5a50"/></g>'
+        // 16. from the ground: the huge pedestal, tiny visitors, the statue's feet out of sight
+        $('gr16').innerHTML = '<g transform="translate(410,240) scale(0.65)">' + STATUE('green') + '</g><path d="M300,860 L780,860 L860,1560 L220,1560Z" fill="#b8b0a0" stroke="#7a7468" stroke-width="8"/><rect x="290" y="840" width="500" height="30" fill="#d0c8b8"/>' + [380, 540, 700].map((x) => `<rect x="${x - 30}" y="1000" width="60" height="140" rx="30" fill="#8a8478"/>`).join('') + '<rect x="0" y="1560" width="1080" height="360" fill="#3a4a3a"/>' + [150, 260, 820, 930].map((x) => `<g transform="translate(${x},1640)"><circle cx="0" cy="-60" r="18" fill="#e8c0a0"/><rect x="-16" y="-42" width="32" height="60" rx="10" fill="${x < 500 ? '#3a4a6a' : '#6a2a2a'}"/></g>`).join('') + '<circle id="eye16" cx="420" cy="860" r="0" fill="none"/>'
+        $('hl16').innerHTML = '<rect x="20" y="20" width="260" height="8" fill="#1b1b20"/><rect x="146" y="28" width="8" height="24" fill="#1b1b20"/><path d="M90,52 L200,52 C240,52 250,110 200,110 L110,110 C70,110 60,52 90,52Z" fill="#d7263d"/><path d="M200,80 L290,70 L290,90 L200,96Z" fill="#d7263d"/><circle cx="110" cy="80" r="16" fill="#9ad0f0"/><path d="M100,120 L220,120" stroke="#1b1b20" stroke-width="6"/>'
+        // 17. the poem; the pedestal fund (coins)
+        $('pm17').innerHTML = '<rect x="10" y="10" width="400" height="500" fill="#efe6cf" stroke="#b8a888" stroke-width="5"/><text x="210" y="80" text-anchor="middle" font-family="Anton" font-size="40" fill="#1d3557">THE NEW</text><text x="210" y="130" text-anchor="middle" font-family="Anton" font-size="40" fill="#1d3557">COLOSSUS</text>' + [190, 230, 270, 310, 350, 390, 430, 470].map((y, i) => `<line x1="50" y1="${y}" x2="${i % 4 === 3 ? 300 : 370}" y2="${y}" stroke="#8a7a5a" stroke-width="5"/>`).join('')
+        $('sk17').innerHTML = '<path d="M200,40 L400,40 L440,280 L160,280Z" fill="none" stroke="#d0c8b8" stroke-width="8" stroke-dasharray="20 14"/><text x="300" y="180" text-anchor="middle" font-family="Anton" font-size="56" fill="#d0c8b8">SOCLE</text>' + [[60, 240], [100, 200], [500, 240], [540, 190], [80, 160], [520, 140]].map(([x, y]) => `<g class="coin"><circle cx="${x}" cy="${y}" r="30" fill="#ffc93c" stroke="#a87a10" stroke-width="5"/><text x="${x}" y="${y + 12}" text-anchor="middle" font-family="Anton" font-size="34" fill="#a87a10">$</text></g>`).join('')
+        // 18. the drawer swallows the poem; dust
+        $('dw18').innerHTML = '<rect x="40" y="300" width="520" height="260" fill="#5a3418" stroke="#2a1a0c" stroke-width="10"/><rect x="40" y="250" width="520" height="60" fill="#6a4228" stroke="#2a1a0c" stroke-width="8"/><g id="dp18"><rect x="180" y="20" width="240" height="300" fill="#efe6cf" stroke="#b8a888" stroke-width="5"/><text x="300" y="80" text-anchor="middle" font-family="Anton" font-size="30" fill="#1d3557">THE NEW COLOSSUS</text></g><rect x="40" y="300" width="520" height="260" fill="#5a3418" stroke="#2a1a0c" stroke-width="10"/><rect x="250" y="410" width="100" height="24" rx="10" fill="#c9962e"/>'
+        // 19. inauguration: fireworks, ships; the pedestal under the statue
+        $('fw19').innerHTML = [[200, 420, '#ffc93c'], [860, 380, '#ff7a8a'], [540, 300, '#7ad0f0'], [300, 760, '#9be27a'], [820, 720, '#ffc93c']].map(([x, y, c]) => `<g class="fw" style="transform-origin:${x}px ${y}px">${Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2; return `<line x1="${x}" y1="${y}" x2="${(x + Math.cos(a) * 90).toFixed(0)}" y2="${(y + Math.sin(a) * 90).toFixed(0)}" stroke="${c}" stroke-width="6" stroke-linecap="round"/>` }).join('')}</g>`).join('') + [[60, 1180], [760, 1210]].map(([x, y]) => `<g transform="translate(${x},${y}) scale(0.55)">${BOAT}</g>`).join('')
+        $('pd19').innerHTML = '<path d="M455,1074 L625,1074 L645,1260 L435,1260Z" fill="#b8b0a0" stroke="#7a7468" stroke-width="5"/><path d="M380,1260 L700,1260 L740,1320 L340,1320Z" fill="#3a3a32"/>'
+        // 20. Ellis Island: the red-brick hall with four domed towers
+        $('el20').innerHTML = '<rect x="0" y="1180" width="1080" height="740" fill="#1e4a6a"/><g transform="translate(90,660)"><rect x="0" y="200" width="900" height="340" fill="#a8483a" stroke="#6a2a20" stroke-width="8"/><path d="M300,200 C300,90 600,90 600,200Z" fill="#a8483a" stroke="#6a2a20" stroke-width="8"/>' + [20, 300, 560, 840].map((x) => `<rect x="${x}" y="80" width="60" height="460" fill="#c8c0b0"/><path d="M${x},80 C${x},30 ${x + 60},30 ${x + 60},80Z" fill="#7a8a9a"/>`).join('') + Array.from({ length: 7 }, (_, i) => `<rect x="${110 + i * 105}" y="300" width="50" height="110" rx="25" fill="#f4e8c8"/>`).join('') + '</g>'
+        // 21. the bronze plaque; timeline 1886 → 1903
+        $('pl21').innerHTML = '<rect x="10" y="10" width="580" height="400" rx="16" fill="#8a6a3a" stroke="#4a3418" stroke-width="10"/><rect x="34" y="34" width="532" height="352" rx="8" fill="none" stroke="#c9a060" stroke-width="4"/><text x="300" y="100" text-anchor="middle" font-family="Anton" font-size="44" fill="#f2d070">THE NEW COLOSSUS</text>' + [160, 200, 240, 280, 320, 360].map((y) => `<line x1="80" y1="${y}" x2="520" y2="${y}" stroke="#c9a060" stroke-width="5"/>`).join('')
+        $('tm21').innerHTML = '<line x1="60" y1="200" x2="940" y2="200" stroke="#f4f1e8" stroke-width="10" stroke-linecap="round"/><g id="tk21a"><circle cx="100" cy="200" r="22" fill="#86c9b4"/><text x="100" y="300" text-anchor="middle" font-family="Anton" font-size="60" fill="#f4f1e8">1886</text></g><g id="tk21b"><circle cx="420" cy="200" r="22" fill="#a8483a"/><text x="420" y="300" text-anchor="middle" font-family="Anton" font-size="60" fill="#f4f1e8">1892</text></g><g id="tk21c"><circle cx="900" cy="200" r="22" fill="#ffc93c"/><text x="900" y="300" text-anchor="middle" font-family="Anton" font-size="60" fill="#ffc93c">1903</text></g><path id="br21" d="M100,140 C100,60 900,60 900,140" stroke="#ffc93c" stroke-width="8" fill="none" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>'
+
+        // ---------- scene cuts on the voice ----------
+        const at = (k) => Math.round((T[k] - 0.06) * 100) / 100
+        const CUT = [0, at(12), at(19), at(37), at(44), at(56), at(68), at(81), at(96), at(107), at(114), at(129), at(143), at(161), at(174), at(191), at(206), at(228), at(237), at(245), at(250), at(264), at(272), END]
+        const SC = Array.from({ length: 23 }, (_, i) => '#s' + (i + 1))
+        SC.forEach((s, i) => {
+          tl.set(s, { visibility: 'visible' }, CUT[i])
+          tl.set(s, { visibility: 'hidden' }, CUT[i + 1])
+          if (s !== '#s14') tl.fromTo(s + ' .cam', { scale: 1 }, { scale: 1.06, duration: CUT[i + 1] - CUT[i], ease: 'none', immediateRender: false }, CUT[i])
+          if (i) tl.fromTo(s + ' .cam', { y: 30 }, { y: 0, duration: 0.25, ease: 'power3.out', immediateRender: false }, CUT[i])
+        })
+        const pop = (sel, t, o) => { const { rot, ...from } = Object.assign({ autoAlpha: 0, scale: 0.4 }, o || {}); tl.fromTo(sel, from, { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: rot || 0, duration: 0.4, ease: 'back.out(1.8)' }, t) }
+        const out = (sel, t) => tl.to(sel, { autoAlpha: 0, scale: 0.7, duration: 0.18, ease: 'power2.in' }, t)
+        const spin = (sel, t0, t1, deg) => tl.fromTo(sel, { rotation: 0 }, { rotation: deg, duration: t1 - t0, ease: 'none', immediateRender: false }, t0)
+        const stamp = (sel, t, rot) => tl.fromTo(sel, { autoAlpha: 0, scale: 2.6, rotation: 4 }, { autoAlpha: 1, scale: 1, rotation: rot, duration: 0.2, ease: 'power4.in' }, t)
+        const shake = (sel, t) => tl.fromTo(sel, { x: 0 }, { x: 14, duration: 0.04, yoyo: true, repeat: 5, ease: 'none', immediateRender: false }, t)
+        const draw = (sel, t, d) => tl.fromTo(sel, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: d || 0.5, ease: 'power1.inOut', immediateRender: false }, t)
+        const glow = (sel, t, c) => tl.fromTo(sel, { filter: `drop-shadow(0 0 0px ${c})` }, { filter: `drop-shadow(0 0 30px ${c})`, duration: 0.4, immediateRender: false }, t)
+        const gold = (sel, t) => tl.fromTo(sel, { stroke: (i, el) => el.getAttribute('stroke') }, { stroke: '#ffc93c', duration: 0.4, immediateRender: false }, t)
+        const flicker = (sel, t0, t1) => tl.fromTo(sel, { scaleY: 1 }, { scaleY: 1.25, duration: 0.18, yoyo: true, repeat: Math.max(1, Math.floor((t1 - t0) / 0.18)), ease: 'sine.inOut', transformOrigin: '50% 100%', immediateRender: false }, t0)
+
+        // 1. the statue at night; the boat of immigrants arrives
+        pop('#st1', 0.02, { y: 200, scale: 0.85 })
+        tl.fromTo('#bt1', { x: 500 }, { x: 0, duration: 2.0, ease: 'power2.out' }, 0.05)
+        pop('#im1', T[8] - 0.05, { rot: -2 })
+        glow('#st1 .flame', 0.4, 'rgba(255,200,60,0.9)')
+        // 2. the torch, raised for them
+        tl.fromTo('#tc2', { y: 200 }, { y: 0, duration: CUT[2] - CUT[1], ease: 'power2.out', immediateRender: false }, CUT[1])
+        glow('#tc2 .flame', T[16] - 0.05, 'rgba(255,200,60,1)')
+        flicker('#tc2 .flame', CUT[1], CUT[2])
+        // 3. the postcard; FAUX
+        pop('#pc3', CUT[2] + 0.02, { y: 200, scale: 0.85, rot: -3 })
+        stamp('#faux3', T[30] - 0.04, -10)
+        shake('#s3 .cam', T[30] + 0.16)
+        // 4. POUR LES IMMIGRANTS ? ; 1865
+        spin('#rays4', CUT[3], CUT[4], 18)
+        pop('#q4', CUT[3] + 0.02, { scale: 0.6 })
+        out('#q4', T[41] - 0.15)
+        pop('#cal4', T[43] - 0.1, { scale: 0.4, rot: -8 })
+        // 5. the Civil War ends; the chain breaks; ESCLAVAGE ABOLI
+        pop('#gs5', T[47] - 0.05, { rot: -2 })
+        pop('#ch5', T[52] - 0.1, { scale: 0.5 })
+        tl.fromTo('#cl5', { x: 0, rotation: 0 }, { x: -60, rotation: -10, duration: 0.3, ease: 'power3.out', immediateRender: false }, T[55] - 0.05)
+        tl.fromTo('#cr5', { x: 0, rotation: 0 }, { x: 60, rotation: 10, duration: 0.3, ease: 'power3.out', immediateRender: false }, T[55] - 0.05)
+        tl.fromTo('#sp5', { autoAlpha: 0, scale: 0.3 }, { autoAlpha: 1, scale: 1.2, duration: 0.15, yoyo: true, repeat: 1, ease: 'none', immediateRender: false }, T[55] - 0.05)
+        gsap.set('#sp5', { autoAlpha: 0 })
+        pop('#ab5', T[55] - 0.05, { scale: 0.5 })
+        // 6. Laboulaye, jurist; the toast to the North's victory
+        pop('#lb6', T[60] - 0.05, { scale: 0.3 }); pop('#nm6', T[61] - 0.05, { y: 30 })
+        pop('#ju6', T[59] - 0.05, { rot: -2 })
+        document.querySelectorAll('#pa6 .gl6').forEach((g, i) => tl.fromTo(g, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25, immediateRender: false }, T[63] - 0.1 + i * 0.1))
+        gsap.set('#pa6 .gl6', { autoAlpha: 0 })
+        pop('#vn6', T[65] - 0.05, { scale: 0.5 })
+        blink('#lb6', [T[64]])
+        // 7. the anti-slavery society; PRÉSIDENT
+        pop('#lb7', CUT[6] + 0.02, { scale: 0.3 })
+        pop('#dc7', T[69] - 0.05, { y: 150, rot: 2 })
+        stamp('#pr7', T[80] - 0.04, -8)
+        // 8. the idea, over dinner (so the story goes)
+        pop('#g8', T[84] - 0.05, { scale: 0.6 })
+        flicker('#dn8 .fl8', CUT[7], CUT[8])
+        pop('#bulb8', T[86] - 0.05, { scale: 0.3 })
+        glow('#bulb8', T[86] + 0.2, 'rgba(255,230,120,0.9)')
+        pop('#mo8', T[92] - 0.05, { rot: -2 })
+        // 9. a gift for the end of slavery, not a gateway
+        pop('#gf9', T[97] - 0.05, { scale: 0.4, rot: -4 }); pop('#cd9', T[100] - 0.05, { y: 20 })
+        pop('#dr9', T[103] - 0.05, { scale: 0.4 }); pop('#po9', T[105] - 0.05, { y: 20 })
+        tl.fromTo('#x9 line', { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.18, ease: 'power3.out', stagger: 0.08, immediateRender: false }, T[105])
+        gsap.set('#x9 line', { scale: 0, transformOrigin: '50% 50%' })
+        // 10. Bartholdi, sculptor; the maquettes
+        pop('#ba10', CUT[9] + 0.02, { scale: 0.3 }); pop('#nm10', T[109] - 0.05, { x: 60 }); pop('#sc10', T[108] - 0.05, { rot: -3 })
+        document.querySelectorAll('#ws10 .mq').forEach((m, i) => tl.fromTo(m, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.25, immediateRender: false }, T[112] + i * 0.15))
+        gsap.set('#ws10 .mq', { autoAlpha: 0 })
+        blink('#ba10', [T[110]])
+        // 11. a maquette: broken chains in her left hand
+        pop('#sk11', CUT[10] + 0.02, { y: 150, scale: 0.9 })
+        pop('#mq11', CUT[10] + 0.1, { rot: -2 })
+        pop('#hi11', T[117] - 0.05, { rot: 2 })
+        tl.fromTo('#sk11 .hc', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, immediateRender: false }, T[123] - 0.05)
+        gsap.set('#sk11 .hc', { autoAlpha: 0 })
+        tl.to('#sk11 .hc ellipse, #sk11 .hc path', { stroke: '#d7263d', duration: 0.3 }, T[123] + 0.2)
+        pop('#cb11', T[124] - 0.05, { scale: 0.5 })
+        // 12. the tablet; 4 July 1776
+        pop('#g12', T[135] - 0.05, { scale: 0.6 })
+        pop('#tb12', T[134] - 0.05, { scale: 0.4, rot: -6 })
+        pop('#d12', T[140] - 0.05, { scale: 0.5 })
+        // 13. the statue builds: iron skeleton, copper plates row by row, the finished copper statue
+        pop('#ei13', T[145] - 0.05, { scale: 0.3 }); pop('#nm13', T[146] - 0.05, { y: 20 })
+        tl.fromTo('#bd13 .skel', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.9, ease: 'power1.out', immediateRender: false }, T[148] - 0.1)
+        gsap.set('#bd13 .skel', { clipPath: 'inset(100% 0% 0% 0%)' })
+        pop('#fe13', T[150] - 0.05, { x: 60 })
+        document.querySelectorAll('#bd13 .band').forEach((b, i) => tl.fromTo(b, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.08, immediateRender: false }, T[154] + i * 0.13))
+        gsap.set('#bd13 .band', { autoAlpha: 0 })
+        pop('#cu13', T[154] - 0.05, { x: 60 })
+        tl.fromTo('#bd13 .cu', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, immediateRender: false }, CUT[13] - 0.35)
+        gsap.set('#bd13 .cu', { autoAlpha: 0 })
+        blink('#ei13', [T[152]])
+        // 14. the camera goes down the statue, from the torch to the feet
+        tl.fromTo('#big14', { y: 0 }, { y: -1430, duration: T[173] + 0.2 - CUT[13], ease: 'power2.inOut', immediateRender: false }, CUT[13])
+        gold('#big14 .chn ellipse, #big14 .chn path', T[172])
+        // 15. the feet: open shackle, broken chain, the right heel lifts
+        pop('#sh15', T[175] - 0.05, { scale: 0.5 }); pop('#fo15', T[176] - 0.05, { y: 20 })
+        gold('#sh15 path', T[175] + 0.2)
+        pop('#br15', T[178] - 0.05, { scale: 0.5 }); pop('#cb15', T[179] - 0.05, { y: 20 })
+        gold('#cn15 ellipse, #br15 path', T[178] + 0.2)
+        tl.fromTo('#hl15', { rotation: 0 }, { rotation: -6, duration: 0.6, ease: 'power2.out', immediateRender: false }, T[182])
+        pop('#pd15', T[183] - 0.05, { scale: 0.5 })
+        // 16. from the ground they are out of sight; from above
+        pop('#in16', T[193] - 0.05, { rot: -2 })
+        tl.fromTo('#hl16', { x: 500, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration: 0.6, ease: 'power2.out' }, T[200])
+        pop('#eh16', T[204] - 0.05, { scale: 0.5 })
+        // 17. ET LE POÈME ? ; Emma Lazarus, 1883; the pedestal fund
+        pop('#q17', CUT[16] + 0.02, { scale: 0.6 })
+        pop('#em17', T[217] - 0.05, { scale: 0.3 }); pop('#nm17', T[218] - 0.05, { y: 20 })
+        pop('#pm17', T[215] - 0.05, { y: 150, rot: 3 })
+        pop('#y17', T[220] - 0.05, { scale: 0.5 })
+        pop('#sk17', T[222] - 0.05, { y: 100 })
+        document.querySelectorAll('#sk17 .coin').forEach((c, i) => tl.fromTo(c, { y: -300, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.35, ease: 'bounce.out', immediateRender: false }, T[224] + i * 0.1))
+        gsap.set('#sk17 .coin', { autoAlpha: 0 })
+        blink('#em17', [T[222]])
+        // 18. meanwhile: the poem slides into a drawer; OUBLIÉ
+        pop('#q18', CUT[17] + 0.02, { scale: 0.6 })
+        pop('#dw18', CUT[17] + 0.1, { y: 120 })
+        tl.fromTo('#dp18', { y: 0 }, { y: 300, duration: 0.6, ease: 'power2.in', immediateRender: false }, T[234])
+        stamp('#ou18', T[236] - 0.04, -8)
+        // 19. 28 Oct. 1886: fireworks, ships; without the poem
+        pop('#y19', T[241] - 0.1, { scale: 0.5 })
+        pop('#st19', CUT[18] + 0.02, { scale: 0.8, y: 100 })
+        document.querySelectorAll('#fw19 .fw').forEach((f, i) => tl.fromTo(f, { scale: 0, autoAlpha: 0 }, { scale: 1.2, autoAlpha: 1, duration: 0.5, ease: 'power2.out', immediateRender: false }, CUT[18] + 0.2 + i * 0.3))
+        gsap.set('#fw19 .fw', { autoAlpha: 0 })
+        stamp('#sp19', T[243] - 0.04, -6)
+        // 20. Ellis Island, 1892
+        tl.fromTo('#el20 g', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, immediateRender: false }, CUT[19] + 0.02)
+        pop('#nm20', T[246] - 0.05, { rot: -2 })
+        pop('#y20', T[249] - 0.05, { scale: 0.5 })
+        // 21. the plaque, 1903; + 17 years
+        pop('#pl21', T[252] - 0.05, { y: 150 })
+        pop('#g21', T[259] - 0.05, { scale: 0.5 })
+        pop('#tk21a', CUT[20] + 0.1, { scale: 0.3 }); pop('#tk21b', CUT[20] + 0.3, { scale: 0.3 }); pop('#tk21c', T[259] - 0.05, { scale: 0.3 })
+        draw('#br21', T[260] - 0.05, 0.6)
+        pop('#a21', T[260] - 0.05, { scale: 0.5 })
+        // 22. its real name
+        pop('#q22', CUT[21] + 0.02, { scale: 0.6 })
+        out('#q22', T[267] - 0.15)
+        pop('#st22', CUT[21] + 0.05, { scale: 0.8, y: 100 })
+        pop('#vn22a', T[268] - 0.05, { scale: 0.5 }); pop('#vn22b', T[269] - 0.05, { scale: 0.5 })
+        glow('#st22 .flame', T[269], 'rgba(255,200,60,1)')
+        // 23. mirror: the statue in gold light; down to the broken chains
+        spin('#rays23', CUT[22], END, 20)
+        pop('#st23', CUT[22] + 0.02, { scale: 0.8, y: 100 })
+        pop('#f23a', T[272] - 0.05, { scale: 0.6 })
+        out('#f23a', T[281] - 0.15)
+        pop('#f23b', T[281] - 0.05, { scale: 0.5 })
+        tl.to('#st23', { scale: 2.6, y: -260, transformOrigin: '50% 95%', duration: 1.2, ease: 'power2.inOut' }, T[283])
+        gold('#st23 .chn ellipse, #st23 .chn path', T[287] - 0.3)
+
+        // ---------- captions: groups of 2-4 words, the spoken word in a red box ----------
+        const caps = $('caps')
+        const G = []
+        let cur = []
+        WORDS.forEach((w, k) => {
+          if (!w) return
+          cur.push(k)
+          const len = cur.reduce((n, j) => n + WORDS[j].length + 1, 0)
+          if (/[.,:;?!…]$/.test(w) || cur.length >= 4 || len > 20) { G.push(cur); cur = [] }
+        })
+        if (cur.length) G.push(cur)
+        G.forEach((g, gi) => {
+          const box = document.createElement('div'); box.className = 'grp'; caps.appendChild(box)
+          const t0 = T[g[0]] - 0.04, t1 = gi < G.length - 1 ? T[G[gi + 1][0]] - 0.04 : END
+          tl.set(box, { visibility: 'visible' }, t0)
+          tl.set(box, { visibility: 'hidden' }, t1)
+          tl.fromTo(box, { scale: 0.92 }, { scale: 1, duration: 0.12, ease: 'power2.out', immediateRender: false }, t0)
+          g.forEach((k, j) => {
+            const s = document.createElement('span'); s.className = 'cw'; s.textContent = WORDS[k]; box.appendChild(s)
+            const next = j < g.length - 1 ? T[g[j + 1]] - 0.04 : t1
+            tl.set(s, { '--on': 1 }, T[k] - 0.04)
+            tl.set(s, { '--on': 0 }, next)
+          })
+        })
+        tl.fromTo('#prog', { scaleX: 0 }, { scaleX: 1, duration: END, ease: 'none', immediateRender: false }, 0)
+        gsap.set('#prog', { scaleX: 0 })
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+
+    </script>
+  </body>
+</html>
