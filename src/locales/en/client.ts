@@ -597,6 +597,8 @@ export const CLIENT_EN: Record<string, string> = {
   'Destination mise à jour': 'Destination updated',
   'Position du bateau': 'Ship position',
   'Voyage': 'Voyage',
+  'En direct': 'Live',
+  'Actualiser la position': 'Refresh the position',
   'Dernier signal : {0} (il y a {1})': 'Last signal: {0} ({1} ago)',
   'Carte de la position du bateau': 'Map of the ship position',
   'Position issue des signaux AIS du bateau : elle peut avoir quelques heures de retard et la destination est annoncée par le bateau lui-même.': 'Position from the ship\'s AIS signals: it can be a few hours behind, and the destination is announced by the ship itself.',

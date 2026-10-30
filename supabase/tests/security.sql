@@ -1109,13 +1109,14 @@ DO $$ DECLARE a uuid := (SELECT client_a FROM ctx); b uuid := (SELECT client_b F
   RESET ROLE;
   ASSERT r ->> 'vessel' = 'MV TEST SHIP' AND (r ->> 'lat')::numeric = 22.4 AND (r ->> 'speed_kn')::numeric = 12.0, 'the owner does not see the ship: ' || coalesce(r::text, 'null');
   ASSERT r ->> 'destination' = 'HT PAP' AND jsonb_array_length(r -> 'history') = 2, 'the destination or the history is missing';
+  ASSERT jsonb_array_length(r -> 'track') = 2 AND (r -> 'track' -> 0 ->> 0)::numeric = 22.5 AND (r -> 'track' -> 1 ->> 0)::numeric = 22.4, 'the route is missing or not oldest first: ' || (r -> 'track')::text;
 
   -- what the team hides is not sent at all
   UPDATE shipments SET ais_show = '{"position":false,"speed":false,"destination":true,"eta":false,"history":false}' WHERE id = sid;
   PERFORM pg_temp.as_user(a);
   r := public.get_shipment_vessel(sid);
   RESET ROLE;
-  ASSERT NOT (r ? 'lat') AND NOT (r ? 'lng') AND NOT (r ? 'speed_kn') AND NOT (r ? 'eta') AND NOT (r ? 'history'), 'a hidden parameter was sent: ' || r::text;
+  ASSERT NOT (r ? 'lat') AND NOT (r ? 'lng') AND NOT (r ? 'track') AND NOT (r ? 'course') AND NOT (r ? 'speed_kn') AND NOT (r ? 'eta') AND NOT (r ? 'history'), 'a hidden parameter was sent: ' || r::text;
   ASSERT r ->> 'destination' = 'HT PAP', 'a shown parameter is missing';
 
   -- someone else's cargo, a switched-off follow-up, anonymous visitors

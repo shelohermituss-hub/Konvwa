@@ -1,5 +1,6 @@
 // Follows the ship of a shipment from the free aisstream.io feed (the position signals ships broadcast, AIS).
 // Admin tool: `find` (looks a ship up by name: it listens to the feed for a minute) and `refresh` (reads one shipment now).
+// `live` (a client with the page open): reads the ship now, at most once every 3 minutes per shipment, for the clients whose shipment it is.
 // The job (pg_cron -> database function -> here, header x-cron-secret): `tick` refreshes every shipment that is at sea.
 // Needs the secret AISSTREAM_API_KEY (Supabase > Edge Functions > Secrets). The feed allows one connection per key: calls wait their turn.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -142,16 +143,34 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await admin.auth.getUser(authHeader.replace('Bearer ', ''))
     if (authError || !user) return json({ error: 'Unauthorized' }, 401)
 
-    // staff only: is_admin() is evaluated with the caller's own token (it also enforces the MFA rule)
     const asUser = createClient(supaUrl, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } })
+    const body = await req.json().catch(() => ({})) as { action?: unknown; name?: unknown; shipment_id?: unknown }
+
+    // a client watching the map: only for a shipment that is theirs (get_shipment_vessel answers nothing otherwise), and never more than once per 3 minutes
+    if (body.action === 'live') {
+      const id = String(body.shipment_id ?? '')
+      if (!UUID.test(id)) return json({ error: 'Expédition inconnue.' }, 400)
+      const { data: mine } = await asUser.rpc('get_shipment_vessel', { p_shipment: id })
+      if (!mine) return json({ error: 'Expédition inconnue.' }, 404)
+      const { data: allowedLive } = await admin.rpc('check_rate_limit', { p_key: `vessel-live:${user.id}`, p_max: 60, p_window_seconds: 3600 })
+      if (allowedLive === false) return json({ throttled: true })
+      if (!key) return json({ throttled: true })
+      const { data: ship } = await admin.from('shipments').select(`${SHIP_FIELDS}, ais_synced_at`).eq('id', id).maybeSingle()
+      if (!ship?.vessel_mmsi) return json({ throttled: true })
+      if (ship.ais_synced_at && Date.now() - Date.parse(ship.ais_synced_at) < 180_000) return json({ throttled: true })
+      // mark the reading first: a second client arriving during these seconds is turned away instead of opening a second connection
+      await admin.from('shipments').update({ ais_synced_at: new Date().toISOString() }).eq('id', id)
+      const { results } = await track(admin, key, [ship as Ship], 20_000)
+      return json({ heard: !!results[id]?.fix, saved: !!results[id]?.saved })
+    }
+
+    // staff only: is_admin() is evaluated with the caller's own token (it also enforces the MFA rule)
     const { data: isStaff } = await asUser.rpc('is_admin')
     if (isStaff !== true) return json({ error: 'Accès réservé à l\'équipe.' }, 403)
 
     const { data: allowed } = await admin.rpc('check_rate_limit', { p_key: `vessel-track:${user.id}`, p_max: 30, p_window_seconds: 3600 })
     if (allowed === false) return json({ error: 'Trop de recherches, réessayez dans quelques minutes.' }, 429)
     if (!key) return notConfigured()
-
-    const body = await req.json().catch(() => ({})) as { action?: unknown; name?: unknown; shipment_id?: unknown }
 
     if (body.action === 'find') {
       const name = String(body.name ?? '').trim().slice(0, 40)

@@ -30,6 +30,9 @@ export const findVessel = (name: string) => call<{ candidates: VesselCandidate[]
 /** Reads the position of the ship of a shipment now (up to 40 seconds). */
 export const refreshVessel = (shipmentId: string) => call<{ heard: boolean; saved: boolean; lat: number | null; lng: number | null; at: string | null }>({ action: 'refresh', shipment_id: shipmentId })
 
+/** A client with the map open: the server reads the ship now (at most once every 3 minutes per shipment; `throttled` when it was read recently). */
+export const liveVessel = (shipmentId: string) => call<{ throttled?: boolean; heard?: boolean }>({ action: 'live', shipment_id: shipmentId })
+
 /** What a client sees of the ship of their shipment: only the parameters the team chose to show are present. */
 export interface ShipmentVessel {
   vessel: string | null
@@ -37,6 +40,10 @@ export interface ShipmentVessel {
   at: string
   lat?: number
   lng?: number
+  /** Heading in degrees (0 = north). */
+  course?: number
+  /** The route travelled so far, oldest first: [lat, lng]. */
+  track?: Array<[number, number]>
   speed_kn?: number
   destination?: string
   eta?: string
