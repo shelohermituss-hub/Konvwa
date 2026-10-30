@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Comment un téléphone passe un appel</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script type="importmap">
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.181.2/examples/jsm/" } }
+    </script>
+    <!--
+      « style 3D » (videos/_engine/style-3d/README.md) : vraie 3D Three.js, un seul plan, l'objet se construit pièce par pièce ;
+      récit « tu le construis toi-même » : deux pots et un fil → le micro → le codec → l'antenne → l'antenne-relais → la carte SIM →
+      la fibre (sous la mer) → le central → le téléphone de ton ami → tout à l'envers → moins de 0,15 s → « tu viens de construire un téléphone ».
+      Toute la scène est calculée à partir du temps (événement hf-seek) ; étiquettes projetées depuis la 3D ; titres et sous-titres en GSAP.
+      Voix Adrien Moreau (Magnific / ElevenLabs) ; bruitages mixés sous la voix (../_engine/style-anime/mix_anime.py).
+    -->
+    <style>
+      @font-face { font-family: "Poppins"; font-weight: 800; src: url("assets/fonts/poppins-800.woff2") format("woff2"); }
+      @font-face { font-family: "Mono"; font-weight: 700; src: url("assets/fonts/jetbrains-mono-700.woff2") format("woff2"); }
+      @font-face { font-family: "Mono"; font-weight: 700; src: url("assets/fonts/jetbrains-mono-ext-700.woff2") format("woff2"); unicode-range: U+0100-024F; }
+      @font-face { font-family: "Mono"; font-weight: 500; src: url("assets/fonts/jetbrains-mono-500.woff2") format("woff2"); }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0c1c22; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #0c1c22; }
+      #three { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; display: block; }
+      #glow { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 45% at 50% 42%, rgba(63, 214, 240, 0.08), transparent 70%), radial-gradient(ellipse 90% 70% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%); pointer-events: none; }
+      .lab { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); font-family: "Mono", monospace; font-weight: 700; font-size: 26px; letter-spacing: 0.08em; color: #dff7fc; background: rgba(8, 22, 28, 0.86); border: 2px solid rgba(63, 214, 240, 0.55); border-radius: 8px; padding: 6px 14px 5px; white-space: nowrap; opacity: 0; }
+      .lab.warn { color: #ffd2c4; border-color: rgba(240, 120, 90, 0.7); }
+      .ttl { position: absolute; left: 0; right: 0; top: 250px; text-align: center; font-family: "Mono", monospace; font-weight: 700; font-size: 84px; letter-spacing: 0.08em; color: #f4fbfd; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6); visibility: hidden; }
+      .ttl::after { content: ""; display: block; width: 180px; height: 8px; margin: 18px auto 0; background: #3fd6f0; border-radius: 4px; box-shadow: 0 0 18px rgba(63, 214, 240, 0.8); }
+      .cnt { position: absolute; left: 60px; top: 200px; font-family: "Mono", monospace; color: #f4fbfd; visibility: hidden; }
+      .cnt small { display: block; font-size: 28px; font-weight: 500; letter-spacing: 0.12em; color: #8fd8e6; }
+      .cnt b { display: block; font-size: 92px; font-weight: 700; color: #3fd6f0; text-shadow: 0 0 22px rgba(63, 214, 240, 0.6); }
+      #caps { position: absolute; left: 60px; right: 60px; top: 1180px; height: 220px; }
+      .grp { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-family: "Poppins", sans-serif; font-weight: 800; font-size: 66px; line-height: 1.12; color: #ffffff; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 2px rgba(0, 0, 0, 0.9); visibility: hidden; }
+      .grp .k { color: #3fd6f0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="81.6" data-width="1080" data-height="1920">
+      <canvas id="three" width="1080" height="1920"></canvas>
+      <div id="glow"></div>
+      <div id="labs"></div>
+      <div class="ttl" id="t-micro">MICRO</div>
+      <div class="ttl" id="t-codec">CODEC</div>
+      <div class="ttl" id="t-ant">ANTENNE</div>
+      <div class="ttl" id="t-relais">ANTENNE-RELAIS</div>
+      <div class="ttl" id="t-sim">CARTE SIM</div>
+      <div class="ttl" id="t-res">UN RÉSEAU</div>
+      <div class="cnt" id="c-ech"><small>MESURES</small><b id="c-ech-n">0</b><small>PAR SECONDE</small></div>
+      <div class="cnt" id="c-vit"><small>ONDES RADIO</small><b>300 000</b><small>KM PAR SECONDE</small></div>
+      <div class="cnt" id="c-lat"><small>DE TA BOUCHE À SON OREILLE</small><b id="c-lat-n">0,00 s</b><small>OBJECTIF : &lt; 0,15 s</small></div>
+      <div id="caps"></div>
+      <!-- Son : un seul mixage (voix devant ; musique et bruitages sous la voix) -->
+      <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="81.6" data-track-index="10" data-volume="1"></audio>
+    </div>
+    <script type="module">
+      import * as THREE from "three";
+      import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+      import { Line2 } from "three/addons/lines/Line2.js";
+      import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+      import { LineGeometry } from "three/addons/lines/LineGeometry.js";
+
+      const END = 81.6
+      const RAW = [0.0, 0.144, 0.288, 0.649, 0.937, 1.226, 1.37, 1.803, 2.091, 2.235, 2.452, 2.74, 3.362, 3.412, 3.485, 4.134, 4.278, 4.765, 4.975, 5.179, 5.383, 5.791, 5.927, 6.675, 6.743, 7.015, 7.151, 7.355, 8.001, 8.653, 8.796, 9.225, 9.368, 9.583, 9.912, 10.012, 10.291, 10.422, 10.947, 11.144, 11.275, 11.391, 11.651, 11.791, 12.09, 12.421, 12.701, 13.121, 13.657, 13.759, 14.001, 14.486, 14.789, 14.971, 15.576, 15.698, 15.879, 16.485, 16.606, 17.031, 17.623, 17.673, 18.412, 18.637, 19.021, 19.225, 19.36, 19.896, 20.031, 20.5, 20.634, 21.004, 21.285, 21.494, 21.771, 21.91, 22.327, 22.466, 22.813, 22.863, 23.091, 23.369, 23.577, 23.96, 24.202, 24.896, 25.035, 25.313, 25.452, 25.804, 25.936, 26.15, 26.31, 27.1, 27.15, 27.323, 27.75, 28.016, 28.123, 28.383, 28.433, 29.172, 29.392, 29.855, 29.984, 30.368, 30.533, 30.917, 31.136, 31.489, 31.539, 31.63, 31.904, 32.124, 32.398, 32.618, 32.892, 33.276, 33.692, 33.79, 34.285, 34.347, 34.47, 34.903, 35.027, 35.15, 35.524, 35.574, 36.011, 36.652, 36.795, 37.008, 37.656, 37.705, 37.995, 38.683, 38.889, 39.106, 39.542, 39.687, 39.904, 40.597, 40.826, 40.885, 41.363, 42.02, 42.199, 42.318, 42.654, 42.915, 43.274, 43.692, 44.11, 44.289, 44.614, 44.664, 45.147, 45.378, 46.347, 46.542, 47.03, 47.17, 47.589, 48.077, 48.216, 48.356, 48.775, 48.908, 49.008, 49.115, 49.611, 49.721, 50.107, 50.327, 50.603, 50.658, 51.154, 51.264, 51.484, 51.87, 52.14, 52.343, 52.748, 53.018, 53.22, 53.423, 53.625, 53.76, 53.906, 54.335, 54.627, 54.824, 55.319, 55.502, 55.722, 55.89, 56.5, 56.55, 56.73, 56.954, 57.178, 57.346, 57.682, 57.794, 58.074, 58.522, 58.667, 59.03, 59.176, 59.794, 60.265, 60.556, 60.846, 60.991, 61.096, 61.172, 61.639, 61.839, 61.972, 62.665, 62.839, 62.972, 63.306, 63.717, 63.906, 64.172, 64.572, 64.772, 65.339, 65.879, 65.999, 66.133, 66.399, 66.466, 67.049, 67.147, 67.426, 68.096, 68.264, 68.745, 68.879, 69.27, 69.94, 70.052, 70.41, 70.628, 70.757, 71.081, 71.856, 72.244, 72.631, 72.818, 72.879, 73.043, 73.372, 74.031, 74.14, 74.415, 74.634, 74.744, 74.854, 75.128, 75.238, 75.567, 76.06, 76.17, 76.758, 77.626, 77.676, 77.987, 78.139, 78.896, 79.048, 79.634, 79.764, 80.067, 80.218]
+      const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+      const K = {"micro": 60, "codec": 99, "ant": 126, "relais": 154, "sim": 188, "reseau": 273, "huit": 78, "compresse": 92, "lumiere": 125, "normes": 251, "regarde": 266}  // index of key words in T
+
+      // ---------- maths ----------
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x))
+      const win = (t, a, b) => clamp((t - a) / (b - a))
+      const eio = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+      const eob = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2) }
+      const popS = (t, t0, d = 0.45) => (t < t0 ? 0 : eob(win(t, t0, t0 + d)))
+      const fade = (t, a, b, f = 0.3) => clamp(Math.min(win(t, a, a + f), 1 - win(t, b - f, b)))
+      let seed = 7
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+
+      // ---------- renderer, scene ----------
+      const canvas = document.getElementById("three")
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      renderer.setSize(1080, 1920, false); renderer.setPixelRatio(1)
+      renderer.setClearColor(0x0c1c22)
+      renderer.outputColorSpace = THREE.SRGBColorSpace
+      const scene = new THREE.Scene()
+      scene.fog = new THREE.Fog(0x0c1c22, 40, 190)
+      const camera = new THREE.PerspectiveCamera(44, 1080 / 1920, 0.05, 400)
+      scene.add(new THREE.HemisphereLight(0xcfeaff, 0x0a2a30, 1.5))
+      const key = new THREE.DirectionalLight(0xffffff, 2.0); key.position.set(10, 20, 12); scene.add(key)
+      const C = { cyan: 0x3fd6f0, white: 0xf4fbfd, dark: 0x1b2026, green: 0x1f7a4a, gold: 0xd8a94a, copper: 0xd07a3a, red: 0xf0785a }
+      const mat = (color, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.55, metalness: 0.1 }, o))
+      const basic = (color, o = {}) => new THREE.MeshBasicMaterial(Object.assign({ color, transparent: true, depthWrite: false }, o))
+
+      const fatLine = (color, width, n) => { const g = new LineGeometry(); g.setPositions(new Float32Array(n * 3)); const m = new LineMaterial({ color, linewidth: width, transparent: true, depthWrite: false }); m.resolution.set(1080, 1920); const l = new Line2(g, m); l.frustumCulled = false; l.buf = new Float32Array(n * 3); l.n = n; scene.add(l); return l }
+      const flush = (l) => l.geometry.setPositions(l.buf)
+      // ground: dark teal floor, faint grid, glowing rings
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(0x10282e, { roughness: 0.95 }))
+      ground.rotation.x = -Math.PI / 2; scene.add(ground)
+      const grid = new THREE.GridHelper(200, 100, 0x2a5a64, 0x1a3a42); grid.position.set(30, 0.002, -5); grid.material.transparent = true; grid.material.opacity = 0.35; scene.add(grid)
+      const ringAt = (x, z, r, op = 0.7) => { const m = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.04, 96), basic(C.cyan, { opacity: op, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.01, z); scene.add(m); return m }
+      const padA = [ringAt(0, 0, 2.2), ringAt(0, 0, 2.6, 0.35)]
+      const padB = [ringAt(64, 0, 2.2), ringAt(64, 0, 2.6, 0.35)]
+
+      // floating dust (deterministic drift)
+      const NDUST = 900, dustPos = new Float32Array(NDUST * 3), dust0 = []
+      for (let i = 0; i < NDUST; i++) { const p = [-15 + rnd() * 95, 0.3 + rnd() * 14, -30 + rnd() * 45]; dust0.push(p) }
+      const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3))
+      const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0x9fe6f2, size: 0.06, transparent: true, opacity: 0.55 })); scene.add(dust)
+
+      // ---------- 0. two yogurt pots and a string ----------
+      const pot = () => { const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.27, 0.62, 40, 1, true), mat(0xf4f1e8, { side: THREE.DoubleSide })); body.position.y = 0.31; const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.27, 40), mat(0xd8d4ca)); bottom.rotation.x = -Math.PI / 2; bottom.position.y = 0.01; const band = new THREE.Mesh(new THREE.CylinderGeometry(0.345, 0.32, 0.16, 40, 1, true), mat(C.cyan, { side: THREE.DoubleSide })); band.position.y = 0.42; g.add(body, bottom, band); g.rotation.z = Math.PI / 2; return g }
+      const potA = pot(), potB = pot(); scene.add(potA, potB)
+      const strL = fatLine(0xf4e8c8, 4, 24), strR = fatLine(0xf4e8c8, 4, 24)
+
+      // ---------- 1. a phone (A) and its insides ----------
+      function makePhone() {
+        const g = new THREE.Group()
+        const shellMat = mat(0x22262e, { roughness: 0.35, metalness: 0.4, transparent: true })
+        const shell = new THREE.Mesh(new RoundedBoxGeometry(1.4, 0.16, 2.8, 4, 0.14), shellMat); shell.position.y = 0.09
+        const scrMat = mat(0x0a3a46, { emissive: 0x0b4a58, emissiveIntensity: 0.6, roughness: 0.15, transparent: true })
+        const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.24, 2.6), scrMat); scr.rotation.x = -Math.PI / 2; scr.position.y = 0.172
+        const board = new THREE.Mesh(new THREE.BoxGeometry(1.16, 0.03, 2.3), mat(C.green, { roughness: 0.6 })); board.position.y = 0.08
+        const traces = new THREE.Group(); for (let i = 0; i < 9; i++) { const tr = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.005, 0.6 + (i % 3) * 0.3), basic(0xb8e0a0, { opacity: 0.8 })); tr.position.set(-0.45 + i * 0.11, 0.097, -0.2 + (i % 2) * 0.4); traces.add(tr) }
+        const chip = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.05, 0.36), mat(0x111418, { roughness: 0.3, metalness: 0.5 })); chip.position.set(0, 0.12, 0.15)
+        const chipDot = new THREE.Mesh(new THREE.CircleGeometry(0.03, 16), basic(C.cyan)); chipDot.rotation.x = -Math.PI / 2; chipDot.position.set(-0.12, 0.146, 0.03)
+        const mic = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.06, 24), mat(0x8a9aa8, { metalness: 0.7, roughness: 0.3 })); mic.position.set(0.3, 0.12, 1.22)
+        const memb = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.01, 24), mat(0xe8eef2, { emissive: C.cyan, emissiveIntensity: 0 })); memb.position.set(0.3, 0.155, 1.22)
+        const spk = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.04, 0.08), mat(0x8a9aa8, { metalness: 0.7, roughness: 0.3 })); spk.position.set(0, 0.12, -1.22)
+        const spkM = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.01, 0.05), mat(0xe8eef2, { emissive: C.cyan, emissiveIntensity: 0 })); spkM.position.set(0, 0.146, -1.22)
+        const antMat = mat(C.copper, { emissive: C.copper, emissiveIntensity: 0, metalness: 0.6, roughness: 0.3 })
+        const ant = new THREE.Group(); [[0, -1.34, 1.1, 0.05], [-0.62, -1.0, 0.05, 0.7], [0.62, -1.0, 0.05, 0.7]].forEach(([x, z, w, d]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.03, d), antMat); m.position.set(x, 0.11, z); ant.add(m) })
+        const sim = new THREE.Group(); const simCard = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.02, 0.56), mat(0xf2f0e8)); const simGold = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.022, 0.3), mat(C.gold, { metalness: 0.8, roughness: 0.25, emissive: C.gold, emissiveIntensity: 0 })); simGold.position.set(0.02, 0.002, 0.04); sim.add(simCard, simGold); sim.position.set(0.25, 0.1, -0.55)
+        g.add(shell, scr, board, traces, chip, chipDot, mic, memb, spk, spkM, ant, sim)
+        return { g, shell, shellMat, scr, scrMat, board, traces, chip, chipDot, mic, memb, spk, spkM, ant, antMat, sim, simGold }
+      }
+      const A = makePhone(); scene.add(A.g)
+      const B = makePhone(); B.g.position.set(64, 0, 0); scene.add(B.g)
+
+      // sound rings in the air (voice), electric waveform, sample bars, bits
+      const ringGeo = new THREE.TorusGeometry(1, 0.012, 6, 64)
+      const vRingGeo = new THREE.TorusGeometry(1, 0.03, 6, 64)
+      const voiceRingsA = Array.from({ length: 6 }, () => { const m = new THREE.Mesh(vRingGeo, basic(C.white, { opacity: 0 })); scene.add(m); return m })
+      const voiceRingsB = Array.from({ length: 6 }, () => { const m = new THREE.Mesh(vRingGeo, basic(C.white, { opacity: 0 })); scene.add(m); return m })
+      const NW = 120
+      const wave = fatLine(C.cyan, 5, NW), waveB = fatLine(C.cyan, 5, NW)
+      const bars = Array.from({ length: 24 }, () => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.018, 1, 0.018), basic(C.white, { opacity: 0 })); scene.add(m); return m })
+      const bits = Array.from({ length: 18 }, (_, i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.07), mat(i % 3 ? C.cyan : C.white, { emissive: i % 3 ? C.cyan : C.white, emissiveIntensity: 0.6, transparent: true })); scene.add(m); return m })
+
+      // radio rings (horizontal), limited range circle
+      const radioRings = Array.from({ length: 7 }, () => { const m = new THREE.Mesh(ringGeo, basic(C.cyan, { opacity: 0 })); m.rotation.x = -Math.PI / 2; scene.add(m); return m })
+      const rangeCircle = new THREE.Mesh(new THREE.RingGeometry(4.0, 4.06, 96), basic(C.red, { opacity: 0, side: THREE.DoubleSide })); rangeCircle.rotation.x = -Math.PI / 2; rangeCircle.position.y = 0.02; scene.add(rangeCircle)
+
+      // ---------- 2. relay towers ----------
+      function makeTower() {
+        const g = new THREE.Group(); const steel = mat(0xb8c4cc, { metalness: 0.6, roughness: 0.4 })
+        const H = 8, legs = [[-0.9, -0.9], [0.9, -0.9], [0.9, 0.9], [-0.9, 0.9]]
+        legs.forEach(([x, z]) => { const p0 = new THREE.Vector3(x, 0, z), p1 = new THREE.Vector3(x * 0.25, H, z * 0.25); const len = p0.distanceTo(p1); const m = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, len, 6), steel); m.position.copy(p0.clone().add(p1).multiplyScalar(0.5)); m.lookAt(p1); m.rotateX(Math.PI / 2); g.add(m) })
+        for (let k = 1; k < 8; k++) { const y = k, s = 1 - (y / H) * 0.75; for (let e = 0; e < 4; e++) { const [x0, z0] = legs[e], [x1, z1] = legs[(e + 1) % 4]; const a = new THREE.Vector3(x0 * s, y, z0 * s), b = new THREE.Vector3(x1 * s, y, z1 * s); const m = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, a.distanceTo(b), 4), steel); m.position.copy(a.clone().add(b).multiplyScalar(0.5)); m.lookAt(b); m.rotateX(Math.PI / 2); g.add(m) } }
+        const panels = []; for (let i = 0; i < 3; i++) { const a = (i / 3) * Math.PI * 2; const p = new THREE.Mesh(new THREE.BoxGeometry(0.34, 1.3, 0.14), mat(0xf4f4f0, { emissive: C.cyan, emissiveIntensity: 0 })); p.position.set(Math.cos(a) * 0.55, H + 0.2, Math.sin(a) * 0.55); p.rotation.y = -a; g.add(p); panels.push(p) }
+        const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 8), basic(0xff4040, { opacity: 1 })); beacon.position.y = H + 1.1; g.add(beacon)
+        return { g, panels, beacon }
+      }
+      const TA = makeTower(); TA.g.position.set(10, 0, -6); scene.add(TA.g)
+      const TB = makeTower(); TB.g.position.set(57, 0, -6); scene.add(TB.g)
+      const towerRingsA = Array.from({ length: 4 }, () => { const m = new THREE.Mesh(ringGeo, basic(C.cyan, { opacity: 0 })); m.rotation.x = -Math.PI / 2; scene.add(m); return m })
+      const towerRingsB = Array.from({ length: 4 }, () => { const m = new THREE.Mesh(ringGeo, basic(C.cyan, { opacity: 0 })); m.rotation.x = -Math.PI / 2; scene.add(m); return m })
+
+      // honeycomb cells around each tower
+      const hexMat = new THREE.LineBasicMaterial({ color: C.cyan, transparent: true, opacity: 0 })
+      const hexes = []
+      function hexGrid(cx, cz) { const R = 4.2, w = Math.sqrt(3) * R; for (let q = -2; q <= 2; q++) for (let r = -2; r <= 2; r++) { if (Math.abs(q + r) > 2) continue; const x = cx + w * (q + r / 2), z = cz + 1.5 * R * r; const pts = Array.from({ length: 7 }, (_, i) => { const a = (i / 6) * Math.PI * 2 + Math.PI / 6; return new THREE.Vector3(x + Math.cos(a) * R * 0.97, 0.02, z + Math.sin(a) * R * 0.97) }); const ln = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), hexMat.clone()); scene.add(ln); hexes.push({ ln, x, z }) } }
+      hexGrid(10, -6); hexGrid(57, -6)
+      const cellB = new THREE.Mesh(new THREE.CircleGeometry(4.0, 6), basic(C.cyan, { opacity: 0, side: THREE.DoubleSide })); cellB.rotation.x = -Math.PI / 2; cellB.rotation.z = Math.PI / 6; cellB.position.set(57, 0.015, -6); scene.add(cellB)
+      const pingB = Array.from({ length: 3 }, () => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), basic(C.gold, { opacity: 0 })); scene.add(m); return m })
+
+      // ---------- 3. the sea, the fibre, the switching centre ----------
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(14, 40), mat(0x1a5a7a, { transparent: true, opacity: 0, roughness: 0.15, metalness: 0.2 })); sea.rotation.x = -Math.PI / 2; sea.position.set(44, 0.08, -8); scene.add(sea)
+      const seaLines = Array.from({ length: 8 }, (_, i) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(13, 0.05), basic(0x9fe6f2, { opacity: 0 })); m.rotation.x = -Math.PI / 2; m.position.set(44, 0.09, -26 + i * 5); scene.add(m); return m })
+      const fiberPts = [[10, 0.04, -6], [16, 0.04, -7.5], [22, 0.04, -9], [28, 0.04, -9], [34, 0.04, -8.5], [40, 0.03, -7], [48, 0.03, -7], [52, 0.04, -7], [57, 0.04, -6]].map((p) => new THREE.Vector3(...p))
+      const fiberCurve = new THREE.CatmullRomCurve3(fiberPts)
+      const fiber = new THREE.Mesh(new THREE.TubeGeometry(fiberCurve, 200, 0.12, 10, false), mat(0x2a6a7a, { emissive: C.cyan, emissiveIntensity: 0.15, transparent: true, opacity: 0 })); scene.add(fiber)
+      const pulses = Array.from({ length: 7 }, () => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 8), basic(0xffffff, { opacity: 0 })); scene.add(m); return m })
+      const central = new THREE.Group(); const cBody = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.4, 2.6), mat(0x2a3440)); cBody.position.y = 1.2; central.add(cBody)
+      const cWins = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) { const w = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.3), basic(C.cyan, { opacity: 0.15 })); w.position.set(-1.25 + c * 0.5, 0.6 + r * 0.6, 1.31); central.add(w); cWins.push(w) }
+      central.position.set(28, 0, -11); scene.add(central)
+
+      // the full route of a call, for the final light run
+      const routePts = [new THREE.Vector3(0, 0.3, 0), new THREE.Vector3(5, 6, -3), new THREE.Vector3(10, 8.3, -6), new THREE.Vector3(10, 0.1, -6), ...fiberPts.slice(1, -1), new THREE.Vector3(57, 0.1, -6), new THREE.Vector3(57, 8.3, -6), new THREE.Vector3(61, 6, -3), new THREE.Vector3(64, 0.3, 0)]
+      const route = new THREE.CatmullRomCurve3(routePts, false, "catmullrom", 0.1)
+      const runner = new THREE.Mesh(new THREE.SphereGeometry(0.35, 14, 10), basic(0xffffff, { opacity: 0 })); scene.add(runner)
+      const trail = Array.from({ length: 10 }, () => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.25, 10, 8), basic(C.cyan, { opacity: 0 })); scene.add(m); return m })
+
+      // ---------- camera path ----------
+      const P = (x, y, z) => new THREE.Vector3(x, y, z)
+      const NET = [P(-24, 34, 4), P(30, 0, -6), 52] // wide shot along the route: the whole network fits the portrait frame
+      const KEYS = [
+        [0.0, P(0, 1.9, 6.3), P(0, 0.3, 0)], [4.8, P(0.3, 2.2, 5.8), P(0, 0.3, 0)],
+        [7.4, P(-0.6, 2.2, 4.6), P(0, 0, -10)], [10.1, P(-0.6, 2.4, 5.0), P(0, 0, -10)],
+        [11.6, P(1.4, 3.0, 6.0), P(0.2, 0.1, 1.0)], [13.8, P(1.5, 1.3, 3.2), P(0.2, 0.12, 1.0)], [19.2, P(1.5, 1.3, 3.2), P(0.2, 0.12, 1.0)],
+        [21.3, P(1.1, 2.0, 1.9), P(0, 0.12, 0.3)], [29.3, P(-1.1, 2.1, 2.1), P(0, 0.12, 0.0)],
+        [31.6, P(4, 5, 8), P(0, 0.5, -1)], [37.4, P(4.5, 5.5, 8.5), P(0, 0.5, -1)],
+        [38.6, P(0.8, 9.5, 8.5), P(0, 0, -1.8)], [40.5, P(0.8, 10, 9), P(0, 0, -1.8)],
+        [41.8, P(-5, 5.5, 16), P(6.5, 4.4, -4), 48], [46.3, P(-5.5, 6, 16.5), P(6.5, 4.4, -4), 48],
+        [47.4, ...NET], [49.2, P(-25, 35, 4.5), P(30, 0, -6), 52],
+        [50.4, P(70, 6, 14), P(60, 4, -3), 50], [52.0, P(70.5, 6, 14.5), P(60, 4, -3), 50],
+        [53.0, P(65.2, 3.2, 2.4), P(64.2, 0.4, -0.6)], [55.6, P(65.3, 3.3, 2.5), P(64.2, 0.4, -0.6)],
+        [57.0, ...NET], [61.1, P(-25, 35, 5), P(31, 0, -6), 52],
+        [62.5, P(24, 6, 1), P(28, 1.2, -11)], [64.3, P(60, 5, 8), P(63.5, 0.3, -1)],
+        [66.2, P(65.6, 1.9, 3.0), P(64.1, 0.12, 0)], [72.9, P(65.8, 2.0, 2.8), P(64.1, 0.12, -0.2)],
+        [74.6, ...NET], [END, P(-30, 42, 6), P(31, 0, -6), 52],
+      ]
+      function camAt(t) {
+        let i = 0; while (i < KEYS.length - 2 && t > KEYS[i + 1][0]) i++
+        const [t0, p0, q0, f0 = 44] = KEYS[i], [t1, p1, q1, f1 = 44] = KEYS[i + 1]
+        const u = eio(win(t, t0, t1))
+        camera.fov = f0 + (f1 - f0) * u; camera.updateProjectionMatrix()
+        camera.position.lerpVectors(p0, p1, u)
+        const tg = new THREE.Vector3().lerpVectors(q0, q1, u)
+        camera.lookAt(tg)
+      }
+
+      // ---------- labels (HTML, projected from 3D) ----------
+      const labsEl = document.getElementById("labs")
+      const LAB = []
+      const addLab = (text, anchor, t0, t1, warn) => { const el = document.createElement("div"); el.className = "lab" + (warn ? " warn" : ""); el.textContent = text; labsEl.appendChild(el); LAB.push({ el, anchor, t0, t1 }) }
+      const v = (x, y, z) => () => new THREE.Vector3(x, y, z)
+      addLab("POT DE YAOURT", v(-0.9, 0.95, 0), T[3], T[17])
+      addLab("FIL TENDU", v(0, 0.75, 0), T[9], T[17])
+      addLab("CAP-HAÏTIEN · 100 KM", () => potB.position.clone().add(new THREE.Vector3(0, 1.2, 0)), T[22], T[35])
+      addLab("TA VOIX", v(0.3, 0.75, 2.4), T[39], T[48])
+      addLab("MEMBRANE", v(0.3, 0.45, 1.22), T[50], T[64])
+      addLab("COURANT ÉLECTRIQUE", v(0.1, 0.45, 0.75), T[57], T[64])
+      addLab("ÇA S'ABÎME", v(0.1, 0.45, 0.75), T[67], T[71], true)
+      addLab("PUCE", v(0, 0.42, 0.15), T[73], T[89])
+      addLab("NOMBRES", v(-0.35, 0.5, -0.2), T[87], T[92])
+      addLab("COMPRESSÉS", v(-0.35, 0.5, -0.2), T[92], T[99])
+      addLab("ONDES RADIO", v(1.6, 1.0, -2.0), T[116], T[128])
+      addLab("PORTÉE LIMITÉE", v(4.0, 0.4, 0), T[137], T[147], true)
+      addLab("PYLÔNE", v(10, 9.8, -6), T[147], T[158])
+      addLab("TON AMI", v(64, 0.9, 0), T[166], T[188])
+      addLab("ANTENNE LA PLUS PROCHE", v(57, 10, -6), T[174], T[188])
+      addLab("QUI IL EST", () => B.sim.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.45, 0)), T[183], T[193])
+      addLab("FIBRE OPTIQUE", v(22, 1.2, -9), T[201], T[214])
+      addLab("SOUS LA MER", v(44, 1.2, -7), T[211], T[215])
+      addLab("CENTRAL", v(28, 3.4, -11), T[215], T[222])
+      addLab("N° APPELÉ ✓", v(28, 2.6, -9.6), T[218], T[222])
+      addLab("ÇA SONNE", v(64, 1.0, 0), T[225], T[229])
+      addLab("HAUT-PARLEUR", () => new THREE.Vector3(64, 0.42, -1.22), T[246], T[251])
+      addLab("TOI", v(0, 1.5, 0), T[266], END + 1)
+      addLab("TON AMI", v(64, 1.5, 0), T[266], END + 1)
+      const pv = new THREE.Vector3()
+      function placeLabels(t) {
+        for (const L of LAB) {
+          const op = fade(t, L.t0, L.t1, 0.25)
+          if (op <= 0) { L.el.style.opacity = 0; continue }
+          pv.copy(L.anchor(t)).project(camera)
+          const vis = pv.z < 1 && Math.abs(pv.x) < 1.1 && Math.abs(pv.y) < 1.1
+          L.el.style.opacity = vis ? op : 0
+          const hw = L.el.offsetWidth / 2 + 40
+          L.el.style.left = clamp(((pv.x + 1) / 2) * 1080, hw, 1080 - hw) + "px"
+          L.el.style.top = clamp(((1 - pv.y) / 2) * 1920, 150, 1780) + "px"
+        }
+      }
+
+      // ---------- the world, as a function of time ----------
+      const tmp = new THREE.Vector3()
+      function setWave(l, t, from, to, amp, noise, on) {
+        const pos = { setXYZ: (i, x, y, z) => l.buf.set([x, y, z], i * 3) }
+        for (let i = 0; i < NW; i++) { const u = i / (NW - 1); tmp.lerpVectors(from, to, u); const ph = u * 26 - t * 9; let y = Math.sin(ph) * amp * (0.6 + 0.4 * Math.sin(u * 5 + t)); if (noise) y += (Math.sin(i * 12.9898 + Math.floor(t * 30) * 78.233) * 43758.5453 % 1) * noise; pos.setXYZ(i, tmp.x, tmp.y + y * on, tmp.z) }
+        flush(l)
+      }
+      function voiceRings(rings, t, t0, t1, origin, dir) {
+        rings.forEach((r, i) => { const local = (t - t0 - i * 0.35); const life = 1.6; const u = local / life; const alive = t >= t0 && t <= t1 + life && local >= 0 && u <= 1; r.material.opacity = alive ? 0.7 * (1 - u) : 0; if (!alive) return; const k = ((local % life) + life) % life / life; const s = 0.1 + u * 0.9; r.scale.setScalar(s); r.position.copy(origin).addScaledVector(dir, u * 1.2); r.lookAt(r.position.clone().add(dir)) })
+      }
+      function renderAt(t) {
+        camAt(t)
+        // dust
+        const dp = dustGeo.attributes.position
+        for (let i = 0; i < NDUST; i++) { const d = dust0[i]; dp.setXYZ(i, d[0] + Math.sin(t * 0.3 + i) * 0.3, d[1] + ((t * 0.12 + i * 0.37) % 1.2) - 0.6, d[2]) }
+        dp.needsUpdate = true
+
+        // 0. pots and string: B slides away to Cap-Haïtien, the string snaps on « Impossible »
+        const potsOn = 1 - win(t, T[35] - 0.3, T[35] + 0.3)
+        potA.visible = potB.visible = strL.visible = strR.visible = potsOn > 0.01
+        potA.scale.setScalar(popS(t, 0.05) * potsOn); potB.scale.setScalar(popS(t, 0.2) * potsOn)
+        potA.position.set(-0.9, 0.34, 0)
+        const away = eio(win(t, T[17], T[27]))
+        potB.position.set(0.9 - away * 0.9, 0.34, -away * 38)
+        const snap = win(t, T[28], T[28] + 0.7)
+        // the string snaps in the middle: each half falls and recoils toward its pot
+        const mid = tmp.lerpVectors(potA.position, potB.position, 0.5).clone()
+        ;[[strL, potA.position], [strR, potB.position]].forEach(([l, p0]) => { for (let i = 0; i < l.n; i++) { const u = i / (l.n - 1); const e = new THREE.Vector3().lerpVectors(p0, mid, u * (1 - 0.25 * eio(snap))); e.y -= eio(snap) * 0.32 * u * u; l.buf.set([e.x, e.y, e.z], i * 3) } flush(l); l.material.color.setHex(snap > 0 ? 0xf0785a : 0xf4e8c8); l.material.opacity = potsOn })
+
+        // 1. phone A appears; glass shell when we go inside
+        const aOn = popS(t, T[35] - 0.1, 0.6)
+        A.g.visible = aOn > 0.001; A.g.scale.setScalar(Math.max(0.001, aOn))
+        const inside = win(t, T[48] - 0.4, T[48] + 0.4) * (1 - win(t, T[103] + 0.5, T[103] + 1.4))
+        A.shellMat.opacity = 1 - inside * 0.8; A.scrMat.opacity = 1 - inside
+        A.board.visible = A.traces.visible = true
+        A.board.scale.setScalar(Math.max(0.001, popS(t, T[71] - 0.2)))
+        A.traces.visible = t > T[71]
+        A.chip.scale.setScalar(Math.max(0.001, popS(t, T[73] - 0.1)))
+        A.chipDot.visible = t > T[73]
+        A.mic.scale.setScalar(Math.max(0.001, popS(t, T[48] - 0.1)))
+        const talk = fade(t, T[41], T[60], 0.3)
+        A.memb.scale.set(1, 1 + talk * Math.abs(Math.sin(t * 40)) * 2.5, 1); A.memb.material.emissiveIntensity = talk * 0.8
+        voiceRings(voiceRingsA, t, T[41], T[50], new THREE.Vector3(0.3, 0.3, 3.2), new THREE.Vector3(0, -0.05, -1).normalize())
+        // electric waveform from the mic to the chip (noisy on « ça s'abîme »)
+        const wOn = fade(t, T[56], T[89], 0.3)
+        wave.material.opacity = wOn
+        setWave(wave, t, new THREE.Vector3(0.3, 0.2, 1.15), new THREE.Vector3(0.05, 0.2, 0.32), 0.05, fade(t, T[66], T[73], 0.2) * 0.07, 1)
+        // samples: vertical bars on the wave
+        bars.forEach((b, i) => { const on = t > T[75] + i * 0.05 && t < T[88]; b.material.opacity = on ? 0.9 : 0; const u = (i + 0.5) / bars.length; tmp.lerpVectors(new THREE.Vector3(0.3, 0.2, 1.15), new THREE.Vector3(0.05, 0.2, 0.32), u); const h = 0.02 + Math.abs(Math.sin(u * 26 - t * 9)) * 0.08; b.scale.y = h; b.position.set(tmp.x, tmp.y + h / 2, tmp.z) })
+        // bits stream out of the chip, then get compressed
+        const comp = eio(win(t, T[92], T[98]))
+        bits.forEach((m, i) => { const on = popS(t, T[86] + i * 0.04, 0.3); const visBits = i < 18 - Math.round(comp * 10); m.visible = on > 0.01 && visBits && t < T[105]; const col = i % 6, row = Math.floor(i / 6); const x0 = -0.5 + col * 0.12, z0 = -0.15 - row * 0.12; const x1 = -0.25 + (i % 4) * 0.07, z1 = -0.2 - Math.floor(i / 4) * 0.07; m.position.set(x0 + (x1 - x0) * comp, 0.32 + Math.sin(t * 3 + i) * 0.01, z0 + (z1 - z0) * comp); m.scale.setScalar(Math.max(0.001, on * (1 - comp * 0.35))) })
+        // antenna glows, radio rings expand from the phone (then die out: limited range)
+        A.antMat.emissiveIntensity = fade(t, T[104], T[141], 0.3) * (0.6 + 0.4 * Math.sin(t * 10))
+        const range = t < T[133] ? 9 : 4
+        radioRings.forEach((r, i) => { const local = t - T[108] - i * 0.45; const life = 2.2; const on = t > T[108] && t < T[145] && local > 0; if (!on) { r.material.opacity = 0; return } const u = (local % life) / life; const rad = 0.4 + u * range; r.position.set(0, 0.25 + i * 0.02, -1.0); r.scale.setScalar(rad); r.material.opacity = 0.8 * (1 - u) * (t < T[133] ? 1 : 1 - win(rad, 3.0, 4.0) * 0.7) })
+        rangeCircle.material.opacity = fade(t, T[135], T[147], 0.3) * 0.9; rangeCircle.position.set(0, 0.02, -1)
+
+        // 2. tower A rises; its panels catch the waves
+        const ta = eio(win(t, T[141], T[147]))
+        TA.g.visible = ta > 0.001; TA.g.scale.set(1, Math.max(0.001, ta), 1)
+        TA.panels.forEach((p) => (p.material.emissiveIntensity = fade(t, T[151], END + 1, 0.3) * (0.5 + 0.5 * Math.sin(t * 6))))
+        TA.beacon.material.opacity = 0.4 + 0.6 * (Math.sin(t * 4) > 0 ? 1 : 0)
+        towerRingsA.forEach((r, i) => { const local = t - T[151] - i * 0.5; const life = 2.0; const on = t > T[151] && local > 0 && t < T[158] + 1; r.material.opacity = on ? 0.6 * (1 - (local % life) / life) : 0; r.position.set(10, 8.2, -6); r.scale.setScalar(0.4 + ((local % life) / life) * 4) })
+        // honeycomb cells, tower B, friend's phone B
+        const cells = fade(t, T[158] - 0.5, T[251], 0.6)
+        hexes.forEach((h) => (h.ln.material.opacity = cells * 0.55))
+        const tb = eio(win(t, T[160], T[166]))
+        TB.g.visible = tb > 0.001; TB.g.scale.set(1, Math.max(0.001, tb), 1)
+        TB.panels.forEach((p) => (p.material.emissiveIntensity = fade(t, T[171], END + 1, 0.3) * (0.5 + 0.5 * Math.sin(t * 6 + 1))))
+        TB.beacon.material.opacity = 0.4 + 0.6 * (Math.sin(t * 4 + 1) > 0 ? 1 : 0)
+        const bOn = popS(t, T[166] - 0.4, 0.6)
+        B.g.visible = bOn > 0.001; B.g.scale.setScalar(Math.max(0.001, bOn))
+        cellB.material.opacity = fade(t, T[171], T[193], 0.3) * 0.18
+        pingB.forEach((m, i) => { const local = t - T[171] - i * 0.5; const life = 1.5; const on = t > T[171] && t < T[188] && local > 0; m.material.opacity = on ? 0.95 : 0; const u = (local % life) / life; m.position.set(64 + (57 - 64) * u, 0.5 + Math.sin(u * Math.PI) * 6 + u * 2, 0 + (-6 - 0) * u) })
+        // SIM rises out of phone B and glows
+        const simUp = eio(win(t, T[181], T[184])) * (1 - eio(win(t, T[193], T[195])))
+        B.sim.position.set(0.25, 0.1 + simUp * 0.55, -0.55); B.sim.rotation.x = simUp * 0.5; B.sim.scale.setScalar(1 + simUp * 0.9)
+        B.simGold.material.emissiveIntensity = simUp * 0.9
+        B.shellMat.opacity = 1 - fade(t, T[179], T[195], 0.4) * 0.75 - fade(t, T[229], END + 1, 0.4) * 0.75
+        B.scrMat.opacity = 1 - fade(t, T[179], T[195], 0.4) - fade(t, T[229], END + 1, 0.4)
+
+        // 3. sea, fibre, light pulses, central
+        const seaOn = fade(t, T[193] - 0.4, END + 1, 0.6)
+        sea.material.opacity = seaOn * 0.55
+        seaLines.forEach((l, i) => { l.material.opacity = seaOn * 0.25; l.position.z = -26 + ((i * 5 + t * 0.8) % 40) })
+        fiber.material.opacity = fade(t, T[193] - 0.2, END + 1, 0.5) * 0.9
+        pulses.forEach((m, i) => { const on = t > T[205] && t < T[228]; m.material.opacity = on ? 0.95 : 0; const u = ((t - T[205]) * 0.35 + i / pulses.length) % 1; m.position.copy(fiberCurve.getPointAt(Math.max(0, u))) })
+        const cOn = popS(t, T[214] - 0.3, 0.5)
+        central.visible = cOn > 0.001; central.scale.setScalar(Math.max(0.001, cOn))
+        cWins.forEach((w, i) => (w.material.opacity = t > T[216] ? 0.25 + 0.7 * ((Math.floor(t * 8) + i * 7) % 5 === 0 ? 1 : 0.3) : 0.15))
+        // the call reaches phone B: it rings (shake), then the reverse chain
+        const ring = fade(t, T[224], T[229], 0.1)
+        B.g.rotation.z = ring * Math.sin(t * 60) * 0.04; B.g.position.y = ring * Math.abs(Math.sin(t * 30)) * 0.05
+        B.scrMat.emissiveIntensity = 0.6 + ring * 1.4 * (Math.sin(t * 12) > 0 ? 1 : 0.3)
+        towerRingsB.forEach((r, i) => { const local = t - T[219] - i * 0.4; const life = 1.6; const on = t > T[219] && local > 0 && t < T[236]; r.material.opacity = on ? 0.7 * (1 - (local % life) / life) : 0; r.position.set(57, 8.2, -6); r.scale.setScalar(0.4 + ((local % life) / life) * 4) })
+        B.antMat.emissiveIntensity = fade(t, T[224], T[238], 0.3) * (0.6 + 0.4 * Math.sin(t * 10))
+        waveB.material.opacity = fade(t, T[238], T[251], 0.3)
+        setWave(waveB, t, new THREE.Vector3(64.05, 0.2, 0.32), new THREE.Vector3(64, 0.2, -1.15), 0.05, 0, 1)
+        const play = fade(t, T[244], T[252], 0.3)
+        B.spkM.scale.set(1, 1 + play * Math.abs(Math.sin(t * 40)) * 3, 1); B.spkM.material.emissiveIntensity = play
+        voiceRings(voiceRingsB, t, T[247], T[252], new THREE.Vector3(64, 0.3, -1.6), new THREE.Vector3(0, 0.05, -1).normalize())
+
+        // 4. the full route lights up (< 0.15 s), then the wide shot of the network
+        const run = t > T[252] && t < T[266] + 1
+        const ru = ((t - T[252]) / 1.6) % 1
+        runner.material.opacity = run ? 1 : 0; runner.scale.setScalar(2.2); trail.forEach((m) => m.scale.setScalar(2.2))
+        if (run) runner.position.copy(route.getPointAt(ru))
+        trail.forEach((m, i) => { m.material.opacity = run ? 0.6 * (1 - i / trail.length) : 0; if (run) m.position.copy(route.getPointAt(Math.max(0, ru - (i + 1) * 0.012))) })
+        padA.forEach((m) => (m.material.opacity = 0.35 + 0.35 * fade(t, 0, T[48], 0.5)))
+        renderer.render(scene, camera)
+        placeLabels(t)
+      }
+      window.addEventListener("hf-seek", (e) => renderAt(e.detail.time))
+      renderAt(window.__hfThreeTime || 0)
+    </script>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const END = 81.6
+        const RAW = [0.0, 0.144, 0.288, 0.649, 0.937, 1.226, 1.37, 1.803, 2.091, 2.235, 2.452, 2.74, 3.362, 3.412, 3.485, 4.134, 4.278, 4.765, 4.975, 5.179, 5.383, 5.791, 5.927, 6.675, 6.743, 7.015, 7.151, 7.355, 8.001, 8.653, 8.796, 9.225, 9.368, 9.583, 9.912, 10.012, 10.291, 10.422, 10.947, 11.144, 11.275, 11.391, 11.651, 11.791, 12.09, 12.421, 12.701, 13.121, 13.657, 13.759, 14.001, 14.486, 14.789, 14.971, 15.576, 15.698, 15.879, 16.485, 16.606, 17.031, 17.623, 17.673, 18.412, 18.637, 19.021, 19.225, 19.36, 19.896, 20.031, 20.5, 20.634, 21.004, 21.285, 21.494, 21.771, 21.91, 22.327, 22.466, 22.813, 22.863, 23.091, 23.369, 23.577, 23.96, 24.202, 24.896, 25.035, 25.313, 25.452, 25.804, 25.936, 26.15, 26.31, 27.1, 27.15, 27.323, 27.75, 28.016, 28.123, 28.383, 28.433, 29.172, 29.392, 29.855, 29.984, 30.368, 30.533, 30.917, 31.136, 31.489, 31.539, 31.63, 31.904, 32.124, 32.398, 32.618, 32.892, 33.276, 33.692, 33.79, 34.285, 34.347, 34.47, 34.903, 35.027, 35.15, 35.524, 35.574, 36.011, 36.652, 36.795, 37.008, 37.656, 37.705, 37.995, 38.683, 38.889, 39.106, 39.542, 39.687, 39.904, 40.597, 40.826, 40.885, 41.363, 42.02, 42.199, 42.318, 42.654, 42.915, 43.274, 43.692, 44.11, 44.289, 44.614, 44.664, 45.147, 45.378, 46.347, 46.542, 47.03, 47.17, 47.589, 48.077, 48.216, 48.356, 48.775, 48.908, 49.008, 49.115, 49.611, 49.721, 50.107, 50.327, 50.603, 50.658, 51.154, 51.264, 51.484, 51.87, 52.14, 52.343, 52.748, 53.018, 53.22, 53.423, 53.625, 53.76, 53.906, 54.335, 54.627, 54.824, 55.319, 55.502, 55.722, 55.89, 56.5, 56.55, 56.73, 56.954, 57.178, 57.346, 57.682, 57.794, 58.074, 58.522, 58.667, 59.03, 59.176, 59.794, 60.265, 60.556, 60.846, 60.991, 61.096, 61.172, 61.639, 61.839, 61.972, 62.665, 62.839, 62.972, 63.306, 63.717, 63.906, 64.172, 64.572, 64.772, 65.339, 65.879, 65.999, 66.133, 66.399, 66.466, 67.049, 67.147, 67.426, 68.096, 68.264, 68.745, 68.879, 69.27, 69.94, 70.052, 70.41, 70.628, 70.757, 71.081, 71.856, 72.244, 72.631, 72.818, 72.879, 73.043, 73.372, 74.031, 74.14, 74.415, 74.634, 74.744, 74.854, 75.128, 75.238, 75.567, 76.06, 76.17, 76.758, 77.626, 77.676, 77.987, 78.139, 78.896, 79.048, 79.634, 79.764, 80.067, 80.218]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Si", "tu", "relies", "deux", "pots", "de", "yaourt", "avec", "un", "fil", "tendu,", "bravo :", "tu", "as", "construit", "un", "téléphone.", "Mais", "ton", "ami", "habite", "au", "Cap-Haïtien,", "à", "plus", "de", "100", "kilomètres.", "Impossible", "de", "tendre", "un", "fil", "aussi", "long.", "Alors", "on", "commence", "par", "ta", "voix.", "Quand", "tu", "parles,", "tu", "fais", "vibrer", "l'air.", "Une", "fine", "membrane", "capte", "ces", "vibrations", "et", "les", "transforme", "en", "courant", "électrique.", "Ça,", "c'est", "un", "micro.", "Mais", "un", "courant,", "ça", "s'abîme", "en", "route.", "Alors", "une", "puce", "le", "mesure", "au", "moins", "8 000", "", "fois", "par", "seconde,", "et", "transforme", "ta", "voix", "en", "nombres.", "Puis", "elle", "les", "compresse,", "pour", "qu'ils", "prennent", "moins", "de", "place.", "Ça,", "c'est", "un", "codec.", "Pour", "envoyer", "ces", "nombres", "sans", "fil,", "on", "les", "lance", "dans", "l'air", "sous", "forme", "d'ondes", "radio,", "qui", "voyagent", "à", "la", "vitesse", "de", "la", "lumière.", "Ça,", "c'est", "l'antenne", "de", "ton", "téléphone.", "Le", "vrai", "problème :", "elle", "est", "petite,", "et", "peu", "puissante.", "Alors", "à", "quelques", "kilomètres,", "sur", "un", "pylône,", "une", "grande", "antenne", "attrape", "ses", "ondes.", "Ça,", "c'est", "une", "antenne-relais.", "Mais", "comment", "le", "réseau", "sait-il", "où", "se", "trouve", "ton", "ami ?", "Son", "téléphone", "se", "signale", "sans", "arrêt", "à", "l'antenne", "la", "plus", "proche,", "avec", "une", "petite", "puce", "qui", "dit", "qui", "il", "est.", "Ça,", "c'est", "la", "carte", "SIM.", "Entre", "les", "antennes,", "ta", "voix", "file", "dans", "des", "câbles", "de", "fibre", "optique,", "en", "flashs", "de", "lumière,", "parfois", "même", "sous", "la", "mer.", "Un", "central", "lit", "le", "numéro,", "trouve", "la", "bonne", "antenne,", "et", "fait", "sonner", "son", "téléphone.", "Là-bas,", "tout", "se", "fait", "à", "l'envers :", "les", "ondes", "redeviennent", "des", "nombres,", "les", "nombres", "redeviennent", "du", "courant,", "et", "un", "petit", "haut-parleur", "refait", "vibrer", "l'air.", "Et", "les", "normes", "recommandent", "de", "faire", "tout", "ça", "en", "moins", "de", "0,15", "", "", "seconde.", "Regarde-toi :", "tu", "viens", "de", "construire", "un", "téléphone.", "Et", "tout", "un", "réseau."]
+        const KEYW = new Set([16, 22, 40, 58, 63, 88, 92, 102, 117, 125, 128, 157, 192, 203, 213, 215, 225, 247, 262, 272, 276])
+        // titles: « Ça, c'est un… »
+        const title = (id, t0, t1) => { tl.set(id, { visibility: 'visible' }, t0); tl.fromTo(id, { opacity: 0, y: 20, scale: 1.12 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: 'power3.out', immediateRender: false }, t0); tl.to(id, { opacity: 0, duration: 0.3 }, t1 - 0.3); tl.set(id, { visibility: 'hidden' }, t1) }
+        const K = {"micro": 60, "codec": 99, "ant": 126, "relais": 154, "sim": 188, "reseau": 273, "huit": 78, "compresse": 92, "lumiere": 125, "normes": 251, "regarde": 266}
+        title('#t-micro', T[K.micro] + 0.6, T[K.micro] + 3.0)
+        title('#t-codec', T[K.codec] + 0.6, T[K.codec] + 3.0)
+        title('#t-ant', T[K.ant], T[K.ant] + 2.5)
+        title('#t-relais', T[K.relais], T[K.relais] + 2.7)
+        title('#t-sim', T[K.sim], T[K.sim] + 2.5)
+        title('#t-res', T[K.reseau] - 0.1, END)
+        // counters
+        const counter = (id, t0, t1) => { tl.set(id, { visibility: 'visible' }, t0); tl.fromTo(id, { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power2.out', immediateRender: false }, t0); tl.to(id, { opacity: 0, duration: 0.25 }, t1 - 0.25); tl.set(id, { visibility: 'hidden' }, t1) }
+        counter('#c-ech', T[K.huit] - 0.3, T[K.compresse])
+        const o1 = { v: 0 }; tl.fromTo(o1, { v: 0 }, { v: 8000, duration: 1.2, ease: 'power2.out', immediateRender: false, onUpdate: () => { document.getElementById('c-ech-n').textContent = Math.round(o1.v).toLocaleString('fr-FR').replace(/ | /g, ' ') } }, T[K.huit] - 0.3)
+        counter('#c-vit', T[K.lumiere] - 1.6, T[K.ant] - 0.1)
+        counter('#c-lat', T[K.normes], T[K.regarde])
+        const o2 = { v: 0 }; tl.fromTo(o2, { v: 0 }, { v: 0.15, duration: 1.6, ease: 'none', immediateRender: false, onUpdate: () => { document.getElementById('c-lat-n').textContent = o2.v.toFixed(2).replace('.', ',') + ' s' } }, T[K.normes] + 0.2)
+        // captions: groups of words, the key words in cyan
+        const caps = document.getElementById('caps')
+        const G = []; let cur = []
+        WORDS.forEach((w, k) => { if (!w) return; cur.push(k); const len = cur.reduce((n, j) => n + WORDS[j].length + 1, 0); if (/[.,:;?!…]$/.test(w) || cur.length >= 5 || len > 24) { G.push(cur); cur = [] } })
+        if (cur.length) G.push(cur)
+        G.forEach((g, gi) => {
+          const box = document.createElement('div'); box.className = 'grp'; caps.appendChild(box)
+          box.innerHTML = g.map((k) => (KEYW.has(k) ? `<span class="k">${WORDS[k]}</span>` : WORDS[k])).join(' ')
+          const t0 = T[g[0]] - 0.05, t1 = gi < G.length - 1 ? T[G[gi + 1][0]] - 0.05 : END
+          tl.set(box, { visibility: 'visible' }, t0); tl.set(box, { visibility: 'hidden' }, t1)
+          tl.fromTo(box, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out', immediateRender: false }, t0)
+        })
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>

@@ -1,6 +1,6 @@
-# Style 3D « construis-le » — analyse de la référence
+# Style 3D — guide (« construis-le »)
 
-Référence du client : « Comment un drone tient vraiment en l'air » (83 s, 720×1280, 30 i/s). Ce document décrit ce que fait la vidéo et comment la reproduire. Le nom du style reste à choisir avec le client.
+Référence du client : « Comment un drone tient vraiment en l'air » (83 s, 720×1280, 30 i/s). Ce document décrit ce que fait la vidéo et comment la reproduire. **Nom choisi par le client : « style 3D ».**
 
 ## 1. Image
 
@@ -49,7 +49,7 @@ Les mots-outils qui rythment le texte : « Mais », « Alors », « Ça, c'est u
   - débit **208 mots/min**, plus calme que le style ANIMÉ (239) ;
   - 283 mots pour 83 s ;
   - probablement une voix de synthèse.
-  - Parmi nos voix déjà testées, la plus proche en timbre est Cédric Bouchard. Il faudra en tester de plus graves et calmes (Corentin Beaulieu, Thibault Vasseur, Adrien Moreau).
+  - **Voix retenue : Adrien Moreau** (Magnific / ElevenLabs, `voiceId` 230, consigne `[calm, clear, confident documentary narration]`). C'est la plus proche de la référence au comparatif de timbre (MFCC 14,8), devant Cédric Bouchard (22,5), Thibault Vasseur (24,4), Corentin Beaulieu (26,3), Gabriel Dubois (27,1) et Charon (32,3).
 - **Musique** : électro « tech » douce (nappes, arpèges, basse, beat léger), positive, continue.
 - **Bruitages** : environ 34 en 83 s (un toutes les 2,4 s), plus rares que dans le style ANIMÉ. Ce sont des sons fonctionnels :
   - bourdonnement des hélices, whoosh de rotation et d'accélération ;
