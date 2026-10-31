@@ -69,3 +69,13 @@ Les mots-outils qui rythment le texte : « Mais », « Alors », « Ça, c'est u
 - Habillage en HTML par-dessus la 3D : étiquettes mono, titres soulignés, compteurs, sous-titres avec mot-clé cyan.
 - Chaîne inchangée pour le reste : voix (Magnific/ElevenLabs), temps des mots avec Whisper, `align_voice.py`, bruitages générés, `mix_anime.py`, rendu à 120 i/s puis `finish.py`.
 - Sujets qui se prêtent au format « tu le construis » : comment marche une moto, un panneau solaire et sa batterie, un téléphone qui appelle, un avion, un frigo, l'électricité qui arrive à la maison, un paiement MonCash.
+
+## 5. Vidéos faites et banque de sons
+
+- `videos/telephone/` : comment un téléphone passe un appel.
+- `videos/ascenseur/` : comment un ascenseur ne tombe jamais. Accroche demandée par le client : une scène de chute (le câble casse, la cabine tombe), puis « Pourquoi ? ». La même chute revient à la fin, et cette fois la cabine s'arrête. Elle montre aussi qu'on peut mettre une **scène historique dans le même monde** (New York en 1854, à côté de l'immeuble), où la caméra se rend sans coupe.
+- `sfx/` : `ui-blip`, `clip`, `onde-radio`, `donnees`, `sonnerie`, `fibre`, `bourdonnement`, la boucle `musique-tech`, ainsi que `cable-casse`, `chute`, `ding-ascenseur`, `moteur-elec`, `freinage` et `hache` (ajoutés pour l'ascenseur).
+- Points de vigilance techniques :
+  - les `Points` (poussière, étincelles) dont on recalcule les positions doivent avoir `frustumCulled = false`, sinon ils disparaissent ;
+  - pas de particules trop près de la caméra : elles deviennent de gros carrés.
+

@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Comment un ascenseur ne tombe jamais</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script type="importmap">
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.181.2/examples/jsm/" } }
+    </script>
+    <!--
+      « style 3D » (videos/_engine/style-3d/README.md) : vraie 3D Three.js, un seul plan, l'objet se construit pièce par pièce.
+      Accroche demandée par le client : la chute d'un ascenseur (le câble casse, la cabine tombe), puis « pourquoi ça n'arrive presque jamais ? ».
+      Récit « tu le construis toi-même » : une caisse et une corde → le contrepoids → le moteur → les câbles d'acier → le frein →
+      le pire des cas → Otis, New York 1854 (la corde coupée à la hache, les crochets dans les crans) → le limiteur de vitesse et le
+      parachute → les amortisseurs → le câble casse : la cabine glisse de quelques centimètres et s'arrête → « tu viens de construire un ascenseur ».
+      Toute la scène est calculée à partir du temps (événement hf-seek) ; étiquettes projetées depuis la 3D ; titres et sous-titres en GSAP.
+      Voix Adrien Moreau (Magnific / ElevenLabs) ; bruitages mixés sous la voix (../_engine/style-anime/mix_anime.py).
+    -->
+    <style>
+      @font-face { font-family: "Poppins"; font-weight: 800; src: url("assets/fonts/poppins-800.woff2") format("woff2"); }
+      @font-face { font-family: "Mono"; font-weight: 700; src: url("assets/fonts/jetbrains-mono-700.woff2") format("woff2"); }
+      @font-face { font-family: "Mono"; font-weight: 700; src: url("assets/fonts/jetbrains-mono-ext-700.woff2") format("woff2"); unicode-range: U+0100-024F; }
+      @font-face { font-family: "Mono"; font-weight: 500; src: url("assets/fonts/jetbrains-mono-500.woff2") format("woff2"); }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0c1c22; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #0c1c22; }
+      #three { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; display: block; }
+      #glow { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 45% at 50% 42%, rgba(63, 214, 240, 0.08), transparent 70%), radial-gradient(ellipse 90% 70% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%); pointer-events: none; }
+      #flash { position: absolute; inset: 0; background: #ff3a2a; opacity: 0; pointer-events: none; }
+      .lab { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); font-family: "Mono", monospace; font-weight: 700; font-size: 26px; letter-spacing: 0.08em; color: #dff7fc; background: rgba(8, 22, 28, 0.86); border: 2px solid rgba(63, 214, 240, 0.55); border-radius: 8px; padding: 6px 14px 5px; white-space: nowrap; opacity: 0; }
+      .lab.warn { color: #ffd2c4; border-color: rgba(240, 120, 90, 0.8); }
+      .ttl { position: absolute; left: 0; right: 0; top: 250px; text-align: center; font-family: "Mono", monospace; font-weight: 700; font-size: 84px; letter-spacing: 0.08em; color: #f4fbfd; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6); visibility: hidden; }
+      .ttl::after { content: ""; display: block; width: 180px; height: 8px; margin: 18px auto 0; background: #3fd6f0; border-radius: 4px; box-shadow: 0 0 18px rgba(63, 214, 240, 0.8); }
+      .cnt { position: absolute; left: 60px; top: 200px; font-family: "Mono", monospace; color: #f4fbfd; visibility: hidden; }
+      .cnt small { display: block; font-size: 28px; font-weight: 500; letter-spacing: 0.12em; color: #8fd8e6; }
+      .cnt b { display: block; font-size: 92px; font-weight: 700; color: #3fd6f0; text-shadow: 0 0 22px rgba(63, 214, 240, 0.6); }
+      .cnt.warn b { color: #ff7a5a; text-shadow: 0 0 22px rgba(255, 90, 60, 0.6); }
+      #caps { position: absolute; left: 60px; right: 60px; top: 1180px; height: 220px; }
+      .grp { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-family: "Poppins", sans-serif; font-weight: 800; font-size: 66px; line-height: 1.12; color: #ffffff; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 2px rgba(0, 0, 0, 0.9); visibility: hidden; }
+      .grp .k { color: #3fd6f0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="86.6" data-width="1080" data-height="1920">
+      <canvas id="three" width="1080" height="1920"></canvas>
+      <div id="glow"></div>
+      <div id="flash"></div>
+      <div id="labs"></div>
+      <div class="ttl" id="t-pq">POURQUOI ?</div>
+      <div class="ttl" id="t-cp">CONTREPOIDS</div>
+      <div class="ttl" id="t-ca">CÂBLES D'ACIER</div>
+      <div class="ttl" id="t-fr">FREIN</div>
+      <div class="ttl" id="t-pa">PARACHUTE</div>
+      <div class="ttl" id="t-am">AMORTISSEURS</div>
+      <div class="ttl" id="t-as">UN ASCENSEUR</div>
+      <div class="cnt warn" id="c-et"><small>CHUTE LIBRE</small><b id="c-et-n">ÉTAGE 20</b></div>
+      <div class="cnt" id="c-ny"><small>NEW YORK</small><b>1854</b></div>
+      <div class="cnt" id="c-cm"><small>LE CÂBLE CASSE</small><b>≈ 4 CM</b><small>ET LA CABINE S'ARRÊTE</small></div>
+      <div id="caps"></div>
+      <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="86.6" data-track-index="10" data-volume="1"></audio>
+    </div>
+    <script type="module">
+      import * as THREE from "three";
+      import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+      import { Line2 } from "three/addons/lines/Line2.js";
+      import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+      import { LineGeometry } from "three/addons/lines/LineGeometry.js";
+
+      const END = 86.6
+      const RAW = [0.0, 0.135, 0.473, 1.078, 1.213, 1.542, 1.88, 2.015, 2.15, 2.823, 3.16, 3.295, 3.538, 3.588, 3.808, 3.943, 4.28, 4.551, 4.686, 5.361, 5.827, 6.029, 6.571, 7.385, 7.839, 7.889, 8.802, 8.938, 9.073, 9.209, 9.412, 10.308, 10.461, 10.514, 10.782, 11.011, 11.47, 11.546, 11.775, 12.403, 12.453, 12.539, 12.692, 13.375, 13.425, 13.762, 13.915, 14.602, 14.755, 15.45, 15.504, 15.628, 15.999, 16.184, 16.555, 16.679, 16.864, 17.111, 17.895, 17.945, 18.029, 18.462, 18.709, 18.833, 18.956, 19.389, 19.513, 20.069, 20.197, 20.516, 20.964, 21.283, 21.603, 21.794, 21.922, 22.29, 22.34, 22.825, 22.953, 23.829, 24.06, 24.43, 24.75, 25.133, 25.899, 25.949, 25.999, 26.322, 26.805, 26.942, 27.336, 27.4, 27.606, 28.019, 28.157, 28.77, 29.184, 29.226, 29.33, 29.881, 30.087, 30.294, 30.701, 31.268, 31.318, 31.382, 31.721, 32.369, 32.69, 33.066, 33.232, 33.436, 33.775, 34.317, 34.792, 34.928, 35.334, 36.009, 36.146, 36.284, 36.353, 36.656, 36.862, 37.475, 37.612, 37.898, 37.995, 38.132, 38.544, 38.819, 39.253, 39.487, 39.624, 39.892, 40.276, 40.414, 41.04, 41.321, 41.371, 41.455, 42.142, 42.273, 42.534, 42.73, 43.584, 43.833, 43.917, 44.309, 44.767, 44.897, 45.159, 45.803, 46.318, 46.514, 46.908, 47.006, 47.302, 47.994, 48.584, 48.781, 49.028, 49.487, 50.819, 50.889, 51.238, 51.587, 51.796, 51.936, 52.903, 53.042, 53.132, 53.55, 53.689, 54.431, 54.481, 54.531, 54.581, 54.845, 55.415, 56.033, 56.156, 56.543, 57.281, 57.404, 57.896, 58.627, 58.677, 58.864, 59.049, 59.418, 59.602, 60.094, 60.34, 60.39, 60.771, 60.969, 61.541, 61.591, 61.641, 61.691, 62.612, 63.123, 63.421, 64.061, 64.111, 64.49, 64.886, 64.952, 65.282, 65.792, 65.905, 66.559, 66.672, 66.785, 67.083, 67.197, 67.423, 67.707, 67.82, 68.33, 68.5, 69.01, 69.18, 69.69, 69.86, 70.4, 70.748, 70.896, 71.033, 71.687, 71.974, 72.249, 72.348, 72.448, 72.671, 72.945, 73.083, 73.22, 73.632, 73.838, 74.661, 75.759, 75.809, 75.891, 75.941, 76.322, 76.435, 76.792, 77.42, 77.563, 77.85, 78.157, 78.299, 78.871, 79.656, 79.799, 80.906, 81.184, 81.454, 81.757, 81.878, 82.371, 82.492, 83.098, 83.601, 83.782, 83.875, 84.173, 84.415, 84.597]
+      const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+
+      // ---------- maths ----------
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x))
+      const win = (t, a, b) => clamp((t - a) / (b - a))
+      const eio = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+      const eob = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2) }
+      const popS = (t, t0, d = 0.45) => (t < t0 ? 0 : eob(win(t, t0, t0 + d)))
+      const fade = (t, a, b, f = 0.3) => clamp(Math.min(win(t, a, a + f), 1 - win(t, b - f, b)))
+      const eout = (x) => 1 - (1 - x) * (1 - x)
+      let seed = 11
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+
+      // ---------- renderer, scene ----------
+      const canvas = document.getElementById("three")
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      renderer.setSize(1080, 1920, false); renderer.setPixelRatio(1)
+      renderer.setClearColor(0x0c1c22)
+      renderer.outputColorSpace = THREE.SRGBColorSpace
+      const scene = new THREE.Scene()
+      scene.fog = new THREE.Fog(0x0c1c22, 30, 110)
+      const camera = new THREE.PerspectiveCamera(44, 1080 / 1920, 0.05, 400)
+      scene.add(new THREE.HemisphereLight(0xcfeaff, 0x0a2a30, 1.5))
+      const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(10, 26, 16); scene.add(key)
+      const C = { cyan: 0x3fd6f0, white: 0xf4fbfd, steel: 0x9aa6ae, wood: 0x8a5a30, woodD: 0x4a2a14, red: 0xf0785a, orange: 0xffa040 }
+      const mat = (color, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.55, metalness: 0.1 }, o))
+      const basic = (color, o = {}) => new THREE.MeshBasicMaterial(Object.assign({ color, transparent: true, depthWrite: false }, o))
+      const box = (w, h, d, m, x = 0, y = 0, z = 0) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); return b }
+      const fatLine = (color, width, n) => { const g = new LineGeometry(); g.setPositions(new Float32Array(n * 3)); const m = new LineMaterial({ color, linewidth: width, transparent: true, depthWrite: false }); m.resolution.set(1080, 1920); const l = new Line2(g, m); l.frustumCulled = false; l.buf = new Float32Array(n * 3); l.n = n; scene.add(l); return l }
+      const flush = (l) => l.geometry.setPositions(l.buf)
+      const setPts = (l, pts) => { for (let i = 0; i < l.n; i++) { const p = pts[Math.min(i, pts.length - 1)]; l.buf.set([p.x, p.y, p.z], i * 3) } flush(l) }
+      const P = (x, y, z) => new THREE.Vector3(x, y, z)
+
+      // ground, grid
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(0x10282e, { roughness: 0.95 })); ground.rotation.x = -Math.PI / 2; ground.position.y = -1.7; scene.add(ground)
+      const grid = new THREE.GridHelper(200, 100, 0x2a5a64, 0x1a3a42); grid.position.set(-6, -1.69, 0); grid.material.transparent = true; grid.material.opacity = 0.3; scene.add(grid)
+      // floating dust
+      const NDUST = 700, dustPos = new Float32Array(NDUST * 3), dust0 = []
+      for (let i = 0; i < NDUST; i++) dust0.push([-24 + rnd() * 34, -1 + rnd() * 22, -6 + rnd() * 8])
+      const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3))
+      { const dp0 = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0x9fe6f2, size: 0.05, transparent: true, opacity: 0.5 })); dp0.frustumCulled = false; scene.add(dp0) }
+
+      // ---------- the building: a cutaway shaft, landings, pit, machine beam ----------
+      const concrete = mat(0x3a4a52, { roughness: 0.9 }), slab = mat(0x56666e, { roughness: 0.85 })
+      scene.add(box(5.4, 22.6, 0.2, concrete, 0.4, 9.6, -1.45))
+      ;[-2.25, 3.05].forEach((x) => { const w = box(0.2, 22.6, 2.9, mat(0x44545c, { transparent: true, opacity: 0.55 }), x, 9.6, -0.1); scene.add(w) })
+      for (let k = 0; k <= 6; k++) { const y = 3 * k - 0.13; scene.add(box(4.2, 0.26, 3, slab, -4.4, y, -0.05)); scene.add(box(4.2, 0.26, 3, slab, 5.2, y, -0.05)); scene.add(box(1.1, 2.2, 0.08, mat(0x8a9aa4), -2.9, y + 1.24, -1.2)) }
+      scene.add(box(5.4, 0.2, 2.9, slab, 0.4, -1.6, -0.1))
+      scene.add(box(5.4, 0.3, 0.45, mat(0x2a3036, { metalness: 0.5 }), 0.4, 18.75, -0.55))
+      // rails: car rails at x = ±1.05, counterweight rails at x = 1.45 / 2.15
+      const railM = mat(C.steel, { metalness: 0.7, roughness: 0.35 })
+      ;[-1.05, 1.05, 1.45, 2.15].forEach((x) => scene.add(box(0.1, 20.4, 0.12, railM, x, 8.7, 0)))
+
+      // ---------- the car ----------
+      const car = new THREE.Group(); scene.add(car)
+      const carBody = new THREE.Mesh(new RoundedBoxGeometry(1.8, 2.4, 1.6, 3, 0.06), mat(0xd8dde2, { metalness: 0.45, roughness: 0.3 })); carBody.position.y = 1.2; car.add(carBody)
+      car.add(box(0.86, 2.0, 0.03, mat(0xaab4bc, { metalness: 0.6, roughness: 0.25 }), -0.44, 1.05, 0.81), box(0.86, 2.0, 0.03, mat(0xaab4bc, { metalness: 0.6, roughness: 0.25 }), 0.44, 1.05, 0.81))
+      const carLight = box(1.4, 0.12, 0.04, mat(0xfff3c0, { emissive: 0xfff3c0, emissiveIntensity: 1.2 }), 0, 2.22, 0.82); car.add(carLight)
+      car.add(box(2.2, 0.14, 0.26, mat(0x3a4048, { metalness: 0.5 }), 0, 2.52, 0))
+      ;[-1, 1].forEach((s) => { car.add(box(0.08, 2.65, 0.2, mat(0x3a4048, { metalness: 0.5 }), s * 1.0, 1.25, 0)) })
+      const jaws = []
+      ;[-1, 1].forEach((s) => [-1, 1].forEach((zs) => { const j = box(0.12, 0.34, 0.09, mat(0x5a6068, { metalness: 0.6, emissive: C.orange, emissiveIntensity: 0 }), s * 1.05, 0.16, zs * 0.16); j.userData = { zs }; car.add(j); jaws.push(j) }))
+      const lever = box(0.5, 0.06, 0.06, mat(0xf0a040), -1.2, 2.3, 0.1); car.add(lever)
+      // ---------- the crate (the first « lift ») ----------
+      const crate = new THREE.Group(); scene.add(crate)
+      crate.add(new THREE.Mesh(new RoundedBoxGeometry(1.2, 1.2, 1.2, 2, 0.04), mat(0xb07a40, { roughness: 0.8 })))
+      ;[-0.45, 0, 0.45].forEach((y) => crate.add(box(1.24, 0.08, 1.24, mat(0x7a4a26, { roughness: 0.8 }), 0, y, 0)))
+      // ---------- sheave, motor, brake, counterweight ----------
+      const SX = 0.9, SY = 19.5, SR = 0.9
+      const machine = new THREE.Group(); scene.add(machine)
+      const sheave = new THREE.Group(); sheave.position.set(SX, SY, 0); machine.add(sheave)
+      const shM = mat(0x5a6068, { metalness: 0.7, roughness: 0.35 })
+      sheave.add(new THREE.Mesh(new THREE.CylinderGeometry(SR, SR, 0.3, 40).rotateX(Math.PI / 2), shM))
+      for (let i = 0; i < 6; i++) { const s = box(0.1, SR * 1.7, 0.32, mat(0x3a4048), 0, 0, 0); s.rotation.z = (i / 6) * Math.PI; sheave.add(s) }
+      sheave.add(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.4, 16).rotateX(Math.PI / 2), mat(C.orange)))
+      const motor = new THREE.Group(); machine.add(motor)
+      motor.add(box(1.0, 0.9, 0.8, mat(0x2a6a8a, { metalness: 0.4 }), SX - 1.55, SY - 0.2, -0.1), new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.7, 12).rotateZ(Math.PI / 2), mat(C.steel, { metalness: 0.8 })))
+      motor.children[1].position.set(SX - 0.85, SY - 0.2, -0.1)
+      const motorLed = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), basic(0x40ff80)); motorLed.position.set(SX - 1.55, SY + 0.1, 0.32); motor.add(motorLed)
+      const brake = new THREE.Group(); machine.add(brake)
+      brake.add(new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.22, 32).rotateX(Math.PI / 2), mat(0x8a9298, { metalness: 0.8, roughness: 0.25 })))
+      brake.children[0].position.set(SX, SY, 0.38)
+      const shoes = [-1, 1].map((s) => { const sh = box(0.16, 0.66, 0.26, mat(0xd7263d, { emissive: 0xd7263d, emissiveIntensity: 0 }), SX + s * 0.7, SY, 0.38); sh.userData.s = s; brake.add(sh); return sh })
+      const cw = new THREE.Group(); scene.add(cw)
+      cw.add(box(0.62, 2.4, 0.42, mat(0x5a5e68, { metalness: 0.5, roughness: 0.5 })))
+      for (let i = 0; i < 6; i++) cw.add(box(0.64, 0.03, 0.44, mat(0x2a2e34), 0, -1.0 + i * 0.4, 0))
+
+      // ---------- ropes and cables ----------
+      const rope = fatLine(0xd8c49a, 7, 40)
+      const ropeHandle = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.05, 8, 20), mat(0xd8c49a)); scene.add(ropeHandle)
+      const NC = 4
+      const cables = Array.from({ length: NC }, () => fatLine(0xc8d2d8, 3.2, 40))
+      const stubs = Array.from({ length: NC }, () => fatLine(0xc8d2d8, 3.2, 2))
+      const K = 20.1 // car (or crate) top + counterweight top = K
+      function cablePath(xOff, yLeftBottom, yRightBottom, out) {
+        const r = SR + xOff, pts = []
+        for (let i = 0; i < 6; i++) pts.push(P(SX - r, yLeftBottom + ((SY - yLeftBottom) * i) / 5, 0))
+        for (let i = 1; i < 28; i++) { const a = Math.PI - (Math.PI * i) / 28; pts.push(P(SX + Math.cos(a) * r, SY + Math.sin(a) * r, 0)) }
+        for (let i = 0; i < 6; i++) pts.push(P(SX + r, SY - ((SY - yRightBottom) * i) / 5, 0))
+        return pts
+      }
+
+      // ---------- the governor (limiteur de vitesse) and the buffers ----------
+      const gov = new THREE.Group(); scene.add(gov)
+      const GX = -1.45
+      const govWheel = new THREE.Group(); govWheel.position.set(GX, 19.3, 0.1); gov.add(govWheel)
+      govWheel.add(new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.12, 24).rotateX(Math.PI / 2), mat(0xf0a040, { metalness: 0.5 })))
+      const fly = [-1, 1].map((s) => { const f = box(0.12, 0.2, 0.14, mat(0x3a4048), s * 0.18, 0, 0.1); govWheel.add(f); return f })
+      const govLow = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.1, 20).rotateX(Math.PI / 2), mat(0xf0a040)); govLow.position.set(GX, -1.1, 0.1); gov.add(govLow)
+      const govRopes = [fatLine(0xf0a040, 3, 2), fatLine(0xf0a040, 3, 2)]
+      const buffers = new THREE.Group(); scene.add(buffers)
+      ;[-0.5, 0.5].forEach((x) => { buffers.add(box(0.4, 0.2, 0.4, mat(0x3a4048), x, -1.4, 0)); for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.035, 6, 20), mat(0xf0c040, { metalness: 0.5 })); r.rotation.x = Math.PI / 2; r.position.set(x, -1.2 + i * 0.12, 0); buffers.add(r) } buffers.add(box(0.36, 0.08, 0.36, mat(0x1a1a1e), x, -0.5, 0)) })
+      // sparks (deterministic particles)
+      const NSP = 80, spPos = new Float32Array(NSP * 3), spGeo = new THREE.BufferGeometry(); spGeo.setAttribute("position", new THREE.BufferAttribute(spPos, 3))
+      const spMat = new THREE.PointsMaterial({ color: 0xffc040, size: 0.16, transparent: true, opacity: 0, depthWrite: false }); const spPts = new THREE.Points(spGeo, spMat); spPts.frustumCulled = false; scene.add(spPts)
+      const spV = Array.from({ length: NSP }, () => [(rnd() - 0.5) * 3, rnd() * 2.5, (rnd() - 0.2) * 2.5, rnd() * 0.5])
+
+      // ---------- New York, 1854: Otis's platform ----------
+      const OX = -14
+      const otis = new THREE.Group(); otis.position.set(OX, -1.6, 0); scene.add(otis)
+      const woodM = mat(C.wood, { roughness: 0.8 }), woodD = mat(C.woodD, { roughness: 0.8 })
+      ;[-1.9, 1.9].forEach((x) => { otis.add(box(0.36, 11.4, 0.36, woodM, x, 5.7, 0)); for (let j = 0; j < 26; j++) { const tooth = box(0.2, 0.06, 0.3, woodD, x - Math.sign(x) * 0.24, 0.8 + j * 0.4, 0); tooth.rotation.z = Math.sign(x) * 0.55; otis.add(tooth) } })
+      otis.add(box(4.6, 0.4, 0.5, woodM, 0, 11.5, 0))
+      const otisPulley = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.12, 20).rotateX(Math.PI / 2), woodD); otisPulley.position.set(0, 11.0, 0.32); otis.add(otisPulley)
+      const plat = new THREE.Group(); otis.add(plat)
+      plat.add(box(3.3, 0.22, 1.9, woodM, 0, 0, 0))
+      ;[-1.58, 1.58].forEach((x) => plat.add(box(0.14, 2.6, 0.14, woodD, x, 1.3, 0)))
+      plat.add(box(3.3, 0.14, 0.2, woodD, 0, 2.6, 0))
+      const spring = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.06, 8, 40, Math.PI * 0.62), mat(0x6a6e78, { metalness: 0.6 })); spring.rotation.z = Math.PI * 0.19; spring.position.set(0, 1.85, 0); plat.add(spring)
+      const dogs = [-1, 1].map((s) => { const d = box(0.42, 0.12, 0.26, mat(0x3a3e46, { metalness: 0.6 }), s * 1.42, 2.75, 0); d.userData.s = s; plat.add(d); return d })
+      plat.add(box(0.8, 0.7, 0.8, mat(0x9a6a3a), 0.9, 0.46, 0.3), box(0.6, 0.5, 0.6, mat(0x9a6a3a), 1.0, 1.06, 0.3))
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.8, 16), mat(0x7a4a26)); barrel.position.set(0.1, 0.5, -0.4); plat.add(barrel)
+      // Otis himself: black coat, top hat
+      const man = new THREE.Group(); man.position.set(-0.75, 0.11, 0.25); plat.add(man)
+      ;[-0.1, 0.1].forEach((x) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.8, 8), mat(0x1a1a20)); l.position.set(x, 0.4, 0); man.add(l) })
+      const coat = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 0.95, 12), mat(0x1e1e28)); coat.position.y = 1.25; man.add(coat)
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 12), mat(0xe8c0a0)); head.position.y = 1.9; man.add(head)
+      const beard = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 8), mat(0x5a4030)); beard.position.set(0, 1.8, 0.06); beard.scale.set(1, 0.8, 0.8); man.add(beard)
+      const hat = new THREE.Group(); hat.position.y = 2.06; man.add(hat)
+      hat.add(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.15, 0.36, 14), mat(0x111114)), new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.03, 18), mat(0x111114)))
+      hat.children[0].position.y = 0.18
+      const arm = box(0.07, 0.6, 0.07, mat(0x1e1e28), 0.27, 1.4, 0); arm.geometry.translate(0, -0.25, 0); arm.position.set(0.27, 1.65, 0); man.add(arm)
+      const otisRopeU = fatLine(0xd8c49a, 6, 2), otisRopeL = fatLine(0xd8c49a, 6, 2)
+      // the axe
+      const axe = new THREE.Group(); otis.add(axe)
+      const axeH = box(0.07, 1.1, 0.07, mat(0x7a5a3a), 0, -0.4, 0); axe.add(axeH)
+      axe.add(box(0.36, 0.22, 0.05, mat(0xb8c4cc, { metalness: 0.8 }), 0.16, 0.12, 0))
+      // the crowd
+      const crowd = new THREE.Group(); otis.add(crowd)
+      for (let i = 0; i < 14; i++) { const g = new THREE.Group(); g.position.set(-4.2 + (i % 7) * 1.4 + rnd() * 0.3, 0, 3 + Math.floor(i / 7) * 1.3 + rnd() * 0.4); const col = [0x2a2a34, 0x5a3a2a, 0x3a4a6a, 0x6a2a2a][i % 4]; const b = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.3, 1.1, 10), mat(col)); b.position.y = 0.55; const h = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), mat(0xe8c0a0)); h.position.y = 1.3; g.add(b, h); if (i % 3 === 0) { const th = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.3, 10), mat(0x111114)); th.position.y = 1.55; g.add(th) } crowd.add(g) }
+
+      // ---------- story clock: positions as a function of time ----------
+      const snaps = [[T[1] + 0.15, T[19]], [T[147], T[202] - 0.3], [T[247], T[256]]]
+      const snapAt = (t) => snaps.find(([a, b]) => t >= a && t < b)
+      function carY(t) {
+        if (t < T[3] - 0.05) return 15
+        if (t < T[8] + 0.25) { const u = win(t, T[3] - 0.05, T[8] + 0.25); return 15 - 15 * u * u }
+        if (t < T[9] + 0.4) return 0
+        if (t < T[19]) return 15 * eio(win(t, T[9] + 0.4, T[19]))
+        if (t < T[113]) return 15
+        if (t < T[214] - 0.1) return 9
+        if (t < T[218] + 0.1) { const u = win(t, T[214] - 0.1, T[218] + 0.1); return 9 - 1.7 * u * u }
+        if (t < T[219] + 0.3) return 7.3 - 0.3 * eout(win(t, T[218] + 0.1, T[219] + 0.3))
+        if (t < T[250] - 0.2) return 7
+        if (t < T[253]) return 7 - 0.15 * eout(win(t, T[250] - 0.2, T[253]))
+        if (t < T[259]) return 6.85
+        return 6.85 + 5.5 * eio(win(t, T[259], END - 0.3))
+      }
+      function crateY(t) {
+        if (t < T[39]) return 0
+        if (t < T[43]) return 3 * eio(win(t, T[39], T[43]))
+        if (t < T[56]) return 3
+        if (t < T[57] + 0.3) return 3 - 1.2 * eout(win(t, T[56], T[57] + 0.3))
+        if (t < T[82] + 0.2) return 1.8
+        return 1.8 + 7.2 * eio(win(t, T[82] + 0.2, T[89]))
+      }
+
+      // ---------- camera ----------
+      const KEYS = [
+        [0, P(3.4, 17.6, 9.5), P(0.3, 16.3, 0)], [T[3] - 0.1, P(3.4, 17.6, 9.5), P(0.3, 16.3, 0)],
+        [T[8] + 0.3, P(3.4, 2.4, 9.5), P(0.3, 1.1, 0)], [T[9] + 0.2, P(3.4, 2.4, 9.5), P(0.3, 1.1, 0)],
+        [T[9] + 1.0, P(6, 9, 30), P(0.6, 9, 0)], [T[30] + 0.3, P(6, 9, 30), P(0.6, 9, 0)],
+        [T[33], P(2.8, 2.6, 8), P(0.3, 1.6, 0)], [T[46], P(3.0, 3.8, 9), P(0.3, 3.0, 0)], [T[53], P(3.2, 3.4, 9), P(0.3, 2.6, 0)],
+        [T[60], P(5.5, 10, 27), P(0.9, 10, 0)], [T[78], P(5.5, 10, 27), P(0.9, 10, 0)],
+        [T[81], P(2.2, 20.2, 8), P(0.1, 19.3, 0)], [T[89], P(2.2, 20.2, 8), P(0.1, 19.3, 0)],
+        [T[92], P(3.6, 13, 10), P(0.4, 12.2, 0)], [T[106], P(3.2, 12.5, 9), P(0.4, 11.5, 0)], [T[112], P(4.0, 11.2, 11), P(0.4, 10.4, 0)],
+        [T[117], P(3.0, 20.2, 6.5), P(0.9, 19.5, 0)], [T[135], P(3.0, 20.2, 6.5), P(0.9, 19.5, 0)],
+        [T[138], P(4.6, 12, 15), P(0.5, 11, 0)], [T[150], P(4.6, 12, 15), P(0.5, 11, 0)],
+        [T[153], P(-10.5, 6.5, 21), P(-14, 4.5, 0)], [T[161], P(-11, 5.6, 16), P(-14, 4.2, 0)], [T[166], P(-11.6, 6.6, 12), P(-14, 5.2, 0)],
+        [T[172], P(-12.2, 8, 9.5), P(-14, 7, 0)], [T[176], P(-11.5, 5.4, 11), P(-14, 4.4, 0)],
+        [T[185], P(-12.9, 6.9, 4.6), P(-12.4, 6.5, 0)], [T[196], P(-11, 5.2, 13), P(-14, 4.6, 0)], [T[201], P(-11, 5.2, 13), P(-14, 4.6, 0)],
+        [T[203], P(-3.5, 18.5, 8), P(-1.45, 18.6, 0)], [T[210], P(-3.5, 18.5, 8), P(-1.45, 18.6, 0)],
+        [T[213], P(3.0, 10.4, 9), P(0, 9.2, 0)], [T[218], P(3.0, 9.0, 8), P(0, 7.8, 0)], [T[228], P(3.0, 8.8, 8), P(0, 7.6, 0)],
+        [T[231], P(2.6, 0.6, 7), P(0.2, -0.6, 0)], [T[243], P(2.6, 0.6, 7), P(0.2, -0.6, 0)],
+        [T[245], P(3.6, 9.5, 10), P(0.2, 8.3, 0)], [T[255], P(3.4, 8.8, 9), P(0.2, 7.6, 0)],
+        [T[257], P(6, 10, 30), P(0.6, 9.5, 0)], [END, P(7, 10.5, 34), P(0.6, 9.5, 0)],
+      ]
+      function camAt(t) {
+        let i = 0; while (i < KEYS.length - 2 && t > KEYS[i + 1][0]) i++
+        const [t0, p0, q0] = KEYS[i], [t1, p1, q1] = KEYS[i + 1]
+        const u = eio(win(t, t0, t1))
+        camera.position.lerpVectors(p0, p1, u)
+        // a small shake when something hits
+        const hit = [T[8] + 0.25, T[218] + 0.1, T[250] - 0.1, T[175] + 0.45].reduce((s, h) => s + (t > h && t < h + 0.4 ? (1 - (t - h) / 0.4) : 0), 0)
+        camera.position.x += Math.sin(t * 90) * 0.05 * hit; camera.position.y += Math.cos(t * 77) * 0.05 * hit
+        camera.lookAt(new THREE.Vector3().lerpVectors(q0, q1, u))
+      }
+
+      // ---------- labels ----------
+      const labsEl = document.getElementById("labs"), LAB = []
+      const addLab = (text, anchor, t0, t1, warn) => { const el = document.createElement("div"); el.className = "lab" + (warn ? " warn" : ""); el.textContent = text; labsEl.appendChild(el); LAB.push({ el, anchor, t0, t1 }) }
+      const v = (x, y, z) => () => P(x, y, z)
+      const onCar = (dx, dy) => (t) => P(dx, carY(t) + dy, 0.9)
+      const onCrate = (dy) => (t) => P(0, crateY(t) + dy, 0.7)
+      addLab("◀◀ RETOUR EN ARRIÈRE", onCar(0, 3.2), T[9] + 0.4, T[19])
+      addLab("CAISSE", onCrate(1.3), T[35], T[49])
+      addLab("CORDE", (t) => P(-0.2, crateY(t) + 4, 0.3), T[38], T[49])
+      addLab("TROP LOURD", onCrate(1.3), T[53], T[58], true)
+      addLab("POULIE", v(SX, SY + 1.4, 0.3), T[63], T[71])
+      addLab("≈ LE POIDS DE LA CAISSE", (t) => P(1.8, K - crateY(t) - 1.3 + 0.4, 0.6), T[69], T[75] - 0.1)
+      addLab("MOTEUR", v(SX - 1.55, SY + 0.6, 0), T[82], T[90])
+      addLab("ÇA S'USE…", (t) => P(0.1, crateY(t) + 2.6, 0.3), T[92], T[96], true)
+      addLab("× 4 CÂBLES D'ACIER", (t) => P(0, Math.max(crateY(t), 9) + 3.6, 0.3), T[102], T[112])
+      addLab("CHACUN PEUT TOUT PORTER", (t) => P(0, 9 + 4.4, 0.3), T[108], T[117])
+      addLab("COURANT COUPÉ", v(SX - 1.55, SY + 0.6, 0), T[118], T[124], true)
+      addLab("LE FREIN SERRE", v(SX, SY - 0.9, 0.5), T[124], T[136])
+      addLab("TOUS LES CÂBLES CASSENT", onCar(0, 3.4), T[146], T[151], true)
+      addLab("ELISHA OTIS", (t) => P(OX - 0.75, plat.position.y - 1.6 + 2.6, 0.3), T[161], T[169])
+      addLab("LA CORDE", v(OX + 0.9, 8.6, 0.3), T[171], T[175])
+      addLab("RESSORT", (t) => P(OX, plat.position.y - 1.6 + 3.5, 0.3), T[185], T[196])
+      addLab("CRANS", (t) => P(OX + 1.75, plat.position.y - 1.6 + 2.2, 0.3), T[191], T[202])
+      addLab("2ᵉ CÂBLE", v(GX - 0.15, 16.6, 0.3), T[204], T[212])
+      addLab("LIMITEUR DE VITESSE", v(GX, 20.1, 0.3), T[207], T[214])
+      addLab("TROP VITE !", onCar(0, 3.0), T[214], T[219], true)
+      addLab("MÂCHOIRES", onCar(-1.05, -0.3), T[219], T[229])
+      addLab("FOSSE", v(0.4, -0.95, 1.0), T[236], T[244])
+      addLab("CÂBLE CASSÉ", onCar(0, 3.4), T[246], T[251], true)
+      addLab("QUELQUES CM", onCar(1.3, 0.2), T[251], T[256])
+      const pv = new THREE.Vector3()
+      function placeLabels(t) {
+        for (const L of LAB) {
+          const op = fade(t, L.t0, L.t1, 0.25)
+          if (op <= 0) { L.el.style.opacity = 0; continue }
+          pv.copy(L.anchor(t)).project(camera)
+          L.el.style.opacity = pv.z < 1 ? op : 0
+          const hw = L.el.offsetWidth / 2 + 40
+          L.el.style.left = clamp(((pv.x + 1) / 2) * 1080, hw, 1080 - hw) + "px"
+          L.el.style.top = clamp(((1 - pv.y) / 2) * 1920, 150, 1140) + "px"
+        }
+      }
+
+      // ---------- the world, as a function of time ----------
+      const sz = (o, s) => { o.visible = s > 0.002; o.scale.setScalar(Math.max(0.001, s)) }
+      const tmp = new THREE.Vector3()
+      function renderAt(t) {
+        const dp = dustGeo.attributes.position
+        for (let i = 0; i < NDUST; i++) { const d = dust0[i]; dp.setXYZ(i, d[0] + Math.sin(t * 0.3 + i) * 0.3, d[1] + ((t * 0.1 + i * 0.37) % 1.2) - 0.6, d[2]) }
+        dp.needsUpdate = true
+        const hookOut = 1 - win(t, T[25], T[25] + 0.5)
+        // the car: shown in the hook, dissolved, rebuilt from the crate at « la cabine pleine »
+        const cy = carY(t)
+        const carS = t < T[26] ? hookOut : popS(t, T[113] - 0.3, 0.5)
+        sz(car, carS); car.position.set(0, cy, 0)
+        carLight.material.emissiveIntensity = 1.2 * (snapAt(t) && t < T[19] ? (Math.sin(t * 40) > 0 ? 1 : 0.2) : 1)
+        // the crate
+        const crS = popS(t, T[35] - 0.1) * (1 - win(t, T[113] - 0.3, T[113] + 0.1))
+        const cry = crateY(t)
+        sz(crate, crS); crate.position.set(0, cry + 0.6, 0)
+        // machine: hook, then sheave with the rope, motor, brake
+        const mHook = t < T[26] ? hookOut : 0
+        sz(sheave, Math.max(mHook, popS(t, T[38] - 0.3)))
+        sz(motor, Math.max(mHook, popS(t, T[82] - 0.1)))
+        sz(brake, Math.max(mHook, popS(t, T[82] + 0.1)))
+        const top = t < T[26] ? cy + 2.6 : (cry + 1.25) + (cy + 2.6 - cry - 1.25) * win(t, T[113] - 0.3, T[113] + 0.2)
+        const snap = snapAt(t)
+        // the sheave turns with the load
+        const travel = t < T[26] ? cy : (t > T[113] ? cy : cry)
+        sheave.rotation.z = -travel / SR
+        // counterweight
+        const cwTop = snap ? (snap[0] < 1 ? K - 17.6 : K - (carY(snap[0]) + 2.6)) : K - top
+        const cwOn = Math.max(mHook, popS(t, T[66] - 0.2))
+        sz(cw, cwOn); cw.position.set(1.8, cwTop - 1.3, 0)
+        // power cut: LED red, brake shoes clamp
+        const cut = fade(t, T[118], T[136], 0.15)
+        motorLed.material.color.setHex(cut > 0.5 ? 0xff3a2a : 0x40ff80)
+        const clampB = fade(t, T[124], T[136], 0.2)
+        shoes.forEach((s) => { s.position.x = SX + s.userData.s * (0.7 - 0.13 * clampB); s.material.emissiveIntensity = clampB * 0.8 })
+        // the single rope (crate phase), frays before the steel cables
+        const ropeOn = t > T[38] - 0.2 && t < T[101]
+        rope.visible = ropeOn; ropeHandle.visible = ropeOn && t < T[66] - 0.2
+        if (ropeOn) {
+          const rightEnd = t < T[66] - 0.2 ? 7 - cry : K - top
+          setPts(rope, cablePath(0, top, rightEnd))
+          const fray = fade(t, T[92], T[100], 0.2)
+          rope.material.color.setHex(fray > 0.5 && Math.sin(t * 30) > 0 ? 0xf0785a : 0xd8c49a)
+          rope.material.linewidth = 7 - fray * 3 + (t > T[95] ? -2 : 0)
+          rope.material.opacity = 1 - win(t, T[100], T[101])
+          ropeHandle.position.set(SX + SR, rightEnd - 0.2, 0)
+        }
+        // the steel cables (hook; then from « câbles d'acier »), with their three breaks
+        const cablesOn = Math.max(t < T[26] ? hookOut : 0, win(t, T[100], T[101]))
+        cables.forEach((c, i) => {
+          const x = (i - 1.5) * 0.075
+          c.visible = cablesOn > 0.01; c.material.opacity = cablesOn
+          stubs[i].visible = !!snap && cablesOn > 0.01
+          if (!c.visible) return
+          if (snap) {
+            const yb = carY(snap[0]) + 2.6 + 1.4
+            const yEnd = Math.min(SY - 0.2, yb + (t - snap[0]) * 14 * (1 + i * 0.15))
+            setPts(c, cablePath(x, yEnd, cwTop))
+            stubs[i].buf.set([SX - SR - x, top, 0, SX - SR - x + Math.sin(t * 6 + i) * 0.15, top + 1.1, 0.1]); flush(stubs[i])
+          } else setPts(c, cablePath(x, top, K - top))
+        })
+        // red flash when the cables snap
+        document.getElementById("flash").style.opacity = snaps.reduce((s, [a]) => s + (t > a && t < a + 0.25 ? 0.35 * (1 - (t - a) / 0.25) : 0), 0)
+        // governor, its own cable, the trip
+        const gOn = popS(t, T[203] - 0.2)
+        sz(gov, gOn); govRopes.forEach((g) => (g.visible = gOn > 0.01))
+        govRopes[0].buf.set([GX - 0.32, 19.3, 0.1, GX - 0.28, -1.1, 0.1]); flush(govRopes[0])
+        govRopes[1].buf.set([GX + 0.32, 19.3, 0.1, GX + 0.28, -1.1, 0.1]); flush(govRopes[1])
+        const speedy = fade(t, T[214] - 0.1, T[218] + 0.1, 0.1)
+        govWheel.rotation.z = -t * (1 + speedy * 10)
+        const trip = t > T[218] && t < T[230] ? 1 : 0
+        fly.forEach((f, i) => { f.position.x = (i ? 1 : -1) * (0.18 + 0.12 * Math.max(speedy, trip)) })
+        lever.rotation.z = trip ? 0.35 : 0
+        // safety jaws grip the rails
+        const clampJ = (t > T[218] + 0.05 && t < T[231]) || (t > T[250] - 0.05 && t < T[257]) ? 1 : 0
+        jaws.forEach((j) => { j.position.z = j.userData.zs * (0.16 - 0.06 * clampJ); j.material.emissiveIntensity = clampJ * 0.9 })
+        // sparks at the jaws
+        const em = [T[218] + 0.05, T[250] - 0.05].find((a) => t > a && t < a + 1.1)
+        spMat.opacity = em !== undefined ? 1 - (t - em) / 1.1 : 0
+        if (em !== undefined) { const sp = spGeo.attributes.position; for (let i = 0; i < NSP; i++) { const [vx, vy, vz, d] = spV[i]; const a = Math.max(0, t - em - d * 0.4); const side = i % 2 ? 1.05 : -1.05; sp.setXYZ(i, side + vx * a, cy + 0.15 + vy * a - 6 * a * a, vz * a) } sp.needsUpdate = true }
+        // buffers in the pit
+        sz(buffers, popS(t, T[238] - 0.1))
+        // ---------- Otis, 1854 ----------
+        const pyBase = 4.2, dropped = t > T[175] + 0.1 ? 0.38 * eout(win(t, T[175] + 0.1, T[175] + 0.45)) : 0
+        plat.position.y = pyBase - dropped + 1.6
+        spring.scale.y = 1 - 0.5 * win(t, T[175] + 0.1, T[175] + 0.3)
+        dogs.forEach((d) => { d.position.x = d.userData.s * (1.42 + 0.3 * win(t, T[175] + 0.1, T[175] + 0.3)) })
+        const ropeTopY = plat.position.y - 1.6 + 3.55
+        const cutRope = t > T[175] + 0.08
+        otisRopeU.buf.set([OX, 9.4, 0.3, OX, cutRope ? Math.min(9.3, 8.6 + (t - T[175]) * 4) : 8.6, 0.3]); flush(otisRopeU)
+        otisRopeL.buf.set([OX, ropeTopY, 0.3, OX + (cutRope ? Math.sin(t * 5) * 0.12 : 0), cutRope ? ropeTopY + 0.6 : 8.6, 0.3]); flush(otisRopeL)
+        otisRopeU.visible = otisRopeL.visible = t > T[146]
+        axe.position.set(-0.45, 10.2, 0.5)
+        axe.rotation.z = t < T[173] ? 0.9 : t < T[175] + 0.1 ? 0.9 + 0.8 * win(t, T[173], T[174]) - 2.2 * win(t, T[175] - 0.15, T[175] + 0.08) : -0.5
+        axe.visible = t > T[168] && t < T[186]
+        hat.position.y = 2.06 + 0.35 * fade(t, T[196], T[202], 0.25); arm.rotation.z = -2.3 * fade(t, T[196], T[202], 0.25)
+        renderer.render(scene, camera)
+      }
+      function frame(t) { camAt(t); renderAt(t); placeLabels(t) }
+      window.addEventListener("hf-seek", (e) => frame(e.detail.time))
+      frame(window.__hfThreeTime || 0)
+    </script>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const END = 86.6
+        const RAW = [0.0, 0.135, 0.473, 1.078, 1.213, 1.542, 1.88, 2.015, 2.15, 2.823, 3.16, 3.295, 3.538, 3.588, 3.808, 3.943, 4.28, 4.551, 4.686, 5.361, 5.827, 6.029, 6.571, 7.385, 7.839, 7.889, 8.802, 8.938, 9.073, 9.209, 9.412, 10.308, 10.461, 10.514, 10.782, 11.011, 11.47, 11.546, 11.775, 12.403, 12.453, 12.539, 12.692, 13.375, 13.425, 13.762, 13.915, 14.602, 14.755, 15.45, 15.504, 15.628, 15.999, 16.184, 16.555, 16.679, 16.864, 17.111, 17.895, 17.945, 18.029, 18.462, 18.709, 18.833, 18.956, 19.389, 19.513, 20.069, 20.197, 20.516, 20.964, 21.283, 21.603, 21.794, 21.922, 22.29, 22.34, 22.825, 22.953, 23.829, 24.06, 24.43, 24.75, 25.133, 25.899, 25.949, 25.999, 26.322, 26.805, 26.942, 27.336, 27.4, 27.606, 28.019, 28.157, 28.77, 29.184, 29.226, 29.33, 29.881, 30.087, 30.294, 30.701, 31.268, 31.318, 31.382, 31.721, 32.369, 32.69, 33.066, 33.232, 33.436, 33.775, 34.317, 34.792, 34.928, 35.334, 36.009, 36.146, 36.284, 36.353, 36.656, 36.862, 37.475, 37.612, 37.898, 37.995, 38.132, 38.544, 38.819, 39.253, 39.487, 39.624, 39.892, 40.276, 40.414, 41.04, 41.321, 41.371, 41.455, 42.142, 42.273, 42.534, 42.73, 43.584, 43.833, 43.917, 44.309, 44.767, 44.897, 45.159, 45.803, 46.318, 46.514, 46.908, 47.006, 47.302, 47.994, 48.584, 48.781, 49.028, 49.487, 50.819, 50.889, 51.238, 51.587, 51.796, 51.936, 52.903, 53.042, 53.132, 53.55, 53.689, 54.431, 54.481, 54.531, 54.581, 54.845, 55.415, 56.033, 56.156, 56.543, 57.281, 57.404, 57.896, 58.627, 58.677, 58.864, 59.049, 59.418, 59.602, 60.094, 60.34, 60.39, 60.771, 60.969, 61.541, 61.591, 61.641, 61.691, 62.612, 63.123, 63.421, 64.061, 64.111, 64.49, 64.886, 64.952, 65.282, 65.792, 65.905, 66.559, 66.672, 66.785, 67.083, 67.197, 67.423, 67.707, 67.82, 68.33, 68.5, 69.01, 69.18, 69.69, 69.86, 70.4, 70.748, 70.896, 71.033, 71.687, 71.974, 72.249, 72.348, 72.448, 72.671, 72.945, 73.083, 73.22, 73.632, 73.838, 74.661, 75.759, 75.809, 75.891, 75.941, 76.322, 76.435, 76.792, 77.42, 77.563, 77.85, 78.157, 78.299, 78.871, 79.656, 79.799, 80.906, 81.184, 81.454, 81.757, 81.878, 82.371, 82.492, 83.098, 83.601, 83.782, 83.875, 84.173, 84.415, 84.597]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Le", "câble", "casse.", "La", "cabine", "tombe", "de", "20", "étages.", "C'est", "la", "peur", "de", "tout", "le", "monde", "dans", "un", "ascenseur.", "Pourtant,", "ça", "n'arrive", "pratiquement", "jamais.", "Pourquoi ?", "Construisons-en", "un,", "et", "tu", "vas", "comprendre.", "Si", "tu", "attaches", "une", "caisse", "à", "une", "corde,", "et", "que", "tu", "tires,", "bravo :", "tu", "as", "construit", "un", "ascenseur.", "Mais", "la", "caisse", "est", "lourde,", "et", "tes", "bras", "fatiguent.", "Alors,", "de", "l'autre", "côté", "de", "la", "poulie,", "tu", "accroches", "un", "poids", "presque", "aussi", "lourd", "que", "la", "caisse.", "Ça,", "c'est", "un", "contrepoids.", "Maintenant,", "un", "petit", "moteur", "suffit :", "il", "fait", "juste", "tourner", "la", "poulie.", "Mais", "une", "corde,", "ça", "casse.", "Alors", "on", "la", "remplace", "par", "des", "câbles", "d'acier.", "Pas", "un", "seul :", "plusieurs.", "Et", "chacun,", "à", "lui", "seul,", "pourrait", "retenir", "la", "cabine", "pleine.", "Et", "si", "le", "courant", "est", "coupé ?", "Un", "frein", "serre", "la", "poulie", "tout", "seul.", "Pas", "de", "courant,", "pas", "de", "mouvement.", "Le", "vrai", "problème,", "c'est", "le", "pire", "des", "scénarios :", "tous", "les", "câbles", "cassent", "en", "même", "temps.", "Remontons", "en", "1854,", "à", "New", "York.", "Devant", "la", "foule,", "un", "inventeur,", "Elisha", "Otis,", "monte", "sur", "sa", "plateforme.", "Il", "fait", "couper", "la", "corde,", "à", "la", "hache.", "La", "plateforme", "tombe…", "de", "quelques", "centimètres,", "et", "s'arrête", "net.", "Des", "ressorts", "ont", "planté", "des", "crochets", "dans", "les", "crans", "des", "rails.", "Tout", "va", "bien,", "messieurs,", "aurait-il", "dit.", "Aujourd'hui,", "un", "deuxième", "câble,", "à", "part,", "surveille", "la", "vitesse.", "Si", "la", "cabine", "va", "trop", "vite,", "il", "déclenche", "des", "mâchoires", "qui", "agrippent", "les", "rails.", "Ça,", "c'est", "le", "parachute.", "Et", "tout", "en", "bas,", "au", "fond", "de", "la", "fosse,", "des", "amortisseurs", "attendent,", "au", "cas", "où.", "Alors,", "le", "câble", "casse ?", "La", "cabine", "glisse", "de", "quelques", "centimètres,", "et", "s'arrête.", "Regarde-toi :", "tu", "viens", "de", "construire", "un", "ascenseur.", "Celui", "que", "tu", "prends", "tous", "les", "jours."]
+        const KEYW = new Set([1, 18, 24, 35, 48, 78, 82, 101, 102, 124, 146, 153, 163, 175, 193, 210, 220, 228, 239, 255, 262])
+        const title = (id, t0, t1) => { tl.set(id, { visibility: 'visible' }, t0); tl.fromTo(id, { opacity: 0, y: 20, scale: 1.12 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: 'power3.out', immediateRender: false }, t0); tl.to(id, { opacity: 0, duration: 0.3 }, t1 - 0.3); tl.set(id, { visibility: 'hidden' }, t1) }
+        title('#t-pq', T[24] - 0.05, T[30] + 0.4)
+        title('#t-cp', T[75], T[79])
+        title('#t-ca', T[101], T[106] + 0.6)
+        title('#t-fr', T[124], T[130])
+        title('#t-pa', T[228] - 0.05, T[229] + 0.3)
+        title('#t-am', T[239] - 0.05, T[244])
+        title('#t-as', T[261] - 0.1, END)
+        const counter = (id, t0, t1) => { tl.set(id, { visibility: 'visible' }, t0); tl.fromTo(id, { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, t0); tl.to(id, { opacity: 0, duration: 0.25 }, t1 - 0.25); tl.set(id, { visibility: 'hidden' }, t1) }
+        counter('#c-et', T[3] - 0.1, T[9] + 0.3)
+        const o1 = { v: 20 }; tl.fromTo(o1, { v: 20 }, { v: 0, duration: T[8] + 0.25 - (T[3] - 0.05), ease: 'power2.in', immediateRender: false, onUpdate: () => { document.getElementById('c-et-n').textContent = 'ÉTAGE ' + Math.round(o1.v) } }, T[3] - 0.05)
+        counter('#c-ny', T[151] + 0.1, T[161])
+        counter('#c-cm', T[251], T[256] + 0.2)
+        // captions: groups of words, the key words in cyan
+        const caps = document.getElementById('caps')
+        const G = []; let cur = []
+        WORDS.forEach((w, k) => { if (!w) return; cur.push(k); const len = cur.reduce((n, j) => n + WORDS[j].length + 1, 0); if (/[.,:;?!…]$/.test(w) || cur.length >= 5 || len > 24) { G.push(cur); cur = [] } })
+        if (cur.length) G.push(cur)
+        G.forEach((g, gi) => {
+          const box = document.createElement('div'); box.className = 'grp'; caps.appendChild(box)
+          box.innerHTML = g.map((k) => (KEYW.has(k) ? `<span class="k">${WORDS[k]}</span>` : WORDS[k])).join(' ')
+          const t0 = T[g[0]] - 0.05, t1 = gi < G.length - 1 ? T[G[gi + 1][0]] - 0.05 : END
+          tl.set(box, { visibility: 'visible' }, t0); tl.set(box, { visibility: 'hidden' }, t1)
+          tl.fromTo(box, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out', immediateRender: false }, t0)
+        })
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
