@@ -48,34 +48,41 @@
     <style>.cnt { position: absolute; left: 50px; visibility: hidden; text-shadow: 0 4px 0 rgba(0,0,0,0.6) } .cnt b { display: block; font-family: 'Anton', sans-serif; font-weight: 400; font-size: 92px; color: #ffc93c; -webkit-text-stroke: 3px #3a2312; paint-order: stroke fill } .cnt small { display: block; font-family: 'Bebas', sans-serif; font-size: 44px; color: #fff; letter-spacing: 0.05em; -webkit-text-stroke: 2px #1b1410; paint-order: stroke fill }</style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="76.6" data-width="1080" data-height="1920">
-      <!-- 1. hook: the tower over Paris at dusk -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="74.3" data-width="1080" data-height="1920">
+      <!-- 1. hook: « En 1910, la tour Eiffel devait être détruite » : the wrecking ball swings in -->
       <div class="scene" id="s1"><div class="cam">
         <div class="bg" style="background: linear-gradient(180deg, #2a2050 0%, #a8506a 45%, #f0a060 62%, #3a3040 63%, #1e1a24 100%)"></div>
         <svg id="pa1" class="full" viewBox="0 0 1080 1920"></svg>
-        <svg id="tw1" viewBox="0 0 600 1000" style="left: 240px; top: 230px; width: 600px; height: 1000px"></svg>
+        <svg id="tw1" viewBox="0 0 600 1000" style="left: 160px; top: 300px; width: 560px; height: 933px"></svg>
+        <svg id="wb1" class="full" viewBox="0 0 1080 1920"></svg>
         <div class="vig"></div>
-        <div class="plate" id="du1" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 1250px; font-size: 58px; background: #ffc93c">CONSTRUITE POUR DURER</div>
+        <div class="gold" id="y1" style="left: 0; right: 0; top: 150px; font-size: 150px">1910</div>
+        <div class="stamp" id="dt1" style="left: 210px; top: 1180px; font-size: 100px">À DÉTRUIRE</div>
       </div></div>
-      <!-- 2. « Et les Parisiens l'ont aimée tout de suite » -->
+      <!-- 2. « Pourquoi voulait-on démolir le symbole de Paris ? » -->
       <div class="scene" id="s2"><div class="cam">
-        <div class="bg" style="background: linear-gradient(180deg, #8ab0d0 0%, #c8d8e8 60%, #6a6a5a 61%, #4a4a3a 100%)"></div>
-        <svg id="tw2" viewBox="0 0 600 1000" style="left: 340px; top: 260px; width: 400px; height: 667px"></svg>
-        <svg id="cr2" class="full" viewBox="0 0 1080 1920"></svg>
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a2a3a 0%, #1a121a 60%, #08060a 100%)"></div>
+        <svg id="rays2" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -40px; width: 2000px; height: 2000px; opacity: 0.16"></svg>
+        <svg id="tw2" viewBox="0 0 600 1000" style="left: 290px; top: 330px; width: 500px; height: 833px"></svg>
+        <svg id="ct2" viewBox="0 0 600 1000" style="left: 290px; top: 330px; width: 500px; height: 833px"></svg>
         <div class="vig"></div>
+        <div class="gold" id="q2" style="left: 0; right: 0; top: 170px; font-size: 130px">POURQUOI ?</div>
+        <div class="plate" id="sy2" style="left: 0; right: 0; margin: 0 auto; width: max-content; top: 1220px; font-size: 52px; background: #ffc93c">LE SYMBOLE DE PARIS</div>
       </div></div>
-      <!-- 3. « Ça, c'est ce qu'on veut te faire croire… » : the guidebook; FAUX -->
+      <!-- 3. « Et qu'est-ce qui l'a sauvée au dernier moment ? » -->
       <div class="scene" id="s3"><div class="cam">
-        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a3a46 0%, #1a1a22 60%, #08080c 100%)"></div><div class="vig"></div>
-        <svg id="gb3" viewBox="0 0 640 860" style="left: 220px; top: 420px; width: 640px; height: 860px"></svg>
-        <div class="stamp" id="faux3" style="left: 330px; top: 760px">FAUX</div>
+        <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 40%, #2a3a6a 0%, #101830 60%, #05080f 100%)"></div>
+        <svg id="tw3" viewBox="0 0 600 1000" style="left: 290px; top: 360px; width: 500px; height: 833px"></svg>
+        <svg id="lb3" viewBox="0 0 300 300" style="left: 390px; top: 700px; width: 300px; height: 300px"></svg>
+        <svg id="ck3" viewBox="0 0 240 240" style="left: 60px; top: 380px; width: 240px; height: 240px"></svg>
+        <div class="vig"></div>
+        <div class="gold" id="q3" style="left: 0; right: 0; top: 170px; font-size: 104px">QUI L'A SAUVÉE ?</div>
       </div></div>
-      <!-- 4. « Construite pour durer ? Remontons en 1887 » -->
+      <!-- 4. « Remontons en 1887 » -->
       <div class="scene" id="s4"><div class="cam">
         <div class="bg" style="background: radial-gradient(ellipse 60% 50% at 50% 45%, #3a2a3a 0%, #1a121a 60%, #08060a 100%)"></div>
         <svg id="rays4" viewBox="-1000 -1000 2000 2000" style="left: -460px; top: -40px; width: 2000px; height: 2000px; opacity: 0.16"></svg>
         <div class="vig"></div>
-        <div class="gold" id="q4" style="left: 0; right: 0; top: 600px; font-size: 100px">POUR DURER ?</div>
         <svg id="cal4" viewBox="0 0 300 340" style="left: 390px; top: 560px; width: 300px; height: 340px"></svg>
       </div></div>
       <!-- 5. « Paris prépare l'Exposition universelle, pour les 100 ans de la Révolution. Gustave Eiffel promet une tour de 300 mètres » -->
@@ -248,16 +255,16 @@
       <div id="prog"></div>
 
       <!-- Son : un seul mixage (voix devant ; musique et bruitages baissés sous la voix par ../_engine/style-anime/mix_anime.py) -->
-      <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="76.6" data-track-index="10" data-volume="1"></audio>
+      <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="74.3" data-track-index="10" data-volume="1"></audio>
     </div>
     <script>
       ;(function () {
         const tl = gsap.timeline({ paused: true })
         const $ = (id) => document.getElementById(id)
-        const END = 76.6
-        const RAW = [0.0, 0.103, 0.307, 0.615, 0.665, 0.819, 1.332, 1.536, 1.918, 1.968, 2.018, 2.462, 2.719, 2.923, 3.128, 3.23, 3.437, 3.648, 3.91, 3.97, 4.246, 4.466, 4.576, 4.852, 5.075, 5.158, 5.305, 5.551, 5.943, 5.993, 6.043, 6.121, 6.219, 6.318, 6.657, 7.444, 7.756, 7.829, 9.106, 9.333, 9.507, 9.751, 10.156, 10.848, 11.293, 11.714, 11.887, 12.06, 12.234, 12.349, 12.465, 12.571, 13.309, 13.692, 14.074, 14.266, 14.522, 14.649, 14.699, 14.84, 15.073, 15.414, 15.67, 15.838, 15.965, 16.493, 16.623, 16.818, 17.116, 17.246, 17.65, 17.716, 18.235, 18.365, 18.573, 18.703, 19.158, 19.368, 19.563, 19.613, 20.197, 20.393, 20.491, 20.54, 20.589, 20.688, 20.983, 21.228, 21.327, 21.433, 21.483, 22.02, 22.141, 22.222, 22.423, 22.504, 22.949, 23.07, 23.353, 23.433, 23.597, 23.647, 23.873, 24.285, 24.335, 24.436, 24.689, 24.79, 25.291, 25.341, 25.446, 25.547, 26.147, 26.244, 26.294, 26.407, 26.572, 27.123, 27.343, 27.787, 27.837, 27.887, 27.981, 28.587, 28.83, 29.012, 29.34, 29.39, 29.456, 29.923, 30.183, 30.39, 30.599, 30.649, 30.703, 31.214, 31.287, 31.568, 31.97, 32.257, 32.373, 32.832, 33.291, 33.348, 33.731, 33.807, 33.98, 34.439, 34.841, 35.013, 35.703, 35.932, 36.047, 36.449, 36.563, 36.902, 37.067, 37.471, 38.077, 38.178, 38.599, 38.912, 39.063, 39.164, 39.801, 39.851, 40.275, 40.629, 41.074, 41.124, 41.217, 41.577, 41.777, 42.043, 42.509, 42.642, 43.585, 43.861, 43.911, 44.571, 44.709, 44.809, 44.859, 45.309, 45.458, 45.78, 45.88, 46.08, 46.429, 46.529, 46.779, 46.879, 46.979, 47.079, 47.179, 47.478, 47.86, 48.064, 48.386, 48.787, 49.289, 49.563, 49.865, 50.017, 50.472, 50.809, 50.859, 50.909, 51.289, 51.403, 51.744, 51.914, 52.539, 52.709, 52.823, 53.125, 53.175, 53.225, 53.631, 53.709, 54.153, 54.331, 54.475, 55.034, 55.592, 55.99, 56.31, 56.469, 56.948, 57.586, 58.394, 58.435, 58.818, 59.01, 59.105, 59.547, 59.597, 59.647, 59.871, 59.966, 60.157, 60.349, 60.445, 60.637, 60.884, 60.934, 60.984, 61.373, 62.051, 62.644, 62.867, 63.535, 63.684, 63.832, 64.129, 64.418, 64.516, 64.609, 65.038, 65.358, 65.778, 65.828, 66.145, 66.391, 66.538, 66.931, 67.03, 67.602, 67.652, 67.758, 67.813, 67.924, 68.365, 68.475, 68.585, 68.922, 69.026, 69.08, 69.797, 69.907, 70.458, 70.602, 70.674, 70.813, 71.061, 71.371, 71.805, 72.301, 72.487, 72.885, 72.935, 73.322, 73.647, 73.937, 74.11, 74.227, 74.575, 74.625, 74.672, 75.224, 75.424, 75.474]
+        const END = 74.3
+        const RAW = [0.0, 0.152, 0.533, 0.685, 0.989, 1.445, 1.902, 2.206, 2.598, 3.005, 3.525, 3.889, 3.993, 4.356, 4.46, 4.661, 4.828, 5.293, 5.448, 5.603, 5.862, 5.965, 6.327, 6.588, 7.689, 7.939, 8.49, 8.736, 9.103, 9.734, 10.276, 10.522, 10.68, 10.837, 10.994, 11.1, 11.204, 11.554, 11.954, 12.305, 12.655, 12.831, 13.063, 13.181, 13.231, 13.356, 13.659, 13.881, 14.114, 14.406, 14.523, 14.727, 14.858, 15.063, 15.472, 15.608, 15.947, 15.997, 16.403, 16.539, 16.812, 16.948, 17.227, 17.442, 17.647, 17.783, 18.192, 18.374, 18.474, 18.525, 18.575, 18.677, 18.981, 19.234, 19.335, 19.689, 19.831, 20.126, 20.286, 20.392, 20.659, 20.766, 21.352, 21.512, 21.886, 21.936, 21.999, 22.435, 22.485, 22.992, 23.047, 23.159, 23.437, 23.547, 23.863, 24.047, 24.27, 24.381, 24.568, 24.789, 24.944, 25.097, 25.252, 25.766, 25.959, 26.032, 26.306, 26.357, 26.511, 27.025, 27.23, 27.331, 27.586, 27.637, 27.807, 28.317, 28.599, 28.826, 28.875, 28.96, 29.01, 29.459, 29.532, 29.644, 30.186, 30.573, 30.728, 31.347, 31.966, 32.043, 32.56, 32.609, 32.76, 33.162, 33.514, 33.665, 34.27, 34.471, 34.571, 34.923, 35.024, 35.147, 35.481, 35.819, 36.485, 36.585, 36.842, 37.314, 37.465, 37.565, 38.044, 38.134, 38.786, 39.202, 39.46, 39.738, 39.884, 40.28, 40.496, 40.783, 41.287, 41.43, 41.958, 42.484, 42.835, 43.256, 43.478, 43.589, 43.847, 44.067, 44.205, 44.524, 44.615, 44.797, 45.116, 45.208, 45.436, 45.527, 45.618, 45.71, 45.801, 45.907, 46.161, 46.55, 46.819, 47.295, 47.463, 47.829, 48.086, 48.215, 48.601, 48.752, 48.852, 48.916, 49.423, 49.549, 49.929, 50.119, 50.816, 50.996, 51.046, 51.096, 51.362, 51.652, 51.968, 52.264, 52.38, 52.761, 52.914, 53.448, 53.981, 54.362, 54.668, 54.819, 55.277, 55.887, 56.327, 56.696, 57.161, 57.347, 57.408, 57.48, 57.854, 57.948, 58.181, 58.273, 58.46, 58.646, 58.739, 58.819, 58.929, 59.083, 59.471, 59.626, 60.338, 60.959, 61.191, 61.89, 62.044, 62.196, 62.451, 62.498, 62.835, 62.932, 63.316, 63.568, 63.641, 63.997, 64.334, 64.575, 64.719, 65.104, 65.2, 65.464, 65.678, 65.876, 65.926, 66.025, 66.421, 66.521, 66.621, 66.791, 67.017, 67.066, 67.711, 67.811, 68.306, 68.464, 68.536, 68.603, 68.835, 69.124, 69.529, 69.992, 70.165, 70.571, 70.744, 71.184, 71.258, 71.534, 71.701, 71.811, 72.142, 72.309, 72.443, 72.516, 72.888, 73.053]
         const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
-        const WORDS = ["La", "tour", "Eiffel", "a", "été", "construite", "pour", "durer.", "Et", "les", "Parisiens", "l'ont", "aimée", "tout", "de", "suite.", "Ça,", "c'est", "ce", "qu'on", "veut", "te", "faire", "croire.", "Sauf", "que", "c'est", "faux,", "et", "je", "vais", "te", "le", "prouver.", "Construite", "pour", "durer ?", "Remontons", "en", "1887.", "Paris", "prépare", "l'Exposition", "universelle,", "pour", "les", "100", "ans", "de", "la", "Révolution.", "Gustave", "Eiffel", "promet", "une", "tour", "de", "300", "", "mètres,", "la", "plus", "haute", "du", "monde.", "18 000", "", "pièces", "de", "fer.", "2", "millions", "et", "demi", "de", "rivets.", "2", "ans", "de", "chantier.", "Mais", "il", "y", "a", "un", "détail", "qu'on", "ne", "raconte", "jamais.", "Eiffel", "n'a", "le", "droit", "de", "l'exploiter", "que", "pendant", "20", "ans.", "Après,", "elle", "appartient", "à", "la", "Ville", "de", "Paris,", "qui", "peut", "la", "démonter.", "Elle", "n'a", "pas", "été", "construite", "pour", "durer.", "Elle", "a", "été", "construite", "pour", "une", "fête.", "Et", "les", "Parisiens", "l'ont", "aimée", "tout", "de", "suite ?", "Même", "pas.", "En", "février", "1887,", "le", "chantier", "commence", "à", "peine,", "et", "des", "artistes", "signent", "une", "protestation", "dans", "le", "journal", "Le", "Temps.", "Charles", "Garnier,", "l'architecte", "de", "l'Opéra.", "L'écrivain", "Guy", "de", "Maupassant.", "Le", "compositeur", "Charles", "Gounod.", "Pour", "eux,", "c'est", "une", "tour", "« inutile", "et", "monstrueuse ».", "Maupassant,", "dit-on,", "déjeunait", "dans", "la", "tour,", "parce", "que", "c'était", "le", "seul", "endroit", "de", "Paris", "d'où", "on", "ne", "la", "voyait", "pas.", "Alors,", "comment", "a-t-elle", "survécu ?", "Eiffel", "veut", "la", "rendre", "utile.", "Il", "y", "installe", "la", "météo,", "des", "expériences", "sur", "le", "vent.", "Et", "surtout,", "une", "antenne.", "En", "1898,", "un", "premier", "message", "radio", "part", "du", "sommet", "jusqu'au", "Panthéon.", "L'armée", "comprend", "tout", "de", "suite :", "c'est", "le", "point", "le", "plus", "haut", "de", "Paris.", "Et", "en", "1910,", "la", "concession", "d'Eiffel", "est", "prolongée", "de", "70", "ans.", "Et", "pendant", "la", "Première", "Guerre", "mondiale ?", "Son", "antenne", "capte", "les", "messages", "de", "l'ennemi.", "Elle", "aide", "à", "la", "victoire", "de", "la", "Marne,", "et", "à", "l'arrestation", "de", "l'espionne", "Mata", "Hari.", "La", "tour", "qu'on", "voulait", "démonter", "est", "devenue", "une", "arme.", "Ce", "n'est", "pas", "sa", "beauté", "qui", "l'a", "sauvée.", "C'est", "une", "antenne."]
+        const WORDS = ["En", "1910,", "la", "tour", "Eiffel", "devait", "être", "détruite.", "Pourquoi", "voulait-on", "démolir", "le", "symbole", "de", "Paris ?", "Et", "qu'est-ce", "qui", "l'a", "sauvée", "au", "dernier", "moment ?", "Remontons", "en", "1887.", "Paris", "prépare", "l'Exposition", "universelle,", "pour", "les", "100", "ans", "de", "la", "Révolution.", "Gustave", "Eiffel", "promet", "une", "tour", "de", "300", "", "mètres,", "la", "plus", "haute", "du", "monde.", "18 000", "", "pièces", "de", "fer.", "2", "millions", "et", "demi", "de", "rivets.", "2", "ans", "de", "chantier.", "Mais", "il", "y", "a", "un", "détail", "qu'on", "ne", "raconte", "jamais.", "Eiffel", "n'a", "le", "droit", "de", "l'exploiter", "que", "pendant", "20", "ans.", "Après,", "elle", "appartient", "à", "la", "Ville", "de", "Paris,", "qui", "peut", "la", "démonter.", "Elle", "n'a", "pas", "été", "construite", "pour", "durer.", "Elle", "a", "été", "construite", "pour", "une", "fête.", "Et", "les", "Parisiens", "l'ont", "aimée", "tout", "de", "suite ?", "Même", "pas.", "En", "février", "1887,", "le", "chantier", "commence", "à", "peine,", "et", "des", "artistes", "signent", "une", "protestation", "dans", "le", "journal", "Le", "Temps.", "Charles", "Garnier,", "l'architecte", "de", "l'Opéra.", "L'écrivain", "Guy", "de", "Maupassant.", "Le", "compositeur", "Charles", "Gounod.", "Pour", "eux,", "c'est", "une", "tour", "« inutile", "et", "monstrueuse ».", "Maupassant,", "dit-on,", "déjeunait", "dans", "la", "tour,", "parce", "que", "c'était", "le", "seul", "endroit", "de", "Paris", "d'où", "on", "ne", "la", "voyait", "pas.", "Alors,", "comment", "a-t-elle", "survécu ?", "Eiffel", "veut", "la", "rendre", "utile.", "Il", "y", "installe", "la", "météo,", "des", "expériences", "sur", "le", "vent.", "Et", "surtout,", "une", "antenne.", "En", "1898,", "un", "premier", "message", "radio", "part", "du", "sommet", "jusqu'au", "Panthéon.", "L'armée", "comprend", "tout", "de", "suite :", "c'est", "le", "point", "le", "plus", "haut", "de", "Paris.", "Et", "en", "1910,", "la", "concession", "d'Eiffel", "est", "prolongée", "de", "70", "ans.", "Et", "pendant", "la", "Première", "Guerre", "mondiale ?", "Son", "antenne", "capte", "les", "messages", "de", "l'ennemi.", "Elle", "aide", "à", "la", "victoire", "de", "la", "Marne,", "et", "à", "l'arrestation", "de", "l'espionne", "Mata", "Hari.", "La", "tour", "qu'on", "voulait", "démonter", "est", "devenue", "une", "arme.", "Ce", "n'est", "pas", "sa", "beauté", "qui", "l'a", "sauvée.", "C'est", "une", "antenne."]
         let seed = 23
         const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
 
@@ -374,7 +381,7 @@
           if (o.flag) s += '<g class="flg"><path d="M300,-20 L300,-80" stroke="#3a2010" stroke-width="4"/><rect x="300" y="-80" width="16" height="30" fill="#2a4a8a"/><rect x="316" y="-80" width="16" height="30" fill="#f4f1e8"/><rect x="332" y="-80" width="16" height="30" fill="#b8222e"/></g>'
           return s
         }
-        ;['tw1', 'tw2', 'tw8', 'tw12', 'tw14', 'tw17', 'tw21'].forEach((id) => { $(id).innerHTML = TOWER() })
+        ;['tw1', 'tw2', 'tw3', 'tw8', 'tw12', 'tw14', 'tw17', 'tw21'].forEach((id) => { $(id).innerHTML = TOWER() })
         $('tw6').innerHTML = TOWER({ flag: true })
         $('tw15').innerHTML = TOWER({ antCol: '#ffc93c' })
         $('tw22').innerHTML = TOWER({ col: '#c9962e', ln: '#5a3a10', antCol: '#fff3c0' })
@@ -385,10 +392,14 @@
 
         // 1. Paris at dusk
         $('pa1').innerHTML = roofs(1300, '#2a2030') + '<rect x="0" y="1300" width="1080" height="620" fill="#1e1a24"/><path d="M0,1380 C300,1340 700,1420 1080,1370 L1080,1440 C700,1490 300,1410 0,1450Z" fill="#3a4a6a"/>'
-        // 2. a crowd of Parisians in top hats; hearts
-        $('cr2').innerHTML = Array.from({ length: 9 }, (_, i) => { const x = 60 + i * 120, y = 1250 + (i % 2) * 30; return `<g><circle cx="${x}" cy="${y}" r="34" fill="#f0c9a8"/><rect x="${x - 28}" y="${y - 96}" width="56" height="62" fill="#14141a"/><rect x="${x - 44}" y="${y - 40}" width="88" height="10" fill="#14141a"/><path d="M${x - 60},${y + 200} C${x - 60},${y + 60} ${x + 60},${y + 60} ${x + 60},${y + 200}Z" fill="${['#2a2a30', '#3a2a3a', '#2a3440'][i % 3]}"/></g>` }).join('') + [[200, 900], [820, 860], [420, 760], [660, 980], [540, 640]].map(([x, y]) => `<path class="hrt" style="transform-origin:${x}px ${y}px" d="M${x},${y + 30} C${x - 60},${y - 10} ${x - 40},${y - 60} ${x},${y - 30} C${x + 40},${y - 60} ${x + 60},${y - 10} ${x},${y + 30}Z" fill="#d7263d"/>`).join('')
-        // 3. the guidebook
-        $('gb3').innerHTML = '<rect x="10" y="10" width="620" height="840" rx="16" fill="#1d3557"/><rect x="40" y="40" width="560" height="780" rx="10" fill="none" stroke="#ffc93c" stroke-width="5"/><text x="320" y="130" text-anchor="middle" font-family="Anton" font-size="66" fill="#ffc93c">GUIDE DE PARIS</text><g transform="translate(220,170) scale(0.33)">' + TOWER() + '</g><text x="320" y="640" text-anchor="middle" font-family="Anton" font-size="44" fill="#f4f1e8">LA DAME DE FER</text><text x="320" y="700" text-anchor="middle" font-family="Anton" font-size="44" fill="#f4f1e8">SYMBOLE ÉTERNEL</text>'
+        // 1. the wrecking crane and its ball
+        $('wb1').innerHTML = '<rect x="930" y="260" width="26" height="1060" fill="#3a3a40"/>' + Array.from({ length: 20 }, (_, i) => `<path d="M930,${280 + i * 52} L956,${306 + i * 52}" stroke="#5a5a64" stroke-width="5"/>`).join('') + '<rect x="600" y="250" width="380" height="22" fill="#3a3a40"/><path d="M943,250 L943,190 L620,250" stroke="#3a3a40" stroke-width="6" fill="none"/><g id="sw1" style="transform-origin: 640px 272px"><line x1="640" y1="272" x2="640" y2="760" stroke="#1b1b20" stroke-width="6"/><circle cx="640" cy="810" r="56" fill="#2a2a30" stroke="#111" stroke-width="6"/><circle cx="624" cy="792" r="14" fill="#5a5a64"/></g>'
+        // 2. red cut lines across the tower
+        $('ct2').innerHTML = [300, 560, 820].map((y) => `<path class="cut" d="M60,${y} L540,${y}" stroke="#d7263d" stroke-width="10" stroke-dasharray="26 16" pathLength="1"/>`).join('')
+        rays('rays2', 24, '#a87aa8', '#2a1a2a')
+        // 3. the lifebuoy; the clock at the last minute
+        $('lb3').innerHTML = '<circle cx="150" cy="150" r="110" fill="none" stroke="#f4f1e8" stroke-width="56"/>' + [0, 1, 2, 3].map((i) => `<path d="M${150 + Math.cos((i * Math.PI) / 2 + Math.PI / 4) * 82},${150 + Math.sin((i * Math.PI) / 2 + Math.PI / 4) * 82} A110,110 0 0 1 ${150 + Math.cos((i * Math.PI) / 2 + Math.PI / 4 + 0.5) * 110},${150 + Math.sin((i * Math.PI) / 2 + Math.PI / 4 + 0.5) * 110}" stroke="#d7263d" stroke-width="56" fill="none"/>`).join('')
+        $('ck3').innerHTML = '<circle cx="120" cy="120" r="108" fill="#f4f1e8" stroke="#c9962e" stroke-width="12"/>' + Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2; return `<line x1="${120 + Math.sin(a) * 84}" y1="${120 - Math.cos(a) * 84}" x2="${120 + Math.sin(a) * 98}" y2="${120 - Math.cos(a) * 98}" stroke="#1b1410" stroke-width="${i % 3 ? 4 : 8}"/>` }).join('') + '<line x1="120" y1="120" x2="120" y2="60" stroke="#1b1410" stroke-width="10" stroke-linecap="round"/><g id="mh3" style="transform-origin: 120px 120px"><line x1="120" y1="120" x2="120" y2="34" stroke="#d7263d" stroke-width="6" stroke-linecap="round"/></g><circle cx="120" cy="120" r="9" fill="#1b1410"/>'
         // 4. calendar 1887
         $('cal4').innerHTML = '<rect x="10" y="40" width="280" height="290" rx="16" fill="#f4f1e8"/><rect x="10" y="40" width="280" height="70" rx="16" fill="#d7263d"/><rect x="70" y="20" width="16" height="50" rx="8" fill="#9aa4ae"/><rect x="214" y="20" width="16" height="50" rx="8" fill="#9aa4ae"/><text x="150" y="96" text-anchor="middle" font-family="Anton" font-size="40" fill="#fff">ANNÉE</text><text x="150" y="250" text-anchor="middle" font-family="Anton" font-size="110" fill="#1b1410">1887</text>'
         // 5. the Exposition poster; the height ruler
@@ -426,7 +437,7 @@
 
         // ---------- scene cuts on the voice ----------
         const at = (k) => Math.round((T[k] - 0.06) * 100) / 100
-        const CUT = [0, at(8), at(16), at(34), at(40), at(65), at(80), at(112), at(126), at(136), at(155), at(168), at(176), at(196), at(215), at(219), at(230), at(243), at(254), at(267), at(282), at(291), END]
+        const CUT = [0, at(8), at(15), at(23), at(26), at(51), at(66), at(98), at(112), at(122), at(141), at(154), at(162), at(182), at(201), at(205), at(216), at(229), at(240), at(253), at(268), at(277), END]
         const SC = Array.from({ length: 22 }, (_, i) => '#s' + (i + 1))
         SC.forEach((s, i) => {
           tl.set(s, { visibility: 'visible' }, CUT[i])
@@ -444,136 +455,145 @@
         const waves = (sel, t0, t1) => document.querySelectorAll(sel + ' .wave').forEach((w, i) => tl.fromTo(w, { autoAlpha: 0, scale: 0.6, transformOrigin: '50% 100%' }, { autoAlpha: 1, scale: 1, duration: 0.4, repeat: Math.max(0, Math.floor((t1 - t0) / 1.2) - 1), repeatDelay: 0.8, ease: 'power1.out', immediateRender: false }, t0 + i * 0.2))
         const fade = (sel, t, d) => { tl.fromTo(sel, { autoAlpha: 0 }, { autoAlpha: 1, duration: d || 0.3, immediateRender: false }, t); gsap.set(sel, { autoAlpha: 0 }) }
 
-        // 1. the tower at dusk; CONSTRUITE POUR DURER
-        pop('#tw1', 0.02, { y: 200, scale: 0.85 })
-        pop('#du1', T[5] - 0.05, { rot: -2 })
-        // 2. Parisians in top hats; hearts
-        pop('#tw2', CUT[1] + 0.02, { scale: 0.8 })
-        document.querySelectorAll('#cr2 .hrt').forEach((h, i) => tl.fromTo(h, { scale: 0, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.35, ease: 'back.out(2.5)', immediateRender: false }, T[12] - 0.1 + i * 0.12))
-        gsap.set('#cr2 .hrt', { autoAlpha: 0 })
-        // 3. the guidebook; FAUX
-        pop('#gb3', CUT[2] + 0.02, { y: 200, scale: 0.85, rot: -3 })
-        stamp('#faux3', T[27] - 0.04, -10)
-        shake('#s3 .cam', T[27] + 0.16)
-        // 4. POUR DURER ? ; 1887
+        // 1. 1910: the wrecking ball swings into the tower; À DÉTRUIRE
+        pop('#tw1', 0.02, { y: 160, scale: 0.9 })
+        pop('#y1', T[1] - 0.05, { scale: 0.5 })
+        tl.fromTo('#sw1', { rotation: -28 }, { rotation: 10, duration: 1.1, ease: 'power2.in', immediateRender: false }, 0.05)
+        tl.to('#sw1', { rotation: 4, duration: 0.6, ease: 'power2.out' }, 1.15)
+        tl.to('#sw1', { rotation: 14, duration: 0.5, ease: 'power2.in' }, T[7] - 0.45)
+        gsap.set('#sw1', { rotation: -28 })
+        shake('#s1 .cam', T[7] + 0.05)
+        stamp('#dt1', T[7] + 0.05, -8)
+        // 2. POURQUOI ? ; the symbol of Paris, cut into pieces
+        spin('#rays2', CUT[1], CUT[2], 18)
+        pop('#q2', CUT[1] + 0.02, { scale: 0.6 })
+        pop('#tw2', CUT[1] + 0.05, { scale: 0.85 })
+        document.querySelectorAll('#ct2 .cut').forEach((c, i) => tl.fromTo(c, { strokeDashoffset: 1, autoAlpha: 1 }, { strokeDashoffset: 0, duration: 0.3, ease: 'none', immediateRender: false }, T[10] + i * 0.15))
+        gsap.set('#ct2 .cut', { strokeDashoffset: 1 })
+        pop('#sy2', T[12] - 0.05, { scale: 0.5 })
+        // 3. who saved it, at the last minute? the lifebuoy, the clock
+        pop('#q3', CUT[2] + 0.02, { scale: 0.6 })
+        pop('#tw3', CUT[2] + 0.05, { scale: 0.85 })
+        pop('#lb3', T[19] - 0.05, { scale: 0.2, rot: 20 })
+        pop('#ck3', T[21] - 0.05, { scale: 0.3 })
+        tl.fromTo('#mh3', { rotation: -40 }, { rotation: 0, duration: 0.8, ease: 'power2.inOut', immediateRender: false }, T[21])
+        // 4. 1887
         spin('#rays4', CUT[3], CUT[4], 18)
-        pop('#q4', CUT[3] + 0.02, { scale: 0.6 })
-        out('#q4', T[37] - 0.1)
-        pop('#cal4', T[39] - 0.1, { scale: 0.4, rot: -8 })
+        pop('#cal4', CUT[3] + 0.05, { scale: 0.4, rot: -8 })
         // 5. the Exposition poster; Eiffel; 300 m
         pop('#po5', CUT[4] + 0.02, { y: 200, rot: -3 })
-        pop('#ei5', T[51] - 0.05, { scale: 0.3 }); pop('#nm5', T[52] - 0.05, { y: 20 })
-        reveal('#ru5', T[56], 0.6)
-        pop('#h5', T[57] - 0.05, { scale: 0.5 })
-        pop('#ph5', T[61] - 0.05, { rot: -2 })
-        blink('#ei5', [T[55]])
+        pop('#ei5', T[37] - 0.05, { scale: 0.3 }); pop('#nm5', T[38] - 0.05, { y: 20 })
+        reveal('#ru5', T[42], 0.6)
+        pop('#h5', T[43] - 0.05, { scale: 0.5 })
+        pop('#ph5', T[47] - 0.05, { rot: -2 })
+        blink('#ei5', [T[41]])
         // 6. the tower builds itself, part by part; counters
         reveal('#tw6 .p1', CUT[5] + 0.05, 1.2, 6)
-        reveal('#tw6 .p2', T[70] - 0.1, 1.2, 6)
-        reveal('#tw6 .p3', T[76] - 0.3, 1.0, 6)
-        fade('#tw6 .ant', T[79] - 0.1, 0.1); fade('#tw6 .flg', T[79] + 0.1, 0.2)
+        reveal('#tw6 .p2', T[56] - 0.1, 1.2, 6)
+        reveal('#tw6 .p3', T[62] - 0.3, 1.0, 6)
+        fade('#tw6 .ant', T[65] - 0.1, 0.1); fade('#tw6 .flg', T[65] + 0.1, 0.2)
         document.querySelectorAll('#sk6 .spk').forEach((s, i) => tl.fromTo(s, { scale: 0, autoAlpha: 0, transformOrigin: '50% 50%' }, { scale: 1.6, autoAlpha: 1, duration: 0.12, yoyo: true, repeat: 1, ease: 'none', immediateRender: false }, CUT[5] + 0.2 + i * 0.33))
         gsap.set('#sk6 .spk', { autoAlpha: 0 })
         pop('#c6a', CUT[5] + 0.02, { x: -60, scale: 1 })
         const o6 = { v: 0 }; tl.fromTo(o6, { v: 0 }, { v: 18038, duration: 1.0, ease: 'power2.out', immediateRender: false, onUpdate: () => { $('n6a').textContent = Math.round(o6.v).toLocaleString('fr-FR').replace(/\s/g, ' ') } }, CUT[5] + 0.05)
-        pop('#c6b', T[70] - 0.05, { x: -60, scale: 1 })
-        pop('#c6c', T[76] - 0.05, { x: -60, scale: 1 })
+        pop('#c6b', T[56] - 0.05, { x: -60, scale: 1 })
+        pop('#c6c', T[62] - 0.05, { x: -60, scale: 1 })
         // 7. the contract: 20 years, then the City; DÉMONTABLE
         pop('#ct7', CUT[6] + 0.02, { y: 200, rot: 2 })
-        tl.fromTo('#ct7 .hl', { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.3, ease: 'power2.out', immediateRender: false }, T[97])
+        tl.fromTo('#ct7 .hl', { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.3, ease: 'power2.out', immediateRender: false }, T[83])
         gsap.set('#ct7 .hl', { scaleX: 0, transformOrigin: '0% 50%' })
-        pop('#v7', T[98] - 0.05, { scale: 0.5 })
-        stamp('#dm7', T[111] - 0.04, -6)
+        pop('#v7', T[84] - 0.05, { scale: 0.5 })
+        stamp('#dm7', T[97] - 0.04, -6)
         // 8. built for a fair: fireworks, bunting; 1889 → 1909
         pop('#tw8', CUT[7] + 0.02, { scale: 0.85 })
-        document.querySelectorAll('#fw8 .fw').forEach((f, i) => tl.fromTo(f, { scale: 0, autoAlpha: 0 }, { scale: 1.2, autoAlpha: 1, duration: 0.5, ease: 'power2.out', immediateRender: false }, T[119] + i * 0.25))
+        document.querySelectorAll('#fw8 .fw').forEach((f, i) => tl.fromTo(f, { scale: 0, autoAlpha: 0 }, { scale: 1.2, autoAlpha: 1, duration: 0.5, ease: 'power2.out', immediateRender: false }, T[105] + i * 0.25))
         gsap.set('#fw8 .fw', { autoAlpha: 0 })
-        pop('#g8', T[124] - 0.05, { scale: 0.6 })
-        pop('#dt8', T[116] - 0.05, { rot: -2 })
+        pop('#g8', T[110] - 0.05, { scale: 0.6 })
+        pop('#dt8', T[102] - 0.05, { rot: -2 })
         // 9. AIMÉE ? ; the heart cracks; MÊME PAS
         pop('#q9', CUT[8] + 0.02, { scale: 0.6 })
-        pop('#ht9', T[130] - 0.05, { scale: 0.4 })
-        tl.to('#hl9', { x: -40, rotation: -12, duration: 0.3, ease: 'power3.out', transformOrigin: '50% 100%' }, T[134])
-        tl.to('#hr9', { x: 40, rotation: 12, duration: 0.3, ease: 'power3.out', transformOrigin: '50% 100%' }, T[134])
-        stamp('#mp9', T[134] - 0.04, -6)
+        pop('#ht9', T[116] - 0.05, { scale: 0.4 })
+        tl.to('#hl9', { x: -40, rotation: -12, duration: 0.3, ease: 'power3.out', transformOrigin: '50% 100%' }, T[120])
+        tl.to('#hr9', { x: 40, rotation: 12, duration: 0.3, ease: 'power3.out', transformOrigin: '50% 100%' }, T[120])
+        stamp('#mp9', T[120] - 0.04, -6)
         // 10. February 1887; Le Temps; the signatures
         pop('#y10', CUT[9] + 0.02, { scale: 0.6 })
-        pop('#np10', T[149] - 0.1, { y: 200, rot: -3 })
-        document.querySelectorAll('#np10 .sig').forEach((s, i) => tl.fromTo(s, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.15, immediateRender: false }, T[152] + i * 0.18))
+        pop('#np10', T[135] - 0.1, { y: 200, rot: -3 })
+        document.querySelectorAll('#np10 .sig').forEach((s, i) => tl.fromTo(s, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.15, immediateRender: false }, T[138] + i * 0.18))
         gsap.set('#np10 .sig', { autoAlpha: 0 })
         // 11. Garnier, Maupassant, Gounod
-        pop('#ga11', T[155] - 0.05, { scale: 0.3 }); pop('#gan11', T[156] - 0.05, { y: 20 }); pop('#gar11', T[157] - 0.05, { rot: -3 })
-        pop('#op11', T[158] - 0.05, { y: 100 })
-        pop('#ma11', T[160] - 0.05, { scale: 0.3 }); pop('#man11', T[163] - 0.05, { y: 20 }); pop('#mar11', T[160] + 0.1, { rot: 3 })
-        pop('#go11', T[164] - 0.05, { scale: 0.3 }); pop('#gon11', T[167] - 0.05, { y: 20 }); pop('#gor11', T[165] - 0.05, { rot: -3 })
-        blink('#ga11', [T[161]]); blink('#ma11', [T[165]]); blink('#go11', [T[167] + 0.3])
+        pop('#ga11', T[141] - 0.05, { scale: 0.3 }); pop('#gan11', T[142] - 0.05, { y: 20 }); pop('#gar11', T[143] - 0.05, { rot: -3 })
+        pop('#op11', T[144] - 0.05, { y: 100 })
+        pop('#ma11', T[146] - 0.05, { scale: 0.3 }); pop('#man11', T[149] - 0.05, { y: 20 }); pop('#mar11', T[146] + 0.1, { rot: 3 })
+        pop('#go11', T[150] - 0.05, { scale: 0.3 }); pop('#gon11', T[153] - 0.05, { y: 20 }); pop('#gor11', T[151] - 0.05, { rot: -3 })
+        blink('#ga11', [T[147]]); blink('#ma11', [T[151]]); blink('#go11', [T[153] + 0.3])
         // 12. INUTILE, MONSTRUEUSE
         pop('#tw12', CUT[11] + 0.02, { scale: 0.85 })
-        stamp('#in12', T[173] - 0.04, -8)
-        stamp('#mo12', T[175] - 0.04, 6)
-        shake('#s12 .cam', T[175] + 0.16)
+        stamp('#in12', T[159] - 0.04, -8)
+        stamp('#mo12', T[161] - 0.04, 6)
+        shake('#s12 .cam', T[161] + 0.16)
         // 13. Maupassant at lunch inside the tower: Paris without the tower
-        pop('#g13', T[177] - 0.05, { scale: 0.6 })
-        pop('#ma13', T[178] - 0.05, { scale: 0.3 })
-        pop('#nv13', T[190] - 0.05, { x: 60 })
-        blink('#ma13', [T[184]])
+        pop('#g13', T[163] - 0.05, { scale: 0.6 })
+        pop('#ma13', T[164] - 0.05, { scale: 0.3 })
+        pop('#nv13', T[176] - 0.05, { x: 60 })
+        blink('#ma13', [T[170]])
         // 14. how did it survive? weather, wind experiments
         pop('#q14', CUT[13] + 0.02, { scale: 0.6 })
         pop('#tw14', CUT[13] + 0.1, { y: 150, scale: 0.9 })
-        out('#q14', T[205] - 0.15)
-        pop('#an14', T[209] - 0.05, { scale: 0.3 }); pop('#me14', T[209] - 0.05, { x: -60 })
-        spin('#cups14', T[209], CUT[14], 720)
-        pop('#ve14', T[212] - 0.05, { x: -60 })
+        out('#q14', T[191] - 0.15)
+        pop('#an14', T[195] - 0.05, { scale: 0.3 }); pop('#me14', T[195] - 0.05, { x: -60 })
+        spin('#cups14', T[195], CUT[14], 720)
+        pop('#ve14', T[198] - 0.05, { x: -60 })
         document.querySelectorAll('#cl14 .cld').forEach((c, i) => tl.fromTo(c, { x: 0 }, { x: i % 2 ? -120 : 120, duration: CUT[14] - CUT[13], ease: 'none', immediateRender: false }, CUT[13]))
         // 15. and above all, an antenna
         tl.fromTo('#tw15', { y: 300 }, { y: 0, duration: CUT[15] - CUT[14], ease: 'power2.out', immediateRender: false }, CUT[14])
-        waves('#wv15', T[217], CUT[15])
-        pop('#at15', T[218] - 0.05, { scale: 0.5 })
+        waves('#wv15', T[203], CUT[15])
+        pop('#at15', T[204] - 0.05, { scale: 0.5 })
         // 16. 1898: the first radio message, top of the tower → Panthéon
         pop('#y16', CUT[15] + 0.02, { scale: 0.6 })
-        draw('#lk16', T[224] - 0.05, 1.2)
-        pop('#km16', T[229] - 0.05, { scale: 0.4 })
-        pop('#mo16', T[224] - 0.05, { scale: 0.5 })
+        draw('#lk16', T[210] - 0.05, 1.2)
+        pop('#km16', T[215] - 0.05, { scale: 0.4 })
+        pop('#mo16', T[210] - 0.05, { scale: 0.5 })
         // 17. the army: the highest point in Paris
-        pop('#so17', CUT[16] + 0.02, { scale: 0.3 }); pop('#ar17', T[230] + 0.1, { rot: -3 })
+        pop('#so17', CUT[16] + 0.02, { scale: 0.3 }); pop('#ar17', T[216] + 0.1, { rot: -3 })
         document.querySelectorAll('#sk17 .sol').forEach((s, i) => tl.fromTo(s, { y: 200, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.3, ease: 'power2.out', immediateRender: false }, CUT[16] + 0.2 + i * 0.1))
         gsap.set('#sk17 .sol', { autoAlpha: 0 })
         pop('#tw17', CUT[16] + 0.05, { scale: 0.85 })
-        pop('#ph17', T[238] - 0.05, { scale: 0.5 })
-        blink('#so17', [T[235]])
+        pop('#ph17', T[224] - 0.05, { scale: 0.5 })
+        blink('#so17', [T[221]])
         // 18. 1910: +70 years
         pop('#y18', CUT[17] + 0.02, { scale: 0.6 })
-        pop('#ct18', T[247] - 0.05, { y: 200, rot: -2 })
-        tl.fromTo('#ct18 .hl', { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.3, ease: 'power2.out', immediateRender: false }, T[250])
+        pop('#ct18', T[233] - 0.05, { y: 200, rot: -2 })
+        tl.fromTo('#ct18 .hl', { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.3, ease: 'power2.out', immediateRender: false }, T[236])
         gsap.set('#ct18 .hl', { scaleX: 0, transformOrigin: '0% 50%' })
-        stamp('#pl18', T[252] - 0.04, -6)
+        stamp('#pl18', T[238] - 0.04, -6)
         // 19. WWI: the radio room catches enemy messages
         pop('#q19', CUT[18] + 0.02, { scale: 0.6 })
         fade('#rd19', CUT[18] + 0.05, 0.3)
-        document.querySelectorAll('#rd19 .mc').forEach((m, i) => tl.fromTo(m, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.05, immediateRender: false }, T[262] + i * 0.07))
+        document.querySelectorAll('#rd19 .mc').forEach((m, i) => tl.fromTo(m, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.05, immediateRender: false }, T[248] + i * 0.07))
         gsap.set('#rd19 .mc', { autoAlpha: 0 })
-        pop('#en19', T[264] - 0.05, { scale: 0.5 })
+        pop('#en19', T[250] - 0.05, { scale: 0.5 })
         // 20. the Marne, the taxis; Mata Hari, arrested
         pop('#mn20', CUT[19] + 0.02, { y: 150 })
-        document.querySelectorAll('#mn20 .tx').forEach((t, i) => tl.fromTo(t, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2, immediateRender: false }, T[271] + i * 0.15))
+        document.querySelectorAll('#mn20 .tx').forEach((t, i) => tl.fromTo(t, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2, immediateRender: false }, T[257] + i * 0.15))
         gsap.set('#mn20 .tx', { autoAlpha: 0 })
-        pop('#ma20', T[274] - 0.05, { rot: -2 })
-        pop('#mh20', T[277] - 0.1, { scale: 0.3 }); pop('#mhn20', T[279] - 0.05, { y: 20 })
-        stamp('#as20', T[280] - 0.04, -8)
+        pop('#ma20', T[260] - 0.05, { rot: -2 })
+        pop('#mh20', T[263] - 0.1, { scale: 0.3 }); pop('#mhn20', T[265] - 0.05, { y: 20 })
+        stamp('#as20', T[266] - 0.04, -8)
         // 21. the tower they wanted to take down became a weapon
         pop('#tw21', CUT[20] + 0.02, { scale: 0.9 })
-        pop('#dm21', T[286] - 0.05, { rot: -3 })
-        tl.to('#dm21', { autoAlpha: 0.35, duration: 0.2 }, T[288])
-        waves('#wv21', T[288], CUT[21])
-        pop('#ar21', T[290] - 0.05, { scale: 0.5 })
+        pop('#dm21', T[272] - 0.05, { rot: -3 })
+        tl.to('#dm21', { autoAlpha: 0.35, duration: 0.2 }, T[274])
+        waves('#wv21', T[274], CUT[21])
+        pop('#ar21', T[276] - 0.05, { scale: 0.5 })
         // 22. mirror: the golden tower; not its beauty → an antenna
         spin('#rays22', CUT[21], END, 20)
         pop('#tw22', CUT[21] + 0.02, { scale: 0.85, y: 100 })
-        pop('#f22a', T[291] + 0.1, { scale: 0.6 })
-        out('#f22a', T[299] - 0.15)
-        pop('#f22b', T[300] - 0.05, { scale: 0.5 })
-        waves('#wv22', T[300], END)
-        tl.to('#tw22', { scale: 2.2, y: 380, transformOrigin: '50% 0%', duration: 1.0, ease: 'power2.inOut' }, T[300])
+        pop('#f22a', T[277] + 0.1, { scale: 0.6 })
+        out('#f22a', T[285] - 0.15)
+        pop('#f22b', T[286] - 0.05, { scale: 0.5 })
+        waves('#wv22', T[286], END)
+        tl.to('#tw22', { scale: 2.2, y: 380, transformOrigin: '50% 0%', duration: 1.0, ease: 'power2.inOut' }, T[286])
 
         // ---------- captions: groups of 2-4 words, the spoken word in a red box ----------
         const caps = $('caps')

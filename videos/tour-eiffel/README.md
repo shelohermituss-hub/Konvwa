@@ -1,12 +1,11 @@
 # « La tour Eiffel a été construite pour durer ? Faux. » — style ANIMÉ, en français (public France)
 
-Vidéo en **style ANIMÉ** écrite sur le gabarit de `../_engine/style-anime/README.md`. Elle dure **≈ 76,6 s**, avec la voix de **Gabriel Dubois**. Tout est dessiné en SVG et CSS dans `index.html`. La tour est dessinée en quatre parties (pieds et 1ᵉʳ étage, 2ᵉ étage, flèche, antenne), avec un treillis découpé dans la silhouette : elle peut **se construire pièce par pièce**, puis devenir dorée pour la phrase miroir. Le son est mixé sous la voix par `../_engine/style-anime/mix_anime.py`.
+Vidéo en **style ANIMÉ** écrite sur le gabarit de `../_engine/style-anime/README.md`. Elle dure **≈ 74,3 s** (v2), avec la voix de **Gabriel Dubois**. Tout est dessiné en SVG et CSS dans `index.html`. La tour est dessinée en quatre parties (pieds et 1ᵉʳ étage, 2ᵉ étage, flèche, antenne), avec un treillis découpé dans la silhouette : elle peut **se construire pièce par pièce**, puis devenir dorée pour la phrase miroir. Le son est mixé sous la voix par `../_engine/style-anime/mix_anime.py`.
 
 | Étape du gabarit | Texte | Image |
 |---|---|---|
-| Accroche (mythe en deux affirmations) | « La tour Eiffel a été construite pour durer. Et les Parisiens l'ont aimée tout de suite. » | la tour au crépuscule sur les toits de Paris, « CONSTRUITE POUR DURER » ; une foule en hauts-de-forme, des cœurs |
-| Démenti | « Ça, c'est ce qu'on veut te faire croire… » | « GUIDE DE PARIS · SYMBOLE ÉTERNEL », tampon « FAUX » |
-| Question d'ouverture n° 1 | « Construite pour durer ? Remontons en 1887. » | calendrier 1887 |
+| Accroche (v2, demandée par le client) | « En 1910, la tour Eiffel devait être détruite. Pourquoi voulait-on démolir le symbole de Paris ? Et qu'est-ce qui l'a sauvée au dernier moment ? » | « 1910 » doré, une grue de démolition dont le boulet frappe la tour, tampon « À DÉTRUIRE » ; « POURQUOI ? », la tour découpée en pointillés rouges, « LE SYMBOLE DE PARIS » ; « QUI L'A SAUVÉE ? », une bouée, une horloge à quelques minutes de midi |
+| Ouverture | « Remontons en 1887. » | calendrier 1887 |
 | La construction | Exposition universelle, 100 ans de la Révolution, 300 m ; 18 000 pièces, 2,5 millions de rivets, 2 ans de chantier | affiche « PARIS 1889 », Eiffel en médaillon, règle « 300 M » ; **la tour se construit étage par étage** entre deux grues, compteur jusqu'à 18 038 pièces, étincelles de rivets, puis le drapeau |
 | L'accusation retournée | 20 ans seulement, puis la Ville de Paris peut la démonter ; « construite pour une fête » | la convention du 8 janvier 1887 (article 11), « 20 ANS » surligné, tampon « DÉMONTABLE » ; feux d'artifice, fanions, « 1889 → 1909 » |
 | Question d'ouverture n° 2 | « Les Parisiens l'ont aimée ? Même pas. » | un cœur qui se brise, « MÊME PAS » |
@@ -14,6 +13,11 @@ Vidéo en **style ANIMÉ** écrite sur le gabarit de `../_engine/style-anime/REA
 | Comment elle a survécu | météo, vent ; l'antenne ; 1898, premier message jusqu'au Panthéon ; l'armée ; 1910 : +70 ans ; la guerre de 14 (la Marne, Mata Hari) | anémomètre qui tourne ; ondes radio ; carte de Paris, liaison de 4 km, morse ; soldats ; contrat 1910, tampon « +70 ANS » ; poste d'écoute, bande morse ; carte de la Marne, taxis ; Mata Hari « ARRÊTÉE » |
 | Grand retournement | « La tour qu'on voulait démonter est devenue une arme. » | la tour émet, « À DÉMONTER » s'efface, « UNE ARME » |
 | **Phrase miroir** | « Ce n'est pas sa beauté qui l'a sauvée. C'est une antenne. » | la tour dorée sur des rayons, puis zoom sur l'antenne qui émet |
+
+## Versions
+
+- **v1** : l'accroche « mythe contre réalité » du gabarit (« La tour Eiffel a été construite pour durer. Et les Parisiens l'ont aimée tout de suite… c'est faux »).
+- **v2** (retour client : accroche trop faible) : on ouvre sur la question « pourquoi voulait-on la détruire ? », et la phrase miroir y répond. Seule l'accroche a été régénérée (50 crédits) puis raccordée à la voix d'origine à partir de « Paris prépare l'Exposition… ».
 
 ## Faits (vérifiés, formulés avec prudence)
 
@@ -26,7 +30,7 @@ Vidéo en **style ANIMÉ** écrite sur le gabarit de `../_engine/style-anime/REA
 - **Concession de 20 ans** :
   - l'article 11 de la convention du 8 janvier 1887 donne à Eiffel la jouissance de la tour pour 20 ans, jusqu'au 31 décembre 1909 ;
   - elle revient ensuite à la Ville de Paris ;
-  - le contrat prévoyait qu'on puisse la démonter.
+  - le contrat prévoyait qu'on puisse la démonter : sa destruction était envisagée pour 1910.
 
   [Wikipédia](https://fr.wikipedia.org/wiki/Tour_Eiffel), [toureiffel.paris](https://www.toureiffel.paris/en/news/130-years/how-did-radio-save-tower)
 - **La protestation des artistes** :
@@ -51,14 +55,14 @@ Vidéo en **style ANIMÉ** écrite sur le gabarit de `../_engine/style-anime/REA
 - **Voix** : Magnific / ElevenLabs « Gabriel Dubois » (`voiceId` 480, `eleven_v4`, stabilité 0,4, 384 crédits), consigne `[energetic, punchy, fast delivery]`.
   - Une seule prise.
   - Temps des mots avec Whisper ; pauses à 0,16 s, respirations avant les questions et la phrase miroir.
-  - Tempo ×1,1 → 75,5 s, 302 mots, soit 240 mots/min.
+  - Tempo ×1,1 → 73,2 s (v2), 288 mots, soit 236 mots/min.
 - **Sons** :
   - banque `../_engine/style-anime/sfx/`, plus `onde-radio` du style 3D, et 1 son ajouté (10 crédits) : `morse` ;
-  - 88 bruitages ;
+  - 89 bruitages (v2) ;
   - mixage `mix_anime.py` : voix 19,6 dB au-dessus du fond pendant la parole (médiane).
 - **Rendu** :
-  1. `npx --yes hyperframes@0.8.168 render --fps 120 --quality looks --output renders/raw120.mp4`
-  2. `python3 -I ../_engine/style-histoire/finish.py renders/raw120.mp4 renders/tour-eiffel.mp4`
+  1. `npx --yes hyperframes@0.8.168 render --fps 120 --quality looks --output renders/raw120-v2.mp4`
+  2. `python3 -I ../_engine/style-histoire/finish.py renders/raw120-v2.mp4 renders/tour-eiffel-v2.mp4`
 
   MP4 non commités.
 
