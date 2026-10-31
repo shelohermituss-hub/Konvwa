@@ -6,11 +6,23 @@ La règle « images réelles uniquement » du style RÉEL **ne s'applique pas** 
 
 ## 1. Gabarit de script (à suivre pour chaque vidéo)
 
+> **Accroche par défaut depuis la vidéo `videos/tour-eiffel/` v2 (choix du client) : l'énigme, pas le démenti.** Le client a jugé l'accroche « mythe + c'est faux, je vais te le prouver » trop faible. On ouvre désormais sur **un fait surprenant suivi de questions** que la vidéo va résoudre, et la phrase miroir y répond. Le reste du gabarit ne change pas (questions d'ouverture, accusation retournée, preuves, « et pendant ce temps-là », phrase miroir).
+>
+> | # | Temps | Rôle | Règle | Exemple validé |
+> |---|---|---|---|---|
+> | 1 | 0–3 s | **Le fait choc, daté** | Un fait vrai et inattendu, ≤ 7 mots à l'écran, une date ou un chiffre, une image forte dès la 1ʳᵉ image (et un son). | « En 1910, la tour Eiffel devait être détruite. » (boulet de démolition, tampon « À DÉTRUIRE ») |
+> | 2 | 3–5 s | **« Pourquoi… ? »** | La question que tout le monde se pose en entendant le fait. Elle porte le mythe en creux. | « Pourquoi voulait-on démolir le symbole de Paris ? » |
+> | 3 | 5–7 s | **La 2ᵉ question, celle de la fin** | Elle annonce la réponse que donnera la phrase miroir. | « Et qu'est-ce qui l'a sauvée au dernier moment ? » |
+> | 4 | — | **Plongée dans l'histoire** | « Remontons en [date]. » puis le gabarit continue (étape 3 et suivantes). | « Remontons en 1887. » |
+> | 11 | fin | **Phrase miroir = la réponse** | Elle répond à la 2ᵉ question de l'accroche, en chiasme si possible. | « Ce n'est pas sa beauté qui l'a sauvée. C'est une antenne. » |
+>
+> **Squelette :** `[Date], [fait surprenant]. Pourquoi [question évidente] ? Et [question dont la fin donne la réponse] ? Remontons en [date]. …` On n'utilise plus « Ça, c'est ce qu'on veut te faire croire. Sauf que c'est faux… » sauf demande explicite. Le « FAUX » peut revenir plus tard en tampon, sur une preuve.
+
 Le format est « mythe contre réalité ». Le script doit permettre une image par phrase. Viser **60 à 100 s, jamais moins de 60 s** (demande du client), soit **au moins 250 mots** et jusqu'à environ 380, à un débit d'environ 235 mots/min (celui de la référence).
 
 | # | Temps | Rôle | Règle | Exemple de la référence |
 |---|---|---|---|---|
-| 1 | 0–3 s | **Accroche = le mythe énoncé comme vrai** | Formulé comme le pense quelqu'un qui y croit, choquant, ≤ 7 mots à l'écran. Idéalement **deux affirmations**, qui deviendront les deux parties. | « Les africains sentent mauvais, et sans les blancs, ils ne seraient rien. » |
+| 1 | 0–3 s | **Accroche = le mythe énoncé comme vrai** (ancien format, remplacé par l'énigme ci-dessus) | Formulé comme le pense quelqu'un qui y croit, choquant, ≤ 7 mots à l'écran. Idéalement **deux affirmations**, qui deviendront les deux parties. | « Les africains sentent mauvais, et sans les blancs, ils ne seraient rien. » |
 | 2 | 3–6 s | **Démenti et promesse** | Toujours la même formule. | « Ça, c'est ce que l'histoire veut nous faire croire. Sauf que c'est faux, et je vais te le prouver. » |
 | 3 | — | **Question d'ouverture de la partie 1** | Elle répète le mythe sous forme de question, pour que le spectateur sache où il en est. | « D'où vient cette histoire d'odeur ? » |
 | 4 | — | **Origine du mythe, puis accusation retournée** | La cause réelle, puis une chute en antithèse **« X, pas Y »**. | « Cette odeur, c'était celle de la cruauté des négriers, pas celle des africains. » |
