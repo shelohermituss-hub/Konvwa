@@ -1,0 +1,18 @@
+/* Kit des couvertures TikTok créées à part (1080×1920). Texte dans le recadrage 3:4 : y 240 → 1680. */
+@font-face { font-family: Anton; src: url(anton.woff2); }
+@font-face { font-family: Mono; font-weight: 700; src: url(jetbrains-mono-700.woff2); }
+@font-face { font-family: Inter; font-weight: 800; src: url(inter-800.woff2); }
+* { margin: 0; box-sizing: border-box; }
+body { width: 1080px; height: 1920px; overflow: hidden; background: #000 center / cover; position: relative; font-family: Anton, sans-serif; }
+.shade { position: absolute; inset: 0; }
+.kick { position: absolute; font: 700 36px/1 Mono, monospace; letter-spacing: 0.14em; color: #0f1011; background: #ffd23f; padding: 14px 24px; border-radius: 999px; transform: rotate(-2deg); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); white-space: nowrap; }
+h1 { position: absolute; color: #fff; text-transform: uppercase; line-height: 0.95; letter-spacing: 0.01em; text-shadow: 0 8px 0 rgba(0, 0, 0, 0.45), 0 0 40px rgba(0, 0, 0, 0.55); }
+h1 span { display: block; white-space: nowrap; }
+h1 em { font-style: normal; color: #ffd23f; }
+.stamp { position: absolute; font: 400 150px/1 Anton, sans-serif; color: #e5483a; border: 12px solid #e5483a; border-radius: 18px; padding: 8px 30px 2px; transform: rotate(-12deg); letter-spacing: 0.04em; background: rgba(255, 255, 255, 0.06); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45); text-shadow: 0 4px 0 rgba(0, 0, 0, 0.25); }
+.tag { position: absolute; font: 700 32px/1.05 Mono, monospace; letter-spacing: 0.08em; color: #fff; background: #e5483a; padding: 12px 18px; border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); white-space: nowrap; }
+.tag small { display: block; font-size: 24px; opacity: 0.85; margin-top: 4px; }
+.tag.blue { background: #3d7bff; }
+.tag.yel { background: #ffd23f; color: #0f1011; }
+.tag.dark { background: rgba(15, 16, 17, 0.88); border: 2px solid rgba(255, 255, 255, 0.25); }
+svg { position: absolute; inset: 0; }

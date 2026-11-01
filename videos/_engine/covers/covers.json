@@ -1,16 +1,8 @@
 [
-  { "project": "tour-eiffel", "render": "tour-eiffel-v2.mp4", "at": 1.5, "style": "anime",
-    "kicker": "PARIS · 1910", "title": ["ELLE DEVAIT", "ÊTRE *DÉTRUITE*"] },
-  { "project": "liberte", "at": 72.6, "style": "anime",
-    "kicker": "STATUE DE LA LIBERTÉ", "title": ["LES *CHAÎNES*", "CACHÉES", "À SES PIEDS"] },
-  { "project": "guillotin", "at": 70.6, "style": "anime",
-    "kicker": "LE DOCTEUR GUILLOTIN", "title": ["IL N'A PAS", "INVENTÉ LA", "*GUILLOTINE*"] },
-  { "project": "joconde", "at": 1.2, "style": "anime",
-    "kicker": "LA JOCONDE", "title": ["CÉLÈBRE", "GRÂCE À", "UN *VOL*"] },
-  { "project": "ascenseur", "at": 1.5, "style": "3d",
-    "kicker": "CHUTE LIBRE", "title": ["LE CÂBLE CASSE…", "*ET APRÈS ?*"] },
-  { "project": "sous-marin", "at": 56, "style": "3d",
-    "kicker": "300 M SOUS L'EAU", "title": ["COMMENT IL", "*REMONTE ?*"] },
-  { "project": "telephone", "at": 26, "style": "3d",
-    "kicker": "UN APPEL · 0,07 S", "title": ["OÙ VA", "*TA VOIX ?*"] }
+  {"project": "tour-eiffel", "render": "tour-eiffel-v2.mp4", "at": 1.5, "style": "anime", "kicker": "PARIS · 1910", "title": ["ELLE DEVAIT", "ÊTRE *DÉTRUITE*"]},
+  {"project": "liberte", "at": 72.6, "style": "anime", "kicker": "STATUE DE LA LIBERTÉ", "title": ["LES *CHAÎNES*", "CACHÉES", "À SES PIEDS"]},
+  {"project": "guillotin", "at": 70.6, "style": "anime", "kicker": "LE DOCTEUR GUILLOTIN", "title": ["IL N'A PAS", "INVENTÉ LA", "*GUILLOTINE*"]},
+  {"project": "joconde", "at": 1.2, "style": "anime", "kicker": "LA JOCONDE", "title": ["CÉLÈBRE", "GRÂCE À", "UN *VOL*"]},
+  {"project": "ascenseur", "at": 1.5, "style": "3d", "kicker": "CHUTE LIBRE", "title": ["LE CÂBLE CASSE…", "*ET APRÈS ?*"]},
+  {"project": "sous-marin", "at": 56, "style": "3d", "kicker": "300 M SOUS L'EAU", "title": ["COMMENT IL", "*REMONTE ?*"]}
 ]

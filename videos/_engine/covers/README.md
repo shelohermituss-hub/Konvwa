@@ -5,7 +5,11 @@
 - Le titre-choc fait 3 à 7 mots (Anton), avec une petite pastille (« COMMENT ÇA MARCHE ? »).
 - Des annotations donnent l'échelle ou désignent un détail : cercle « TOI », pointillés de longueur, contour, étiquettes.
 - Le texte reste dans le recadrage 3:4 (y 240 → 1680).
-- Modèle : `../../eolienne/cover/` (`cover.html` + `render-cover.mjs` → `cover.png`, `cover-grille.png`).
+- Modèle : `../../eolienne/cover/`. Kit commun : `kit/cover.css` (polices, pastille, titre, tampon « FAUX », étiquettes).
+  Chaque projet a `videos/<projet>/cover/` (`cover.html` qui déclare `body { background-image: url(fond.jpg) }`, et `fond.jpg`).
+  Rendu : `node videos/_engine/covers/render_cover.mjs videos/<projet>/cover [...]` → `cover.png` + `cover-grille.png`.
+- Déjà faites dans ce style : éolienne, téléphone, maths et Grecs, femmes et guerre, inventeurs.
+- Pour les vidéos « mythe » du style ANIMÉ : la question du mythe en titre et un tampon rouge « FAUX ».
 
 Le générateur ci-dessous (image du rendu + titre) reste utile pour rattraper les anciennes vidéos.
 
