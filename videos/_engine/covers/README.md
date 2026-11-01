@@ -11,7 +11,8 @@
 - Modèle : `../../eolienne/cover/`. Kit commun : `kit/cover.css` (polices, pastille, titre, tampon « FAUX », étiquettes).
   Chaque projet a `videos/<projet>/cover/` (`cover.html` qui déclare `body { background-image: url(fond.jpg) }`, et `fond.jpg`).
   Rendu : `node videos/_engine/covers/render_cover.mjs videos/<projet>/cover [...]` → `cover.png` + `cover-grille.png`.
-- Déjà faites dans ce style : éolienne, téléphone, maths et Grecs, femmes et guerre, inventeurs.
+- Déjà faites en 3D studio : téléphone, maths et Grecs, femmes et guerre, inventeurs.
+  - Exception : l'éolienne garde sa photo-illustration aérienne, à la demande du client, qui la trouvait parfaite (`../../eolienne/cover/`).
 - Pour les vidéos « mythe » du style ANIMÉ : la question du mythe en titre et un tampon rouge « FAUX ».
 
 Le générateur ci-dessous (image du rendu + titre) reste utile pour rattraper les anciennes vidéos.
