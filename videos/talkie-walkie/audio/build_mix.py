@@ -105,4 +105,5 @@ plan = {'voice': os.path.join(HERE, '..', 'voice', 'voice.wav'), 'voice_start': 
 plan_path = os.path.join(HERE, 'plan.json')
 json.dump(plan, open(plan_path, 'w'), indent=1)
 subprocess.run(['python3', '-I', os.path.join(ROOT, 'videos', '_engine', 'style-anime', 'mix_anime.py'), plan_path, os.path.join(HERE, 'mix.wav')], check=True)
+subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', os.path.join(HERE, 'mix.wav'), '-c:a', 'flac', os.path.join(HERE, 'mix.flac')], check=True)
 print('durée', DUR, 's')

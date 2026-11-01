@@ -40,3 +40,8 @@ graphify-out/.graphify_*
 # HyperFrames : rendus et état local des projets vidéo (les MP4 ne sont jamais commités)
 videos/*/renders/
 videos/*/.hyperframes/
+
+# style ANIMÉ : fichiers de travail du son (régénérés par audio/build_mix.py ; le mix final est commité en FLAC)
+videos/*/audio/bed.wav
+videos/*/audio/mix.wav
+videos/talkie-walkie/audio/plan.json
