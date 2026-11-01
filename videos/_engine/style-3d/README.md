@@ -74,7 +74,8 @@ Les mots-outils qui rythment le texte : « Mais », « Alors », « Ça, c'est u
 
 - `videos/telephone/` : comment un téléphone passe un appel.
 - `videos/ascenseur/` : comment un ascenseur ne tombe jamais. Accroche demandée par le client : une scène de chute (le câble casse, la cabine tombe), puis « Pourquoi ? ». La même chute revient à la fin, et cette fois la cabine s'arrête. Elle montre aussi qu'on peut mettre une **scène historique dans le même monde** (New York en 1854, à côté de l'immeuble), où la caméra se rend sans coupe.
-- `sfx/` : `ui-blip`, `clip`, `onde-radio`, `donnees`, `sonnerie`, `fibre`, `bourdonnement`, la boucle `musique-tech`, ainsi que `cable-casse`, `chute`, `ding-ascenseur`, `moteur-elec`, `freinage` et `hache` (ajoutés pour l'ascenseur).
+- `videos/sous-marin/` : comment un sous-marin plonge et remonte. Sous-marin **en écorché** : la moitié avant de la coque est découpée par un plan de coupe (`clippingPlanes`, `renderer.localClippingEnabled = true`, matériau `DoubleSide`). L'eau des ballasts et de la bouteille monte et descend grâce à un autre plan de coupe. Ne pas superposer une coque *transparente* à des objets intérieurs transparents : elle les cache, à cause du tampon de profondeur.
+- `sfx/` : `ui-blip`, `clip`, `onde-radio`, `donnees`, `sonnerie`, `fibre`, `bourdonnement`, la boucle `musique-tech`, ainsi que `cable-casse`, `chute`, `ding-ascenseur`, `moteur-elec`, `freinage` et `hache` (ajoutés pour l'ascenseur), ainsi que `bulles`, `sonar`, `purge-air`, `chasse-air` et `coque-craque` (ajoutés pour le sous-marin).
 - Points de vigilance techniques :
   - les `Points` (poussière, étincelles) dont on recalcule les positions doivent avoir `frustumCulled = false`, sinon ils disparaissent ;
   - pas de particules trop près de la caméra : elles deviennent de gros carrés.

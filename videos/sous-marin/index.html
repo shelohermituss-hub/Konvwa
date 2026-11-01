@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Comment un sous-marin plonge et remonte</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script type="importmap">
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.181.2/examples/jsm/" } }
+    </script>
+    <!--
+      « style 3D » (videos/_engine/style-3d/README.md) : vraie 3D Three.js, un seul plan, l'objet se construit pièce par pièce.
+      Accroche : un sous-marin de milliers de tonnes plonge exprès, reste entre deux eaux et remonte — « Comment ? ».
+      Récit « tu le construis toi-même » : une bouteille qui flotte, qui coule → Archimède (poussée contre poids) → la coque et les
+      ballasts ouverts par le bas → plonger : purges ouvertes, l'eau entre → la pression (+1 bar / 10 m) et la coque épaisse →
+      régleurs et barres de plongée → remonter : l'air comprimé chasse l'eau → « tu viens de construire un sous-marin ».
+      Toute la scène est calculée à partir du temps (événement hf-seek) ; étiquettes projetées depuis la 3D ; titres et sous-titres en GSAP.
+      Voix Adrien Moreau (Magnific / ElevenLabs) ; bruitages mixés sous la voix (../_engine/style-anime/mix_anime.py).
+    -->
+    <style>
+      @font-face { font-family: "Poppins"; font-weight: 800; src: url("assets/fonts/poppins-800.woff2") format("woff2"); }
+      @font-face { font-family: "Mono"; font-weight: 700; src: url("assets/fonts/jetbrains-mono-700.woff2") format("woff2"); }
+      @font-face { font-family: "Mono"; font-weight: 700; src: url("assets/fonts/jetbrains-mono-ext-700.woff2") format("woff2"); unicode-range: U+0100-024F; }
+      @font-face { font-family: "Mono"; font-weight: 500; src: url("assets/fonts/jetbrains-mono-500.woff2") format("woff2"); }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0c1c22; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #0c1c22; }
+      #three { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; display: block; }
+      #glow { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 45% at 50% 42%, rgba(63, 214, 240, 0.08), transparent 70%), radial-gradient(ellipse 90% 70% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%); pointer-events: none; }
+      #flash { position: absolute; inset: 0; background: #ff3a2a; opacity: 0; pointer-events: none; }
+      .lab { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); font-family: "Mono", monospace; font-weight: 700; font-size: 26px; letter-spacing: 0.08em; color: #dff7fc; background: rgba(8, 22, 28, 0.86); border: 2px solid rgba(63, 214, 240, 0.55); border-radius: 8px; padding: 6px 14px 5px; white-space: nowrap; opacity: 0; }
+      .lab.warn { color: #ffd2c4; border-color: rgba(240, 120, 90, 0.8); }
+      .ttl { position: absolute; left: 0; right: 0; top: 250px; text-align: center; font-family: "Mono", monospace; font-weight: 700; font-size: 84px; letter-spacing: 0.08em; color: #f4fbfd; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6); visibility: hidden; }
+      .ttl::after { content: ""; display: block; width: 180px; height: 8px; margin: 18px auto 0; background: #3fd6f0; border-radius: 4px; box-shadow: 0 0 18px rgba(63, 214, 240, 0.8); }
+      .cnt { position: absolute; left: 60px; top: 200px; font-family: "Mono", monospace; color: #f4fbfd; visibility: hidden; }
+      .cnt small { display: block; font-size: 28px; font-weight: 500; letter-spacing: 0.12em; color: #8fd8e6; }
+      .cnt b { display: block; font-size: 92px; font-weight: 700; color: #3fd6f0; text-shadow: 0 0 22px rgba(63, 214, 240, 0.6); }
+      .cnt.warn b { color: #ff7a5a; text-shadow: 0 0 22px rgba(255, 90, 60, 0.6); }
+      #caps { position: absolute; left: 60px; right: 60px; top: 1180px; height: 220px; }
+      .grp { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-family: "Poppins", sans-serif; font-weight: 800; font-size: 66px; line-height: 1.12; color: #ffffff; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 2px rgba(0, 0, 0, 0.9); visibility: hidden; }
+      .grp .k { color: #3fd6f0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="89.8" data-width="1080" data-height="1920">
+      <canvas id="three" width="1080" height="1920"></canvas>
+      <div id="glow"></div>
+      <div id="flash"></div>
+      <div id="labs"></div>
+      <div class="ttl" id="t-cm">COMMENT ?</div>
+      <div class="ttl" id="t-pa" style="font-size: 62px">POUSSÉE D'ARCHIMÈDE</div>
+      <div class="ttl" id="t-ba">BALLASTS</div>
+      <div class="ttl" id="t-ce">COQUE ÉPAISSE</div>
+      <div class="ttl" id="t-bp" style="font-size: 62px">BARRES DE PLONGÉE</div>
+      <div class="ttl" id="t-ac">AIR COMPRIMÉ</div>
+      <div class="ttl" id="t-sm">UN SOUS-MARIN</div>
+      <div class="cnt" id="c-t"><small>PLUSIEURS</small><b>MILLIERS</b><small>DE TONNES</small></div>
+      <div class="cnt" id="c-ar"><small>SYRACUSE · IL Y A 2 000 ANS</small><b>ARCHIMÈDE</b></div>
+      <div class="cnt" id="c-dp"><small>PROFONDEUR</small><b id="c-dp-n">0 m</b><small id="c-dp-p">PRESSION : 1 BAR</small></div>
+      <div class="cnt warn" id="c-kg"><small>SUR 1 CM² DE COQUE</small><b>≈ 30 KG</b><small>À 300 MÈTRES</small></div>
+      <div id="caps"></div>
+      <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="89.8" data-track-index="10" data-volume="1"></audio>
+    </div>
+    <script type="module">
+      import * as THREE from "three";
+      import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+      import { Line2 } from "three/addons/lines/Line2.js";
+      import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+      import { LineGeometry } from "three/addons/lines/LineGeometry.js";
+
+      const END = 89.8
+      const RAW = [0.0, 0.134, 0.806, 1.074, 1.679, 2.216, 2.35, 2.716, 3.001, 3.279, 3.696, 4.183, 4.6, 4.948, 5.226, 5.573, 5.852, 6.408, 6.755, 6.894, 7.073, 7.633, 8.849, 8.899, 9.23, 9.345, 9.634, 9.808, 10.328, 10.56, 10.791, 11.138, 11.369, 11.743, 12.24, 12.795, 13.15, 13.557, 14.267, 14.317, 14.367, 14.986, 15.129, 15.795, 16.346, 16.499, 16.8, 16.897, 16.973, 17.049, 17.354, 17.507, 17.557, 17.812, 18.117, 18.193, 18.879, 19.565, 19.794, 20.24, 20.812, 21.198, 21.455, 21.584, 21.841, 22.098, 22.42, 22.853, 23.135, 23.335, 23.666, 23.998, 24.131, 24.463, 24.595, 24.927, 25.259, 25.925, 26.153, 26.467, 26.656, 26.971, 27.223, 27.663, 28.012, 28.325, 28.76, 29.024, 29.522, 29.572, 30.109, 30.263, 30.804, 31.63, 31.844, 32.024, 32.624, 32.744, 32.864, 33.104, 33.284, 33.404, 33.704, 33.944, 34.069, 34.649, 34.775, 35.343, 35.533, 35.911, 36.037, 36.479, 36.669, 37.3, 37.742, 37.931, 38.057, 38.203, 38.253, 38.614, 38.952, 39.206, 39.823, 40.066, 40.569, 40.695, 41.009, 41.198, 41.575, 41.701, 41.914, 42.263, 42.945, 43.286, 43.423, 43.627, 43.968, 44.173, 44.309, 44.456, 44.595, 45.339, 45.841, 46.159, 46.521, 46.772, 47.038, 47.171, 47.702, 47.968, 48.301, 48.63, 48.867, 49.06, 49.189, 49.639, 49.767, 50.281, 50.796, 51.053, 51.19, 51.247, 51.297, 51.466, 51.976, 52.413, 53.142, 53.506, 53.652, 54.016, 54.599, 55.11, 55.217, 55.283, 55.333, 55.689, 56.429, 56.552, 56.737, 56.86, 57.353, 57.784, 58.031, 58.339, 58.524, 58.955, 59.017, 59.791, 59.841, 60.423, 60.591, 61.013, 61.474, 61.564, 61.832, 62.233, 62.568, 62.835, 63.009, 63.104, 63.459, 64.05, 64.464, 64.582, 64.878, 65.114, 65.66, 65.775, 65.968, 66.547, 66.74, 67.126, 67.255, 67.77, 67.899, 68.349, 68.671, 68.8, 69.146, 69.291, 69.634, 70.253, 71.104, 71.257, 71.772, 72.0, 72.343, 72.591, 72.912, 73.023, 73.078, 73.41, 73.521, 73.798, 74.296, 74.628, 74.849, 75.015, 75.568, 75.624, 75.845, 76.122, 76.465, 76.792, 77.205, 77.549, 77.755, 77.893, 78.096, 78.189, 78.824, 79.395, 79.649, 79.967, 80.157, 80.475, 80.792, 80.939, 81.427, 81.554, 82.206, 83.192, 83.242, 83.441, 83.577, 84.258, 84.394, 85.016, 85.414, 85.619, 86.299, 86.435, 87.008, 87.058, 87.116, 87.388, 87.824, 87.949, 87.999, 88.199]
+      const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+
+      // ---------- maths ----------
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x))
+      const win = (t, a, b) => clamp((t - a) / (b - a))
+      const eio = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+      const eob = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2) }
+      const popS = (t, t0, d = 0.45) => (t < t0 ? 0 : eob(win(t, t0, t0 + d)))
+      const fade = (t, a, b, f = 0.3) => clamp(Math.min(win(t, a, a + f), 1 - win(t, b - f, b)))
+      const lerp = (a, b, u) => a + (b - a) * u
+      let seed = 21
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+
+      // ---------- renderer, scene ----------
+      const canvas = document.getElementById("three")
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      renderer.setSize(1080, 1920, false); renderer.setPixelRatio(1)
+      renderer.outputColorSpace = THREE.SRGBColorSpace
+      renderer.localClippingEnabled = true
+      const scene = new THREE.Scene()
+      const SKY = new THREE.Color(0x16323a), DEEP = new THREE.Color(0x082a38)
+      scene.fog = new THREE.Fog(0x16323a, 30, 120)
+      const camera = new THREE.PerspectiveCamera(44, 1080 / 1920, 0.05, 400)
+      scene.add(new THREE.HemisphereLight(0xcfeaff, 0x0a2a30, 1.5))
+      const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(10, 26, 16); scene.add(key)
+      const C = { cyan: 0x3fd6f0, white: 0xf4fbfd, steel: 0x7a8590, red: 0xf0785a, water: 0x2a9ad8 }
+      const mat = (color, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.55, metalness: 0.1 }, o))
+      const basic = (color, o = {}) => new THREE.MeshBasicMaterial(Object.assign({ color, transparent: true, depthWrite: false }, o))
+      const box = (w, h, d, m, x = 0, y = 0, z = 0) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); return b }
+      const fatLine = (color, width, n) => { const g = new LineGeometry(); g.setPositions(new Float32Array(n * 3)); const m = new LineMaterial({ color, linewidth: width, transparent: true, depthWrite: false }); m.resolution.set(1080, 1920); const l = new Line2(g, m); l.frustumCulled = false; l.buf = new Float32Array(n * 3); l.n = n; scene.add(l); return l }
+      const flush = (l) => l.geometry.setPositions(l.buf)
+      const P = (x, y, z) => new THREE.Vector3(x, y, z)
+      const sz = (o, s) => { o.visible = s > 0.002; o.scale.setScalar(Math.max(0.001, s)) }
+
+      // ---------- the sea: surface, light shafts, seabed, rocks ----------
+      const surf = new THREE.Mesh(new THREE.PlaneGeometry(400, 400, 1, 1), new THREE.MeshStandardMaterial({ color: 0x2a7a9a, transparent: true, opacity: 0.55, side: THREE.DoubleSide, roughness: 0.15, metalness: 0.3, depthWrite: false }))
+      surf.rotation.x = -Math.PI / 2; scene.add(surf)
+      const ripples = Array.from({ length: 10 }, (_, i) => { const r = new THREE.Mesh(new THREE.RingGeometry(1, 1.04, 64), basic(0xbfefff, { opacity: 0, side: THREE.DoubleSide })); r.rotation.x = -Math.PI / 2; r.position.y = 0.01; scene.add(r); return r })
+      const shafts = Array.from({ length: 7 }, (_, i) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 2.4, 30, 16, 1, true), basic(0x9fe6f2, { opacity: 0.05, side: THREE.DoubleSide })); m.position.set(-12 + i * 5 + rnd() * 2, -15, -6 - rnd() * 6); m.rotation.z = 0.15; scene.add(m); return m })
+      const bed = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(0x2f4f50, { roughness: 1 })); bed.rotation.x = -Math.PI / 2; bed.position.y = -24; scene.add(bed)
+      for (let i = 0; i < 26; i++) { const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6 + rnd() * 1.6, 0), mat(0x3a5050, { roughness: 1 })); r.position.set(-20 + rnd() * 40, -23.6, -14 + rnd() * 18); r.scale.y = 0.6; scene.add(r) }
+      // ambient bubbles
+      const NB = 260, bPos = new Float32Array(NB * 3), bGeo = new THREE.BufferGeometry(); bGeo.setAttribute("position", new THREE.BufferAttribute(bPos, 3))
+      const b0 = Array.from({ length: NB }, () => [-14 + rnd() * 28, -24 + rnd() * 24, -8 + rnd() * 10, 0.3 + rnd() * 0.7])
+      const bPts = new THREE.Points(bGeo, new THREE.PointsMaterial({ color: 0xcff6ff, size: 0.06, transparent: true, opacity: 0.6, depthWrite: false })); bPts.frustumCulled = false; scene.add(bPts)
+      // effect bubbles (vents, blown ballasts, splash)
+      const NE = 160, ePos = new Float32Array(NE * 3), eGeo = new THREE.BufferGeometry(); eGeo.setAttribute("position", new THREE.BufferAttribute(ePos, 3))
+      const eMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.13, transparent: true, opacity: 0, depthWrite: false }); const ePts = new THREE.Points(eGeo, eMat); ePts.frustumCulled = false; scene.add(ePts)
+      const eV = Array.from({ length: NE }, () => [rnd() - 0.5, rnd(), rnd() - 0.5, rnd()])
+
+      // ---------- the bottle ----------
+      const bottle = new THREE.Group(); scene.add(bottle)
+      const prof = [[0.001, 0], [0.28, 0], [0.31, 0.06], [0.31, 0.78], [0.22, 0.95], [0.11, 1.06], [0.11, 1.16]].map(([r, y]) => new THREE.Vector2(r * 1.5, y * 1.5))
+      bottle.add(new THREE.Mesh(new THREE.LatheGeometry(prof, 40), new THREE.MeshStandardMaterial({ color: 0xdff7fc, transparent: true, opacity: 0.32, roughness: 0.1, side: THREE.DoubleSide, depthWrite: false })))
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.16, 20), mat(0x2a6ad8)); cap.position.y = 1.82; bottle.add(cap)
+      const bPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0)
+      const bWater = new THREE.Mesh(new THREE.LatheGeometry(prof.map((v) => new THREE.Vector2(Math.max(0.001, v.x * 0.93), v.y * 0.98)), 40), new THREE.MeshStandardMaterial({ color: C.water, transparent: true, opacity: 0.75, clippingPlanes: [bPlane], side: THREE.DoubleSide }))
+      bottle.add(bWater)
+      const arrow = (color) => { const g = new THREE.Group(); const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1, 10), basic(color, { opacity: 1 })); sh.position.y = 0.5; const hd = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.36, 14), basic(color, { opacity: 1 })); g.add(sh, hd); g.userData = { sh, hd }; scene.add(g); return g }
+      const setArrow = (g, x, y, len, dir) => { g.position.set(x, y, 0.6); g.rotation.z = dir > 0 ? 0 : Math.PI; g.userData.sh.scale.y = len; g.userData.hd.position.y = len + 0.16 }
+      const upA = arrow(C.cyan), dnA = arrow(C.red)
+
+      // ---------- the submarine (cutaway) ----------
+      const sub = new THREE.Group(); scene.add(sub)
+      const outerM = mat(0x2a3440, { metalness: 0.4, roughness: 0.45, side: THREE.DoubleSide })
+      const cutPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0.02) // cutaway: keep the back half of the outer hull
+      let cutOn = false
+      const outer = new THREE.Group(); sub.add(outer)
+      outer.add(new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.35, 10, 40, 1, true).rotateZ(Math.PI / 2), outerM))
+      outer.children[0].position.x = -0.5
+      const bow = new THREE.Mesh(new THREE.SphereGeometry(1.35, 32, 20), outerM); bow.scale.set(1.8, 1, 1); bow.position.x = 4.5; outer.add(bow)
+      const stern = new THREE.Mesh(new THREE.ConeGeometry(1.35, 3, 40, 1, true).rotateZ(Math.PI / 2), outerM); stern.position.x = -7; outer.add(stern)
+      const sail = new THREE.Mesh(new RoundedBoxGeometry(2.4, 1.8, 0.7, 3, 0.2), outerM); sail.position.set(1.2, 2.0, 0); outer.add(sail)
+      const sailPlanes = box(0.8, 0.08, 1.8, mat(0x3a4450), 1.4, 2.3, 0); outer.add(sailPlanes)
+      outer.add(box(1.2, 2.8, 0.08, mat(0x3a4450), -7.6, 0, 0), box(1.2, 0.08, 2.8, mat(0x3a4450), -7.6, 0, 0))
+      const prop = new THREE.Group(); prop.position.x = -8.6; outer.add(prop)
+      for (let i = 0; i < 5; i++) { const bl = box(0.12, 0.9, 0.3, mat(0xc0a050, { metalness: 0.7 }), 0, 0.45, 0); const p = new THREE.Group(); p.rotation.x = (i / 5) * Math.PI * 2; p.add(bl); prop.add(p) }
+      const bowPlanes = [-1, 1].map((s) => { const p = new THREE.Group(); p.position.set(3.4, -0.2, s * 1.4); p.add(box(1.0, 0.07, 0.9, mat(0x3a4450), 0, 0, s * 0.4)); outer.add(p); return p })
+      // pressure hull, with ring frames
+      const innerM = mat(C.steel, { metalness: 0.6, roughness: 0.35, emissive: 0x3fd6f0, emissiveIntensity: 0 })
+      const inner = new THREE.Group(); sub.add(inner)
+      inner.add(new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 7.6, 36).rotateZ(Math.PI / 2), innerM)); inner.children[0].position.x = -0.3
+      ;[3.5, -4.1].forEach((x) => { const c = new THREE.Mesh(new THREE.SphereGeometry(0.95, 24, 16), innerM); c.scale.x = 0.4; c.position.x = x; inner.add(c) })
+      for (let i = 0; i < 9; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.97, 0.05, 6, 36), mat(0x4a5560, { metalness: 0.6 })); r.rotation.y = Math.PI / 2; r.position.x = -3.8 + i * 0.9; inner.add(r) }
+      // ballast tanks (bow and stern), with seawater clipped to the fill level
+      const tanks = [{ x: 4.6, len: 2.0 }, { x: -4.9, len: 1.6 }].map((tk) => {
+        const g = new THREE.Group(); g.position.x = tk.x; sub.add(g)
+        g.add(new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, tk.len, 32, 1, true).rotateZ(Math.PI / 2), basic(C.cyan, { opacity: 0.12, side: THREE.DoubleSide })))
+        g.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CylinderGeometry(1.25, 1.25, tk.len, 16).rotateZ(Math.PI / 2)), new THREE.LineBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.55 })))
+        const plane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0)
+        const w = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, tk.len * 0.96, 32).rotateZ(Math.PI / 2), new THREE.MeshStandardMaterial({ color: C.water, transparent: true, opacity: 0.8, clippingPlanes: [plane] })); g.add(w)
+        const holes = new THREE.Group(); g.add(holes)
+        for (let i = 0; i < 3; i++) holes.add(box(0.3, 0.06, 0.5, mat(0x0a0e12), (i - 1) * 0.55, -1.33, 0))
+        const vent = new THREE.Group(); vent.position.set(0, 1.36, 0); g.add(vent)
+        const lid = box(0.42, 0.08, 0.42, mat(0xf0a040), 0.21, 0, 0); vent.add(lid)
+        return Object.assign(tk, { g, plane, w, holes, vent })
+      })
+      // compressed air bottles, air lines, trim tanks
+      const airB = new THREE.Group(); sub.add(airB)
+      for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 2.6, 16).rotateZ(Math.PI / 2), mat(0x3a9a5a, { metalness: 0.4, emissive: 0x3a9a5a, emissiveIntensity: 0 })); c.position.set(-0.6, 1.06, -0.4 + i * 0.4); airB.add(c) }
+      const airLines = [fatLine(0x7af0a0, 4, 2), fatLine(0x7af0a0, 4, 2)]
+      const trims = [2.4, -2.8].map((x) => { const tb = box(0.8, 0.45, 0.8, mat(0xf0c040, { transparent: true, opacity: 0.7, emissive: 0xf0c040, emissiveIntensity: 0 }), x, -0.45, 0); inner.add(tb); return tb })
+      // pressure arrows all around the hull
+      const press = new THREE.Group(); sub.add(press)
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 8; j++) { const a = (j / 8) * Math.PI * 2; const cone = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 10), basic(C.red, { opacity: 0.9 })); const r = 2.0; cone.position.set(-4.5 + i * 3, Math.cos(a) * r, Math.sin(a) * r); cone.lookAt(new THREE.Vector3(-4.5 + i * 3, 0, 0)); cone.rotateX(Math.PI / 2); press.add(cone) }
+
+      // ---------- story clock ----------
+      const tankLevel = (t) => (t < T[132] ? 0 : t < T[243] ? eio(win(t, T[132], T[141])) : 1 - eio(win(t, T[243], T[247] + 0.6)))
+      function subPose(t) {
+        // hook: on the surface, dives, hovers, comes back up
+        if (t < T[22] + 0.6) {
+          const x = -5 + 7 * win(t, 0, T[22])
+          let y = 0.25
+          if (t > T[9] - 0.2) y = lerp(0.25, -5, eio(win(t, T[9] - 0.2, T[11])))
+          if (t > T[16]) y = lerp(-5, 0.25, eio(win(t, T[16], T[19] + 0.2)))
+          return { x, y, pitch: t > T[9] - 0.2 && t < T[11] ? -0.12 : t > T[16] && t < T[19] ? 0.1 : 0 }
+        }
+        let y = -4
+        if (t > T[141]) y = lerp(-4, -7, eio(win(t, T[141], T[143] + 0.6)))
+        if (t > T[144]) y = lerp(-7, -16, eio(win(t, T[144], T[172])))
+        if (t > T[250]) y = lerp(-16, 0.25, eio(win(t, T[250], T[259] + 0.3)))
+        const bob = t > T[259] ? Math.sin(t * 1.5) * 0.06 : 0
+        const pitch = t > T[208] && t < T[218] ? Math.sin((t - T[208]) * 1.6) * 0.06 : t > T[250] && t < T[259] ? 0.08 : t > T[141] && t < T[147] ? -0.05 : 0
+        return { x: 0, y: y + bob, pitch }
+      }
+      function bottleY(t) {
+        let y = -0.9
+        if (t > T[35]) y = lerp(-0.9, -3.2, eio(win(t, T[35], T[36] + 0.6)))
+        if (t > T[78]) y = lerp(-3.2, -4.4, eio(win(t, T[78], T[83] + 0.3)))
+        if (t > T[85]) y = lerp(-4.4, -0.9, eio(win(t, T[85], T[87] + 0.4)))
+        if (t > T[93]) y = lerp(-0.9, -3.0, eio(win(t, T[93], T[95] + 0.3)))
+        if (t > T[266]) y = -0.9 + Math.sin(t * 1.7) * 0.05
+        return y
+      }
+      const bottleLevel = (t) => { let l = eio(win(t, T[33], T[34] + 0.4)); if (t > T[84]) l = lerp(1, 0.12, win(t, T[84], T[85] + 0.3)); if (t > T[93]) l = lerp(0.12, 1, win(t, T[93], T[95])); if (t > T[266]) l = 0; return l }
+
+      // ---------- camera ----------
+      const KEYS = [
+        [0, P(9, 3.5, 15), P(-1, 0.3, 0)], [T[9] - 0.3, P(8, 1.6, 13), P(0, -0.2, 0)],
+        [T[11], P(7, -3.8, 12), P(0.5, -4.6, 0)], [T[16], P(7, -3.8, 12), P(0.5, -4.6, 0)], [T[19] + 0.3, P(9, 2.6, 15), P(1, 0, 0)], [T[22], P(9, 2.6, 15), P(1, 0, 0)],
+        [T[23], P(1.6, 0.6, 4.4), P(0, -0.2, 0)], [T[33], P(1.6, 0.6, 4.4), P(0, -0.2, 0)], [T[36] + 0.4, P(1.8, -1.6, 5.2), P(0, -2.3, 0)], [T[42], P(1.8, -2, 5.4), P(0, -2.6, 0)],
+        [T[55], P(2.2, -1.9, 7), P(0, -2.5, 0)], [T[87], P(2.4, -1.6, 7.6), P(0, -2.0, 0)], [T[93], P(2.2, -2.2, 6.4), P(0, -2.6, 0)],
+        [T[104], P(5, -3, 14), P(0, -3.8, 0)], [T[108], P(7, -2.2, 17), P(-0.5, -4, 0)], [T[121], P(7, -2.2, 17), P(-0.5, -4, 0)],
+        [T[125], P(4.6, -1.6, 8.5), P(4.4, -3.6, 0)], [T[135], P(4.6, -3.4, 8.5), P(4.4, -4.2, 0)], [T[141], P(8, -4, 17), P(0, -5, 0)], [T[147], P(8, -8, 17), P(0, -8.5, 0)],
+        [T[151], P(6, -10, 15), P(0, -11, 0)], [T[172], P(6, -15, 15), P(0, -15.6, 0)], [T[179], P(3.6, -14.8, 7.5), P(0, -15.8, 0)], [T[191], P(3.6, -14.8, 7.5), P(0, -15.8, 0)],
+        [T[198], P(9, -14, 15), P(1, -16, 0)], [T[217], P(10, -15, 14), P(2, -16, 0)],
+        [T[222], P(6, -14.5, 13), P(0, -16, 0)], [T[232], P(3.4, -14.6, 7.5), P(-0.4, -15.3, 0)], [T[243], P(7, -15, 13), P(0, -16, 0)],
+        [T[250], P(9, -10, 17), P(0, -10, 0)], [T[259] + 0.4, P(10, 2.5, 18), P(0, 0, 0)],
+        [T[264], P(12, 4, 22), P(0.5, 0.5, 0)], [END, P(14, 5, 26), P(0.5, 0.5, 0)],
+      ]
+      function camAt(t) {
+        let i = 0; while (i < KEYS.length - 2 && t > KEYS[i + 1][0]) i++
+        const [t0, p0, q0] = KEYS[i], [t1, p1, q1] = KEYS[i + 1]
+        const u = eio(win(t, t0, t1))
+        camera.position.lerpVectors(p0, p1, u)
+        camera.lookAt(new THREE.Vector3().lerpVectors(q0, q1, u))
+        // under the surface: deep-blue fog; above it: petrol sky
+        const under = clamp(-camera.position.y * 2 + 0.5)
+        const col = SKY.clone().lerp(DEEP, under)
+        renderer.setClearColor(col); scene.fog.color.copy(col); scene.fog.near = lerp(30, 4, under); scene.fog.far = lerp(120, 55, under)
+      }
+
+      // ---------- labels ----------
+      const labsEl = document.getElementById("labs"), LAB = []
+      const addLab = (text, anchor, t0, t1, warn) => { const el = document.createElement("div"); el.className = "lab" + (warn ? " warn" : ""); el.textContent = text; labsEl.appendChild(el); LAB.push({ el, anchor, t0, t1 }) }
+      const onSub = (x, y, z) => (t) => { const s = subPose(t); return P(s.x + x, s.y + y, z) }
+      const onBottle = (dy, dx = 0) => (t) => P(dx, bottleY(t) + dy, 0.4)
+      addLab("BOUTEILLE VIDE", onBottle(2.3), T[27], T[33])
+      addLab("PLEINE D'EAU", onBottle(2.3), T[34], T[43])
+      addLab("POUSSÉE", (t) => P(0.9, bottleY(t) + 2.4, 0.6), T[60], T[93])
+      addLab("POIDS", (t) => P(-0.9, bottleY(t) - 0.6, 0.6), T[72], T[93], true)
+      addLab("IMPOSSIBLE À VIDER", onBottle(2.3), T[96], T[104], true)
+      addLab("COQUE", onSub(-0.3, 1.25, 1.0), T[106], T[112])
+      addLab("RÉSERVOIRS", onSub(4.6, 1.9, 0.5), T[111], T[117])
+      addLab("OUVERTS PAR LE BAS", onSub(4.6, -1.9, 0.5), T[113], T[122])
+      addLab("PURGES", onSub(4.6, 2.0, 0.3), T[126], T[131])
+      addLab("L'AIR S'ÉCHAPPE", onSub(4.6, 2.6, 0.3), T[130], T[133])
+      addLab("L'EAU ENTRE", onSub(4.6, -1.9, 0.5), T[133], T[141])
+      addLab("+1 BAR TOUS LES 10 M", onSub(2.5, 2.6, 0.5), T[151], T[160], true)
+      addLab("CYLINDRE D'ACIER ÉPAIS", onSub(-0.6, 1.2, 1.0), T[179], T[188])
+      addLab("RÉGLEURS", onSub(2.4, -1.2, 1.0), T[200], T[207])
+      addLab("BARRES DE PLONGÉE", onSub(3.6, -0.9, 1.6), T[209], T[218])
+      addLab("BOUTEILLES D'AIR", onSub(-0.6, 1.7, 0.8), T[236], T[242])
+      addLab("L'EAU EST CHASSÉE", onSub(4.6, -2.0, 0.5), T[243], T[250])
+      addLab("UNE BOUTEILLE", () => P(3, 1.6, 5.5), T[268], END)
+      addLab("DE L'AIR", onSub(-0.6, 3.6, 0.6), T[270], END)
+      addLab("ARCHIMÈDE", onSub(-2.6, 3.0, 0.6), T[274], END)
+      const pv = new THREE.Vector3()
+      function placeLabels(t) {
+        for (const L of LAB) {
+          const op = fade(t, L.t0, L.t1, 0.25)
+          if (op <= 0) { L.el.style.opacity = 0; continue }
+          pv.copy(L.anchor(t)).project(camera)
+          L.el.style.opacity = pv.z < 1 ? op : 0
+          const hw = L.el.offsetWidth / 2 + 40
+          L.el.style.left = clamp(((pv.x + 1) / 2) * 1080, hw, 1080 - hw) + "px"
+          L.el.style.top = clamp(((1 - pv.y) / 2) * 1920, 150, 1140) + "px"
+        }
+      }
+
+      // ---------- the world, as a function of time ----------
+      const wp = new THREE.Vector3()
+      function renderAt(t) {
+        // ambient bubbles drift up
+        const bp = bGeo.attributes.position
+        for (let i = 0; i < NB; i++) { const [x, y, z, s] = b0[i]; bp.setXYZ(i, x + Math.sin(t + i) * 0.2, -24 + (((y + 24) + t * s * 1.2) % 24), z) }
+        bp.needsUpdate = true
+        shafts.forEach((m, i) => (m.material.opacity = 0.04 + 0.025 * Math.sin(t * 0.7 + i)))
+        // the submarine: in the hook, then rebuilt piece by piece
+        const sp = subPose(t)
+        sub.position.set(sp.x, sp.y, 0); sub.rotation.z = sp.pitch
+        sub.updateMatrixWorld()
+        const hook = t < T[22] + 0.6 ? 1 - win(t, T[21], T[21] + 0.6) : 0
+        const built = (k) => (t < T[22] + 0.6 ? hook : popS(t, k))
+        sz(inner, built(T[106] - 0.2)); sz(outer, built(T[110] - 0.2))
+        tanks.forEach((tk) => { sz(tk.g, built(T[112] - 0.1)); tk.holes.visible = t < T[22] + 0.6 || t > T[113] - 0.1 })
+        const wantCut = t > T[22] + 0.6 && t < T[261]
+        if (wantCut !== cutOn) { cutOn = wantCut; outerM.clippingPlanes = cutOn ? [cutPlane] : []; outerM.needsUpdate = true }
+        prop.rotation.x = t * 6
+        // tanks: water level, vents
+        const lvl = t < T[22] + 0.6 ? 0 : tankLevel(t)
+        tanks.forEach((tk) => { tk.g.getWorldPosition(wp); tk.plane.constant = wp.y - 1.2 + 2.4 * lvl; tk.w.visible = lvl > 0.01; tk.vent.rotation.z = (t > T[125] + 0.1 && t < T[141] + 0.5 ? 1 : 0) * 1.1 })
+        // the bottle
+        const bOn = popS(t, T[25] - 0.1) * (1 - win(t, T[104], T[104] + 0.4)) + popS(t, T[268] - 0.2)
+        sz(bottle, Math.min(1, bOn)); bottle.position.set(t > T[266] ? 3 : 0, bottleY(t), t > T[266] ? 5.5 : 0)
+        bottle.getWorldPosition(wp); bPlane.constant = wp.y + 0.05 + 1.7 * bottleLevel(t)
+        bWater.visible = bottleLevel(t) > 0.01
+        // Archimedes: push (up) against weight (down)
+        const arOn = fade(t, T[60] - 0.1, T[93], 0.3)
+        let up = 1.2, dn = 1.2
+        if (t > T[78]) { up = 0.9; dn = 1.7 } if (t > T[85]) { up = 1.7; dn = 0.6 }
+        const by = bottleY(t)
+        upA.visible = arOn > 0.01; dnA.visible = t > T[72] - 0.1 && arOn > 0.01
+        setArrow(upA, 0.55, by + 1.4, up * arOn, 1); setArrow(dnA, -0.55, by + 0.4, dn * arOn, -1)
+        // ripples on the surface
+        ripples.forEach((r, i) => { const k = (t * 0.5 + i / ripples.length) % 1; r.scale.setScalar(0.5 + k * 6); r.material.opacity = 0.25 * (1 - k) * (t < T[23] || t > T[258] ? 1 : 0.4); r.position.set(t < T[23] ? sp.x : t > T[258] ? 0 : bottle.position.x, 0.01, 0) })
+        // pressure arrows and the thick hull
+        const pr = fade(t, T[148], T[188], 0.4)
+        sz(press, pr ? 1 : 0); press.children.forEach((c, i) => { c.material.opacity = pr * (0.5 + 0.4 * Math.sin(t * 6 + i)) })
+        press.scale.setScalar(pr > 0 ? 1 - 0.08 * Math.sin(t * 4) : 0.001)
+        innerM.emissiveIntensity = fade(t, T[179], T[192], 0.3) * 0.6
+        // trim tanks, diving planes
+        trims.forEach((tb) => (tb.material.emissiveIntensity = fade(t, T[200], T[207], 0.2) * 0.8 * (0.6 + 0.4 * Math.sin(t * 8))))
+        const planes = t > T[208] && t < T[218] ? Math.sin((t - T[208]) * 1.6) * 0.45 : 0
+        bowPlanes.forEach((p) => (p.rotation.z = planes)); sailPlanes.rotation.z = planes * 0.6
+        // compressed air bottles and their lines
+        sz(airB, t > T[22] + 0.6 ? popS(t, T[232] - 0.2) : 0)
+        airB.children.forEach((c) => (c.material.emissiveIntensity = fade(t, T[242] - 0.2, T[250], 0.2) * 0.9))
+        const lines = t > T[242] - 0.2 && t < T[251]
+        airLines.forEach((l, i) => { l.visible = lines; if (!lines) return; const tk = tanks[i]; const a = new THREE.Vector3(-0.6 + (i ? -1.3 : 1.3), 1.12, 0).applyMatrix4(sub.matrixWorld); const b = new THREE.Vector3(tk.x, 1.3, 0).applyMatrix4(sub.matrixWorld); l.buf.set([a.x, a.y, a.z + 0.3, b.x, b.y, b.z + 0.3]); flush(l) })
+        // effect bubbles: vents (air escapes up), blown ballasts (water and air pushed out below), surfacing splash
+        const ep = eGeo.attributes.position
+        let src = null
+        if (t > T[130] && t < T[141]) src = { y0: 1.5, dir: 1, t0: T[130] }
+        else if (t > T[243] && t < T[249]) src = { y0: -1.4, dir: -1, t0: T[243] }
+        eMat.opacity = src ? 0.9 : 0
+        if (src) for (let i = 0; i < NE; i++) { const [vx, vy, vz, d] = eV[i]; const tk = tanks[i % 2]; const a = ((t - src.t0) * (0.8 + d) + d) % 1.6; ep.setXYZ(i, sp.x + tk.x + vx * 1.6 + vx * a, sp.y + src.y0 + src.dir * (a * (2.5 + vy * 2)), vz * 1.4) }
+        if (t > T[258] && t < T[262]) { eMat.opacity = 1 - win(t, T[258], T[262]); for (let i = 0; i < NE; i++) { const [vx, vy, vz, d] = eV[i]; const a = t - T[258]; ep.setXYZ(i, (vx - 0.2) * 12, Math.max(0, 0.4 + (vy * 5) * a - 4.9 * a * a), vz * 4) } }
+        ep.needsUpdate = true
+        renderer.render(scene, camera)
+      }
+      function frame(t) { camAt(t); renderAt(t); placeLabels(t) }
+      window.addEventListener("hf-seek", (e) => frame(e.detail.time))
+      frame(window.__hfThreeTime || 0)
+
+    </script>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const END = 89.8
+        const RAW = [0.0, 0.134, 0.806, 1.074, 1.679, 2.216, 2.35, 2.716, 3.001, 3.279, 3.696, 4.183, 4.6, 4.948, 5.226, 5.573, 5.852, 6.408, 6.755, 6.894, 7.073, 7.633, 8.849, 8.899, 9.23, 9.345, 9.634, 9.808, 10.328, 10.56, 10.791, 11.138, 11.369, 11.743, 12.24, 12.795, 13.15, 13.557, 14.267, 14.317, 14.367, 14.986, 15.129, 15.795, 16.346, 16.499, 16.8, 16.897, 16.973, 17.049, 17.354, 17.507, 17.557, 17.812, 18.117, 18.193, 18.879, 19.565, 19.794, 20.24, 20.812, 21.198, 21.455, 21.584, 21.841, 22.098, 22.42, 22.853, 23.135, 23.335, 23.666, 23.998, 24.131, 24.463, 24.595, 24.927, 25.259, 25.925, 26.153, 26.467, 26.656, 26.971, 27.223, 27.663, 28.012, 28.325, 28.76, 29.024, 29.522, 29.572, 30.109, 30.263, 30.804, 31.63, 31.844, 32.024, 32.624, 32.744, 32.864, 33.104, 33.284, 33.404, 33.704, 33.944, 34.069, 34.649, 34.775, 35.343, 35.533, 35.911, 36.037, 36.479, 36.669, 37.3, 37.742, 37.931, 38.057, 38.203, 38.253, 38.614, 38.952, 39.206, 39.823, 40.066, 40.569, 40.695, 41.009, 41.198, 41.575, 41.701, 41.914, 42.263, 42.945, 43.286, 43.423, 43.627, 43.968, 44.173, 44.309, 44.456, 44.595, 45.339, 45.841, 46.159, 46.521, 46.772, 47.038, 47.171, 47.702, 47.968, 48.301, 48.63, 48.867, 49.06, 49.189, 49.639, 49.767, 50.281, 50.796, 51.053, 51.19, 51.247, 51.297, 51.466, 51.976, 52.413, 53.142, 53.506, 53.652, 54.016, 54.599, 55.11, 55.217, 55.283, 55.333, 55.689, 56.429, 56.552, 56.737, 56.86, 57.353, 57.784, 58.031, 58.339, 58.524, 58.955, 59.017, 59.791, 59.841, 60.423, 60.591, 61.013, 61.474, 61.564, 61.832, 62.233, 62.568, 62.835, 63.009, 63.104, 63.459, 64.05, 64.464, 64.582, 64.878, 65.114, 65.66, 65.775, 65.968, 66.547, 66.74, 67.126, 67.255, 67.77, 67.899, 68.349, 68.671, 68.8, 69.146, 69.291, 69.634, 70.253, 71.104, 71.257, 71.772, 72.0, 72.343, 72.591, 72.912, 73.023, 73.078, 73.41, 73.521, 73.798, 74.296, 74.628, 74.849, 75.015, 75.568, 75.624, 75.845, 76.122, 76.465, 76.792, 77.205, 77.549, 77.755, 77.893, 78.096, 78.189, 78.824, 79.395, 79.649, 79.967, 80.157, 80.475, 80.792, 80.939, 81.427, 81.554, 82.206, 83.192, 83.242, 83.441, 83.577, 84.258, 84.394, 85.016, 85.414, 85.619, 86.299, 86.435, 87.008, 87.058, 87.116, 87.388, 87.824, 87.949, 87.999, 88.199]
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = ["Un", "sous-marin", "pèse", "plusieurs", "milliers", "de", "tonnes.", "Il", "peut", "couler", "exprès,", "rester", "entre", "deux", "eaux,", "puis", "remonter", "quand", "il", "veut.", "Comment ?", "Construisons-en", "un.", "Si", "tu", "poses", "une", "bouteille", "vide", "dans", "l'eau,", "elle", "flotte.", "Remplis-la", "d'eau :", "elle", "coule.", "Bravo :", "tu", "as", "construit", "un", "sous-marin.", "Pourquoi", "ça", "marche ?", "Il", "y", "a", "plus", "de", "2 000", "", "ans,", "à", "Syracuse,", "Archimède", "l'a", "compris :", "l'eau", "pousse", "vers", "le", "haut", "tout", "objet", "plongé,", "avec", "une", "force", "égale", "au", "poids", "de", "l'eau", "qu'il", "déplace.", "Plus", "lourd", "que", "cette", "eau,", "l'objet", "coule.", "Plus", "léger,", "il", "flotte.", "Ça,", "c'est", "la", "poussée", "d'Archimède.", "Mais", "une", "bouteille,", "on", "ne", "peut", "pas", "la", "vider", "sous", "l'eau.", "Alors", "on", "construit", "une", "coque,", "et", "autour,", "des", "réservoirs", "ouverts", "par", "le", "bas.", "Ça,", "ce", "sont", "des", "ballasts.", "Pour", "plonger,", "on", "ouvre", "des", "purges", "en", "haut.", "L'air", "s'échappe,", "l'eau", "de", "mer", "entre", "par", "le", "bas.", "Le", "sous-marin", "s'alourdit…", "et", "descend.", "Mais", "plus", "on", "descend,", "plus", "l'eau", "appuie.", "Tous", "les", "10", "mètres,", "la", "pression", "augmente", "d'un", "bar.", "À", "300", "", "mètres,", "chaque", "centimètre", "carré", "de", "coque", "supporte", "environ", "30", "kilos.", "Alors,", "à", "l'intérieur,", "on", "met", "un", "cylindre", "d'acier", "très", "épais,", "qui", "résiste", "à", "l'écrasement.", "Ça,", "c'est", "la", "coque", "épaisse.", "Et", "pour", "rester", "entre", "deux", "eaux ?", "De", "petits", "réservoirs", "règlent", "le", "poids", "très", "finement,", "et", "des", "ailerons,", "les", "barres", "de", "plongée,", "le", "guident", "comme", "un", "avion.", "Le", "vrai", "problème :", "remonter.", "Les", "ballasts", "sont", "pleins", "d'eau.", "Alors", "on", "y", "envoie", "de", "l'air", "comprimé,", "stocké", "dans", "des", "bouteilles", "à", "très", "haute", "pression.", "L'air", "chasse", "l'eau", "par", "le", "bas.", "Le", "sous-marin", "redevient", "plus", "léger", "que", "l'eau", "qu'il", "déplace…", "et", "il", "remonte.", "Regarde-toi :", "tu", "viens", "de", "construire", "un", "sous-marin.", "Avec", "une", "bouteille,", "de", "l'air,", "et", "une", "idée", "vieille", "de", "2 000", "", "ans."]
+        const KEYW = new Set([1, 20, 27, 36, 56, 72, 91, 92, 108, 121, 127, 143, 159, 171, 190, 191, 210, 212, 233, 259, 266])
+        const title = (id, t0, t1) => { tl.set(id, { visibility: 'visible' }, t0); tl.fromTo(id, { opacity: 0, y: 20, scale: 1.12 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: 'power3.out', immediateRender: false }, t0); tl.to(id, { opacity: 0, duration: 0.3 }, t1 - 0.3); tl.set(id, { visibility: 'hidden' }, t1) }
+        title('#t-cm', T[20] - 0.05, T[22] + 0.6)
+        title('#t-pa', T[88] - 0.05, T[93])
+        title('#t-ba', T[117] - 0.05, T[122])
+        title('#t-ce', T[187] - 0.05, T[192])
+        title('#t-bp', T[209] - 0.05, T[218])
+        title('#t-ac', T[232] - 0.05, T[237] + 0.4)
+        title('#t-sm', T[265] - 0.1, END)
+        const counter = (id, t0, t1) => { tl.set(id, { visibility: 'visible' }, t0); tl.fromTo(id, { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.3, ease: 'power2.out', immediateRender: false }, t0); tl.to(id, { opacity: 0, duration: 0.25 }, t1 - 0.25); tl.set(id, { visibility: 'hidden' }, t1) }
+        counter('#c-t', T[2] - 0.05, T[8] + 0.6)
+        counter('#c-ar', T[51] - 0.05, T[59])
+        counter('#c-dp', T[151] - 0.05, T[173])
+        const o1 = { v: 0 }; tl.fromTo(o1, { v: 0 }, { v: 300, duration: T[161] + 0.3 - T[151], ease: 'power1.inOut', immediateRender: false, onUpdate: () => { document.getElementById('c-dp-n').textContent = Math.round(o1.v) + ' m'; document.getElementById('c-dp-p').textContent = 'PRESSION : ' + Math.round(1 + o1.v / 10) + ' BAR' } }, T[151])
+        counter('#c-kg', T[173] + 0.1, T[187])
+        // captions: groups of words, the key words in cyan
+        const caps = document.getElementById('caps')
+        const G = []; let cur = []
+        WORDS.forEach((w, k) => { if (!w) return; cur.push(k); const len = cur.reduce((n, j) => n + WORDS[j].length + 1, 0); if (/[.,:;?!…]$/.test(w) || cur.length >= 5 || len > 24) { G.push(cur); cur = [] } })
+        if (cur.length) G.push(cur)
+        G.forEach((g, gi) => {
+          const box = document.createElement('div'); box.className = 'grp'; caps.appendChild(box)
+          box.innerHTML = g.map((k) => (KEYW.has(k) ? `<span class="k">${WORDS[k]}</span>` : WORDS[k])).join(' ')
+          const t0 = T[g[0]] - 0.05, t1 = gi < G.length - 1 ? T[G[gi + 1][0]] - 0.05 : END
+          tl.set(box, { visibility: 'visible' }, t0); tl.set(box, { visibility: 'hidden' }, t1)
+          tl.fromTo(box, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out', immediateRender: false }, t0)
+        })
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
