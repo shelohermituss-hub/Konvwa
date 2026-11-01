@@ -60,7 +60,9 @@ const Inner: React.FC<{ id: number; kit: Kit }> = ({ id, kit }) => {
     grade: new GradeEffect(GRADES.day, GRADE_STRENGTH.day),
     grain: new GrainEffect({ amount: 0.025, cellPx: 1.5 }), // film grain, OFF by default (inputProps post.grain): the reference measures no grain and it quadruples the file size
   }), [camera, scene]);
-  useEffect(() => () => fx.ink.dispose(), [fx]);
+  // <primitive dispose={null}> remplace la méthode dispose de l'objet par null : on appelle celle de la classe (sinon
+  // la fin d'un fondu enchaîné, qui démonte la vue superposée, plante le rendu : « fx.ink.dispose is not a function »)
+  useEffect(() => () => InkPass.prototype.dispose.call(fx.ink), [fx]);
   const post = useMemo(() => (
     <EffectComposer multisampling={(getInputProps() as { post?: { msaa?: number } }).post?.msaa ?? 4}>
       {/* @react-three/postprocessing 2.x wants elements only: the switched-off passes are filtered out */}
