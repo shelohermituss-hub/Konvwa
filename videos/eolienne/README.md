@@ -47,11 +47,11 @@ C'est la première vidéo en **style STUDIO**, le nom choisi par le client pour 
   - mixage `mix_anime.py` sans musique : ambiance coupée sous 280 Hz, 20 dB sous la voix ; voix 19,6 dB au-dessus du fond (médiane) ; **0 trou**.
 - **Sources** dans `src/` : `eol-module.js` (la 3D), `eol-shell.html` (sous-titres, téléphone), `build_eol.py` (mixage et assemblage de `index.html`), `script.txt`, `disp.json`, `timing.json`.
   - La voix `vo.wav` n'est pas commitée : seul le mixage `assets/audio/mix.mp3` l'est.
-- **Rendu** :
-  1. `npx --yes hyperframes@0.8.168 render --fps 120 --quality looks --output renders/raw120.mp4`
-  2. `python3 -I ../_engine/style-histoire/finish.py renders/raw120.mp4 renders/eolienne.mp4`
+- **Rendu** : directement en **60 i/s**, à la demande du client. En 120 i/s, le rendu prenait environ 3 h sur le processeur du serveur, sans carte graphique.
+  1. `npx --yes hyperframes@0.8.168 render --fps 60 --quality looks --output renders/raw60.mp4`
+  2. `python3 -I ../_engine/style-histoire/finish.py renders/raw60.mp4 renders/eolienne.mp4`
 
-  Les ombres sont en 1024 PCF : en 2048 doux, le rendu prenait environ 3 h. MP4 non commités.
+  Sur une entrée à 60 i/s, `finish.py` ne mélange pas les images : il règle seulement le son à −14 LUFS et réencode. Les ombres sont en 1024 PCF. MP4 non commités.
 
 ## Couverture (faite à part)
 
