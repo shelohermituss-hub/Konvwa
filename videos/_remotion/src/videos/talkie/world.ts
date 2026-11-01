@@ -156,6 +156,25 @@ const rowTex = (key: string, wm: number, hm: number, shop: Shop, brick: string) 
     g.fillStyle = "#e8c45a"; g.beginPath(); g.arc(W / 2 + dw / 2 - m(0.18), H - m(1.1), m(0.05), 0, 7); g.fill();
   });
 };
+/** plis de tôle (sur la forme du flanc, uv = mètres) : vagues sombres et reflets clairs, plus forts au centre */
+const crumpleTex = () => {
+  const t = ctex("crumple2", 1024, 256, (g, r) => {
+    for (let k = 0; k < 26; k++) { // creux sombres irréguliers avec un liseré clair au-dessus (tôle cabossée)
+      const x = 170 + r() * 680, y = 50 + r() * 160, rx = 28 + r() * 60, ry = 14 + r() * 30, a = (r() - 0.5) * 0.8;
+      g.save(); g.translate(x, y); g.rotate(a);
+      const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+      gr.addColorStop(0, "rgba(8,30,18,0.55)"); gr.addColorStop(0.7, "rgba(8,30,18,0.25)"); gr.addColorStop(1, "rgba(8,30,18,0)");
+      g.scale(1, ry / rx); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, 7); g.fill();
+      g.strokeStyle = "rgba(235,255,225,0.5)"; g.lineWidth = 5; g.beginPath(); g.arc(0, 0, rx * 0.85, Math.PI * 1.15, Math.PI * 1.85); g.stroke();
+      g.restore();
+    }
+    const fade = g.createLinearGradient(0, 0, 1024, 0);
+    fade.addColorStop(0, "rgba(0,0,0,1)"); fade.addColorStop(0.18, "rgba(0,0,0,0)"); fade.addColorStop(0.82, "rgba(0,0,0,0)"); fade.addColorStop(1, "rgba(0,0,0,1)");
+    g.globalCompositeOperation = "destination-out"; g.fillStyle = fade; g.fillRect(0, 0, 1024, 256);
+  });
+  t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.repeat.set(1 / 4.84, 1 / 0.7); t.offset.set(2.42 / 4.84, -0.3 / 0.7);
+  return t;
+};
 const coirTex = () => ctex("coir", 512, 320, (g, r) => {
   g.fillStyle = "#b8864a"; g.fillRect(0, 0, 512, 320);
   for (let i = 0; i < 5000; i++) { g.fillStyle = r() < 0.5 ? "rgba(90,60,30,0.35)" : "rgba(230,190,130,0.35)"; g.fillRect(r() * 512, r() * 320, 1 + r() * 2, 4 + r() * 6); }
@@ -288,7 +307,7 @@ const CABIN: [number, number][] = [[0.95, 0.9], [0.15, 1.38], [-1.15, 1.41], [-1
 const WINDOW: [number, number][] = [[0.78, 0.98], [0.12, 1.33], [-1.1, 1.36], [-1.56, 0.99]];
 
 // ---------------- les nuages et le reste ----------------
-type CarParts = { root: THREE.Group; body: THREE.Mesh; base: Float32Array; mirror: THREE.Group; mirrorDrip: THREE.Mesh; badge: THREE.Mesh; badgeDrip: THREE.Mesh; paint: THREE.MeshPhongMaterial };
+type CarParts = { root: THREE.Group; body: THREE.Mesh; base: Float32Array; crumple: THREE.MeshBasicMaterial; mirror: THREE.Group; mirrorDrip: THREE.Mesh; badge: THREE.Mesh; badgeDrip: THREE.Mesh; paint: THREE.MeshPhongMaterial };
 
 const sightLines = (): Ray[] => {
   const out: Ray[] = [];
@@ -596,9 +615,9 @@ export class World {
 
   private buildCar(R: THREE.Object3D) {
     const root = new THREE.Group();
-    const paint = twoTone(new THREE.MeshPhongMaterial({ color: "#1f6a44", specular: "#cfe8da", shininess: 70 }), 0.6);
+    const paint = twoTone(new THREE.MeshPhongMaterial({ color: "#1f6a44", specular: "#5f7f6c", shininess: 70 }), 0.6);
     const chrome = twoTone(new THREE.MeshPhongMaterial({ color: "#c9ced6", specular: "#ffffff", shininess: 90 }));
-    const glassM = twoTone(new THREE.MeshPhongMaterial({ color: "#3b4f78", specular: "#ffffff", shininess: 90 }));
+    const glassM = twoTone(new THREE.MeshPhongMaterial({ color: "#3b4f78", specular: "#6f7d99", shininess: 60 }));
     const body = new THREE.Mesh(extrude(LOWER, CAR_W - 0.14), paint);
     const base = new Float32Array(body.geometry.attributes.position.array as Float32Array);
     const cabin = new THREE.Mesh(extrude(CABIN, CAR_W - 0.42, 0.06), paint);
@@ -619,15 +638,15 @@ export class World {
     }
     // phares, calandre, pare-chocs
     for (const s of [-1, 1]) {
-      const l = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), new THREE.MeshBasicMaterial({ color: "#fff6d8" })); l.position.set(2.36, 0.68, s * 0.62); l.scale.set(0.5, 1, 1); root.add(l);
+      const l = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), new THREE.MeshBasicMaterial({ color: "#fff6d8" })); l.position.set(2.42, 0.66, s * 0.62); l.scale.set(0.5, 1, 1); root.add(l);
       const tl = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.12, 0.3), new THREE.MeshBasicMaterial({ color: "#d1262c" })); tl.position.set(-2.4, 0.72, s * 0.62); root.add(tl);
     }
-    const grille = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.7), lam("grilleL", () => ({ color: "#2b2d33" }))); grille.position.set(2.39, 0.55, 0); root.add(grille);
-    for (const x of [2.44, -2.46]) { const bp = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, CAR_W - 0.1), chrome); bp.position.set(x, 0.36, 0); root.add(bp); }
+    const grille = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.7), lam("grilleL", () => ({ color: "#2b2d33" }))); grille.position.set(2.46, 0.5, 0); root.add(grille);
+    for (const x of [2.5, -2.52]) { const bp = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, CAR_W - 0.1), chrome); bp.position.set(x, 0.36, 0); root.add(bp); }
     // le badge (fond, logo qui se ramollit) et son goutte-à-goutte
     const badge = new THREE.Mesh(new THREE.CircleGeometry(0.11, 32).rotateY(Math.PI / 2), new THREE.MeshBasicMaterial({ map: badgeTex() }));
-    badge.position.set(2.43, 0.58, 0); badge.layers.set(NOINK); root.add(badge);
-    const badgeDrip = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), chrome); badgeDrip.position.set(2.43, 0.45, 0); root.add(badgeDrip);
+    badge.position.set(2.5, 0.58, 0); badge.layers.set(NOINK); root.add(badge);
+    const badgeDrip = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), chrome); badgeDrip.position.set(2.5, 0.45, 0); root.add(badgeDrip);
     // le rétroviseur (côté trottoir, +z)
     const mirror = new THREE.Group(); mirror.position.set(0.72, 1.0, (CAR_W - 0.14) / 2 + 0.05);
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.16), paint); arm.position.z = 0.08; mirror.add(arm);
@@ -635,11 +654,15 @@ export class World {
     const shell = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), paint); shell.scale.set(0.07, 0.07, 0.12); shell.position.z = 0.1; housing.add(shell);
     const glassMir = new THREE.Mesh(new THREE.CircleGeometry(0.06, 20).rotateY(-Math.PI / 2), chrome); glassMir.position.set(-0.06, 0, 0.1); glassMir.scale.set(1, 1, 1.6); housing.add(glassMir);
     const mirrorDrip = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.1, 10).rotateX(Math.PI), paint); mirrorDrip.position.set(0, -0.08, 0.12); housing.add(mirrorDrip);
+    // plis de tôle peints sur le flanc côté trottoir : apparaissent quand la carrosserie gondole
+    const crumple = new THREE.MeshBasicMaterial({ map: crumpleTex(), transparent: true, opacity: 0, depthWrite: false });
+    const cg = new THREE.ShapeGeometry(carShape(LOWER.map(([x, y]) => [x * 0.97, 0.3 + (y - 0.3) * 0.92] as [number, number])));
+    const cm = new THREE.Mesh(cg, crumple); cm.position.z = (CAR_W - 0.14) / 2 + 0.075; cm.layers.set(NOINK); root.add(cm);
     root.add(body, cabin, mirror);
     root.traverse((o) => { o.castShadow = true; o.receiveShadow = true; });
     root.position.set(JAG[0], 0, JAG[2]);
     R.add(root);
-    this.car = { root, body, base, mirror: housing as unknown as THREE.Group, mirrorDrip, badge, badgeDrip, paint };
+    this.car = { root, body, base, crumple, mirror: housing as unknown as THREE.Group, mirrorDrip, badge, badgeDrip, paint };
   }
 
   /** l'état de la voiture : rétroviseur, logo, carrosserie (0 intacte .. 1 fondue) */
@@ -670,6 +693,7 @@ export class World {
       a[i * 3 + 2] = z - w * (0.05 + 0.06 * (0.5 + 0.5 * Math.sin(x * 9 + y * 6)));
     }
     pos.needsUpdate = true;
+    C.crumple.opacity = 0.85 * k.b;
     // la peinture terne quand elle a chauffé, brillante une fois réparée
     C.paint.shininess = id === 22 ? 120 : 70 - 40 * k.b;
   }

@@ -383,7 +383,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     case 26: { // Las Vegas : un client sur son transat, les cheveux qui fument
       const [lx, , lz] = LV, k = clamp01((t - at(207)) / 0.5);
       stander(cam, out, 80, GUEST, "guest", t, lx - 0.2, lz - 1.6, k > 0.4 ? "shock" : "smile_closed", { mode: "sit" }, 1, 0.42);
-      if (k > 0) smoke(out, t, lx - 0.2, 2.0, lz - 1.55, 0.3 + 0.2 * k, 5, 1.3, 8);
+      if (k > 0) smoke(out, t, lx - 0.2, 1.7, lz - 1.5, 0.45 + 0.2 * k, 6, 1.3, 8);
       stander(cam, out, 81, FOLK[3], "f3", t, lx - 2.6, lz - 2.4, "smile", { mode: "sit" }, 1, 0.42);
       break;
     }
