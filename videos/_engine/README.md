@@ -133,3 +133,20 @@ videos/_engine/
 - Les images produit des fiches catalogue sont des JPG à fond blanc : en thème clair elles sont fondues par `mix-blend-mode: multiply`, en thème sombre posées sur une carte blanche. Pour un détourage propre, fournir des PNG transparents.
 - Les durées de voix doivent venir de fichiers réels pour que le calage soit exact ; sinon elles sont estimées (≈ 2,7 mots/s).
 - Rendu : Chrome + FFmpeg (installés par `npx hyperframes`), ~3 à 5 min pour 25 s de 1080×1920 sur CPU.
+
+## Rendu sur le PC Windows du client (carte graphique)
+
+Le serveur cloud n'a pas de carte graphique : une vidéo 3D de 60 s y prend 1 à 2 h, contre quelques minutes sur un PC équipé.
+
+- **Installation, une seule fois** (dans PowerShell) :
+  ```
+  winget install Git.Git OpenJS.NodeJS.LTS Gyan.FFmpeg Python.Python.3.12
+  ```
+  Puis rouvrir PowerShell et lancer `pip install numpy`.
+- **Récupérer le projet** :
+  ```
+  git clone https://github.com/shelohermituss-hub/Konvwa.git
+  cd Konvwa
+  git checkout ccr-84eb92fb-rldiwe
+  ```
+- **Pour chaque vidéo** : `git pull`, puis `videos\_engine\rendre.cmd <projet>`. La vidéo finale est `videos\<projet>\renders\<projet>.mp4`, et le dossier s'ouvre tout seul à la fin.
