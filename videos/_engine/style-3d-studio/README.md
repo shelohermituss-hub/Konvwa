@@ -1,4 +1,6 @@
-# Style « 3D studio » — analyse des références (nom à confirmer par le client)
+# Style « STUDIO » — variante C retenue par le client
+
+**Nom choisi par le client : « style STUDIO », mise en page C (sous-titres en haut).** Premier modèle : `../../eolienne/` (« Comment une éolienne fait de l'électricité »). Les règles de fabrication sont à la fin de ce fichier.
 
 Trois vidéos de référence envoyées par le client. Elles appartiennent à **la même famille** : des explications d'objets du quotidien, en rendus 3D « produit » très propres et en plans macro. Chacune a pourtant **sa propre mise en page**.
 
@@ -44,3 +46,35 @@ Trois vidéos de référence envoyées par le client. Elles appartiennent à **l
   - variante C : sans musique, la voix seule et quelques bruitages discrets ;
   - variantes A et B : musique légère sous la voix avec `../style-anime/mix_anime.py` (réglages corrigés contre les coupures).
 - **Limite à connaître** : le réalisme des mains, des peaux et des cheveux de ces références vient d'un vrai logiciel 3D (de type Blender). En Three.js, on s'en approche avec des modèles générés et un éclairage soigné, mais les personnages resteront dans le style « pâte » de B et C plutôt que photoréalistes.
+
+## Fabrication (variante C, modèle `../../eolienne/`)
+
+- **Script** : environ 300 mots pour environ 90 s, avec tutoiement et ton de conversation.
+  - Déroulé : un fait surprenant, puis « Alors, comment… ? », puis « Imagine… », le mécanisme pas à pas, le retour à la question (« Alors, ce truc… ? »), et enfin « Abonne-toi, et envoie ça à quelqu'un qui… ! ».
+  - Les nombres sont écrits en lettres pour la voix et en chiffres à l'écran (`disp.json`).
+- **Voix** : Adrien Moreau (`voiceId` 230, `eleven_v4`, stabilité 0,4), consigne `[conversational, clear, confident, lively explainer]`.
+  - Il parle naturellement à environ 200 mots/min : tempo ×1,0.
+  - Pauses alignées à 0,18 s (`../style-histoire/align_voice.py`).
+  - Après l'alignement, vérifier les mots que Whisper place dans la pause suivante : nombres écrits en lettres, « Alors, ». Les recaler à la main.
+- **Plans** :
+  - Une liste `SH` de plans `{ k: <indice du mot>, g: [ensembles 3D], cam: (u, t) => …, st: { … } }`. Chaque plan commence 0,06 s avant son mot, avec une coupe franche.
+  - Chaque objet est un `THREE.Group` : on ne montre que ceux du plan en cours.
+  - Rendu studio : `ACESFilmicToneMapping`, `RoomEnvironment`, ombres douces, sol à grille fine.
+  - `fy` abaisse le sol pour les gros plans, sinon il coupe les objets.
+  - Les plans clairs (`light: true`) sont à réserver aux objets colorés : blanc sur blanc, on ne voit rien.
+- **Sous-titres** : groupes de 4 mots ou 19 caractères au plus, centrés vers y = 290-470.
+  - Le mot entre flou (`blur(14px)` → 0, 0,17 s), en gras blanc tant qu'il est dit, puis il passe en fin et gris.
+  - Les mots-clés (`KEYW`) restent en gras dans un cadre bleu `#3d7bff` à deux poignées.
+  - La bande du haut est un dégradé `#0f1011` avec une grille fine, en version claire sur les plans clairs.
+- **Étiquettes** : en mono, majuscules, sans fond, projetées depuis la 3D. Les gros chiffres sont en Inter 800 (« 300 KM/H », « 1831 »).
+  - Le cadre de sélection 3D (`selAround`) entoure une pièce, comme dans Figma.
+- **Fin** : la feuille de partage d'un téléphone en HTML/CSS. Le haut de l'écran est un trou qui laisse voir la 3D. On choisit un contact puis on tape « Envoyer » → « ✓ Envoyé ».
+- **Son** :
+  - pas de musique ;
+  - une ambiance très basse (`../style-3d/sfx/ambiance-vent.mp3`, coupée sous 280 Hz, 20 dB sous la voix au-dessus de 300 Hz), pour que les pauses ne tombent jamais dans le silence numérique ;
+  - environ 40 bruitages discrets.
+  - Le mixage avec `../style-anime/mix_anime.py` doit annoncer **0 trou**.
+- **Pièges rencontrés** :
+  - `groupe.add(mesh(...)).rotation.x = …` tourne le **groupe**, pas la pièce : utiliser `rx(mesh(...))`.
+  - Projeter les étiquettes après `camera.updateMatrixWorld()` et `TB.updateMatrixWorld(true)`.
+  - Les pales passent devant la caméra : les figer (`rotFix`) ou les cacher (`noRot`) dans les gros plans de la nacelle.

@@ -1,5 +1,14 @@
 # Couvertures TikTok
 
+**Règle du client (depuis l'éolienne)** : chaque nouvelle vidéo est livrée avec **une couverture créée à part**, très accrocheuse, et non une image tirée du rendu.
+- Le visuel est fort : une photo-illustration générée (Magnific `images_generate`, 9:16), ou un rendu 3D dédié.
+- Le titre-choc fait 3 à 7 mots (Anton), avec une petite pastille (« COMMENT ÇA MARCHE ? »).
+- Des annotations donnent l'échelle ou désignent un détail : cercle « TOI », pointillés de longueur, contour, étiquettes.
+- Le texte reste dans le recadrage 3:4 (y 240 → 1680).
+- Modèle : `../../eolienne/cover/` (`cover.html` + `render-cover.mjs` → `cover.png`, `cover-grille.png`).
+
+Le générateur ci-dessous (image du rendu + titre) reste utile pour rattraper les anciennes vidéos.
+
 Une couverture = une image tirée du rendu + un gros titre-question. Sortie `videos/<projet>/cover.png` (1080×1920) et `cover-grille.png` (aperçu 3:4 tel qu'il apparaît sur la grille du profil).
 
 ```

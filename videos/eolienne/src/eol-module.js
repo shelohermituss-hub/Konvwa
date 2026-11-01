@@ -1,0 +1,465 @@
+      import * as THREE from "three";
+      import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+      import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+      import { Line2 } from "three/addons/lines/Line2.js";
+      import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+      import { LineGeometry } from "three/addons/lines/LineGeometry.js";
+
+      const END = __END__
+      const RAW = __RAW__
+      const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+
+      // ---------- maths ----------
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x))
+      const win = (t, a, b) => clamp((t - a) / (b - a))
+      const eio = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
+      const eo = (x) => 1 - Math.pow(1 - x, 3)
+      const eob = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2) }
+      const popS = (t, t0, d = 0.4) => (t < t0 ? 0 : eob(win(t, t0, t0 + d)))
+      const lerp = (a, b, u) => a + (b - a) * u
+      const L3 = (a, b, u) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)]
+      let seed = 7
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+      const P = (x, y, z) => new THREE.Vector3(x, y, z)
+      const sz = (o, s) => { o.visible = s > 0.002; o.scale.setScalar(Math.max(0.001, s)) }
+
+      // ---------- renderer: studio look ----------
+      const canvas = document.getElementById("three")
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      renderer.setSize(1080, 1920, false); renderer.setPixelRatio(1)
+      renderer.outputColorSpace = THREE.SRGBColorSpace
+      renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0
+      renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap
+      renderer.localClippingEnabled = true
+      const scene = new THREE.Scene()
+      const pm = new THREE.PMREMGenerator(renderer)
+      scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture
+      scene.environmentIntensity = 0.55
+      const DARK = new THREE.Color(0x0f1011), LIGHT = new THREE.Color(0xeceae6)
+      scene.background = DARK.clone()
+      scene.fog = new THREE.Fog(0x0f1011, 50, 400)
+      const camera = new THREE.PerspectiveCamera(35, 1080 / 1920, 0.05, 3000)
+      const hemi = new THREE.HemisphereLight(0xdfe8f0, 0x15171a, 0.7); scene.add(hemi)
+      const key = new THREE.DirectionalLight(0xfff6ea, 2.4); key.castShadow = true
+      key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.0004; key.shadow.normalBias = 0.02; key.shadow.radius = 6
+      scene.add(key); scene.add(key.target)
+      const rim = new THREE.DirectionalLight(0xbcd4ff, 1.1); scene.add(rim); scene.add(rim.target)
+
+      // ---------- materials ----------
+      const std = (color, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.45, metalness: 0.0 }, o))
+      const M = {
+        white: std(0xf1f0ec, { roughness: 0.32 }), shell: std(0xe9e8e4, { roughness: 0.38 }),
+        clay: std(0xa7b6c6, { roughness: 0.75 }), steel: std(0x9aa3ab, { roughness: 0.28, metalness: 0.85 }),
+        dark: std(0x24272b, { roughness: 0.5, metalness: 0.3 }), gold: std(0xd9a441, { roughness: 0.22, metalness: 1.0 }),
+        copper: std(0xc8743c, { roughness: 0.3, metalness: 1.0 }), red: std(0xd8402f, { roughness: 0.4 }), blue: std(0x2f6fd8, { roughness: 0.4 }),
+        wood: std(0xc98a4b, { roughness: 0.55 }), glass: std(0x9fd0ff, { roughness: 0.05, transparent: true, opacity: 0.18, depthWrite: false }),
+        win: std(0x1b1e22, { emissive: 0xffc35a, emissiveIntensity: 0, roughness: 0.3 }),
+      }
+      const basic = (color, o = {}) => new THREE.MeshBasicMaterial(Object.assign({ color, transparent: true, depthWrite: false }, o))
+      const rx = (o) => { o.rotation.x = Math.PI / 2; return o }
+      const mesh = (g, m, x = 0, y = 0, z = 0, cast = true) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.castShadow = cast; o.receiveShadow = true; return o }
+      const fatLine = (color, width, n, parent) => { const g = new LineGeometry(); g.setPositions(new Float32Array(n * 3)); const m = new LineMaterial({ color, linewidth: width, transparent: true, depthWrite: false }); m.resolution.set(1080, 1920); const l = new Line2(g, m); l.frustumCulled = false; l.buf = new Float32Array(n * 3); l.n = n; (parent || scene).add(l); return l }
+      const flush = (l) => l.geometry.setPositions(l.buf)
+      const setPath = (l, pts) => { for (let i = 0; i < l.n; i++) { const p = pts[Math.min(i, pts.length - 1)]; l.buf[i * 3] = p.x; l.buf[i * 3 + 1] = p.y; l.buf[i * 3 + 2] = p.z } flush(l) }
+
+      // ---------- studio floor with a fine grid ----------
+      const gridTex = (base, line) => { const c = document.createElement("canvas"); c.width = c.height = 512; const g = c.getContext("2d"); g.fillStyle = base; g.fillRect(0, 0, 512, 512); g.strokeStyle = line; g.lineWidth = 2; for (let i = 0; i <= 512; i += 64) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 512); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(512, i); g.stroke() } const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t }
+      const floorD = gridTex("#151719", "#1f2225"), floorL = gridTex("#e6e4df", "#d9d7d2")
+      const floorM = std(0xffffff, { map: floorD, roughness: 0.85 })
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), floorM); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor)
+      const setFloor = (light, cell) => { floorM.map = light ? floorL : floorD; const r = 4000 / (cell * 8); floorM.map.repeat.set(r, r); floorM.needsUpdate = true }
+
+      // ---------- geometry builders ----------
+      // NACA-like profile, x 0..1 from leading edge, closed loop (upper TE→LE, lower LE→TE)
+      function profile(n = 28, t = 0.16, m = 0.04, p = 0.4) {
+        const up = [], lo = []
+        for (let i = 0; i <= n; i++) { const b = (Math.PI * i) / n, x = (1 - Math.cos(b)) / 2
+          const yt = 5 * t * (0.2969 * Math.sqrt(x) - 0.126 * x - 0.3516 * x * x + 0.2843 * x ** 3 - 0.1036 * x ** 4)
+          const yc = x < p ? (m / (p * p)) * (2 * p * x - x * x) : (m / ((1 - p) ** 2)) * (1 - 2 * p + 2 * p * x - x * x)
+          up.push([x, yc + yt]); lo.push([x, yc - yt]) }
+        return up.reverse().concat(lo.slice(1, -1))
+      }
+      const PROF = profile()
+      // a wind-turbine blade along +Y: round root → twisted, tapering airfoil; red tip band via vertex colours
+      function bladeGeo(L) {
+        const S = 44, N = PROF.length, pos = [], col = [], idx = []
+        for (let i = 0; i <= S; i++) {
+          const s = i / S, y = s * L
+          const blend = clamp((s - 0.03) / 0.16)
+          const chord = s < 0.2 ? lerp(0.075 * L * 0.9, 0.075 * L, blend) : lerp(0.075 * L, 0.018 * L, (s - 0.2) / 0.8)
+          const tw = (16 * Math.pow(1 - s, 1.6) * Math.PI) / 180
+          const r = 0.03 * L
+          for (let j = 0; j < N; j++) {
+            const a = (j / N) * Math.PI * 2
+            const cx = Math.cos(a) * r, cz = Math.sin(a) * r
+            const px = (PROF[j][0] - 0.33) * chord, pz = PROF[j][1] * chord
+            let x = lerp(cx, px, blend), z = lerp(cz, pz, blend)
+            const xr = x * Math.cos(tw) - z * Math.sin(tw), zr = x * Math.sin(tw) + z * Math.cos(tw)
+            pos.push(xr, y, zr)
+            const red = s > 0.9 && s < 0.97
+            col.push(red ? 0.85 : 0.95, red ? 0.25 : 0.95, red ? 0.18 : 0.93)
+          }
+        }
+        for (let i = 0; i < S; i++) for (let j = 0; j < N; j++) { const a = i * N + j, b = i * N + ((j + 1) % N), c = a + N, d = b + N; idx.push(a, c, b, b, c, d) }
+        const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals(); return g
+      }
+      const bladeM = std(0xffffff, { vertexColors: true, roughness: 0.3 })
+      function gearGeo(R, teeth, thick, hole = 0.25) {
+        const s = new THREE.Shape(), d = R * 0.12, pa = (Math.PI * 2) / teeth
+        for (let i = 0; i < teeth; i++) {
+          const a = i * pa
+          const pts = [[a - pa * 0.5, R - d], [a - pa * 0.22, R - d], [a - pa * 0.13, R], [a + pa * 0.13, R], [a + pa * 0.22, R - d]]
+          pts.forEach(([aa, rr], k) => { const x = Math.cos(aa) * rr, y = Math.sin(aa) * rr; if (i === 0 && k === 0) s.moveTo(x, y); else s.lineTo(x, y) })
+        }
+        s.closePath()
+        const h = new THREE.Path(); h.absarc(0, 0, R * hole, 0, Math.PI * 2, true); s.holes.push(h)
+        const g = new THREE.ExtrudeGeometry(s, { depth: thick, bevelEnabled: true, bevelThickness: thick * 0.08, bevelSize: R * 0.015, bevelSegments: 2, curveSegments: 6 })
+        g.translate(0, 0, -thick / 2); return g
+      }
+      class Helix extends THREE.Curve { constructor(r, len, turns) { super(); this.r = r; this.len = len; this.turns = turns } getPoint(u, o = new THREE.Vector3()) { const a = u * this.turns * Math.PI * 2; return o.set(Math.cos(a) * this.r, Math.sin(a) * this.r, (u - 0.5) * this.len) } }
+      function arrow(color, len = 1, rad = 0.08) { const g = new THREE.Group(); const m = std(color, { emissive: color, emissiveIntensity: 0.35, roughness: 0.4 }); const sh = mesh(new THREE.CylinderGeometry(rad, rad, len * 0.75, 16), m, 0, len * 0.375, 0); const hd = mesh(new THREE.ConeGeometry(rad * 2.6, len * 0.25, 20), m, 0, len * 0.875, 0); g.add(sh, hd); g.m = m; return g }
+      function figure(m = M.clay) { const g = new THREE.Group(); g.add(mesh(new THREE.CapsuleGeometry(0.34, 0.75, 8, 16), m, 0, 0.95, 0)); g.add(mesh(new THREE.SphereGeometry(0.26, 24, 16), m, 0, 1.68, 0)); [-1, 1].forEach((s) => { const a = mesh(new THREE.CapsuleGeometry(0.1, 0.55, 6, 12), m, s * 0.45, 1.05, 0); a.rotation.z = s * 0.18; g.add(a); g.add(mesh(new THREE.CapsuleGeometry(0.12, 0.45, 6, 12), m, s * 0.17, 0.35, 0)) }); return g }
+      function house(w = 6, h = 4, d = 5) { const g = new THREE.Group(); g.add(mesh(new THREE.BoxGeometry(w, h, d), M.white, 0, h / 2, 0)); const sh = new THREE.Shape(); sh.moveTo(-w / 2 - 0.3, 0); sh.lineTo(0, h * 0.55); sh.lineTo(w / 2 + 0.3, 0); sh.closePath(); const r = mesh(new THREE.ExtrudeGeometry(sh, { depth: d + 0.4, bevelEnabled: false }), M.shell, 0, h, -d / 2 - 0.2); g.add(r); g.wins = []; for (let i = -1; i <= 1; i += 2) { const wm = M.win.clone(); const wn = mesh(new THREE.PlaneGeometry(w * 0.22, h * 0.32), wm, i * w * 0.24, h * 0.5, d / 2 + 0.02, false); g.add(wn); g.wins.push(wm) } return g }
+
+      // ---------- the wind turbine (metres) ----------
+      const H = 100, BL = 55
+      const TB = new THREE.Group(); scene.add(TB)
+      const towerG = new THREE.CylinderGeometry(1.5, 2.4, H, 48, 1, true); const tower = mesh(towerG, M.white, 0, H / 2, 0); TB.add(tower)
+      tower.add(mesh(new THREE.CylinderGeometry(2.6, 2.6, 0.6, 48), M.shell, 0, -H / 2 + 0.3, 0))
+      const yawG = new THREE.Group(); yawG.position.y = H; TB.add(yawG) // everything that turns to face the wind
+      const yawRing = mesh(gearGeo(1.75, 72, 0.35, 0.86), M.steel, 0, 0.15, 0); yawRing.rotation.x = Math.PI / 2; TB.add(yawRing); yawRing.position.y = H + 0.1
+      const yawMotors = []; for (let i = 0; i < 4; i++) { const a = (i / 4) * Math.PI * 2 + 0.4; const mo = new THREE.Group(); mo.add(mesh(new THREE.CylinderGeometry(0.28, 0.28, 1.1, 20), M.dark, 0, 0.9, 0)); const pin = mesh(gearGeo(0.32, 12, 0.3, 0.3), M.gold, 0, 0.2, 0); pin.rotation.x = Math.PI / 2; mo.add(pin); mo.pin = pin; mo.position.set(Math.cos(a) * 1.35, 0, Math.sin(a) * 1.35); yawG.add(mo); yawMotors.push(mo) }
+      const NAC = new THREE.Group(); NAC.position.y = 2.4; yawG.add(NAC)
+      const nacShellG = new RoundedBoxGeometry(4.2, 4.2, 13, 6, 0.9)
+      const nacShell = mesh(nacShellG, M.shell, 0, 0, -3.5); NAC.add(nacShell)
+      const cutPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0)
+      const shellCutM = std(0xe9e8e4, { roughness: 0.38, side: THREE.DoubleSide, clippingPlanes: [cutPlane, new THREE.Plane(new THREE.Vector3(0, -1, 0), H + 3.3)] })
+      const nacShellCut = mesh(nacShellG, shellCutM, 0, 0, -3.5); nacShellCut.visible = false; NAC.add(nacShellCut)
+      // interior: main shaft → gearbox → generator
+      const shaft = mesh(new THREE.CylinderGeometry(0.42, 0.42, 4.6, 32), M.steel, 0, 0, 1.1); shaft.rotation.x = Math.PI / 2; NAC.add(shaft)
+      const stripe = mesh(new THREE.BoxGeometry(0.1, 4.6, 0.1), M.red, 0, 0, 0.42, false); shaft.add(stripe)
+      const bearing = mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.7, 32), M.dark, 0, 0, 2.1); bearing.rotation.x = Math.PI / 2; NAC.add(bearing)
+      const gboxM = std(0x6f7a84, { roughness: 0.35, metalness: 0.7, emissive: 0x3d8bff, emissiveIntensity: 0 })
+      const gbox = mesh(new THREE.CylinderGeometry(1.35, 1.25, 2.6, 40), gboxM, 0, -0.2, -2.4); gbox.rotation.x = Math.PI / 2; NAC.add(gbox)
+      const hss = mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.6, 16), M.steel, 0, 0.4, -4.4); hss.rotation.x = Math.PI / 2; NAC.add(hss)
+      const hssStripe = mesh(new THREE.BoxGeometry(0.05, 1.6, 0.05), M.red, 0, 0, 0.16, false); hss.add(hssStripe)
+      const genM = std(0xb46a37, { roughness: 0.3, metalness: 0.9, emissive: 0xffa040, emissiveIntensity: 0 })
+      const gen = mesh(new THREE.CylinderGeometry(1.15, 1.15, 2.6, 40), genM, 0, 0.4, -6.4); gen.rotation.x = Math.PI / 2; NAC.add(gen)
+      const cab = mesh(new THREE.BoxGeometry(2.2, 1.8, 1.6), M.dark, 0, -0.6, -8.9); NAC.add(cab)
+      // roof: anemometer + wind vane
+      const anemo = new THREE.Group(); anemo.position.set(0.8, 2.1, -8.6); NAC.add(anemo)
+      anemo.add(mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 10), M.steel, 0, 0.7, 0))
+      const cups = new THREE.Group(); cups.position.y = 1.45; anemo.add(cups)
+      for (let i = 0; i < 3; i++) { const a = (i / 3) * Math.PI * 2; const arm = mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8), M.steel, Math.cos(a) * 0.25, 0, Math.sin(a) * 0.25); arm.rotation.z = Math.PI / 2; arm.rotation.y = -a; cups.add(arm); const cup = mesh(new THREE.SphereGeometry(0.11, 16, 10, 0, Math.PI), M.dark, Math.cos(a) * 0.5, 0, Math.sin(a) * 0.5); cup.rotation.y = -a; cups.add(cup) }
+      const vane = new THREE.Group(); vane.position.set(-0.8, 2.1, -8.6); NAC.add(vane)
+      vane.add(mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 10), M.steel, 0, 0.7, 0))
+      const fin = new THREE.Group(); fin.position.y = 1.45; vane.add(fin)
+      fin.add(mesh(new THREE.BoxGeometry(0.03, 0.03, 1.0), M.steel, 0, 0, -0.2)); fin.add(mesh(new THREE.BoxGeometry(0.02, 0.32, 0.4), M.red, 0, 0, -0.62)); const vp = mesh(new THREE.ConeGeometry(0.06, 0.2, 12), M.steel, 0, 0, 0.36); vp.rotation.x = Math.PI / 2; fin.add(vp)
+      // rotor
+      const ROT = new THREE.Group(); ROT.position.set(0, 0, 3.6); NAC.add(ROT)
+      const spinner = mesh(new THREE.SphereGeometry(1.9, 40, 24, 0, Math.PI * 2, 0, Math.PI / 2), M.shell, 0, 0, 0.6); spinner.rotation.x = Math.PI / 2; spinner.scale.set(1, 1.5, 1); ROT.add(spinner)
+      ROT.add(rx(mesh(new THREE.CylinderGeometry(1.9, 1.9, 1.2, 40), M.shell, 0, 0, 0)))
+      const bGeo = bladeGeo(BL), blades = []
+      for (let i = 0; i < 3; i++) { const arm = new THREE.Group(); arm.rotation.z = (i / 3) * Math.PI * 2; ROT.add(arm); const pitch = new THREE.Group(); pitch.position.y = 1.4; arm.add(pitch); const b = mesh(bGeo, bladeM); pitch.add(b); blades.push(pitch) }
+      const rotArrows = [0, 1, 2].map((i) => { const a = arrow(0x3fd6f0, 14, 0.8); const g = new THREE.Group(); g.rotation.z = (i / 3) * Math.PI * 2; g.add(a); a.position.set(-0.5, BL * 0.62, 2.2); a.rotation.z = Math.PI / 2; ROT.add(g); return a })
+      const tipTrail = fatLine(0xffffff, 10, 30)
+      const torq = new THREE.Group(); torq.position.set(0, 0, 0.6); NAC.add(torq)
+      const torqM = std(0xff8a3d, { emissive: 0xff8a3d, emissiveIntensity: 0.6 })
+      torq.add(mesh(new THREE.TorusGeometry(1.5, 0.16, 12, 48, Math.PI * 1.5), torqM, 0, 0, 0, false))
+      { const hd = mesh(new THREE.ConeGeometry(0.42, 0.9, 20), torqM, 1.5, 0, 0, false); hd.rotation.z = Math.PI; torq.add(hd) }
+      // electric cable down the tower (cutaway shots)
+      const cableM = std(0x1a1c1f, { emissive: 0xffb340, emissiveIntensity: 0 })
+      const cable = mesh(new THREE.CylinderGeometry(0.16, 0.16, H, 12), cableM, 0.6, H / 2, 0.6, false); TB.add(cable)
+      const towerCutM = std(0xf1f0ec, { roughness: 0.32, side: THREE.DoubleSide, clippingPlanes: [new THREE.Plane(new THREE.Vector3(0, 0, -1), 0.3)] })
+      const towerCut = mesh(towerG, towerCutM, 0, H / 2, 0); towerCut.visible = false; TB.add(towerCut)
+      const trafo = new THREE.Group(); trafo.position.set(7, 0, 4); TB.add(trafo)
+      trafo.add(mesh(new RoundedBoxGeometry(4, 3.2, 3, 4, 0.25), M.white, 0, 1.6, 0)); const trafoGlow = std(0x2a2d31, { emissive: 0xffb340, emissiveIntensity: 0 }); for (let i = -1; i <= 1; i++) trafo.add(mesh(new THREE.BoxGeometry(0.25, 2.4, 3.05), trafoGlow, i * 0.9, 1.6, 0, false))
+      // houses around the foot
+      const HOUSES = new THREE.Group(); TB.add(HOUSES); const allWins = []
+      for (let i = 0; i < 26; i++) { const a = 0.6 + i * 0.47 + rnd() * 0.2, r = 34 + (i % 5) * 9 + rnd() * 6; const hs = house(5 + rnd() * 3, 3.5 + rnd() * 1.5, 4.5 + rnd() * 2); hs.position.set(Math.cos(a) * r, 0, Math.sin(a) * r + 10); hs.rotation.y = -a + Math.PI / 2 + (rnd() - 0.5) * 0.4; HOUSES.add(hs); hs.wins.forEach((w) => allWins.push([w, i])) }
+      const linesOut = []; for (let i = 0; i < 4; i++) linesOut.push(fatLine(0xffb340, 5, 24, TB))
+
+      // ---------- set: basketball court + a blade lying beside it ----------
+      const COURT = new THREE.Group(); scene.add(COURT)
+      const courtTex = (() => { const c = document.createElement("canvas"); c.width = 1024; c.height = 560; const g = c.getContext("2d"); g.fillStyle = "#c98a4b"; g.fillRect(0, 0, 1024, 560); for (let i = 0; i < 40; i++) { g.fillStyle = i % 2 ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)"; g.fillRect(0, i * 14, 1024, 14) } g.strokeStyle = "#fff"; g.lineWidth = 6; g.strokeRect(8, 8, 1008, 544); g.beginPath(); g.moveTo(512, 8); g.lineTo(512, 552); g.stroke(); g.beginPath(); g.arc(512, 280, 66, 0, Math.PI * 2); g.stroke(); [0, 1].forEach((s) => { const x = s ? 1016 : 8, d = s ? -1 : 1; g.strokeRect(s ? 1016 - 212 : 8, 280 - 89, 212, 178); g.beginPath(); g.arc(x + d * 58, 280, 248, -Math.PI / 2.2, Math.PI / 2.2, s === 1); g.stroke() }); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t })()
+      const court = mesh(new THREE.BoxGeometry(28, 0.2, 15), [M.wood, M.wood, std(0xffffff, { map: courtTex, roughness: 0.45 }), M.wood, M.wood, M.wood], 0, 0.1, 0); COURT.add(court)
+      ;[-1, 1].forEach((s) => { const hp = new THREE.Group(); hp.position.set(s * 14.6, 0, 0); hp.rotation.y = s > 0 ? Math.PI : 0; hp.add(mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.6, 16), M.dark, -0.6, 1.8, 0)); hp.add(mesh(new THREE.BoxGeometry(0.08, 1.05, 1.8), M.white, 0.2, 3.5, 0)); const ring = mesh(new THREE.TorusGeometry(0.23, 0.03, 8, 24), M.red, 0.5, 3.05, 0); ring.rotation.x = Math.PI / 2; hp.add(ring); COURT.add(hp) })
+      const lyingBlade = mesh(bGeo, bladeM, -16, 1.2, 10.5); lyingBlade.rotation.z = -Math.PI / 2; lyingBlade.rotation.x = Math.PI / 2; COURT.add(lyingBlade)
+      const courtFig = figure(); courtFig.position.set(-6, 0.2, 3); COURT.add(courtFig)
+
+      // ---------- set: one blade, its twisted wing profile ----------
+      const BLADE = new THREE.Group(); scene.add(BLADE)
+      const bladeS = new THREE.Group(); bladeS.scale.setScalar(0.16); bladeS.position.set(-4.2, 3.2, 0); bladeS.rotation.z = -Math.PI / 2; BLADE.add(bladeS)
+      const bAlone = mesh(bGeo, bladeM); bladeS.add(bAlone)
+      const secs = [0.28, 0.5, 0.72].map((sv) => { const l = fatLine(0x3fd6f0, 9, PROF.length + 1, bladeS); const chord = sv < 0.2 ? 0.075 * BL : lerp(0.075 * BL, 0.018 * BL, (sv - 0.2) / 0.8); const tw = (16 * Math.pow(1 - sv, 1.6) * Math.PI) / 180; const pts = PROF.concat([PROF[0]]).map(([x, y]) => { const px = (x - 0.33) * chord * 1.04, pz = y * chord * 1.04; return P(px * Math.cos(tw) - pz * Math.sin(tw), sv * BL, px * Math.sin(tw) + pz * Math.cos(tw)) }); setPath(l, pts); return l })
+      // ---------- set: not a sail ----------
+      const SAIL = new THREE.Group(); scene.add(SAIL)
+      const sailShape = new THREE.Shape(); sailShape.moveTo(0, 0); sailShape.lineTo(0, 5); sailShape.quadraticCurveTo(1.6, 2.2, 3.4, 0); sailShape.closePath()
+      const sail = mesh(new THREE.ShapeGeometry(sailShape, 24), std(0xf4f2ee, { side: THREE.DoubleSide, roughness: 0.6 }), 0, 0.6, 0); sail.position.x = -1.7; SAIL.add(sail)
+      SAIL.add(mesh(new THREE.CylinderGeometry(0.06, 0.06, 6, 12), M.dark, 0, 3, 0))
+      const sailArrows = []; for (let i = 0; i < 5; i++) { const a = arrow(0x7fc8ff, 2.2, 0.05); a.rotation.x = -Math.PI / 2; a.position.set(0, 1 + i * 0.85, 4.5); SAIL.add(a); sailArrows.push(a) }
+      const cross = new THREE.Group(); cross.position.set(0, 3, 1.2); SAIL.add(cross); ;[1, -1].forEach((s) => { const b = mesh(new THREE.BoxGeometry(0.3, 6, 0.1), std(0xe5483a, { emissive: 0xe5483a, emissiveIntensity: 0.5 }), 0, 0, 0, false); b.rotation.z = s * 0.75; cross.add(b) })
+
+      // ---------- set: airfoil slab + streamlines ----------
+      const FOIL = new THREE.Group(); scene.add(FOIL)
+      const fsh = new THREE.Shape(); PROF.forEach(([x, y], i) => (i ? fsh.lineTo((x - 0.5) * 8, y * 8) : fsh.moveTo((x - 0.5) * 8, y * 8))); fsh.closePath()
+      const foilInner = new THREE.Group(); foilInner.rotation.z = -0.14; FOIL.add(foilInner)
+      const foil = mesh(new THREE.ExtrudeGeometry(fsh, { depth: 3, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 3, curveSegments: 12 }), M.white, 0, 0, -3); foilInner.add(foil)
+      const upY = (x) => { const xc = (x + 4) / 8; if (xc <= 0 || xc >= 1) return 0; let best = 0; for (const [px, py] of PROF) if (Math.abs(px - xc) < 0.04 && py > best) best = py; return best * 8 }
+      const loY = (x) => { const xc = (x + 4) / 8; if (xc <= 0 || xc >= 1) return 0; let best = 0; for (const [px, py] of PROF) if (Math.abs(px - xc) < 0.04 && py < best) best = py; return best * 8 }
+      const smooth = (f, x) => { let s = 0; for (let k = -6; k <= 6; k++) s += f(x + k * 0.18); return s / 13 }
+      const STREAMS = []
+      for (let i = 0; i < 12; i++) { const top = i < 6, d = 0.35 + (i % 6) * 0.55, pts = []; for (let x = -9; x <= 9.01; x += 0.3) { const k = Math.exp(-d / 2.4); pts.push(P(x, top ? smooth(upY, x) * (0.7 + 0.3 * k) + d : smooth(loY, x) * k - d, 0.25)) } STREAMS.push({ top, pts }) }
+      const streaks = []; STREAMS.forEach((s, si) => { for (let j = 0; j < 4; j++) { const l = fatLine(s.top ? 0x5cc8ff : 0xa9b4bf, s.top ? 5 : 4, 8, foilInner); streaks.push({ l, s, ph: j / 4 + rnd() * 0.1 }) } })
+      const glowTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d"); const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c) })()
+      const lowP = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0x3d8bff, transparent: true, opacity: 0, depthWrite: false })); lowP.scale.set(9, 3.4, 1); lowP.position.set(0, 1.6, 0.1); foilInner.add(lowP)
+      const highP = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff8a3d, transparent: true, opacity: 0, depthWrite: false })); highP.scale.set(8, 2.4, 1); highP.position.set(0, -1.2, 0.1); foilInner.add(highP)
+      const liftA = arrow(0x3fd6f0, 4.2, 0.16); liftA.position.set(-0.6, 0.9, 0.6); FOIL.add(liftA)
+      const wingGhost = mesh(new THREE.BoxGeometry(0.01, 0.01, 0.01), M.white); FOIL.add(wingGhost)
+
+      // ---------- set: gears macro ----------
+      const GEARS = new THREE.Group(); scene.add(GEARS)
+      const bigGear = mesh(gearGeo(3, 60, 0.9, 0.18), M.steel, 0, 0, 0); GEARS.add(bigGear)
+      const smallGear = mesh(gearGeo(0.62, 12, 0.9, 0.3), M.gold, 3.5, 0.0, 0); GEARS.add(smallGear)
+      const gearAxle = mesh(new THREE.CylinderGeometry(0.42, 0.42, 3, 24), M.steel, 0, 0, 1.2); gearAxle.rotation.x = Math.PI / 2; GEARS.add(gearAxle)
+      const gearAxle2 = mesh(new THREE.CylinderGeometry(0.14, 0.14, 3, 16), M.steel, 3.5, 0, 1.2); gearAxle2.rotation.x = Math.PI / 2; GEARS.add(gearAxle2)
+      const bigMark = mesh(new THREE.BoxGeometry(0.28, 1.8, 0.1), M.red, 0, 1.4, 0.55, false); bigGear.add(bigMark)
+      const smallMark = mesh(new THREE.BoxGeometry(0.12, 0.34, 0.1), M.red, 0, 0.32, 0.55, false); smallGear.add(smallMark)
+      GEARS.add(mesh(new THREE.BoxGeometry(14, 0.4, 6), M.dark, 1.5, -3.6, 0))
+
+      // ---------- set: generator (magnets inside copper coils) ----------
+      const GEN = new THREE.Group(); scene.add(GEN)
+      const stator = new THREE.Group(); GEN.add(stator); const coilMs = []
+      for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; const cm = std(0xc8743c, { roughness: 0.3, metalness: 1, emissive: 0xffa040, emissiveIntensity: 0 }); coilMs.push(cm); const c = mesh(new THREE.TorusGeometry(0.42, 0.16, 12, 28), cm, Math.cos(a) * 2.55, Math.sin(a) * 2.55, 0); c.rotation.y = Math.PI / 2; c.rotation.x = 0; c.lookAt(0, 0, 0); stator.add(c) }
+      stator.add(mesh(new THREE.TorusGeometry(3.2, 0.25, 12, 64), M.dark, 0, 0, 0))
+      const rotorM = new THREE.Group(); GEN.add(rotorM)
+      rotorM.add(rx(mesh(new THREE.CylinderGeometry(1.4, 1.4, 1.2, 40), M.steel, 0, 0, 0)))
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; const mg = mesh(new THREE.BoxGeometry(0.62, 0.5, 1.1), i % 2 ? M.red : M.blue, Math.cos(a) * 1.65, Math.sin(a) * 1.65, 0); mg.rotation.z = a; rotorM.add(mg) }
+      const genShaft = mesh(new THREE.CylinderGeometry(0.25, 0.25, 4, 20), M.steel, 0, 0, -1); genShaft.rotation.x = Math.PI / 2; GEN.add(genShaft)
+
+      // ---------- set: copper wire + electrons ----------
+      const WIRE = new THREE.Group(); scene.add(WIRE)
+      const wCurve = new THREE.CatmullRomCurve3([P(-9, -1.2, 0), P(-4, 0.2, 0), P(0, 0, 0), P(4, -0.4, 0), P(9, 0.8, 0)])
+      WIRE.add(mesh(new THREE.TubeGeometry(wCurve, 120, 0.42, 24), std(0xc8743c, { roughness: 0.3, metalness: 1, transparent: true, opacity: 0.6, depthWrite: false })))
+      WIRE.add(mesh(new THREE.TubeGeometry(wCurve, 120, 0.62, 24), M.glass))
+      const NEL = 90, elPos = new Float32Array(NEL * 3), elGeo = new THREE.BufferGeometry(); elGeo.setAttribute("position", new THREE.BufferAttribute(elPos, 3))
+      const elM = new THREE.PointsMaterial({ color: 0xffd36a, size: 0.42, map: glowTex, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending })
+      const elPts = new THREE.Points(elGeo, elM); elPts.frustumCulled = false; WIRE.add(elPts)
+      const elR = Array.from({ length: NEL }, () => [rnd(), rnd() * Math.PI * 2, rnd() * 0.28])
+      const wMag = new THREE.Group(); WIRE.add(wMag); wMag.add(mesh(new THREE.BoxGeometry(1.4, 1.1, 1.2), M.red, -0.7, 0, 0)); wMag.add(mesh(new THREE.BoxGeometry(1.4, 1.1, 1.2), M.blue, 0.7, 0, 0))
+
+      // ---------- set: Faraday 1831 on a green cutting mat ----------
+      const FAR = new THREE.Group(); scene.add(FAR)
+      const matTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 512; const g = c.getContext("2d"); g.fillStyle = "#3d5a45"; g.fillRect(0, 0, 512, 512); g.strokeStyle = "rgba(220,240,225,0.35)"; g.lineWidth = 2; for (let i = 0; i <= 512; i += 32) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 512); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(512, i); g.stroke() } const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 3); return t })()
+      FAR.add(mesh(new THREE.BoxGeometry(16, 0.12, 12), std(0xffffff, { map: matTex, roughness: 0.8 }), 0, 0.06, 0))
+      const coil = mesh(new THREE.TubeGeometry(new Helix(1.1, 3.2, 11), 400, 0.09, 8), M.copper, 0, 1.3, 0); coil.rotation.y = Math.PI / 2; FAR.add(coil)
+      const fMag = new THREE.Group(); FAR.add(fMag); fMag.add(mesh(new RoundedBoxGeometry(2.2, 0.7, 0.7, 3, 0.08), M.red, -1.1, 0, 0)); fMag.add(mesh(new RoundedBoxGeometry(2.2, 0.7, 0.7, 3, 0.08), M.blue, 1.1, 0, 0))
+      const galv = new THREE.Group(); galv.position.set(0.5, 0.12, -3.6); FAR.add(galv)
+      galv.add(mesh(new THREE.CylinderGeometry(1.3, 1.4, 0.5, 40), M.dark, 0, 0.25, 0)); galv.add(mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.02, 40), M.white, 0, 0.51, 0))
+      const needle = new THREE.Group(); needle.position.y = 0.55; galv.add(needle); needle.add(mesh(new THREE.BoxGeometry(0.05, 0.02, 0.95), M.red, 0, 0, -0.45, false))
+      const fWire = fatLine(0xc8743c, 5, 30, FAR)
+
+      // ---------- set: the dial ----------
+      const DIAL = new THREE.Group(); scene.add(DIAL)
+      DIAL.add(rx(mesh(new THREE.CylinderGeometry(3.2, 3.3, 0.6, 64), M.dark, 0, 0, 0)))
+      DIAL.add(rx(mesh(new THREE.CylinderGeometry(2.9, 2.9, 0.05, 64), std(0x16181b, { roughness: 0.6 }), 0, 0, 0.32)))
+      for (let i = 0; i <= 30; i++) { const a = Math.PI * 1.25 - (i / 30) * Math.PI * 1.5; const big = i % 5 === 0; const tk = mesh(new THREE.BoxGeometry(big ? 0.08 : 0.04, big ? 0.42 : 0.22, 0.02), i > 24 ? M.red : M.white, Math.cos(a) * 2.4, Math.sin(a) * 2.4, 0.36, false); tk.rotation.z = a - Math.PI / 2; DIAL.add(tk) }
+      const dNeedle = new THREE.Group(); dNeedle.position.z = 0.42; DIAL.add(dNeedle); dNeedle.add(mesh(new THREE.BoxGeometry(0.1, 2.3, 0.04), std(0xff7a3d, { emissive: 0xff7a3d, emissiveIntensity: 0.6 }), 0, 1.0, 0, false)); dNeedle.add(rx(mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.12, 24), M.steel, 0, 0, 0)))
+
+      // ---------- set: a bus for scale ----------
+      const BUS = new THREE.Group(); scene.add(BUS)
+      const busBody = new THREE.Group(); busBody.position.x = 0; BUS.add(busBody)
+      busBody.add(mesh(new RoundedBoxGeometry(12, 3.1, 2.55, 4, 0.35), std(0xf3c33c, { roughness: 0.4 }), 0, 1.95, 0))
+      busBody.add(mesh(new THREE.BoxGeometry(11.2, 0.9, 2.6), M.dark, 0.1, 2.5, 0))
+      ;[-4, 3.8].forEach((x) => [-1, 1].forEach((s) => { const w = mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.35, 24), M.dark, x, 0.5, s * 1.2); w.rotation.x = Math.PI / 2; busBody.add(w) }))
+      const busNac = new THREE.Group(); BUS.add(busNac)
+      const busFig = figure(); busFig.position.set(-2, 0, 4.2); BUS.add(busFig)
+
+      // ---------- set: pylons + power line (light studio) ----------
+      const GRIDS = new THREE.Group(); scene.add(GRIDS)
+      const pylon = () => { const g = new THREE.Group(); const lm = std(0x9aa1a8, { metalness: 0.8, roughness: 0.4 }); [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => { const leg = mesh(new THREE.CylinderGeometry(0.12, 0.2, 24, 8), lm, a * 1.6, 12, b * 1.6); leg.rotation.z = a * 0.06; leg.rotation.x = -b * 0.06; g.add(leg) }); for (let y = 4; y < 24; y += 4) g.add(mesh(new THREE.BoxGeometry(3.4 - y * 0.1, 0.12, 0.12), lm, 0, y, 1.5 - y * 0.05)); g.add(mesh(new THREE.BoxGeometry(9, 0.3, 0.3), lm, 0, 22, 0)); g.add(mesh(new THREE.BoxGeometry(6, 0.3, 0.3), lm, 0, 18, 0)); return g }
+      const pyl = [0, 1, 2].map((i) => { const p = pylon(); p.position.set(30 + i * 40, 0, 10 - i * 14); p.rotation.y = 0.35; GRIDS.add(p); return p })
+      const pLines = [0, 1, 2].map(() => fatLine(0x4a5058, 3, 40, GRIDS))
+      const pFlow = [0, 1, 2].map(() => fatLine(0xffb340, 7, 6, GRIDS))
+
+      // ---------- wind streaks (shared) ----------
+      const WIND = []; for (let i = 0; i < 26; i++) WIND.push({ l: fatLine(0xcfe6ff, 3, 6), o: [rnd(), rnd(), rnd()], ph: rnd() })
+      function windAt(t, on, center, size, dir, speed, color = 0xcfe6ff) {
+        WIND.forEach((w, i) => { w.l.visible = on > 0.01 && i < 26; if (!w.l.visible) return; w.l.material.color.set(color); w.l.material.opacity = on * 0.75
+          const k = (t * speed * 0.08 + w.ph) % 1, len = size * 0.18
+          const side = P(-dir.z, 0, dir.x)
+          const base = center.clone().addScaledVector(side, (w.o[0] - 0.5) * size).add(P(0, (w.o[1] - 0.5) * size * 0.9, 0)).addScaledVector(dir, (k - 0.5) * size * 1.6)
+          const pts = []; for (let j = 0; j < 6; j++) pts.push(base.clone().addScaledVector(dir, -len * j / 5)); setPath(w.l, pts) })
+      }
+
+      // ---------- labels (HTML projected from 3D) ----------
+      const labs = document.getElementById("labs")
+      const mk = (cls, html) => { const e = document.createElement("div"); e.className = cls; e.innerHTML = html; labs.appendChild(e); return e }
+      const v = new THREE.Vector3()
+      const place = (el, wp, op, dx = 0, dy = 0) => { if (op <= 0.01) { el.style.opacity = 0; return } v.copy(wp).project(camera); if (v.z > 1) { el.style.opacity = 0; return } el.style.opacity = op; el.style.transform = `translate(${((v.x + 1) / 2) * 1080 + dx}px, ${((1 - v.y) / 2) * 1920 + dy}px) translate(-50%, -50%)` }
+      const LB = {
+        court: mk("lab", "TERRAIN DE BASKET · 28 M"), blade: mk("lab", "UNE PALE · 50 À 80 M"), turn: mk("big", "1"), h100: mk("big sm", "100 M"), sail: mk("lab", "PAS UNE VOILE"),
+        wing: mk("lab", "PROFIL D'AILE"), fast: mk("lab", "PLUS RAPIDE"), slow: mk("lab", "PLUS LENT"), minus: mk("big sm", "−"), plus: mk("big sm warm", "+"), asp: mk("lab", "ASPIRATION"),
+        kmh: mk("big", "300 KM/H"), rpm15: mk("big", "15 TR/MIN"), arbre: mk("lab", "ARBRE"), dial: mk("big", "15"), dialU: mk("lab", "TOURS PAR MINUTE"),
+        bus: mk("lab", "UN BUS · 12 M"), nac: mk("lab", "NACELLE"), gearIn: mk("big sm", "15"), gearOut: mk("big sm", "1 500"), mult: mk("lab", "MULTIPLICATEUR"), gene: mk("lab", "GÉNÉRATRICE"),
+        aim: mk("lab", "AIMANTS"), cuivre: mk("lab", "BOBINES DE CUIVRE"), elec: mk("lab", "ÉLECTRONS"), y1831: mk("big", "1831"), faraday: mk("lab", "MICHAEL FARADAY"),
+        trafo: mk("lab", "TRANSFORMATEUR"), reseau: mk("lab", "RÉSEAU"), anemo: mk("lab", "ANÉMOMÈTRE"), girou: mk("lab", "GIROUETTE"), moteurs: mk("lab", "MOTEURS D'ORIENTATION"),
+        storm: mk("big warm", "> 90 KM/H"), profil: mk("lab", "PALES DE PROFIL"), fort: mk("big", "LENT, MAIS FORT"),
+      }
+      const SEL = mk("sel", "<i></i><i></i>")
+      const box3 = new THREE.Box3(), corners = Array.from({ length: 8 }, () => new THREE.Vector3())
+      function selAround(obj, op, pad = 18) {
+        if (op <= 0.01) { SEL.style.opacity = 0; return }
+        box3.setFromObject(obj); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9
+        for (let i = 0; i < 8; i++) { corners[i].set(i & 1 ? box3.max.x : box3.min.x, i & 2 ? box3.max.y : box3.min.y, i & 4 ? box3.max.z : box3.min.z).project(camera); const sx = ((corners[i].x + 1) / 2) * 1080, sy = ((1 - corners[i].y) / 2) * 1920; x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy) }
+        SEL.style.opacity = op; SEL.style.left = x0 - pad + "px"; SEL.style.top = y0 - pad + "px"; SEL.style.width = x1 - x0 + 2 * pad + "px"; SEL.style.height = y1 - y0 + 2 * pad + "px"
+      }
+
+      // ---------- shots (hard cuts, one idea per shot) ----------
+      const wp = new THREE.Vector3()
+      const nacW = (x, y, z) => NAC.localToWorld(P(x, y, z))
+      const groups = [TB, COURT, BLADE, SAIL, FOIL, GEARS, GEN, WIRE, FAR, DIAL, BUS, GRIDS]
+      // state defaults for the turbine; each shot overrides what it needs
+      const ST = { yaw: 0, rotSpeed: 0.2, rotPhase: 0, pitch: 0, cut: false, towerCut: false, houses: 0, cable: 0, trafo: 0, wins: 0, lines: 0, gbox: 0, gen: 0, shaftSpin: 1 }
+      const rotAngle = (t) => t * 2 * Math.PI * 0.2 // 12 rpm
+      const SH = [
+        { k: 0, g: [COURT], S: 50, cam: (u) => ({ p: L3([-6, 30, 46], [-4, 27, 42], eio(u)), l: [6, 0, 6], f: 50 }) },
+        { k: 11, g: [TB], S: 160, fog: [250, 900], cam: (u) => ({ p: L3([-75, 6, 165], [-65, 8, 152], u), l: [0, 84, 0], f: 52 }), st: { rotSpeed: 1 } },
+        { k: 23, g: [TB], S: 160, fog: [250, 900], cam: (u) => ({ p: L3([95, 70, 150], [80, 52, 130], eio(u)), l: [0, 18, 12], f: 46 }), st: { houses: 1, wins: 1, lines: 1 } },
+        { k: 35, g: [TB], S: 30, fog: [60, 600], cam: (u) => ({ p: L3([-2.4, H + 6.4, -11], [-2.0, H + 6.2, -9.8], eio(u)), l: [0.5, H + 5.4, 0], f: 52 }), st: { fig: 1, wind: 1, rotFix: Math.PI / 3 } },
+        { k: 50, g: [SAIL], S: 12, cam: (u) => ({ p: L3([9, 4.5, 9], [8, 4, 7.6], eio(u)), l: [0, 2.6, 1], f: 40 }) },
+        { k: 59, g: [BLADE], S: 12, cam: (u) => ({ p: L3([6.5, 5.2, 4.2], [5.2, 4.6, 3.4], eio(u)), l: [-0.5, 3.1, 0], f: 44 }) },
+        { k: 68, g: [FOIL], S: 14, fy: -7, cam: (u) => ({ p: L3([0.5, 1.6, 19], [0.5, 1.6, 16.5], eio(u)), l: [0.3, 2.6, 0], f: 44 }) },
+        { k: 78, g: [FOIL], S: 14, fy: -7, cam: (u) => ({ p: L3([-3, 2.6, 17], [-2.4, 2.4, 15], eio(u)), l: [0, 3.2, 0], f: 46 }) },
+        { k: 92, g: [TB], S: 160, fog: [250, 900], cam: (u) => ({ p: L3([34, H - 34, 120], [30, H - 30, 108], eio(u)), l: [0, H + 4, 0], f: 52 }), st: { spinUp: 1 } },
+        { k: 99, g: [TB], S: 80, fog: [150, 900], cam: (u, t) => { const a = rotAngle(t), R = 1.4 + BL * 0.97, c = Math.cos(a), sn = Math.sin(a); const tip = [sn * R, H + 2.4 + c * R, 3.6], tg = [c, -sn, 0]; return { p: [tip[0] - tg[0] * 14 + 8, tip[1] - tg[1] * 14 + 4, 24], l: [tip[0] + tg[0] * 2, tip[1] + tg[1] * 2, 3.6], f: 50 } }, st: { rotSpeed: 1, tip: 1 } },
+        { k: 110, g: [TB], S: 20, fog: [40, 300], cam: (u) => ({ p: L3([9, H + 7.5, -3.5], [7.6, H + 6.6, -2.6], eio(u)), l: [0, H + 2.4, 0.8], f: 44 }), st: { cut: true, rotSpeed: 1 } },
+        { k: 123, g: [DIAL], S: 10, cam: (u) => ({ p: L3([0, 0, 13], [0, 0, 11.5], eio(u)), l: [0, 0.2, 0], f: 40 }) },
+        { k: 133, g: [BUS], S: 26, cam: (u) => ({ p: L3([-18, 10, 26], [-15.5, 9, 22.5], eio(u)), l: [1, 2.6, -3], f: 46 }) },
+        { k: 146, g: [TB], S: 26, fog: [50, 300], cam: (u) => ({ p: L3([10.5, H + 10, -3], [9.2, H + 9, -3.2], eio(u)), l: [0, H + 2.2, -4.6], f: 48 }), st: { cut: true, rotSpeed: 1, gbox: 1 } },
+        { k: 151, g: [GEARS], S: 12, fy: -3.8, cam: (u) => ({ p: L3([3, 3, 11.5], [2.6, 2.4, 10], eio(u)), l: [1.6, 0, 0], f: 44 }) },
+        { k: 167, g: [GEN], S: 10, fy: -4.2, cam: (u) => ({ p: L3([5, 3, 9], [4.2, 2.4, 7.6], eio(u)), l: [0, 0, 0], f: 44 }) },
+        { k: 178, g: [WIRE], S: 14, fy: -3.5, cam: (u) => ({ p: L3([-4, 2.4, 9], [-2.5, 1.8, 7.5], eio(u)), l: [0, 0, 0], f: 44 }) },
+        { k: 191, g: [FAR], light: true, S: 14, cam: (u) => ({ p: L3([6, 8.5, 9], [5, 7.4, 7.6], eio(u)), l: [0, 0.8, -0.8], f: 42 }) },
+        { k: 201, g: [TB, GRIDS], S: 160, fog: [300, 1200], cam: (u) => ({ p: L3([-26, 22, 78], [-32, 18, 88], eio(u)), l: [26, 24, 0], f: 52 }), st: { towerCut: true, cable: 1, trafo: 1, grid: 1 } },
+        { k: 218, g: [TB], S: 160, fog: [250, 1000], cam: (u) => ({ p: L3([0.01, H + 150, 0], [0.01, H + 135, 0], eio(u)), l: [0, H, 0], f: 50 }), st: { yawTurn: 1, wind: 2 } },
+        { k: 223, g: [TB], S: 14, fog: [30, 300], cam: (u) => ({ p: L3([3.4, H + 5.4, -14.5], [2.8, H + 5.3, -13], eio(u)), l: [0, H + 6.6, -8.6], f: 40 }), st: { roof: 1 } },
+        { k: 236, g: [TB], S: 20, fog: [40, 300], cam: (u) => ({ p: L3([8.5, H + 6.5, 5.5], [7.4, H + 5.8, 4.6], eio(u)), l: [0, H + 0.4, -0.5], f: 44 }), st: { yawDrive: 1, noRot: 1, cut: true } },
+        { k: 249, g: [TB], S: 160, fog: [150, 800], storm: true, cam: (u) => ({ p: L3([60, H - 10, 120], [52, H - 6, 108], eio(u)), l: [0, H + 4, 0], f: 50 }), st: { storm: 1, wind: 3 } },
+        { k: 266, g: [TB], S: 160, fog: [250, 900], cam: (u) => ({ p: L3([-90, 20, 160], [-80, 26, 145], eio(u)), l: [0, 70, 0], f: 52 }), st: { houses: 1, wins: 2, lines: 1 } },
+        { k: 272, g: [TB], S: 20, fog: [40, 300], cam: (u) => ({ p: L3([10, H + 8, -6], [8.6, H + 7.2, -5], eio(u)), l: [0, H + 2.6, 0.4], f: 46 }), st: { cut: true, rotSpeed: 1, torque: 1 } },
+        { k: 280, g: [GEARS], S: 12, fy: -3.8, cam: (u) => ({ p: L3([-2, 1.2, 10], [-1.6, 1, 8.6], eio(u)), l: [1.8, 0, 0], f: 44 }), st: { fast: 1 } },
+        { k: 285, g: [TB], S: 160, fog: [250, 900], phone: true, cam: (u) => ({ p: L3([-60, 50, 180], [-50, 52, 165], u), l: [0, 80, 0], f: 46 }), st: { houses: 1, wins: 2 } },
+      ]
+      SH.forEach((s, i) => { s.t0 = i === 0 ? 0 : T[s.k] - 0.06; s.t1 = i < SH.length - 1 ? T[SH[i + 1].k] - 0.06 : END + 1 })
+      window.__SHOTS = SH.map((s) => [s.t0, !!s.light, !!s.phone])
+      const shotAt = (t) => SH.find((s) => t >= s.t0 && t < s.t1) || SH[SH.length - 1]
+
+      function frame(t) {
+        const s = shotAt(t), u = clamp((t - s.t0) / (s.t1 - s.t0)), lt = t - s.t0, st = Object.assign({}, ST, s.st || {})
+        groups.forEach((g) => (g.visible = s.g.includes(g)))
+        // theme
+        scene.background.copy(s.light ? LIGHT : s.storm ? new THREE.Color(0x0b1220) : DARK)
+        scene.fog.color.copy(scene.background); const fg = s.fog || [s.S * 2, s.S * 12]; scene.fog.near = fg[0]; scene.fog.far = fg[1]
+        setFloor(!!s.light, s.S > 100 ? 40 : s.S > 30 ? 4 : 1)
+        floor.visible = !s.g.includes(DIAL); floor.position.y = s.fy || 0
+        hemi.intensity = s.light ? 1.3 : 0.7; scene.environmentIntensity = s.light ? 0.9 : 0.55
+        // camera
+        const c = s.cam(u, t); camera.position.set(...c.p); camera.fov = c.f; camera.up.set(0, 1, 0); if (s.k === 218) camera.up.set(0, 0, -1); camera.lookAt(...c.l); camera.updateProjectionMatrix(); camera.updateMatrixWorld()
+        // lights follow the set
+        const tg = P(...c.l); key.target.position.copy(tg); key.position.copy(tg).add(P(0.6, 1.0, 0.7).multiplyScalar(s.S)); const sc = key.shadow.camera; sc.left = sc.bottom = -s.S * 0.8; sc.right = sc.top = s.S * 0.8; sc.near = 0.1; sc.far = s.S * 4; sc.updateProjectionMatrix()
+        rim.target.position.copy(tg); rim.position.copy(tg).add(P(-1, 0.6, -0.8).multiplyScalar(s.S))
+        key.intensity = s.storm ? 1.0 : 2.4
+        Object.values(LB).forEach((e) => (e.style.opacity = 0)); SEL.style.opacity = 0
+        WIND.forEach((w) => (w.l.visible = false))
+
+        // ---- the turbine state ----
+        if (s.g.includes(TB)) {
+          let ang = rotAngle(t)
+          if (st.spinUp) ang = spinUpAngle(t)
+          if (st.still) ang = 0.6
+          if (st.rotFix !== undefined) ang = st.rotFix + rotAngle(t) * 0.0
+          let pitch = 0
+          if (st.storm) { pitch = eio(win(t, T[256], T[262])) * Math.PI / 2; ang = stormAngle(t) }
+          ROT.rotation.z = -ang; ROT.visible = !st.noRot
+          blades.forEach((b) => (b.rotation.y = pitch))
+          let yaw = 0
+          if (st.yawTurn) yaw = eio(win(t, T[220], T[223])) * 0.9
+          if (st.yawDrive) yaw = 0.9 - eio(win(t, T[237], T[247])) * 0.9
+          yawG.rotation.y = yaw
+          yawMotors.forEach((m) => (m.pin.rotation.z = st.yawDrive ? t * 6 : 0))
+          TB.updateMatrixWorld(true)
+          nacShell.visible = !st.cut; nacShellCut.visible = !!st.cut
+          tower.visible = !st.towerCut; towerCut.visible = !!st.towerCut
+          shaft.rotation.y = 0; shaft.rotation.set(Math.PI / 2, -ang, 0)
+          hss.rotation.set(Math.PI / 2, -ang * 100 * 0.04, 0)
+          gboxM.emissiveIntensity = st.gbox ? 0.25 + 0.2 * Math.sin(t * 6) : st.torque ? 0.15 : 0
+          genM.emissiveIntensity = st.gbox ? 0.08 : 0
+          HOUSES.visible = st.houses > 0
+          allWins.forEach(([w, i]) => (w.emissiveIntensity = st.wins === 2 ? 1.6 : st.wins ? 1.6 * clamp((t - T[29] - i * 0.05) / 0.25) : 0))
+          const lo = st.lines ? (st.wins === 2 ? 1 : win(t, T[28], T[31])) : 0
+          linesOut.forEach((l, i) => { l.visible = lo > 0.01; if (!l.visible) return; const a = 0.9 + i * 1.4, end = P(Math.cos(a) * 46, 0.4, Math.sin(a) * 46 + 10), pts = []; for (let j = 0; j < 24; j++) { const q = (j / 23) * lo; pts.push(P(lerp(0, end.x, q), 0.3, lerp(0, end.z, q))) } setPath(l, pts); l.material.opacity = 0.9 })
+          cableM.emissiveIntensity = st.cable ? 1.4 * win(t, T[202], T[205]) : 0; cable.visible = !!st.cable
+          trafo.visible = !!st.trafo; trafoGlow.emissiveIntensity = st.trafo ? 1.5 * win(t, T[207], T[209]) : 0
+          anemo.visible = vane.visible = true; cups.rotation.y = t * (st.storm ? 16 : 7); fin.rotation.y = st.roof ? Math.sin(t * 1.3) * 0.35 : st.yawTurn ? -yaw * 0.0 : 0
+          // figure on the roof (shot "tu es tout en haut")
+          if (st.fig) { if (!TB.fig) { TB.fig = figure(); NAC.add(TB.fig); TB.fig.position.set(0, 2.1, -4.5); TB.fig.rotation.y = 0 } TB.fig.visible = true } else if (TB.fig) TB.fig.visible = false
+          if (st.wind === 1) windAt(t, win(t, T[46], T[48]), nacW(0, 3.6, 2), 9, P(0, 0, -1), 16)
+          if (st.wind === 2) { const d = P(Math.sin(-0.9 * eio(win(t, T[220], T[222]))), 0, Math.cos(0.9 * eio(win(t, T[220], T[222])))).negate(); windAt(t, 1, P(0, H + 6, 0), 120, d, 60) }
+          if (st.wind === 3) windAt(t, 1, P(0, H, 30), 160, P(0, -0.05, -1).normalize(), 140, 0x9fb9ff)
+          // labels
+          if (s.k === 11) { const n = Math.floor((ang + 0.0001) / (Math.PI * 2 / 3)) % 9 + 1; LB.turn.textContent = String(Math.min(n, 9)); place(LB.turn, nacW(0, 30, 3), win(lt, 0.3, 0.6)) }
+          if (s.k === 35) { place(LB.h100, nacW(0, 3.9, -4.5), popS(t, T[42] - 0.1, 0.35), 0, -230) }
+          
+          if (s.k === 99) { { const a = rotAngle(t), R = 1.4 + BL * 0.9; place(LB.kmh, P(Math.sin(a) * R + 3, H + 2.4 + Math.cos(a) * R + 4, 3.6), popS(t, T[105] - 0.1, 0.35)) } }
+          if (s.k === 110) { place(LB.rpm15, nacW(0, 3.6, 1.5), win(t, T[117] - 0.1, T[117] + 0.2)); place(LB.arbre, nacW(0, -0.9, 1.6), win(t, T[113] - 0.1, T[113] + 0.2)) }
+          if (s.k === 146) { selAround(gbox, win(t, T[149] - 0.1, T[149] + 0.15)); place(LB.mult, nacW(0, -2.4, -2.4), win(t, T[149] - 0.1, T[149] + 0.2)); place(LB.gene, nacW(0, 2.4, -6.4), win(t, T[149] + 0.2, T[149] + 0.5) * 0.85) }
+          if (s.k === 201) { place(LB.trafo, P(7, 6, 4), win(t, T[207], T[208])); place(LB.reseau, P(70, 30, -4), win(t, T[214], T[215])) }
+          if (s.k === 223) { place(LB.anemo, nacW(0.8, 4.3, -8.6), win(t, T[232], T[233] + 0.1)); place(LB.girou, nacW(-0.8, 4.0, -8.6), win(t, T[229], T[230] + 0.1)) }
+          if (s.k === 236) { place(LB.moteurs, P(0, H, 0), win(t, T[237], T[238]), 0, 300) }
+          if (s.k === 249) { place(LB.storm, P(0, H + 70, 0), popS(t, T[251] - 0.05, 0.35)); place(LB.profil, P(0, H - 30, 10), win(t, T[260], T[261])) }
+          sz(torq, st.torque ? popS(t, T[277] - 0.15, 0.4) : 0); if (st.torque) torq.rotation.z = -ang * 0.5
+          if (s.k === 272) { place(LB.fort, nacW(0, 5.4, 0.6), popS(t, T[277] - 0.1, 0.35)) }
+          rotArrows.forEach((a) => sz(a, s.k === 92 ? popS(t, T[93] - 0.1, 0.35) * (1 - win(t, T[97], T[98])) : 0))
+          tipTrail.visible = !!st.tip
+          if (st.tip) { const pts = []; for (let j = 0; j < 30; j++) { const a = -rotAngle(t - j * 0.012); pts.push(NAC.localToWorld(P(-Math.sin(a) * (1.4 + BL * 0.98), Math.cos(a) * (1.4 + BL * 0.98), 3.6))) } setPath(tipTrail, pts); tipTrail.material.opacity = 0.8 }
+        }
+        // ---- court ----
+        if (s.k === 0) { place(LB.court, P(7, 0.5, -2), win(t, T[7], T[8])); place(LB.blade, P(6, 0.3, 14.5), win(t, T[2], T[3])) }
+        // ---- the blade alone ----
+        if (s.g.includes(BLADE)) { bladeS.rotation.x = Math.PI / 2 + 0.25 * Math.sin(lt * 0.8); secs.forEach((l, i) => (l.material.opacity = win(t, T[63] - 0.1 + i * 0.12, T[63] + 0.2 + i * 0.12))); place(LB.wing, P(-0.4, 4.9, 0), win(t, T[66] - 0.1, T[66] + 0.2)) }
+        // ---- sail ----
+        if (s.g.includes(SAIL)) { sailArrows.forEach((a, i) => { const k = (lt * 1.2 + i * 0.13) % 1; a.position.z = 5 - k * 3.6; a.scale.setScalar(1) }); sz(cross, popS(t, T[57] - 0.15, 0.3)); place(LB.sail, P(0, 6.6, 1), win(t, T[56], T[57])) }
+        // ---- airfoil ----
+        if (s.g.includes(FOIL)) {
+          streaks.forEach((sk) => { const sp = sk.s.top ? 0.62 : 0.36, q = (lt * sp + sk.ph) % 1; const n = sk.s.pts.length, i0 = q * (n - 8); const pts = []; for (let j = 0; j < 8; j++) { const f = Math.max(0, i0 - j * (sk.s.top ? 0.9 : 0.55)); const a = Math.floor(f), b = Math.min(n - 1, a + 1); pts.push(sk.s.pts[a].clone().lerp(sk.s.pts[b], f - a)) } setPath(sk.l, pts); sk.l.material.opacity = 0.9 * Math.sin(Math.PI * q) })
+          const pr = s.k === 78 ? win(t, T[78], T[80] + 0.2) : 0
+          lowP.material.opacity = pr * 0.55; highP.material.opacity = pr * 0.4
+          sz(liftA, s.k === 78 ? eo(win(t, T[87], T[88] + 0.3)) : 0)
+          if (s.k === 68) { place(LB.fast, P(-1.5, 3.2, 0.3).applyAxisAngle(P(0, 0, 1), -0.14), win(t, T[70], T[71])); place(LB.slow, P(-1.5, -2.7, 0.3).applyAxisAngle(P(0, 0, 1), -0.14), win(t, T[75], T[76])) }
+          if (s.k === 78) { place(LB.minus, P(0, 2.1, 0.4), pr); place(LB.plus, P(0.4, -1.6, 0.4), pr * 0.9); place(LB.asp, P(-0.6, 5.9, 0.6), win(t, T[88], T[88] + 0.3)) }
+        }
+        // ---- dial ----
+        if (s.g.includes(DIAL)) { const v0 = 15, v1 = 1500, p = eio(win(t, T[129], T[132] + 0.25)); const val = Math.round(lerp(v0, v1, p)); dNeedle.rotation.z = Math.PI * 0.25 - (Math.PI * 1.5) * (0.01 + 0.82 * p); LB.dial.textContent = val >= 1000 ? Math.floor(val / 1000) + " " + String(val % 1000).padStart(3, "0") : String(val); place(LB.dial, P(0, -1.3, 0.5), 1); place(LB.dialU, P(0, -2.1, 0.5), 1) }
+        // ---- bus + nacelle ----
+        if (s.g.includes(BUS)) { if (!busNac.children.length) { const n = new THREE.Group(); n.add(mesh(nacShellG, M.shell, 0, 0, 0)); const sp = mesh(new THREE.SphereGeometry(1.9, 40, 24, 0, Math.PI * 2, 0, Math.PI / 2), M.shell, 0, 0, 7.4); sp.rotation.x = Math.PI / 2; sp.scale.set(1, 1.5, 1); n.add(sp); n.rotation.y = Math.PI / 2; n.position.set(0, 2.1, -6.5); busNac.add(n); n.traverse((o) => (o.castShadow = true)) } sz(busNac, popS(t, T[137] - 0.1, 0.45)); const bu = popS(t, T[143] - 0.1, 0.45); busBody.scale.setScalar(Math.max(0.001, bu)); busBody.visible = bu > 0.01; place(LB.nac, P(0, 6.2, -6.5), win(t, T[139], T[140])); place(LB.bus, P(0, 4.3, 1.6), win(t, T[144], T[145])) }
+        // ---- gears ----
+        if (s.g.includes(GEARS)) { const fast = !!st.fast; const big = gearSpin(t, fast); bigGear.rotation.z = big; smallGear.rotation.z = -big * (60 / 12) + Math.PI / 12; if (!fast) { place(LB.gearIn, P(0, 3.8, 0.6), win(t, T[161], T[161] + 0.2)); place(LB.gearOut, P(3.5, 1.6, 0.6), win(t, T[164], T[164] + 0.2)) } else place(LB.mult, P(1.5, 4.2, 0.6), win(t, T[281], T[281] + 0.2)) }
+        // ---- generator ----
+        if (s.g.includes(GEN)) { const a = t * 2.2; rotorM.rotation.z = a; coilMs.forEach((cm, i) => { const ca = (i / 12) * Math.PI * 2; let best = 0; for (let m = 0; m < 8; m++) { const ma = a + (m / 8) * Math.PI * 2; const d = Math.abs(Math.atan2(Math.sin(ma - ca), Math.cos(ma - ca))); best = Math.max(best, Math.exp(-d * d * 60)) } cm.emissiveIntensity = win(t, T[175], T[176]) * best * 1.2 }); place(LB.aim, P(0, 0, 1.4), win(t, T[171], T[172])); place(LB.cuivre, P(0, 3.6, 0.8), win(t, T[175], T[176])) }
+        // ---- wire + electrons ----
+        if (s.g.includes(WIRE)) { const go = win(t, T[181], T[183]); const ep = elGeo.attributes.position; for (let i = 0; i < NEL; i++) { const [p0, ang, r] = elR[i]; const q = (p0 + lt * 0.12 * go) % 1; const pt = wCurve.getPointAt(q); ep.setXYZ(i, pt.x, pt.y + Math.cos(ang) * r, pt.z + Math.sin(ang) * r) } ep.needsUpdate = true; elM.opacity = 0.35 + 0.65 * go; wMag.position.set(lerp(-7, 7, (lt * 0.28) % 1), 2.2, 0); place(LB.elec, P(0, -1.6, 0), win(t, T[184], T[185])) }
+        // ---- Faraday ----
+        if (s.g.includes(FAR)) { const x = -3.4 + 2.2 * Math.sin(lt * 3.1); fMag.position.set(x, 1.3, 0); needle.rotation.y = 0.9 * Math.cos(lt * 3.1); const pts = []; for (let i = 0; i < 30; i++) { const q = i / 29; pts.push(P(lerp(1.6, 0.5, q) + Math.sin(q * 3) * 0.6, 0.18, lerp(0, -3.0, q))) } setPath(fWire, pts); place(LB.y1831, P(0, 1.3, 0), popS(t, T[195] - 0.1, 0.35), 0, -300); place(LB.faraday, P(0, 1.3, 0), win(t, T[192], T[193]), 0, -200) }
+        // ---- grid / pylons ----
+        if (s.g.includes(GRIDS)) { const go = win(t, T[212], T[216]); pLines.forEach((l, i) => { const pts = []; const a = i === 0 ? P(7, 3, 4) : P(pyl[i - 1].position.x, 22, pyl[i - 1].position.z), b = P(pyl[i].position.x, 22, pyl[i].position.z); for (let j = 0; j < 40; j++) { const q = j / 39; const p = a.clone().lerp(b, q); p.y -= Math.sin(Math.PI * q) * 3; pts.push(p) } setPath(l, pts); const f = pFlow[i]; const k = clamp(go * 3 - i); f.visible = k > 0.01 && k < 1; if (f.visible) { const pp = []; for (let j = 0; j < 6; j++) { const q = clamp(k - j * 0.04); const p = a.clone().lerp(b, q); p.y -= Math.sin(Math.PI * q) * 3; pp.push(p) } setPath(f, pp) } }) }
+
+        renderer.render(scene, camera)
+        if (window.__onFrame) window.__onFrame(t, s)
+      }
+      // continuous angle helpers (independent of frame order)
+      function spinUpAngle(t) { const a0 = rotAngle(T[92]), t0 = T[95], D = 1.6, w = 2 * Math.PI * 0.2; if (t < t0) return a0; const d = t - t0; return d < D ? a0 + (w * d * d) / (2 * D) : a0 + (w * D) / 2 + w * (d - D) }
+      function stormAngle(t) { const t0 = T[256], t1 = T[265] + 0.2; const w = 2 * Math.PI * 0.2; if (t < t0) return w * t; const d = Math.min(t, t1) - t0, D = t1 - t0; return w * t0 + w * (d - (d * d) / (2 * D)) }
+      function gearSpin(t, fast) { if (fast) return t * 1.4; const a = T[159], b = T[165], w0 = 0.12, w1 = 1.2; if (t < a) return w0 * t; const d = Math.min(t, b) - a; const k = (w1 - w0) / (b - a); let ang = w0 * a + w0 * d + 0.5 * k * d * d; if (t > b) ang += w1 * (t - b); return ang }
+      window.addEventListener("hf-seek", (e) => frame(e.detail.time))
+      frame(window.__hfThreeTime || 0)

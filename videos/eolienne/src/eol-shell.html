@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Comment une éolienne fait de l'électricité</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script type="importmap">
+      { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.181.2/examples/jsm/" } }
+    </script>
+    <!--
+      « style STUDIO » (variante C, videos/_engine/style-3d-studio/README.md) : rendus 3D « produit » Three.js, un plan par idée
+      (coupes franches), fond noir #0f1011 à grille fine, quelques plans studio blancs ; sous-titres EN HAUT : les mots
+      arrivent flous puis nets, le mot en cours en gras blanc, les mots déjà dits fins et gris, le mot-clé dans un cadre de
+      sélection bleu à deux poignées. Pas de musique : la voix seule et quelques bruitages discrets.
+      Accroche : une pale plus longue qu'un terrain de basket, qui tourne lentement → « comment ça allume des milliers de maisons ? »
+      → le vent aspire la pale (profil d'aile) → arbre lent (15 tr/min) → multiplicateur (×100) → génératrice (aimants + cuivre,
+      Faraday 1831) → transformateur, réseau → girouette, anémomètre, moteurs d'orientation → tempête : pales de profil
+      → « il ne tourne pas vite, il tourne fort » → « Abonne-toi et envoie ça à… » avec la feuille de partage du téléphone.
+      Voix Adrien Moreau (Magnific / ElevenLabs) ; bruitages mixés sous la voix (../_engine/style-anime/mix_anime.py, sans musique).
+    -->
+    <style>
+      @font-face { font-family: "Inter"; font-weight: 400; src: url("assets/fonts/inter-400.woff2") format("woff2"); }
+      @font-face { font-family: "Inter"; font-weight: 700; src: url("assets/fonts/inter-700.woff2") format("woff2"); }
+      @font-face { font-family: "Inter"; font-weight: 800; src: url("assets/fonts/inter-800.woff2") format("woff2"); }
+      @font-face { font-family: "Mono"; font-weight: 500; src: url("assets/fonts/jetbrains-mono-500.woff2") format("woff2"); }
+      @font-face { font-family: "Mono"; font-weight: 700; src: url("assets/fonts/jetbrains-mono-700.woff2") format("woff2"); }
+      @font-face { font-family: "Mono"; font-weight: 700; src: url("assets/fonts/jetbrains-mono-ext-700.woff2") format("woff2"); unicode-range: U+0100-024F; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0f1011; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #0f1011; }
+      #three { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; display: block; }
+      /* the caption band: solid at the top, fading into the picture, fine grid */
+      .band { position: absolute; left: 0; right: 0; top: 0; height: 640px; pointer-events: none; }
+      #bandD { background: linear-gradient(180deg, #0f1011 0%, #0f1011 46%, rgba(15, 16, 17, 0.75) 66%, rgba(15, 16, 17, 0) 100%); }
+      #bandD::after { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.035) 2px, transparent 2px), linear-gradient(90deg, rgba(255, 255, 255, 0.035) 2px, transparent 2px); background-size: 60px 60px; -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 90%); mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 90%); }
+      #bandL { opacity: 0; background: linear-gradient(180deg, #eceae6 0%, #eceae6 46%, rgba(236, 234, 230, 0.75) 66%, rgba(236, 234, 230, 0) 100%); }
+      #bandL::after { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(0, 0, 0, 0.04) 2px, transparent 2px), linear-gradient(90deg, rgba(0, 0, 0, 0.04) 2px, transparent 2px); background-size: 60px 60px; -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 90%); mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 90%); }
+      #vig { position: absolute; inset: 0; background: radial-gradient(ellipse 95% 70% at 50% 62%, transparent 60%, rgba(0, 0, 0, 0.35) 100%); pointer-events: none; }
+      /* captions (variant C) */
+      #caps { position: absolute; left: 70px; right: 70px; top: 290px; height: 180px; }
+      .grp { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; flex-wrap: wrap; align-content: center; column-gap: 18px; row-gap: 4px; font-family: "Inter", sans-serif; font-size: 66px; line-height: 1.12; letter-spacing: -0.01em; visibility: hidden; }
+      .w { position: relative; font-weight: 400; color: #8b9096; opacity: 0; white-space: nowrap; }
+      .w.cur, .w.kw { font-weight: 700; color: #ffffff; }
+      .w.kw .bx { position: absolute; left: -10px; right: -10px; top: 2px; bottom: 0; border: 3px solid #3d7bff; }
+      .w.kw .bx::before, .w.kw .bx::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #3d7bff; border: 3px solid #fff; }
+      .w.kw .bx::before { left: -11px; top: -11px; }
+      .w.kw .bx::after { right: -11px; bottom: -11px; }
+      .bx { display: none; }
+      .w.kw .bx { display: block; }
+      #caps.light .w { color: #9a9a9a; }
+      #caps.light .w.cur, #caps.light .w.kw { color: #111214; }
+      /* labels projected from the 3D */
+      .lab { position: absolute; left: 0; top: 0; font-family: "Mono", monospace; font-weight: 700; font-size: 27px; letter-spacing: 0.14em; color: #e9edf0; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7); white-space: nowrap; opacity: 0; }
+      .big { position: absolute; left: 0; top: 0; font-family: "Inter", sans-serif; font-weight: 800; font-size: 128px; letter-spacing: -0.02em; color: #ffffff; text-shadow: 0 8px 30px rgba(0, 0, 0, 0.55); white-space: nowrap; opacity: 0; }
+      .big.sm { font-size: 96px; }
+      .big.warm { color: #ff8a3d; }
+      #labs.light .lab { color: #22252a; text-shadow: none; }
+      #labs.light .big { color: #111214; text-shadow: 0 6px 24px rgba(0, 0, 0, 0.12); }
+      .sel { position: absolute; border: 3px solid #3d7bff; opacity: 0; box-shadow: 0 0 0 1px rgba(61, 123, 255, 0.2); }
+      .sel i { position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #3d7bff; border: 3px solid #fff; }
+      .sel i:first-child { left: -12px; top: -12px; }
+      .sel i:last-child { right: -12px; bottom: -12px; }
+      /* the share sheet at the end */
+      #phone { position: absolute; left: 230px; top: 520px; width: 620px; height: 1260px; visibility: hidden; }
+      #hole { position: absolute; left: 22px; top: 22px; width: 576px; height: 600px; border-radius: 64px 64px 0 0; box-shadow: 0 0 0 3000px #0f1011; }
+      #frame { position: absolute; inset: 0; border: 22px solid #1c1e21; border-radius: 86px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), inset 0 0 0 2px #2c2f33; }
+      #notch { position: absolute; left: 50%; top: 40px; width: 150px; height: 40px; margin-left: -75px; border-radius: 22px; background: #050506; }
+      #status { position: absolute; left: 70px; right: 70px; top: 46px; display: flex; justify-content: space-between; font-family: "Inter", sans-serif; font-weight: 700; font-size: 26px; color: #fff; }
+      #sheet { position: absolute; left: 22px; right: 22px; bottom: 22px; top: 600px; background: #17191c; border-radius: 40px 40px 64px 64px; padding: 26px 34px; box-sizing: border-box; font-family: "Inter", sans-serif; color: #e9edf0; }
+      #sheet .grab { width: 90px; height: 8px; border-radius: 4px; background: #3a3d42; margin: 0 auto 24px; }
+      #sheet .search { height: 64px; border-radius: 18px; background: #24272b; display: flex; align-items: center; padding: 0 22px; font-size: 26px; color: #8b9096; }
+      #sheet .people { display: flex; justify-content: space-between; margin: 34px 4px 26px; }
+      .pp { width: 112px; text-align: center; font-size: 22px; color: #b8bec4; }
+      .pp b { display: block; width: 96px; height: 96px; margin: 0 auto 10px; border-radius: 50%; font-size: 40px; line-height: 96px; color: #fff; font-weight: 800; position: relative; }
+      .pp.on b { box-shadow: 0 0 0 5px #17191c, 0 0 0 9px #f3c33c; }
+      .pp b em { position: absolute; right: -4px; bottom: -4px; width: 34px; height: 34px; border-radius: 50%; background: #3d7bff; border: 4px solid #17191c; font-style: normal; font-size: 20px; line-height: 34px; opacity: 0; }
+      #sheet .msg { height: 60px; border-radius: 16px; background: #24272b; display: flex; align-items: center; padding: 0 22px; font-size: 26px; color: #e9edf0; margin-bottom: 22px; }
+      #send { height: 78px; border-radius: 22px; background: #3d7bff; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 700; color: #fff; position: relative; }
+      #send span { position: absolute; }
+      #tap { position: absolute; width: 70px; height: 70px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.9); left: 400px; top: 1008px; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="__END__" data-width="1080" data-height="1920">
+      <canvas id="three" width="1080" height="1920"></canvas>
+      <div id="vig"></div>
+      <div id="labs"></div>
+      <div id="phone">
+        <div id="hole"></div>
+        <div id="frame"></div>
+        <div id="notch"></div>
+        <div id="status"><span>10:24</span><span>●●● ▮</span></div>
+        <div id="sheet">
+          <div class="grab"></div>
+          <div class="search">⌕&nbsp;&nbsp;Rechercher</div>
+          <div class="people">
+            <div class="pp"><b style="background: linear-gradient(135deg, #ff9a5a, #e5483a)">L</b>Léa</div>
+            <div class="pp" id="pp2"><b style="background: linear-gradient(135deg, #5ab4ff, #3d5bd8)">M<em>✓</em></b>Malik</div>
+            <div class="pp"><b style="background: linear-gradient(135deg, #6fd18a, #2f8f6a)">I</b>Inès</div>
+            <div class="pp"><b style="background: linear-gradient(135deg, #c79bff, #7a4fd8)">H</b>Hugo</div>
+          </div>
+          <div class="msg">regarde ça</div>
+          <div id="send"><span id="s1">Envoyer</span><span id="s2" style="opacity: 0">✓ Envoyé</span></div>
+        </div>
+        <div id="tap"></div>
+      </div>
+      <div class="band" id="bandD"></div>
+      <div class="band" id="bandL"></div>
+      <div id="caps"></div>
+      <audio id="mix" src="assets/audio/mix.mp3" data-start="0" data-duration="__END__" data-track-index="10" data-volume="1"></audio>
+    </div>
+    <script type="module">
+__MODULE__
+    </script>
+    <script>
+      ;(function () {
+        const tl = gsap.timeline({ paused: true })
+        const END = __END__
+        const RAW = __RAW__
+        const T = RAW.map((t) => Math.round((0.2 + t) * 100) / 100)
+        const WORDS = __WORDS__
+        const KEYW = new Set(__KEYWORDS__)
+        const SHOTK = __SHOTK__, LIGHTK = new Set(__LIGHTK__)
+        // light studio shots: white caption band, dark text
+        SHOTK.forEach((k, i) => { const t = i === 0 ? 0 : T[k] - 0.06; const L = LIGHTK.has(k); tl.set('#bandL', { opacity: L ? 1 : 0 }, t); tl.set('#bandD', { opacity: L ? 0 : 1 }, t); tl.set('#caps', { attr: { class: L ? 'light' : '' } }, t); tl.set('#labs', { attr: { class: L ? 'light' : '' } }, t) })
+        // captions: short groups, words arrive blurred then sharp; current word bold white, past words thin grey
+        const caps = document.getElementById('caps')
+        const G = []; let cur = []
+        WORDS.forEach((w, k) => { if (!w) return; cur.push(k); const len = cur.reduce((n, j) => n + WORDS[j].length + 1, 0); if (/[.,:;?!…]$/.test(w) || cur.length >= 4 || len > 19) { G.push(cur); cur = [] } })
+        if (cur.length) G.push(cur)
+        G.forEach((g, gi) => {
+          const box = document.createElement('div'); box.className = 'grp'; caps.appendChild(box)
+          const t0 = T[g[0]] - 0.04, t1 = gi < G.length - 1 ? T[G[gi + 1][0]] - 0.04 : END
+          tl.set(box, { visibility: 'visible' }, t0); tl.set(box, { visibility: 'hidden' }, t1)
+          g.forEach((k, j) => {
+            const el = document.createElement('span'); el.className = 'w'; el.innerHTML = WORDS[k] + '<span class="bx"></span>'; box.appendChild(el)
+            const on = Math.max(t0, T[k] - 0.03), next = j < g.length - 1 ? T[g[j + 1]] - 0.03 : t1
+            tl.fromTo(el, { opacity: 0, filter: 'blur(14px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.17, ease: 'power2.out', immediateRender: false }, on)
+            tl.set(el, { attr: { class: KEYW.has(k) ? 'w kw' : 'w cur' } }, on)
+            if (!KEYW.has(k)) tl.set(el, { attr: { class: 'w' } }, next)
+          })
+        })
+        // the share sheet
+        const P0 = T[285] - 0.06
+        tl.set('#phone', { visibility: 'visible' }, P0)
+        tl.fromTo('#phone', { y: 90 }, { y: 0, duration: 0.5, ease: 'power3.out', immediateRender: false }, P0)
+        tl.set('#pp2', { attr: { class: 'pp on' } }, T[290])
+        tl.fromTo('#pp2 em', { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.25, ease: 'back.out(2)', immediateRender: false }, T[290])
+        tl.fromTo('#tap', { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.25, immediateRender: false }, T[295])
+        tl.to('#send', { scale: 0.95, duration: 0.1 }, T[296]); tl.to('#send', { scale: 1, duration: 0.15 }, T[296] + 0.1)
+        tl.to('#s1', { opacity: 0, duration: 0.15 }, T[296] + 0.05); tl.to('#s2', { opacity: 1, duration: 0.15 }, T[296] + 0.1)
+        tl.to('#tap', { opacity: 0, scale: 1.6, duration: 0.35 }, T[296] + 0.15)
+        tl.set('#root', { opacity: 1 }, END)
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+      })()
+    </script>
+  </body>
+</html>
