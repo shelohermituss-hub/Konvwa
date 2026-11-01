@@ -55,9 +55,9 @@ C'est la première vidéo en **style STUDIO**, le nom choisi par le client pour 
 
 ## Couverture (faite à part)
 
-`cover.png` (1080×1920) et `cover-grille.png` (aperçu 3:4 du profil). La source est dans `cover/` : `cover.html`, `fond.jpg` et `render-cover.mjs`.
+`cover.png` (1080×1920) et `cover-grille.png` (aperçu 3:4 du profil). La source est dans `cover/` : `cover.html` et `fond.jpg`. Rendu : `node ../_engine/covers/render_cover.mjs cover`.
 
-- **Fond** : une photo-illustration générée avec Magnific (vue de drone au coucher du soleil, une pale géante posée à côté d'un terrain de basket, deux personnes minuscules). C'est une illustration, pas une photo réelle.
+- **Fond** : une image générée avec Magnific en **rendu 3D studio**, à la demande du client qui trouvait la photo-illustration « trop réelle ». On y voit une pale géante à côté d'un terrain de basket miniature et deux figurines.
 - **Titre** : « 1 PALE » en très gros, puis « PLUS LONGUE QU'UN TERRAIN DE BASKET », avec une pastille « COMMENT ÇA MARCHE ? ».
 - **Annotations** : un cercle « TOI » autour des personnes, des pointillés rouges sur la longueur de la pale, et le contour bleu du terrain (« 28 M »).
 

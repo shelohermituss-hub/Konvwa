@@ -1,7 +1,10 @@
 # Couvertures TikTok
 
 **Règle du client (depuis l'éolienne)** : chaque nouvelle vidéo est livrée avec **une couverture créée à part**, très accrocheuse, et non une image tirée du rendu.
-- Le visuel est fort : une photo-illustration générée (Magnific `images_generate`, 9:16), ou un rendu 3D dédié.
+- Le visuel est fort, en **rendu 3D studio** (choix du client, les photo-illustrations étaient « trop réelles »).
+  - Il est généré avec Magnific `images_generate` en 9:16.
+  - Prompt type : « Clean 3D studio render, Blender product-render style: … dark charcoal studio floor with a subtle fine grid, soft studio lighting, minimal, no text ».
+  - Les personnages sont des figurines en pâte mate.
 - Le titre-choc fait 3 à 7 mots (Anton), avec une petite pastille (« COMMENT ÇA MARCHE ? »).
 - Des annotations donnent l'échelle ou désignent un détail : cercle « TOI », pointillés de longueur, contour, étiquettes.
 - Le texte reste dans le recadrage 3:4 (y 240 → 1680).

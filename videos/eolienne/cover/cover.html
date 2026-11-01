@@ -1,41 +1,17 @@
 <!doctype html>
-<!-- Couverture TikTok créée à part (1080×1920) : photo-illustration générée (Magnific) + titre-choc.
-     Rendu : node render-cover.mjs → ../cover.png et ../cover-grille.png (recadrage 3:4 de la grille du profil). -->
-<html lang="fr">
-<meta charset="utf-8" />
-<style>
-  @font-face { font-family: Anton; src: url(anton.woff2); }
-  @font-face { font-family: Mono; font-weight: 700; src: url(jetbrains-mono-700.woff2); }
-  @font-face { font-family: Inter; font-weight: 800; src: url(inter-800.woff2); }
-  * { margin: 0; box-sizing: border-box; }
-  body { width: 1080px; height: 1920px; overflow: hidden; background: #000 url(fond.jpg) center / cover; position: relative; font-family: Anton, sans-serif; }
-  .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.55) 26%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0) 72%, rgba(0, 0, 0, 0.55) 100%); }
-  .kick { position: absolute; left: 0; right: 0; top: 250px; text-align: center; }
-  .kick span { display: inline-block; font: 700 38px/1 Mono, monospace; letter-spacing: 0.14em; color: #0f1011; background: #ffd23f; padding: 14px 26px; border-radius: 999px; transform: rotate(-2deg); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
-  h1 { position: absolute; left: 0; right: 0; top: 318px; text-align: center; color: #fff; text-transform: uppercase; line-height: 0.95; text-shadow: 0 8px 0 rgba(0, 0, 0, 0.45), 0 0 40px rgba(0, 0, 0, 0.5); }
-  h1 .a { display: block; font-size: 200px; letter-spacing: 0.01em; }
-  h1 .a em { font-style: normal; color: #ffd23f; }
-  h1 .b { display: block; font-size: 86px; letter-spacing: 0.01em; }
-  /* annotations on the photo */
-  .tag { position: absolute; font: 700 34px/1 Mono, monospace; letter-spacing: 0.1em; color: #fff; background: #e5483a; padding: 12px 18px; border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); white-space: nowrap; }
-  .tag.blue { background: #3d7bff; }
-  svg { position: absolute; inset: 0; }
-</style>
-<div class="shade"></div>
+<html lang="fr"><meta charset="utf-8" /><link rel="stylesheet" href="../../_engine/covers/kit/cover.css" /><style>body { background-image: url(fond.jpg); }</style>
+<!-- Couverture créée à part, style 3D studio (image générée avec Magnific) : une pale à côté d'un terrain de basket. -->
+<div class="shade" style="background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.35) 100%)"></div>
 <svg width="1080" height="1920" viewBox="0 0 1080 1920">
-  <!-- the two tiny people -->
-  <circle cx="632" cy="922" r="46" fill="none" stroke="#ffd23f" stroke-width="7" />
-  <path d="M 700 880 Q 770 820 812 760" fill="none" stroke="#ffd23f" stroke-width="7" stroke-linecap="round" />
-  <!-- blade length bracket -->
-  <path d="M 318 738 L 960 1330" fill="none" stroke="#e5483a" stroke-width="8" stroke-dasharray="22 14" stroke-linecap="round" />
-  <circle cx="318" cy="738" r="11" fill="#e5483a" />
-  <circle cx="960" cy="1330" r="11" fill="#e5483a" />
-  <!-- court outline -->
-  <path d="M 70 1100 L 418 1056 L 618 1440 L 204 1512 Z" fill="none" stroke="#3d7bff" stroke-width="8" stroke-linejoin="round" />
+  <path d="M 999 392 L 257 1553" fill="none" stroke="#e5483a" stroke-width="8" stroke-dasharray="22 14" stroke-linecap="round" />
+  <circle cx="999" cy="392" r="12" fill="#e5483a" /><circle cx="257" cy="1553" r="12" fill="#e5483a" />
+  <path d="M 49 905 L 378 540 L 716 635 L 392 1053 Z" fill="none" stroke="#3d7bff" stroke-width="8" stroke-linejoin="round" />
+  <circle cx="783" cy="958" r="48" fill="none" stroke="#ffd23f" stroke-width="7" />
+  <path d="M 815 920 L 860 860" stroke="#ffd23f" stroke-width="7" stroke-linecap="round" />
 </svg>
-<div class="tag" style="left: 790px; top: 700px; background: #ffd23f; color: #0f1011">TOI</div>
-<div class="tag" style="left: 640px; top: 1130px">UNE PALE</div>
-<div class="tag blue" style="left: 230px; top: 1540px">28 M</div>
-<div class="kick"><span>COMMENT ÇA MARCHE ?</span></div>
-<h1><span class="a">1 <em>PALE</em></span><span class="b">PLUS LONGUE QU'UN</span><span class="b">TERRAIN DE BASKET</span></h1>
+<div class="kick" style="left: 290px; top: 250px">COMMENT ÇA MARCHE ?</div>
+<div class="tag blue" style="left: 60px; top: 560px">28 M</div>
+<div class="tag yel" style="left: 830px; top: 800px">TOI</div>
+<div class="tag" style="left: 80px; top: 1200px">UNE PALE<small>50 À 80 M</small></div>
+<h1 style="right: 50px; top: 1150px; text-align: right"><span style="font-size: 200px">1 <em>PALE</em></span><span style="font-size: 92px">PLUS LONGUE</span><span style="font-size: 92px">QU'UN TERRAIN</span><span style="font-size: 92px">DE BASKET</span></h1>
 </html>
