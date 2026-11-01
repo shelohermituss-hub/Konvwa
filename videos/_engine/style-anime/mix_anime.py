@@ -81,7 +81,9 @@ def main():
     voice = np.zeros((n, 2), np.float32)
     place(voice, load(plan['voice']), plan.get('voice_start', 0.2))
     vmono = voice.mean(1)
-    speaking = np.abs(vmono) > 1e-4
+    # speech = the voice envelope within 30 dB of its loud parts (the room tone in the pauses is not speech)
+    env = rms(vmono, 0.03)
+    speaking = env > np.percentile(env[env > 1e-6], 90) * 10 ** (-30 / 20) if (env > 1e-6).any() else np.zeros(len(vmono), bool)
     v_level = rms_db(vmono[speaking]) if speaking.any() else -30
 
     bed = np.zeros((n, 2), np.float32)
@@ -137,14 +139,15 @@ def main():
     worst = np.array(worst)
     print(f'voix − fond pendant la parole : médiane {np.median(worst):.1f} dB, pire {worst.min():.1f} dB, '
           f'fenêtres < 6 dB : {(worst < 6).mean() * 100:.0f} %')
-    # holes: inside speech (voice within 300 ms on both sides), 50 ms where the mix, heard through a phone speaker
+    # holes: inside speech (voice within 300 ms on both sides), 150 ms where the mix, heard through a phone speaker
     # (above 300 Hz), falls more than 26 dB under the voice. Those were heard as « le son se coupe ».
     hw = int(0.05 * SR)
     lvl = lambda x: 20 * np.log10(np.sqrt(np.add.reduceat(x.astype(np.float64) ** 2, np.arange(0, len(x) - hw, hw)) / hw) + 1e-9)
     vp, mp = lvl(highpass(vmono.astype(np.float64), 300.0)), lvl(highpass(mix.mean(1).astype(np.float64), 300.0))
     vref = rms_db(highpass(vmono[speaking].astype(np.float64), 300.0)) if speaking.any() else -30
     on = vp > vref - 30
-    holes = [round(k * 0.05, 2) for k in range(6, len(mp) - 6) if not on[k] and on[k - 6:k].any() and on[k + 1:k + 7].any() and mp[k] < vref - 26]
+    low = mp < vref - 26  # a hole lasts at least 150 ms (a 50 ms dip between two beats of the music is rhythm, not a cut)
+    holes = [round(k * 0.05, 2) for k in range(6, len(mp) - 8) if low[k] and low[k + 1] and low[k + 2] and not on[k] and on[k - 6:k].any() and on[k + 3:k + 9].any()]
     print(f'trous dans le son (pauses à plus de 26 dB sous la voix, au téléphone) : {len(holes)}' + (f' à {holes[:12]} s — À CORRIGER' if holes else ''))
 
 
