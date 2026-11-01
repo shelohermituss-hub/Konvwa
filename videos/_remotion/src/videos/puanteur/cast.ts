@@ -350,7 +350,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     case 2: case 14: {
       const dir = id === 2 ? 1 : -1;
       for (let i = 0; i < 6; i++) {
-        const xs = id === 2 ? 3 - i * 1.5 : 8 + i * 1.6;
+        const xs = id === 2 ? 3 - i * 1.5 : -3 + i * 1.5;
         walker(cam, out, 20 + i, MP[i], `mp${i}`, t, t0, xs, 3.0 + (i % 3) * 1.1, dir * 2.8, 0, i % 2 ? "pained" : "shock", "hanky", 1, true);
       }
       riverStink(4, -6, 10, -3.5, 1.4);
@@ -376,8 +376,8 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     }
     case 10: case 11: riverStink(id === 10 ? 10 : 6, id === 10 ? -40 : -30, id === 10 ? 160 : 30, -8, id === 10 ? 6 : 3.5); break;
     case 12: {
-      stander(cam, out, 40, SERVANT, "maid", t, cx + 2.4, cz - 5.0, "pained", { look: -1 });
-      stink(out, t, cx + 0.2, 1.4, cz - 6.6, 0.8, 1);
+      stander(cam, out, 40, SERVANT, "maid", t, cx + 10.3, cz - 4.7, "pained", { look: -1 });
+      stink(out, t, cx + 8.6, 1.4, cz - 6.6, 0.8, 1);
       break;
     }
     case 13: case 17: {
@@ -403,12 +403,12 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     }
     case 18: {
       const n = Math.max(1, Math.min(18, 1 + Math.floor(((t - at(148)) / Math.max(0.3, at(150) + 0.4 - at(148))) * 17)));
-      out.fx.push({ key: `cal${n}`, cw: 400, ch: 460, draw: (p) => fxCal(p, n), x: cx + 10.85, y: 2.0, z: cz, w: 0.9, h: 1.04 });
+      out.fx.push({ key: `cal${n}`, cw: 400, ch: 460, draw: (p) => fxCal(p, n), x: cx + 10.9, y: 2.2, z: cz - 2.7, w: 0.9, h: 1.04 });
       break;
     }
     case 19: case 22: {
       stander(cam, out, 80, BAZALGETTE, "baz", t, BAZ[0], BAZ[2], id === 22 ? "grin" : "stern", { prop: "plan", look: id === 22 ? 0 : 1 });
-      if (id === 19) for (let i = 0; i < 4; i++) stander(cam, out, 81 + i, NAVVY[i % 3], `nav${i % 3}`, t, 30 + i * 4.5, STREET_Z + (i % 2 ? 0.8 : -0.8), "neutral", { prop: "shovel" }, 1, -1.5);
+      if (id === 19) for (let i = 0; i < 4; i++) stander(cam, out, 81 + i, NAVVY[i % 3], `nav${i % 3}`, t, 30 + i * 4.5, STREET_Z + (i % 2 ? 0.8 : -0.8), "neutral", { prop: "shovel" }, 1, -1.1);
       break;
     }
     case 20: {
@@ -422,7 +422,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
       break;
     }
     case 25: {
-      for (let i = 0; i < 6; i++) walker(cam, out, 400 + i, i % 2 ? MP[i] : FOLK[i], i % 2 ? `mp${i}` : `f${i}`, t, t0, -8 + i * 2.6, 2.6 + (i % 3) * 1.4, i % 2 ? 0.6 : -0.6, 0, i % 3 ? "smile_closed" : "grin");
+      for (let i = 0; i < 6; i++) walker(cam, out, 400 + i, i % 2 ? MP[i] : FOLK[i], i % 2 ? `mp${i}` : `f${i}`, t, t0, -2 - i * 2.4, 1.2 + (i % 3) * 1.1, i % 2 ? 0.6 : -0.6, 0, i % 3 ? "smile_closed" : "grin");
       break;
     }
     default: break;

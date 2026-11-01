@@ -354,7 +354,7 @@ export class World {
     bt.add(flatUp(TRENCH.x0, TRENCH.x1, TRENCH.z - TRENCH.w / 2, TRENCH.z + TRENCH.w / 2, 0.005, 8, 1), lam("trenchDark", () => ({ color: "#4a3626" })));
     const arch = new THREE.CylinderGeometry(1.5, 1.5, TRENCH.x1 - TRENCH.x0 - 6, 18, 1, true, 0, Math.PI); arch.rotateZ(Math.PI / 2);
     bt.add(arch, lam("sewerB", () => ({ map: rep(sewerBrick(), 6, 1) })), M4((TRENCH.x0 + TRENCH.x1) / 2 + 3, -1.6, TRENCH.z));
-    for (const sz of [-1, 1]) for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 3.2) bt.add(new THREE.SphereGeometry(1, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), earth, new THREE.Matrix4().compose(V(xx + 1.6, 0, TRENCH.z + sz * (TRENCH.w / 2 + 1.1)), new THREE.Quaternion(), V(1.4, 0.7, 0.9)));
+    for (const sz of [-1, 1]) for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 3.2) bt.add(new THREE.SphereGeometry(1, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), earth, new THREE.Matrix4().compose(V(xx + 1.6, 0, TRENCH.z + sz * (TRENCH.w / 2 + 1.1)), new THREE.Quaternion(), V(1.1, 0.4, 0.7)));
     for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 4) bt.add(boxGeo(V(xx, 0.02, TRENCH.z - 2.4), V(xx + 0.25, 0.08, TRENCH.z + 2.4)), wood);
     bt.build(this.trench); R.add(this.trench);
     // la charrette du déménagement (plan 15)
@@ -375,12 +375,12 @@ export class World {
     // fenêtres en ogive et rideaux sur le mur du fleuve (z -), un rideau trempé descend dans la bassine
     for (const wx of [-8, -3, 2, 7]) {
       b.add(quad(V(cx + wx - 1.1, 3, cz - 7.45), V(cx + wx + 1.1, 3, cz - 7.45), V(cx + wx + 1.1, 7.8, cz - 7.45), V(cx + wx - 1.1, 7.8, cz - 7.45)), lam("winCh", () => ({ color: "#8fa6c8" })));
-      if (wx !== -3) for (const s of [-1, 1]) b.add(quad(V(cx + wx + s * 0.8 - 0.55, 2.6, cz - 7.3), V(cx + wx + s * 0.8 + 0.55, 2.6, cz - 7.3), V(cx + wx + s * 0.8 + 0.55, 8.2, cz - 7.3), V(cx + wx + s * 0.8 - 0.55, 8.2, cz - 7.3)), lam("curtainR", () => ({ map: curtainTex("#9c2f3a"), side: THREE.DoubleSide })));
+      if (wx !== 7) for (const s of [-1, 1]) b.add(quad(V(cx + wx + s * 0.8 - 0.55, 2.6, cz - 7.3), V(cx + wx + s * 0.8 + 0.55, 2.6, cz - 7.3), V(cx + wx + s * 0.8 + 0.55, 8.2, cz - 7.3), V(cx + wx + s * 0.8 - 0.55, 8.2, cz - 7.3)), lam("curtainR", () => ({ map: curtainTex("#9c2f3a"), side: THREE.DoubleSide })));
     }
     // la bassine de chlorure de chaux, le rideau qui trempe dedans
-    b.add(new THREE.CylinderGeometry(0.75, 0.6, 0.7, 20, 1, true).translate(0, 0.35, 0), wood, M4(cx + 1, 0, cz - 5.6));
-    b.add(new THREE.CircleGeometry(0.72, 20).rotateX(-Math.PI / 2), lam("chlorine", () => ({ color: "#e6f0d6" })), M4(cx + 1, 0.6, cz - 5.6));
-    b.add(quad(V(cx - 0.35, 8.2, cz - 7.25), V(cx + 0.65, 8.2, cz - 7.25), V(cx + 1.3, 0.62, cz - 5.4), V(cx + 0.5, 0.62, cz - 5.8)), lam("curtainR", () => ({ map: curtainTex("#9c2f3a"), side: THREE.DoubleSide })));
+    b.add(new THREE.CylinderGeometry(0.75, 0.6, 0.7, 20, 1, true).translate(0, 0.35, 0), wood, M4(cx + 9.4, 0, cz - 5.6));
+    b.add(new THREE.CircleGeometry(0.72, 20).rotateX(-Math.PI / 2), lam("chlorine", () => ({ color: "#e6f0d6" })), M4(cx + 9.4, 0.6, cz - 5.6));
+    b.add(quad(V(cx + 6.6, 8.2, cz - 7.25), V(cx + 7.6, 8.2, cz - 7.25), V(cx + 9.7, 0.62, cz - 5.4), V(cx + 8.9, 0.62, cz - 5.8)), lam("curtainR", () => ({ map: curtainTex("#9c2f3a"), side: THREE.DoubleSide })));
     // les bancs verts en gradins, la table au milieu
     const green = lam("benchGreen", () => ({ color: "#2f6a43" }));
     for (const s of [-1, 1]) for (const [r0, hgt] of [[3.0, 0.45], [4.1, 0.8]] as const) {
@@ -439,10 +439,10 @@ export class World {
 
     // ---- les égouts vus du ciel : deux grands collecteurs le long des rives, des branches sous les rues ----
     this.dash = rep(dashTex(), 60, 1);
-    const glowM = new THREE.MeshBasicMaterial({ map: this.dash, color: new THREE.Color(0.6, 1.6, 2.2), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, fog: false });
+    const glowM = new THREE.MeshBasicMaterial({ map: this.dash, color: new THREE.Color(1.0, 2.6, 3.4), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, fog: false });
     const lines: THREE.BufferGeometry[] = [];
-    for (const zz of [14, RIVER.zS - 8]) lines.push(flatUp(-300, 700, zz - 1.2, zz + 1.2, 1.0, 1, 1));
-    for (const xx of [-120, -40, 40, 120, 200]) lines.push(quad(V(xx - 0.8, 1.0, 300), V(xx + 0.8, 1.0, 300), V(xx + 0.8, 1.0, 14), V(xx - 0.8, 1.0, 14), 1, 1));
+    for (const zz of [14, RIVER.zS - 8]) lines.push(flatUp(-300, 700, zz - 3.5, zz + 3.5, 1.0, 1, 1));
+    for (const xx of [-120, -40, 40, 120, 200]) lines.push(quad(V(xx - 2.2, 1.0, 300), V(xx + 2.2, 1.0, 300), V(xx + 2.2, 1.0, 14), V(xx - 2.2, 1.0, 14), 1, 1));
     this.sewerGlow = new THREE.Mesh(mergeGeometries(lines, false), glowM);
     this.sewerGlow.renderOrder = 10; this.sewerGlow.layers.set(NOINK); this.sewerGlow.visible = false; R.add(this.sewerGlow);
   }
@@ -524,7 +524,7 @@ export class World {
     this.cart.visible = id === 15;
     if (id === 15) { this.cart.position.set(1.2 + 1.4 * (t - s.a / FPS), 0, STREET_Z); }
     this.bus.visible = id === 26;
-    if (id === 26) this.bus.position.set(MOD[0] + 30 - 5 * (t - s.a / FPS), 0, MOD[2] - 5.0);
+    if (id === 26) this.bus.position.set(MOD[0] - 40 + 6 * (t - s.a / FPS), 0, MOD[2] - 5.0);
     this.sewerGlow.visible = id === 21;
     this.dash.offset.x = -t * 0.8;
     for (const l of this.lanterns) l.scale.setScalar(1.5 + 0.12 * Math.sin(t * 9 + l.position.x));
