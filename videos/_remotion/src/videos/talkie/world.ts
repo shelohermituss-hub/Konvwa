@@ -406,8 +406,9 @@ export class World {
 
     // ---- lignes de visée : on retire ce qui boucherait un plan ----
     setSight(sightLines());
+    // au sud de la rue, rien ne projette d'ombre : le soleil couchant (très bas, au sud) doit éclairer la rue
+    const bs = new Batch();
     // rangée de boutiques au sud (façades vers -z, à SHOP_Z) ; la boutique Godzy est derrière le paillasson
-    const bs = new Batch(); // les boutiques ne projettent pas d'ombre : le soleil couchant est derrière elles et doit éclairer la rue
     let x = -64, si = 0;
     while (x < 70) {
       const w = [6, 7.5, 9][si % 3], h = [13, 15.5, 11.5, 17][si % 4], cx = x + w / 2;
@@ -429,7 +430,7 @@ export class World {
       if (Math.abs(gx - TOWER.x) < 42 && gz < 0 && gz > -100) continue; // la tour
       if (Math.hypot(gx + 95, gz + 125) < 40) continue;           // le cornichon
       const city = gz < 0 && gx < 120, h = city ? 30 + rr * 90 : 14 + rr * 30;
-      block(b, gx + (rr - 0.5) * 6, gz + (rr - 0.5) * 6, (rr > 0.5 ? 0 : Math.PI / 2), 18 + rr * 8, 18 + (1 - rr) * 6, h, Math.floor(rr * 50));
+      block(gz > 20 ? bs : b, gx + (rr - 0.5) * 6, gz + (rr - 0.5) * 6, (rr > 0.5 ? 0 : Math.PI / 2), 18 + rr * 8, 18 + (1 - rr) * 6, h, Math.floor(rr * 50));
     }
     // le « cornichon » (une tour en ogive, dessinée à notre façon)
     const pts: THREE.Vector2[] = [];
