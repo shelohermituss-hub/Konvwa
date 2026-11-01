@@ -49,7 +49,9 @@ Trois vidéos de référence envoyées par le client. Elles appartiennent à **l
 
 ## Fabrication (variante C, modèle `../../eolienne/`)
 
-- **Script** : environ 300 mots pour environ 90 s, avec tutoiement et ton de conversation.
+- **Rendu** : directement en 60 i/s (`npx --yes hyperframes@0.8.168 render --fps 60 --quality looks --output renders/raw60.mp4`, puis `python3 -I ../_engine/style-histoire/finish.py renders/raw60.mp4 renders/<projet>.mp4`). Compter environ 1 h 30 pour 90 s sur la machine du cloud, environ 1 h pour 65 s.
+
+- **Script** : **60 à 70 s** (règle du client), soit environ 210 à 230 mots à 200 mots/min, avec tutoiement et ton de conversation. L'éolienne (90 s) a été faite avant cette règle.
   - Déroulé : un fait surprenant, puis « Alors, comment… ? », puis « Imagine… », le mécanisme pas à pas, le retour à la question (« Alors, ce truc… ? »), et enfin « Abonne-toi, et envoie ça à quelqu'un qui… ! ».
   - Les nombres sont écrits en lettres pour la voix et en chiffres à l'écran (`disp.json`).
 - **Voix** : Adrien Moreau (`voiceId` 230, `eleven_v4`, stabilité 0,4), consigne `[conversational, clear, confident, lively explainer]`.
