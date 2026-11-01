@@ -353,8 +353,8 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     }
     case 2: case 16: {
       caged();
-      stander(cam, out, 20, VN(1), "vn1", t, fx - 1.6, fz + 1.7, id === 2 ? "laugh" : "nervous", { look: 1 });
-      if (id === 16) stander(cam, out, 21, INSPECTOR, "insp", t, fx + 1.5, fz + 1.9, t > at(166) ? "shock" : "stern", { look: -1 });
+      stander(cam, out, 20, VN(1), "vn1", t, fx + 0.2, fz + 1.4, id === 2 ? "laugh" : "nervous", { look: 1 });
+      if (id === 16) stander(cam, out, 21, INSPECTOR, "insp", t, fx - 0.9, fz + 2.2, t > at(166) ? "shock" : "stern", { look: -1 });
       break;
     }
     case 3: {
@@ -396,7 +396,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     case 14: {
       stander(cam, out, 80, LADY, "lady", t, -1.6, 8.0, t > at(146) ? "shock" : "neutral", { look: 1 });
       stander(cam, out, 81, GENT, "gent", t, -0.6, 8.4, t > at(148) ? "shock" : "neutral", { look: 1 });
-      rats(out, cam, t, 6, -8, 10, 5.6, 7.0, 0.12, -1.8, () => false, 0.36, 7);
+      rats(out, cam, t, 6, -3, 5, 5.8, 6.6, 0.12, -1.8, () => false, 0.55, 7);
       break;
     }
     case 15: {
@@ -410,8 +410,8 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
       stander(cam, out, 10, CLERK, "clerk", t, ox + 0.9, oz - 1.6, "stern", { look: -1 });
       break;
     }
-    case 18: rats(out, cam, t, 40, -14, 14, -4.5, 7.5, 0.06, 1.6, (k) => k % 3 !== 0, 0.36, 11); break;
-    case 19: { const r = clamp01((t - at(191)) / 0.8); out.fx.push({ key: `cobra${q(r, 12)}${q(t % 1, 6)}`, cw: 300, ch: 420, draw: (p) => fxCobra(p, q(r, 12), q(t % 1, 6) * 6), x: ax - 0.25, y: 1.15, z: az - 0.05, w: 0.42, h: 0.59 }); stander(cam, out, 95, HISTORIAN, "hist", t, ax + 0.6, az - 0.9, t > at(197) ? "shock" : "neutral", { look: -1 }); break; }
+    case 18: rats(out, cam, t, 40, -14, 14, -4.5, 7.5, 0.06, 1.6, (k) => k % 3 !== 0, 0.5, 11); break;
+    case 19: { const r = clamp01((t - at(191)) / 0.8); out.fx.push({ key: `cobra${q(r, 12)}${q(t % 1, 6)}`, cw: 300, ch: 420, draw: (p) => fxCobra(p, q(r, 12), q(t % 1, 6) * 6), x: ax - 0.25, y: 1.27, z: az - 0.05, w: 0.6, h: 0.84 }); stander(cam, out, 95, HISTORIAN, "hist", t, ax + 0.6, az - 0.9, t > at(197) ? "shock" : "neutral", { look: -1 }); break; }
     case 20: {
       stander(cam, out, 95, HISTORIAN, "hist", t, ax + 0.6, az - 0.9, t > at(209) ? "grin" : "smile", { look: -1 });
       out.fx.push({ key: "book", cw: 380, ch: 300, draw: fxBook, x: ax + 0.1, y: 1.05, z: az - 0.1, w: 0.42, h: 0.33 });

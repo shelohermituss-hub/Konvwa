@@ -142,8 +142,8 @@ const Captions: React.FC = () => {
         {g.words.map((k) => {
           const on = t >= W[k] - 0.03 && (t < WE[k] + 0.08 || k === g.words[g.words.length - 1]);
           return (
-            <span key={k} style={{ color: on ? "#ffd23f" : "#ffffff", WebkitTextStroke: "12px #1a1020", paintOrder: "stroke fill",
-              display: "inline-block", margin: "0 12px", transform: on ? "scale(1.08)" : "none", textShadow: "0 6px 0 rgba(26,16,32,0.55)" }}>
+            <span key={k} style={{ color: on ? "#ffd23f" : "#ffffff", WebkitTextStroke: "10px #1a1020", paintOrder: "stroke fill",
+              display: "inline-block", margin: "0 22px", transform: on ? "scale(1.08)" : "none", textShadow: "0 6px 0 rgba(26,16,32,0.55)" }}>
               {WORDS[k].replace(/\u202f/g, " ")}
             </span>
           );
