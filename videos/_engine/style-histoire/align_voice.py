@@ -3,7 +3,7 @@ import json,re,difflib,subprocess,sys,numpy as np
 raw,wj,tj,outw,outj,tempo,keepj,insj=sys.argv[1:9]
 TEMPO=float(tempo); KEEP={int(k):v for k,v in json.loads(keepj).items()}; INS={int(k):v for k,v in json.loads(insj).items()}
 toks=json.load(open(tj)); ws=json.load(open(wj))
-out=subprocess.run(['ffmpeg','-hide_banner','-i',raw,'-af','silencedetect=n=-38dB:d=0.08','-f','null','-'],capture_output=True,text=True).stderr
+out=subprocess.run(['ffmpeg','-hide_banner','-i',raw,'-af','silencedetect=n=-48dB:d=0.08','-f','null','-'],capture_output=True,text=True).stderr
 ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',out)]; se=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',out)]
 sil=list(zip(ss,se))
 norm=lambda s: re.sub(r"[^\w']",'',s.lower().replace(' ','').replace('’',"'"))
@@ -35,7 +35,8 @@ owner={}
 for k,(s,e) in before.items(): owner[(s,e)]=k
 for s,e in sil:
     k=owner.get((s,e)); DEF=KEEP.get(-1,0.2); L=KEEP.get(k,DEF) if k is not None else DEF
-    if e-s>L+0.03: EDITS.append([s+L/2,e-L/2,0.0])
+    # keep most of the kept pause after the word (soft word tails fade slowly; cutting early clipped them)
+    if e-s>L+0.03: EDITS.append([s+L*0.7,e-L*0.3,0.0])
 # lengthen short sentence-end pauses up to the target (when a default target is given)
 if -1 in KEEP:
     for k in range(1,len(toks)):
@@ -52,11 +53,21 @@ for k,ins in INS.items():
     if hit: hit[0][2]+=ins
     else: EDITS.append([c,c,ins])
 EDITS.sort()
-seg=[];prev=0;F=int(.008*SR)
+# room tone: the quietest 0.4 s of the take, used instead of digital silence for inserted pauses
+# (pure zeros between words were heard as « le son se coupe »)
+h=int(0.4*SR); st=int(0.05*SR)
+cand=[(float(np.sqrt(np.mean(a[i:i+h]**2))),i) for i in range(0,max(1,len(a)-h),st)]
+tone=a[min(cand)[1]:min(cand)[1]+h].copy() if cand else np.zeros(h,np.float32)
+def roomtone(n):
+    if n<=0: return np.zeros(0,np.float32)
+    r=np.tile(tone,n//len(tone)+1)[:n].copy(); f=min(n//2,int(0.02*SR))
+    if f: r[:f]*=np.linspace(0,1,f); r[-f:]*=np.linspace(1,0,f)
+    return r
+seg=[];prev=0;F=int(.02*SR)
 for s,e,ins in EDITS:
     x=a[int(prev*SR):int(s*SR)].copy()
     if seg: x[:F]*=np.linspace(0,1,F)
-    x[-F:]*=np.linspace(1,0,F); seg.append(x); seg.append(np.zeros(int(ins*SR),np.float32)); prev=e
+    x[-F:]*=np.linspace(1,0,F); seg.append(x); seg.append(roomtone(int(ins*SR))); prev=e
 x=a[int(prev*SR):].copy(); x[:F]*=np.linspace(0,1,F); seg.append(x)
 b=np.concatenate(seg)
 subprocess.run(['ffmpeg','-v','error','-y','-f','s16le','-ar',str(SR),'-ac','1','-i','-','-af',f'atempo={TEMPO}',outw],input=b.astype(np.int16).tobytes())

@@ -9,7 +9,8 @@
 # Règles (mesurées sur la vidéo de référence, voir README.md) :
 #   - dans la référence, pendant que la voix parle, le fond est environ 17 dB sous elle (26 dB au-dessus de 150 Hz),
 #     et l'ensemble musique + bruitages est environ 9 LU sous la voix : les gros sons tombent entre les phrases ;
-#   - musique en continu, 18 dB sous la voix, baissée encore de 8 dB pendant qu'elle parle ;
+#   - musique en continu, 14 dB sous la voix (mesurés au-dessus de 300 Hz, la bande d'un haut-parleur de téléphone),
+#     baissée de 3 dB seulement, lentement, pendant qu'elle parle : sinon les pauses sonnent comme des coupures ;
 #   - pendant la parole, chaque bruitage est plafonné à 20 dB sous la voix au-dessus de 150 Hz
 #     et à 12 dB sous elle en pleine bande (booms) ; 30 ms d'anticipation ;
 #   - entre les phrases, les bruitages retrouvent leur pleine force.
@@ -22,8 +23,8 @@ from scipy.ndimage import minimum_filter1d
 from scipy.signal import butter, lfilter
 
 SR = 48000
-BED_BELOW_VOICE_DB = 18
-BED_DUCK_DB = 8
+BED_BELOW_VOICE_DB = 15  # was 18 (+8 dB duck): pauses fell ~23 dB under the voice on a phone speaker, heard as cuts
+BED_DUCK_DB = 3  # was 8: a deep duck left near-silence between words (heard as « le son se coupe »)
 SFX_BELOW_VOICE_SPEECH_DB = 20  # above 150 Hz, where the voice is understood
 SFX_BELOW_VOICE_FULL_DB = 12  # full band (keeps the booms under the voice)
 
@@ -86,7 +87,13 @@ def main():
     bed = np.zeros((n, 2), np.float32)
     if plan.get('bed'):
         place(bed, load(plan['bed'], dur=plan['duration']), 0.0)
-        bed *= 10 ** ((v_level - plan.get('bed_below_voice_db', BED_BELOW_VOICE_DB) - rms_db(bed.mean(1))) / 20)
+        # level set in the band a phone speaker plays (above 300 Hz): a bass-heavy bed measured full-band
+        # vanished on phones and the pauses sounded like cuts
+        # soften the bed's bass (≈ −4 dB under 200 Hz) so it fills the pauses without masking the voice
+        bed = (0.6 * bed + 0.4 * np.stack([highpass(bed[:, c].astype(np.float64), 200.0) for c in range(2)], 1)).astype(np.float32)
+        vb = rms_db(highpass(vmono[speaking].astype(np.float64), 300.0)) if speaking.any() else v_level
+        bb = rms_db(highpass(bed.mean(1).astype(np.float64), 300.0))
+        bed *= 10 ** ((vb - plan.get('bed_below_voice_db', BED_BELOW_VOICE_DB) - bb) / 20)
 
     sfx = np.zeros((n, 2), np.float32)
     for f, t0, vol, cap in plan['events']:
@@ -99,7 +106,9 @@ def main():
 
     venv = smooth(rms(vmono, 0.03), 0.01, 0.2)
     talk = np.clip(venv / (np.percentile(venv[speaking], 50) + 1e-9), 0, 1) if speaking.any() else np.zeros(n)
-    bed_gain = 10 ** (-BED_DUCK_DB * talk / 20)
+    # the bed follows a slow envelope (1.5 s release): it stays put through the gaps between words instead of pumping
+    talk_slow = smooth(talk, 0.15, 1.5)
+    bed_gain = 10 ** (-BED_DUCK_DB * talk_slow / 20)
 
     # cap each effect relative to the voice while it speaks (detector ignores the sub-bass),
     # with 30 ms of look-ahead so a transient is already turned down when it starts
@@ -128,6 +137,15 @@ def main():
     worst = np.array(worst)
     print(f'voix − fond pendant la parole : médiane {np.median(worst):.1f} dB, pire {worst.min():.1f} dB, '
           f'fenêtres < 6 dB : {(worst < 6).mean() * 100:.0f} %')
+    # holes: inside speech (voice within 300 ms on both sides), 50 ms where the mix, heard through a phone speaker
+    # (above 300 Hz), falls more than 26 dB under the voice. Those were heard as « le son se coupe ».
+    hw = int(0.05 * SR)
+    lvl = lambda x: 20 * np.log10(np.sqrt(np.add.reduceat(x.astype(np.float64) ** 2, np.arange(0, len(x) - hw, hw)) / hw) + 1e-9)
+    vp, mp = lvl(highpass(vmono.astype(np.float64), 300.0)), lvl(highpass(mix.mean(1).astype(np.float64), 300.0))
+    vref = rms_db(highpass(vmono[speaking].astype(np.float64), 300.0)) if speaking.any() else -30
+    on = vp > vref - 30
+    holes = [round(k * 0.05, 2) for k in range(6, len(mp) - 6) if not on[k] and on[k - 6:k].any() and on[k + 1:k + 7].any() and mp[k] < vref - 26]
+    print(f'trous dans le son (pauses à plus de 26 dB sous la voix, au téléphone) : {len(holes)}' + (f' à {holes[:12]} s — À CORRIGER' if holes else ''))
 
 
 if __name__ == '__main__':
