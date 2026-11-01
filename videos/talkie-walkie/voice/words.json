@@ -1,0 +1,1087 @@
+[
+{
+"text": "À",
+"start": 0.3,
+"end": 0.354
+},
+{
+"text": "Londres,",
+"start": 0.374,
+"end": 1.124
+},
+{
+"text": "un",
+"start": 1.278,
+"end": 1.308
+},
+{
+"text": "gratte-ciel",
+"start": 1.328,
+"end": 1.911
+},
+{
+"text": "a",
+"start": 1.931,
+"end": 1.985
+},
+{
+"text": "fait",
+"start": 2.005,
+"end": 2.282
+},
+{
+"text": "fondre",
+"start": 2.302,
+"end": 2.477
+},
+{
+"text": "une",
+"start": 2.497,
+"end": 2.671
+},
+{
+"text": "voiture",
+"start": 2.691,
+"end": 3.186
+},
+{
+"text": "sans",
+"start": 3.206,
+"end": 3.621
+},
+{
+"text": "la",
+"start": 3.641,
+"end": 3.723
+},
+{
+"text": "toucher.",
+"start": 3.743,
+"end": 4.145
+},
+{
+"text": "Nous",
+"start": 4.165,
+"end": 4.267
+},
+{
+"text": "sommes",
+"start": 4.287,
+"end": 4.888
+},
+{
+"text": "en",
+"start": 4.908,
+"end": 5.095
+},
+{
+"text": "deux",
+"start": 5.115,
+"end": 5.145
+},
+{
+"text": "mille",
+"start": 5.165,
+"end": 5.195
+},
+{
+"text": "treize.",
+"start": 5.215,
+"end": 5.698
+},
+{
+"text": "Dans",
+"start": 5.718,
+"end": 5.748
+},
+{
+"text": "la",
+"start": 5.768,
+"end": 5.851
+},
+{
+"text": "City,",
+"start": 5.871,
+"end": 6.513
+},
+{
+"text": "une",
+"start": 6.533,
+"end": 6.563
+},
+{
+"text": "nouvelle",
+"start": 6.583,
+"end": 6.842
+},
+{
+"text": "tour",
+"start": 6.862,
+"end": 7.09
+},
+{
+"text": "vient",
+"start": 7.11,
+"end": 7.399
+},
+{
+"text": "de",
+"start": 7.419,
+"end": 7.523
+},
+{
+"text": "pousser",
+"start": 7.543,
+"end": 8.185
+},
+{
+"text": "plus",
+"start": 8.205,
+"end": 8.235
+},
+{
+"text": "large",
+"start": 8.255,
+"end": 8.532
+},
+{
+"text": "en",
+"start": 8.552,
+"end": 8.664
+},
+{
+"text": "haut",
+"start": 8.684,
+"end": 8.928
+},
+{
+"text": "qu'en",
+"start": 8.948,
+"end": 9.166
+},
+{
+"text": "bas,",
+"start": 9.186,
+"end": 9.559
+},
+{
+"text": "avec",
+"start": 9.579,
+"end": 9.785
+},
+{
+"text": "une",
+"start": 9.805,
+"end": 9.983
+},
+{
+"text": "immense",
+"start": 10.003,
+"end": 10.445
+},
+{
+"text": "façade",
+"start": 10.465,
+"end": 10.841
+},
+{
+"text": "de",
+"start": 10.861,
+"end": 10.973
+},
+{
+"text": "verre",
+"start": 10.993,
+"end": 11.302
+},
+{
+"text": "bombée",
+"start": 11.322,
+"end": 11.698
+},
+{
+"text": "vers",
+"start": 11.718,
+"end": 11.798
+},
+{
+"text": "la",
+"start": 11.818,
+"end": 11.897
+},
+{
+"text": "rue.",
+"start": 11.917,
+"end": 12.303
+},
+{
+"text": "Les",
+"start": 12.323,
+"end": 12.568
+},
+{
+"text": "Londoniens",
+"start": 12.588,
+"end": 13.268
+},
+{
+"text": "la",
+"start": 13.288,
+"end": 13.408
+},
+{
+"text": "surnomment",
+"start": 13.428,
+"end": 14.108
+},
+{
+"text": "le",
+"start": 14.128,
+"end": 14.248
+},
+{
+"text": "Talkie-Walkie.",
+"start": 14.268,
+"end": 15.018
+},
+{
+"text": "Fin",
+"start": 15.138,
+"end": 15.168
+},
+{
+"text": "d'été,",
+"start": 15.188,
+"end": 15.938
+},
+{
+"text": "le",
+"start": 16.024,
+"end": 16.054
+},
+{
+"text": "soleil",
+"start": 16.074,
+"end": 16.418
+},
+{
+"text": "est",
+"start": 16.438,
+"end": 16.581
+},
+{
+"text": "bas.",
+"start": 16.601,
+"end": 17.064
+},
+{
+"text": "Dans",
+"start": 17.084,
+"end": 17.114
+},
+{
+"text": "la",
+"start": 17.134,
+"end": 17.208
+},
+{
+"text": "rue",
+"start": 17.228,
+"end": 17.395
+},
+{
+"text": "d'en",
+"start": 17.415,
+"end": 17.646
+},
+{
+"text": "face,",
+"start": 17.666,
+"end": 18.037
+},
+{
+"text": "une",
+"start": 18.057,
+"end": 18.146
+},
+{
+"text": "tache",
+"start": 18.166,
+"end": 18.459
+},
+{
+"text": "de",
+"start": 18.479,
+"end": 18.585
+},
+{
+"text": "lumière",
+"start": 18.605,
+"end": 19.023
+},
+{
+"text": "aveuglante",
+"start": 19.043,
+"end": 19.649
+},
+{
+"text": "apparaît.",
+"start": 19.669,
+"end": 20.206
+},
+{
+"text": "Une",
+"start": 20.226,
+"end": 20.385
+},
+{
+"text": "selle",
+"start": 20.405,
+"end": 20.742
+},
+{
+"text": "de",
+"start": 20.762,
+"end": 20.885
+},
+{
+"text": "vélo",
+"start": 20.905,
+"end": 21.171
+},
+{
+"text": "se",
+"start": 21.191,
+"end": 21.314
+},
+{
+"text": "met",
+"start": 21.334,
+"end": 21.528
+},
+{
+"text": "à",
+"start": 21.548,
+"end": 21.6
+},
+{
+"text": "cloquer.",
+"start": 21.62,
+"end": 22.28
+},
+{
+"text": "Un",
+"start": 22.3,
+"end": 22.33
+},
+{
+"text": "paillasson",
+"start": 22.35,
+"end": 22.796
+},
+{
+"text": "fume.",
+"start": 22.816,
+"end": 23.566
+},
+{
+"text": "Un",
+"start": 23.601,
+"end": 23.641
+},
+{
+"text": "homme",
+"start": 23.661,
+"end": 23.923
+},
+{
+"text": "d'affaires",
+"start": 23.943,
+"end": 24.488
+},
+{
+"text": "retrouve",
+"start": 24.508,
+"end": 24.94
+},
+{
+"text": "sa",
+"start": 24.96,
+"end": 25.053
+},
+{
+"text": "Jaguar",
+"start": 25.073,
+"end": 25.619
+},
+{
+"text": "le",
+"start": 25.639,
+"end": 25.669
+},
+{
+"text": "rétroviseur",
+"start": 25.689,
+"end": 26.348
+},
+{
+"text": "a",
+"start": 26.368,
+"end": 26.417
+},
+{
+"text": "fondu,",
+"start": 26.437,
+"end": 27.035
+},
+{
+"text": "le",
+"start": 27.055,
+"end": 27.085
+},
+{
+"text": "logo",
+"start": 27.105,
+"end": 27.248
+},
+{
+"text": "s'est",
+"start": 27.268,
+"end": 27.594
+},
+{
+"text": "ramolli,",
+"start": 27.614,
+"end": 28.26
+},
+{
+"text": "la",
+"start": 28.28,
+"end": 28.312
+},
+{
+"text": "carrosserie",
+"start": 28.332,
+"end": 29.082
+},
+{
+"text": "a",
+"start": 29.232,
+"end": 29.293
+},
+{
+"text": "gondolé.",
+"start": 29.313,
+"end": 29.841
+},
+{
+"text": "Les",
+"start": 29.861,
+"end": 30.096
+},
+{
+"text": "journalistes",
+"start": 30.116,
+"end": 30.522
+},
+{
+"text": "accourent.",
+"start": 30.542,
+"end": 31.268
+},
+{
+"text": "L'un",
+"start": 31.288,
+"end": 31.508
+},
+{
+"text": "d'eux",
+"start": 31.528,
+"end": 31.861
+},
+{
+"text": "pose",
+"start": 31.881,
+"end": 32.144
+},
+{
+"text": "une",
+"start": 32.164,
+"end": 32.355
+},
+{
+"text": "poêle",
+"start": 32.375,
+"end": 32.708
+},
+{
+"text": "sur",
+"start": 32.728,
+"end": 32.793
+},
+{
+"text": "le",
+"start": 32.813,
+"end": 32.877
+},
+{
+"text": "trottoir",
+"start": 32.897,
+"end": 33.282
+},
+{
+"text": "et",
+"start": 33.302,
+"end": 33.63
+},
+{
+"text": "fait",
+"start": 33.65,
+"end": 33.913
+},
+{
+"text": "cuire",
+"start": 33.933,
+"end": 34.018
+},
+{
+"text": "un",
+"start": 34.038,
+"end": 34.124
+},
+{
+"text": "œuf.",
+"start": 34.144,
+"end": 34.549
+},
+{
+"text": "Heureusement,",
+"start": 34.569,
+"end": 35.319
+},
+{
+"text": "à",
+"start": 35.357,
+"end": 35.389
+},
+{
+"text": "Londres,",
+"start": 35.409,
+"end": 35.933
+},
+{
+"text": "il",
+"start": 35.953,
+"end": 36.069
+},
+{
+"text": "n'y",
+"start": 36.089,
+"end": 36.273
+},
+{
+"text": "a",
+"start": 36.293,
+"end": 36.341
+},
+{
+"text": "presque",
+"start": 36.361,
+"end": 36.817
+},
+{
+"text": "jamais",
+"start": 36.837,
+"end": 37.225
+},
+{
+"text": "de",
+"start": 37.245,
+"end": 37.335
+},
+{
+"text": "soleil.",
+"start": 37.355,
+"end": 37.766
+},
+{
+"text": "Malheureusement,",
+"start": 37.786,
+"end": 38.536
+},
+{
+"text": "ce",
+"start": 39.003,
+"end": 39.136
+},
+{
+"text": "jour-là,",
+"start": 39.156,
+"end": 39.512
+},
+{
+"text": "il",
+"start": 39.532,
+"end": 39.631
+},
+{
+"text": "y",
+"start": 39.651,
+"end": 39.749
+},
+{
+"text": "en",
+"start": 39.769,
+"end": 39.868
+},
+{
+"text": "avait.",
+"start": 39.888,
+"end": 40.307
+},
+{
+"text": "Tu",
+"start": 40.327,
+"end": 40.357
+},
+{
+"text": "as",
+"start": 40.377,
+"end": 40.457
+},
+{
+"text": "déjà",
+"start": 40.477,
+"end": 40.716
+},
+{
+"text": "joué",
+"start": 40.736,
+"end": 40.974
+},
+{
+"text": "avec",
+"start": 40.994,
+"end": 41.233
+},
+{
+"text": "une",
+"start": 41.253,
+"end": 41.427
+},
+{
+"text": "loupe",
+"start": 41.447,
+"end": 41.816
+},
+{
+"text": "au",
+"start": 41.836,
+"end": 41.917
+},
+{
+"text": "soleil",
+"start": 41.937,
+"end": 42.338
+},
+{
+"text": "Elle",
+"start": 42.358,
+"end": 42.522
+},
+{
+"text": "attrape",
+"start": 42.542,
+"end": 42.951
+},
+{
+"text": "toute",
+"start": 42.971,
+"end": 43.258
+},
+{
+"text": "la",
+"start": 43.278,
+"end": 43.38
+},
+{
+"text": "lumière",
+"start": 43.4,
+"end": 43.809
+},
+{
+"text": "qui",
+"start": 43.829,
+"end": 43.993
+},
+{
+"text": "la",
+"start": 44.013,
+"end": 44.116
+},
+{
+"text": "traverse",
+"start": 44.136,
+"end": 44.606
+},
+{
+"text": "et",
+"start": 44.626,
+"end": 44.729
+},
+{
+"text": "la",
+"start": 44.749,
+"end": 44.851
+},
+{
+"text": "serre",
+"start": 44.871,
+"end": 45.158
+},
+{
+"text": "sur",
+"start": 45.178,
+"end": 45.342
+},
+{
+"text": "un",
+"start": 45.362,
+"end": 45.464
+},
+{
+"text": "seul",
+"start": 45.484,
+"end": 45.55
+},
+{
+"text": "point.",
+"start": 45.57,
+"end": 45.957
+},
+{
+"text": "La",
+"start": 45.977,
+"end": 46.166
+},
+{
+"text": "tour",
+"start": 46.186,
+"end": 46.455
+},
+{
+"text": "faisait",
+"start": 46.475,
+"end": 46.962
+},
+{
+"text": "pareil,",
+"start": 46.982,
+"end": 47.254
+},
+{
+"text": "en",
+"start": 47.274,
+"end": 47.614
+},
+{
+"text": "miroir",
+"start": 47.634,
+"end": 48.384
+},
+{
+"text": "des",
+"start": 48.436,
+"end": 48.529
+},
+{
+"text": "milliers",
+"start": 48.549,
+"end": 49.018
+},
+{
+"text": "de",
+"start": 49.038,
+"end": 49.14
+},
+{
+"text": "vitres,",
+"start": 49.16,
+"end": 49.677
+},
+{
+"text": "toutes",
+"start": 49.697,
+"end": 49.935
+},
+{
+"text": "tournées",
+"start": 49.955,
+"end": 50.424
+},
+{
+"text": "vers",
+"start": 50.444,
+"end": 50.668
+},
+{
+"text": "le",
+"start": 50.688,
+"end": 50.79
+},
+{
+"text": "même",
+"start": 50.81,
+"end": 50.877
+},
+{
+"text": "coin",
+"start": 50.897,
+"end": 50.964
+},
+{
+"text": "de",
+"start": 50.984,
+"end": 51.052
+},
+{
+"text": "rue.",
+"start": 51.072,
+"end": 51.459
+},
+{
+"text": "Les",
+"start": 51.479,
+"end": 51.714
+},
+{
+"text": "propriétaires",
+"start": 51.734,
+"end": 52.445
+},
+{
+"text": "ont",
+"start": 52.465,
+"end": 52.614
+},
+{
+"text": "payé",
+"start": 52.634,
+"end": 52.839
+},
+{
+"text": "la",
+"start": 52.859,
+"end": 52.951
+},
+{
+"text": "réparation",
+"start": 52.971,
+"end": 53.514
+},
+{
+"text": "de",
+"start": 53.534,
+"end": 53.626
+},
+{
+"text": "la",
+"start": 53.646,
+"end": 53.735
+},
+{
+"text": "Jaguar,",
+"start": 53.755,
+"end": 53.954
+},
+{
+"text": "puis",
+"start": 53.974,
+"end": 54.358
+},
+{
+"text": "ont",
+"start": 54.378,
+"end": 54.526
+},
+{
+"text": "couvert",
+"start": 54.546,
+"end": 54.92
+},
+{
+"text": "la",
+"start": 54.94,
+"end": 55.032
+},
+{
+"text": "façade",
+"start": 55.052,
+"end": 55.37
+},
+{
+"text": "de",
+"start": 55.39,
+"end": 55.482
+},
+{
+"text": "pare-soleil.",
+"start": 55.502,
+"end": 56.07
+},
+{
+"text": "Et",
+"start": 56.09,
+"end": 56.12
+},
+{
+"text": "le",
+"start": 56.14,
+"end": 56.273
+},
+{
+"text": "plus",
+"start": 56.293,
+"end": 56.612
+},
+{
+"text": "fort",
+"start": 56.632,
+"end": 57.249
+},
+{
+"text": "Trois",
+"start": 57.269,
+"end": 57.557
+},
+{
+"text": "ans",
+"start": 57.577,
+"end": 57.75
+},
+{
+"text": "plus",
+"start": 57.77,
+"end": 57.899
+},
+{
+"text": "tôt,",
+"start": 57.919,
+"end": 58.188
+},
+{
+"text": "le",
+"start": 58.208,
+"end": 58.395
+},
+{
+"text": "même",
+"start": 58.415,
+"end": 58.653
+},
+{
+"text": "architecte",
+"start": 58.673,
+"end": 59.299
+},
+{
+"text": "avait",
+"start": 59.319,
+"end": 59.621
+},
+{
+"text": "construit",
+"start": 59.641,
+"end": 60.202
+},
+{
+"text": "à",
+"start": 60.222,
+"end": 60.266
+},
+{
+"text": "Las",
+"start": 60.286,
+"end": 60.46
+},
+{
+"text": "Vegas",
+"start": 60.48,
+"end": 60.782
+},
+{
+"text": "un",
+"start": 60.802,
+"end": 60.911
+},
+{
+"text": "hôtel",
+"start": 60.931,
+"end": 61.494
+},
+{
+"text": "dont",
+"start": 61.514,
+"end": 61.657
+},
+{
+"text": "le",
+"start": 61.677,
+"end": 61.771
+},
+{
+"text": "reflet",
+"start": 61.791,
+"end": 62.116
+},
+{
+"text": "roussissait",
+"start": 62.136,
+"end": 62.747
+},
+{
+"text": "les",
+"start": 62.767,
+"end": 62.919
+},
+{
+"text": "cheveux",
+"start": 62.939,
+"end": 63.32
+},
+{
+"text": "des",
+"start": 63.34,
+"end": 63.493
+},
+{
+"text": "clients",
+"start": 63.513,
+"end": 63.894
+},
+{
+"text": "au",
+"start": 63.914,
+"end": 64.009
+},
+{
+"text": "bord",
+"start": 64.029,
+"end": 64.238
+},
+{
+"text": "de",
+"start": 64.258,
+"end": 64.353
+},
+{
+"text": "la",
+"start": 64.373,
+"end": 64.468
+},
+{
+"text": "piscine.",
+"start": 64.488,
+"end": 64.888
+}
+]
