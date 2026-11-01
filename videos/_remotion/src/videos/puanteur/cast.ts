@@ -343,14 +343,14 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
   switch (id) {
     case 1: {
       stander(cam, out, 10, MP[2], "mp2", t, 0, 4.0, t > at(5) ? "pained" : "nervous", { prop: "hanky", look: -1 });
-      riverStink(5, -4, 5, -3.0, 1.2);
+      for (const [k, sx] of [[0, -2.2], [1, 2.4], [2, 1.2]] as const) stink(out, t, sx, 0.9, 1.0 + k * 0.4, 0.9, k);
       flies(out, t, 0.2, 2.0, 3.8, 0.35, 3);
       break;
     }
     case 2: case 14: {
       const dir = id === 2 ? 1 : -1;
       for (let i = 0; i < 6; i++) {
-        const xs = id === 2 ? -6 - i * 1.6 : 8 + i * 1.6;
+        const xs = id === 2 ? 3 - i * 1.5 : 8 + i * 1.6;
         walker(cam, out, 20 + i, MP[i], `mp${i}`, t, t0, xs, 3.0 + (i % 3) * 1.1, dir * 2.8, 0, i % 2 ? "pained" : "shock", "hanky", 1, true);
       }
       riverStink(4, -6, 10, -3.5, 1.4);

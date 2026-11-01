@@ -217,6 +217,7 @@ export class World {
   private flows: THREE.Texture[] = [];
   private lid = new THREE.Group();
   private cart = new THREE.Group();
+  private trench = new THREE.Group();
   private bus = new THREE.Group();
   private sewerGlow: THREE.Mesh; private dash: THREE.Texture;
   private lanterns: THREE.Sprite[] = [];
@@ -273,10 +274,11 @@ export class World {
     this.riverMat = twoTone(new THREE.MeshLambertMaterial({ map: this.riverMaps.dirty }));
     this.river = new THREE.Mesh(flatUp(-700, 900, RIVER.zS, RIVER.zN, RIVER.y, 1, 1), this.riverMat);
     this.river.receiveShadow = true; R.add(this.river);
-    b.add(flatUp(-900, 900, -900, 900, -0.03, 200, 200), lam("groundFar", () => ({ color: "#9a9282" })));
+    b.add(flatUp(-900, 900, -900, 900, -3, 200, 200), lam("groundFar", () => ({ color: "#9a9282" })));
+    b.add(flatUp(-900, 900, 0, 900, -0.02, 200, 100), lam("groundN", () => ({ color: "#a59a84" })));
     b.add(boxGeo(V(-700, RIVER.y - 1, -0.6), V(900, 0.12, 0)), wallStone);                  // quai nord
     b.add(boxGeo(V(-700, RIVER.y - 1, RIVER.zS), V(900, 0.6, RIVER.zS + 0.6)), wallStone); // rive sud
-    b.add(flatUp(-700, 900, RIVER.zS - 40, RIVER.zS, 0.6, 400, 10), lam("southBank", () => ({ color: "#a59a84" })));
+    b.add(flatUp(-900, 900, -900, RIVER.zS, 0.6, 400, 10), lam("southBank", () => ({ color: "#a59a84" })));
     b.add(flatUp(-700, 900, -2.5, -0.6, RIVER.y + 0.02, 1, 1), mud);
     // terrasse, parapet
     b.add(flatUp(PARL.x0 - 30, PARL.x1 + 30, 0, PARL.z, 0.12, 40, 3), lam("terrace", () => ({ map: paveTex() })));
@@ -300,7 +302,7 @@ export class World {
     b.add(boxGeo(V(BRIDGE_X + 6.4, 4.6, RIVER.zS - 6), V(BRIDGE_X + 7, 5.6, 6)), stone);
     for (let zz = -8; zz > RIVER.zS; zz -= 16) b.add(boxGeo(V(BRIDGE_X - 7.6, RIVER.y - 1, zz - 1.8), V(BRIDGE_X + 7.6, 3.6, zz + 1.8)), wallStone);
     // ---- la rive sud : entrepôts ----
-    for (let x = -300; x < 500; x += 14) house(bs, x, RIVER.zS - 12, 0, 12, 10, 8 + ((x / 14) % 3) * 2, Math.abs(Math.round(x / 14)) % 8, 0.6);
+    for (let x = -240; x < 300; x += 14) house(bs, x, RIVER.zS - 12, 0, 12, 10, 8 + ((x / 14) % 3) * 2, Math.abs(Math.round(x / 14)) % 8, 0.6);
     // ---- les bouches d'égout et les usines ----
     this.flows = [];
     for (const ox of OUTFALL_X) {
@@ -337,7 +339,7 @@ export class World {
       }
     }
     // la rue derrière (blocs de maisons vus du ciel)
-    for (let zz = 60; zz < 300; zz += 26) if (Math.abs(zz - STREET_Z) > 20) for (let xx = -200; xx < 200; xx += 10) house(b, xx, zz, (zz / 26) % 2 ? 0 : Math.PI, 9.6, 8, 8.4 + (Math.abs(xx) % 3), Math.abs(xx + zz) % 8);
+    for (let zz = 60; zz < 240; zz += 26) if (Math.abs(zz - STREET_Z) > 20) for (let xx = -180; xx < 180; xx += 13) house(bs, xx, zz, (zz / 26) % 2 ? 0 : Math.PI, 9.6, 8, 8.4 + (Math.abs(xx) % 3), Math.abs(xx + zz) % 8);
     for (let lx = -60; lx <= 60; lx += 12) for (const lz of [STREET_Z - 6.8, STREET_Z + 6.8]) { // becs de gaz
       b.add(new THREE.CylinderGeometry(0.06, 0.09, 3.4, 8).translate(0, 1.7, 0), iron, M4(lx, 0.12, lz));
       b.add(new THREE.BoxGeometry(0.4, 0.5, 0.4).translate(0, 3.6, 0), lam("gasLamp", () => ({ color: "#f2e2a8" })), M4(lx, 0.12, lz));
@@ -345,14 +347,16 @@ export class World {
     // enseigne GODZY sur une boutique de la rue (côté nord, façade vers la rue)
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.9), new THREE.MeshBasicMaterial({ map: godzyTexture({ w: 1024, h: 288 }) }));
     sign.position.set(-14, 3.1, STREET_Z + 8.4); sign.rotation.y = Math.PI; sign.layers.set(NOINK); R.add(sign);
-    // la tranchée des égouts : terre, parois, tunnel en construction
+    // la tranchée des égouts : terre, parois, tunnel en construction (visible à partir du plan 19)
+    const bt = new Batch();
     const earth = lam("earth", () => ({ color: "#7a5a3c" }));
-    b.add(boxGeo(V(TRENCH.x0, -2.4, TRENCH.z - TRENCH.w / 2), V(TRENCH.x1, -2.3, TRENCH.z + TRENCH.w / 2)), earth);
-    b.add(flatUp(TRENCH.x0, TRENCH.x1, TRENCH.z - TRENCH.w / 2, TRENCH.z + TRENCH.w / 2, 0.005, 8, 1), lam("trenchDark", () => ({ color: "#4a3626" })));
+    bt.add(boxGeo(V(TRENCH.x0, -2.4, TRENCH.z - TRENCH.w / 2), V(TRENCH.x1, -2.3, TRENCH.z + TRENCH.w / 2)), earth);
+    bt.add(flatUp(TRENCH.x0, TRENCH.x1, TRENCH.z - TRENCH.w / 2, TRENCH.z + TRENCH.w / 2, 0.005, 8, 1), lam("trenchDark", () => ({ color: "#4a3626" })));
     const arch = new THREE.CylinderGeometry(1.5, 1.5, TRENCH.x1 - TRENCH.x0 - 6, 18, 1, true, 0, Math.PI); arch.rotateZ(Math.PI / 2);
-    b.add(arch, lam("sewerB", () => ({ map: rep(sewerBrick(), 6, 1) })), M4((TRENCH.x0 + TRENCH.x1) / 2 + 3, -1.6, TRENCH.z));
-    for (const sz of [-1, 1]) for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 3.2) b.add(new THREE.SphereGeometry(1, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), earth, new THREE.Matrix4().compose(V(xx + 1.6, 0, TRENCH.z + sz * (TRENCH.w / 2 + 1.1)), new THREE.Quaternion(), V(1.4, 0.7, 0.9)));
-    for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 4) b.add(boxGeo(V(xx, 0.02, TRENCH.z - 2.4), V(xx + 0.25, 0.08, TRENCH.z + 2.4)), wood);
+    bt.add(arch, lam("sewerB", () => ({ map: rep(sewerBrick(), 6, 1) })), M4((TRENCH.x0 + TRENCH.x1) / 2 + 3, -1.6, TRENCH.z));
+    for (const sz of [-1, 1]) for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 3.2) bt.add(new THREE.SphereGeometry(1, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), earth, new THREE.Matrix4().compose(V(xx + 1.6, 0, TRENCH.z + sz * (TRENCH.w / 2 + 1.1)), new THREE.Quaternion(), V(1.4, 0.7, 0.9)));
+    for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 4) bt.add(boxGeo(V(xx, 0.02, TRENCH.z - 2.4), V(xx + 0.25, 0.08, TRENCH.z + 2.4)), wood);
+    bt.build(this.trench); R.add(this.trench);
     // la charrette du déménagement (plan 15)
     const cartBed = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.25, 1.5), lam("woodP", () => ({ color: "#8a5a3c" }))); cartBed.position.y = 0.8;
     this.cart.add(cartBed);
@@ -419,7 +423,7 @@ export class World {
     // la poubelle : cuve verte (autocollant GODZY côté rue), couvercle à charnière
     const binM = lam("binGodzy", () => ({ map: binTex() })), binG = lam("binGreen", () => ({ color: "#2f5f3a" }));
     const [bx, by, bz] = BIN;
-    b.add(quad(V(bx - 0.32, by, bz - 0.36), V(bx + 0.32, by, bz - 0.36), V(bx + 0.35, by + 1.0, bz - 0.4), V(bx - 0.35, by + 1.0, bz - 0.4)), binM);
+    b.add(quad(V(bx + 0.32, by + 0.02, bz - 0.375), V(bx - 0.32, by + 0.02, bz - 0.375), V(bx - 0.32, by + 0.98, bz - 0.375), V(bx + 0.32, by + 0.98, bz - 0.375)), binM);
     walls(b, binG, bx - 0.33, bx + 0.33, by, by + 1.0, bz - 0.36, bz + 0.36, 1);
     for (const s of [-1, 1]) b.add(new THREE.CylinderGeometry(0.1, 0.1, 0.06, 14).rotateZ(Math.PI / 2), iron, M4(bx + s * 0.3, by + 0.1, bz + 0.38));
     const lidM = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.06, 0.82).translate(0, 0.03, -0.41), binG);
@@ -515,7 +519,8 @@ export class World {
     if (this.riverMat.map) this.riverMat.map.offset.set(t * 0.004, 0);
     for (const fl of this.flows) fl.offset.y = -t * 0.9;
     // ---- la poubelle, la charrette, le bus, les égouts lumineux ----
-    this.lid.rotation.x = id === 9 ? -1.0 * clamp01((t - at(69)) / 0.5) : 0;
+    this.lid.rotation.x = id === 9 ? 1.1 * clamp01((t - at(69)) / 0.5) : 0;
+    this.trench.visible = id >= 19;
     this.cart.visible = id === 15;
     if (id === 15) { this.cart.position.set(1.2 + 1.4 * (t - s.a / FPS), 0, STREET_Z); }
     this.bus.visible = id === 26;
