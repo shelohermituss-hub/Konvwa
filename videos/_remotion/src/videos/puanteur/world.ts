@@ -354,7 +354,7 @@ export class World {
     bt.add(flatUp(TRENCH.x0, TRENCH.x1, TRENCH.z - TRENCH.w / 2, TRENCH.z + TRENCH.w / 2, 0.005, 8, 1), lam("trenchDark", () => ({ color: "#4a3626" })));
     const arch = new THREE.CylinderGeometry(1.5, 1.5, TRENCH.x1 - TRENCH.x0 - 6, 18, 1, true, 0, Math.PI); arch.rotateZ(Math.PI / 2);
     bt.add(arch, lam("sewerB", () => ({ map: rep(sewerBrick(), 6, 1) })), M4((TRENCH.x0 + TRENCH.x1) / 2 + 3, -1.6, TRENCH.z));
-    for (const sz of [-1, 1]) for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 3.2) bt.add(new THREE.SphereGeometry(1, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), earth, new THREE.Matrix4().compose(V(xx + 1.6, 0, TRENCH.z + sz * (TRENCH.w / 2 + 1.1)), new THREE.Quaternion(), V(1.1, 0.4, 0.7)));
+    for (const sz of [-1, 1]) for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 6.4) bt.add(new THREE.SphereGeometry(1, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), earth, new THREE.Matrix4().compose(V(xx + 1.6, 0, TRENCH.z + sz * (TRENCH.w / 2 + 1.1)), new THREE.Quaternion(), V(0.8, 0.3, 0.5)));
     for (let xx = TRENCH.x0; xx < TRENCH.x1; xx += 4) bt.add(boxGeo(V(xx, 0.02, TRENCH.z - 2.4), V(xx + 0.25, 0.08, TRENCH.z + 2.4)), wood);
     bt.build(this.trench); R.add(this.trench);
     // la charrette du déménagement (plan 15)

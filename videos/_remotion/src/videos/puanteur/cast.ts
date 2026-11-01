@@ -374,7 +374,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
       if (id === 9) stander(cam, out, 30, MODERN_KID, "kid", t, mx - 1.2, mz + 2.2, open > 0.3 ? "pained" : "neutral", { prop: open > 0.3 ? "pinch" : null, look: 1 }, 0.72);
       break;
     }
-    case 10: case 11: riverStink(id === 10 ? 10 : 6, id === 10 ? -40 : -30, id === 10 ? 160 : 30, -8, id === 10 ? 6 : 3.5); break;
+    case 10: case 11: riverStink(id === 10 ? 10 : 6, id === 10 ? -40 : -30, id === 10 ? 160 : 30, id === 10 ? -40 : -8, id === 10 ? 16 : 3.5); break;
     case 12: {
       stander(cam, out, 40, SERVANT, "maid", t, cx + 10.3, cz - 4.7, "pained", { look: -1 });
       stink(out, t, cx + 8.6, 1.4, cz - 6.6, 0.8, 1);
@@ -382,10 +382,11 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     }
     case 13: case 17: {
       for (let i = 0; i < 12; i++) {
-        const side = i < 6 ? -1 : 1, j = i % 6, x = cx - 6 + j * 2.4, z = cz + side * (3.4 + (j % 2) * 1.1);
+        const side = i < 6 ? -1 : 1, j = i % 6, x = cx - 6 + j * 2.4, z = cz + side * (2.85 + (j % 2) * 1.1);
         const vote = id === 17 && t > at(141) + j * 0.06;
-        const fo: Partial<FrontOpts> = id === 13 ? { mode: "sit", prop: "hanky" } : { mode: "sit", wave: vote ? q(0.6 + 0.4 * Math.sin(t * 6 + i), 10) : undefined };
-        stander(cam, out, 50 + i, MP[i % 6], `mp${i % 6}`, t, x, z, id === 13 ? "pained" : vote ? "grin" : "neutral", fo, 1, 0.45 + (j % 2) * 0.35);
+        // pour voter, ils se lèvent et lèvent la main (assis, le dessin ne lève pas le bras)
+        const fo: Partial<FrontOpts> = id === 13 ? { mode: "sit", prop: "hanky" } : vote ? { mode: "stand", wave: q(0.6 + 0.4 * Math.sin(t * 6 + i), 10) } : { mode: "sit" };
+        stander(cam, out, 50 + i, MP[i % 6], `mp${i % 6}`, t, x, z, id === 13 ? "pained" : vote ? "grin" : "neutral", fo, 1, vote ? (j % 2) * 0.35 : 0.45 + (j % 2) * 0.35);
       }
       if (id === 13) for (let k = 0; k < 3; k++) stink(out, t, cx - 3 + k * 3, 2.4, cz - 6.5, 1.0, k);
       break;
