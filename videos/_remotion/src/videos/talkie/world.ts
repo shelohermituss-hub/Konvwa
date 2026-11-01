@@ -407,11 +407,12 @@ export class World {
     // ---- lignes de visée : on retire ce qui boucherait un plan ----
     setSight(sightLines());
     // rangée de boutiques au sud (façades vers -z, à SHOP_Z) ; la boutique Godzy est derrière le paillasson
+    const bs = new Batch(); // les boutiques ne projettent pas d'ombre : le soleil couchant est derrière elles et doit éclairer la rue
     let x = -64, si = 0;
     while (x < 70) {
       const w = [6, 7.5, 9][si % 3], h = [13, 15.5, 11.5, 17][si % 4], cx = x + w / 2;
       const godzy = cx - w / 2 < MAT[0] && cx + w / 2 > MAT[0];
-      shopHouse(b, cx, SHOP_Z + 5, Math.PI, w, 10, godzy ? 14 : h, godzy ? -1 : si);
+      shopHouse(bs, cx, SHOP_Z + 5, Math.PI, w, 10, godzy ? 14 : h, godzy ? -1 : si);
       x += w; si++;
     }
     // côté nord : blocs de bureaux de part et d'autre du parvis (façades vers +z)
@@ -491,7 +492,7 @@ export class World {
       b.add(boxGeo(V(lx - 0.35, 0.3, lz - 0.9), V(lx + 0.35, 0.38, lz + 0.6)), lounger);
       b.add(quad(V(lx - 0.35, 0.38, lz - 0.9), V(lx + 0.35, 0.38, lz - 0.9), V(lx + 0.35, 0.95, lz - 1.3), V(lx - 0.35, 0.95, lz - 1.3)), lounger);
       for (const s of [-1, 1]) for (const zz of [-0.8, 0.5]) b.add(boxGeo(V(lx + s * 0.3 - 0.03, 0.03, lz + zz - 0.03), V(lx + s * 0.3 + 0.03, 0.3, lz + zz + 0.03)), coping);
-      if (k % 2 === 0) {
+      if (k % 2 !== 0) {
         b.add(new THREE.CylinderGeometry(0.03, 0.03, 2.4, 6).translate(0, 1.2, 0), coping, M4(lx + 0.8, 0.03, lz + 0.9));
         b.add(new THREE.ConeGeometry(1.2, 0.5, 8, 1, true).translate(0, 2.4, 0), lam("parasol", () => ({ color: "#f2c230", side: THREE.DoubleSide })), M4(lx + 0.8, 0.03, lz + 0.9));
       }
@@ -513,6 +514,7 @@ export class World {
     ([[-180, -330, 160, 60, 90], [40, -380, 220, 80, 110], [-380, -250, 180, 55, 100]] as const).forEach(([dx, dz, sx, sy, sz], i) =>
       b.add(hill, lam("mount" + i, () => ({ color: ["#c99d73", "#b98f6c", "#d4a97d"][i] })), new THREE.Matrix4().compose(V(LV[0] + dx, -2, LV[2] + dz), new THREE.Quaternion(), V(sx, sy, sz))));
     b.build(R);
+    bs.build(R, false);
     setSight([]);
 
     // ---- signatures « Godzy » : panneau d'affichage à Las Vegas (la boutique et le bus portent les deux autres) ----
@@ -754,15 +756,16 @@ export class World {
     this.matMat.color.setScalar(1 - 0.45 * mk);
     this.pan.visible = id === 15 && t > at(101);
     // ---- la lumière concentrée ----
-    const hotK = id === 1 ? 1 : id === 7 ? ramp(t, 60, 65) : (id >= 8 && id <= 15) || id === 17 || id === 20 || id === 21 ? 1 : 0;
+    const near = id === 15 ? 0.35 : id === 8 || id === 9 ? 0.6 : id === 1 || id >= 10 && id <= 14 ? 0.75 : 1;
+    const hotK = near * (id === 1 ? 1 : id === 7 ? ramp(t, 60, 65) : (id >= 8 && id <= 15) || id === 17 || id === 20 || id === 21 ? 1 : 0);
     this.hot.visible = hotK > 0.01;
-    this.hotMat.color.setRGB(2.6, 2.0, 1.2).multiplyScalar(hotK * (1 + 0.06 * Math.sin(t * 9)));
+    this.hotMat.color.setRGB(1.9, 1.45, 0.85).multiplyScalar(hotK * (1 + 0.06 * Math.sin(t * 9)));
     const glareK = s.light === "golden" && id <= 21 ? (id === 6 ? 0.25 : id === 7 ? 0.3 + 0.7 * ramp(t, 60, 65) : 1) : 0;
     this.glare.visible = glareK > 0.01;
     if (glareK > 0) {
       const gp = facadeAt(0, 62);
       this.glare.position.copy(gp).add(V(0, 0, 6)); this.glare.quaternion.copy(cam.quaternion);
-      const gs = 34 + 6 * Math.sin(t * 2.3);
+      const gs = 22 + 4 * Math.sin(t * 2.3);
       this.glare.scale.set(gs, gs, 1); this.glareMat.color.setRGB(2.4, 1.8, 1.1).multiplyScalar(glareK * 0.8);
     }
     const rayK = id === 20 ? ramp(t, 152, 157) : id === 21 ? 1 : 0;

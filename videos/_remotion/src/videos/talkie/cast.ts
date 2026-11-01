@@ -322,7 +322,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
   };
   switch (id) {
     case 1: { // l'accroche : une passante horrifiée devant la voiture qui fond
-      stander(cam, out, 10, FOLK[1], "f1", t, jx + 3.6, jz + 2.6, "shock", { look: -1 });
+      stander(cam, out, 10, FOLK[1], "f1", t, 12.3, 7.3, "shock", { look: -1 });
       smoke(out, t, jx + 1.6, 1.25, jz, 0.9, 5, 0.7, 1);
       smoke(out, t, jx - 0.6, 1.4, jz + 0.4, 0.8, 4, 0.6, 2);
       heat(out, t, jx + 2.0, 0.9, jz + 0.9, 1.1);
@@ -330,7 +330,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     }
     case 5: case 24: { // l'enfant et son talkie-walkie (jouet) ; un parent derrière
       const talk = id === 24;
-      stander(cam, out, 20, LONDON_KID, "kid", t, -4.5, 9.1, talk ? "grin" : "smile", { prop: "walkie", look: talk ? 0 : 1 }, 0.72);
+      stander(cam, out, 20, LONDON_KID, "kid", t, -5.0, 9.4, talk ? "grin" : "smile", { prop: "walkie", look: talk ? 0 : 1 }, 0.72);
       if (!talk) stander(cam, out, 21, FOLK[0], "f0", t, -2.4, 8.2, "smile", { look: -1 });
       break;
     }
