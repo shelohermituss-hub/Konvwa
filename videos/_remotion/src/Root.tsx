@@ -8,6 +8,7 @@ import { TestBox } from "./videos/test/Test";
 import { TalkieShort, TALKIE_FRAMES } from "./videos/talkie/Talkie";
 import { PuanteurShort, PUANTEUR_FRAMES } from "./videos/puanteur/Puanteur";
 import { RatsShort, RATS_FRAMES } from "./videos/rats/Rats";
+import { LookTest, LOOK_FRAMES } from "./videos/look/Look";
 
 export const Root: React.FC = () => (
   <>
@@ -19,6 +20,8 @@ export const Root: React.FC = () => (
     <Composition id="PuanteurShort" component={PuanteurShort} durationInFrames={PUANTEUR_FRAMES} fps={60} width={1080} height={1920} />
     {/* « Les rats d'Hanoï » (1902) : troisième vidéo ANIMÉ, la première avec des sous-titres. */}
     <Composition id="RatsShort" component={RatsShort} durationInFrames={RATS_FRAMES} fps={60} width={1080} height={1920} />
+    {/* Test du nouveau rendu d'après les références de la chaîne (objets 3D Sketchfab, HDRI, caméra continue). */}
+    <Composition id="LookTest" component={LookTest} durationInFrames={LOOK_FRAMES} fps={60} width={1080} height={1920} />
     {/* Test minimal du rendu WebGL (cube rouge) : vérifie qu'une machine sait rendre la 3D. */}
     <Composition id="TestBox" component={TestBox} durationInFrames={60} fps={60} width={1080} height={1920} />
   </>
