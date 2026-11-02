@@ -2,8 +2,8 @@
 
 Troisième vidéo du style ANIMÉ (skill `cartoon-3d-short`, adapté au français : `.claude/skills/cartoon-3d-short/KONVWA.md`), et la première avec des sous-titres.
 
-- **Format** : 1080 × 1920, **60 i/s**, **64,8 s**.
-- **Voix** : Gabriel Dubois.
+- **Format** : 1080 × 1920, **60 i/s**, **61,9 s**.
+- **Voix** : Gabriel Dubois, **vivante et énergique** (prise 2, à la demande du client ; la prise 1, posée, est `voice/take1.mp3`).
 - **Faits et sources** : `SCRIPT.md`.
 
 ## Sous-titres (intégrés à l'image, dans `Rats.tsx`)
@@ -18,7 +18,7 @@ Troisième vidéo du style ANIMÉ (skill `cartoon-3d-short`, adapté au françai
 
 | Quoi | Où |
 |---|---|
-| Voix, mots minutés | `voice/voice.wav`, `voice/words.json` (texte du script), `voice/words-whisper.json`, prise brute `voice/take1.mp3`, `serrer_pauses.py` |
+| Voix, mots minutés | `voice/voice.wav` (prise 2), `voice/words.json` (texte du script, calé par `../_remotion/scripts/caler_texte.py`), `voice/words-whisper.json`, prises brutes `voice/take1.mp3` (posée) et `voice/take2.mp3` (énergique) |
 | Image (code) | `../_remotion/src/videos/rats/` : `story.ts` (20 plans), `world.ts` (décors), `cast.ts` (personnages et effets), `Rats.tsx` (avec les sous-titres) |
 | Son | `audio/build_mix.py`, `audio/mix.flac` (mix final, commité), `audio/musique.mp3`, `audio/sfx/` |
 | Couverture | `cover.png`, `cover-grille.png` ; source dans `cover/` |
@@ -63,10 +63,10 @@ Décors de `world.ts` :
 
 ## Son
 
-- **Musique** : cartoon espiègle (pizzicati, cithare pincée, basson), générée avec Magnific / ElevenLabs. Ses vrais silences sont remontés, et le fond ne descend jamais à plus de 8 dB sous son niveau médian.
+- **Musique** : cartoon espiègle (pizzicati, cithare pincée, basson), générée avec Magnific / ElevenLabs. Ses vrais silences sont remontés, et le fond ne descend jamais à plus de 5 dB sous son niveau médian.
 - **Ambiances** : boulevard, rizières, égouts, bureau, jardin.
 - **Bruitages** : pièce, couinements, rats dans les égouts, chasse d'eau, compteur, pile de rats, mauvaise herbe, ciseaux, tampon, cobra.
-- **Mixage** : `../_engine/style-anime/mix_anime.py`. La voix passe devant (médiane 15,7 dB au-dessus du fond), **0 trou**.
+- **Mixage** : `../_engine/style-anime/mix_anime.py`. La voix passe devant (médiane 15,8 dB au-dessus du fond), **0 trou**.
 
 ## Rendu (sur le PC Windows du client, en PowerShell)
 

@@ -9,7 +9,7 @@ Faits (vérifiés) :
 
 Sources : Michael G. Vann, « Of Rats, Rice, and Race: The Great Hanoi Rat Massacre », French Colonial History 4 (2003) ; Wikipédia (« Great Hanoi Rat Massacre ») ; Atlas Obscura ; IIAS (« Rats and Sewers in 'Modern' and 'Civilized' French Hanoi ») ; Freakonomics (« The Cobra Effect », 2012).
 
-Voix : Gabriel Dubois (Magnific / ElevenLabs, `voiceId` 480, stabilité 0,5, consigne `[calm, steady, dry storytelling]`, 250 crédits). Prise de 64,5 s, pauses resserrées par `serrer_pauses.py` (version douce) : 63,2 s, 211 mots. `voice/words.json` = texte exact du script calé sur les temps de Whisper (`voice/words-whisper.json`), pour les sous-titres.
+Voix : Gabriel Dubois (Magnific / ElevenLabs, `voiceId` 480). Prise 2, retenue à la demande du client (« plus vivante, plus énergique ») : stabilité 0,3, consignes de ton phrase par phrase (`[energetic, enthusiastic storyteller, lively and punchy]`, `[amused]`, `[excited]`, `[playful, conspiratorial]`…), mots clés en capitales, 306 crédits. 60,6 s, pauses gardées telles quelles (pour ne pas casser l'énergie). La prise 1, posée, est `voice/take1.mp3`. `voice/words.json` = texte exact du script calé sur les temps de Whisper (`voice/words-whisper.json`) par `videos/_remotion/scripts/caler_texte.py`, pour les sous-titres.
 
 ---
 

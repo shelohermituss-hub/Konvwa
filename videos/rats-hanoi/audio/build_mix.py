@@ -12,7 +12,7 @@ ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 SR = 48000
 FPS = 60
 W = [w['start'] for w in json.load(open(os.path.join(HERE, '..', 'voice', 'words.json')))]
-VOICE_END = 63.24
+VOICE_END = 60.32
 DUR = round((VOICE_END + 1.6) * FPS) / FPS  # = TOTAL / 60 (story.ts)
 at = lambda k: W[k] - 2 / FPS
 A = lambda n: os.path.join(HERE, 'sfx', n)
@@ -62,7 +62,7 @@ amb = {k: loop_to(load(p), n) for k, p in
 for k in amb:  # chaque ambiance 6 dB sous la musique (la salle, très calme : +6 dB)
     amb[k] *= rms(music) / rms(amb[k]) * 10 ** ((-6 + (6 if k == 'salle' else 0)) / 20)
 # quelle ambiance quand : le bureau, la ferme, le boulevard, la salle de bains, les égouts, le jardin, les archives
-CUTS = [(0, 'salle'), (11, 'ferme'), (21, 'rue'), (38, 'egout'), (49, 'salle'), (56, 'rue'), (61, 'egout'), (73, 'salle'),
+CUTS = [(0, 'salle'), (11, 'ferme'), (21, 'rue'), (38, 'egout'), (49, 'salle'), (54, 'rue'), (61, 'egout'), (73, 'salle'),
         (85, 'egout'), (97, 'salle'), (117, 'jardin'), (138, 'rue'), (150, 'egout'), (164, 'ferme'), (177, 'salle'), (181, 'rue'), (188, 'salle')]
 ZONES = [(k, 0 if i == 0 else at(w), at(CUTS[i + 1][0]) if i + 1 < len(CUTS) else DUR) for i, (w, k) in enumerate(CUTS)]
 bed = music.copy()
@@ -70,11 +70,11 @@ t = np.arange(n) / SR
 for k, a, b in ZONES:
     g = np.clip((t - a + 0.3) / 0.6, 0, 1) * np.clip((b - t + 0.3) / 0.6, 0, 1)
     bed += amb[k] * g[:, None]
-# filet de sécurité : le fond complet (musique + ambiance) ne descend jamais à plus de 8 dB sous son niveau médian
+# filet de sécurité : le fond complet (musique + ambiance) ne descend jamais à plus de 5 dB sous son niveau médian
 bm = bed.mean(1).astype(np.float64)
 kw = int(0.25 * SR)
 benv = np.sqrt(np.convolve(bm ** 2, np.ones(kw) / kw, mode='same')) + 1e-6
-bref = np.median(benv) * 10 ** (-8 / 20)
+bref = np.median(benv) * 10 ** (-5 / 20)
 bg = np.convolve(np.clip(bref / benv, 1.0, 30.0), np.ones(int(0.15 * SR)) / int(0.15 * SR), mode='same')
 bed *= bg[:, None].astype(np.float32)
 bed_path = os.path.join(HERE, 'bed.wav')
@@ -91,6 +91,7 @@ E = [  # [fichier, début (s), volume, durée max]
     [A('chasse-eau.mp3'), at(31) - 0.1, 0.8, None],     # la chasse d'eau
     [A('rats-egout.mp3'), at(39), 0.7, None],           # la ville des rats
     [S1('ping-carte.mp3'), at(51), 0.5, 1.2],           # la peste sur la carte
+    [S1('whoosh.mp3'), at(56) - 0.3, 0.45, 0.8],        # retour sur le boulevard
     [A('rats-egout.mp3'), at(62), 0.6, 3.0],            # la chasse dans les égouts
     [A('couic.mp3'), at(70), 0.5, None],
     [S1('compteur.mp3'), at(77), 0.5, 1.4],             # 20 112

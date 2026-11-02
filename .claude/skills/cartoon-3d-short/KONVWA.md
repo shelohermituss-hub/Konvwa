@@ -12,7 +12,7 @@ Ce skill vient de [mromidev/claude-animated-shorts](https://github.com/mromidev/
 | 55-70 s | **60 à 70 s** (plus de 60 s, jamais plus de 70 s) |
 | 30 i/s, export 2K `--scale 1.3333` | **60 i/s** (`--fps 60` ; composition à 60 i/s), 1080×1920 par défaut ; 2K seulement si le rendu se fait sur le PC du client |
 | No captions | **pas de sous-titres** (confirmé par le client) |
-| Voix « one steady tone » | voix **Gabriel Dubois** (Magnific / ElevenLabs, `voiceId` 480), ton posé et régulier |
+| Voix « one steady tone » | voix **Gabriel Dubois** (Magnific / ElevenLabs, `voiceId` 480), **vivante et énergique** (demande du client, novembre 2026) : stabilité 0,3, consignes de ton phrase par phrase (`[energetic, enthusiastic storyteller, lively and punchy]`, `[amused]`, `[excited]`, `[playful, conspiratorial]`…), mots clés en capitales ; modèle : `videos/rats-hanoi/` (prise 2). Ne plus utiliser le ton posé `[calm, steady, dry storytelling]` |
 | Musique de marche synthétisée | autorisée ; le mixage ne doit jamais avoir de trou (règle du son, voir `videos/_engine/style-anime/mix_anime.py`) |
 | — | **signature « Godzy » dans le décor**, 2 à 4 fois : enseignes peintes, affiches, drapeaux, maillots (`videos/_engine/signature/README.md`) |
 | — | **couverture TikTok créée à part**, en rendu 3D studio (`videos/_engine/covers/README.md`) |
@@ -41,7 +41,7 @@ Le reste suit SKILL.md : la recette du script (accroche absurde, décor, escalad
 ## Chaîne en français, pas à pas
 
 1. **Script** : `SCRIPT_modele_fr.md`, 180 à 210 mots, faits vérifiés et sourcés.
-2. **Voix** : Gabriel Dubois. `ffmpeg` en 16 kHz mono, puis `npx hyperframes@0.8.168 transcribe voice.wav -m medium -l fr --json > voice.out`, puis `python3 videos/_remotion/scripts/mots.py voice.out videos/<nom>/voice/words.json`. Relire les nombres et les mots placés dans une pause.
+2. **Voix** : Gabriel Dubois, ton vivant et énergique (voir le tableau). Ne pas resserrer les pauses d'une prise énergique (ça casse l'élan) ; si la vidéo dépasse 70 s, raccourcir le texte. `ffmpeg` en 16 kHz mono, puis `npx hyperframes@0.8.168 transcribe voice.wav -m medium -l fr --json > voice.out`, puis `python3 videos/_remotion/scripts/mots.py voice.out videos/<nom>/voice/words.json`. Relire les nombres et les mots placés dans une pause. **Avec sous-titres** : `python3 -I videos/_remotion/scripts/caler_texte.py texte.txt words-whisper.json words.json` met le texte exact du script sur les temps de Whisper (modèle : `src/videos/rats/Rats.tsx`, composant `Captions`).
 3. **Plans** (`story.ts`) : à 60 i/s, chaque réaction 0 à 6 images avant son mot.
 4. **Son** : `templates/audio/` (bruitages et musique synthétisés, voix gain seul). Le mixage final ne doit avoir aucun trou.
 5. **Contrôle** : images fixes, `node scripts/stills.mjs <Comp> out/<nom>/x_ 100,400 0.5`.
