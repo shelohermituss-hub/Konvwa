@@ -45,10 +45,10 @@ export type Cam = { pos: V3; look: V3; fov: number; roll: number };
 type Key = { t: number; pos: V3; look: V3; fov: number; roll: number; via?: boolean };
 /** points de passage ; entre deux points la caméra glisse (glide), et le passage filé se fait en ≈ 0,3 s */
 const KEYS: Key[] = [
-  { t: 0, pos: [0.2, 1.55, 2.9], look: [0.25, 1.35, -0.6], fov: 38, roll: -0.04 },          // le chasseur de dos (à droite, devant), l'employé derrière le comptoir
-  { t: W[6], pos: [-0.1, 1.5, 2.3], look: [0.48, 1.25, -0.23], fov: 40, roll: -0.03 },        // « payait » : on plonge vers la queue et la pièce
-  { t: WHIP.a, pos: [-0.35, 1.55, 1.45], look: [0.1, 1.42, -0.95], fov: 36, roll: 0.02 },      // « queue de rat » : l'employé horrifié
-  { t: WHIP.b, pos: [0.25, 1.55, 1.6], look: [8.6, 1.0, -2.6], fov: 30, roll: 0.06 },         // passage filé : on tourne vers la porte de la réserve
+  { t: 0, pos: [0.2, 1.55, 2.7], look: [0.25, 1.35, -0.6], fov: 46, roll: -0.04 },          // le chasseur de dos (à droite, devant), l'employé derrière le comptoir
+  { t: W[6], pos: [-0.1, 1.5, 2.1], look: [0.48, 1.25, -0.23], fov: 46, roll: -0.03 },        // « payait » : on plonge vers la queue et la pièce
+  { t: WHIP.a, pos: [-0.05, 1.5, 1.4], look: [0.15, 1.42, -0.95], fov: 42, roll: 0.02 },      // « queue de rat » : l'employé horrifié
+  { t: WHIP.b, pos: [0.25, 1.55, 1.6], look: [8.6, 1.0, -2.6], fov: 34, roll: 0.06 },         // passage filé : on tourne vers la porte de la réserve
   { t: (WHIP.b + W[18]) / 2, pos: [4.2, 1.5, -1.5], look: [8.4, 1.0, -2.4], fov: 38, roll: 0.03, via: true }, // on file par la porte
   { t: W[18], pos: [5.9, 1.4, 0.0], look: [8.3, 1.0, -2.35], fov: 42, roll: 0.02 },         // « élever » : les cages, l'éleveur
   { t: W[21] + 0.45, pos: [6.3, 1.35, -0.3], look: [8.3, 1.0, -2.4], fov: 40, roll: 0.0 },
