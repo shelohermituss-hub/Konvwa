@@ -3,7 +3,7 @@
 // est où, dans quelle pose et avec quelle expression ; les effets (rats, queues, pièce, tableaux) sont des cartes non éclairées.
 import * as THREE from "three";
 import { Pen, bodyFront, bodySide, fxShadow, fxContact, KID, SKINS, townsfolk, Outfit, Expr, FrontOpts, SideOpts, Prop } from "./toon";
-import { FPS, V3, SHOTS, Light, at, smooth, clamp01, CLERK, CATCHER, FARMER, groundY } from "./story";
+import { FPS, V3, SHOTS, Light, at, smooth, clamp01, CLERK, CATCHER, FARMER, groundY, WHIP } from "./story";
 import { NOINK } from "./ink";
 import { cardShade, blobMaterial, CARD_K } from "./cardshade";
 
@@ -279,7 +279,8 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
   LNAME = s.light;
   findSun(cam, SUN);
   // au guichet
-  stander(cam, out, 1, CATCH, "catch", t, CATCHER[0], CATCHER[2], t > at(6) ? "grin" : "smile", { prop: "tail", look: -1 });
+  // le chasseur sort du cadre avant le passage filé (sinon la caméra balaie son visage en gros plan)
+  if (t < WHIP.a - 0.05) stander(cam, out, 1, CATCH, "catch", t, CATCHER[0], CATCHER[2], t > at(6) ? "grin" : "smile", { prop: "tail", look: -1 });
   const shock = t > at(8);
   stander(cam, out, 2, CLERK_O, "clerk", t, CLERK[0], CLERK[2], shock ? "shock" : "neutral", { prop: shock ? null : "coin", look: 1, wave: shock ? 0.9 : undefined });
   out.fx.push({ key: "coin1", cw: 300, ch: 300, draw: (p) => fxCoin(p, 1), x: 0.42, y: 1.095, z: 0.15, w: 0.08, h: 0.08, flat: true });
