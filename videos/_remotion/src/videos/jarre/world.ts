@@ -3,7 +3,10 @@
 // la salle du trône (Luoyang) et sa cour, le bus d'aujourd'hui, le village de Longxi après le séisme, le musée.
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
-import { staticFile } from "remotion";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
+import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { getInputProps, staticFile } from "remotion";
 import { Kit } from "./build";
 import { ctex } from "./paint";
 import { LIGHTS, LOOK } from "./lights";
@@ -11,18 +14,31 @@ import { TONE, CHAR } from "./shade";
 import { NOINK } from "./ink";
 import { Pool, Actor, Fx, stage, Stage } from "./cast";
 import { Jar } from "./jar";
-import { FPS, SHOTS, camAt, HALL, COURT, JAR, THRONE, MAPT, TEA, BUS, LONGXI, MUSEUM, T, WHIPS, clamp01 } from "./story";
+import { FPS, SHOTS, camAt, HALL, COURT, JAR, THRONE, MAPT, TEA, BUS, LONGXI, MUSEUM, T, WHIPS, clamp01, riderAt, RIDER_X } from "./story";
 import { W } from "./words";
 
 /** police des affiches du décor */
 export const POSTER_FONT = "Anton Konvwa";
 let HDR: THREE.DataTexture | null = null;
+/** objets 3D de Sketchfab (CC BY, crédits : public/assets/sketchfab/CREDITS.md), optimisés en GLB (meshopt, WebP 1024) */
+const MODELS = ["lanterne", "vase", "vase-dragon", "encensoir", "fauteuil", "cheval", "charrette", "foin", "maison-chine", "cour-chine",
+  "temple", "pots", "rochers", "arbres", "bambou", "socles"];
+/** matières réalistes de Poly Haven (CC0) : couleur, relief (normales), rugosité */
+const TEXS = ["large_floor_tiles_02", "red_plaster_weathered", "lacquered_cherry_wood", "granite_tile_04", "clay_roof_tiles_02", "grey_roof_tiles", "dry_ground_01",
+  "clay_plaster", "brown_mud_dry", "herringbone_parquet", "white_plaster_02", "rubber_tiles", "wood_table"];
+const TX: Record<string, THREE.Texture> = {};
+let ANIM: THREE.AnimationClip[] = [];
 let kitP: Promise<Kit> | null = null;
 export const loadKit = () => {
   if (!kitP) {
     const font = new FontFace(POSTER_FONT, `url(${staticFile("fonts/anton.woff2")})`).load()
       .then((ff) => { (document.fonts as unknown as { add: (x: FontFace) => void }).add(ff); return ["_font", new THREE.Group()] as const; });
+    const gl = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), tl = new THREE.TextureLoader();
     kitP = Promise.all([
+      ...MODELS.map((n) => gl.loadAsync(staticFile(`assets/sketchfab/${n}.glb`)).then((g) => { if (n === "cheval") ANIM = g.animations; return [n, g.scene] as const; })),
+      ...TEXS.flatMap((id) => (["diff", "nor", "rough"] as const).map((k) => tl.loadAsync(staticFile(`assets/polyhaven/tex/${id}_${k}.jpg`)).then((t) => {
+        t.wrapS = t.wrapT = THREE.RepeatWrapping; if (k === "diff") t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX[`${id}_${k}`] = t; return [`_${id}_${k}`, new THREE.Group()] as const;
+      }))),
       new RGBELoader().loadAsync(staticFile("assets/polyhaven/hdri/kloofendal_48d_partly_cloudy_puresky.hdr")).then((t) => { HDR = t; return ["_hdr", new THREE.Group()] as const; }),
       font,
     ]).then((l) => Object.fromEntries(l) as Kit);
@@ -37,6 +53,23 @@ const box = (w: number, h: number, d: number, m: THREE.Material, x: number, y: n
 };
 const cyl = (r: number, h: number, m: THREE.Material, x: number, y: number, z: number, n = 24, r2 = r) => {
   const me = new THREE.Mesh(new THREE.CylinderGeometry(r, r2, h, n), m); me.position.set(x, y + h / 2, z); me.castShadow = true; me.receiveShadow = true; return me;
+};
+/** matière réaliste Poly Haven, répétée rx × ry fois, teintée */
+const pbr = (id: string, rx: number, ry: number, tint = "#ffffff", nscale = 1) => {
+  const c = (k: string) => { const t = TX[`${id}_${k}`].clone(); t.repeat.set(rx, ry); t.needsUpdate = true; return t; };
+  return new THREE.MeshStandardMaterial({ map: c("diff"), normalMap: c("nor"), normalScale: new THREE.Vector2(nscale, nscale), roughnessMap: c("rough"), color: tint, metalness: 0 });
+};
+const items = (o: THREE.Object3D) => { let n = o; while (n.children.length === 1) n = n.children[0]; return n.children.length ? n.children : [o]; };
+/** copie d'un modèle, mise à l'échelle (hauteur h ou plus grande largeur w), posée au sol en (x, y, z), tournée de yaw */
+const place = (src: THREE.Object3D, o: { h?: number; w?: number }, x: number, y: number, z: number, yaw = 0, lift = 1) => {
+  const c = src.clone(true), g = new THREE.Group();
+  const b = new THREE.Box3().setFromObject(c), size = b.getSize(new THREE.Vector3()), ctr = b.getCenter(new THREE.Vector3());
+  const k = o.h ? o.h / Math.max(1e-4, size.y) : (o.w ?? 1) / Math.max(1e-4, Math.max(size.x, size.z));
+  c.position.set(-ctr.x, -b.min.y, -ctr.z);
+  const inner = new THREE.Group(); inner.add(c); inner.scale.setScalar(k);
+  g.add(inner); g.position.set(x, y, z); g.rotation.y = yaw;
+  g.traverse((m) => { const me = m as THREE.Mesh; if (me.isMesh) { me.castShadow = true; me.receiveShadow = true; const mm = me.material as THREE.MeshStandardMaterial; if (lift !== 1 && mm.color) { me.material = mm.clone(); (me.material as THREE.MeshStandardMaterial).color.multiplyScalar(lift); } } });
+  return g;
 };
 const ball = (r: number, m: THREE.Material, x: number, y: number, z: number) => { const me = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), m); me.position.set(x, y, z); me.castShadow = true; return me; };
 /** un panneau dessiné posé contre un mur (face vers +z, tourné de yaw) */
@@ -186,6 +219,13 @@ const glowTex = () => ctex("glowSoft", 256, 256, (g) => {
   g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
 });
 
+/** orientation du modèle de cheval (il doit regarder vers -z, la salle) et vitesse de lecture de son animation */
+const HORSE_YAW = Math.PI;
+const GALLOP_SPEED = 1.0;
+/** dans la longue animation du modèle (60 s : pas, trot, galop…) : le galop, et une pose debout pour l'arrivée (secondes) */
+const GALLOP: [number, number] = [33.0, 35.0];
+const STAND = 5;
+
 export class World {
   root = new THREE.Group();
   private pool = new Pool();
@@ -195,10 +235,12 @@ export class World {
   private jar: Jar; private replica: Jar;
   private city: THREE.Texture; private tea: THREE.Mesh;
   private houses: THREE.Object3D[] = [];
+  private horse!: THREE.Group; private mixer: THREE.AnimationMixer | null = null;
   private frustum = new THREE.Frustum();
   private m4 = new THREE.Matrix4(); private v = new THREE.Vector3(); private sph = new THREE.Sphere();
 
-  constructor(_kit: Kit) {
+  constructor(kit: Kit) {
+    const K = (n: string) => kit[n];
     const R = this.root;
     // ---- lumière claire et égale ; le soleil suit la caméra d'un lieu à l'autre (ombres) ----
     this.hemi = new THREE.HemisphereLight("#fff6e6", "#b89a74", 1.5);
@@ -211,9 +253,9 @@ export class World {
 
     // ================= la salle du trône =================
     const { x0, x1, z0, z1, h } = HALL;
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0).rotateX(-Math.PI / 2), mat({ map: tiled(stoneTex("hallFloor", "#f1d8a0", "#e6c47e"), (x1 - x0) / 2, (z1 - z0) / 2) }));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0).rotateX(-Math.PI / 2), pbr("large_floor_tiles_02", (x1 - x0) / 3, (z1 - z0) / 3, "#f2e2c4"));
     floor.position.set(0, 0, (z0 + z1) / 2); floor.receiveShadow = true; R.add(floor);
-    const lacq = mat({ map: tiled(lacquerTex(), 6, 1) }), red = mat({ color: "#c8352e" }), gold = mat({ color: "#e8b84a" }), dark = mat({ color: "#5a2a1e" });
+    const lacq = pbr("red_plaster_weathered", 5, 2.2, "#ffb0a0"), red = pbr("lacquered_cherry_wood", 1, 3, "#ff5a48"), gold = mat({ color: "#e8b84a" }), dark = mat({ color: "#5a2a1e" });
     const lat = mat({ map: latticeTex() });
     // murs : fond et côtés en laque rouge, fenêtres à croisillons sur les côtés
     R.add(box(x1 - x0, h, 0.3, lacq, 0, h / 2, z0));
@@ -238,18 +280,23 @@ export class World {
     R.add(ball(0.12, red, THRONE[0] - 0.95, 2.25, THRONE[2] - 0.65), ball(0.12, red, THRONE[0] + 0.95, 2.25, THRONE[2] - 0.65));
     R.add(panel(screenTex(), 7, 3.5, 0, 3.0, z0 + 0.2, 0, "#e8b84a"));
     // lanternes rouges suspendues
-    const lanM = mat({ color: "#e2453c", emissive: new THREE.Color("#ff6a3a"), emissiveIntensity: 0.35 });
-    for (const [x, z] of [[-2.4, -5.5], [2.4, -5.5], [-2.4, -0.5], [2.4, -0.5], [-2.4, 3.0], [2.4, 3.0]] as const) {
-      const l = ball(0.32, lanM, x, 4.6, z); l.scale.set(1, 1.2, 1); R.add(l, cyl(0.2, 0.08, gold, x, 4.98, z), cyl(0.2, 0.08, gold, x, 4.15, z), cyl(0.012, h - 5.0, mat({ color: INK }), x, 5.06, z, 6));
+    // lanternes de soie rouge suspendues (modèle 3D), et leur fil
+    for (const [x, z] of [[-2.4, -5.5], [2.4, -5.5], [-2.4, -0.5], [2.4, -0.5], [-2.4, 3.0], [2.4, 3.0]] as const) R.add(place(K("lanterne"), { h: 1.0 }, x, 4.0, z, 0, 1.2), cyl(0.012, h - 5.0, mat({ color: INK }), x, 5.0, z, 6));
+    // brûle-parfums de bronze de chaque côté de l'estrade, vases de porcelaine, jarres de bronze, fauteuils, pots
+    for (const sx of [-1, 1]) {
+      R.add(place(K("encensoir"), { h: 1.0 }, sx * 2.7, 0, -6.4));
+      R.add(box(0.7, 0.8, 0.7, pbr("wood_table", 1, 1, "#8a4a30"), sx * 4.0, 0.4, -8.7), place(K("vase"), { h: 1.15 }, sx * 4.0, 0.8, -8.7, sx * 0.6));
+      R.add(place(K("vase-dragon"), { h: 1.3 }, sx * 6.1, 0, -8.6), place(K("vase-dragon"), { h: 1.1 }, sx * 6.2, 0, 4.0));
+      R.add(place(K("fauteuil"), { h: 1.15 }, sx * 6.3, 0, -1.0, -sx * Math.PI / 2), place(K("fauteuil"), { h: 1.15 }, sx * 6.3, 0, 1.4, -sx * Math.PI / 2));
+      R.add(place(K("pots"), { w: 1.4 }, sx * 6.0, 0, -4.6, sx));
     }
-    // brûle-parfums de bronze de chaque côté de l'estrade
-    for (const sx of [-1, 1]) { R.add(cyl(0.4, 0.5, gold, sx * 2.7, 0.35, -6.4, 20, 0.3)); for (let k = 0; k < 3; k++) { const a = (k * 2 * Math.PI) / 3; R.add(cyl(0.05, 0.4, gold, sx * 2.7 + 0.25 * Math.sin(a), 0, -6.4 + 0.25 * Math.cos(a), 8)); } }
     // la table à carte de l'empire
-    R.add(box(2.5, 0.1, 1.6, mat({ color: "#8a4f2a" }), MAPT[0], 0.87, MAPT[2]));
+    R.add(box(2.5, 0.1, 1.6, pbr("wood_table", 1.2, 0.8, "#c08060"), MAPT[0], 0.87, MAPT[2]));
+    R.add(place(K("fauteuil"), { h: 1.15 }, MAPT[0] - 1.7, 0, MAPT[2] - 0.2, Math.PI / 2), place(K("fauteuil"), { h: 1.15 }, MAPT[0] + 1.75, 0, MAPT[2] + 0.1, -Math.PI / 2));
     for (const [dx, dz] of [[-1.1, -0.65], [1.1, -0.65], [-1.1, 0.65], [1.1, 0.65]] as const) R.add(box(0.12, 0.82, 0.12, dark, MAPT[0] + dx, 0.41, MAPT[2] + dz));
     const map = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.44).rotateX(-Math.PI / 2), mat({ map: mapTex() })); map.position.set(MAPT[0], 0.925, MAPT[2]); map.receiveShadow = true; R.add(map);
     // la petite table à thé : théière et tasse (qui ne bougeront pas)
-    R.add(box(0.9, 0.06, 0.6, mat({ color: "#7a3e22" }), TEA[0], 0.66, TEA[2]));
+    R.add(box(0.9, 0.06, 0.6, pbr("wood_table", 0.5, 0.4, "#a06040"), TEA[0], 0.66, TEA[2]), place(K("fauteuil"), { h: 1.15 }, TEA[0] + 0.85, 0, TEA[2] - 0.1, -Math.PI / 2));
     for (const [dx, dz] of [[-0.38, -0.24], [0.38, -0.24], [-0.38, 0.24], [0.38, 0.24]] as const) R.add(box(0.06, 0.63, 0.06, dark, TEA[0] + dx, 0.315, TEA[2] + dz));
     const porc = mat({ color: "#f6f2e6" }), blue = mat({ color: "#2f6fd0" });
     const pot = ball(0.13, porc, TEA[0] - 0.2, 0.8, TEA[2] - 0.05); pot.scale.set(1, 0.85, 1); R.add(pot, ball(0.03, blue, TEA[0] - 0.2, 0.93, TEA[2] - 0.05));
@@ -260,29 +307,41 @@ export class World {
     this.jar = new Jar(); this.jar.root.position.set(...JAR); R.add(this.jar.root);
 
     // ================= la cour, devant la salle =================
-    const court = new THREE.Mesh(new THREE.PlaneGeometry(COURT.x1 - COURT.x0, COURT.z1 - COURT.z0 + 4).rotateX(-Math.PI / 2), mat({ map: tiled(stoneTex("courtFloor", "#e4dccb", "#d6ccb6"), 13, 12) }));
+    const court = new THREE.Mesh(new THREE.PlaneGeometry(COURT.x1 - COURT.x0, COURT.z1 - COURT.z0 + 4).rotateX(-Math.PI / 2), pbr("granite_tile_04", 9, 8, "#f4ecdc"));
     court.position.set(0, -0.005, (COURT.z0 + COURT.z1) / 2 + 2); court.receiveShadow = true; R.add(court);
-    const tileGold = mat({ map: tiled(roofTileTex("roofGold", "#f2b83a"), 8, 2) }), ridge = mat({ color: "#2f6f5e" });
+    const tileGold = pbr("clay_roof_tiles_02", 8, 3, "#ffc850"), ridge = mat({ color: "#2f6f5e" });
     R.add(roof(x1 - x0, 7, h, tileGold, ridge));
     // la frise sous le toit et les colonnes du porche
     R.add(box(x1 - x0 + 0.6, 0.6, 0.4, mat({ map: tiled(coffersTex(), 10, 0.5) }), 0, h - 0.3, z1 + 0.5));
     for (const x of [-6, -3.6, 3.6, 6]) R.add(cyl(0.28, h - 0.6, red, x, 0, z1 + 0.9), cyl(0.38, 0.25, gold, x, 0, z1 + 0.9));
     // murs de la cour (rouges, chaperon de tuiles), la porte de la ville
-    const wallR = mat({ color: "#c8452e" }), cap = mat({ map: tiled(roofTileTex("roofTeal", "#2f8a7e"), 10, 1) });
+    const wallR = pbr("red_plaster_weathered", 8, 1.2, "#ffb0a0"), cap = pbr("grey_roof_tiles", 10, 1, "#9fd0c4");
     for (const sx of [-1, 1]) { R.add(box(0.6, 3.2, COURT.z1 - COURT.z0, wallR, sx * COURT.x1, 1.6, (COURT.z0 + COURT.z1) / 2), box(1.0, 0.3, COURT.z1 - COURT.z0, cap, sx * COURT.x1, 3.3, (COURT.z0 + COURT.z1) / 2)); }
     for (const sx of [-1, 1]) R.add(box(COURT.x1 - 2.5, 3.6, 0.8, wallR, sx * (2.5 + COURT.x1) / 2, 1.8, COURT.z1), box(COURT.x1 - 2.5, 0.3, 1.2, cap, sx * (2.5 + COURT.x1) / 2, 3.75, COURT.z1));
     R.add(box(5.6, 1.4, 1.0, wallR, 0, 4.9, COURT.z1), roof(6, 2.6, 5.6, mat({ map: tiled(roofTileTex("roofTeal", "#2f8a7e"), 4, 1) }), dark).translateZ(COURT.z1));
     // arbres ronds, grand brûle-parfum, la bannière signée
     const leaf = mat({ color: "#5fb04a" }), trunk = mat({ color: "#7a4f2a" });
-    for (const [x, z] of [[-9, 10], [9, 10], [-9, 19], [9, 19]] as const) { R.add(cyl(0.18, 1.6, trunk, x, 0, z, 10)); const c = ball(1.3, leaf, x, 2.6, z); c.scale.set(1, 0.85, 1); R.add(c); }
-    R.add(cyl(0.7, 0.9, gold, 0, 0.4, 15.5, 24, 0.5)); for (let k = 0; k < 3; k++) { const a = (k * 2 * Math.PI) / 3; R.add(cyl(0.08, 0.5, gold, 0.5 * Math.sin(a), 0, 15.5 + 0.5 * Math.cos(a), 8)); }
+    const trees = items(K("arbres"));
+    for (const [k, x, z] of [[1, -9, 10], [2, 9, 10], [3, -9, 19], [1, 9, 19], [2, -11.5, 15], [3, 11.5, 14]] as const) R.add(place(trees[k % trees.length], { h: 5.5 }, x, 0, z, k));
+    R.add(place(K("encensoir"), { h: 1.6 }, 0, 0, 15.5));
+    for (const sx of [-1, 1]) { R.add(place(K("pots"), { w: 1.6 }, sx * 11.6, 0, 7.0, sx), place(K("rochers"), { w: 2.2 }, sx * 10.8, 0, 22.5, sx)); R.add(place(K("vase-dragon"), { h: 1.4 }, sx * 3.0, 0, 6.2)); }
+    // les lanternes du porche, et au-delà des murs : les toits des autres pavillons et une pagode
+    for (const x of [-4.8, -1.6, 1.6, 4.8]) R.add(place(K("lanterne"), { h: 1.0 }, x, 4.3, 5.75, 0, 1.2));
+    for (const sx of [-1, 1]) R.add(place(K("cour-chine"), { w: 16 }, sx * 22, 0, 14, sx * Math.PI / 2));
+    R.add(place(K("temple"), { h: 14 }, 9, 0, 40));
+    // le cheval du messager (modèle 3D animé : son galop est joué image par image)
+    const hs = cloneSkinned(K("cheval")), hb = new THREE.Box3().setFromObject(hs), hsz = hb.getSize(new THREE.Vector3()), hc = hb.getCenter(new THREE.Vector3());
+    hs.position.set(-hc.x, -hb.min.y, -hc.z); hs.traverse((m) => { const me = m as THREE.Mesh; if (me.isMesh) { me.castShadow = true; me.receiveShadow = true; me.frustumCulled = false; } m.layers.set(NOINK); });
+    const hin = new THREE.Group(); hin.add(hs); hin.scale.setScalar(1.75 / hsz.y);
+    this.horse = new THREE.Group(); this.horse.add(hin); this.horse.rotation.y = HORSE_YAW; R.add(this.horse);
+    if (ANIM[0]) { this.mixer = new THREE.AnimationMixer(hs); this.mixer.clipAction(ANIM[0]).play(); }
     R.add(cyl(0.07, 6, mat({ color: "#5a2a1e" }), 6.5, 0, 12.5, 10), box(1.3, 0.08, 0.08, gold, 6.5, 5.9, 12.5));
     R.add(panel(godzyTex("#d8352f", "#f3c84a", true), 1.0, 3.8, 6.5, 3.9, 12.52, 0, "#d8352f"));
 
     // ================= le bus d'aujourd'hui =================
     let from = R.children.length;
     const B = BUS, bw = 2.4, bl = 12, bh = 2.3, bx0 = B[0] - bw / 2, bx1 = B[0] + bw / 2;
-    const bfloor = new THREE.Mesh(new THREE.PlaneGeometry(bw, bl).rotateX(-Math.PI / 2), mat({ map: tiled(busFloorTex(), 2, 8) })); bfloor.position.set(B[0], 0.002, B[2]); R.add(bfloor);
+    const bfloor = new THREE.Mesh(new THREE.PlaneGeometry(bw, bl).rotateX(-Math.PI / 2), pbr("rubber_tiles", 2, 10, "#9aa0b0")); bfloor.position.set(B[0], 0.002, B[2]); R.add(bfloor);
     const bwall = mat({ color: "#f6f2e6" }), bseat = mat({ color: "#2f6fd0" }), pole = mat({ color: "#f2c230" });
     for (const sx of [-1, 1]) { const x = B[0] + sx * bw / 2; R.add(box(0.1, 0.9, bl, bwall, x, 0.45, B[2]), box(0.1, 0.45, bl, bwall, x, bh - 0.22, B[2])); for (let z = -6; z <= 6; z += 2) R.add(box(0.12, 0.95, 0.12, bwall, x, 1.38, B[2] + z)); }
     R.add(box(bw, 0.1, bl, mat({ color: "#e9e4d6" }), B[0], bh, B[2]), box(bw, bh, 0.1, bwall, B[0], bh / 2, B[2] - bl / 2), box(bw, bh, 0.1, bwall, B[0], bh / 2, B[2] + bl / 2));
@@ -301,10 +360,20 @@ export class World {
     // ================= Longxi, après le séisme =================
     from = R.children.length;
     const L = LONGXI;
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(90, 90).rotateX(-Math.PI / 2), mat({ map: tiled(loessTex(), 30, 30) })); ground.position.set(L[0], 0, L[2] - 20); ground.receiveShadow = true; R.add(ground);
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(90, 90).rotateX(-Math.PI / 2), pbr("dry_ground_01", 30, 30, "#f6e0b8")); ground.position.set(L[0], 0, L[2] - 20); ground.receiveShadow = true; R.add(ground);
     const hill = (x: number, z: number, r: number, hh: number, c: string) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat({ color: c })); m.scale.y = hh / r; m.position.set(x, 0, z); return m; };
-    for (const [dx, dz, r, hh, c] of [[-22, -30, 16, 12, "#c99a5a"], [6, -36, 20, 16, "#b98a4a"], [30, -28, 14, 10, "#d4a868"], [-40, -14, 12, 8, "#8fae5a"], [24, -10, 9, 6, "#9cbb62"], [-8, -48, 26, 22, "#a8b8d0"]] as const) R.add(hill(L[0] + dx, L[2] + dz, r, hh, c));
-    const mud = mat({ map: mudTex() }), roofG = mat({ map: tiled(roofTileTex("roofGrey", "#7a7f8f"), 4, 1) });
+    // les montagnes arides du Gansu (relief réel, texture satellite), au loin
+    // collines de lœss en relief (même terre sèche que le sol), de plus en plus hautes au loin
+    const hg = new THREE.PlaneGeometry(220, 110, 160, 80).rotateX(-Math.PI / 2), hp = hg.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < hp.count; i++) {
+      const x = hp.getX(i), z = hp.getZ(i), far = Math.max(0, (-z + 25) / 80);
+      const hgt = far * far * (14 + 7 * Math.sin(x * 0.045 + 1.3) + 5 * Math.sin(x * 0.11 + z * 0.07) + 2.2 * Math.sin(x * 0.31 - z * 0.23));
+      hp.setY(i, Math.max(0, hgt));
+    }
+    hg.computeVertexNormals();
+    const hills = new THREE.Mesh(hg, pbr("dry_ground_01", 40, 20, "#e8c89a")); hills.position.set(L[0], -0.02, L[2] - 60); hills.receiveShadow = true; R.add(hills);
+    void hill;
+    const mud = pbr("clay_plaster", 1.5, 1, "#f0d0a0"), roofG = pbr("grey_roof_tiles", 4, 2);
     const house = (x: number, z: number, w: number, d: number, tilt: number, fallen: boolean) => {
       const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.z = tilt;
       g.add(box(w, 1.9, d, mud, 0, 0.95, 0));
@@ -313,20 +382,30 @@ export class World {
       if (fallen) { r.rotation.set(0.25, 0, 0.35); r.position.set(0.4, -1.1, 0.4); }
       g.add(r); return g;
     };
-    for (const [dx, dz, w, d, tl, f] of [[-5.5, -3.5, 3.4, 2.6, 0.04, false], [-1.0, -4.8, 3.0, 2.4, -0.07, true], [3.6, -3.4, 3.4, 2.6, 0.0, false], [7.5, -6.2, 3.0, 2.4, 0.09, false], [-8.6, -7.5, 3.0, 2.4, -0.05, true]] as const) {
+    // les maisons du village (modèles 3D), penchées par la secousse ; deux masures effondrées
+    for (const [dx, dz, w, yaw, tl] of [[-6.0, -4.5, 6.5, 0.2, 0.03], [4.5, -4.8, 6.0, -0.25, -0.05], [12, -9, 7, 0.4, 0.0]] as const) {
+      const hs = place(K("maison-chine"), { w }, L[0] + dx, 0, L[2] + dz, yaw); hs.rotation.z = tl; this.houses.push(hs); R.add(hs);
+    }
+    for (const [dx, dz, w, d, tl, f] of [[-1.0, -2.8, 3.0, 2.4, -0.07, true], [-11, -6.5, 3.0, 2.4, -0.05, true]] as const) {
       const hs = house(L[0] + dx, L[2] + dz, w, d, tl, f); this.houses.push(hs); R.add(hs);
     }
+    const tc = place(K("charrette"), { w: 2.6 }, L[0] - 4.2, 0, L[2] - 0.3, 0.6); tc.rotation.z = 0.12; R.add(tc);
+    for (const [dx, dz] of [[5.2, -1.4], [6.4, -0.6], [-7.8, -1.0]] as const) R.add(place(K("foin"), { w: 1.6 }, L[0] + dx, 0, L[2] + dz, dx));
+    R.add(place(K("pots"), { w: 1.5 }, L[0] + 2.2, 0, L[2] - 1.6, 0.5), place(K("rochers"), { w: 3 }, L[0] - 3, 0, L[2] + 6.5));
+    const bam = items(K("bambou"));
+    for (const [k, dx, dz] of [[1, -9, -2], [1, 9.5, -2.5], [1, -14, -5]] as const) R.add(place(bam[k % bam.length], { h: 4 }, L[0] + dx, 0, L[2] + dz));
     // la route vers l'est (Luoyang), et le panneau
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 60).rotateX(-Math.PI / 2), mat({ color: "#c9a06a" })); road.position.set(L[0] + 2, 0.006, L[2] + 20); road.rotation.y = 0; R.add(road);
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 60).rotateX(-Math.PI / 2), pbr("brown_mud_dry", 1, 25, "#f0d8b0")); road.position.set(L[0] + 2, 0.006, L[2] + 20); road.rotation.y = 0; R.add(road);
     R.add(cyl(0.07, 2.2, mat({ color: "#7a4f2a" }), L[0] + 3.6, 0, L[2] + 4.4, 8), panel(signTex("LONGXI", "#2f6fd0"), 1.5, 0.5, L[0] + 3.6, 2.0, L[2] + 4.46, 0, "#2f6fd0"));
-    for (const [dx, dz] of [[-12, 2], [11, 0], [-14, -10], [14, -12]] as const) { R.add(cyl(0.15, 1.4, trunk, L[0] + dx, 0, L[2] + dz, 8)); const c = ball(1.1, leaf, L[0] + dx, 2.2, L[2] + dz); c.scale.set(1, 0.85, 1); R.add(c); }
+    for (const [k, dx, dz] of [[1, -12, 2], [2, 11, 1], [3, -15, -10], [1, 15, -12], [2, -20, -16], [3, 20, -18]] as const) R.add(place(trees[k % trees.length], { h: 6 }, L[0] + dx, 0, L[2] + dz, k));
+    void leaf; void trunk;
 
     this.grab("longxi", from);
     // ================= le musée =================
     from = R.children.length;
     const M = MUSEUM;
-    const mfloor = new THREE.Mesh(new THREE.PlaneGeometry(14, 12).rotateX(-Math.PI / 2), mat({ map: tiled(stoneTex("museumFloor", "#d9b88a", "#cfa978"), 7, 6) })); mfloor.position.set(M[0], 0, M[2]); mfloor.receiveShadow = true; R.add(mfloor);
-    const mwall = mat({ color: "#eaf2f6" }), mtrim = mat({ color: "#2f6fd0" });
+    const mfloor = new THREE.Mesh(new THREE.PlaneGeometry(14, 12).rotateX(-Math.PI / 2), pbr("herringbone_parquet", 5, 4)); mfloor.position.set(M[0], 0, M[2]); mfloor.receiveShadow = true; R.add(mfloor);
+    const mwall = pbr("white_plaster_02", 4, 1.5, "#eef4f8"), mtrim = mat({ color: "#2f6fd0" });
     R.add(box(14, 4.5, 0.2, mwall, M[0], 2.25, M[2] - 5), box(0.2, 4.5, 12, mwall, M[0] - 7, 2.25, M[2]), box(0.2, 4.5, 12, mwall, M[0] + 7, 2.25, M[2]), box(14, 0.12, 0.25, mtrim, M[0], 0.06, M[2] - 4.9));
     const mceil = new THREE.Mesh(new THREE.PlaneGeometry(14, 12).rotateX(Math.PI / 2), mat({ color: "#ffffff" })); mceil.position.set(M[0], 4.5, M[2]); R.add(mceil);
     R.add(box(1.5, 0.9, 1.5, mat({ color: "#2a2f40" }), M[0], 0.45, M[2] - 0.5));
@@ -339,6 +418,11 @@ export class World {
     R.add(panel(labelTex(), 0.7, 0.3, M[0], 0.62, M[2] + 0.26, 0, "#fffdf6"));
     R.add(panel(posterTex(), 1.4, 1.96, M[0] - 3.2, 2.2, M[2] - 4.88), panel(godzyTex("#2f6fd0", "#fff6e0"), 1.5, 0.55, M[0] + 3.0, 2.8, M[2] - 4.88, 0, "#2f6fd0"));
     for (const dx of [-5, 5]) R.add(box(0.06, 2.0, 1.2, mat({ color: "#7a4f2a" }), M[0] + dx, 2.0, M[2] - 4.85));
+    // d'autres pièces exposées sur des socles : vases, jarre de bronze, brûle-parfum
+    const so = items(K("socles"));
+    for (const [k, dx, dz, obj, oh] of [[0, -4.4, -3.2, "vase", 0.9], [1, 4.4, -3.2, "vase-dragon", 0.9], [2, -5.6, 1.5, "encensoir", 0.7], [0, 5.6, 1.5, "vase", 0.8]] as const) {
+      const s0 = place(so[k % so.length], { h: 1.1 }, M[0] + dx, 0, M[2] + dz); R.add(s0, place(K(obj), { h: oh }, M[0] + dx, 1.1, M[2] + dz));
+    }
     const spot = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: new THREE.Color(1.5, 1.4, 1.1), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
     spot.position.set(M[0], 4.2, M[2] - 0.5); spot.scale.setScalar(1.4); spot.layers.set(NOINK); R.add(spot);
     this.grab("museum", from);
@@ -366,9 +450,9 @@ export class World {
     for (const [k, g] of Object.entries(this.places)) g.visible = k === s.loc;
     // l'orage de la cour : ciel et lumière assombris
     const storm = s.loc === "court" && t < W[40];
-    this.hemi.intensity = storm ? 0.85 : 1.5; this.sun.intensity = storm ? 0.5 : s.loc === "hall" ? 1.2 : 1.8;
+    this.hemi.intensity = storm ? 0.85 : s.loc === "hall" ? 1.95 : 1.5; this.sun.intensity = storm ? 0.5 : s.loc === "hall" ? 1.6 : 1.8;
     if (HDR) HDR.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = HDR; scene.background = HDR; scene.backgroundIntensity = storm ? 0.45 : 1.3; scene.environmentIntensity = 0.25;
+    scene.environment = HDR; scene.background = HDR; scene.backgroundIntensity = storm ? 0.45 : 1.3; scene.environmentIntensity = storm ? 0.3 : 0.6;
     scene.fog = null;
     // les personnages (cartes) : éclairage deux tons du style
     TONE.uLitCol.value.set(...L.lit); TONE.uShadeCol.value.set(...L.shade); TONE.uShadeLift.value.set(...L.lift);
@@ -388,6 +472,15 @@ export class World {
     const brake = T.brake, v = (tt: number) => (tt < brake ? 9 : Math.max(0, 9 * (1 - (tt - brake) / 0.8)));
     const dist = t < brake ? 9 * t : 9 * brake + (9 * Math.min(0.8, t - brake)) / 2 + 0 * v(t);
     this.city.offset.x = -(dist / 60) % 1;
+    // le cheval au galop (et à l'arrêt, une fois arrivé)
+    const rd = riderAt(t);
+    this.horse.visible = s.loc === "court" && t > W[40];
+    this.horse.position.set(RIDER_X, 0, rd.z);
+    const hT = (getInputProps() as { horseT?: number }).horseT; // images de contrôle : instant de l'animation imposé
+    // au galop dans la cour, puis debout, arrêté devant la salle
+    const ta = t - T.gallop[1];
+    if (this.mixer && ANIM[0]) this.mixer.setTime(hT ?? (rd.u < 1 ? GALLOP[0] + (((t - T.gallop[0]) * GALLOP_SPEED) % (GALLOP[1] - GALLOP[0])) : STAND));
+    void ta;
     // la tasse de thé : immobile (la surface ne frémit pas). Les maisons de Longxi tremblent
     this.tea.position.y = 0.758;
     const sh3 = t > T.shake3[0] && t < T.shake3[1] ? 0.03 : 0;

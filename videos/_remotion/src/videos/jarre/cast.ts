@@ -3,7 +3,7 @@
 // les effets (nuage en colère, éclair, cheval au galop, flèche, ondes, « ? ») sont des cartes non éclairées.
 import * as THREE from "three";
 import { Pen, bodyFront, bodySide, fxShadow, fxContact, Outfit, Expr, FrontOpts, SideOpts, Prop } from "./toon";
-import { FPS, V3, SHOTS, Light, at, smooth, clamp01, groundY, T, JAR, THRONE, ZH, MAPT, TEA, LONGXI, MUSEUM, BUS } from "./story";
+import { FPS, V3, SHOTS, Light, at, smooth, clamp01, groundY, T, JAR, THRONE, ZH, MAPT, TEA, LONGXI, MUSEUM, BUS, riderAt, RIDER_X } from "./story";
 import { W } from "./words";
 import { NOINK } from "./ink";
 import { cardShade, blobMaterial, CARD_K } from "./cardshade";
@@ -289,9 +289,10 @@ const fxDust = (p: Pen, k: number) => {
 /** fissure au sol, 600 x 200 */
 const fxCrack = (p: Pen) => { p.stroke([[10, 100], [120, 80], [180, 130], [280, 90], [360, 140], [450, 95], [590, 120]], 14); p.stroke([[180, 130], [210, 190]], 8); p.stroke([[360, 140], [380, 20]], 8); };
 /** le cheval au galop et son cavalier (le messager), de profil, 900 x 640, tourné vers la droite ; f = image (0..5) */
-const fxRider = (p: Pen, f: number, dusty: boolean) => {
+const fxRider = (p: Pen, f: number, dusty: boolean, horse = true) => {
   const two = Math.PI * 2, ph = (f / 6) * two, bob = 10 * Math.sin(ph * 2);
   const C = "#a0643a", D = "#6e3f22";
+  if (horse) {
   // jambes : deux paires en opposition
   const legs: [number, number][] = [[300, 0], [340, 0.5], [560, 0.25], [600, 0.75]];
   for (const [x, o] of legs) {
@@ -306,8 +307,9 @@ const fxRider = (p: Pen, f: number, dusty: boolean) => {
   p.dot(735, 205 + bob, 8); p.ell(800, 240 + bob, 6, 5, INKC, 0);
   p.poly([[690, 160 + bob], [700, 128 + bob], [712, 168 + bob]], C, 6);
   for (let k = 0; k < 5; k++) p.stroke([[640 + k * 14, 190 + k * 22 + bob], [612 + k * 12, 214 + k * 24 + bob]], 12, "#3a2418");
-  // selle et cavalier penché en avant
   p.poly([[390, 280 + bob], [500, 280 + bob], [490, 310 + bob], [400, 310 + bob]], "#d8352f", 6);
+  }
+  // le cavalier penché en avant
   p.ell(455, 220 + bob, 52, 72, "#c8352e", 9, 0, 360, 0.5);
   p.stroke([[480, 210 + bob], [560, 250 + bob], [640, 240 + bob]], 12, "#8a2a24");
   p.stroke([[430, 280 + bob], [420, 350 + bob], [450, 380 + bob]], 18, "#3b3f52");
@@ -393,10 +395,12 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
       if (t > T.bolt && t < T.bolt + 0.45 && Math.floor((t - T.bolt) * 20) % 3 !== 2) out.fx.push({ key: "bolt", cw: 200, ch: 600, draw: fxBolt, x: 2.2, y: 9.2, z: 3.5, w: 1.6, h: 4.8 });
     } else {
       // quelques jours plus tard : le messager au galop, de la porte de la ville jusqu'au seuil de la salle
-      const [g0, g1] = T.gallop, u = clamp01((t - g0) / (g1 - g0)), z = 24 - 15.5 * (1 - (1 - u) * (1 - u));
+      // le cheval est en 3D (world.ts) ; ici le cavalier seul, assis sur son dos
+      const { u, z } = riderAt(t);
       const f = u < 1 ? Math.floor(t * 12) % 6 : 1;
       const right = -cam.right.z > 0;
-      out.fx.push({ key: `rider${f}${right ? "r" : "l"}`, cw: 900, ch: 640, draw: (p) => { if (!right) { p.g.translate(900, 0); p.g.scale(-1, 1); } fxRider(p, f, u < 1); }, x: 0.3, y: 1.05, z, w: 2.9, h: 2.06 });
+      const rear = 0;
+      out.fx.push({ key: `riderOnly${f}${right ? "r" : "l"}`, cw: 900, ch: 640, draw: (p) => { if (!right) { p.g.translate(900, 0); p.g.scale(-1, 1); } fxRider(p, f, false, false); }, x: RIDER_X, y: 1.0 + 0.5 * rear, z: z + 0.05 + 0.25 * rear, w: 2.9, h: 2.06, rot: (right ? 1 : -1) * 0.55 * rear });
       if (u < 1) out.fx.push({ key: `dust${Math.floor(t * 8) % 3}`, cw: 400, ch: 300, draw: (p) => fxDust(p, Math.floor(t * 8) % 3), x: 0.3, y: 0.55, z: z + 1.8, w: 2.4, h: 1.8, soft: true });
       stander(cam, out, 1, EMP, "emp", t, -0.7, 6.2, t > W[183] ? "shock" : "neutral", { look: 0 });
       stander(cam, out, 2, ZHANG, "zh", t, 0.9, 6.4, t > W[185] ? "grin" : "neutral", { look: 0 });

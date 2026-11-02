@@ -49,18 +49,18 @@ export class Jar {
     const R = this.root;
     // le vase : profil tourné (socle, panse, épaule, col), couvercle bombé et son bouton
     const prof = [[0, 0.24], [0.62, 0.24], [0.76, 0.34], [0.92, 0.62], [0.99, 0.95], [0.97, 1.28], [0.86, 1.52], [0.74, 1.66], [0.77, 1.7]].map(([r, y]) => new THREE.Vector2(r, y));
-    this.bodyMat = mat({ map: bronzeTex(), side: THREE.DoubleSide, transparent: true });
+    this.bodyMat = mat({ map: bronzeTex(), side: THREE.DoubleSide, transparent: true, metalness: 0.55, roughness: 0.42 });
     this.body = new THREE.Mesh(new THREE.LatheGeometry(prof, 64), this.bodyMat); this.body.castShadow = true; this.body.receiveShadow = true; R.add(this.body);
     const lprof = [[0.8, 1.7], [0.74, 1.82], [0.58, 1.95], [0.36, 2.04], [0.16, 2.08], [0, 2.09]].map(([r, y]) => new THREE.Vector2(r, y));
-    this.lidMat = mat({ map: lidTex(), transparent: true });
+    this.lidMat = mat({ map: lidTex(), transparent: true, metalness: 0.55, roughness: 0.42 });
     const lid = new THREE.Mesh(new THREE.LatheGeometry(lprof, 64), this.lidMat); lid.castShadow = true; R.add(lid);
     const knob = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 14), mat({ color: "#e8b84a" })); knob.position.y = 2.16; R.add(knob);
     // le socle : un disque bas, et le plateau où sont assis les crapauds
     const plinth = new THREE.Mesh(new THREE.CylinderGeometry(1.62, 1.7, 0.12, 64), mat({ color: "#8a4f2a" })); plinth.position.y = 0.06; plinth.receiveShadow = true; R.add(plinth);
     const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.72, 0.14, 48), mat({ color: "#b9792c" })); foot.position.y = 0.19; R.add(foot);
-    const dragonM = mat({ color: "#3aa17e" }), bellyM = mat({ color: "#e8c96a" }), hornM = mat({ color: "#f2e6c4" }), eyeW = mat({ color: "#fffdf4" }), eyeK = mat({ color: INK });
-    const ballM = mat({ color: "#f3c84a", emissive: new THREE.Color("#5a3a00"), emissiveIntensity: 0.3 });
-    const toadM = mat({ color: "#6fb35a" }), toadD = mat({ color: "#4f8a40" }), mouthM = mat({ color: "#5a1a22" });
+    const dragonM = mat({ color: "#3a9a78", metalness: 0.35, roughness: 0.5 }), bellyM = mat({ color: "#d9b25a", metalness: 0.6, roughness: 0.35 }), hornM = mat({ color: "#f2e6c4" }), eyeW = mat({ color: "#fffdf4" }), eyeK = mat({ color: INK });
+    const ballM = mat({ color: "#f3c84a", metalness: 0.85, roughness: 0.22, emissive: new THREE.Color("#5a3a00"), emissiveIntensity: 0.2 });
+    const toadM = mat({ color: "#5f9e64", metalness: 0.35, roughness: 0.5 }), toadD = mat({ color: "#45784a", metalness: 0.35, roughness: 0.55 }), mouthM = mat({ color: "#5a1a22" });
     for (let k = 0; k < 8; k++) {
       const a = (k * Math.PI) / 4, s = Math.sin(a), c = Math.cos(a);
       const g = new THREE.Group(); g.rotation.y = a; R.add(g); // dans g : +z = vers l'extérieur

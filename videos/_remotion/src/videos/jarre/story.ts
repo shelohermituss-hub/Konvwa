@@ -52,6 +52,10 @@ export const T = {
   shake3: [W[186], W[192]] as const,
 };
 
+/** le messager au galop : de la porte de la ville (z 24) au seuil de la salle (z 8,5), en freinant */
+export const RIDER_X = 0.3;
+export const riderAt = (t: number) => { const u = clamp01((t - T.gallop[0]) / (T.gallop[1] - T.gallop[0])); return { u, z: 24 - 15.5 * (1 - (1 - u) * (1 - u)) }; };
+
 // ---------------- « plans » (lumière et distribution ; la caméra, elle, glisse) ----------------
 export type Light = "day" | "golden" | "gris" | "canicule";
 export type Loc = "hall" | "court" | "bus" | "longxi" | "museum";

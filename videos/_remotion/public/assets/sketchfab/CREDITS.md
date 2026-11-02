@@ -16,4 +16,23 @@
 | `cages.glb` | Palace Cage Furniture Assets | oneironauticus | CC Attribution 4.0 | https://sketchfab.com/3d-models/palace-cage-furniture-assets-0965108def8240e5a66dda96eefc1ec3 |
 | `desk-lamp.glb` | Stylized Desk Lamp | MatthewTheoblad | CC Attribution 4.0 | https://sketchfab.com/3d-models/stylized-desk-lamp-c4c277adfd2742e3a4550ef3b299b9a5 |
 
+| `lanterne.glb` | Chinese Lantern | Batuhan13 | CC Attribution 4.0 | https://sketchfab.com/3d-models/chinese-lantern-0fc4dbf7122141828c16bae9025ce47c |
+| `vase.glb` | Chinese Vase | M3Drender | CC Attribution 4.0 | https://sketchfab.com/3d-models/chinese-vase-edf3b8ba31db414d832c936ef4e73f9e |
+| `vase-dragon.glb` | Chinese Dragon Vase | Jack_W | CC Attribution 4.0 | https://sketchfab.com/3d-models/chinese-dragon-vase-5e37e18ff4504730888fde5a1db1747b |
+| `encensoir.glb` | Chinese Incense Burner-LowPory-Material test | chiwei2333 | CC Attribution 4.0 | https://sketchfab.com/3d-models/chinese-incense-burner-lowpory-material-test-69dbb96caea84dcab6ac8fa83af78ff9 |
+| `fauteuil.glb` | Chinese Yoke-Back Armchair - The Squire armchair | artsandmaterials | CC Attribution 4.0 | https://sketchfab.com/3d-models/chinese-yoke-back-armchair-the-squire-armchair-fa3f62fbc2724bc69ddec15e37c92549 |
+| `cheval.glb` | Horse Rigged(Game Ready) | abhayexe | CC Attribution 4.0 | https://sketchfab.com/3d-models/horse-riggedgame-ready-bc64f4ff7966474ca9bacd42fa73a754 |
+| `charrette.glb` | Medieval wooden cart | rakutin | CC Attribution 4.0 | https://sketchfab.com/3d-models/medieval-wooden-cart-c4ee19920e9b45aaa6ebe37839b1ad2a |
+| `foin.glb` | Haystack 2 | Frice | CC Attribution 4.0 | https://sketchfab.com/3d-models/haystack-2-b0f9bf31bec0474fb20f3d911f427a8c |
+| `maison-chine.glb` | chinese house | 799105734 | CC Attribution 4.0 | https://sketchfab.com/3d-models/chinese-house-2bb6ef8d3a5a4019b00bf86bbacd96cc |
+| `cour-chine.glb` | Ancient Chinese Courtyard House | BlackBirb | CC Attribution 4.0 | https://sketchfab.com/3d-models/ancient-chinese-courtyard-house-ed4ea9eb5f024d989eec182d48fa72d8 |
+| `temple.glb` | CHINESE TEMPLE | mervemacit | CC Attribution 4.0 | https://sketchfab.com/3d-models/chinese-temple-0ffd9067916642779ae1c270d083d77f |
+| `pots.glb` | Assorted Old Pots | Kigha | CC Attribution 4.0 | https://sketchfab.com/3d-models/assorted-old-pots-7795c6a5fa144bfcb1c33041c71eab00 |
+| `rochers.glb` | Free Pack - Rocks Stylized | polyone | CC Attribution 4.0 | https://sketchfab.com/3d-models/free-pack-rocks-stylized-7c60b4d1b8ab4187965f30c5e0212fc0 |
+| `arbres.glb` | Low Poly Forest Tree Pack | 99.Miles | CC Attribution 4.0 | https://sketchfab.com/3d-models/low-poly-forest-tree-pack-5ff5a51e74324845a4e4905f182dfb2b |
+| `bambou.glb` | Free Bamboo Set | JonhGillessen | CC Attribution 4.0 | https://sketchfab.com/3d-models/free-bamboo-set-e9f9fa5397814f81bf85ad06acf5bf30 |
+| `socles.glb` | Classical Museum Pedestals - Asset Pack | oneironauticus | CC Attribution 4.0 | https://sketchfab.com/3d-models/classical-museum-pedestals-asset-pack-ed296d2da43845f5a5b007c3af1cdff0 |
+
 Fichiers réduits avec `npx @gltf-transform/cli@4.1.1 optimize … --texture-compress webp --texture-size 1024 --simplify false` (géométrie intacte, textures 1024 px en WebP).
+
+Modèles de « La jarre de Zhang Heng » (novembre 2026) : réduits avec `optimize … --texture-compress webp --texture-size 1024` (compression meshopt : three.js les lit avec `MeshoptDecoder`).

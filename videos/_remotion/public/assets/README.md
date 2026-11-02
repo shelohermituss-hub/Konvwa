@@ -5,6 +5,7 @@ Tout ce dossier est sous licence **CC0** (usage libre, sans citer l'auteur), sau
 | Dossier | Source | Comment il arrive |
 |---|---|---|
 | `polyhaven/hdri/` | Poly Haven (polyhaven.com), ciels HDRI 1k pour une lumière de cinéma | téléchargé par Claude (API Poly Haven) |
+| `polyhaven/tex/` | Poly Haven, matières réalistes 1k (couleur `_diff`, relief `_nor` en OpenGL, rugosité `_rough`) : sols, plâtres, tuiles, bois, terre sèche | téléchargé par Claude (API Poly Haven) |
 | `polyhaven/models/` | Poly Haven, objets réalistes (au cas par cas) | téléchargé par Claude |
 | `sketchfab/` | Sketchfab, modèles en CC BY (auteurs dans `sketchfab/CREDITS.md`) | téléchargé par Claude (API Sketchfab ; la clé du client n'est jamais écrite dans le dépôt) |
 | `kenney/` | Kenney (kenney.nl) | à télécharger par le client : le site ne laisse pas télécharger automatiquement |
