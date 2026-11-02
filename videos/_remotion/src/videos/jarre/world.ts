@@ -280,6 +280,7 @@ export class World {
     R.add(panel(godzyTex("#d8352f", "#f3c84a", true), 1.0, 3.8, 6.5, 3.9, 12.52, 0, "#d8352f"));
 
     // ================= le bus d'aujourd'hui =================
+    let from = R.children.length;
     const B = BUS, bw = 2.4, bl = 12, bh = 2.3, bx0 = B[0] - bw / 2, bx1 = B[0] + bw / 2;
     const bfloor = new THREE.Mesh(new THREE.PlaneGeometry(bw, bl).rotateX(-Math.PI / 2), mat({ map: tiled(busFloorTex(), 2, 8) })); bfloor.position.set(B[0], 0.002, B[2]); R.add(bfloor);
     const bwall = mat({ color: "#f6f2e6" }), bseat = mat({ color: "#2f6fd0" }), pole = mat({ color: "#f2c230" });
@@ -296,7 +297,9 @@ export class World {
     R.add(panel(godzyTex("#f3c84a", "#1a1418"), 1.3, 0.42, bx1 - 0.06, 2.05, B[2] - 1.6, -Math.PI / 2, "#f3c84a"));
     void bx0;
 
+    this.grab("bus", from);
     // ================= Longxi, après le séisme =================
+    from = R.children.length;
     const L = LONGXI;
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(90, 90).rotateX(-Math.PI / 2), mat({ map: tiled(loessTex(), 30, 30) })); ground.position.set(L[0], 0, L[2] - 20); ground.receiveShadow = true; R.add(ground);
     const hill = (x: number, z: number, r: number, hh: number, c: string) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat({ color: c })); m.scale.y = hh / r; m.position.set(x, 0, z); return m; };
@@ -318,7 +321,9 @@ export class World {
     R.add(cyl(0.07, 2.2, mat({ color: "#7a4f2a" }), L[0] + 3.6, 0, L[2] + 4.4, 8), panel(signTex("LONGXI", "#2f6fd0"), 1.5, 0.5, L[0] + 3.6, 2.0, L[2] + 4.46, 0, "#2f6fd0"));
     for (const [dx, dz] of [[-12, 2], [11, 0], [-14, -10], [14, -12]] as const) { R.add(cyl(0.15, 1.4, trunk, L[0] + dx, 0, L[2] + dz, 8)); const c = ball(1.1, leaf, L[0] + dx, 2.2, L[2] + dz); c.scale.set(1, 0.85, 1); R.add(c); }
 
+    this.grab("longxi", from);
     // ================= le musée =================
+    from = R.children.length;
     const M = MUSEUM;
     const mfloor = new THREE.Mesh(new THREE.PlaneGeometry(14, 12).rotateX(-Math.PI / 2), mat({ map: tiled(stoneTex("museumFloor", "#d9b88a", "#cfa978"), 7, 6) })); mfloor.position.set(M[0], 0, M[2]); mfloor.receiveShadow = true; R.add(mfloor);
     const mwall = mat({ color: "#eaf2f6" }), mtrim = mat({ color: "#2f6fd0" });
@@ -336,6 +341,14 @@ export class World {
     for (const dx of [-5, 5]) R.add(box(0.06, 2.0, 1.2, mat({ color: "#7a4f2a" }), M[0] + dx, 2.0, M[2] - 4.85));
     const spot = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: new THREE.Color(1.5, 1.4, 1.1), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
     spot.position.set(M[0], 4.2, M[2] - 0.5); spot.scale.setScalar(1.4); spot.layers.set(NOINK); R.add(spot);
+    this.grab("museum", from);
+  }
+  /** les objets ajoutés depuis `from` forment un lieu, caché quand la caméra est ailleurs */
+  private places: Record<string, THREE.Group> = {};
+  private grab(name: string, from: number) {
+    const g = new THREE.Group();
+    for (const o of this.root.children.slice(from)) g.add(o);
+    this.root.add(g); this.places[name] = g;
   }
 
   private actor(i: number) { while (this.actors.length <= i) this.actors.push(new Actor(this.root)); return this.actors[i]; }
@@ -350,6 +363,7 @@ export class World {
     // le soleil (et son ombre) suit le lieu
     const tgt = s.loc === "hall" ? [0, 0, -2] : s.loc === "court" ? [0, 0, 13] : s.loc === "bus" ? BUS : s.loc === "longxi" ? LONGXI : MUSEUM;
     this.sun.target.position.set(tgt[0], tgt[1], tgt[2]); this.sun.position.set(tgt[0] - 9, 14, tgt[2] + 6);
+    for (const [k, g] of Object.entries(this.places)) g.visible = k === s.loc;
     // l'orage de la cour : ciel et lumière assombris
     const storm = s.loc === "court" && t < W[40];
     this.hemi.intensity = storm ? 0.85 : 1.5; this.sun.intensity = storm ? 0.5 : s.loc === "hall" ? 1.2 : 1.8;

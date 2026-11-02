@@ -372,7 +372,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     if (t > r0 - 0.5 && t < W[56]) {
       const u = clamp01((t - r0) / (r1 - r0));
       const f = Math.floor(t * 6) % 6;
-      out.fx.push({ key: `tok${f % 4}`, cw: 300, ch: 240, draw: (p) => fxToken(p, f), x: MAPT[0] - 0.95 + 0.62 * smooth(u), y: 0.92 + 0.11, z: MAPT[2] - 0.1 + 0.18 * u, w: 0.28, h: 0.22 });
+      out.fx.push({ key: `tok${f % 4}`, cw: 300, ch: 240, draw: (p) => fxToken(p, f), x: MAPT[0] - 0.59 + 0.88 * u, y: 0.925 + 0.1, z: MAPT[2] - 0.08 - 0.06 * Math.sin(u * 6), w: 0.24, h: 0.19 });
     }
     // la flèche de la direction (vers le sud : le dragon dont la bille est tombée)
     if (t > T.arrow && t < W[114] + 0.3) {
@@ -387,7 +387,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     if (t < W[40]) {
       // le Ciel gronde : l'empereur sur le seuil, le nuage en colère au-dessus du toit, l'éclair
       stander(cam, out, 1, EMP, "emp", t, 0, 6.4, t > W[29] ? "shock" : "nervous", { look: 0, headTilt: -6 });
-      for (let k = 0; k < 3; k++) stander(cam, out, 10 + k, COURT(k), `c${k}`, t, -1.6 + k * 1.6 + (k === 1 ? 0.3 : 0), 7.6 + (k % 2) * 0.6, "shock", { look: k - 1 });
+      for (let k = 0; k < 2; k++) stander(cam, out, 10 + k, COURT(k), `c${k}`, t, k ? 1.5 : -1.5, 6.6, "shock", { look: k ? -1 : 1, headTilt: -6 });
       const m = t > T.bolt ? 0.6 + 0.4 * Math.abs(Math.sin(t * 12)) : 0.25;
       out.fx.push({ key: `cloud${Math.round(m * 4)}`, cw: 800, ch: 480, draw: (p) => fxCloud(p, Math.round(m * 4) / 4), x: 0, y: 12.5 + 0.2 * Math.sin(t * 2), z: 3, w: 13, h: 7.8 });
       if (t > T.bolt && t < T.bolt + 0.45 && Math.floor((t - T.bolt) * 20) % 3 !== 2) out.fx.push({ key: "bolt", cw: 200, ch: 600, draw: fxBolt, x: 2.2, y: 9.2, z: 3.5, w: 1.6, h: 4.8 });
@@ -405,7 +405,7 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
     // le passager debout ; au coup de frein, il part vers l'avant (vers -z = à gauche de l'image)
     const lean = t > T.lean ? Math.sin(Math.PI * clamp01((t - T.lean) / 1.6)) : 0;
     const sgn = cam.right.z > 0 ? -1 : 1;
-    stander(cam, out, 3, PASS, "pass", t, BUS[0] + 0.3, BUS[2] - 0.3, t > T.brake ? "shock" : "neutral", { tilt: sgn * 24 * lean, look: 0 });
+    stander(cam, out, 3, PASS, "pass", t, BUS[0] + 0.85, BUS[2] - 0.5, t > T.brake ? "shock" : "neutral", { tilt: sgn * 32 * lean, look: 0 });
     stander(cam, out, 4, RIDER2, "r2", t, BUS[0] + 0.9, BUS[2] - 2.6, t > T.brake ? "dazed" : "smile_closed", { mode: "sit", tilt: sgn * 10 * lean }, 1, 0.12);
   } else if (loc === "longxi") {
     const c = LONGXI;

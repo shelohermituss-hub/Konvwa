@@ -23,8 +23,8 @@ export const HALL = { x0: -7, x1: 7, z0: -9.5, z1: 5, h: 6.5 };
 export const JAR: V3 = [0, 0, -2.5];
 export const THRONE: V3 = [0, 0.6, -7.7];
 export const ZH: V3 = [1.85, 0, -1.4];
-export const MAPT: V3 = [-4.3, 0, 1.0];
-export const TEA: V3 = [3.0, 0, -4.6];
+export const MAPT: V3 = [-2.6, 0, 1.7];
+export const TEA: V3 = [2.2, 0, -5.6];
 /** la cour devant la salle, la porte de la ville au sud */
 export const COURT = { x0: -13, x1: 13, z0: 5, z1: 26 };
 export const BUS: V3 = [60, 0, 0];
@@ -88,50 +88,56 @@ const whip = (tw: number, from: Omit<Key, "t">, to: Omit<Key, "t">, dir = 1, d =
 const KEYS: Key[] = [
   // ---- accroche : gros plan sur un dragon et sa bille, recul : l'empereur sur son trône, Zhang Heng présente sa jarre ----
   { t: 0, pos: [0.3, 1.22, -0.45], look: [0, 1.12, -1.35], fov: 40 },
-  { t: W[10], pos: [1.3, 1.8, 2.6], look: [0, 1.5, -4.5], fov: 50 },
-  ...whip(WHIPS[0], { pos: [-0.6, 2.4, 4.0], look: [0, 1.2, -3.5], fov: 54 },
-    { pos: [2.4, 1.0, 13.8], look: [0, 5.2, 2], fov: 56 }),
+  { t: W[10], pos: [3.6, 2.2, 0.9], look: [-0.5, 1.45, -5.2], fov: 56 },
+  ...whip(WHIPS[0], { pos: [3.0, 2.6, 2.6], look: [-0.6, 1.3, -4.6], fov: 58 },
+    { pos: [1.6, 0.6, 12.4], look: [0, 6.2, 3], fov: 60 }),
   // ---- la cour sous l'orage : le Ciel gronde l'empereur ----
-  ...whip(WHIPS[1], { pos: [1.0, 1.3, 11.2], look: [0, 5.6, 2], fov: 52 },
-    { pos: [-4.3, 2.75, 2.15], look: [-4.3, 0.9, 0.75], fov: 50 }, -1),
+  ...whip(WHIPS[1], { pos: [0.9, 0.7, 11.0], look: [0, 6.6, 3], fov: 58 },
+    { pos: [-2.75, 2.45, 2.8], look: [-2.75, 0.92, 1.55], fov: 44 }, -1),
   // ---- la carte de l'empire : la nouvelle met des semaines ; l'empereur dépité ----
-  { t: W[48], pos: [-4.1, 2.35, 2.0], look: [-4.25, 0.9, 0.7], fov: 48 },
-  { t: W[54], pos: [-3.7, 1.6, 2.9], look: [-4.3, 1.35, -0.4], fov: 46 },
+  { t: W[48], pos: [-2.55, 2.3, 2.75], look: [-2.6, 0.92, 1.5], fov: 44 },
+  { t: W[54], pos: [-2.0, 1.6, 3.7], look: [-2.6, 1.3, 0.3], fov: 46 },
   // ---- Zhang Heng et sa jarre ----
   { t: W[58], pos: [2.0, 1.55, 0.7], look: [1.75, 1.45, -1.4], fov: 44 },
-  { t: W[71] - 0.1, pos: orb(48, 3.4, 1.7), look: [0.4, 1.2, -2.4], fov: 50 },
+  { t: W[66], pos: orb(38, 4.8, 1.6), look: [0.5, 1.1, -2.3], fov: 54 },
+  { t: W[71] - 0.1, pos: orb(42, 4.0, 1.7), look: [0.3, 1.2, -2.4], fov: 52 },
   // tout autour, huit dragons (orbite)
   { t: W[75], pos: orb(15, 2.7, 1.55), look: JC, fov: 48, via: true },
   { t: W[79], pos: orb(-25, 2.6, 1.5), look: JC, fov: 48, via: true },
   { t: W[83], pos: orb(-60, 2.4, 1.1), look: [J[0], 0.8, J[2]], fov: 48, via: true },
   // et sous chaque dragon, un crapaud
-  { t: W[90], pos: orb(-55, 2.0, 0.55), look: [...orb(-45, 1.2, 0.38)] as V3, fov: 46 },
+  { t: W[90], pos: orb(-55, 2.5, 0.75), look: [...orb(-45, 1.2, 0.38)] as V3, fov: 46 },
   // ---- quand la terre tremble : la bille du sud tombe dans le crapaud ----
   { t: W[96], pos: [0.9, 1.05, -0.2], look: [0, 0.85, -1.35], fov: 46 },
   { t: W[103], pos: [0.45, 0.72, -0.55], look: [0, 0.45, -1.3], fov: 42 },
   // la direction : la flèche au sol, vue de derrière la jarre
   { t: W[113] + 0.2, pos: [0.6, 3.9, -5.6], look: [0, 0, 1.2], fov: 56 },
   // ---- comment ? le secret est perdu ----
-  ...whip(WHIPS[2], { pos: [1.3, 1.7, 0.1], look: [0, 1.4, -2.5], fov: 46 },
-    { pos: [59.0, 1.5, 1.5], look: [60.5, 1.15, -0.6], fov: 50 }),
+  { t: W[115], pos: [2.7, 2.4, -0.9], look: [0, 1.95, -2.5], fov: 52 },
+  ...whip(WHIPS[2], { pos: [2.2, 2.1, -0.2], look: [0, 1.9, -2.5], fov: 50 },
+    { pos: [58.85, 1.45, 1.6], look: [60.9, 1.15, -0.9], fov: 62 }),
   // ---- le bus qui freine ----
-  ...whip(WHIPS[3], { pos: [59.2, 1.45, 0.7], look: [60.4, 1.1, -0.4], fov: 46 },
-    { pos: [1.7, 1.45, -0.4], look: [0, 1.1, -2.5], fov: 44 }, -1),
+  ...whip(WHIPS[3], { pos: [58.85, 1.4, 0.4], look: [60.9, 1.1, -0.5], fov: 60 },
+    { pos: [2.6, 1.55, 0.3], look: [0, 1.15, -2.5], fov: 46 }, -1),
   // ---- la colonne cachée dans la jarre (vue en transparence) ----
-  ...whip(WHIPS[4], { pos: [1.3, 1.35, -0.9], look: [-0.3, 1.0, -2.5], fov: 44 },
+  ...whip(WHIPS[4], { pos: [2.1, 1.45, -0.3], look: [-0.3, 1.05, -2.5], fov: 46 },
     { pos: [3.4, 2.0, 2.6], look: [0, 1.2, -3.6], fov: 52 }),
   // ---- un jour : la bille de l'ouest tombe ----
   { t: W[150], pos: [-2.5, 0.95, -1.2], look: [-1.2, 0.55, -2.5], fov: 44 },
   { t: W[154] + 0.2, pos: [-2.9, 1.3, -0.9], look: [-1.2, 0.9, -2.6], fov: 46 },
   // personne n'a rien senti : la tasse de thé ne bouge pas
-  { t: W[158], pos: [3.45, 0.95, -3.95], look: [3.0, 0.74, -4.6], fov: 40 },
-  { t: W[162] + 0.15, pos: [3.3, 1.0, -3.8], look: [3.0, 0.8, -4.7], fov: 42 },
+  { t: W[158], pos: [2.75, 0.95, -4.95], look: [2.38, 0.74, -5.54], fov: 40 },
+  { t: W[162] + 0.15, pos: [2.6, 1.0, -4.8], look: [2.38, 0.8, -5.64], fov: 42 },
   // on se moque
   { t: W[165], pos: [-1.5, 1.6, 0.9], look: [-3.1, 1.35, -2.3], fov: 48 },
   ...whip(WHIPS[5], { pos: [2.6, 1.6, 0.7], look: [1.85, 1.45, -1.4], fov: 44 },
-    { pos: [6.2, 1.3, 21.5], look: [0, 1.3, 22], fov: 48 }),
+    { pos: [6.2, 1.3, 22.5], look: [0, 1.3, 23.2], fov: 48 }),
   // ---- quelques jours plus tard : le messager au galop ----
-  { t: W[182], pos: [5.4, 1.4, 13.5], look: [0, 1.3, 12.0], fov: 48 },
+  // la caméra suit le cheval (sa position : cast.ts, z = 24 - 15,5 (1 - (1 - u)²))
+  { t: W[173] + 0.6, pos: [6.2, 1.35, 19.5], look: [0, 1.2, 17.0], fov: 48, via: true },
+  { t: W[173] + 1.2, pos: [6.0, 1.35, 15.5], look: [0, 1.2, 12.6], fov: 48, via: true },
+  { t: W[173] + 1.8, pos: [5.6, 1.4, 13.0], look: [0, 1.2, 9.8], fov: 48, via: true },
+  { t: W[182], pos: [5.4, 1.4, 12.0], look: [0, 1.3, 8.6], fov: 48 },
   ...whip(WHIPS[6], { pos: [3.2, 1.6, 13.6], look: [0, 1.4, 7.8], fov: 50 },
     { pos: [-78.2, 1.5, 7.2], look: [-80, 1.7, 0], fov: 50 }, -1),
   // ---- Longxi : la terre a tremblé ; à des centaines de kilomètres ----
