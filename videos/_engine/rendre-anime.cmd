@@ -13,9 +13,16 @@ cd /d "%~dp0..\_remotion" || exit /b 1
 if not exist node_modules call npm install --no-audit --no-fund || exit /b 1
 echo Rendu de %~1 (60 images par seconde)...
 call npx remotion render src/index.ts %~1 "%PROJ%\renders\image.mp4" --codec h264 --crf 16 --gl=angle || exit /b 1
-echo Ajout du son...
 set MIX=%PROJ%\audio\mix.wav
 if exist "%PROJ%\audio\mix.flac" set MIX=%PROJ%\audio\mix.flac
+rem Sans son (ex. le test du rendu LookTest) : on garde l'image seule
+if not exist "%MIX%" (
+  move /y "%PROJ%\renders\image.mp4" "%PROJ%\renders\%~2.mp4" >nul
+  echo.
+  echo Video prete, sans son : %PROJ%\renders\%~2.mp4
+  exit /b 0
+)
+echo Ajout du son...
 ffmpeg -v error -y -i "%PROJ%\renders\image.mp4" -i "%MIX%" -map 0:v:0 -map 1:a:0 -c:v copy -c:a pcm_s16le -shortest "%PROJ%\renders\avec-son.mov" || exit /b 1
 echo Finition du son...
 python -I "%~dp0style-histoire\finish.py" "%PROJ%\renders\avec-son.mov" "%PROJ%\renders\%~2.mp4" || exit /b 1
