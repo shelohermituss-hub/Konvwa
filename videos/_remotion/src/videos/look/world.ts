@@ -6,14 +6,14 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { staticFile } from "remotion";
 import { Kit } from "./build";
-import { ctex, planksHD } from "./paint";
+import { ctex } from "./paint";
 import { LIGHTS, LOOK } from "./lights";
 import { TONE, CHAR } from "./shade";
 import { NOINK } from "./ink";
 import { Pool, Actor, Fx, stage, Stage, CAGES } from "./cast";
 import { FPS, SHOTS, camAt, ROOM, STORE } from "./story";
 
-const MODELS = ["counter", "filing-cabinet", "bookshelf", "wall-clocks", "rugs", "flowerpot", "desk-lamp", "ceiling-fan", "cages", "barrel", "doors"];
+const MODELS = ["filing-cabinet", "bookshelf", "wall-clocks", "flowerpot", "desk-lamp", "ceiling-fan", "cages", "barrel"];
 let HDR: THREE.DataTexture | null = null;
 let kitP: Promise<Kit> | null = null;
 export const loadKit = () => {
@@ -21,7 +21,7 @@ export const loadKit = () => {
     const gl = new GLTFLoader();
     kitP = Promise.all([
       ...MODELS.map((n) => gl.loadAsync(staticFile(`assets/sketchfab/${n}.glb`)).then((g) => [n, g.scene] as const)),
-      new RGBELoader().loadAsync(staticFile("assets/polyhaven/hdri/kiara_1_dawn.hdr")).then((t) => { HDR = t; return ["_hdr", new THREE.Group()] as const; }),
+      new RGBELoader().loadAsync(staticFile("assets/polyhaven/hdri/kloofendal_48d_partly_cloudy_puresky.hdr")).then((t) => { HDR = t; return ["_hdr", new THREE.Group()] as const; }),
     ]).then((l) => Object.fromEntries(l) as Kit);
   }
   return kitP;
@@ -42,12 +42,28 @@ const place = (src: THREE.Object3D, o: { h?: number; w?: number }, x: number, y:
 };
 const std = (o: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0, ...o });
 const plasterTex = () => ctex("plasterLook", 512, 512, (g, r) => {
-  g.fillStyle = "#f1d79c"; g.fillRect(0, 0, 512, 512);
+  g.fillStyle = "#f6e7c4"; g.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 40; i++) { const x = r() * 512, y = r() * 512, s = 30 + r() * 90; const gr = g.createRadialGradient(x, y, 0, x, y, s); gr.addColorStop(0, "rgba(180,130,60,0.12)"); gr.addColorStop(1, "rgba(180,130,60,0)"); g.fillStyle = gr; g.fillRect(x - s, y - s, 2 * s, 2 * s); }
 });
 const brickTex = () => ctex("brickLook", 512, 512, (g, r) => {
   g.fillStyle = "#c9b089"; g.fillRect(0, 0, 512, 512);
   for (let y = 0, row = 0; y < 512; y += 32, row++) for (let x = -(row % 2) * 48; x < 512; x += 96) { const v = 0.85 + r() * 0.25; g.fillStyle = `rgb(${Math.round(176 * v)},${Math.round(98 * v)},${Math.round(66 * v)})`; g.fillRect(x + 3, y + 3, 90, 26); }
+});
+/** carrelage colonial rouge et crème (512 px = 1,1 m) */
+const tileTex = () => { const t = ctex("tilesLook", 512, 512, (g) => {
+  for (let y = 0; y < 512; y += 128) for (let x = 0; x < 512; x += 128) { g.fillStyle = (x + y) % 256 ? "#b8503a" : "#efe2c4"; g.fillRect(x, y, 128, 128); }
+  g.strokeStyle = "rgba(60,40,30,0.35)"; g.lineWidth = 3; for (let k = 0; k <= 512; k += 128) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k, 512); g.moveTo(0, k); g.lineTo(512, k); g.stroke(); }
+}); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+/** tapis persan : fond rouge, bordures, médaillon */
+const rugTex = () => ctex("rugLook", 512, 340, (g, r) => {
+  g.fillStyle = "#7a1f1c"; g.fillRect(0, 0, 512, 340);
+  g.strokeStyle = "#e3c27a"; g.lineWidth = 10; g.strokeRect(14, 14, 484, 312);
+  g.strokeStyle = "#1f3a5a"; g.lineWidth = 16; g.strokeRect(34, 34, 444, 272);
+  for (let k = 0; k < 24; k++) { g.fillStyle = k % 2 ? "#e3c27a" : "#c9643a"; g.fillRect(44 + k * 18.5, 22, 9, 9); g.fillRect(44 + k * 18.5, 309, 9, 9); }
+  g.fillStyle = "#1f3a5a"; g.beginPath(); g.moveTo(256, 90); g.lineTo(356, 170); g.lineTo(256, 250); g.lineTo(156, 170); g.closePath(); g.fill();
+  g.fillStyle = "#e3c27a"; g.beginPath(); g.moveTo(256, 125); g.lineTo(312, 170); g.lineTo(256, 215); g.lineTo(200, 170); g.closePath(); g.fill();
+  g.fillStyle = "#7a1f1c"; g.beginPath(); g.arc(256, 170, 18, 0, 7); g.fill();
+  for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(0,0,0,${0.05 + r() * 0.08})`; g.fillRect(r() * 512, r() * 340, 2, 2); }
 });
 const shaftTex = () => ctex("shaftLook", 64, 256, (g) => { const gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, "rgba(255,255,255,0.9)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 256); });
 const glowTex = () => ctex("glowSoft", 256, 256, (g) => {
@@ -80,13 +96,14 @@ export class World {
     this.sun.shadow.bias = -0.0004; this.sun.shadow.normalBias = 0.03;
     this.sun.position.set(-9, 13, -14); this.sun.target.position.set(1, 0, 1);
     R.add(this.hemi, this.sun, this.sun.target);
-    const lamp = new THREE.PointLight("#ffb866", 6, 7, 1.6); lamp.position.set(-1.05, 1.62, 0.05); R.add(lamp);
-    const storeLamp = new THREE.PointLight("#ffa04a", 9, 9, 1.4); storeLamp.position.set(8.4, 3.0, -0.6); R.add(storeLamp);
+    const lamp = new THREE.PointLight("#ffb866", 10, 7, 1.4); lamp.position.set(-1.05, 1.62, 0.05); R.add(lamp);
+    const storeLamp = new THREE.PointLight("#ffa04a", 30, 14, 1.2); storeLamp.position.set(8.4, 3.0, -0.6); R.add(storeLamp);
+    const cageLight = new THREE.PointLight("#ffd9a8", 18, 8, 1.2); cageLight.position.set(7.2, 2.0, 0.6); R.add(cageLight);
 
     // ---- le bureau : plancher, murs crème, lambris, plafond à poutres ----
     const { x0, x1, z0, z1, h } = ROOM;
-    const floorT = planksHD(); floorT.repeat.set(3, 3);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 + 7, z1 - z0).rotateX(-Math.PI / 2), std({ map: floorT, color: "#c99a6a", roughness: 0.7 }));
+    const floorT = tileTex(); floorT.repeat.set(9, 5);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 + 7, z1 - z0).rotateX(-Math.PI / 2), std({ map: floorT, roughness: 0.45 }));
     floor.position.set((x0 + x1 + 6) / 2, 0, (z0 + z1) / 2); floor.receiveShadow = true; R.add(floor);
     const plaster = std({ map: plasterTex() }), wood = std({ color: "#6a3f24", roughness: 0.6 }), beam = std({ color: "#5a3420", roughness: 0.7 });
     // mur du fond avec une fenêtre à volets (x -3.6..-1.8, y 1.2..3.3)
@@ -98,7 +115,9 @@ export class World {
     // mur de gauche, mur de droite avec la porte de la réserve (z -2.4..-0.6)
     R.add(box(0.2, h, z1 - z0, plaster, x0, h / 2, (z0 + z1) / 2));
     R.add(box(0.2, h, -2.4 - z0, plaster, x1, h / 2, (z0 - 2.4) / 2), box(0.2, h, z1 + 0.6, plaster, x1, h / 2, (z1 - 0.6) / 2), box(0.2, h - 2.7, 1.8, plaster, x1, (h + 2.7) / 2, -1.5));
-    for (const [x, z, w, d] of [[(x0 + x1) / 2, z0 + 0.12, x1 - x0, 0.06], [x0 + 0.12, 0, 0.06, z1 - z0]] as const) R.add(box(w, 1.1, d, wood, x, 0.55, z));
+    const teal = std({ color: "#2f7a6e", roughness: 0.5 });
+    for (const [x, z, w, d] of [[(x0 + x1) / 2, z0 + 0.12, x1 - x0, 0.06], [x0 + 0.12, 0, 0.06, z1 - z0], [x1 - 0.12, 0.5 * (z1 - 0.6), 0.06, z1 + 0.6]] as const) R.add(box(w, 1.15, d, teal, x, 0.575, z));
+    for (const [x, z, w, d] of [[(x0 + x1) / 2, z0 + 0.16, x1 - x0, 0.08], [x0 + 0.16, 0, 0.08, z1 - z0]] as const) R.add(box(w, 0.06, d, wood, x, 1.18, z));
     const ceil = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0).rotateX(Math.PI / 2), std({ color: "#e9d2a0" })); ceil.position.set(0, h, 0); R.add(ceil);
     for (let x = x0 + 1; x < x1; x += 2) R.add(box(0.22, 0.25, z1 - z0, beam, x, h - 0.12, 0));
     // ---- la réserve : briques, une lucarne, des cages et des tonneaux ----
@@ -108,27 +127,39 @@ export class World {
     const sceil = new THREE.Mesh(new THREE.PlaneGeometry(STORE.x1 - STORE.x0, STORE.z1 - STORE.z0).rotateX(Math.PI / 2), beam); sceil.position.set((STORE.x0 + STORE.x1) / 2, h, (STORE.z0 + STORE.z1) / 2); R.add(sceil);
 
     // ---- les objets ----
-    const counter = place(K("counter"), { w: 3.6 }, 0, 0, 0, Math.PI); R.add(counter);
+    // le comptoir du guichet : bois sombre, panneaux en relief, dessus ciré, une grille de guichet
+    const cw = std({ color: "#7a4528", roughness: 0.55 }), ctop = std({ color: "#5a3420", roughness: 0.65 }), brass = new THREE.MeshStandardMaterial({ color: "#c9a04a", metalness: 0.9, roughness: 0.3 });
+    R.add(box(3.4, 1.02, 0.7, cw, -0.2, 0.51, 0), box(3.56, 0.07, 0.86, ctop, -0.2, 1.055, 0));
+    for (let k = 0; k < 4; k++) R.add(box(0.66, 0.6, 0.04, std({ color: "#8a5232", roughness: 0.5 }), -1.47 + k * 0.85, 0.52, 0.37));
+    for (let k = 0; k < 7; k++) R.add(box(0.025, 0.7, 0.025, brass, -0.95 + k * 0.12, 1.44, -0.05));
+    R.add(box(0.85, 0.04, 0.05, brass, -0.59, 1.8, -0.05));
     R.add(place(K("filing-cabinet"), { h: 1.6 }, -4.2, 0, -3.4));
     R.add(place(K("bookshelf"), { h: 2.4 }, 2.8, 0, -3.62));
     const clocks = items(K("wall-clocks"));
     R.add(place(clocks[0], { h: 0.55 }, 0.6, 2.75, -3.88));
-    R.add(place(items(K("rugs"))[0], { w: 2.6 }, 0.6, 0.006, 2.1));
+    const rug = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.6).rotateX(-Math.PI / 2), std({ map: rugTex(), roughness: 0.95 }));
+    rug.position.set(0.3, 0.006, 1.6); rug.receiveShadow = true; R.add(rug);
     const pots = items(K("flowerpot"));
     R.add(place(pots[0], { h: 1.3 }, -4.2, 0, 2.6), place(pots[Math.min(1, pots.length - 1)], { h: 1.1 }, 4.3, 0, 2.8));
     R.add(place(K("desk-lamp"), { h: 0.48 }, -1.05, 1.08, 0.05, 0.6));
     this.fan = place(K("ceiling-fan"), { w: 1.5 }, 0.2, h - 0.75, 0.4); R.add(this.fan);
     // les cages en deux étages, des tonneaux, la porte de la réserve ouverte
-    for (const y of [0, 1.2]) for (const x of [7.4, 8.6, 9.8]) R.add(place(items(K("cages"))[0], { h: 1.05 }, x, y + 0.02, -2.9));
-    R.add(box(3.9, 0.08, 0.9, wood, 8.6, 1.2, -2.9));
+    // une cage = les 4 premières pièces du pack (toit, socle, grillage, plateau)
+    const cage = new THREE.Group(); for (const o of items(K("cages")).slice(0, 4)) cage.add(o.clone(true));
+    for (const y of [0, 0.87]) for (const x of [7.4, 8.6, 9.8]) R.add(place(cage, { h: 0.75 }, x, y + 0.02, -3.1));
+    R.add(box(3.9, 0.08, 1.5, wood, 8.6, 0.85, -3.1));
     for (const [x, z] of [[10.3, -1.0], [10.4, 0.1], [6.0, -3.3]] as const) R.add(place(K("barrel"), { h: 0.95 }, x, 0, z));
-    R.add(place(items(K("doors"))[0], { h: 2.65 }, 5.1, 0, -2.6, -Math.PI / 2 + 0.9));
+    // une porte à panneaux au fond (le pack de portes est une rangée de 16 m : on la fait nous-mêmes)
+    const dw = std({ color: "#5e3a22", roughness: 0.55 }), dp = std({ color: "#6e4428", roughness: 0.5 });
+    R.add(box(1.1, 2.3, 0.08, dw, 3.95, 1.15, -3.86), box(1.3, 0.12, 0.12, wood, 3.95, 2.36, -3.84));
+    for (const [y, hh] of [[0.55, 0.7], [1.55, 0.95]] as const) for (const dx of [-0.24, 0.24]) R.add(box(0.36, hh, 0.04, dp, 3.95 + dx, y, -3.8));
+    R.add(box(0.06, 0.06, 0.08, brass, 3.6, 1.1, -3.78));
     void CAGES;
 
     // ---- rayons de soleil (fenêtre du bureau, lucarne de la réserve) et halo de la lampe ----
-    const shaftM = new THREE.MeshBasicMaterial({ map: shaftTex(), color: new THREE.Color(1.6, 1.25, 0.8), transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+    const shaftM = new THREE.MeshBasicMaterial({ map: shaftTex(), color: new THREE.Color(1.6, 1.25, 0.8), transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
     for (let k = 0; k < 3; k++) {
-      const sh = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 6.5), shaftM); sh.position.set(-2.7 + k * 0.45 + 2.2, 1.75, -2.0 + 0.2 * k); sh.rotation.set(-0.95, 0.35, -0.25);
+      const sh = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 4.5), shaftM); sh.position.set(-3.0 + k * 0.4, 1.7, -2.9 + 0.15 * k); sh.rotation.set(-0.9, 0.3, -0.2);
       sh.layers.set(NOINK); sh.renderOrder = 5; R.add(sh);
     }
     for (let k = 0; k < 2; k++) { const sh = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 5), shaftM); sh.position.set(8.0 + k * 0.6, 2.2, -2.0); sh.rotation.set(-0.7, 0.2, 0.1); sh.layers.set(NOINK); sh.renderOrder = 5; R.add(sh); }
@@ -152,7 +183,7 @@ export class World {
       HDR.mapping = THREE.EquirectangularReflectionMapping;
       this.pmrem = HDR;
     }
-    scene.environment = this.pmrem; scene.background = this.pmrem; scene.backgroundIntensity = 1.4; scene.environmentIntensity = 0.55;
+    scene.environment = this.pmrem; scene.background = this.pmrem; scene.backgroundIntensity = 1.2; scene.environmentIntensity = 0.5;
     scene.fog = null;
     // les personnages (cartes) gardent l'éclairage deux tons du style
     TONE.uLitCol.value.set(...L.lit); TONE.uShadeCol.value.set(...L.shade); TONE.uShadeLift.value.set(...L.lift);

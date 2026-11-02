@@ -14,7 +14,7 @@ import { InkPass, noInkFallback } from "./ink";
 import { LensBlur, GrainEffect } from "./lensblur";
 import { GradeEffect, GRADES, GRADE_STRENGTH, gradeFor } from "./grade";
 import { Kit } from "./build";
-import { TOTAL, FLASH_AT, SHOTS, FPS, layersAt, dofAt, whipBlur } from "./story";
+import { TOTAL, FLASH_AT, SHOTS, FPS, layersAt, dofAt, whipBlur, LAST_WORD } from "./story";
 import { W, WE, WORDS } from "./words";
 
 export const LOOK_FRAMES = TOTAL;
@@ -121,6 +121,7 @@ const GROUPS: Group[] = (() => {
   let cur: number[] = [];
   const flush = () => { if (cur.length) out.push({ a: W[cur[0]], b: WE[cur[cur.length - 1]], words: cur }); cur = []; };
   WORDS.forEach((w, i) => {
+    if (i > LAST_WORD) return;
     cur.push(i);
     const len = cur.reduce((n, k) => n + WORDS[k].length + 1, 0);
     if (/[.,:;!?…]$/.test(w) || cur.length >= 3 || len > 12) flush();

@@ -282,8 +282,8 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
   stander(cam, out, 1, CATCH, "catch", t, CATCHER[0], CATCHER[2], t > at(6) ? "grin" : "smile", { prop: "tail", look: -1 });
   const shock = t > at(8);
   stander(cam, out, 2, CLERK_O, "clerk", t, CLERK[0], CLERK[2], shock ? "shock" : "neutral", { prop: shock ? null : "coin", look: 1, wave: shock ? 0.9 : undefined });
-  out.fx.push({ key: "coin1", cw: 300, ch: 300, draw: (p) => fxCoin(p, 1), x: 0.62, y: 1.105, z: 0.12, w: 0.07, h: 0.07, flat: true });
-  out.fx.push({ key: "tails", cw: 260, ch: 300, draw: fxTails, x: 0.95, y: 1.22, z: 0.18, w: 0.2, h: 0.24, rot: -0.15 });
+  out.fx.push({ key: "coin1", cw: 300, ch: 300, draw: (p) => fxCoin(p, 1), x: 0.42, y: 1.095, z: 0.15, w: 0.08, h: 0.08, flat: true });
+  out.fx.push({ key: "tails", cw: 260, ch: 300, draw: fxTails, x: 0.72, y: 1.21, z: 0.22, w: 0.2, h: 0.24, rot: -0.15 });
   // dans la réserve : l'éleveur ravi, des rats dans les cages et par terre
   stander(cam, out, 3, FARM, "farm", t, FARMER[0], FARMER[2], t > at(16) ? "laugh" : "grin", { look: -1, wave: t > at(18) ? 0.7 : undefined });
   for (let c = 0; c < CAGES.length; c++) for (let k = 0; k < 3; k++) {
@@ -297,5 +297,5 @@ export const stage = (id: number, t: number, cam: CamInfo, s = SHOTS[id - 1]): S
   return out;
 };
 /** planchers des cages de la réserve (x, y, z) : la scène en pose les rats */
-export const CAGES: V3[] = [[7.4, 0.02, -2.9], [8.6, 0.02, -2.9], [9.8, 0.02, -2.9], [7.4, 1.2, -2.9], [8.6, 1.2, -2.9], [9.8, 1.2, -2.9]];
+export const CAGES: V3[] = [[7.4, 0.15, -2.75], [8.6, 0.15, -2.75], [9.8, 0.15, -2.75], [7.4, 0.95, -2.75], [8.6, 0.95, -2.75], [9.8, 0.95, -2.75]];
 export { FPS };
