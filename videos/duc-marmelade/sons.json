@@ -1,11 +1,206 @@
 {
- "_aide": "Les sons du film (konvwa son). t = secondes, ou « mot:jarre » / « mot:jarre#2+0.1 » (2e « jarre » + 0,1 s). type = une catégorie de la bibliothèque (videos/_creatorize/lowpoly/library/sfx : whoosh, pop, impact, thud, door, footstep, coin, bell, thunder, crowd…). gain en dB (0 = niveau prévu). Un whoosh est ajouté seul à chaque changement de plan (whoosh_plans). beds = fonds (room, crowd, city, wind, pad, music) ; musique = un fichier (ex. audio/musique.mp3), baissée sous la voix.",
+ "_aide": "Les sons du film (konvwa son) : effets au temps d'un mot (« mot:jarre#2+0.1 ») ou en secondes, catégories de videos/_creatorize/lowpoly/library/sfx ; un whoosh à chaque changement de plan ; des fonds sous toute la voix ; pas de musique (choix du client : seulement sur demande).",
  "sfx": [
-  {"t": 0.4, "type": "footstep"},
-  {"t": "mot:Chine", "type": "pop", "gain": -2}
+  {
+   "t": 6.05,
+   "type": "footstep",
+   "gain": -6
+  },
+  {
+   "t": 6.6,
+   "type": "footstep",
+   "gain": -6
+  },
+  {
+   "t": 7.15,
+   "type": "footstep",
+   "gain": -6
+  },
+  {
+   "t": 7.7,
+   "type": "footstep",
+   "gain": -6
+  },
+  {
+   "t": 8.25,
+   "type": "footstep",
+   "gain": -6
+  },
+  {
+   "t": "mot:roi-0.05",
+   "type": "chime",
+   "gain": -3
+  },
+  {
+   "t": "mot:fabrique",
+   "type": "pop",
+   "gain": -4
+  },
+  {
+   "t": "mot:quatre",
+   "type": "pop",
+   "gain": -2
+  },
+  {
+   "t": "mot:huit",
+   "type": "pop",
+   "gain": -2
+  },
+  {
+   "t": "mot:vingt-deux",
+   "type": "pop",
+   "gain": -2
+  },
+  {
+   "t": "mot:trente-sept",
+   "type": "pop",
+   "gain": -2
+  },
+  {
+   "t": "mot:armoiries",
+   "type": "swish",
+   "gain": -4
+  },
+  {
+   "t": "mot:devise",
+   "type": "paper",
+   "gain": -4
+  },
+  {
+   "t": "mot:titre",
+   "type": "chime",
+   "gain": -5
+  },
+  {
+   "t": "mot:titres+0.3",
+   "type": "paper_rustle",
+   "gain": -6
+  },
+  {
+   "t": "mot:Plaisance",
+   "type": "swish",
+   "gain": -6
+  },
+  {
+   "t": "mot:Limbé",
+   "type": "swish",
+   "gain": -6
+  },
+  {
+   "t": "mot:Limonade#2",
+   "type": "swish",
+   "gain": -6
+  },
+  {
+   "t": "mot:Marmelade#2",
+   "type": "applause",
+   "gain": -8
+  },
+  {
+   "t": "mot:moque",
+   "type": "paper_rustle",
+   "gain": -4
+  },
+  {
+   "t": "mot:Bouillon-0.1",
+   "type": "pop",
+   "gain": -5
+  },
+  {
+   "t": "mot:Malheureusement",
+   "type": "sub_drop",
+   "gain": -6
+  },
+  {
+   "t": "mot:d'Orléans",
+   "type": "pin",
+   "gain": -5
+  },
+  {
+   "t": "mot:Limonade#3",
+   "type": "pin",
+   "gain": -5
+  },
+  {
+   "t": 50.2,
+   "type": "thud",
+   "gain": -7
+  },
+  {
+   "t": 50.8,
+   "type": "thud",
+   "gain": -7
+  },
+  {
+   "t": 51.4,
+   "type": "thud",
+   "gain": -7
+  },
+  {
+   "t": "mot:900",
+   "type": "thud",
+   "gain": -5
+  },
+  {
+   "t": "mot:canons",
+   "type": "metal",
+   "gain": -6
+  },
+  {
+   "t": "mot:jamais",
+   "type": "swish",
+   "gain": -7
+  },
+  {
+   "t": "mot:1820",
+   "type": "tick",
+   "gain": -6
+  },
+  {
+   "t": "mot:Marmelade#4",
+   "type": "chime",
+   "gain": -4
+  }
  ],
  "whoosh_plans": true,
- "beds": [{"from": 0, "to": 70, "type": "room", "gain": -45}],
+ "beds": [
+  {
+   "from": 0,
+   "to": 33.4,
+   "type": "room",
+   "gain": -44
+  },
+  {
+   "from": 33.4,
+   "to": 46.83,
+   "type": "city",
+   "gain": -44
+  },
+  {
+   "from": 46.83,
+   "to": 50.1,
+   "type": "room",
+   "gain": -44
+  },
+  {
+   "from": 50.1,
+   "to": 61.7,
+   "type": "wind",
+   "gain": -42
+  },
+  {
+   "from": 61.7,
+   "to": 64.8,
+   "type": "room",
+   "gain": -44
+  },
+  {
+   "from": 64.8,
+   "to": 69.6,
+   "type": "wind",
+   "gain": -42
+  }
+ ],
  "musique": null,
  "musique_gain": -22
 }

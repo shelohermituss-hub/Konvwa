@@ -388,7 +388,80 @@ def all_salon():
     sign('GODZY', 'sign_godzy.png', 1024, 260, '#6a1e2a', '#f2d68a')
 
 
+def panorama(name, sunset=False, w=4096, h=1024):
+    """Le panorama 360 du tambour de ciel (u = azimut depuis +Y) : ciel, nuages, chaînes de montagnes vertes du Nord,
+    la mer sur un quart de l'horizon (u 0.6..0.85), l'horizon à z ~ 0 (bas de l'image ~ 22 %)."""
+    img = Image.new('RGB', (w, h))
+    d = ImageDraw.Draw(img, 'RGBA')
+    top, hor = ((70, 60, 140), (255, 150, 90)) if sunset else ((40, 120, 200), (200, 236, 245))
+    for y in range(h):
+        k = min(1.0, y / (h * 0.78))
+        d.line([(0, y), (w, y)], fill=tuple(int(top[i] + (hor[i] - top[i]) * k ** 1.4) for i in range(3)))
+    if sunset:
+        d.ellipse([w * 0.7 - 70, h * 0.62 - 70, w * 0.7 + 70, h * 0.62 + 70], fill=(255, 210, 120, 255))
+        d.ellipse([w * 0.7 - 160, h * 0.62 - 160, w * 0.7 + 160, h * 0.62 + 160], fill=(255, 190, 110, 60))
+    rnd = random.Random(8 if sunset else 9)
+    for _ in range(26):   # nuages
+        x, y = rnd.uniform(0, w), rnd.uniform(h * 0.12, h * 0.5)
+        cc = (255, 200, 170, 200) if sunset else (255, 255, 255, 220)
+        for k in range(5):
+            r = rnd.uniform(30, 70)
+            d.ellipse([x + k * 40 - r, y - r * 0.6, x + k * 40 + r, y + r * 0.6], fill=cc)
+    hz = h * 0.78
+    d.rectangle([w * 0.6, hz - 10, w * 0.85, h], fill=(70, 120, 160, 255) if sunset else (60, 140, 190, 255))   # la mer
+    layers = [((110, 90, 140) if sunset else (120, 160, 170), 120, 0.9), ((80, 70, 110) if sunset else (70, 130, 90), 160, 0.95), ((60, 50, 80) if sunset else (50, 110, 70), 200, 1.0)]
+    for col, amp, sc in layers:
+        pts = [(0, h)]
+        for i in range(0, w + 32, 32):
+            u = i / w
+            if 0.6 < u < 0.85:
+                y = hz + 20
+            else:
+                y = hz - amp * (0.5 + 0.5 * math.sin(i * 0.004 * sc + amp) * math.cos(i * 0.0017 + amp * 0.1)) - rnd.uniform(0, 14)
+            pts.append((i, y))
+        pts.append((w, h))
+        d.polygon(pts, fill=col + (255,))
+    d.rectangle([0, hz + 20, w, h], fill=((60, 50, 80) if sunset else (50, 110, 70)) + (255,))
+    save(img, name)
+
+
+def stone(name='stone_wall.png', base='#8f877a', seed=12):
+    """Maçonnerie de pierre (blocs irréguliers, joints), pour la Citadelle."""
+    img = Image.new('RGB', (1024, 1024), hexc(base)[:3])
+    d = ImageDraw.Draw(img, 'RGBA')
+    rnd = random.Random(seed)
+    y = 0
+    while y < 1024:
+        bh = rnd.randint(70, 110)
+        x = -rnd.randint(0, 80)
+        while x < 1024:
+            bw = rnd.randint(110, 200)
+            v = rnd.randint(-22, 22)
+            c = tuple(max(0, min(255, hexc(base)[i] + v)) for i in range(3))
+            d.rectangle([x + 4, y + 4, x + bw - 4, y + bh - 4], fill=c + (255,))
+            x += bw
+        d.line([(0, y), (1024, y)], fill=(60, 54, 48, 200), width=6)
+        y += bh
+    img = mottle(img, 22, 200, seed)
+    save(img, name)
+
+
+def grass(name='grass.png'):
+    img = Image.new('RGB', (1024, 1024), hexc('#5a9a48')[:3])
+    img = mottle(img, 30, 400, 61, (10, 60))
+    d = ImageDraw.Draw(img, 'RGBA')
+    rnd = random.Random(62)
+    for _ in range(2500):
+        x, y = rnd.uniform(0, 1024), rnd.uniform(0, 1024)
+        d.line([(x, y), (x + rnd.uniform(-4, 4), y - rnd.uniform(6, 16))], fill=(40, 90, 30, 120), width=2)
+    save(img, name)
+
+
 def all_out():
+    panorama('pano_jour.png')
+    panorama('pano_couchant.png', True)
+    stone()
+    grass()
     sign('MARMELADE', 'sign_marmelade.png', 1024, 260, '#5a3a20', '#f2e6c4', SERIF)
     sign('GODZY', 'crate_godzy.png', 1024, 340, '#b88a4a', '#3a2010')
     label('900 m', 'lbl_900.png', 512, 200, '#f2e6c4', '#3a2408')

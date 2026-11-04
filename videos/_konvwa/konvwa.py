@@ -682,7 +682,7 @@ def cmd_rendu(a):
 # ---------------- le son (chaîne du pack : sound_design.py + mix.py, bibliothèque lowpoly/library/sfx) ----------------
 def word_time(words, spec):
     """« mot:jarre#2+0.1 » -> le début du 2e « jarre » + 0,1 s (casse et ponctuation ignorées)."""
-    m = re.fullmatch(r'mot:([^#+\-]+)(?:#(\d+))?([+-][\d.]+)?', spec.strip())
+    m = re.fullmatch(r'mot:(.+?)(?:#(\d+))?([+-][\d.]+)?', spec.strip())   # « vingt-deux » : le trait d'union fait partie du mot
     if not m:
         raise ValueError('temps illisible : ' + spec)
     k = ''.join(ch for ch in m.group(1).lower() if ch.isalnum())
