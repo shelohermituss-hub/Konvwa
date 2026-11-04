@@ -9,6 +9,7 @@
 #   python videos/_konvwa/konvwa.py mots <projet> <words.json>     (re)fait audio/timeline.json + audio/words.json
 #   python videos/_konvwa/konvwa.py test <projet> <s03> [--frames 880,915] [--scale 0.4] [--samples 12]
 #   python videos/_konvwa/konvwa.py planche <dossier d'images> [--cols 6]
+#   python videos/_konvwa/konvwa.py son <projet>                   effets sonores (bibliothèque CC0 du pack) + fond + musique, mix -14 LUFS
 #   python videos/_konvwa/konvwa.py rendu <projet> [--jobs 1] [--scale 1.0] [--samples 48] [--fps60 dup|interp|non]
 #
 # <projet> = le nom d'un dossier de videos/ (ex. jarre-blender) ou un chemin. Le moteur n'est jamais modifié : tout ce qui
@@ -137,7 +138,7 @@ def cmd_installer(a):
     if not venv_python():
         subprocess.run([sys.executable, '-m', 'venv', v], check=True)
     py = venv_python()
-    pk = ['pillow', 'numpy', 'opencv-python-headless'] + (['bpy==5.2.3'] if a.bpy else [])
+    pk = ['pillow', 'numpy', 'opencv-python-headless', 'scipy'] + (['bpy==5.2.3'] if a.bpy else [])
     subprocess.run([py, '-m', 'pip', 'install', '--no-cache-dir', '-q'] + pk, check=True)
     print('Installé dans', v)
     return cmd_verifier(a)
@@ -335,6 +336,14 @@ def cmd_rendu(a):
     subprocess.run([py, os.path.join(T, 'assemble.py'), proj], env=env, cwd=ENGINE, check=True)
     os.makedirs(os.path.join(proj, 'renders'), exist_ok=True)
     voice = next(iter(sorted(glob.glob(os.path.join(proj, 'audio', 'voice.*')))), None)
+    fm = os.path.join(proj, 'audio', 'final_mix.wav')
+    if os.path.exists(os.path.join(proj, 'sons.json')):
+        print('   Son du film (sons.json : effets, fond, musique)…')
+        cmd_son(a)
+    if os.path.exists(fm):
+        voice = fm   # le mix de « konvwa son » (voix + effets + fond)
+    else:
+        print('  (pas de audio/final_mix.wav : la voix seule ; « konvwa son » ajoute effets et fond)')
     post_out = os.path.join('renders', f'{name}_post.mp4')
     print('3/5 Finition image, sous-titres, voix…')
     cmd = [py, os.path.join(T, 'post.py'), proj, '--frames', os.path.join(proj, 'frames_final'), '--out', post_out,
@@ -364,6 +373,75 @@ def cmd_rendu(a):
     return 0
 
 
+# ---------------- le son (chaîne du pack : sound_design.py + mix.py, bibliothèque lowpoly/library/sfx) ----------------
+SKILL = os.path.join(VIDEOS, '_creatorize', 'skill')
+
+
+def word_time(words, spec):
+    """« mot:jarre#2+0.1 » -> le début du 2e « jarre » + 0,1 s (casse et ponctuation ignorées)."""
+    m = re.fullmatch(r'mot:([^#+\-]+)(?:#(\d+))?([+-][\d.]+)?', spec.strip())
+    if not m:
+        raise ValueError('temps illisible : ' + spec)
+    k = ''.join(ch for ch in m.group(1).lower() if ch.isalnum())
+    hits = [w for w in words if ''.join(ch for ch in w['word'].lower() if ch.isalnum()) == k]
+    n = int(m.group(2) or 1)
+    if len(hits) < n:
+        raise KeyError(f'« {m.group(1)} » n°{n} absent de la voix')
+    return hits[n - 1]['start'] + float(m.group(3) or 0)
+
+
+def shot_starts(proj):
+    """Le début (s) de chaque plan après le premier, dans l'ordre d'assemble.json : un whoosh à chaque changement de plan."""
+    cfg = json.load(open(os.path.join(proj, 'assemble.json'), encoding='utf-8-sig'))
+    out = []
+    for s in cfg.get('shots', [])[1:]:
+        m = re.search(r'^F0\s*,\s*F1\s*=\s*(\d+)\s*,\s*(\d+)', open(os.path.join(proj, s + '.py'), encoding='utf-8-sig').read(), re.M)
+        if m:
+            out.append((int(m.group(1)) - 1) / FPS)
+    return out
+
+
+def cmd_son(a):
+    proj = project_dir(a.projet)
+    A = os.path.join(proj, 'audio')
+    py = need(find_py(), 'Python des outils introuvable')
+    need(shutil.which('ffmpeg'), 'ffmpeg introuvable')
+    if not has_modules(py, ['scipy']):
+        sys.exit('KONVWA : il manque scipy -> python videos/_konvwa/konvwa.py installer')
+    voice = next(iter(sorted(glob.glob(os.path.join(A, 'voice.*')))), None)
+    need(voice, 'pas de voix (audio/voice.*)')
+    words = load_words(os.path.join(A, 'words.json'))
+    cfgp = os.path.join(proj, 'sons.json')
+    cfg = json.load(open(cfgp, encoding='utf-8-sig')) if os.path.exists(cfgp) else {}
+    # les effets : ceux du film (sons.json, au temps d'un mot ou en secondes) + un whoosh à chaque changement de plan
+    sfx = []
+    for e in cfg.get('sfx', []):
+        e = dict(e)
+        t = e.get('t')
+        e['t'] = round(word_time(words, t) if isinstance(t, str) else float(t), 3)
+        sfx.append(e)
+    if cfg.get('whoosh_plans', True):
+        sfx += [{'t': round(max(0.0, t - 0.12), 3), 'type': 'whoosh', 'gain': -4} for t in shot_starts(proj)]
+    json.dump({'style': 'toon', 'sfx': sorted(sfx, key=lambda e: e['t'])}, open(os.path.join(A, 'events.json'), 'w', encoding='utf-8'), indent=1)
+    end = words[-1]['end'] + 1.5
+    beds = cfg.get('beds') or [{'from': 0, 'to': round(end, 2), 'type': 'room', 'gain': -45}]
+    json.dump({'music': bool(cfg.get('musique_synth')), 'ambience': True, 'beds': beds},
+              open(os.path.join(A, 'beds.json'), 'w', encoding='utf-8'), indent=1)
+    # la voix telle quelle (mix.py la lit en audio/clean.wav)
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', voice, '-ar', '48000', '-ac', '1', os.path.join(A, 'clean.wav')], check=True)
+    print('Effets et fond (sound_design.py)…')
+    subprocess.run([py, os.path.join(SKILL, 'blender-toon-shorts', 'scripts', 'sound_design.py'), proj], check=True)
+    mix = [py, os.path.join(SKILL, 'pixel-explainer-video', 'scripts', 'mix.py'), proj, '--lufs', '-14', '--min-ratio', str(cfg.get('min_ratio', 12))]
+    music = cfg.get('musique')
+    if music:
+        mp = music if os.path.isabs(music) else os.path.join(proj, music)
+        mix += ['--music', mp, '--music-gain', str(cfg.get("musique_gain", -22))]
+    print('Mixage (voix devant, fond baissé sous la voix, -14 LUFS)…')
+    subprocess.run(mix, check=True)
+    print('Son prêt :', os.path.join(A, 'final_mix.wav'), '(le rendu l\'utilise à la place de la voix seule)')
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(prog='konvwa', description='Fabrication des vidéos 3D KONVWA (moteur Blender).')
     sp = ap.add_subparsers(dest='cmd', required=True)
@@ -374,6 +452,7 @@ def main():
     p = sp.add_parser('test'); p.add_argument('projet'); p.add_argument('seq'); p.add_argument('--frames'); p.add_argument('--scale', default='0.4')
     p.add_argument('--samples', default='12'); p.add_argument('--cols', type=int, default=6); p.set_defaults(fn=cmd_test)
     p = sp.add_parser('planche'); p.add_argument('dossier'); p.add_argument('--cols', type=int, default=6); p.set_defaults(fn=cmd_planche)
+    p = sp.add_parser('son'); p.add_argument('projet'); p.set_defaults(fn=cmd_son)
     p = sp.add_parser('rendu'); p.add_argument('projet'); p.add_argument('--jobs', type=int, default=1); p.add_argument('--scale', default='1.0')
     p.add_argument('--samples', default='48'); p.add_argument('--fps60', choices=['dup', 'interp', 'non']); p.add_argument('--sans-sous-titres', action='store_true')
     p.set_defaults(fn=cmd_rendu)

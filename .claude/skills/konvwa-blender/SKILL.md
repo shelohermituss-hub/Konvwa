@@ -30,7 +30,7 @@ Le savoir-faire est celui du moteur, mesuré image par image ; on le suit à la 
 | 30 i/s | le moteur reste à **30 i/s** (toutes ses durées en images en dépendent) ; la sortie passe à **60 i/s** à la fin (`konvwa rendu`, réglage `project.json > konvwa > fps60` : `dup` par défaut, `interp` = images intermédiaires calculées) puis `finish.py` (−14 LUFS) |
 | marque | **signature « Godzy »** 2 à 4 fois sur des objets du décor (affiche, enseigne, caisse, tee-shirt), le nom seul (`videos/_engine/signature/README.md`) |
 | — | **couverture TikTok créée à part**, 3D studio (`videos/_engine/covers/README.md`) |
-| musique : non par défaut | pas de musique sauf demande ; la voix mène (le son du moteur n'a pas encore d'effets) |
+| musique : non par défaut | effets sur les événements de l'image (porte, chute, pop, choc…) et fond d'ambiance jamais muet ; musique seulement si demandée (`sons.json > musique`) ; la voix mène |
 | interdits « no-slop » du moteur | gardés : pas de tampon « FERMÉ » plaqué, pas de mention de voix IA, pas de vraies marques ni de vraies personnes, chaque image lisible |
 
 Le script suit la recette de `videos/_remotion/SCRIPT_modele_fr.md` (accroche absurde, décor, escalade, rupture,
@@ -46,6 +46,7 @@ python videos/_konvwa/konvwa.py nouveau <projet> --mots <words.json> --voix <voi
 python videos/_konvwa/konvwa.py mots <projet> <words.json>       # refaire timeline.json après une nouvelle prise
 python videos/_konvwa/konvwa.py test <projet> s03 --frames 880,915 [--scale 0.4 --samples 12]
 python videos/_konvwa/konvwa.py planche <dossier>
+python videos/_konvwa/konvwa.py son <projet>                     # effets + fond + musique -> audio/final_mix.wav (-14 LUFS)
 python videos/_konvwa/konvwa.py rendu <projet> [--jobs 1] [--fps60 dup|interp|non]
 ```
 - `nouveau` crée le film depuis `videos/_konvwa/modele/` : PLAN.md (avec la liste des phrases et leur image de début),
@@ -53,6 +54,11 @@ python videos/_konvwa/konvwa.py rendu <projet> [--jobs 1] [--fps60 dup|interp|no
   d'exemple qui marche), assemble.json, NOTES.md.
 - `test` remplace `render_frames` de l'application : un nouveau dossier `renders/test/<seq>_rN/` à chaque tour, le
   journal filtré (Traceback, CZ CLIP, CZ SIT, CZ PROP FAILED…), une `planche.jpg`. Lire le journal, puis REGARDER chaque image.
+- `son` = la chaîne son du pack : `sons.json` du film (effets au temps d'un mot : `{"t": "mot:jarre", "type": "pop"}`, fonds,
+  `musique` = un fichier, baissé ~22 dB sous la voix) + un whoosh à chaque changement de plan -> `sound_design.py` (vraies
+  prises CC0 de `videos/_creatorize/lowpoly/library/sfx`, 97 catégories ; ~20 effets par minute au plus, les plus
+  importants) -> `mix.py` (voix intacte devant, fond baissé sous la voix, −14 LUFS, contrôle voix/fond ≥ 12 dB).
+  `rendu` le refait tout seul quand le film a un `sons.json`.
 - `rendu` = l'export : `render_queue.py` (ne rend que ce qui manque, `shots/<seq>/NNNN.png`), `assemble.py`
   (fondus, raccords → `frames_final/`), `post.py` (étalonnage de `project.json > konvwa > post`, sous-titres, voix),
   60 i/s, `finish.py` (−14 LUFS) → `renders/<projet>.mp4`.

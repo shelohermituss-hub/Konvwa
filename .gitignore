@@ -63,3 +63,16 @@ videos/_konvwa/.cache/
 videos/*/captions.ass
 videos/*/fonts/
 videos/*/.suite/
+# Son généré par « konvwa son » (refait à chaque rendu)
+videos/*/audio/clean.wav
+videos/*/audio/sfx_bed.wav
+videos/*/audio/sound_*.wav
+videos/*/audio/premix*.wav
+videos/*/audio/final_mix.wav
+videos/*/audio/events.json
+videos/*/audio/beds.json
+videos/*/audio/mix_report.json
+videos/*/audio/sfx_placed.txt
+videos/*/audio/stems/
+videos/*/DESCRIPTION.txt
+videos/*/audio/sfx_used.json

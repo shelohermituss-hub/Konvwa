@@ -1,0 +1,11 @@
+{
+ "_aide": "Les sons du film (konvwa son). t = secondes, ou « mot:jarre » / « mot:jarre#2+0.1 » (2e « jarre » + 0,1 s). type = une catégorie de la bibliothèque (videos/_creatorize/lowpoly/library/sfx : whoosh, pop, impact, thud, door, footstep, coin, bell, thunder, crowd…). gain en dB (0 = niveau prévu). Un whoosh est ajouté seul à chaque changement de plan (whoosh_plans). beds = fonds (room, crowd, city, wind, pad, music) ; musique = un fichier (ex. audio/musique.mp3), baissée sous la voix.",
+ "sfx": [
+  {"t": 0.4, "type": "footstep"},
+  {"t": "mot:Chine", "type": "pop", "gain": -2}
+ ],
+ "whoosh_plans": true,
+ "beds": [{"from": 0, "to": 70, "type": "room", "gain": -45}],
+ "musique": null,
+ "musique_gain": -22
+}
