@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { AbsoluteFill, continueRender, delayRender, getInputProps, staticFile, useCurrentFrame } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
-import { EffectComposer } from "@react-three/postprocessing";
+import { EffectComposer, N8AO } from "@react-three/postprocessing";
 import { BlendFunction, BloomEffect, ToneMappingEffect, ToneMappingMode } from "postprocessing";
 import { World, loadKit } from "./world";
 import { InkPass, noInkFallback } from "./ink";
@@ -19,8 +19,8 @@ import { W, WE, WORDS } from "./words";
 export const JARRE_FRAMES = TOTAL;
 
 /** A/B switches for test stills only (Remotion inputProps `{ post: { ink: false, ... } }`); everything is on by default. */
-type PostToggles = { ink: boolean; lens: boolean; pre: boolean; bloom: boolean; grade: boolean; grain: boolean };
-const toggles = (): PostToggles => ({ ink: true, lens: true, pre: true, bloom: true, grade: true, grain: false, ...((getInputProps() as { post?: Partial<PostToggles> }).post ?? {}) });
+type PostToggles = { ink: boolean; lens: boolean; pre: boolean; bloom: boolean; grade: boolean; grain: boolean; ao: boolean };
+const toggles = (): PostToggles => ({ ink: false, lens: true, pre: true, bloom: true, grade: false, grain: false, ao: true, ...((getInputProps() as { post?: Partial<PostToggles> }).post ?? {}) });
 
 /** Bloom for emissive sources only (depth.md 6.4). Its MIP chain always starts at 540x960 (half of 1080x1920),
  *  whatever the output size, so the glow keeps the same size relative to the frame (e-fold ~30 px at 1080p,
@@ -52,7 +52,7 @@ const Inner: React.FC<{ id: number; kit: Kit }> = ({ id, kit }) => {
     ink: new InkPass(scene, camera as THREE.PerspectiveCamera),
     lens: new LensBlur({ maxCoC: 24, nearScale: 1.2 }),
     bloom: makeBloom(),
-    tone: new ToneMappingEffect({ mode: ToneMappingMode.NEUTRAL }),
+    tone: new ToneMappingEffect({ mode: ToneMappingMode.AGX }),
     grade: new GradeEffect(GRADES.day, GRADE_STRENGTH.day),
     grain: new GrainEffect({ amount: 0.025, cellPx: 1.5 }), // film grain, OFF by default (inputProps post.grain): the reference measures no grain and it quadruples the file size
   }), [camera, scene]);
@@ -64,6 +64,8 @@ const Inner: React.FC<{ id: number; kit: Kit }> = ({ id, kit }) => {
       {/* @react-three/postprocessing 2.x wants elements only: the switched-off passes are filtered out */}
       {[
         on.ink ? <primitive key="ink" object={fx.ink} dispose={null} /> : null,
+        // occlusion ambiante : les ombres douces dans les coins, sous les objets, entre les colonnes (le relief du décor)
+        on.ao ? <N8AO key="ao" aoRadius={1.4} distanceFalloff={0.8} intensity={3.5} quality="medium" halfRes color="#1a0e08" /> : null,
         on.lens && on.pre ? <primitive key="pre" object={fx.lens.pre} dispose={null} /> : null,
         on.lens ? <primitive key="lens" object={fx.lens.main} dispose={null} /> : null,
         on.bloom ? <primitive key="bloom" object={fx.bloom} dispose={null} /> : null,

@@ -235,6 +235,7 @@ export class World {
   private jar: Jar; private replica: Jar;
   private city: THREE.Texture; private tea: THREE.Mesh;
   private houses: THREE.Object3D[] = [];
+  private fill: THREE.DirectionalLight; private hallLights: THREE.Group; private museumLights: THREE.Group; private busLights: THREE.Group;
   private horse!: THREE.Group; private mixer: THREE.AnimationMixer | null = null;
   private frustum = new THREE.Frustum();
   private m4 = new THREE.Matrix4(); private v = new THREE.Vector3(); private sph = new THREE.Sphere();
@@ -245,11 +246,31 @@ export class World {
     // ---- lumière claire et égale ; le soleil suit la caméra d'un lieu à l'autre (ombres) ----
     this.hemi = new THREE.HemisphereLight("#fff6e6", "#b89a74", 1.5);
     this.sun = new THREE.DirectionalLight("#fff0d6", 1.8);
-    this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048); this.sun.shadow.radius = 4;
+    this.sun.castShadow = true; this.sun.shadow.mapSize.set(4096, 4096); this.sun.shadow.radius = 3;
     const sc = this.sun.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 80;
     this.sun.shadow.bias = -0.0004; this.sun.shadow.normalBias = 0.03;
-    const fill = new THREE.DirectionalLight("#e8f0ff", 0.55); fill.position.set(3, 4, 8);
-    R.add(this.hemi, this.sun, this.sun.target, fill);
+    this.fill = new THREE.DirectionalLight("#cfe0ff", 0.35); this.fill.position.set(3, 4, 8);
+    R.add(this.hemi, this.sun, this.sun.target, this.fill);
+    // ---- lumières de la salle : lanternes chaudes, un projecteur sur la jarre, un sur le trône ----
+    this.hallLights = new THREE.Group(); R.add(this.hallLights);
+    for (const [x, z] of [[-2.4, -5.5], [2.4, -5.5], [-2.4, -0.5], [2.4, -0.5], [-2.4, 3.0], [2.4, 3.0]] as const) {
+      const pl = new THREE.PointLight("#ffa45a", 9, 9, 2); pl.position.set(x, 4.35, z); this.hallLights.add(pl);
+    }
+    const jarSpot = new THREE.SpotLight("#fff1d8", 160, 14, 0.42, 0.65, 1.6); jarSpot.position.set(1.2, 6.3, -0.8); jarSpot.target.position.set(JAR[0], 1.0, JAR[2]);
+    jarSpot.castShadow = true; jarSpot.shadow.mapSize.set(2048, 2048); jarSpot.shadow.bias = -0.0003; jarSpot.shadow.radius = 4;
+    const thrSpot = new THREE.SpotLight("#ffd6a0", 90, 12, 0.5, 0.8, 1.6); thrSpot.position.set(0, 6.2, -4.5); thrSpot.target.position.set(THRONE[0], 1.2, THRONE[2]);
+    thrSpot.castShadow = true; thrSpot.shadow.mapSize.set(1024, 1024);
+    this.hallLights.add(jarSpot, jarSpot.target, thrSpot, thrSpot.target);
+    // ---- musée : projecteurs sur les vitrines et les socles ----
+    this.museumLights = new THREE.Group(); R.add(this.museumLights);
+    for (const [dx, dz, i, sh] of [[0, -0.5, 140, true], [-4.4, -3.2, 70, false], [4.4, -3.2, 70, false], [-5.6, 1.5, 60, false], [5.6, 1.5, 60, false]] as const) {
+      const sp = new THREE.SpotLight("#fff4e4", i, 9, 0.38, 0.7, 1.6); sp.position.set(MUSEUM[0] + dx * 0.8, 4.3, MUSEUM[2] + dz + 1.2); sp.target.position.set(MUSEUM[0] + dx, 1.0, MUSEUM[2] + dz);
+      if (sh) { sp.castShadow = true; sp.shadow.mapSize.set(2048, 2048); sp.shadow.bias = -0.0003; }
+      this.museumLights.add(sp, sp.target);
+    }
+    // ---- bus : rampes lumineuses du plafond ----
+    this.busLights = new THREE.Group(); R.add(this.busLights);
+    for (const z of [-4, 0, 4]) { const pl = new THREE.PointLight("#f4f8ff", 6, 6, 2); pl.position.set(BUS[0], 2.1, BUS[2] + z); this.busLights.add(pl); }
 
     // ================= la salle du trône =================
     const { x0, x1, z0, z1, h } = HALL;
@@ -445,15 +466,24 @@ export class World {
     cam.fov = c.fov; cam.near = 0.05; cam.far = 400; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
     cam.layers.enable(NOINK);
     // le soleil (et son ombre) suit le lieu
-    const tgt = s.loc === "hall" ? [0, 0, -2] : s.loc === "court" ? [0, 0, 13] : s.loc === "bus" ? BUS : s.loc === "longxi" ? LONGXI : MUSEUM;
-    this.sun.target.position.set(tgt[0], tgt[1], tgt[2]); this.sun.position.set(tgt[0] - 9, 14, tgt[2] + 6);
+    // salle : le soleil entre par la grande porte (sud) et dessine sa tache et les ombres des colonnes sur le dallage
+    // cour et Longxi : soleil franc et rasant (ombres longues) ; musée et bus : soleil coupé, lumières intérieures
+    const tgt = s.loc === "hall" ? [0, 0, -1] : s.loc === "court" ? [0, 0, 13] : s.loc === "bus" ? BUS : s.loc === "longxi" ? LONGXI : MUSEUM;
+    const sd = s.loc === "hall" ? [-4, 7.5, 16] : s.loc === "longxi" ? [-14, 7, 9] : [-11, 12, 7];
+    this.sun.target.position.set(tgt[0], tgt[1], tgt[2]); this.sun.position.set(tgt[0] + sd[0], sd[1], tgt[2] + sd[2]);
     for (const [k, g] of Object.entries(this.places)) g.visible = k === s.loc;
     // l'orage de la cour : ciel et lumière assombris
     const storm = s.loc === "court" && t < W[40];
-    this.hemi.intensity = storm ? 0.85 : s.loc === "hall" ? 1.95 : 1.5; this.sun.intensity = storm ? 0.5 : s.loc === "hall" ? 1.6 : 1.8;
+    const LI: Record<string, [number, number, number]> = { hall: [0.32, 5.5, 0.12], court: [0.75, 3.4, 0.25], longxi: [0.6, 3.8, 0.2], museum: [0.28, 0, 0.1], bus: [0.7, 0, 0.3] };
+    const [hi, si, fli] = storm ? [0.45, 0.35, 0.15] : LI[s.loc];
+    this.hemi.intensity = hi; this.sun.intensity = si; this.fill.intensity = fli; this.sun.castShadow = si > 0;
+    this.hemi.color.set(s.loc === "hall" ? "#ffe2c0" : "#dfeaff"); this.hemi.groundColor.set(s.loc === "hall" ? "#5a2a18" : "#8a6a48");
+    this.sun.color.set(s.loc === "longxi" ? "#ffd8a0" : "#fff0d8");
+    this.hallLights.visible = s.loc === "hall"; this.museumLights.visible = s.loc === "museum"; this.busLights.visible = s.loc === "bus";
     if (HDR) HDR.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = HDR; scene.background = HDR; scene.backgroundIntensity = storm ? 0.45 : 1.3; scene.environmentIntensity = storm ? 0.3 : 0.6;
-    scene.fog = null;
+    // une légère brume : profondeur dans la salle (poussière dans la lumière), air sec et poussiéreux à Longxi
+    scene.fog = s.loc === "hall" ? new THREE.FogExp2("#4a2c1c", 0.028) : s.loc === "longxi" ? new THREE.FogExp2("#e6cfa6", 0.012) : s.loc === "court" ? new THREE.FogExp2(storm ? "#5a6070" : "#d8e2ea", 0.006) : null;
     // les personnages (cartes) : éclairage deux tons du style
     TONE.uLitCol.value.set(...L.lit); TONE.uShadeCol.value.set(...L.shade); TONE.uShadeLift.value.set(...L.lift);
     TONE.uLambert.value = L.lambert; TONE.uSideK.value = L.sideK; TONE.uTerm.value = L.term; TONE.uBounce.value.set(...LOOK.day.bounce); TONE.uSat.value = 1.15;
