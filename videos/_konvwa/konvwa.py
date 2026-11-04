@@ -269,6 +269,54 @@ def cmd_planche(a):
     return 0 if s else 1
 
 
+def render_with_progress(cmd, env, proj):
+    """Lance render_queue.py et affiche où il en est toutes les 10 s (images faites / à faire, dernière ligne de Blender),
+    puis les erreurs du journal de chaque plan. Renvoie 1 en cas de problème."""
+    import threading
+    import time
+    shots = os.path.join(proj, 'shots')
+    p = subprocess.Popen(cmd, env=env, cwd=ENGINE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace')
+    out = []
+    total = [0]
+
+    def reader():
+        for line in p.stdout:
+            out.append(line.rstrip())
+            m = re.match(r'QUEUE (\d+) frames', line)
+            if m:
+                total[0] = int(m.group(1))
+            print('  ' + line.rstrip(), flush=True)
+    th = threading.Thread(target=reader, daemon=True)
+    th.start()
+    t0, last = time.time(), ''
+    while p.poll() is None:
+        time.sleep(10)
+        done, tail = 0, ''
+        for lg in glob.glob(os.path.join(shots, '*_q.log')):
+            txt = open(lg, encoding='utf-8', errors='replace').read()
+            done += len(re.findall(r'^CZ frame \d+', txt, re.M))
+            lines = [x for x in txt.splitlines() if x.strip() and 'EGL Error' not in x]
+            if lines:
+                tail = lines[-1][:110]
+        msg = f'  … {done}/{total[0] or "?"} images ({(time.time() - t0) / 60:.1f} min) | {tail}'
+        if msg != last:
+            print(msg, flush=True)
+            last = msg
+    th.join(timeout=5)
+    bad = p.returncode != 0 or any('PROBLEMS' in x for x in out)
+    for lg in glob.glob(os.path.join(shots, '*_q.log')):
+        txt = open(lg, encoding='utf-8', errors='replace').read().splitlines()
+        errs = [i for i, x in enumerate(txt) if 'Traceback' in x or 'Error' in x and 'EGL Error' not in x and 'Shadow buffer' not in x]
+        if errs:
+            bad = True
+            print(f'\nERREUR dans {lg} :')
+            for x in txt[max(0, errs[0] - 2):errs[0] + 18]:
+                print('  ' + x)
+    if bad:
+        print('\nLe rendu a échoué : envoie ce message (ou le fichier _q.log ci-dessus) à Claude.')
+    return 1 if bad else 0
+
+
 def cmd_rendu(a):
     proj = project_dir(a.projet)
     name = os.path.basename(proj)
@@ -280,8 +328,9 @@ def cmd_rendu(a):
     env = env_for(py, bl)
     T = os.path.join(ENGINE, 'tools')
     print('1/5 Rendu des plans (moteur Blender)…')
-    subprocess.run([py, os.path.join(T, 'render_queue.py'), proj, '--jobs', str(a.jobs), '--scale', str(a.scale), '--samples', str(a.samples)],
-                   env=env, cwd=ENGINE, check=True)
+    if render_with_progress([py, os.path.join(T, 'render_queue.py'), proj, '--jobs', str(a.jobs), '--scale', str(a.scale), '--samples', str(a.samples)],
+                            env, proj):
+        return 1
     print('2/5 Montage (fondus, raccords)…')
     subprocess.run([py, os.path.join(T, 'assemble.py'), proj], env=env, cwd=ENGINE, check=True)
     os.makedirs(os.path.join(proj, 'renders'), exist_ok=True)
