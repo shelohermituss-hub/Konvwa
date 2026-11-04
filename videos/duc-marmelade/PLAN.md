@@ -59,4 +59,6 @@ TRÔNE soir : violet et braise. CITADELLE couchant : rouge-or, ombres magenta.
 L'enseigne d'une boutique en face, par la fenêtre du salon (s05) ; une caisse au chantier de Sans-Souci (s08) ; la marque
 de fonderie sur la culasse d'un canon (s09).
 
-## Étalonnage (rempli à la fin : options de post.py, recopiées dans project.json > konvwa > post)
+## Étalonnage (options de post.py, dans project.json > konvwa > post)
+`--sat 1.15` (le modèle). Non sondé sur le film entier (le serveur ne rend que des images de contrôle) : sonder avec
+`gradeprobe.py shots/<plan> --step 20` après le premier rendu du PC si les couleurs déçoivent.
