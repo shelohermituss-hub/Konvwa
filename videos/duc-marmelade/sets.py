@@ -8,6 +8,7 @@ from common import T, dress, wall_x, wall_y
 
 # ---------------- TRÔNE : la salle du trône de Sans-Souci (x -5..5, y -3.5..5, plafond 5 m)
 X0, X1, Y0, Y1, H = -5.0, 5.0, -3.5, 5.0, 5.0
+PLAQUE = (0.0, 5.0 - 0.85, 3.98)    # la plaque « 1811 » (devant le lambrequin)
 THRONE_Y = 2.6                      # bord avant de l'estrade ; le roi assis en (0, THRONE_Y + 1.4)
 SEAT = (0.0, THRONE_Y + 1.4)
 DOOR = (-3.0, Y1)                   # la porte du fond (Henri entre par là)
@@ -15,7 +16,7 @@ WINDOWS = [(-2.4, -1.2), (0.4, 1.6), (3.0, 4.2)]   # fenêtres du mur gauche (y)
 MAP_TABLE = (2.7, -0.6)             # la table de la carte (centre), plateau à 0.86 m
 MAP_TOP = 0.86
 SHIELDS = []                        # [(objet, groupe)] : groupes 0 princes, 1 ducs, 2 comtes, 3 barons
-GROUPS = [(4, 2, 2, 0.56, 0.5), (8, 2, 4, 0.46, 0.42), (22, 3, 8, 0.34, 0.3), (37, 5, 8, 0.3, 0.27)]   # (n, rangs, colonnes, pas, taille)
+GROUPS = [(4, 2, 2, 0.5, 0.45), (8, 2, 4, 0.42, 0.38), (22, 3, 8, 0.31, 0.28), (37, 5, 8, 0.27, 0.24)]   # (n, rangs, colonnes, pas, taille)
 
 
 def ring(name, r, t, loc, mat, n=48, m=10):
@@ -53,7 +54,8 @@ def trone(mode='jour', shields='all'):
     wall_x('tr_left', X0 - 0.05, Y0, Y1, H, wall, holes=[(a, b, 0.9, 3.9) for a, b in WINDOWS])
     wall_x('tr_right', X1 + 0.05, Y0, Y1, H, wall)
     # plinthes rouges, corniche d'or, pilastres blancs
-    for nm, sz, loc in (('tr_baseB', (X1 - X0, 0.04, 0.22), (0, Y1 - 0.02, 0.11)), ('tr_baseR', (0.04, Y1 - Y0, 0.22), (X1 - 0.02, (Y0 + Y1) / 2, 0.11)),
+    da, db = DOOR[0] - 0.65, DOOR[0] + 0.65
+    for nm, sz, loc in (('tr_baseB', (da - X0, 0.04, 0.22), ((X0 + da) / 2, Y1 - 0.02, 0.11)), ('tr_baseB2', (X1 - db, 0.04, 0.22), ((db + X1) / 2, Y1 - 0.02, 0.11)), ('tr_baseR', (0.04, Y1 - Y0, 0.22), (X1 - 0.02, (Y0 + Y1) / 2, 0.11)),
                         ('tr_baseL', (0.04, Y1 - Y0, 0.22), (X0 + 0.02, (Y0 + Y1) / 2, 0.11))):
         cz.box(nm, sz, loc, red, bevel=0.004, ol=0.003)
     for nm, sz, loc in (('tr_corB', (X1 - X0, 0.16, 0.2), (0, Y1 - 0.08, H - 0.3)), ('tr_corR', (0.16, Y1 - Y0, 0.2), (X1 - 0.08, (Y0 + Y1) / 2, H - 0.3)),
@@ -77,13 +79,16 @@ def trone(mode='jour', shields='all'):
     cz.plane('tr_sky', 14, 7, (X0 - 6.0, 1.0, 2.6), sky, rot=(90, 0, 90))
     cz.box('tr_outside_ground', (6, 14, 0.1), (X0 - 3.5, 1.0, -0.05), cz.toon('tr_outside_groundm', '#7ab86a' if not soir else '#7a4a5a'), bevel=0, ol=0)
     # dehors par la porte du fond : une galerie claire
-    cz.box('tr_hall', (2.0, 2.5, 3.2), (DOOR[0], Y1 + 1.4, 1.6), cz.glow('tr_hall_skym', '#f4e2b8' if not soir else '#8a5a7a', 0.9), bevel=0, ol=0)
+    cz.plane('tr_hall', 2.6, 3.4, (DOOR[0], Y1 + 2.4, 1.7), cz.glow('tr_hall_skym', '#f4e2b8' if not soir else '#8a5a7a', 0.9))
+    cz.box('tr_hallfloor', (2.4, 2.6, 0.2), (DOOR[0], Y1 + 1.2, -0.1), floor, bevel=0, ol=0)
+    for sx in (-1, 1):
+        cz.box(f'tr_hallwall{sx}', (0.1, 2.6, 3.2), (DOOR[0] + sx * 1.0, Y1 + 1.2, 1.6), wall, bevel=0, ol=0)
 
     # l'estrade et le trône (copie du trône du moteur avec nos images : props/throne.py)
     cz.prop('throne', 'tr_throne', (0, THRONE_Y, 0), lacquer='#9c1424', dais='#5a1412', gold='#d9a72e', cushion='#c21f2a')
     cz.prop('stage_curtain', 'tr_drapeback', (0, Y1 - 0.25, 0), kind='straight', width=3.4, height=H - 0.4, folds=9, color='#8a1824')
     cz.prop('stage_curtain', 'tr_valance', (0, Y1 - 0.4, H - 0.85), kind='valance', width=3.8, height=0.8, swags=3, color='#9c1424')
-    pl = cz.plane('tr_plaque', 1.5, 1.5 * 420 / 1024, (0, Y1 - 0.42, 4.05), cz.toon('tr_plaquem', img=T('plaque_1811.png'), alpha_clip=True, lift=0.7))
+    pl = cz.plane('tr_plaque', 1.3, 1.3 * 420 / 1024, (0, Y1 - 0.85, 3.98), cz.toon('tr_plaquem', img=T('plaque_1811.png'), alpha_clip=True, lift=0.7))
     for sx in (-1, 1):
         cz.prop('stage_column', f'tr_col{sx}', (sx * 2.25, THRONE_Y + 0.6, 0), height=H - 0.4, marble='#f0e6d0', gold='#d2a23e')
     # rideaux des fenêtres
@@ -153,8 +158,8 @@ def trone(mode='jour', shields='all'):
         cz.light('tr_fill', 'AREA', (3.0, -3.0, 4.2), color='#7a6ad8', power=1400, size=5, target=(0, 1.5, 1.0))
         cz.light('tr_rim', 'AREA', (2.5, 4.4, 4.0), color='#ff9a5a', power=500, size=2.5, target=(0, 3.0, 1.2))
     else:
-        cz.light('tr_sun', 'SUN', (X0 - 4, -0.5, 5.4), color='#ffe0a0', power=6.0, size=1.2, target=(X0 + 3.2, 1.6, 0.0))
-        cz.light('tr_fill', 'AREA', (3.4, -3.2, 4.2), color='#8fd2de', power=380, size=5, target=(0, 1.5, 1.0))
+        cz.light('tr_sun', 'SUN', (X0 - 4, -0.5, 5.4), color='#ffe0a0', power=9.0, size=1.0, target=(X0 + 3.2, 1.6, 0.0))
+        cz.light('tr_fill', 'AREA', (3.4, -3.2, 4.2), color='#8fd2de', power=220, size=5, target=(0, 1.5, 1.0))
         cz.light('tr_rim', 'AREA', (2.8, 4.6, 4.2), color='#ffd8a0', power=420, size=2.5, target=(0, 3.0, 1.2))
     dress('dress_trone', mode=mode)
     cz.no_shadow(('glass', 'Glass', 'pane', 'sky', 'outside', 'tr_hall'))

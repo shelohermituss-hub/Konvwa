@@ -333,7 +333,38 @@ def sign(text, name, w=1024, h=300, bg='#2a5a3a', ink='#f2e6c4', font=None):
     save(img, name)
 
 
+def painting(name, kind, w=900, h=640):
+    """Un tableau peint : 'citadelle' (la forteresse sur sa montagne, ciel d'or) ou 'navire' (un trois-mâts sur la mer)."""
+    img = Image.new('RGB', (w, h))
+    d = ImageDraw.Draw(img, 'RGBA')
+    for y in range(h):   # ciel en dégradé
+        k = y / h
+        c = (int(250 - 60 * k), int(200 - 30 * k), int(120 + 60 * k)) if kind == 'citadelle' else (int(150 + 60 * k), int(200 + 30 * k), int(230))
+        d.line([(0, y), (w, y)], fill=c)
+    if kind == 'citadelle':
+        d.polygon([(0, h), (0, 470), (180, 380), (380, 250), (520, 300), (700, 420), (w, 400), (w, h)], fill=(70, 120, 70, 255))
+        d.polygon([(330, 262), (520, 250), (560, 215), (330, 200)], fill=(120, 110, 100, 255), outline=(50, 40, 30, 255))
+        d.polygon([(560, 215), (610, 240), (520, 252)], fill=(100, 92, 84, 255), outline=(50, 40, 30, 255))
+        for k in range(5):
+            d.rectangle([350 + k * 34, 190, 366 + k * 34, 200], fill=(120, 110, 100, 255))
+        d.polygon([(0, h), (0, 560), (300, 520), (600, 560), (w, 530), (w, h)], fill=(50, 95, 60, 255))
+    else:
+        d.rectangle([0, 420, w, h], fill=(40, 100, 140, 255))
+        for k in range(14):
+            x = (k * 83) % w
+            d.arc([x, 440 + (k % 4) * 40, x + 70, 470 + (k % 4) * 40], 200, 340, fill=(220, 240, 250, 200), width=4)
+        d.polygon([(250, 420), (650, 420), (600, 470), (300, 470)], fill=(90, 50, 30, 255))
+        for mx, mh in ((340, 300), (450, 340), (560, 280)):
+            d.line([(mx, 420), (mx, 420 - mh)], fill=(60, 40, 25, 255), width=8)
+            d.polygon([(mx - 70, 420 - mh + 30), (mx + 70, 420 - mh + 30), (mx + 60, 400), (mx - 60, 400)], fill=(240, 232, 210, 255))
+        d.rectangle([440, 100, 470, 120], fill=(200, 30, 40, 255))
+    img = mottle(img, 16, 120, 51)
+    save(img, name)
+
+
 def all_throne():
+    painting('painting_citadelle.png', 'citadelle')
+    painting('painting_navire.png', 'navire')
     floor_checker()
     wall_ochre()
     wall_ochre('wall_ochre_dark.png', '#b9812f', 6)

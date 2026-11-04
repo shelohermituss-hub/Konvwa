@@ -232,18 +232,30 @@ def strawhat(color='#d8b25a'):
     return build
 
 
+def _torus(name, r, t, loc, mat, parent, n=32, m=8):
+    """Un anneau (verres de lunettes, monocle) dont l'axe est Y : il fait face à la caméra (-Y)."""
+    bm = bmesh.new()
+    rows = []
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        rows.append([bm.verts.new(((r + t * math.cos(2 * math.pi * j / m)) * math.cos(a), t * math.sin(2 * math.pi * j / m),
+                                   (r + t * math.cos(2 * math.pi * j / m)) * math.sin(a))) for j in range(m)])
+    for i in range(n):
+        for j in range(m):
+            bm.faces.new((rows[i][j], rows[(i + 1) % n][j], rows[(i + 1) % n][(j + 1) % m], rows[i][(j + 1) % m]))
+    o = cz._mesh_obj(name, bm, mat)
+    cz.place(o, loc, parent=parent)
+    o['cz_contact_ok'] = 1
+    return o
+
+
 def spectacles(color='#2a1a10', r=0.07):
     """Lunettes rondes en anneaux OUVERTS (des disques pleins se lisent comme des lunettes de soleil), devant le visage."""
     def build(c):
         R = c.R
         m = cz.toon('kv_specm', color, 0.8)
         for sx in (1, -1):
-            bm = bmesh.new()
-            bmesh.ops.create_circle(bm, cap_ends=False, segments=32, radius=r * c.s)
-            o = cz._mesh_obj(c.name + f'_lens{sx}', bm, m, smooth=False)
-            cz.place(o, (sx * R * 0.3, -R * 1.05, R * 0.04), rot=(90, 0, 0), parent=c.head)
-            w = o.modifiers.new('w', 'WIREFRAME')
-            w.thickness = 0.012 * c.s
+            _torus(c.name + f'_lens{sx}', r * c.s, 0.007 * c.s, (sx * R * 0.3, -R * 1.02, R * 0.04), m, c.head)
         cz.box(c.name + '_bridge', (R * 0.16, 0.008, 0.01), (0, -R * 1.06, R * 0.07), m, bevel=0, ol=0, parent=c.head)
     return build
 
@@ -252,12 +264,7 @@ def monocle():
     def build(c):
         R = c.R
         m = cz.toon('kv_monoclem', GOLD, 0.8)
-        bm = bmesh.new()
-        bmesh.ops.create_circle(bm, cap_ends=False, segments=28, radius=0.06 * c.s)
-        o = cz._mesh_obj(c.name + '_monocle', bm, m, smooth=False)
-        cz.place(o, (-R * 0.3, -R * 1.05, R * 0.04), rot=(90, 0, 0), parent=c.head)
-        w = o.modifiers.new('w', 'WIREFRAME')
-        w.thickness = 0.012 * c.s
+        _torus(c.name + '_monocle', 0.062 * c.s, 0.007 * c.s, (-R * 0.3, -R * 1.02, R * 0.04), m, c.head)
         tube(c.name + '_monocord', [(-R * 0.36, -R * 1.04, -R * 0.02), (-R * 0.6, -R * 0.95, -R * 0.4), (-R * 0.7, -R * 0.7, -R * 0.8), (-R * 0.6, -R * 0.5, -R * 1.2)],
              0.004, 0.004, m, c.head, ol=0.0, n=12, ring=6)
     return build
