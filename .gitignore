@@ -59,3 +59,7 @@ videos/**/frames_*/
 # Outil konvwa : environnement Python local et lanceurs générés
 videos/_konvwa/.venv/
 videos/_konvwa/.cache/
+# Fichiers générés par post.py (sous-titres, polices copiées)
+videos/*/captions.ass
+videos/*/fonts/
+videos/*/.suite/
