@@ -548,6 +548,18 @@ def vertical_captions(words, path, y=0.80):
     open(path, 'w', encoding='utf-8').write('\n'.join(L) + '\n')
 
 
+def loudness_only(src, dst):
+    """Le son à -14 LUFS (mesure puis correction linéaire, limiteur), l'image copiée telle quelle : finish.py sans le
+    passage à 60 i/s (sortie à 30 i/s, project.json > konvwa > fps60 = "non")."""
+    m = subprocess.run(['ffmpeg', '-hide_banner', '-i', src, '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json', '-f', 'null', '-'],
+                       capture_output=True, text=True).stderr
+    j = json.loads(m[m.rindex('{'):m.rindex('}') + 1])
+    ln = ('loudnorm=I=-14:TP=-1.5:LRA=11:linear=true:measured_I={input_i}:measured_TP={input_tp}:measured_LRA={input_lra}:'
+          'measured_thresh={input_thresh}:offset={target_offset}').format(**j)
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', src, '-af', ln + ',alimiter=limit=0.79:level=disabled', '-c:v', 'copy',
+                    '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', dst], check=True)
+
+
 def to_vertical(src, dst, mode, ass=None):
     """Un film 16:9 en 9:16 (comme Export > Vertical 9:16 de l'application) : 'flou' = l'image entière posée sur une copie
     floutée d'elle-même, 'recadre' = le centre agrandi pour remplir le cadre ; ass = les sous-titres à graver dessus."""
@@ -655,7 +667,10 @@ def cmd_rendu(a):
     else:
         print('4/5 (60 i/s par finish.py)' if mode == 'dup' else '4/5 (30 i/s gardés)')
     final = os.path.join(proj, 'renders', f'{name}.mp4')
-    if voice and os.path.exists(FINISH):
+    if voice and mode == 'non':
+        print('5/5 Son à -14 LUFS (30 i/s gardés)…')
+        loudness_only(src, final)
+    elif voice and os.path.exists(FINISH):
         print('5/5 Son à -14 LUFS (finish.py)…')
         subprocess.run([py, '-I', FINISH, src, final], check=True)
     else:
