@@ -1,0 +1,66 @@
+[
+ {
+  "id": "ph:forrest_ground_01",
+  "title": "Forest Ground 01",
+  "author": "Rob Tuytel",
+  "license": "CC0 1.0",
+  "source_url": "https://polyhaven.com/a/forrest_ground_01",
+  "kind": "texture"
+ },
+ {
+  "id": "ph:tree_small_02",
+  "title": "Tree Small 02",
+  "author": "Rico Cilliers",
+  "license": "CC0 1.0",
+  "source_url": "https://polyhaven.com/a/tree_small_02",
+  "kind": "model"
+ },
+ {
+  "id": "ph:grass_bermuda_01",
+  "title": "Grass Bermuda 01",
+  "author": "Rico Cilliers",
+  "license": "CC0 1.0",
+  "source_url": "https://polyhaven.com/a/grass_bermuda_01",
+  "kind": "model"
+ },
+ {
+  "id": "ph:rock_moss_set_01",
+  "title": "Rock Moss Set 01",
+  "author": "Kless Gyzen",
+  "license": "CC0 1.0",
+  "source_url": "https://polyhaven.com/a/rock_moss_set_01",
+  "kind": "model"
+ },
+ {
+  "id": "pp:dVLJ5CjB0h",
+  "title": "Red Car",
+  "author": "J-Toastie",
+  "license": "CC-BY 3.0",
+  "source_url": "https://poly.pizza/m/dVLJ5CjB0h",
+  "kind": "model"
+ },
+ {
+  "id": "kenney:city-kit-suburban/building-type-a",
+  "title": "building-type-a (city-kit-suburban)",
+  "author": "Kenney (kenney.nl)",
+  "license": "CC0 1.0",
+  "source_url": "https://kenney.nl/assets/city-kit-suburban",
+  "kind": "model"
+ },
+ {
+  "id": "ph:pipe_wrench",
+  "title": "Pipe Wrench",
+  "author": "Will Evarts",
+  "license": "CC0 1.0",
+  "source_url": "https://polyhaven.com/a/pipe_wrench",
+  "kind": "model"
+ },
+ {
+  "id": "si:ff607e3c-3d88-4422-a246-3976aa4839dc",
+  "title": "Side Chair",
+  "author": "Smithsonian Institution",
+  "license": "CC0 1.0 (Smithsonian Open Access)",
+  "source_url": "https://3d.si.edu/object/3d/ff607e3c-3d88-4422-a246-3976aa4839dc",
+  "kind": "model"
+ }
+]

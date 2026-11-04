@@ -1,0 +1,408 @@
+{
+ "sr": 48000,
+ "built_by": "tools/sfxlib.py",
+ "pack": "VeraSFXpack (owner)",
+ "star": "vine_boom",
+ "sounds": [
+  {
+   "name": "vine_boom",
+   "file": "boom/vine_boom.wav",
+   "category": "boom",
+   "duration": 1.309,
+   "gain": 0,
+   "use": "THE STAR. Dead joke / punchline lands: put t at the end of the punchline word (or 0.05 s after). 5-10 per short.",
+   "source": "youtube shorts sfx/BOOM sound effect.mp3",
+   "centroid_hz": 1674
+  },
+  {
+   "name": "bass_drop",
+   "file": "boom/bass_drop.wav",
+   "category": "boom",
+   "duration": 0.737,
+   "gain": -4,
+   "use": "Big reveal / twist landing, heavier than the vine boom. Max once per short.",
+   "source": "Bass drop/Bass_Drop_Clean.mp3",
+   "centroid_hz": 82
+  },
+  {
+   "name": "meme/bonk",
+   "file": "meme/bonk.wav",
+   "category": "meme",
+   "duration": 0.406,
+   "gain": -6,
+   "use": "Someone gets hit on the head / dumb moment.",
+   "source": "youtube shorts sfx/Bonk Sound Effect.mp3",
+   "centroid_hz": 1431
+  },
+  {
+   "name": "meme/huh",
+   "file": "meme/huh.wav",
+   "category": "meme",
+   "duration": 0.393,
+   "gain": -6,
+   "use": "Confused reaction, a weird statement.",
+   "source": "youtube shorts sfx/Huh Sound Effect.mp3",
+   "centroid_hz": 1497
+  },
+  {
+   "name": "meme/ding",
+   "file": "meme/ding.wav",
+   "category": "meme",
+   "duration": 0.811,
+   "gain": -8,
+   "use": "Idea / correct / good news.",
+   "source": "youtube shorts sfx/Ding.mp3",
+   "centroid_hz": 4595
+  },
+  {
+   "name": "meme/wrong",
+   "file": "meme/wrong.wav",
+   "category": "meme",
+   "duration": 1.214,
+   "gain": -8,
+   "use": "Fail / bad idea buzzer.",
+   "source": "youtube shorts sfx/Wrong.mp3",
+   "centroid_hz": 1999
+  },
+  {
+   "name": "meme/right",
+   "file": "meme/right.wav",
+   "category": "meme",
+   "duration": 0.838,
+   "gain": -8,
+   "use": "Success chime.",
+   "source": "youtube shorts sfx/Right.mp3",
+   "centroid_hz": 2496
+  },
+  {
+   "name": "meme/correct",
+   "file": "meme/correct.wav",
+   "category": "meme",
+   "duration": 0.838,
+   "gain": -9,
+   "use": "Small win.",
+   "source": "youtube shorts sfx/Sound Effects/S_correct ans .mp3",
+   "centroid_hz": 2492
+  },
+  {
+   "name": "meme/money",
+   "file": "meme/money.wav",
+   "category": "meme",
+   "duration": 1.564,
+   "gain": -9,
+   "use": "Money / buying / rich.",
+   "source": "youtube shorts sfx/Sound Effects/S_money.mp3",
+   "centroid_hz": 4606
+  },
+  {
+   "name": "meme/bell",
+   "file": "meme/bell.wav",
+   "category": "meme",
+   "duration": 0.888,
+   "gain": -10,
+   "use": "Notification / phone / school bell gag.",
+   "source": "youtube shorts sfx/Sound Effects/Notification Bell Sound Effect ( By Ashish Editz )_01.mp3",
+   "centroid_hz": 2141
+  },
+  {
+   "name": "pop/pop",
+   "file": "pop/pop.wav",
+   "category": "pop",
+   "duration": 0.181,
+   "gain": -6,
+   "use": "Teleport / appear / vanish (poof). Something pops into frame.",
+   "source": "youtube shorts sfx/Pop.mp3",
+   "centroid_hz": 1024
+  },
+  {
+   "name": "pop/pop2",
+   "file": "pop/pop2.wav",
+   "category": "pop",
+   "duration": 0.072,
+   "gain": -6,
+   "use": "Second poof variant (alternate with pop).",
+   "source": "youtube shorts sfx/Sound Effects/S_pop.mp3",
+   "centroid_hz": 1277
+  },
+  {
+   "name": "pop/pop3",
+   "file": "pop/pop3.wav",
+   "category": "pop",
+   "duration": 0.187,
+   "gain": -6,
+   "use": "Third poof variant.",
+   "source": "youtube shorts sfx/Sound Effects/S_pop sound.MP3",
+   "centroid_hz": 1466
+  },
+  {
+   "name": "pop/ping",
+   "file": "pop/ping.wav",
+   "category": "pop",
+   "duration": 0.777,
+   "gain": -10,
+   "use": "Small UI ping, text card / caption sting.",
+   "source": "youtube shorts sfx/Sound Effects/S_ping.MP3",
+   "centroid_hz": 6379
+  },
+  {
+   "name": "woosh/swoosh",
+   "file": "woosh/swoosh.wav",
+   "category": "woosh",
+   "duration": 1.238,
+   "gain": -8,
+   "use": "Fast camera move / whip cut.",
+   "source": "youtube shorts sfx/Swoosh.mp3",
+   "centroid_hz": 1532
+  },
+  {
+   "name": "woosh/short",
+   "file": "woosh/short.wav",
+   "category": "woosh",
+   "duration": 0.9,
+   "gain": -8,
+   "use": "Quick cut, small move.",
+   "source": "youtube shorts sfx/Sound Effects/Short Swoosh Sound Effect ( By Ashish Editz )_01.mp3",
+   "centroid_hz": 2979
+  },
+  {
+   "name": "woosh/deep",
+   "file": "woosh/deep.wav",
+   "category": "woosh",
+   "duration": 1.6,
+   "gain": -8,
+   "use": "Big body move: a dive, a jump, falling.",
+   "source": "youtube shorts sfx/Sound Effects/S_woosh deep.MP3",
+   "centroid_hz": 1437
+  },
+  {
+   "name": "woosh/simple",
+   "file": "woosh/simple.wav",
+   "category": "woosh",
+   "duration": 0.437,
+   "gain": -8,
+   "use": "Generic move.",
+   "source": "youtube shorts sfx/Sound Effects/S_woosh simple.mp3",
+   "centroid_hz": 1180
+  },
+  {
+   "name": "woosh/reverse",
+   "file": "woosh/reverse.wav",
+   "category": "woosh",
+   "duration": 1.6,
+   "gain": -9,
+   "use": "Swells INTO a cut (align:end on the cut).",
+   "source": "youtube shorts sfx/Sound Effects/S_woosh reverse .mp3",
+   "centroid_hz": 1312
+  },
+  {
+   "name": "woosh/cloth1",
+   "file": "woosh/cloth1.wav",
+   "category": "woosh",
+   "duration": 0.65,
+   "gain": -8,
+   "use": "Arm swing, grab, quick body movement.",
+   "source": "Cloth woosh/Cloth woosh (1).MP3",
+   "centroid_hz": 3911
+  },
+  {
+   "name": "woosh/cloth2",
+   "file": "woosh/cloth2.wav",
+   "category": "woosh",
+   "duration": 0.737,
+   "gain": -8,
+   "use": "Cloth variant.",
+   "source": "Cloth woosh/Cloth woosh (3).MP3",
+   "centroid_hz": 4669
+  },
+  {
+   "name": "woosh/smooth",
+   "file": "woosh/smooth.wav",
+   "category": "woosh",
+   "duration": 1.8,
+   "gain": -10,
+   "use": "Slow camera glide.",
+   "source": "Wooshes/Smooth Woosh.wav",
+   "centroid_hz": 875
+  },
+  {
+   "name": "woosh/power",
+   "file": "woosh/power.wav",
+   "category": "woosh",
+   "duration": 1.8,
+   "gain": -9,
+   "use": "Powerful move: flying, launch.",
+   "source": "Wooshes/Power_Wooshes_02.mp3",
+   "centroid_hz": 585
+  },
+  {
+   "name": "impact/thud",
+   "file": "impact/thud.wav",
+   "category": "impact",
+   "duration": 0.45,
+   "gain": -6,
+   "use": "Body hits the floor, faint, fall.",
+   "source": "Punches & Combat sounds/Thud.wav",
+   "centroid_hz": 2936
+  },
+  {
+   "name": "impact/punch",
+   "file": "impact/punch.wav",
+   "category": "impact",
+   "duration": 0.392,
+   "gain": -6,
+   "use": "Punch / slap.",
+   "source": "Punches & Combat sounds/Hard punch.wav",
+   "centroid_hz": 2705
+  },
+  {
+   "name": "impact/hit",
+   "file": "impact/hit.wav",
+   "category": "impact",
+   "duration": 1.0,
+   "gain": -7,
+   "use": "Small hit / bump.",
+   "source": "Punches & Combat sounds/hits/Hit (1).wav",
+   "centroid_hz": 3522
+  },
+  {
+   "name": "impact/heavy",
+   "file": "impact/heavy.wav",
+   "category": "impact",
+   "duration": 2.0,
+   "gain": -8,
+   "use": "Heavy landing, door slam.",
+   "source": "impacts/Heavy hit impact.wav",
+   "centroid_hz": 3493
+  },
+  {
+   "name": "impact/big_boom",
+   "file": "impact/big_boom.wav",
+   "category": "impact",
+   "duration": 3.0,
+   "gain": -9,
+   "use": "Cinematic hit on a title or dramatic cut.",
+   "source": "impacts/big boom.wav",
+   "centroid_hz": 2634
+  },
+  {
+   "name": "impact/crash",
+   "file": "impact/crash.wav",
+   "category": "impact",
+   "duration": 1.992,
+   "gain": -9,
+   "use": "Things fall over / crash.",
+   "source": "random sfx/crash/Crash_04.mp3",
+   "centroid_hz": 5286
+  },
+  {
+   "name": "impact/glass",
+   "file": "impact/glass.wav",
+   "category": "impact",
+   "duration": 1.687,
+   "gain": -10,
+   "use": "Glass breaks / window.",
+   "source": "random sfx/glass break/Crash_Glass_01.mp3",
+   "centroid_hz": 5894
+  },
+  {
+   "name": "riser/riser",
+   "file": "riser/riser.wav",
+   "category": "riser",
+   "duration": 2.856,
+   "gain": -10,
+   "use": "Tension build into the twist. Use align:\"end\" with t = the twist moment.",
+   "source": "risers/Riser.wav",
+   "centroid_hz": 2694
+  },
+  {
+   "name": "riser/short",
+   "file": "riser/short.wav",
+   "category": "riser",
+   "duration": 2.684,
+   "gain": -10,
+   "use": "Short build before a reveal (align:\"end\").",
+   "source": "risers/ShortRiser1.wav",
+   "centroid_hz": 3634
+  },
+  {
+   "name": "riser/easy",
+   "file": "riser/easy.wav",
+   "category": "riser",
+   "duration": 2.642,
+   "gain": -11,
+   "use": "Soft build (align:\"end\").",
+   "source": "risers/easy riser.wav",
+   "centroid_hz": 2499
+  },
+  {
+   "name": "riser/rising",
+   "file": "riser/rising.wav",
+   "category": "riser",
+   "duration": 3.929,
+   "gain": -10,
+   "use": "Rising tone, something is coming (align:\"end\").",
+   "source": "youtube shorts sfx/Sound Effects/S_rising.wav",
+   "centroid_hz": 9374
+  },
+  {
+   "name": "fx/glitch",
+   "file": "fx/glitch.wav",
+   "category": "fx",
+   "duration": 1.2,
+   "gain": -10,
+   "use": "Glitch / weird / teleport distortion.",
+   "source": "youtube shorts sfx/Sound Effects/glitch 1.wav",
+   "centroid_hz": 8594
+  },
+  {
+   "name": "fx/shine",
+   "file": "fx/shine.wav",
+   "category": "fx",
+   "duration": 1.689,
+   "gain": -10,
+   "use": "Sparkle: clean, shiny, magic, nice thing.",
+   "source": "shine star sfx/shine star.wav",
+   "centroid_hz": 7212
+  },
+  {
+   "name": "fx/camera",
+   "file": "fx/camera.wav",
+   "category": "fx",
+   "duration": 1.161,
+   "gain": -9,
+   "use": "Photo / flash / freeze frame.",
+   "source": "youtube shorts sfx/Camera flash sound effect.mp3",
+   "centroid_hz": 5027
+  },
+  {
+   "name": "fx/explosion",
+   "file": "fx/explosion.wav",
+   "category": "fx",
+   "duration": 3.5,
+   "gain": -9,
+   "use": "Explosion.",
+   "source": "explosion/Explosion_01.mp3",
+   "centroid_hz": 3119
+  },
+  {
+   "name": "fx/spin",
+   "file": "fx/spin.wav",
+   "category": "fx",
+   "duration": 1.87,
+   "gain": -10,
+   "use": "Spinning / dizzy.",
+   "source": "random sfx/Spin_FX_02.mp3",
+   "centroid_hz": 4180
+  },
+  {
+   "name": "fx/slurp",
+   "file": "fx/slurp.wav",
+   "category": "fx",
+   "duration": 2.5,
+   "gain": -9,
+   "use": "Drinking / eating.",
+   "source": "random sfx/slurp drink.wav",
+   "centroid_hz": 3002
+  }
+ ]
+}

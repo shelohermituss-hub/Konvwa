@@ -1,0 +1,8 @@
+The fonts in this folder draw the 3D text and captions of the Blender engine in the letters Arial Black lacks. Each is
+Inter Black (Latin, Latin Extended, Vietnamese, Cyrillic; from @fontsource/inter) merged with one Noto Sans script font at
+weight 800 (Noto Sans Thai, Devanagari, JP, KR, SC; the pieces in the app's templates/host/fonts/script), built by the app's
+scripts/blender-fonts.py and renamed "CZ Latin", "CZ Thai", "CZ Devanagari", "CZ Japanese", "CZ Korean", "CZ Chinese".
+
+Inter: Copyright The Inter Project Authors. Noto Sans: Copyright Google LLC / The Noto Project Authors.
+They are Modified Versions licensed under the SIL Open Font License 1.1 (OFL.txt beside this file,
+https://openfontlicense.org).
