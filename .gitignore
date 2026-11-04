@@ -48,3 +48,14 @@ videos/talkie-walkie/audio/plan.json
 videos/grande-puanteur/audio/plan.json
 videos/rats-hanoi/audio/plan.json
 videos/jarre-zhang-heng/audio/plan.json
+
+# Moteur Blender (Creatorize) : dossiers générés par les rendus, jamais commités
+videos/**/faces/
+!videos/_creatorize/blender/assets/faces/
+videos/**/shots/
+videos/**/renders/
+videos/**/frames_*/
+**/__pycache__/
+# Outil konvwa : environnement Python local et lanceurs générés
+videos/_konvwa/.venv/
+videos/_konvwa/.cache/

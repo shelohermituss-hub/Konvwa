@@ -1,0 +1,14 @@
+{
+ "language": "fr",
+ "end": 66.8,
+ "settings": {
+  "format": "portrait"
+ },
+ "konvwa": {
+  "post": [
+   "--sat",
+   "1.15"
+  ],
+  "fps60": "dup"
+ }
+}
