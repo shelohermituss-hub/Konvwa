@@ -46,7 +46,7 @@ python videos/_konvwa/konvwa.py nouveau <projet> --mots <words.json> --voix <voi
 python videos/_konvwa/konvwa.py mots <projet> <words.json>       # refaire timeline.json après une nouvelle prise
 python videos/_konvwa/konvwa.py test <projet> s03 --frames 880,915 [--scale 0.4 --samples 12]
 python videos/_konvwa/konvwa.py planche <dossier>
-python videos/_konvwa/konvwa.py rendu <projet> [--jobs 2] [--fps60 dup|interp|non]
+python videos/_konvwa/konvwa.py rendu <projet> [--jobs 1] [--fps60 dup|interp|non]
 ```
 - `nouveau` crée le film depuis `videos/_konvwa/modele/` : PLAN.md (avec la liste des phrases et leur image de début),
   CLAUDE.md, common.py (murs à vrais trous, visibilité, porter, allonger, badges), cast.py, sets.py, s01.py (un plan

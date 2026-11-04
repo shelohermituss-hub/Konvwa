@@ -2,7 +2,7 @@
 import os
 import sys
 
-F0, F1 = 1, 40
+F0, F1 = 1, 80
 
 
 def build(ctx):

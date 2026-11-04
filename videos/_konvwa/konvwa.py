@@ -9,7 +9,7 @@
 #   python videos/_konvwa/konvwa.py mots <projet> <words.json>     (re)fait audio/timeline.json + audio/words.json
 #   python videos/_konvwa/konvwa.py test <projet> <s03> [--frames 880,915] [--scale 0.4] [--samples 12]
 #   python videos/_konvwa/konvwa.py planche <dossier d'images> [--cols 6]
-#   python videos/_konvwa/konvwa.py rendu <projet> [--jobs 2] [--scale 1.0] [--samples 48] [--fps60 dup|interp|non]
+#   python videos/_konvwa/konvwa.py rendu <projet> [--jobs 1] [--scale 1.0] [--samples 48] [--fps60 dup|interp|non]
 #
 # <projet> = le nom d'un dossier de videos/ (ex. jarre-blender) ou un chemin. Le moteur n'est jamais modifié : tout ce qui
 # est propre à un film vit dans son dossier (cast.py, sets.py, sNN.py, assemble.json, PLAN.md…).
@@ -325,7 +325,7 @@ def main():
     p = sp.add_parser('test'); p.add_argument('projet'); p.add_argument('seq'); p.add_argument('--frames'); p.add_argument('--scale', default='0.4')
     p.add_argument('--samples', default='12'); p.add_argument('--cols', type=int, default=6); p.set_defaults(fn=cmd_test)
     p = sp.add_parser('planche'); p.add_argument('dossier'); p.add_argument('--cols', type=int, default=6); p.set_defaults(fn=cmd_planche)
-    p = sp.add_parser('rendu'); p.add_argument('projet'); p.add_argument('--jobs', type=int, default=2); p.add_argument('--scale', default='1.0')
+    p = sp.add_parser('rendu'); p.add_argument('projet'); p.add_argument('--jobs', type=int, default=1); p.add_argument('--scale', default='1.0')
     p.add_argument('--samples', default='48'); p.add_argument('--fps60', choices=['dup', 'interp', 'non']); p.add_argument('--sans-sous-titres', action='store_true')
     p.set_defaults(fn=cmd_rendu)
     a = ap.parse_args()
