@@ -1,0 +1,284 @@
+{
+ "films": [
+  {
+   "nom": "An_Unstoppable_Spear_vs",
+   "duree_s": 45.0,
+   "coupes": 1,
+   "coupes_par_10s": 0.22,
+   "cadrages_par_10s": 3.56,
+   "tenue_med": 37.5,
+   "vol_med": 7.5,
+   "vols_penches_pct": 7.1,
+   "plan_med": 675.0,
+   "lum": 127.55234071180556,
+   "sat": 113.93198591820989,
+   "con": 46.68533601697215,
+   "nette": 1232.846372118302,
+   "noir": 0.10411979166666667,
+   "plat": 0.2821717171717172,
+   "nc": 4.61153105397244,
+   "nuit_pct": 15.555555555555555,
+   "groupes_teinte": 4,
+   "ecart_lum": 84.1,
+   "changement_teinte_pct": 71.4
+  },
+  {
+   "nom": "Every_Memory_Has_a_Price",
+   "duree_s": 77.8,
+   "coupes": 0,
+   "coupes_par_10s": 0.0,
+   "cadrages_par_10s": 3.47,
+   "tenue_med": 41.0,
+   "vol_med": 13.5,
+   "vols_penches_pct": 32.0,
+   "plan_med": 2334.0,
+   "lum": 93.09133961560718,
+   "sat": 134.34137806601677,
+   "con": 52.89640617997266,
+   "nette": 1032.5606626490367,
+   "noir": 0.30920367031695156,
+   "plat": 0.32781177156177155,
+   "nc": 7.765610377464883,
+   "nuit_pct": 47.43589743589743,
+   "groupes_teinte": 3,
+   "ecart_lum": 58.1,
+   "changement_teinte_pct": 33.3
+  },
+  {
+   "nom": "The_Ancient_Jar_That_War",
+   "duree_s": 64.8,
+   "coupes": 3,
+   "coupes_par_10s": 0.46,
+   "cadrages_par_10s": 4.47,
+   "tenue_med": 32.0,
+   "vol_med": 10.0,
+   "vols_penches_pct": 26.1,
+   "plan_med": 79.5,
+   "lum": 112.64138050881411,
+   "sat": 105.486546741453,
+   "con": 46.07392405037779,
+   "nette": 1662.2666593734834,
+   "noir": 0.092646968482906,
+   "plat": 0.2171416083916084,
+   "nc": 3.6994459948607545,
+   "nuit_pct": 10.0,
+   "groupes_teinte": 3,
+   "ecart_lum": 46.3,
+   "changement_teinte_pct": 50.0
+  },
+  {
+   "nom": "The_Burglar_Who_Only_Mov",
+   "duree_s": 58.4,
+   "coupes": 1,
+   "coupes_par_10s": 0.17,
+   "cadrages_par_10s": 5.48,
+   "tenue_med": 29.5,
+   "vol_med": 7.5,
+   "vols_penches_pct": 35.7,
+   "plan_med": 875.5,
+   "lum": 140.4597181416192,
+   "sat": 115.69634463289411,
+   "con": 58.80232952629583,
+   "nette": 1915.1575624018726,
+   "noir": 0.10463337636514722,
+   "plat": 0.2931332556332557,
+   "nc": 3.03462717018973,
+   "nuit_pct": 3.418803418803419,
+   "groupes_teinte": 3,
+   "ecart_lum": 74.4,
+   "changement_teinte_pct": 55.6
+  },
+  {
+   "nom": "The_Job_Nobody_Wants_in",
+   "duree_s": 60.5,
+   "coupes": 3,
+   "coupes_par_10s": 0.5,
+   "cadrages_par_10s": 5.95,
+   "tenue_med": 24.5,
+   "vol_med": 10.0,
+   "vols_penches_pct": 37.5,
+   "plan_med": 441.5,
+   "lum": 130.98974647038568,
+   "sat": 112.54801939853077,
+   "con": 53.65610662056181,
+   "nette": 1415.6355983066135,
+   "noir": 0.12009545024104684,
+   "plat": 0.3846074380165289,
+   "nc": 4.4932812989564885,
+   "nuit_pct": 6.6115702479338845,
+   "groupes_teinte": 3,
+   "ecart_lum": 57.4,
+   "changement_teinte_pct": 44.4
+  },
+  {
+   "nom": "Why_Sailors_Carried_Stor",
+   "duree_s": 64.6,
+   "coupes": 0,
+   "coupes_par_10s": 0.0,
+   "cadrages_par_10s": 4.8,
+   "tenue_med": 35.0,
+   "vol_med": 12.0,
+   "vols_penches_pct": 52.0,
+   "plan_med": 1937.0,
+   "lum": 104.46672696314104,
+   "sat": 164.47695162259612,
+   "con": 55.9586598932554,
+   "nette": 1843.2643665732867,
+   "noir": 0.19722943376068372,
+   "plat": 0.32241258741258744,
+   "nc": 4.843042197839866,
+   "nuit_pct": 22.30769230769231,
+   "groupes_teinte": 2,
+   "ecart_lum": 42.7,
+   "changement_teinte_pct": 30.0
+  }
+ ],
+ "cibles": {
+  "duree_s": {
+   "med": 62.55,
+   "p25": 58.925,
+   "p75": 64.75,
+   "min": 45.0,
+   "max": 77.8
+  },
+  "coupes": {
+   "med": 1.0,
+   "p25": 0.25,
+   "p75": 2.5,
+   "min": 0.0,
+   "max": 3.0
+  },
+  "coupes_par_10s": {
+   "med": 0.195,
+   "p25": 0.0425,
+   "p75": 0.4,
+   "min": 0.0,
+   "max": 0.5
+  },
+  "cadrages_par_10s": {
+   "med": 4.635,
+   "p25": 3.7875,
+   "p75": 5.3100000000000005,
+   "min": 3.47,
+   "max": 5.95
+  },
+  "tenue_med": {
+   "med": 33.5,
+   "p25": 30.125,
+   "p75": 36.875,
+   "min": 24.5,
+   "max": 41.0
+  },
+  "vol_med": {
+   "med": 10.0,
+   "p25": 8.125,
+   "p75": 11.5,
+   "min": 7.5,
+   "max": 13.5
+  },
+  "vols_penches_pct": {
+   "med": 33.85,
+   "p25": 27.575000000000003,
+   "p75": 37.05,
+   "min": 7.1,
+   "max": 52.0
+  },
+  "plan_med": {
+   "med": 775.25,
+   "p25": 499.875,
+   "p75": 1671.625,
+   "min": 79.5,
+   "max": 2334.0
+  },
+  "lum": {
+   "med": 120.09686061030983,
+   "p25": 106.51039034955932,
+   "p75": 130.13039503074066,
+   "min": 93.09133961560718,
+   "max": 140.4597181416192
+  },
+  "sat": {
+   "med": 114.814165275552,
+   "p25": 112.89401102845055,
+   "p75": 129.6801197077361,
+   "min": 105.486546741453,
+   "max": 164.47695162259612
+  },
+  "con": {
+   "med": 53.27625640026723,
+   "p25": 48.238103557722276,
+   "p75": 55.383021575082005,
+   "min": 46.07392405037779,
+   "max": 58.80232952629583
+  },
+  "nette": {
+   "med": 1538.9511288400486,
+   "p25": 1278.54367866538,
+   "p75": 1798.0149397733358,
+   "min": 1032.5606626490367,
+   "max": 1915.1575624018726
+  },
+  "noir": {
+   "med": 0.11236441330309703,
+   "p25": 0.10424818784128681,
+   "p75": 0.1779459378807745,
+   "min": 0.092646968482906,
+   "max": 0.30920367031695156
+  },
+  "plat": {
+   "med": 0.30777292152292157,
+   "p25": 0.2849121017871018,
+   "p75": 0.32646197552447553,
+   "min": 0.2171416083916084,
+   "max": 0.3846074380165289
+  },
+  "nc": {
+   "med": 4.552406176464464,
+   "p25": 3.897904820884688,
+   "p75": 4.7851644118730094,
+   "min": 3.03462717018973,
+   "max": 7.765610377464883
+  },
+  "nuit_pct": {
+   "med": 12.777777777777779,
+   "p25": 7.458677685950414,
+   "p75": 20.619658119658123,
+   "min": 3.418803418803419,
+   "max": 47.43589743589743
+  },
+  "groupes_teinte": {
+   "med": 3.0,
+   "p25": 3.0,
+   "p75": 3.0,
+   "min": 2.0,
+   "max": 4.0
+  },
+  "ecart_lum": {
+   "med": 57.75,
+   "p25": 49.074999999999996,
+   "p75": 70.325,
+   "min": 42.7,
+   "max": 84.1
+  },
+  "changement_teinte_pct": {
+   "med": 47.2,
+   "p25": 36.074999999999996,
+   "p75": 54.2,
+   "min": 30.0,
+   "max": 71.4
+  }
+ },
+ "manuel": {
+  "echantillon": "72 images, 12 par film, annotation à l'œil",
+  "larges_pct": 36,
+  "moyens_pct": 40,
+  "gros_plans_objets_pct": 24,
+  "personnages_par_plan": 2.1,
+  "notes": "beaucoup de plongées/contre-plongées ; angles penchés dans les vols (mesure auto : ~1/3 des vols tournent de >3°) ; pas de foules sauf Spear (rangées de soldats) et Job (bureau)"
+ },
+ "nous_tailles": {
+  "moyen": 62,
+  "gros plan / objet": 7,
+  "large": 31
+ }
+}

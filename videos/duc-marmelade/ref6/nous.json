@@ -1,0 +1,22 @@
+{
+ "cadrages": 42,
+ "cadrages_par_10s": 6.03,
+ "tenue_med": 33.09999999999995,
+ "vol_med": 14.0,
+ "pitch_fort_pct": 7.7,
+ "penches_pct": 0.0,
+ "gros_plans_pct": 11.9,
+ "ouverture_med": 5.0,
+ "groupes_teinte": 4,
+ "changement_teinte_pct": 50.0,
+ "ecart_lum": 35.8,
+ "n_images": 69,
+ "lum": 116.94977046849839,
+ "sat": 127.0300113224638,
+ "con": 50.446128983620774,
+ "nette": 218.06902739792812,
+ "noir": 0.11011177787842188,
+ "plat": 0.3940711462450593,
+ "nc": 1.835815508556073,
+ "nuit_pct": 2.898550724637681
+}

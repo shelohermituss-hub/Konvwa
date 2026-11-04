@@ -59,7 +59,26 @@ def image():
         d = regard(im)
         L.append([d[x] for x in ('lum', 'sat', 'con', 'nette', 'noir', 'plat', 'nc', 'lumdom')])
     a = np.array(L)
-    return dict(n_images=len(a), lum=a[:, 0].mean(), sat=a[:, 1].mean(), con=a[:, 2].mean(), nette=float(np.median(a[:, 3])), noir=a[:, 4].mean(), plat=a[:, 5].mean(),
+    # palette par séquence (même idée que les fenêtres de 6,3 s des références)
+    par = {}
+    for (seq, _), p in fs.items():
+        pass
+    seqs = sorted({k[0] for k in fs})
+    pp = []
+    for sq in seqs:
+        ims = [cv2.imread(p) for (s2, _), p in fs.items() if s2 == sq]
+        hs, ls = [], []
+        for im in ims:
+            im = cv2.resize(im, (360, int(im.shape[0] * 360 / im.shape[1])), interpolation=cv2.INTER_AREA)
+            hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+            m = hsv[..., 1] > 60
+            hs.append(float(np.median(hsv[..., 0][m])) * 2 if m.mean() > 0.05 else -1)
+            ls.append(float(cv2.cvtColor(im, cv2.COLOR_BGR2GRAY).mean()))
+        v = [int(h // 60) % 6 for h in hs if h >= 0]
+        pp.append((int(np.bincount(v).argmax()) if v else -1, float(np.mean(ls))))
+    ch = [pp[i][0] != pp[i - 1][0] for i in range(1, len(pp))]
+    return dict(groupes_teinte=len({b for b, _ in pp if b >= 0}), changement_teinte_pct=round(100 * float(np.mean(ch)), 1) if ch else 0,
+                ecart_lum=round(float(np.percentile([l for _, l in pp], 90) - np.percentile([l for _, l in pp], 10)), 1), n_images=len(a), lum=a[:, 0].mean(), sat=a[:, 1].mean(), con=a[:, 2].mean(), nette=float(np.median(a[:, 3])), noir=a[:, 4].mean(), plat=a[:, 5].mean(),
                 nc=float(np.median(a[:, 6])), nuit_pct=float(100 * np.mean(a[:, 0] < 80)))
 
 
@@ -68,7 +87,8 @@ if __name__ == '__main__':
     cib = json.load(open(os.path.join(HERE, 'cibles.json')))['cibles']
     print(f"{'grandeur':<22}{'nous':>10}{'réf méd':>10}{'P25':>9}{'P75':>9}  verdict")
     cle = {'cadrages_par_10s': 'cadrages_par_10s', 'tenue_med': 'tenue_med', 'vol_med': 'vol_med', 'lum': 'lum', 'sat': 'sat', 'con': 'con', 'nette': 'nette',
-           'noir': 'noir', 'plat': 'plat', 'nc': 'nc', 'nuit_pct': 'nuit_pct'}
+           'noir': 'noir', 'plat': 'plat', 'nc': 'nc', 'nuit_pct': 'nuit_pct', 'groupes_teinte': 'groupes_teinte',
+           'changement_teinte_pct': 'changement_teinte_pct', 'ecart_lum': 'ecart_lum'}
     for k in cle:
         v = nous.get(k)
         if v is None or cle[k] not in cib:

@@ -1,7 +1,8 @@
 # L0 : analyse des mesures brutes -> ref6/cibles.json + tableau.  /root/bpyenv/bin/python ref6/analyser.py
-# Tenue / vol : mêmes définitions que ref/measure.json (vitesse de l'image lissée sur 5 images ; seuil 8 px/image à 360 de
-# large, calé pour que le json du moteur redonne ses 51 passages). Un « cadrage » = une tenue. Les coupes = échec RANSAC
-# (< 12 inliers) avec saut de gris, ou saut de gris très fort.
+# Tenue / vol : mêmes définitions que ref/measure.json. Son « pix » est la différence moyenne de gris entre images (valeur de
+# base 3,9 en médiane, que n'explique aucun déplacement de points) : on utilise donc dmean (même grandeur), lissée sur 5
+# images, seuil 8, calé pour que le json du moteur redonne ses 51 passages. Un « cadrage » = une tenue.
+# Coupes : très peu d'inliers (< 60) avec un grand saut de gris (> 20) : le moteur vole presque sans couper.
 import glob, json, os
 import numpy as np
 
@@ -11,7 +12,7 @@ SEUIL, LISSE = 8.0, 5
 
 def coupes(mv):
     inl, d = mv[:, 1], mv[:, 7]
-    cand = [i for i in range(1, len(mv)) if (inl[i] < 12 and d[i] > 4.0) or d[i] > 25.0]
+    cand = [i for i in range(2, len(mv)) if inl[i] < 60 and d[i] > 20.0]
     out = []
     for i in cand:
         if not out or i - out[-1] > 4:      # un fondu = une seule coupe
@@ -21,7 +22,7 @@ def coupes(mv):
 
 def passages(mv, cps):
     """[(genre, debut, fin)] : 'tenue' ou 'vol', hors images de coupe."""
-    pix = mv[:, 2].copy()
+    pix = mv[:, 7].copy()
     bad = np.zeros(len(mv), bool)
     for c in cps:
         bad[max(0, c - 2):c + 4] = True
@@ -42,6 +43,19 @@ def passages(mv, cps):
     return runs
 
 
+def fenetres(look, n, taille=190):
+    """[(teinte dominante sur 6 classes de 60 degres, luminosite moyenne)] par fenetre de `taille` images."""
+    teintes = look[:, 8]
+    bins = np.where(teintes < 0, -1, (teintes // 60).astype(int) % 6)
+    out = []
+    for a in range(0, n, taille):
+        sel = (look[:, 0] >= a) & (look[:, 0] < a + taille)
+        if sel.sum():
+            vals = [x for x in bins[sel] if x >= 0]
+            out.append((int(np.bincount(vals).argmax()) if vals else -1, float(look[sel, 1].mean())))
+    return out
+
+
 def film(path):
     z = np.load(path)
     mv, look = z['mv'], z['look']
@@ -54,24 +68,18 @@ def film(path):
     # roulis : rotation cumulée de chaque vol
     rolls = [abs(mv[r[1]:r[2], 6].sum()) for r in runs if r[0] == 'vol' and r[2] - r[1] >= 4]
     segs = np.diff([0] + cps + [len(mv)])
-    # palette par plan : teinte dominante des images échantillonnées
-    teintes = look[:, 8]
-    bins = np.where(teintes < 0, -1, (teintes // 60).astype(int) % 6)
-    bounds = np.array([0] + cps + [len(mv)])
-    par_plan = []
-    for a, b in zip(bounds[:-1], bounds[1:]):
-        sel = (look[:, 0] >= a) & (look[:, 0] < b)
-        if sel.sum():
-            vals = [x for x in bins[sel] if x >= 0]
-            par_plan.append((int(np.bincount(vals).argmax()) if vals else -1, float(look[sel, 1].mean())))
-    changes = np.mean([par_plan[i][0] != par_plan[i - 1][0] for i in range(1, len(par_plan))]) if len(par_plan) > 1 else 0
+    # palette : fenêtres de 190 images (6,3 s = la longueur moyenne de nos séquences), teinte dominante et luminosité de chacune
+    par_plan = fenetres(look, len(mv))
+    ch = [par_plan[i][0] != par_plan[i - 1][0] for i in range(1, len(par_plan))]
+    changes = float(np.mean(ch)) if ch else 0.0
+    lums = [l for _, l in par_plan]
     return dict(nom=str(z['nom']), duree_s=round(dur, 1), coupes=len(cps), coupes_par_10s=round(len(cps) / dur * 10, 2),
                 cadrages_par_10s=round(len(holds) / dur * 10, 2), tenue_med=float(np.median(holds)) if holds else 0,
                 vol_med=float(np.median(flights)) if flights else 0, vols_penches_pct=round(100 * float(np.mean([r > 3 for r in rolls])), 1) if rolls else 0,
                 plan_med=float(np.median(segs)) if len(segs) else 0,
                 lum=float(look[:, 1].mean()), sat=float(look[:, 2].mean()), con=float(look[:, 3].mean()), nette=float(np.median(look[:, 4])),
                 noir=float(look[:, 5].mean()), plat=float(look[:, 6].mean()), nc=float(np.median(look[:, 7])),
-                nuit_pct=float(100 * np.mean(look[:, 1] < 80)), groupes_teinte=int(len({b for b, _ in par_plan if b >= 0})),
+                nuit_pct=float(100 * np.mean(look[:, 1] < 80)), groupes_teinte=int(len({b for b, _ in par_plan if b >= 0})), ecart_lum=round(float(np.percentile(lums, 90) - np.percentile(lums, 10)), 1),
                 changement_teinte_pct=round(100 * changes, 1))
 
 
