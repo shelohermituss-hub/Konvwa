@@ -76,3 +76,5 @@ videos/*/audio/sfx_placed.txt
 videos/*/audio/stems/
 videos/*/DESCRIPTION.txt
 videos/*/audio/sfx_used.json
+# sorties des styles three.js (konvwa / web.mjs)
+videos/*/out/

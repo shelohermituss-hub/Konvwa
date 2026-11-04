@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
-# KONVWA : l'outil de fabrication des vidéos 3D (moteur Blender de Creatorize, videos/_creatorize/blender).
-# Une commande par étape ; le même outil sur le PC Windows du client (Blender 5.2 installé) et sur le serveur cloud de
-# Claude (Blender en module Python « bpy », rendu logiciel, pour les images de contrôle).
+# KONVWA : l'outil de fabrication des vidéos avec TOUS les moteurs du pack Creatorize (videos/_creatorize) :
+#   - les styles Blender (blender = 3D cartoon, mega = 3D Informational réaliste) : moteur videos/_creatorize/blender ;
+#   - les styles three.js (toon, lowpoly, recon, stickman, stickstory, flat, vox, vox-editorial, pixel, roblox, starter) :
+#     leur moteur servi tel quel à un Chrome / Edge sans fenêtre par web.mjs (comme le fait l'application Creatorize).
+# Une commande par étape ; le même outil sur le PC Windows du client et sur le serveur cloud de Claude.
 #
-#   python videos/_konvwa/konvwa.py verifier                       Blender, Python (Pillow, numpy, OpenCV), ffmpeg
+#   python videos/_konvwa/konvwa.py styles                         la liste des styles, leur moteur, leur skill, leurs formats
+#   python videos/_konvwa/konvwa.py verifier                       Blender, Python (Pillow, numpy, OpenCV, scipy), ffmpeg, Node, Chrome
 #   python videos/_konvwa/konvwa.py installer [--bpy]              crée videos/_konvwa/.venv avec ce qu'il faut
-#   python videos/_konvwa/konvwa.py nouveau <projet> --mots <words.json> [--voix <voix.wav>]
+#   python videos/_konvwa/konvwa.py nouveau <projet> --style <id> --mots <words.json> [--voix <voix.wav>] [--format vertical|landscape] [--dim 2d|3d]
 #   python videos/_konvwa/konvwa.py mots <projet> <words.json>     (re)fait audio/timeline.json + audio/words.json
-#   python videos/_konvwa/konvwa.py test <projet> <s03> [--frames 880,915] [--scale 0.4] [--samples 12]
+#   python videos/_konvwa/konvwa.py test <projet> <s03> [--frames 880,915] [--scale 0.4] [--samples 12]      (Blender)
+#   python videos/_konvwa/konvwa.py test <projet> [--temps 1,4.5] [--scale 0.5] [--controle]               (three.js)
+#   python videos/_konvwa/konvwa.py image <projet> <nom> <fichier> [--source URL --licence CC0]   une image du film (IMG[nom])
+#   python videos/_konvwa/konvwa.py sprite <projet> <perso> <pose-visage> <png détouré> [--desc "…"]  un personnage stickman
 #   python videos/_konvwa/konvwa.py planche <dossier d'images> [--cols 6]
 #   python videos/_konvwa/konvwa.py son <projet>                   effets sonores (bibliothèque CC0 du pack) + fond + musique, mix -14 LUFS
-#   python videos/_konvwa/konvwa.py rendu <projet> [--jobs 1] [--scale 1.0] [--samples 48] [--fps60 dup|interp|non]
+#   python videos/_konvwa/konvwa.py rendu <projet> [--fps60 dup|interp|non] [--vertical flou|recadre|non] [Blender : --jobs --scale --samples --sans-reglage]
 #
 # <projet> = le nom d'un dossier de videos/ (ex. jarre-blender) ou un chemin. Le moteur n'est jamais modifié : tout ce qui
-# est propre à un film vit dans son dossier (cast.py, sets.py, sNN.py, assemble.json, PLAN.md…).
+# est propre à un film vit dans son dossier (Blender : cast.py, sets.py, sNN.py, assemble.json ; three.js : scenes/*.js,
+# models.js ; les deux : project.json, audio/, PLAN.md, sons.json).
 import argparse
 import glob
 import json
@@ -29,7 +36,38 @@ VIDEOS = os.path.join(ROOT, 'videos')
 ENGINE = os.path.join(VIDEOS, '_creatorize', 'blender')
 FINISH = os.path.join(VIDEOS, '_engine', 'style-histoire', 'finish.py')
 WIN = os.name == 'nt'
-FPS = 30  # le moteur travaille à 30 i/s (toutes ses durées en images sont calées dessus)
+FPS = 30  # le moteur Blender travaille à 30 i/s (toutes ses durées en images sont calées dessus)
+PACK = os.path.join(VIDEOS, '_creatorize')
+SKILL = os.path.join(PACK, 'skill')
+WEB = os.path.join(HERE, 'web.mjs')
+
+# Les styles du pack (les noms de l'application Creatorize, support/kb/video-styles.md). moteur = le dossier du pack ;
+# exemple = la scène de départ (un échantillon du Style Studio du pack, sinon modele_web/scenes/<id>.js) ;
+# formats = ce que le moteur sait faire (le premier est celui par défaut ; KONVWA veut du vertical).
+STYLES = {
+    'blender': dict(nom='3D cartoon (moteur Blender)', type='blender', skill='blender-toon-shorts', formats=('vertical', 'landscape')),
+    'mega': dict(nom='3D Informational (réaliste, moteur Blender)', type='blender', skill='mega-informational', formats=('vertical', 'landscape'),
+                 post=['--capstyle', 'mega']),
+    'toon': dict(nom='3D cartoon shorts (three.js)', type='web', moteur='toon', skill='toon-shorts', formats=('vertical', 'landscape')),
+    'lowpoly': dict(nom='Low poly shorts', type='web', moteur='lowpoly', skill='lowpoly-shorts', formats=('vertical', 'landscape'),
+                    exemple='studio/samples/lowpoly/sample.js'),
+    'recon': dict(nom='3D reconstruction (documentaire)', type='web', moteur='recon', skill='recon-reconstruction', formats=('vertical', 'landscape'),
+                  exemple='studio/samples/recon/sample.js'),
+    'stickman': dict(nom='MS Paint stick figures', type='web', moteur='stickman', skill='stickman-explainer', formats=('landscape',),
+                     exemple='studio/samples/stickman/sample.js', musique=False),
+    'stickstory': dict(nom='Stick stories (« Et si tu… »)', type='web', moteur='stickstory', skill='stickstory-videos', formats=('vertical', 'landscape')),
+    'flat': dict(nom='Flat explainer (vectoriel)', type='web', moteur='flat', skill='flat-explainer-video', formats=('vertical', 'landscape'),
+                 exemple='studio/samples/flat/sample.js'),
+    'vox': dict(nom='Vox (collage de une de journal)', type='web', moteur='collage', skill='vox-collage-video', formats=('vertical', 'landscape'),
+                exemple='studio/samples/collage/sample.js'),
+    'vox-editorial': dict(nom='Vox éditorial (ancien)', type='web', moteur='vox', skill='vox-editorial-video', formats=('vertical', 'landscape')),
+    'pixel': dict(nom='Pixel art (rétro 16 couleurs)', type='web', moteur='engine', skill='pixel-explainer-video', formats=('landscape',),
+                  exemple='studio/samples/pixel-art/sample.js'),
+    'roblox': dict(nom='Roblox story shorts', type='web', moteur='roblox', skill='roblox-story-shorts', formats=('vertical', 'landscape'),
+                   exemple='skill/roblox-story-shorts/examples/nose.scene.js', mix='roblox', musique=False),
+    'starter': dict(nom='Studio starter (2D ou 3D neutre)', type='web', moteur='starter', skill='studio-starter', formats=('vertical', 'landscape'),
+                    exemple='studio/samples/starter/{dim}/sample.js'),
+}
 
 
 # ---------------- trouver les outils ----------------
@@ -91,6 +129,27 @@ def blender_exe():
     return None
 
 
+def find_browser():
+    """Le Chrome / Edge que web.mjs pilotera (même ordre que stylekit/tools/cdp.mjs)."""
+    env = os.environ.get('CZ_BROWSER')
+    if env and os.path.exists(env):
+        return env
+    if WIN:
+        for b in [os.environ.get('PROGRAMFILES', r'C:\Program Files'), os.environ.get('PROGRAMFILES(X86)', r'C:\Program Files (x86)'),
+                  os.path.join(os.environ.get('LOCALAPPDATA', ''), '')]:
+            for rel in [r'Google\Chrome\Application\chrome.exe', r'Microsoft\Edge\Application\msedge.exe']:
+                f = os.path.join(b or '', rel)
+                if os.path.exists(f):
+                    return f
+        return None
+    for n in ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser', 'microsoft-edge']:
+        w = shutil.which(n)
+        if w:
+            return w
+    g = sorted(glob.glob('/opt/pw-browsers/chromium-*/chrome-linux/chrome'))
+    return g[-1] if g else None
+
+
 def need(x, msg):
     if not x:
         sys.exit('KONVWA : ' + msg + '\n  -> python videos/_konvwa/konvwa.py verifier')
@@ -128,7 +187,12 @@ def cmd_verifier(a):
     ff = shutil.which('ffmpeg')
     print(f'[ok] ffmpeg : {ff}' if ff else '[!!] ffmpeg introuvable (winget install ffmpeg)')
     ok &= bool(ff)
-    print(f'[ok] moteur : {ENGINE}' if os.path.exists(os.path.join(ENGINE, 'engine', 'run.py')) else '[!!] moteur absent : git pull')
+    print(f'[ok] moteur Blender : {ENGINE}' if os.path.exists(os.path.join(ENGINE, 'engine', 'run.py')) else '[!!] moteur absent : git pull')
+    nd = shutil.which('node')
+    print(f'[ok] Node (styles three.js) : {nd}' if nd else '[!!] Node introuvable (styles three.js) : winget install OpenJS.NodeJS.LTS')
+    br = find_browser()
+    print(f'[ok] navigateur (styles three.js) : {br}' if br else '[!!] Chrome / Edge introuvable (styles three.js) : CZ_BROWSER=<chemin de chrome>')
+    print('     styles :', ', '.join(STYLES))
     print('\nTout est prêt.' if ok else '\nIl manque des choses (voir [!!]).')
     return 0 if ok else 1
 
@@ -180,8 +244,8 @@ def write_words(proj, words):
     pj = os.path.join(proj, 'project.json')
     meta = json.load(open(pj, encoding='utf-8-sig')) if os.path.exists(pj) else {}
     meta.update({'language': 'fr', 'end': end})
-    meta.setdefault('settings', {'format': 'portrait'})
-    meta.setdefault('konvwa', {'post': ['--sat', '1.15'], 'fps60': 'dup'})
+    meta.setdefault('settings', {'format': 'vertical'})
+    meta.setdefault('konvwa', {'style': 'blender', 'post': ['--sat', '1.15'], 'fps60': 'dup'})
     json.dump(meta, open(pj, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     frames = round(end * FPS)
     print(f'{len(words)} mots, {len(tl)} phrases, fin {end} s = {frames} images à {FPS} i/s')
@@ -194,25 +258,130 @@ def cmd_mots(a):
     return 0
 
 
+def style_of(proj):
+    """L'identifiant du style d'un film (project.json > konvwa > style ; un film Blender d'avant les styles : 'blender')."""
+    pj = os.path.join(proj, 'project.json')
+    meta = json.load(open(pj, encoding='utf-8-sig')) if os.path.exists(pj) else {}
+    sid = meta.get('konvwa', {}).get('style') or ('blender' if os.path.exists(os.path.join(proj, 'assemble.json')) else None)
+    if sid not in STYLES:
+        sys.exit(f'KONVWA : style inconnu pour {proj} ({sid}) ; project.json > konvwa > style = un de : ' + ', '.join(STYLES))
+    return sid, STYLES[sid], meta
+
+
+def fill(text, proj, sid, st, tl, frames, fmt):
+    rep = {'{{PROJET}}': os.path.basename(proj), '{{FRAMES}}': str(frames), '{{DUREE}}': f'{frames / FPS:.2f}', '{{STYLE}}': sid,
+           '{{NOMSTYLE}}': st['nom'], '{{SKILL}}': st['skill'], '{{MOTEUR}}': st.get('moteur', 'blender'), '{{FORMAT}}': fmt}
+    rep['{{PHRASES}}'] = '\n'.join((f'- f{round(p["s"] * FPS) + 1} ({p["s"]:.2f} s) : {p["text"]}' if st['type'] == 'blender'
+                                    else f'- {p["s"]:.2f} s : {p["text"]}') for p in tl)
+    for k, v in rep.items():
+        text = text.replace(k, v)
+    return text
+
+
+def cmd_styles(a):
+    print('Styles du pack Creatorize dans konvwa (nouveau <projet> --style <id>) :\n')
+    for sid, st in STYLES.items():
+        print(f'  {sid:<14} {st["nom"]:<46} moteur {("blender" if st["type"] == "blender" else st["moteur"]):<10} '
+              f'formats {"/".join(st["formats"]):<19} skill {st["skill"]}')
+    print('\nRègles KONVWA et méthode de chaque style : .claude/skills/konvwa-styles/SKILL.md')
+    return 0
+
+
 def cmd_nouveau(a):
     proj = project_dir(a.projet)
+    sid = a.style
+    st = STYLES[sid]
     if os.path.exists(os.path.join(proj, 'PLAN.md')):
         sys.exit(f'KONVWA : {proj} existe déjà (PLAN.md présent)')
+    fmt = a.format or st['formats'][0]
+    if fmt not in st['formats']:
+        sys.exit(f'KONVWA : le style {sid} ne fait que {"/".join(st["formats"])} (le rendu le passe en 9:16 : --vertical flou)')
     os.makedirs(proj, exist_ok=True)
+    meta = {'language': 'fr', 'settings': {'format': fmt}}
+    if st['type'] == 'blender':
+        meta['konvwa'] = {'style': sid, 'post': ['--sat', '1.15'] + st.get('post', []), 'fps60': 'dup'}
+    else:
+        meta['scenes'] = ['s01']
+        meta['konvwa'] = {'style': sid, 'moteur': st['moteur']}
+        if sid == 'starter':
+            meta['settings']['dim'] = a.dim
+        if fmt == 'landscape':
+            meta['konvwa']['vertical'] = 'flou'   # KONVWA publie en 9:16 : le 16:9 posé sur une copie floutée de lui-même
+    json.dump(meta, open(os.path.join(proj, 'project.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     tl, frames = write_words(proj, load_words(a.mots))
     if a.voix:
         shutil.copy(a.voix, os.path.join(proj, 'audio', 'voice' + os.path.splitext(a.voix)[1]))
-    T = os.path.join(HERE, 'modele')
+    T = os.path.join(HERE, 'modele' if st['type'] == 'blender' else 'modele_web')
     for f in os.listdir(T):
-        dst = os.path.join(proj, f)
+        src, dst = os.path.join(T, f), os.path.join(proj, f)
+        if os.path.isfile(src) and not os.path.exists(dst):
+            open(dst, 'w', encoding='utf-8').write(fill(open(src, encoding='utf-8').read(), proj, sid, st, tl, frames, fmt))
+    if sid == 'mega':   # la scène de départ de 3D Informational : le plan 1 de la démo du moteur (rocher, neige, caméra qui monte)
+        shutil.copy(os.path.join(ENGINE, 'demo_mega', 'd01.py'), os.path.join(proj, 's01.py'))
+    if st['type'] == 'web':
+        E = os.path.join(PACK, st['moteur'])
+        if os.path.exists(os.path.join(E, 'models.js')) and not os.path.exists(os.path.join(proj, 'models.js')):
+            shutil.copy(os.path.join(E, 'models.js'), os.path.join(proj, 'models.js'))   # les aides du film : à lui de les changer
+        os.makedirs(os.path.join(proj, 'scenes'), exist_ok=True)
+        ex = os.path.join(PACK, st['exemple'].format(dim=a.dim)) if st.get('exemple') else os.path.join(T, 'scenes', sid + '.js')
+        dst = os.path.join(proj, 'scenes', 's01.js')
         if not os.path.exists(dst):
-            s = open(os.path.join(T, f), encoding='utf-8').read()
-            s = s.replace('{{PROJET}}', os.path.basename(proj)).replace('{{FRAMES}}', str(frames))
-            s = s.replace('{{DUREE}}', f'{frames / FPS:.2f}').replace('{{PHRASES}}', '\n'.join(
-                f'- f{round(p["s"] * FPS) + 1} ({p["s"]:.2f} s) : {p["text"]}' for p in tl))
-            open(dst, 'w', encoding='utf-8').write(s)
-    print('Projet créé :', proj)
-    print('Ensuite : PLAN.md, puis cast.py, sets.py, s01.py…, puis : konvwa test', os.path.basename(proj), 's01')
+            txt = open(ex, encoding='utf-8').read()
+            open(dst, 'w', encoding='utf-8').write('// Scène de départ : un exemple du pack qui marche (lire pour la technique, puis remplacer par le film).\n' + txt)
+            for m in re.findall(r"from '\./([\w-]+\.js)'", txt):   # les fichiers voisins qu'importe l'exemple
+                if os.path.exists(os.path.join(os.path.dirname(ex), m)):
+                    shutil.copy(os.path.join(os.path.dirname(ex), m), os.path.join(proj, 'scenes', m))
+        if sid == 'stickman' and not os.path.exists(os.path.join(proj, 'assets', 'sprites')):   # le narrateur dessiné du pack
+            shutil.copytree(os.path.join(E, 'sprites'), os.path.join(proj, 'assets', 'sprites'))
+    print(f'Projet créé : {proj} (style {sid} : {st["nom"]}, {fmt})')
+    print(f'Méthode : videos/_creatorize/skill/{st["skill"]}/SKILL.md + .claude/skills/konvwa-styles/SKILL.md')
+    print('Ensuite : PLAN.md, puis ' + ('cast.py, sets.py, s01.py…, puis : konvwa test ' + os.path.basename(proj) + ' s01'
+                                        if st['type'] == 'blender' else 'scenes/*.js (listées dans project.json), puis : konvwa test ' + os.path.basename(proj)))
+    return 0
+
+
+def cmd_image(a):
+    """Une image du film (ce que font make_image / web_image dans l'application) : copiée dans assets/img/, déclarée dans
+    project.json > images (les moteurs la chargent sous ce nom : IMG[nom], photo(..., 'nom'), cutout(P, 'nom')…),
+    et son crédit dans CREDITS.json (source et licence : CC0, PD, CC-BY…, ou « own » pour une image générée pour le film)."""
+    proj = project_dir(a.projet)
+    ext = os.path.splitext(a.fichier)[1].lower() or '.png'
+    rel = f'img/{a.nom}{ext}'
+    os.makedirs(os.path.join(proj, 'assets', 'img'), exist_ok=True)
+    shutil.copy(a.fichier, os.path.join(proj, 'assets', rel))
+    pj = os.path.join(proj, 'project.json')
+    meta = json.load(open(pj, encoding='utf-8-sig'))
+    meta.setdefault('images', {})[a.nom] = rel
+    json.dump(meta, open(pj, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    cp = os.path.join(proj, 'CREDITS.json')
+    cr = json.load(open(cp, encoding='utf-8-sig')) if os.path.exists(cp) else {}
+    cr['assets/' + rel] = {'source': a.source or '', 'licence': a.licence or 'own'}
+    json.dump(cr, open(cp, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    print(f'Image « {a.nom} » : assets/{rel} (project.json > images, CREDITS.json)')
+    return 0
+
+
+def cmd_sprite(a):
+    """Un personnage dessiné du style stickman (ce que fait make_sprites dans l'application) : un PNG détouré (fond
+    transparent) rangé dans assets/sprites/<personnage>/<pose>-<visage>.png et déclaré dans assets/sprites/index.json."""
+    from PIL import Image
+    proj = project_dir(a.projet)
+    d = os.path.join(proj, 'assets', 'sprites')
+    os.makedirs(os.path.join(d, a.perso), exist_ok=True)
+    ip = os.path.join(d, 'index.json')
+    idx = json.load(open(ip, encoding='utf-8-sig')) if os.path.exists(ip) else {}
+    im = Image.open(a.png).convert('RGBA')
+    bb = im.getchannel('A').getbbox()
+    if bb:
+        im = im.crop(bb)   # le moteur met à l'échelle sur la hauteur de la figure : pas de marge vide
+    f = a.cle + '.png'
+    im.save(os.path.join(d, a.perso, f))
+    c = idx.setdefault(a.perso, {'kind': 'human', 'desc': a.desc or '', 'sprites': {}})
+    if a.desc:
+        c['desc'] = a.desc
+    c['sprites'][a.cle] = {'file': f, 'w': im.width, 'h': im.height, 'sheet': a.feuille}
+    json.dump(idx, open(ip, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    print(f'Sprite {a.perso} / {a.cle} : {im.width}x{im.height} (assets/sprites/index.json)')
     return 0
 
 
@@ -254,8 +423,35 @@ def make_sheet(folder, cols=6):
     return out if os.path.exists(out) else None
 
 
+def web(cmd, proj, *args, check=True):
+    """node web.mjs <cmd> <projet> … (styles three.js) ; renvoie le code de sortie."""
+    node = need(shutil.which('node'), 'Node introuvable (styles three.js)')
+    env = dict(os.environ)
+    br = find_browser()
+    if br:
+        env['CZ_BROWSER'] = br
+    r = subprocess.run([node, WEB, cmd, proj] + [str(x) for x in args], env=env)
+    if check and r.returncode:
+        sys.exit(f'KONVWA : web.mjs {cmd} a échoué (voir ci-dessus)')
+    return r.returncode
+
+
 def cmd_test(a):
     proj = project_dir(a.projet)
+    sid, st, meta = style_of(proj)
+    if st['type'] == 'web':
+        if a.controle:
+            return web('check', proj, check=False)
+        end = float(meta.get('end') or 10)
+        ts = a.temps or ','.join(f'{end * k / 6:.2f}' for k in range(1, 6))
+        out = next_round(proj, 'web')
+        web('stills', proj, '--times', ts, '--scale', a.scale if a.scale != '0.4' else '0.5', '--out', out)
+        s = make_sheet(out, a.cols)
+        if s:
+            print('Planche :', s)
+        return 0
+    if not a.seq:
+        sys.exit('KONVWA : style Blender : konvwa test <projet> <s03> [--frames 880,915]')
     out = next_round(proj, a.seq)
     r = run_engine(proj, a.seq, out, a.frames, a.scale, a.samples)
     s = make_sheet(out, a.cols)
@@ -318,8 +514,95 @@ def render_with_progress(cmd, env, proj):
     return 1 if bad else 0
 
 
+def ass_time(t):
+    t = max(0.0, t)
+    return f'{int(t // 3600)}:{int(t % 3600 // 60):02d}:{t % 60:05.2f}'
+
+
+def vertical_captions(words, path, y=0.80):
+    """Les sous-titres mot à mot de l'export vertical (même allure que ceux du moteur Blender, post.py) : groupes de
+    1-3 mots, CZ Latin blanc à contour sombre, petit « pop », dans la bande sous l'image 16:9."""
+    groups, cur = [], []
+    for w in words:
+        cur.append(w)
+        if len(''.join(ch for ch in w['word'] if ch.isalnum())) > 3 or w['word'][-1:] in ',.?!…' or len(cur) >= 3:
+            groups.append(cur)
+            cur = []
+    if cur:
+        groups.append(cur)
+    L = ['[Script Info]', 'ScriptType: v4.00+', 'PlayResX: 1080', 'PlayResY: 1920', '', '[V4+ Styles]',
+         'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, '
+         'ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
+         'Style: Cap,CZ Latin,74,&H00FFFFFF,&H00FFFFFF,&H00141A1E,&H64000000,0,0,0,0,100,100,0,0,1,6,2,5,40,40,40,1', '',
+         '[Events]', 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text']
+    for i, g in enumerate(groups):
+        st = g[0]['start']
+        en = min(groups[i + 1][0]['start'] if i + 1 < len(groups) else g[-1]['end'] + 0.4, g[-1]['end'] + 0.6)
+        pop = r'{\pos(540,%d)\fscx82\fscy82\t(0,60,\fscx104\fscy104)\t(60,110,\fscx100\fscy100)}' % round(1920 * y)
+        L.append(f'Dialogue: 0,{ass_time(st)},{ass_time(en)},Cap,,0,0,0,,{pop}' + ' '.join(w['word'] for w in g))
+    open(path, 'w', encoding='utf-8').write('\n'.join(L) + '\n')
+
+
+def to_vertical(src, dst, mode, ass=None):
+    """Un film 16:9 en 9:16 (comme Export > Vertical 9:16 de l'application) : 'flou' = l'image entière posée sur une copie
+    floutée d'elle-même, 'recadre' = le centre agrandi pour remplir le cadre ; ass = les sous-titres à graver dessus."""
+    vf = ('split[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,gblur=sigma=40,eq=brightness=-0.08[bg];'
+          '[b]scale=1080:-2[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1' if mode == 'flou' else
+          'scale=-2:1920,crop=1080:1920,setsar=1')
+    cwd = None
+    if ass:   # le chemin passé au filtre sans « : » ni « \ » (Windows) : on lance ffmpeg dans le dossier des sous-titres
+        cwd = os.path.dirname(ass)
+        fd = os.path.join(cwd, 'fonts')   # la police épaisse du pack (OFL), la même sur le PC et le serveur
+        os.makedirs(fd, exist_ok=True)
+        shutil.copy(os.path.join(ENGINE, 'assets', 'fonts', 'cz-latin.ttf'), fd)
+        vf += ',subtitles=' + os.path.basename(ass) + ':fontsdir=fonts'
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', os.path.abspath(src), '-vf', vf, '-c:v', 'libx264', '-preset', 'medium', '-crf', '17',
+                    '-pix_fmt', 'yuv420p', '-c:a', 'copy', os.path.abspath(dst)], check=True, cwd=cwd)
+
+
+def rendu_web(a, proj, st, meta):
+    name = os.path.basename(proj)
+    need(shutil.which('ffmpeg'), 'ffmpeg introuvable')
+    py = find_py() or sys.executable
+    kv = meta.get('konvwa', {})
+    voice = next(iter(sorted(glob.glob(os.path.join(proj, 'audio', 'voice.*')))), None)
+    if voice and not a.sans_son:
+        print('1/4 Son (les sons que posent les scènes + sons.json, fond, mix -14 LUFS)…')
+        cmd_son(a)
+    else:
+        print('1/4 (pas de voix audio/voice.* ou --sans-son : pas de son)')
+    print('2/4 Rendu des images (moteur three.js, 60 i/s)…')
+    web('video', proj, '--fps', 60, '--name', name)
+    src = os.path.join(proj, 'out', name + '.mp4')
+    os.makedirs(os.path.join(proj, 'renders'), exist_ok=True)
+    vmode = a.vertical or kv.get('vertical', 'non')
+    if meta.get('settings', {}).get('format') == 'landscape' and vmode != 'non':
+        print(f'3/4 Passage en 9:16 ({vmode})…')
+        v = os.path.join(proj, 'renders', f'{name}_9x16.mp4')
+        ass = None
+        wj = os.path.join(proj, 'audio', 'words.json')
+        if not a.sans_sous_titres and kv.get('sous_titres_vertical', True) and os.path.exists(wj):
+            ass = os.path.join(proj, 'out', 'vertical.ass')
+            vertical_captions(load_words(wj), ass, 0.80 if vmode == 'flou' else 0.72)
+        to_vertical(src, v, vmode, ass)
+        src = v
+    else:
+        print('3/4 (format gardé)')
+    final = os.path.join(proj, 'renders', f'{name}.mp4')
+    if voice and os.path.exists(FINISH):
+        print('4/4 Son à -14 LUFS (finish.py)…')
+        subprocess.run([py, '-I', FINISH, src, final], check=True)
+    else:
+        shutil.copy(src, final)
+    print('\nVidéo prête :', final)
+    return 0
+
+
 def cmd_rendu(a):
     proj = project_dir(a.projet)
+    sid, st, meta0 = style_of(proj)
+    if st['type'] == 'web':
+        return rendu_web(a, proj, st, meta0)
     name = os.path.basename(proj)
     bl = need(blender_exe(), 'Blender introuvable')
     py = need(find_py(), 'Python des outils introuvable')
@@ -328,9 +611,12 @@ def cmd_rendu(a):
     kv = meta.get('konvwa', {})
     env = env_for(py, bl)
     T = os.path.join(ENGINE, 'tools')
-    print('1/5 Rendu des plans (moteur Blender)…')
-    if render_with_progress([py, os.path.join(T, 'render_queue.py'), proj, '--jobs', str(a.jobs), '--scale', str(a.scale), '--samples', str(a.samples)],
-                            env, proj):
+    # comme l'export de l'application : le réglage du rendu pour cette machine d'abord (render_tune.py : les réglages les
+    # plus rapides qui donnent la même image, un seul Blender sauf mesure contraire), puis chaque plan en animation (--anim)
+    q = [py, os.path.join(T, 'render_queue.py'), proj, '--scale', str(a.scale), '--samples', str(a.samples)]
+    q += (['--jobs', str(a.jobs or 1)] if a.jobs or a.sans_reglage else []) + ([] if a.sans_reglage else ['--tune', '--anim'])
+    print('1/5 Rendu des plans (moteur Blender' + ('' if a.sans_reglage else ', réglé pour cette machine') + ')…')
+    if render_with_progress(q, env, proj):
         return 1
     print('2/5 Montage (fondus, raccords)…')
     subprocess.run([py, os.path.join(T, 'assemble.py'), proj], env=env, cwd=ENGINE, check=True)
@@ -374,9 +660,6 @@ def cmd_rendu(a):
 
 
 # ---------------- le son (chaîne du pack : sound_design.py + mix.py, bibliothèque lowpoly/library/sfx) ----------------
-SKILL = os.path.join(VIDEOS, '_creatorize', 'skill')
-
-
 def word_time(words, spec):
     """« mot:jarre#2+0.1 » -> le début du 2e « jarre » + 0,1 s (casse et ponctuation ignorées)."""
     m = re.fullmatch(r'mot:([^#+\-]+)(?:#(\d+))?([+-][\d.]+)?', spec.strip())
@@ -402,7 +685,11 @@ def shot_starts(proj):
 
 
 def cmd_son(a):
+    """Le son du film avec la chaîne du style (son propre scripts/sound_design.py dans le skill du pack) : les effets
+    (Blender : sons.json + un whoosh par changement de plan ; three.js : les sons que posent les scènes, relevés dans la
+    page par web.mjs events, + sons.json), les fonds, la musique si demandée, puis le mix (voix devant, -14 LUFS)."""
     proj = project_dir(a.projet)
+    sid, st, meta = style_of(proj)
     A = os.path.join(proj, 'audio')
     py = need(find_py(), 'Python des outils introuvable')
     need(shutil.which('ffmpeg'), 'ffmpeg introuvable')
@@ -413,29 +700,44 @@ def cmd_son(a):
     words = load_words(os.path.join(A, 'words.json'))
     cfgp = os.path.join(proj, 'sons.json')
     cfg = json.load(open(cfgp, encoding='utf-8-sig')) if os.path.exists(cfgp) else {}
-    # les effets : ceux du film (sons.json, au temps d'un mot ou en secondes) + un whoosh à chaque changement de plan
-    sfx = []
+    own = []
     for e in cfg.get('sfx', []):
         e = dict(e)
         t = e.get('t')
         e['t'] = round(word_time(words, t) if isinstance(t, str) else float(t), 3)
-        sfx.append(e)
-    if cfg.get('whoosh_plans', True):
-        sfx += [{'t': round(max(0.0, t - 0.12), 3), 'type': 'whoosh', 'gain': -4} for t in shot_starts(proj)]
-    json.dump({'style': 'toon', 'sfx': sorted(sfx, key=lambda e: e['t'])}, open(os.path.join(A, 'events.json'), 'w', encoding='utf-8'), indent=1)
+        if sid == 'roblox' and 'name' not in e:
+            e['name'] = e.get('type')
+        own.append(e)
+    if st['type'] == 'web':
+        print('Les sons que posent les scènes (web.mjs events)…')
+        web('events', proj)
+        ev = json.load(open(os.path.join(A, 'events.json'), encoding='utf-8-sig')) or {}
+        ev['sfx'] = sorted((ev.get('sfx') or []) + own, key=lambda e: e.get('t', 0))
+    else:
+        if cfg.get('whoosh_plans', True):
+            own += [{'t': round(max(0.0, t - 0.12), 3), 'type': 'whoosh', 'gain': -4} for t in shot_starts(proj)]
+        ev = {'style': 'toon', 'sfx': sorted(own, key=lambda e: e['t'])}
+    json.dump(ev, open(os.path.join(A, 'events.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     end = words[-1]['end'] + 1.5
+    music_ok = st.get('musique', True)
+    if not music_ok and (cfg.get('musique') or cfg.get('musique_synth')):
+        print(f'  (le style {sid} n\'a jamais de musique : la musique de sons.json est ignorée)')
     beds = cfg.get('beds') or [{'from': 0, 'to': round(end, 2), 'type': 'room', 'gain': -45}]
-    json.dump({'music': bool(cfg.get('musique_synth')), 'ambience': True, 'beds': beds},
+    json.dump({'music': bool(cfg.get('musique_synth')) and music_ok, 'ambience': True, 'beds': beds},
               open(os.path.join(A, 'beds.json'), 'w', encoding='utf-8'), indent=1)
-    # la voix telle quelle (mix.py la lit en audio/clean.wav)
+    # la voix telle quelle (les mix la lisent en audio/clean.wav)
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', voice, '-ar', '48000', '-ac', '1', os.path.join(A, 'clean.wav')], check=True)
-    print('Effets et fond (sound_design.py)…')
-    subprocess.run([py, os.path.join(SKILL, 'blender-toon-shorts', 'scripts', 'sound_design.py'), proj], check=True)
-    mix = [py, os.path.join(SKILL, 'pixel-explainer-video', 'scripts', 'mix.py'), proj, '--lufs', '-14', '--min-ratio', str(cfg.get('min_ratio', 12))]
-    music = cfg.get('musique')
+    sd = os.path.join(SKILL, st['skill'], 'scripts', 'sound_design.py')
+    print(f'Effets et fond ({st["skill"]}/scripts/sound_design.py)…')
+    subprocess.run([py, sd, proj], check=True, cwd=os.path.dirname(sd))
+    music = cfg.get('musique') if music_ok else None
+    if st.get('mix') == 'roblox':   # le bed de Roblox est déjà calé sur la voix : son propre mix, sans second ducking
+        mix = [py, os.path.join(SKILL, 'roblox-story-shorts', 'scripts', 'mix.py'), proj, '--lufs', '-14']
+    else:
+        mix = [py, os.path.join(SKILL, 'pixel-explainer-video', 'scripts', 'mix.py'), proj, '--lufs', '-14', '--min-ratio', str(cfg.get('min_ratio', 12))]
     if music:
         mp = music if os.path.isabs(music) else os.path.join(proj, music)
-        mix += ['--music', mp, '--music-gain', str(cfg.get("musique_gain", -22))]
+        mix += ['--music', mp, '--music-gain', str(cfg.get('musique_gain', -22))]
     print('Mixage (voix devant, fond baissé sous la voix, -14 LUFS)…')
     subprocess.run(mix, check=True)
     print('Son prêt :', os.path.join(A, 'final_mix.wav'), '(le rendu l\'utilise à la place de la voix seule)')
@@ -443,18 +745,29 @@ def cmd_son(a):
 
 
 def main():
-    ap = argparse.ArgumentParser(prog='konvwa', description='Fabrication des vidéos 3D KONVWA (moteur Blender).')
+    ap = argparse.ArgumentParser(prog='konvwa', description='Fabrication des vidéos KONVWA avec tous les moteurs du pack Creatorize.')
     sp = ap.add_subparsers(dest='cmd', required=True)
+    sp.add_parser('styles').set_defaults(fn=cmd_styles)
     sp.add_parser('verifier').set_defaults(fn=cmd_verifier)
     p = sp.add_parser('installer'); p.add_argument('--bpy', action='store_true', help='aussi Blender en module (serveur sans Blender)'); p.set_defaults(fn=cmd_installer)
-    p = sp.add_parser('nouveau'); p.add_argument('projet'); p.add_argument('--mots', required=True); p.add_argument('--voix'); p.set_defaults(fn=cmd_nouveau)
+    p = sp.add_parser('nouveau'); p.add_argument('projet'); p.add_argument('--mots', required=True); p.add_argument('--voix')
+    p.add_argument('--style', default='blender', choices=list(STYLES)); p.add_argument('--format', choices=['vertical', 'landscape'])
+    p.add_argument('--dim', default='3d', choices=['2d', '3d']); p.set_defaults(fn=cmd_nouveau)
+    p = sp.add_parser('image'); p.add_argument('projet'); p.add_argument('nom'); p.add_argument('fichier'); p.add_argument('--source')
+    p.add_argument('--licence'); p.set_defaults(fn=cmd_image)
+    p = sp.add_parser('sprite'); p.add_argument('projet'); p.add_argument('perso'); p.add_argument('cle', help='pose-visage, ex. walk-angry, talk-happy, XL-smug')
+    p.add_argument('png'); p.add_argument('--desc'); p.add_argument('--feuille', default='film'); p.set_defaults(fn=cmd_sprite)
     p = sp.add_parser('mots'); p.add_argument('projet'); p.add_argument('words'); p.set_defaults(fn=cmd_mots)
-    p = sp.add_parser('test'); p.add_argument('projet'); p.add_argument('seq'); p.add_argument('--frames'); p.add_argument('--scale', default='0.4')
-    p.add_argument('--samples', default='12'); p.add_argument('--cols', type=int, default=6); p.set_defaults(fn=cmd_test)
+    p = sp.add_parser('test'); p.add_argument('projet'); p.add_argument('seq', nargs='?'); p.add_argument('--frames'); p.add_argument('--scale', default='0.4')
+    p.add_argument('--samples', default='12'); p.add_argument('--cols', type=int, default=6)
+    p.add_argument('--temps', help='three.js : secondes, ex. 1,4.5,9'); p.add_argument('--controle', action='store_true', help='three.js : scènes qui plantent + mise en page')
+    p.set_defaults(fn=cmd_test)
     p = sp.add_parser('planche'); p.add_argument('dossier'); p.add_argument('--cols', type=int, default=6); p.set_defaults(fn=cmd_planche)
     p = sp.add_parser('son'); p.add_argument('projet'); p.set_defaults(fn=cmd_son)
-    p = sp.add_parser('rendu'); p.add_argument('projet'); p.add_argument('--jobs', type=int, default=1); p.add_argument('--scale', default='1.0')
+    p = sp.add_parser('rendu'); p.add_argument('projet'); p.add_argument('--jobs', type=int); p.add_argument('--scale', default='1.0')
     p.add_argument('--samples', default='48'); p.add_argument('--fps60', choices=['dup', 'interp', 'non']); p.add_argument('--sans-sous-titres', action='store_true')
+    p.add_argument('--sans-reglage', action='store_true', help='Blender : sans le réglage automatique du rendu (render_tune)')
+    p.add_argument('--vertical', choices=['flou', 'recadre', 'non'], help='film 16:9 -> 9:16'); p.add_argument('--sans-son', action='store_true')
     p.set_defaults(fn=cmd_rendu)
     a = ap.parse_args()
     sys.exit(a.fn(a))

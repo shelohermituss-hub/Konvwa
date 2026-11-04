@@ -34,7 +34,12 @@ for (let i = 0; i < rest.length; i++) if (rest[i].startsWith('--')) { const k = 
 if (!cmd || !projArg) { console.error('usage: node web.mjs info|stills|events|check|video|serve <projet> [options]'); process.exit(2); }
 const PROJ = path.resolve(fs.existsSync(projArg) ? projArg : path.join(HERE, '..', projArg));
 const P = JSON.parse(fs.readFileSync(path.join(PROJ, 'project.json'), 'utf8'));
-const KIND = String(fs.readFileSync(path.join(PROJ, 'engine.js'), 'utf8').match(/export const ENGINE_KIND = '(\w+)'/)?.[1] || 'pixel');
+// le moteur : la copie du projet s'il en a une, sinon le dossier du pack nommé par project.json > konvwa > moteur (rien
+// n'est recopié dans le film : les fichiers absents du projet sont servis depuis le pack, tels quels)
+const ENGDIR = P.konvwa?.moteur ? path.join(PACK, P.konvwa.moteur) : null;
+const engineFile = [path.join(PROJ, 'engine.js'), ENGDIR && path.join(ENGDIR, 'engine.js')].find(f => f && fs.existsSync(f));
+if (!engineFile) { console.error('KONVWA web : pas de engine.js (ni dans le projet, ni project.json > konvwa > moteur)'); process.exit(2); }
+const KIND = String(fs.readFileSync(engineFile, 'utf8').match(/export const ENGINE_KIND = '(\w+)'/)?.[1] || 'pixel');
 const HOSTPAGE = KIND === 'roblox' ? 'roblox.html' : 'host.html';
 const OUT = path.join(PROJ, 'out'); fs.mkdirSync(OUT, { recursive: true });
 
@@ -86,8 +91,9 @@ function startServer(port = 0) {
       if (r[0] === '__anims') return json(res, { version: 1, builtin: fs.existsSync(ANIMS) ? (JSON.parse(fs.readFileSync(ANIMS, 'utf8')).entries ?? []) : [], user: [] });
       if (r[0] === '__chars3d') return json(res, { version: 1, entries: [] });
       if (r[0] === '__library') { const f = inside(path.join(PACK, 'library'), r.slice(1).join('/')); return f ? send(res, f) : (res.writeHead(404), res.end()); }
-      const f = inside(PROJ, r.join('/'));
+      let f = inside(PROJ, r.join('/'));
       if (!f) { res.writeHead(403); return res.end(); }
+      if (!fs.existsSync(f) && ENGDIR) { const g = inside(ENGDIR, r.join('/')); if (g && fs.existsSync(g)) f = g; }
       if (req.method === 'HEAD') { const ok = fs.existsSync(f); res.writeHead(ok ? 200 : 404); return res.end(); }
       return send(res, f);
     } catch (e) { res.writeHead(500); res.end(String(e)); }
@@ -99,7 +105,7 @@ function startServer(port = 0) {
 async function withPage(fn) {
   const { server, port } = await startServer();
   const browser = await launch({ args: process.platform === 'linux' ? ['--no-sandbox', '--enable-unsafe-swiftshader'] : [] });
-  const [W, H] = (P.settings?.format === '16:9' || P.settings?.format === 'landscape') ? [1920, 1080] : [1080, 1920];
+  const [W, H] = ['16:9', 'landscape', 'wide'].includes(P.settings?.format) ? [1920, 1080] : [1080, 1920];
   const page = await browser.newPage(`http://127.0.0.1:${port}/p/film/__suite/${HOSTPAGE}?mode=render`, {
     width: Math.round(W / 2), height: Math.round(H / 2),
     onConsole: (type, text) => { if (/^PROGRESS \d/.test(text)) { const [, f, n] = text.split(' '); process.stdout.write(`\r  ${f}/${n} images`); } else if (type === 'error' || /^\[(error|warn)\]/.test(text)) console.log('  page:', text.slice(0, 300)); } });
@@ -151,9 +157,9 @@ const run = {
   async video() {
     const fps = +opt.fps || 60, name = String(opt.name || 'video').replace(/[^\w-]/g, '');
     await withPage(async p => {
-      const sup = await p.evaluate(`(async () => (await VideoEncoder.isConfigSupported({ codec: 'avc1.640033', width: 1080, height: 1920, bitrate: 16e6, framerate: ${fps}, avc: { format: 'annexb' } })).supported)()`);
+      const sup = await p.evaluate(`(async () => typeof VideoEncoder !== 'undefined' && (await VideoEncoder.isConfigSupported({ codec: 'avc1.640033', width: 1080, height: 1920, bitrate: 16e6, framerate: ${fps}, avc: { format: 'annexb' } })).supported)()`);
       const end = +(await p.evaluate('window.suite.info()')).end || P.end;
-      const to = opt.to != null ? +opt.to : end, from = +opt.from || 0;
+      const to = opt.to != null ? +opt.to : end, from = +opt.from || 0; opt._dur = to - from;
       if (sup && !opt.images) {   // le chemin de l'application : l'encodeur H.264 du navigateur (Chrome / Edge)
         const r = await p.evaluate(`window.suite.exportVideo({ name: '${name}', fps: ${fps}, from: ${from}, to: ${to} })`, { timeout: 6 * 3600000 });
         console.log(`\n  ${r.frames} images en ${r.seconds}s (${r.fps} i/s)`);
@@ -177,7 +183,7 @@ const run = {
     const mix = ['final_mix.wav', 'clean.wav'].map(f => path.join(PROJ, 'audio', f)).find(f => fs.existsSync(f));
     const vin = opt._frames ? ['-framerate', String(fps), '-i', path.join(opt._frames, '%06d.png')] : ['-r', String(fps), '-i', h];
     const venc = opt._frames ? ['-c:v', 'libx264', '-preset', 'medium', '-crf', '17', '-pix_fmt', 'yuv420p', '-bf', '0', '-g', String(fps * 2)] : ['-c:v', 'copy'];
-    const args = ['-y', '-v', 'error', ...vin, ...(mix ? ['-ss', String(+opt.from || 0), '-i', mix] : []), ...venc, ...(mix ? ['-c:a', 'aac', '-b:a', '192k', '-shortest'] : []), mp4];
+    const args = ['-y', '-v', 'error', ...vin, ...(mix ? ['-ss', String(+opt.from || 0), '-i', mix] : []), ...venc, ...(mix ? ['-af', 'apad', '-c:a', 'aac', '-b:a', '192k'] : []), '-t', String(opt._dur), mp4];   // l'image entière, le son complété de silence
     const r = spawnSync('ffmpeg', args, { stdio: 'inherit' });
     if (r.status) throw new Error('ffmpeg a échoué');
     console.log('  ' + mp4);
