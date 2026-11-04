@@ -5,6 +5,9 @@ description: Fabrique une vidéo courte KONVWA en 3D cartoon avec le moteur Blen
 
 # Vidéo 3D cartoon KONVWA sur le moteur Blender (konvwa-blender)
 
+Les autres styles du pack (3D Informational réaliste sur le même moteur, et les 11 styles three.js) : `/konvwa-styles`
+(`.claude/skills/konvwa-styles/SKILL.md`), qui donne aussi la correspondance des outils de l'application.
+
 Le moteur vient du pack Creatorize du client (propriétaire de Creatorize ; usage privé dans ce dépôt, rien à publier
 ailleurs). Il est rangé TEL QUEL dans `videos/_creatorize/` : **ne jamais modifier le moteur** ; tout ce qui est propre à
 un film vit dans `videos/<projet>/`. L'outil `konvwa` remplace l'application Creatorize (aperçu, rendu, export).
@@ -47,7 +50,7 @@ python videos/_konvwa/konvwa.py mots <projet> <words.json>       # refaire timel
 python videos/_konvwa/konvwa.py test <projet> s03 --frames 880,915 [--scale 0.4 --samples 12]
 python videos/_konvwa/konvwa.py planche <dossier>
 python videos/_konvwa/konvwa.py son <projet>                     # effets + fond + musique -> audio/final_mix.wav (-14 LUFS)
-python videos/_konvwa/konvwa.py rendu <projet> [--jobs 1] [--fps60 dup|interp|non]
+python videos/_konvwa/konvwa.py rendu <projet> [--fps60 dup|interp|non] [--sans-reglage] [--jobs N]
 ```
 - `nouveau` crée le film depuis `videos/_konvwa/modele/` : PLAN.md (avec la liste des phrases et leur image de début),
   CLAUDE.md, common.py (murs à vrais trous, visibilité, porter, allonger, badges), cast.py, sets.py, s01.py (un plan
@@ -59,7 +62,9 @@ python videos/_konvwa/konvwa.py rendu <projet> [--jobs 1] [--fps60 dup|interp|no
   prises CC0 de `videos/_creatorize/lowpoly/library/sfx`, 97 catégories ; ~20 effets par minute au plus, les plus
   importants) -> `mix.py` (voix intacte devant, fond baissé sous la voix, −14 LUFS, contrôle voix/fond ≥ 12 dB).
   `rendu` le refait tout seul quand le film a un `sons.json`.
-- `rendu` = l'export : `render_queue.py` (ne rend que ce qui manque, `shots/<seq>/NNNN.png`), `assemble.py`
+- `rendu` = l'export : comme l'application, d'abord le réglage du rendu pour cette machine (`render_tune.py` : les
+  réglages les plus rapides qui donnent la même image, un seul Blender sauf mesure contraire ; `render_plan.json` dans le
+  film ; `--sans-reglage` pour s'en passer), puis `render_queue.py --anim` (ne rend que ce qui manque, `shots/<seq>/NNNN.png`), `assemble.py`
   (fondus, raccords → `frames_final/`), `post.py` (étalonnage de `project.json > konvwa > post`, sous-titres, voix),
   60 i/s, `finish.py` (−14 LUFS) → `renders/<projet>.mp4`.
 

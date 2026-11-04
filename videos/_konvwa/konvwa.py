@@ -225,7 +225,8 @@ def load_words(path):
 
 def write_words(proj, words):
     """audio/timeline.json (phrases {s, e, text, words: [{w, s, e}]}, ce que lit le moteur) + audio/words.json
-    ({"words": [{word, start, end}]}, ce que lit post.py pour les sous-titres)."""
+    ({"words": [{word, start, end}]}, ce que lit post.py pour les sous-titres) + audio/script_timed.txt (les phrases et
+    leur début, ce que lisent les skills)."""
     os.makedirs(os.path.join(proj, 'audio'), exist_ok=True)
     phrases, cur = [], []
     for i, w in enumerate(words):
@@ -240,6 +241,8 @@ def write_words(proj, words):
            'words': [{'w': x['word'], 's': round(x['start'], 3), 'e': round(x['end'], 3)} for x in p]} for p in phrases]
     json.dump(tl, open(os.path.join(proj, 'audio', 'timeline.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     json.dump({'words': words}, open(os.path.join(proj, 'audio', 'words.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    # le texte calé que lisent les skills des styles (le format de l'application, tools/parakeet_timeline.py)
+    open(os.path.join(proj, 'audio', 'script_timed.txt'), 'w', encoding='utf-8').write('\n'.join(f"{p['s']:7.2f}  {p['text']}" for p in tl) + '\n')
     end = round(words[-1]['end'] + 1.2, 3)
     pj = os.path.join(proj, 'project.json')
     meta = json.load(open(pj, encoding='utf-8-sig')) if os.path.exists(pj) else {}
@@ -311,6 +314,8 @@ def cmd_nouveau(a):
     tl, frames = write_words(proj, load_words(a.mots))
     if a.voix:
         shutil.copy(a.voix, os.path.join(proj, 'audio', 'voice' + os.path.splitext(a.voix)[1]))
+        if shutil.which('ffmpeg'):   # la voix telle quelle en 48 kHz mono, là où l'application la met (aperçu, skills, mix)
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', a.voix, '-ar', '48000', '-ac', '1', os.path.join(proj, 'audio', 'clean.wav')])
     T = os.path.join(HERE, 'modele' if st['type'] == 'blender' else 'modele_web')
     for f in os.listdir(T):
         src, dst = os.path.join(T, f), os.path.join(proj, f)

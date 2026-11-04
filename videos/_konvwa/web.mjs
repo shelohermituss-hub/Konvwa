@@ -16,12 +16,12 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PACK = path.resolve(HERE, '..', '_creatorize');
-const { launch } = await import(new URL('file://' + path.join(PACK, 'stylekit', 'tools', 'cdp.mjs').replace(/\\/g, '/')).href);
+const { launch } = await import(pathToFileURL(path.join(PACK, 'stylekit', 'tools', 'cdp.mjs')).href);
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.ogg': 'audio/ogg', '.flac': 'audio/flac', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.webp': 'image/webp', '.svg': 'image/svg+xml', '.gif': 'image/gif', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.otf': 'font/otf', '.mp4': 'video/mp4',
@@ -108,7 +108,7 @@ async function withPage(fn) {
   const [W, H] = ['16:9', 'landscape', 'wide'].includes(P.settings?.format) ? [1920, 1080] : [1080, 1920];
   const page = await browser.newPage(`http://127.0.0.1:${port}/p/film/__suite/${HOSTPAGE}?mode=render`, {
     width: Math.round(W / 2), height: Math.round(H / 2),
-    onConsole: (type, text) => { if (/^PROGRESS \d/.test(text)) { const [, f, n] = text.split(' '); process.stdout.write(`\r  ${f}/${n} images`); } else if (type === 'error' || /^\[(error|warn)\]/.test(text)) console.log('  page:', text.slice(0, 300)); } });
+    onConsole: (type, text) => { if (/^PROGRESS \d/.test(text)) { const [, f, n] = text.split(' '); process.stdout.write(`\r  ${f}/${n} images`); } else if (type === 'error' || type === 'warning' || /^\[(error|warn)\]/.test(text)) console.log(`  page${type === 'warning' ? ' (avert.)' : ''}:`, text.slice(0, 300)); } });
   try {
     await page.waitFor('window.ready === true', 300000);
     const be = await page.evaluate('window.bootError || null');
