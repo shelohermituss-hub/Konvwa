@@ -1,0 +1,15 @@
+{
+ "language": "fr",
+ "settings": {
+  "format": "vertical"
+ },
+ "konvwa": {
+  "style": "blender",
+  "post": [
+   "--sat",
+   "1.15"
+  ],
+  "fps60": "non"
+ },
+ "end": 69.6
+}

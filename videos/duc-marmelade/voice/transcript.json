@@ -1,0 +1,1232 @@
+[
+  {
+    "text": "En",
+    "start": 0,
+    "end": 0.17,
+    "id": "w0"
+  },
+  {
+    "text": "Haïti,",
+    "start": 0.32,
+    "end": 0.76,
+    "id": "w1"
+  },
+  {
+    "text": "il",
+    "start": 0.76,
+    "end": 0.9,
+    "id": "w2"
+  },
+  {
+    "text": "y",
+    "start": 0.9,
+    "end": 1.06,
+    "id": "w3"
+  },
+  {
+    "text": "a",
+    "start": 1.06,
+    "end": 1.09,
+    "id": "w4"
+  },
+  {
+    "text": "eu",
+    "start": 1.09,
+    "end": 1.26,
+    "id": "w5"
+  },
+  {
+    "text": "un",
+    "start": 1.26,
+    "end": 1.43,
+    "id": "w6"
+  },
+  {
+    "text": "vrai",
+    "start": 1.43,
+    "end": 1.66,
+    "id": "w7"
+  },
+  {
+    "text": "duc",
+    "start": 1.75,
+    "end": 2.03,
+    "id": "w8"
+  },
+  {
+    "text": "de",
+    "start": 2.03,
+    "end": 2.14,
+    "id": "w9"
+  },
+  {
+    "text": "la",
+    "start": 2.22,
+    "end": 2.36,
+    "id": "w10"
+  },
+  {
+    "text": "marmelade",
+    "start": 2.43,
+    "end": 3.23,
+    "id": "w11"
+  },
+  {
+    "text": "et",
+    "start": 3.35,
+    "end": 3.45,
+    "id": "w12"
+  },
+  {
+    "text": "un",
+    "start": 3.45,
+    "end": 3.64,
+    "id": "w13"
+  },
+  {
+    "text": "comte",
+    "start": 3.64,
+    "end": 4.12,
+    "id": "w14"
+  },
+  {
+    "text": "de",
+    "start": 4.17,
+    "end": 4.31,
+    "id": "w15"
+  },
+  {
+    "text": "limonade.",
+    "start": 4.31,
+    "end": 5.12,
+    "id": "w16"
+  },
+  {
+    "text": "1811.",
+    "start": 5.52,
+    "end": 6.55,
+    "id": "w17"
+  },
+  {
+    "text": "Dans",
+    "start": 6.55,
+    "end": 6.76,
+    "id": "w18"
+  },
+  {
+    "text": "le",
+    "start": 6.76,
+    "end": 6.86,
+    "id": "w19"
+  },
+  {
+    "text": "Nord,",
+    "start": 6.86,
+    "end": 7.2,
+    "id": "w20"
+  },
+  {
+    "text": "le",
+    "start": 7.2,
+    "end": 7.31,
+    "id": "w21"
+  },
+  {
+    "text": "général",
+    "start": 7.32,
+    "end": 7.76,
+    "id": "w22"
+  },
+  {
+    "text": "Henri",
+    "start": 7.76,
+    "end": 8.07,
+    "id": "w23"
+  },
+  {
+    "text": "Christophe",
+    "start": 8.07,
+    "end": 8.72,
+    "id": "w24"
+  },
+  {
+    "text": "se",
+    "start": 8.73,
+    "end": 8.84,
+    "id": "w25"
+  },
+  {
+    "text": "proclame",
+    "start": 8.84,
+    "end": 9.32,
+    "id": "w26"
+  },
+  {
+    "text": "roi,",
+    "start": 9.37,
+    "end": 9.64,
+    "id": "w27"
+  },
+  {
+    "text": "Henri",
+    "start": 9.64,
+    "end": 10.26,
+    "id": "w28"
+  },
+  {
+    "text": "Ier.",
+    "start": 10.5,
+    "end": 11,
+    "id": "w29"
+  },
+  {
+    "text": "Mais",
+    "start": 11,
+    "end": 11.32,
+    "id": "w30"
+  },
+  {
+    "text": "un",
+    "start": 11.32,
+    "end": 11.39,
+    "id": "w31"
+  },
+  {
+    "text": "roi",
+    "start": 11.39,
+    "end": 11.58,
+    "id": "w32"
+  },
+  {
+    "text": "sans",
+    "start": 11.58,
+    "end": 11.84,
+    "id": "w33"
+  },
+  {
+    "text": "cours,",
+    "start": 11.84,
+    "end": 12.29,
+    "id": "w34"
+  },
+  {
+    "text": "ça",
+    "start": 12.29,
+    "end": 12.42,
+    "id": "w35"
+  },
+  {
+    "text": "fait",
+    "start": 12.42,
+    "end": 12.65,
+    "id": "w36"
+  },
+  {
+    "text": "un",
+    "start": 12.65,
+    "end": 12.81,
+    "id": "w37"
+  },
+  {
+    "text": "peu",
+    "start": 12.81,
+    "end": 13,
+    "id": "w38"
+  },
+  {
+    "text": "vide.",
+    "start": 13,
+    "end": 13.5,
+    "id": "w39"
+  },
+  {
+    "text": "Alors,",
+    "start": 13.81,
+    "end": 13.93,
+    "id": "w40"
+  },
+  {
+    "text": "une",
+    "start": 13.93,
+    "end": 14.12,
+    "id": "w41"
+  },
+  {
+    "text": "semaine",
+    "start": 14.12,
+    "end": 14.39,
+    "id": "w42"
+  },
+  {
+    "text": "plus",
+    "start": 14.56,
+    "end": 14.81,
+    "id": "w43"
+  },
+  {
+    "text": "tard,",
+    "start": 14.81,
+    "end": 15.18,
+    "id": "w44"
+  },
+  {
+    "text": "il",
+    "start": 15.18,
+    "end": 15.3,
+    "id": "w45"
+  },
+  {
+    "text": "fabrique",
+    "start": 15.3,
+    "end": 15.8,
+    "id": "w46"
+  },
+  {
+    "text": "une",
+    "start": 15.8,
+    "end": 15.99,
+    "id": "w47"
+  },
+  {
+    "text": "noblesse",
+    "start": 15.99,
+    "end": 16.48,
+    "id": "w48"
+  },
+  {
+    "text": "entière.",
+    "start": 16.48,
+    "end": 17,
+    "id": "w49"
+  },
+  {
+    "text": "Quatre",
+    "start": 17,
+    "end": 17.31,
+    "id": "w50"
+  },
+  {
+    "text": "princes,",
+    "start": 17.32,
+    "end": 17.78,
+    "id": "w51"
+  },
+  {
+    "text": "huit",
+    "start": 17.78,
+    "end": 17.9,
+    "id": "w52"
+  },
+  {
+    "text": "ducs,",
+    "start": 18.03,
+    "end": 18.28,
+    "id": "w53"
+  },
+  {
+    "text": "vingt-deux",
+    "start": 18.28,
+    "end": 18.79,
+    "id": "w54"
+  },
+  {
+    "text": "comptes,",
+    "start": 18.79,
+    "end": 19.25,
+    "id": "w55"
+  },
+  {
+    "text": "trente-sept",
+    "start": 19.25,
+    "end": 19.81,
+    "id": "w56"
+  },
+  {
+    "text": "barons.",
+    "start": 19.81,
+    "end": 20.36,
+    "id": "w57"
+  },
+  {
+    "text": "Chacun",
+    "start": 20.4,
+    "end": 20.79,
+    "id": "w58"
+  },
+  {
+    "text": "reçoit",
+    "start": 20.79,
+    "end": 21.18,
+    "id": "w59"
+  },
+  {
+    "text": "des",
+    "start": 21.18,
+    "end": 21.3,
+    "id": "w60"
+  },
+  {
+    "text": "armoiries,",
+    "start": 21.46,
+    "end": 22.08,
+    "id": "w61"
+  },
+  {
+    "text": "une",
+    "start": 22.1,
+    "end": 22.3,
+    "id": "w62"
+  },
+  {
+    "text": "devise,",
+    "start": 22.3,
+    "end": 22.75,
+    "id": "w63"
+  },
+  {
+    "text": "un",
+    "start": 22.83,
+    "end": 22.96,
+    "id": "w64"
+  },
+  {
+    "text": "domaine",
+    "start": 22.96,
+    "end": 23.42,
+    "id": "w65"
+  },
+  {
+    "text": "et",
+    "start": 23.42,
+    "end": 23.55,
+    "id": "w66"
+  },
+  {
+    "text": "un",
+    "start": 23.55,
+    "end": 23.67,
+    "id": "w67"
+  },
+  {
+    "text": "titre.",
+    "start": 23.83,
+    "end": 24.3,
+    "id": "w68"
+  },
+  {
+    "text": "Et",
+    "start": 24.3,
+    "end": 24.4,
+    "id": "w69"
+  },
+  {
+    "text": "pour",
+    "start": 24.4,
+    "end": 24.62,
+    "id": "w70"
+  },
+  {
+    "text": "les",
+    "start": 24.62,
+    "end": 24.75,
+    "id": "w71"
+  },
+  {
+    "text": "titres,",
+    "start": 24.75,
+    "end": 25.15,
+    "id": "w72"
+  },
+  {
+    "text": "on",
+    "start": 25.15,
+    "end": 25.2,
+    "id": "w73"
+  },
+  {
+    "text": "prend",
+    "start": 25.36,
+    "end": 25.5,
+    "id": "w74"
+  },
+  {
+    "text": "les",
+    "start": 25.5,
+    "end": 25.65,
+    "id": "w75"
+  },
+  {
+    "text": "noms",
+    "start": 25.65,
+    "end": 25.85,
+    "id": "w76"
+  },
+  {
+    "text": "des",
+    "start": 25.85,
+    "end": 25.98,
+    "id": "w77"
+  },
+  {
+    "text": "villes",
+    "start": 26,
+    "end": 26.3,
+    "id": "w78"
+  },
+  {
+    "text": "du",
+    "start": 26.3,
+    "end": 26.4,
+    "id": "w79"
+  },
+  {
+    "text": "Nord.",
+    "start": 26.4,
+    "end": 26.8,
+    "id": "w80"
+  },
+  {
+    "text": "Le",
+    "start": 26.8,
+    "end": 26.96,
+    "id": "w81"
+  },
+  {
+    "text": "duc",
+    "start": 27.04,
+    "end": 27.2,
+    "id": "w82"
+  },
+  {
+    "text": "de",
+    "start": 27.2,
+    "end": 27.36,
+    "id": "w83"
+  },
+  {
+    "text": "plaisance,",
+    "start": 27.36,
+    "end": 28.26,
+    "id": "w84"
+  },
+  {
+    "text": "le",
+    "start": 28.26,
+    "end": 28.42,
+    "id": "w85"
+  },
+  {
+    "text": "prince",
+    "start": 28.42,
+    "end": 28.91,
+    "id": "w86"
+  },
+  {
+    "text": "du",
+    "start": 28.91,
+    "end": 29.07,
+    "id": "w87"
+  },
+  {
+    "text": "limbé,",
+    "start": 29.07,
+    "end": 29.63,
+    "id": "w88"
+  },
+  {
+    "text": "le",
+    "start": 29.63,
+    "end": 29.79,
+    "id": "w89"
+  },
+  {
+    "text": "comte",
+    "start": 29.79,
+    "end": 30.16,
+    "id": "w90"
+  },
+  {
+    "text": "de",
+    "start": 30.23,
+    "end": 30.35,
+    "id": "w91"
+  },
+  {
+    "text": "limonade",
+    "start": 30.35,
+    "end": 31.1,
+    "id": "w92"
+  },
+  {
+    "text": "et",
+    "start": 31.1,
+    "end": 31.3,
+    "id": "w93"
+  },
+  {
+    "text": "le",
+    "start": 31.3,
+    "end": 31.5,
+    "id": "w94"
+  },
+  {
+    "text": "duc",
+    "start": 31.5,
+    "end": 31.79,
+    "id": "w95"
+  },
+  {
+    "text": "de",
+    "start": 31.79,
+    "end": 31.9,
+    "id": "w96"
+  },
+  {
+    "text": "la",
+    "start": 31.9,
+    "end": 32.23,
+    "id": "w97"
+  },
+  {
+    "text": "marmelade.",
+    "start": 32.23,
+    "end": 33.16,
+    "id": "w98"
+  },
+  {
+    "text": "En",
+    "start": 33.4,
+    "end": 33.53,
+    "id": "w99"
+  },
+  {
+    "text": "Europe,",
+    "start": 33.72,
+    "end": 34.05,
+    "id": "w100"
+  },
+  {
+    "text": "on",
+    "start": 34.05,
+    "end": 34.19,
+    "id": "w101"
+  },
+  {
+    "text": "se",
+    "start": 34.19,
+    "end": 34.3,
+    "id": "w102"
+  },
+  {
+    "text": "moque.",
+    "start": 34.45,
+    "end": 34.88,
+    "id": "w103"
+  },
+  {
+    "text": "Un",
+    "start": 34.89,
+    "end": 35.05,
+    "id": "w104"
+  },
+  {
+    "text": "duc",
+    "start": 35.05,
+    "end": 35.3,
+    "id": "w105"
+  },
+  {
+    "text": "de",
+    "start": 35.3,
+    "end": 35.46,
+    "id": "w106"
+  },
+  {
+    "text": "la",
+    "start": 35.46,
+    "end": 35.54,
+    "id": "w107"
+  },
+  {
+    "text": "marmelade.",
+    "start": 35.63,
+    "end": 36.6,
+    "id": "w108"
+  },
+  {
+    "text": "Heureusement,",
+    "start": 36.6,
+    "end": 37.4,
+    "id": "w109"
+  },
+  {
+    "text": "la",
+    "start": 37.4,
+    "end": 37.5,
+    "id": "w110"
+  },
+  {
+    "text": "France",
+    "start": 37.66,
+    "end": 37.86,
+    "id": "w111"
+  },
+  {
+    "text": "avait",
+    "start": 37.86,
+    "end": 38.15,
+    "id": "w112"
+  },
+  {
+    "text": "elle",
+    "start": 38.15,
+    "end": 38.38,
+    "id": "w113"
+  },
+  {
+    "text": "aussi",
+    "start": 38.38,
+    "end": 38.67,
+    "id": "w114"
+  },
+  {
+    "text": "un",
+    "start": 38.67,
+    "end": 38.74,
+    "id": "w115"
+  },
+  {
+    "text": "duc",
+    "start": 38.83,
+    "end": 38.94,
+    "id": "w116"
+  },
+  {
+    "text": "de",
+    "start": 38.94,
+    "end": 39.05,
+    "id": "w117"
+  },
+  {
+    "text": "bouillon.",
+    "start": 39.05,
+    "end": 39.8,
+    "id": "w118"
+  },
+  {
+    "text": "Malheureusement,",
+    "start": 39.8,
+    "end": 40.62,
+    "id": "w119"
+  },
+  {
+    "text": "celui-là,",
+    "start": 40.62,
+    "end": 41.09,
+    "id": "w120"
+  },
+  {
+    "text": "personne",
+    "start": 41.09,
+    "end": 41.45,
+    "id": "w121"
+  },
+  {
+    "text": "ne",
+    "start": 41.47,
+    "end": 41.58,
+    "id": "w122"
+  },
+  {
+    "text": "le",
+    "start": 41.58,
+    "end": 41.68,
+    "id": "w123"
+  },
+  {
+    "text": "trouvait",
+    "start": 41.68,
+    "end": 42.06,
+    "id": "w124"
+  },
+  {
+    "text": "drôle.",
+    "start": 42.06,
+    "end": 42.49,
+    "id": "w125"
+  },
+  {
+    "text": "Parce",
+    "start": 42.49,
+    "end": 42.82,
+    "id": "w126"
+  },
+  {
+    "text": "qu'un",
+    "start": 42.82,
+    "end": 42.98,
+    "id": "w127"
+  },
+  {
+    "text": "titre,",
+    "start": 42.98,
+    "end": 43.32,
+    "id": "w128"
+  },
+  {
+    "text": "c'est",
+    "start": 43.32,
+    "end": 43.55,
+    "id": "w129"
+  },
+  {
+    "text": "juste",
+    "start": 43.56,
+    "end": 43.8,
+    "id": "w130"
+  },
+  {
+    "text": "le",
+    "start": 43.8,
+    "end": 43.9,
+    "id": "w131"
+  },
+  {
+    "text": "nom",
+    "start": 43.9,
+    "end": 44.05,
+    "id": "w132"
+  },
+  {
+    "text": "d'un",
+    "start": 44.05,
+    "end": 44.22,
+    "id": "w133"
+  },
+  {
+    "text": "endroit.",
+    "start": 44.26,
+    "end": 44.8,
+    "id": "w134"
+  },
+  {
+    "text": "Le",
+    "start": 44.8,
+    "end": 44.91,
+    "id": "w135"
+  },
+  {
+    "text": "duc",
+    "start": 44.91,
+    "end": 45.07,
+    "id": "w136"
+  },
+  {
+    "text": "d'Orléans",
+    "start": 45.12,
+    "end": 45.54,
+    "id": "w137"
+  },
+  {
+    "text": "porte",
+    "start": 45.54,
+    "end": 45.7,
+    "id": "w138"
+  },
+  {
+    "text": "le",
+    "start": 45.86,
+    "end": 45.93,
+    "id": "w139"
+  },
+  {
+    "text": "nom",
+    "start": 45.93,
+    "end": 46.09,
+    "id": "w140"
+  },
+  {
+    "text": "d'une",
+    "start": 46.09,
+    "end": 46.35,
+    "id": "w141"
+  },
+  {
+    "text": "ville,",
+    "start": 46.35,
+    "end": 46.8,
+    "id": "w142"
+  },
+  {
+    "text": "le",
+    "start": 46.8,
+    "end": 46.91,
+    "id": "w143"
+  },
+  {
+    "text": "comte",
+    "start": 46.91,
+    "end": 47.16,
+    "id": "w144"
+  },
+  {
+    "text": "de",
+    "start": 47.23,
+    "end": 47.29,
+    "id": "w145"
+  },
+  {
+    "text": "limonade",
+    "start": 47.29,
+    "end": 47.72,
+    "id": "w146"
+  },
+  {
+    "text": "aussi.",
+    "start": 47.72,
+    "end": 48.16,
+    "id": "w147"
+  },
+  {
+    "text": "Ce",
+    "start": 48.2,
+    "end": 48.34,
+    "id": "w148"
+  },
+  {
+    "text": "qui",
+    "start": 48.52,
+    "end": 48.55,
+    "id": "w149"
+  },
+  {
+    "text": "change,",
+    "start": 48.55,
+    "end": 49.1,
+    "id": "w150"
+  },
+  {
+    "text": "c'est",
+    "start": 49.18,
+    "end": 49.46,
+    "id": "w151"
+  },
+  {
+    "text": "qui",
+    "start": 49.46,
+    "end": 49.67,
+    "id": "w152"
+  },
+  {
+    "text": "rit.",
+    "start": 49.67,
+    "end": 50.1,
+    "id": "w153"
+  },
+  {
+    "text": "Et",
+    "start": 50.1,
+    "end": 50.21,
+    "id": "w154"
+  },
+  {
+    "text": "pendant",
+    "start": 50.42,
+    "end": 50.61,
+    "id": "w155"
+  },
+  {
+    "text": "qu'on",
+    "start": 50.61,
+    "end": 50.88,
+    "id": "w156"
+  },
+  {
+    "text": "riait,",
+    "start": 50.88,
+    "end": 51.26,
+    "id": "w157"
+  },
+  {
+    "text": "ce",
+    "start": 51.26,
+    "end": 51.37,
+    "id": "w158"
+  },
+  {
+    "text": "royaume",
+    "start": 51.37,
+    "end": 51.75,
+    "id": "w159"
+  },
+  {
+    "text": "construisait.",
+    "start": 51.75,
+    "end": 52.7,
+    "id": "w160"
+  },
+  {
+    "text": "Le",
+    "start": 52.7,
+    "end": 52.82,
+    "id": "w161"
+  },
+  {
+    "text": "palais",
+    "start": 53,
+    "end": 53.17,
+    "id": "w162"
+  },
+  {
+    "text": "sans",
+    "start": 53.17,
+    "end": 53.41,
+    "id": "w163"
+  },
+  {
+    "text": "souci.",
+    "start": 53.41,
+    "end": 53.9,
+    "id": "w164"
+  },
+  {
+    "text": "Et",
+    "start": 53.9,
+    "end": 54.01,
+    "id": "w165"
+  },
+  {
+    "text": "là-haut,",
+    "start": 54.01,
+    "end": 54.49,
+    "id": "w166"
+  },
+  {
+    "text": "à",
+    "start": 54.49,
+    "end": 54.54,
+    "id": "w167"
+  },
+  {
+    "text": "900",
+    "start": 54.54,
+    "end": 55.03,
+    "id": "w168"
+  },
+  {
+    "text": "mètres,",
+    "start": 55.03,
+    "end": 55.5,
+    "id": "w169"
+  },
+  {
+    "text": "la",
+    "start": 55.5,
+    "end": 55.68,
+    "id": "w170"
+  },
+  {
+    "text": "citadelle.",
+    "start": 55.68,
+    "end": 56.5,
+    "id": "w171"
+  },
+  {
+    "text": "Jusqu'à",
+    "start": 56.5,
+    "end": 56.92,
+    "id": "w172"
+  },
+  {
+    "text": "20",
+    "start": 56.92,
+    "end": 57.3,
+    "id": "w173"
+  },
+  {
+    "text": "000",
+    "start": 57.3,
+    "end": 57.87,
+    "id": "w174"
+  },
+  {
+    "text": "ouvriers,",
+    "start": 57.87,
+    "end": 58.49,
+    "id": "w175"
+  },
+  {
+    "text": "365",
+    "start": 58.49,
+    "end": 59.06,
+    "id": "w176"
+  },
+  {
+    "text": "canons,",
+    "start": 59.06,
+    "end": 59.58,
+    "id": "w177"
+  },
+  {
+    "text": "contre",
+    "start": 59.58,
+    "end": 59.86,
+    "id": "w178"
+  },
+  {
+    "text": "une",
+    "start": 59.93,
+    "end": 60,
+    "id": "w179"
+  },
+  {
+    "text": "armée",
+    "start": 60.03,
+    "end": 60.24,
+    "id": "w180"
+  },
+  {
+    "text": "française",
+    "start": 60.24,
+    "end": 60.56,
+    "id": "w181"
+  },
+  {
+    "text": "qui",
+    "start": 60.67,
+    "end": 60.8,
+    "id": "w182"
+  },
+  {
+    "text": "n'est",
+    "start": 60.8,
+    "end": 61.02,
+    "id": "w183"
+  },
+  {
+    "text": "jamais",
+    "start": 61.02,
+    "end": 61.3,
+    "id": "w184"
+  },
+  {
+    "text": "venue.",
+    "start": 61.3,
+    "end": 61.62,
+    "id": "w185"
+  },
+  {
+    "text": "Le",
+    "start": 61.7,
+    "end": 61.8,
+    "id": "w186"
+  },
+  {
+    "text": "royaume",
+    "start": 61.9,
+    "end": 62.15,
+    "id": "w187"
+  },
+  {
+    "text": "s'arrête",
+    "start": 62.15,
+    "end": 62.55,
+    "id": "w188"
+  },
+  {
+    "text": "en",
+    "start": 62.55,
+    "end": 62.6,
+    "id": "w189"
+  },
+  {
+    "text": "1820.",
+    "start": 62.76,
+    "end": 63.5,
+    "id": "w190"
+  },
+  {
+    "text": "Les",
+    "start": 63.5,
+    "end": 63.64,
+    "id": "w191"
+  },
+  {
+    "text": "moqueries",
+    "start": 63.66,
+    "end": 64.06,
+    "id": "w192"
+  },
+  {
+    "text": "se",
+    "start": 64.13,
+    "end": 64.2,
+    "id": "w193"
+  },
+  {
+    "text": "sont",
+    "start": 64.2,
+    "end": 64.4,
+    "id": "w194"
+  },
+  {
+    "text": "tues.",
+    "start": 64.4,
+    "end": 64.76,
+    "id": "w195"
+  },
+  {
+    "text": "La",
+    "start": 64.8,
+    "end": 64.92,
+    "id": "w196"
+  },
+  {
+    "text": "citadelle,",
+    "start": 65.11,
+    "end": 65.61,
+    "id": "w197"
+  },
+  {
+    "text": "elle,",
+    "start": 65.61,
+    "end": 65.98,
+    "id": "w198"
+  },
+  {
+    "text": "est",
+    "start": 65.99,
+    "end": 66.17,
+    "id": "w199"
+  },
+  {
+    "text": "toujours",
+    "start": 66.17,
+    "end": 66.68,
+    "id": "w200"
+  },
+  {
+    "text": "debout.",
+    "start": 66.68,
+    "end": 67.3,
+    "id": "w201"
+  },
+  {
+    "text": "Et",
+    "start": 67.3,
+    "end": 67.41,
+    "id": "w202"
+  },
+  {
+    "text": "marmelade",
+    "start": 67.41,
+    "end": 67.89,
+    "id": "w203"
+  },
+  {
+    "text": "aussi.",
+    "start": 67.92,
+    "end": 68.4,
+    "id": "w204"
+  }
+]
