@@ -15,7 +15,7 @@ cd "$W"
 echo "== 1/5 Paquets système (ffmpeg, bibliothèques d'affichage pour Blender sans écran)"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq git ffmpeg xz-utils python3-venv libegl1 libgl1 libglu1-mesa libxi6 libxrender1 libxkbcommon0 libsm6 libxfixes3 libxxf86vm1 >/dev/null
+apt-get install -y -qq git curl ca-certificates ffmpeg xz-utils python3 python3-venv libegl1 libgl1 libglu1-mesa libxi6 libxrender1 libxkbcommon0 libsm6 libxfixes3 libxxf86vm1 >/dev/null
 
 echo "== 2/5 Blender $BLV"
 if [ ! -x "$W/blender/blender" ]; then
@@ -27,7 +27,11 @@ export CZ_BLENDER="$W/blender/blender"
 # La carte graphique est-elle vue par Blender sans écran ? (sinon EEVEE tourne en logiciel : très lent)
 GPU=$("$CZ_BLENDER" -b --factory-startup --python-expr "import gpu; print('GPU=' + gpu.platform.renderer_get())" 2>/dev/null | grep '^GPU=' || true)
 echo "   $GPU"
-case "$GPU" in *llvmpipe*|*softpipe*|"") echo "!! Blender ne voit pas la carte NVIDIA (rendu logiciel, très lent). Arrêt : envoie ce message à Claude."; exit 1;; esac
+case "$GPU" in
+  *llvmpipe*|*softpipe*) echo "!! Blender ne voit pas la carte NVIDIA (rendu logiciel, très lent). Arrêt : envoie ce message à Claude."; exit 1;;
+  "") echo "   (carte non lue en mode sans écran : on continue, la vitesse du rendu dira si la carte travaille)";;
+esac
+nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader 2>/dev/null || true
 
 echo "== 3/5 Le dépôt KONVWA"
 if [ ! -d "$W/Konvwa/.git" ]; then
