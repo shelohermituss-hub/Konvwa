@@ -97,6 +97,34 @@ else
   PROJET="${PROJET:-duc-marmelade}"
 fi
 
+etape "4b/6 Audio du projet (voix et mots)"
+python3 - "$PROJET" <<'EOF2'
+import glob, json, os, shutil, sys
+p = os.path.join('videos', sys.argv[1]); A = os.path.join(p, 'audio')
+os.makedirs(A, exist_ok=True)
+if not glob.glob(os.path.join(A, 'voice.*')):
+    for nom in ('clean.wav', 'source.wav', 'raw.wav', 'voix.wav', 'narration.wav') + tuple(os.path.basename(x) for x in sorted(glob.glob(os.path.join(A, '*.mp3')) + glob.glob(os.path.join(A, '*.m4a')))):
+        if os.path.exists(os.path.join(A, nom)):
+            shutil.copy(os.path.join(A, nom), os.path.join(A, 'voice' + os.path.splitext(nom)[1]))
+            print('   voix : audio/%s -> audio/voice%s' % (nom, os.path.splitext(nom)[1])); break
+    else:
+        print('   (!) aucune voix trouvée dans audio/')
+wj = os.path.join(A, 'words.json')
+if not os.path.exists(wj):
+    mots = []
+    tl = os.path.join(A, 'timeline.json')
+    if os.path.exists(tl):
+        d = json.load(open(tl, encoding='utf-8-sig'))
+        for ph in (d if isinstance(d, list) else d.get('phrases', [])):
+            for w in ph.get('words', []):
+                mots.append({'word': w.get('w') or w.get('word') or w.get('text', ''), 'start': float(w.get('s', w.get('start', 0))), 'end': float(w.get('e', w.get('end', 0)))})
+    if mots:
+        json.dump({'words': mots}, open(wj, 'w', encoding='utf-8'), ensure_ascii=False)
+        print('   words.json : %d mots refaits depuis audio/timeline.json' % len(mots))
+    else:
+        print('   (!) pas de mots : sous-titres impossibles')
+EOF2
+
 etape "5/6 Contrôles et banc d'essai de $PROJET"
 python3 videos/_konvwa/konvwa.py verifier || true
 INFO=$(python3 - "$PROJET" <<'EOF'
@@ -134,7 +162,7 @@ if [ -n "$LOG" ] && [ -f "$LOG/log.txt" ]; then
 fi
 
 etape "6/6 Rendu complet de $PROJET"
-python3 videos/_konvwa/konvwa.py rendu "$PROJET" && CODE=0 || CODE=$?
+python3 videos/_konvwa/konvwa.py rendu "$PROJET" --fps60 non && CODE=0 || CODE=$?   # 30 i/s : choix du client
 if [ "$CODE" = "0" ] && [ -f "videos/$PROJET/renders/$PROJET.mp4" ]; then
   cp "videos/$PROJET/renders/$PROJET.mp4" "$W/out/$PROJET.mp4"
   ls -l "$W/out/$PROJET.mp4" | awk '{print "   MP4 : " $5 " octets"}'
