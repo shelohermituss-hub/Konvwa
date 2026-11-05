@@ -24,7 +24,7 @@ def build(ctx):
     Hn = cast.henri()
     sx, sy = sets.SEAT
     Hn.place(-1, sx, sy, 0)
-    Hn.sit(-1, 1.0, dur=0.01, feet_y=-0.34, feet_z=0.6)
+    Hn.sit(-1, 1.0, dur=0.01, feet_y=-0.34, feet_z=0.62)
     Hn.face(-1, 'bored')
     Hn.set(-1, dur=0.01, hyaw=14, hroll=6, lean=6)
     Hn.set(-1, dur=0.01, hL=(0.2, -0.12, Hn.ht * 0.25), hR=(-0.02, -0.26, Hn.ht * 0.98))   # le menton dans la main

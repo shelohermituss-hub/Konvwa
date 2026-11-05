@@ -28,7 +28,7 @@ def build(ctx):
     a.face(-1, 'determined')
     a.set(-1, dur=0.01, hyaw=-12, hroll=-4)
     mallet = cz.empty('ss_mallet', (0, 0, -50))
-    cz.cyl('ss_mallet_h', 0.018, 0.32, (0, 0, -0.3), cz.toon('ss_polem', '#8a6a42'), ol=0.003, verts=8, parent=mallet)
+    cz.cyl('ss_mallet_h', 0.018, 0.32, (0, 0, -0.3), cz.toon('ss_polem', '#8a6a42'), ol=0.003, verts=8, parent=mallet)['cz_contact_ok'] = 1     # tenu à la main
     cz.box('ss_mallet_head', (0.16, 0.09, 0.09), (0, 0, 0.04), cz.toon('ss_polem', '#8a6a42'), bevel=0.01, ol=0.003, parent=mallet)
     a.hold(mallet, 'R', -1, 99, offset=(0.0, -0.02, 0.1), follow='arm')
     for k in range(14):

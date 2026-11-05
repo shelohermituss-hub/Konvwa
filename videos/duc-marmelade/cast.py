@@ -197,7 +197,7 @@ def bicorne(color='#16120f', cockade='#e2731c'):
         cz.place(o, (0, 0, R * 0.62), parent=c.head)
         cz.outline(o, 0.005)
         o['cz_contact_ok'] = 1
-        cz.cyl(c.name + '_cockade', R * 0.2, 0.02, (R * 0.42, -R * 0.17, R * 1.25), cz.toon(c.name + '_cockm', cockade), rot=(90, 0, 0), ol=0.002, parent=c.head, verts=24)
+        cz.cyl(c.name + '_cockade', R * 0.2, 0.02, (R * 0.42, -R * 0.2, R * 1.25), cz.toon(c.name + '_cockm', cockade), rot=(90, 0, 0), ol=0.002, parent=c.head, verts=24)
     return build
 
 

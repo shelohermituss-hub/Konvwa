@@ -44,7 +44,7 @@ def build(ctx):
     v.face(-1, 'neutral')
     v.set(-1, dur=0.01, hR=(-0.02, -0.36, v.ht * 1.36), hL=(0.04, -0.26, v.ht * 1.3), hyaw=-6)
     spy = cz.empty('ct_spy', (0, 0, -50))
-    cz.cyl('ct_spy_tube', 0.035, 0.42, (0, 0, 0), cz.toon('ct_brassm', '#c99a2e', sheen=0.5), r2=0.028, ol=0.003, verts=14, parent=spy)
+    cz.cyl('ct_spy_tube', 0.035, 0.42, (0, 0, 0), cz.toon('ct_brassm', '#c99a2e', sheen=0.5), r2=0.028, ol=0.003, verts=14, parent=spy)['cz_contact_ok'] = 1     # la longue-vue tenue à la main
     v.hold(spy, 'R', -1, 99, offset=(0.0, -0.02, 0.0), rot=(90, 0, 0), follow='root')
     t_ja = at('jamais')
     v.turn(t_ja - 0.5, 235, 0.4)                       # il se retourne vers nous (la caméra est derrière lui, à gauche)

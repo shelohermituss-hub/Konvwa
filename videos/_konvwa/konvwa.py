@@ -35,7 +35,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 VIDEOS = os.path.join(ROOT, 'videos')
 ENGINE = os.path.join(VIDEOS, '_creatorize', 'blender')
-FINISH = os.path.join(VIDEOS, '_engine', 'style-histoire', 'finish.py')
 WIN = os.name == 'nt'
 FPS = 30  # le moteur Blender travaille à 30 i/s (toutes ses durées en images sont calées dessus)
 PACK = os.path.join(VIDEOS, '_creatorize')
@@ -561,6 +560,23 @@ def loudness_only(src, dst):
                     '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', dst], check=True)
 
 
+def finish(src, dst, fps=None):
+    """La finition, SANS dépendance à l'ancien moteur : son à -14 LUFS (mesure puis correction linéaire, limiteur) et, si fps
+    est donné (60), le passage à cette cadence (tmix si la source dépasse 61 i/s). Remplace l'ancien finish.py."""
+    if not fps:
+        return loudness_only(src, dst)
+    m = subprocess.run(['ffmpeg', '-hide_banner', '-i', src, '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json', '-f', 'null', '-'],
+                       capture_output=True, text=True).stderr
+    j = json.loads(m[m.rindex('{'):m.rindex('}') + 1])
+    ln = ('loudnorm=I=-14:TP=-1.5:LRA=11:linear=true:measured_I={input_i}:measured_TP={input_tp}:measured_LRA={input_lra}:'
+          'measured_thresh={input_thresh}:offset={target_offset}').format(**j)
+    rate = subprocess.check_output(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'csv=p=0', src], text=True).strip()
+    n, _, d = rate.partition('/')
+    vf = f'tmix=frames=2,fps={fps}' if float(n) / float(d or 1) > fps + 1 else f'fps={fps}'
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', src, '-vf', vf, '-af', ln + ',alimiter=limit=0.79:level=disabled',
+                    '-c:v', 'libx264', '-crf', '18', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', dst], check=True)
+
+
 def to_vertical(src, dst, mode, ass=None):
     """Un film 16:9 en 9:16 (comme Export > Vertical 9:16 de l'application) : 'flou' = l'image entière posée sur une copie
     floutée d'elle-même, 'recadre' = le centre agrandi pour remplir le cadre ; ass = les sous-titres à graver dessus."""
@@ -607,9 +623,9 @@ def rendu_web(a, proj, st, meta):
     else:
         print('3/4 (format gardé)')
     final = os.path.join(proj, 'renders', f'{name}.mp4')
-    if voice and os.path.exists(FINISH):
-        print('4/4 Son à -14 LUFS (finish.py)…')
-        subprocess.run([py, '-I', FINISH, src, final], check=True)
+    if voice:
+        print('4/4 Son à -14 LUFS et 60 i/s…')
+        finish(src, final, 60)
     else:
         shutil.copy(src, final)
     print('\nVidéo prête :', final)
@@ -708,9 +724,9 @@ def cmd_rendu(a):
     if voice and mode == 'non':
         print('5/5 Son à -14 LUFS (30 i/s gardés)…')
         loudness_only(src, final)
-    elif voice and os.path.exists(FINISH):
-        print('5/5 Son à -14 LUFS (finish.py)…')
-        subprocess.run([py, '-I', FINISH, src, final], check=True)
+    elif voice:
+        print('5/5 Son à -14 LUFS et 60 i/s…')
+        finish(src, final, 60)
     else:
         shutil.copy(src, final)
     print('\nVidéo prête :', final)

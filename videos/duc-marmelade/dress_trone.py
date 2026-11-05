@@ -15,8 +15,8 @@ def dress(cz, mode='jour'):
     gold = cz.toon('tr_goldm', '#d2a23e', sheen=0.5)
     Y1, X0, X1, H, TY = sets.Y1, sets.X0, sets.X1, sets.H, sets.THRONE_Y
     # deux tableaux : la Citadelle (on la verra à la fin) et un trois-mâts
-    cz.poster('tr_paint_cit', T('painting_citadelle.png'), 1.3, (3.05, Y1 - 0.02, 2.55), rot=0, frame='#b8862a', frame_w=0.07)
-    cz.poster('tr_paint_ship', T('painting_navire.png'), 1.0, (-3.0, Y1 - 0.02, 3.75), rot=0, frame='#b8862a', frame_w=0.06)
+    cz.poster('tr_paint_cit', T('painting_citadelle.png'), 1.3, (3.05, Y1 - 0.05, 2.55), rot=0, frame='#b8862a', frame_w=0.07)
+    cz.poster('tr_paint_ship', T('painting_navire.png'), 1.0, (-3.0, Y1 - 0.05, 3.75), rot=0, frame='#b8862a', frame_w=0.06)
     # chandeliers de part et d'autre de l'estrade
     for sx in (-1, 1):
         cz.prop('hall_candle', f'tr_candle{sx}', (sx * 1.45, TY - 0.35, 0), height=1.3, light=True, power=60 if soir else 25)

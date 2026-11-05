@@ -33,6 +33,7 @@ def build(ctx):
 
     # l'écu aux trois oranges (une carte découpée sur un dos doré) et sa banderole de devise
     sh = cz.empty('ar_shield', (0, 0, -50))
+    sh['cz_contact_ok'] = 1     # l'écu tenu à la main : il flotte au-dessus du tapis par construction
     cz.plane('ar_shield_front', 0.42, 0.42 * 300 / 256, (0, -0.006, 0), cz.toon('ar_shieldm', img=common.T('shield_marmelade.png'), alpha_clip=True, lift=0.72), parent=sh)
     cz.box('ar_shield_back', (0.36, 0.008, 0.4), (0, 0.004, 0.02), cz.toon('tr_goldm', '#d2a23e', sheen=0.5), bevel=0, ol=0.0, parent=sh)
     rib = cz.plane('ar_ribbon', 0.52, 0.52 * 220 / 1024, (0, -0.012, -0.3), cz.toon('ar_ribbonm', img=common.T('ribbon_devise.png'), alpha_clip=True, lift=0.72), parent=sh)

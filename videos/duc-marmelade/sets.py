@@ -69,13 +69,13 @@ def trone(mode='jour', shields='all'):
     # fenêtres : chambranles blancs, petits bois, ciel dehors (émissif, sans ombre), palmiers en silhouette
     for i, (a, b) in enumerate(WINDOWS):
         yc = (a + b) / 2
-        for nm, sz, loc in (('t', (0.22, b - a + 0.3, 0.16), (X0 + 0.02, yc, 3.98)), ('b', (0.3, b - a + 0.3, 0.12), (X0 + 0.06, yc, 0.84)),
-                            ('l', (0.22, 0.14, 3.2), (X0 + 0.02, a - 0.07, 2.4)), ('r', (0.22, 0.14, 3.2), (X0 + 0.02, b + 0.07, 2.4))):
+        for nm, sz, loc in (('t', (0.22, b - a + 0.3, 0.16), (X0 + 0.05, yc, 3.98)), ('b', (0.3, b - a + 0.3, 0.12), (X0 + 0.06, yc, 0.84)),
+                            ('l', (0.22, 0.14, 3.2), (X0 + 0.05, a - 0.07, 2.4)), ('r', (0.22, 0.14, 3.2), (X0 + 0.05, b + 0.07, 2.4))):
             cz.box(f'tr_win{i}{nm}', sz, loc, white, bevel=0.01, ol=0.004)
-        cz.box(f'tr_win{i}mull', (0.05, 0.05, 3.0), (X0 - 0.02, yc, 2.4), white, bevel=0, ol=0.002)
+        cz.box(f'tr_win{i}mull', (0.05, 0.05, 3.0), (X0 + 0.03, yc, 2.4), white, bevel=0, ol=0.002)
         for z in (1.65, 2.4, 3.15):
-            cz.box(f'tr_win{i}tr{z}', (0.05, b - a, 0.05), (X0 - 0.02, yc, z), white, bevel=0, ol=0.002)
-        cz.box(f'tr_win{i}arch', (0.2, b - a + 0.5, 0.5), (X0 + 0.02, yc, 4.35), gold, bevel=0.02, ol=0.004)
+            cz.box(f'tr_win{i}tr{z}', (0.05, b - a, 0.05), (X0 + 0.03, yc, z), white, bevel=0, ol=0.002)
+        cz.box(f'tr_win{i}arch', (0.2, b - a + 0.5, 0.5), (X0 + 0.05, yc, 4.35), gold, bevel=0.02, ol=0.004)
     sky = cz.glow('tr_skym', '#ffb47a' if soir else '#cdeef2', 1.0 if soir else 1.25)
     cz.plane('tr_sky', 14, 7, (X0 - 6.0, 1.0, 2.6), sky, rot=(90, 0, 90))
     cz.box('tr_outside_ground', (6, 14, 0.1), (X0 - 3.5, 1.0, -0.05), cz.toon('tr_outside_groundm', '#7ab86a' if not soir else '#7a4a5a'), bevel=0, ol=0)
@@ -83,7 +83,7 @@ def trone(mode='jour', shields='all'):
     cz.plane('tr_hall', 2.6, 3.4, (DOOR[0], Y1 + 2.4, 1.7), cz.glow('tr_hall_skym', '#f4e2b8' if not soir else '#8a5a7a', 0.9))
     cz.box('tr_hallfloor', (2.4, 2.6, 0.2), (DOOR[0], Y1 + 1.2, -0.1), floor, bevel=0, ol=0)
     for sx in (-1, 1):
-        cz.box(f'tr_hallwall{sx}', (0.1, 2.6, 3.2), (DOOR[0] + sx * 1.0, Y1 + 1.2, 1.6), wall, bevel=0, ol=0)
+        cz.box(f'tr_hallwall{sx}', (0.1, 2.5, 3.2), (DOOR[0] + sx * 1.0, Y1 + 1.25, 1.6), wall, bevel=0, ol=0)
 
     # l'estrade et le trône (copie du trône du moteur avec nos images : props/throne.py)
     cz.prop('throne', 'tr_throne', (0, THRONE_Y, 0), lacquer='#9c1424', dais='#5a1412', gold='#d9a72e', cushion='#c21f2a')
@@ -99,7 +99,7 @@ def trone(mode='jour', shields='all'):
     # le tapis rouge de la porte au trône
     cz.box('tr_carpet', (1.5, 5.4, 0.02), (0, THRONE_Y - 2.75, 0.01), cz.toon('tr_carpetm', '#a81c28', pattern=('carpet', 0.4, '#8a1420')), bevel=0, ol=0)
     for sx in (-1, 1):
-        cz.box(f'tr_carpetb{sx}', (0.1, 5.4, 0.022), (sx * 0.7, THRONE_Y - 2.75, 0.012), gold, bevel=0, ol=0)
+        cz.box(f'tr_carpetb{sx}', (0.1, 5.4, 0.03), (sx * 0.7, THRONE_Y - 2.75, 0.015), gold, bevel=0, ol=0)
 
     # le mur des armoiries (mur droit, face à -X) : 4 groupes, chiffres d'or dessous
     y = Y0 + 0.35
@@ -176,7 +176,7 @@ SWIN = (-2.5, -0.9, 0.8, 3.0)       # la fenêtre du mur du fond (x0, x1, z0, z1
 FIRE = (SX0, 0.6)                   # la cheminée (mur gauche, centre y)
 ARMCHAIR = (1.75, 1.6)              # le fauteuil de BOUILLON (centre du siège), tourné vers -Y et un peu vers la gauche
 ARM_YAW = 25
-MAPFR = (SX1, 0.2, 1.9)             # la carte de France sur le mur droit (centre)
+MAPFR = (SX1 - 0.03, 0.2, 1.9)             # la carte de France sur le mur droit (centre)
 MAPFR_W = 1.15
 
 
@@ -221,12 +221,12 @@ def salon(mode='jour'):
     # la fenêtre : chambranle, petits bois, rideaux ; dehors la façade d'en face et l'enseigne GODZY
     x0, x1, z0, z1 = SWIN
     xc = (x0 + x1) / 2
-    for nm, sz, loc in (('t', (x1 - x0 + 0.24, 0.16, 0.14), (xc, SY1 - 0.02, z1 + 0.07)), ('b', (x1 - x0 + 0.3, 0.24, 0.08), (xc, SY1 - 0.06, z0 - 0.04)),
-                        ('l', (0.12, 0.16, z1 - z0), (x0 - 0.06, SY1 - 0.02, (z0 + z1) / 2)), ('r', (0.12, 0.16, z1 - z0), (x1 + 0.06, SY1 - 0.02, (z0 + z1) / 2))):
+    for nm, sz, loc in (('t', (x1 - x0 + 0.24, 0.16, 0.14), (xc, SY1 - 0.05, z1 + 0.07)), ('b', (x1 - x0 + 0.3, 0.24, 0.08), (xc, SY1 - 0.08, z0 - 0.04)),
+                        ('l', (0.12, 0.16, z1 - z0), (x0 - 0.06, SY1 - 0.05, (z0 + z1) / 2)), ('r', (0.12, 0.16, z1 - z0), (x1 + 0.06, SY1 - 0.05, (z0 + z1) / 2))):
         cz.box(f'sa_win{nm}', sz, loc, white, bevel=0.01, ol=0.004)
-    cz.box('sa_winmull', (0.04, 0.04, z1 - z0), (xc, SY1 + 0.02, (z0 + z1) / 2), white, bevel=0, ol=0.002)
+    cz.box('sa_winmull', (0.04, 0.04, z1 - z0), (xc, SY1 - 0.03, (z0 + z1) / 2), white, bevel=0, ol=0.002)
     for z in (z0 + 0.55, z0 + 1.1, z0 + 1.65):
-        cz.box(f'sa_wintr{z:.2f}', (x1 - x0, 0.04, 0.04), (xc, SY1 + 0.02, z), white, bevel=0, ol=0.002)
+        cz.box(f'sa_wintr{z:.2f}', (x1 - x0, 0.04, 0.04), (xc, SY1 - 0.03, z), white, bevel=0, ol=0.002)
     for side, x in (('L', x0 - 0.3), ('R', x1 + 0.3)):
         cz.prop('stage_curtain', f'sa_cur{side}', (x, SY1 - 0.18, 0), kind='drape', width=0.8, height=3.3, folds=5, side=side, color='#3e5a8a')
     cz.box('sa_outside_facade', (9, 0.3, 9), (xc, SY1 + 5.0, 4.0), cz.toon('sa_outside_facadem', '#9aa0aa', tex='grain', tex_strength=0.1), bevel=0, ol=0)
