@@ -37,8 +37,8 @@ R=$("$CZ_BROWSER" --headless=new --no-sandbox --use-gl=angle --use-angle=gl-egl 
 echo "   WebGL : $R"
 case "$R" in *[Ss]wift[Ss]hader*|*llvmpipe*|*[Ss]oftware*|*no-webgl*|"") echo "!! Chrome dessine sur le processeur, pas sur la carte (rendu trop lent). ARRÊT."; fin 10; exit 10;; esac
 etape "5/6 Rendu de $PROJET"
-python3 videos/_konvwa/konvwa.py rendu "$PROJET" 2>&1 | tail -60
-CODE=${PIPESTATUS[0]}
+python3 videos/_konvwa/konvwa.py rendu "$PROJET" 2>&1
+CODE=$?
 etape "6/6 Résultat"
 MP4=$(ls -t videos/$PROJET/renders/*.mp4 2>/dev/null | head -1)
 if [ -n "$MP4" ]; then cp "$MP4" "$W/out/"; echo "MP4_PRET=$(basename "$MP4")"; ls -l "$MP4"; else CODE=1; echo "!! pas de MP4"; fi
