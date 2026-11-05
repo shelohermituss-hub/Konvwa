@@ -1,7 +1,14 @@
 {
  "language": "fr",
  "settings": {
-  "format": "vertical"
+  "format": "vertical",
+  "post": {
+   "vignette": 0.12,
+   "bloom": 0.35
+  },
+  "characters": {
+   "palette": "white"
+  }
  },
  "scenes": [
   "s01"

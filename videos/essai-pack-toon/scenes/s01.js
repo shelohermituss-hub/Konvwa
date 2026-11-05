@@ -5,6 +5,7 @@ const F = 1 / 30;
 
 // ---- 1 : la salle, en plein jour, rayons de soleil ----
 shot({ say: 'En Haïti, il y a eu un vrai duc', build(S) {
+  S.grade({ sat: 1.15, bright: 1.12, contrast: 1.04 });
   const P = S.place('museum-hall', { seed: 3, mood: 'warm', density: 1.4 });
   const C = P.spots.hall;
   S.fx('godrays', { at: [-1.2, 3.2, -2.5], size: [1.2, 2.4], dir: [0.5, -1, 0.2], length: 5, count: 5, dust: true });
@@ -18,6 +19,7 @@ shot({ say: 'En Haïti, il y a eu un vrai duc', build(S) {
 
 // ---- 2 : la nuit bleue, torches orange, le général se proclame roi ----
 shot({ say: 'Dans le Nord, le général', build(S) {
+  S.grade({ sat: 1.7, bright: 1.4, contrast: 1.04, lift: [0.03, 0.03, 0.07] });
   const P = S.place('old-town', { seed: 5, era: 'medieval', mood: 'night' });
   const king = S.char('main', { at: P.spots.fountain.slice(0, 2), ry: P.spots.fountain[2], face: 'determined', outfit: 'knight' });
   king.gesture('armsUp', S.at('roi'));
@@ -30,6 +32,7 @@ shot({ say: 'Dans le Nord, le général', build(S) {
 
 // ---- 3 : la foule des nobles, coucher de soleil ----
 shot({ say: 'Alors, une semaine plus tard', build(S) {
+  S.grade({ sat: 1.45, bright: 1.4, contrast: 1.04, lift: [0.06, 0.05, 0.05] });
   const P = S.place('old-town', { seed: 8, era: 'medieval', mood: 'warm' });
   const [cx, cz] = P.spots.center;
   const ids = ['juno', 'dex', 'otis', 'rose', 'walt', 'priya', 'sam', 'lola', 'viktor', 'mei', 'hugo', 'ada'];
@@ -45,7 +48,8 @@ shot({ say: 'Alors, une semaine plus tard', build(S) {
 
 // ---- 4 : l'écu au premier plan flou, le duc ravi ----
 shot({ say: 'Chacun reçoit des armoiries', build(S) {
-  const P = S.place('museum-hall', { seed: 9, mood: 'cold', density: 1.3 });
+  S.grade({ sat: 1.3, bright: 1.2, contrast: 1.05, lift: [0.04, 0.04, 0.04] });
+  const P = S.place('museum-hall', { seed: 9, mood: 'warm', density: 1.3, wall: '#4fb3c8', floor: '#f2e2b8' });
   const duke = S.char('main', { at: P.spots.statue.slice(0, 2), ry: P.spots.statue[2], face: 'blissful', outfit: 'medieval' });
   const shield = S.prop('mug', { at: [-0.35, 1.2, 0.9], scale: 3 });
   duke.extra('sparkle', S.at('titre'), S.at('titre') + 1.2);
