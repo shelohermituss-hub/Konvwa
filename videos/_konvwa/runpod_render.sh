@@ -1,60 +1,148 @@
 #!/usr/bin/env bash
-# Rendu d'un film KONVWA (moteur Blender) sur une machine RunPod avec carte NVIDIA, puis le MP4 dans /workspace.
-# À coller dans le terminal web du Pod (modèle « RunPod PyTorch » ou tout Ubuntu avec GPU) :
-#   bash <(curl -fsSL https://raw.githubusercontent.com/<compte>/<dépôt>/<branche>/videos/_konvwa/runpod_render.sh) duc-marmelade
-# ou, si le dépôt est privé : copier ce fichier dans le Pod, puis  bash runpod_render.sh duc-marmelade
-# Le script demande un jeton GitHub (lecture seule) seulement si le dépôt n'est pas encore cloné. Rien n'est enregistré.
+# Rendu d'un film KONVWA (moteur Blender) sur une machine RunPod avec carte NVIDIA, puis le MP4 servi sur le port 8000.
+#   runpod_render.sh [--zip <lien Google Drive | identifiant | adresse .zip>] [<projet>]
+# - sans --zip : rend le film <projet> du dépôt (par défaut duc-marmelade) ;
+# - avec --zip : télécharge le zip du client, repère le dossier du projet (project.json + assemble.json), le range dans
+#   videos/<nom>/ et le rend.
+# Le journal complet est dans /workspace/render.log ; le MP4 et le journal sont servis par /workspace/out sur le port 8000
+# (adresse https://<id du pod>-8000.proxy.runpod.net/). Dernière ligne écrite : « KONVWA_FIN code=<n> ».
+# Aucun secret : le dépôt et le zip sont publics.
 set -euo pipefail
-PROJET="${1:-duc-marmelade}"
+ZIP="${KONVWA_ZIP:-}"
+PROJET=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --zip) ZIP="$2"; shift 2;;
+    *) PROJET="$1"; shift;;
+  esac
+done
 REPO="${KONVWA_REPO:-shelohermituss-hub/Konvwa}"
 BRANCHE="${KONVWA_BRANCHE:-ccr-84eb92fb-rldiwe}"
 BLV="${KONVWA_BLENDER:-5.2.3}"
 W=/workspace
+mkdir -p "$W/out"
 cd "$W"
+ln -sf "$W/render.log" "$W/out/render.log" 2>/dev/null || true
+export CZ_POST_RASTER=1      # sous-titres dessinés avec la police épaisse du pack (pas d'Arial Black sur Linux)
 
-echo "== 1/5 Paquets système (ffmpeg, bibliothèques d'affichage pour Blender sans écran)"
+etape() { echo; echo "== $(date -u +%H:%M:%S) $*"; }
+fin() { echo "KONVWA_FIN code=$1"; }
+
+etape "1/6 Paquets système"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq git curl ca-certificates ffmpeg xz-utils python3 python3-venv libegl1 libgl1 libglu1-mesa libxi6 libxrender1 libxkbcommon0 libsm6 libxfixes3 libxxf86vm1 >/dev/null
+apt-get install -y -qq git curl ca-certificates ffmpeg xz-utils unzip python3 python3-venv python3-pip \
+  libegl1 libgl1 libglu1-mesa libxi6 libxrender1 libxkbcommon0 libsm6 libxfixes3 libxxf86vm1 libx11-6 libxext6 >/dev/null
+# serveur du MP4 : seulement /workspace/out
+(cd "$W/out" && nohup python3 -m http.server 8000 >/dev/null 2>&1 &) || true
 
-echo "== 2/5 Blender $BLV"
+etape "2/6 Blender $BLV et la carte graphique"
 if [ ! -x "$W/blender/blender" ]; then
-  MAJ="${BLV%.*}"
-  curl -fsSL "https://download.blender.org/release/Blender${MAJ}/blender-${BLV}-linux-x64.tar.xz" -o /tmp/blender.tar.xz
+  MAJ="${BLV%.*}"; BASE="https://download.blender.org/release/Blender${MAJ}"; F="blender-${BLV}-linux-x64.tar.xz"
+  if ! curl -fsSLI "$BASE/$F" >/dev/null 2>&1; then
+    F=$(curl -fsSL "$BASE/" | grep -o 'blender-[0-9.]*-linux-x64.tar.xz' | sort -uV | tail -1)
+    echo "   $BLV introuvable, on prend $F"
+  fi
+  curl -fsSL "$BASE/$F" -o /tmp/blender.tar.xz
   mkdir -p "$W/blender" && tar -xJf /tmp/blender.tar.xz -C "$W/blender" --strip-components=1 && rm /tmp/blender.tar.xz
 fi
 export CZ_BLENDER="$W/blender/blender"
-# La carte graphique est-elle vue par Blender sans écran ? (sinon EEVEE tourne en logiciel : très lent)
+"$CZ_BLENDER" --version | head -1
+nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader 2>/dev/null || echo "   (nvidia-smi absent)"
 GPU=$("$CZ_BLENDER" -b --factory-startup --python-expr "import gpu; print('GPU=' + gpu.platform.renderer_get())" 2>/dev/null | grep '^GPU=' || true)
-echo "   $GPU"
+echo "   ${GPU:-GPU= (non lue)}"
 case "$GPU" in
-  *llvmpipe*|*softpipe*) echo "!! Blender ne voit pas la carte NVIDIA (rendu logiciel, très lent). Arrêt : envoie ce message à Claude."; exit 1;;
-  "") echo "   (carte non lue en mode sans écran : on continue, la vitesse du rendu dira si la carte travaille)";;
+  *llvmpipe*|*softpipe*) echo "!! Blender ne voit pas la carte NVIDIA (rendu logiciel, très lent). ARRÊT."; fin 10; exit 10;;
 esac
-nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader 2>/dev/null || true
 
-echo "== 3/5 Le dépôt KONVWA"
+etape "3/6 Le dépôt KONVWA (moteur et outils)"
 if [ ! -d "$W/Konvwa/.git" ]; then
-  if git ls-remote "https://github.com/$REPO.git" >/dev/null 2>&1; then
-    git clone --depth 1 -b "$BRANCHE" "https://github.com/$REPO.git" "$W/Konvwa"
-  else
-    read -rsp "Jeton GitHub (lecture seule, il ne sera pas enregistré) : " TOK; echo
-    git clone --depth 1 -b "$BRANCHE" "https://x-access-token:${TOK}@github.com/$REPO.git" "$W/Konvwa"
-    git -C "$W/Konvwa" remote set-url origin "https://github.com/$REPO.git"
-    unset TOK
-  fi
+  git clone --depth 1 -b "$BRANCHE" "https://github.com/$REPO.git" "$W/Konvwa"
 else
   git -C "$W/Konvwa" pull --ff-only || true
 fi
 cd "$W/Konvwa"
+python3 videos/_konvwa/konvwa.py installer >/tmp/installer.log 2>&1 || { tail -20 /tmp/installer.log; echo "!! installation des outils Python échouée"; fin 11; exit 11; }
 
-echo "== 4/5 Python des outils (Pillow, numpy, OpenCV, scipy)"
-python3 videos/_konvwa/konvwa.py installer >/dev/null
+if [ -n "$ZIP" ]; then
+  etape "4/6 Le zip du client"
+  ID=$(printf '%s' "$ZIP" | sed -nE 's#.*/d/([A-Za-z0-9_-]{20,}).*#\1#p; s#.*[?&]id=([A-Za-z0-9_-]{20,}).*#\1#p' | head -1)
+  [ -z "$ID" ] && case "$ZIP" in http*) ID="";; *) ID="$ZIP";; esac
+  if [ -n "$ID" ]; then URL="https://drive.usercontent.google.com/download?id=${ID}&export=download&confirm=t"; else URL="$ZIP"; fi
+  curl -fL -C - --retry 5 --retry-delay 3 -o "$W/projet.zip" "$URL" || true
+  if ! unzip -tq "$W/projet.zip" >/dev/null 2>&1 && [ -n "$ID" ]; then
+    echo "   le téléchargement direct a donné autre chose qu'un zip : essai avec gdown"
+    python3 -m pip install -q gdown && python3 -m gdown --id "$ID" -O "$W/projet.zip" || true
+  fi
+  unzip -tq "$W/projet.zip" >/dev/null 2>&1 || { echo "!! le fichier téléchargé n'est pas un zip lisible ($(ls -l "$W/projet.zip" 2>&1 | awk '{print $5}') octets)"; fin 12; exit 12; }
+  ls -l "$W/projet.zip" | awk '{print "   zip : " $5 " octets"}'
+  rm -rf "$W/projet" && mkdir -p "$W/projet"
+  unzip -q -o "$W/projet.zip" -d "$W/projet"
+  rm -f "$W/projet.zip"
+  echo "   projets trouvés (project.json + assemble.json) :"
+  RACINE=""
+  while IFS= read -r pj; do
+    d=$(dirname "$pj")
+    if [ -f "$d/assemble.json" ]; then echo "     $d"; [ -z "$RACINE" ] && RACINE="$d"; fi
+  done < <(find "$W/projet" -name project.json -not -path '*/node_modules/*' -not -path '*/_creatorize/*' | sort)
+  [ -z "$RACINE" ] && { echo "!! aucun dossier avec project.json et assemble.json dans le zip. Contenu :"; (cd "$W/projet" && find . -maxdepth 3 | head -40); fin 13; exit 13; }
+  B=$(basename "$RACINE")
+  [ "$RACINE" = "$W/projet" ] && B="film-client"
+  PROJET=$(printf '%s' "$B" | tr 'A-Z ' 'a-z-' | tr -cd 'a-z0-9_-')
+  [ -z "$PROJET" ] && PROJET="film-client"
+  [ -e "videos/$PROJET" ] && PROJET="${PROJET}-client"
+  cp -a "$RACINE" "videos/$PROJET"
+  echo "   projet : videos/$PROJET"
+else
+  PROJET="${PROJET:-duc-marmelade}"
+fi
+
+etape "5/6 Contrôles et banc d'essai de $PROJET"
 python3 videos/_konvwa/konvwa.py verifier || true
+INFO=$(python3 - "$PROJET" <<'EOF'
+import json, os, re, sys
+p = os.path.join('videos', sys.argv[1])
+m = json.load(open(os.path.join(p, 'project.json'), encoding='utf-8-sig'))
+a = json.load(open(os.path.join(p, 'assemble.json'), encoding='utf-8-sig'))
+style = m.get('konvwa', {}).get('style', 'blender')
+spans = []
+for s in a.get('shots', []):
+    t = open(os.path.join(p, s + '.py'), encoding='utf-8-sig').read()
+    mm = re.search(r'^F0\s*,\s*F1\s*=\s*(\d+)\s*,\s*(\d+)', t, re.M)
+    if mm: spans.append((s, int(mm.group(1)), int(mm.group(2))))
+total = max(b for _, _, b in spans) if spans else round(float(m.get('end', 0)) * 30)
+first = spans[0] if spans else ('s01', 1, 30)
+f0, f1 = first[1], first[2]
+mid = (f0 + f1) // 2
+snd = [os.path.exists(os.path.join(p, 'sons.json')), bool([f for f in os.listdir(os.path.join(p, 'audio')) if f.startswith('voice.')]) if os.path.isdir(os.path.join(p, 'audio')) else False]
+print(style, total, first[0], f'{f0 + 8},{mid},{f1 - 8}', int(snd[0]), int(snd[1]))
+EOF
+) || { echo "!! project.json / assemble.json illisibles"; fin 14; exit 14; }
+read -r STYLE TOTAL PREMIER FRAMES SONS VOIX <<<"$INFO"
+echo "   style $STYLE, $TOTAL images, premier plan $PREMIER, sons.json=$SONS, voix=$VOIX"
+case "$STYLE" in blender|mega) ;; *) echo "!! style « $STYLE » : ce script ne rend que les styles Blender."; fin 15; exit 15;; esac
+[ "$VOIX" = "0" ] && echo "   (!) pas de voix audio/voice.* : la vidéo sortira sans son"
+T0=$(date +%s)
+python3 videos/_konvwa/konvwa.py test "$PROJET" "$PREMIER" --frames "$FRAMES" --scale 1 --samples 48 2>&1 | tail -15 || true
+LOG=$(ls -dt "videos/$PROJET"/renders/test/${PREMIER}_r*/ 2>/dev/null | head -1)
+if [ -n "$LOG" ] && [ -f "$LOG/log.txt" ]; then
+  SPF=$(grep -oE '^CZ frame [0-9]+ [0-9.]+s' "$LOG/log.txt" | awk '{gsub("s","",$4); a[NR]=$4} END{ if (NR>=2) printf "%.1f", (a[NR]+a[NR-1])/2; else if (NR==1) printf "%.1f", a[1] }')
+  if [ -n "${SPF:-}" ]; then
+    ETA=$(python3 -c "print(round(float('$SPF')*$TOTAL/60))")
+    echo "   BANC D'ESSAI : $SPF s par image (pleine taille, 48 échantillons) -> ETA_RENDU_MIN=$ETA minutes pour $TOTAL images (un seul Blender ; le réglage automatique peut faire mieux)"
+  fi
+fi
 
-echo "== 5/5 Rendu de $PROJET (réglage automatique pour cette carte, puis les plans, le montage, le son)"
-python3 videos/_konvwa/konvwa.py rendu "$PROJET"
-cp "videos/$PROJET/renders/$PROJET.mp4" "$W/$PROJET.mp4"
-echo
-echo "Terminé : $W/$PROJET.mp4"
-echo "Télécharge-le depuis JupyterLab (panneau de fichiers à gauche, clic droit > Download), puis ARRÊTE le Pod (Stop / Terminate) pour ne plus payer."
+etape "6/6 Rendu complet de $PROJET"
+python3 videos/_konvwa/konvwa.py rendu "$PROJET" && CODE=0 || CODE=$?
+if [ "$CODE" = "0" ] && [ -f "videos/$PROJET/renders/$PROJET.mp4" ]; then
+  cp "videos/$PROJET/renders/$PROJET.mp4" "$W/out/$PROJET.mp4"
+  ls -l "$W/out/$PROJET.mp4" | awk '{print "   MP4 : " $5 " octets"}'
+  ffprobe -v error -show_entries stream=codec_type,width,height,r_frame_rate,duration -of compact "$W/out/$PROJET.mp4" || true
+  echo "MP4_PRET=$PROJET.mp4"
+  fin 0
+else
+  echo "!! le rendu a échoué (code $CODE)"
+  fin "${CODE:-1}"
+  exit "${CODE:-1}"
+fi
