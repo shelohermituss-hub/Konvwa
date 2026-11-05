@@ -813,7 +813,18 @@ def cmd_son(a):
         mp = music if os.path.isabs(music) else os.path.join(proj, music)
         mix += ['--music', mp, '--music-gain', str(cfg.get('musique_gain', -22))]
     print('Mixage (voix devant, fond baissé sous la voix, -14 LUFS)…')
-    subprocess.run(mix, check=True)
+    try:
+        subprocess.run(mix, check=True)
+    except subprocess.CalledProcessError as ex:
+        # filet : le mix du pack a échoué (souvent un ffmpeg plus ancien) -> mix simple, voix pleine + effets sous elle, -14 LUFS
+        print('(!) mix du pack échoué (%s) : mix simple de secours (voix + effets sous la voix, -14 LUFS)' % ex)
+        bed = os.path.join(A, 'sfx_bed.wav')
+        fm = os.path.join(A, 'final_mix.wav')
+        if os.path.exists(bed):
+            fc = '[1:a]volume=-6dB[b];[0:a][b]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11'
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', os.path.join(A, 'clean.wav'), '-i', bed, '-filter_complex', fc, '-ar', '48000', '-ac', '1', fm], check=True)
+        else:
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', os.path.join(A, 'clean.wav'), '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-ar', '48000', fm], check=True)
     print('Son prêt :', os.path.join(A, 'final_mix.wav'), '(le rendu l\'utilise à la place de la voix seule)')
     return 0
 
