@@ -27,7 +27,8 @@ node --version; "$CZ_BROWSER" --version
 etape "3/6 Le dépôt KONVWA"
 git clone --depth 1 -b "$BRANCHE" "https://github.com/$REPO.git" "$W/Konvwa" || { fin 11; exit 11; }
 cd "$W/Konvwa"
-python3 videos/_konvwa/konvwa.py installer >/tmp/installer.log 2>&1 || { tail -20 /tmp/installer.log; fin 11; exit 11; }
+python3 videos/_konvwa/konvwa.py installer >/tmp/installer.log 2>&1 || true      # (il se plaint de Blender, inutile ici)
+[ -x videos/_konvwa/.venv/bin/python ] || { tail -20 /tmp/installer.log; echo "!! outils Python non installés"; fin 11; exit 11; }
 [ -d "videos/$PROJET" ] || { echo "!! pas de projet videos/$PROJET dans le dépôt"; fin 13; exit 13; }
 etape "4/6 La carte graphique vue par Chrome"
 cat > /tmp/gpu.html <<'EOH'
