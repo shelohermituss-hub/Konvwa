@@ -32,3 +32,8 @@ Plage acceptée : P25-P75 des six films, ou ±15 % de la médiane.
 4. **Écart 9 reformulé** : on ne manque pas de teintes variées mais de contraste de luminosité entre ambiances : il faut de vraies séquences sombres (nuit bleue, ~13 % des images), pas seulement des teintes différentes.
 5. **Écart 8 (foule) rétrogradé** : les références montrent ~2 personnages par plan ; la densité du décor compte beaucoup plus que le nombre de figurants.
 6. **À refaire à pleine taille** : netteté, surfaces plates, netteté centre/bords (plan L1/L4, quelques images à l'échelle 1,0).
+
+## Après L1 (caméra)
+cadrages /10 s 6,03 -> 5,32 (dans la plage) ; gros plans/objets 7 % -> 30 % (cible ~24 %) ; vols penchés 0 -> 46 % (cible ~34 %) ;
+|pitch| > 8° 8 % -> 83 % (peut-être trop : à rééquilibrer) ; vol médian 14 (cible 10 : à raccourcir) ; tenue médiane 38,5 (cible 33,5).
+Restent pour L2-L4 : netteté (images de contrôle à 30 %), surfaces plates, nuits (1,9 % contre 12,8 %), contraste entre séquences.
