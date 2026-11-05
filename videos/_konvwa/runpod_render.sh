@@ -69,10 +69,13 @@ if [ -n "$ZIP" ]; then
   ID=$(printf '%s' "$ZIP" | sed -nE 's#.*/d/([A-Za-z0-9_-]{20,}).*#\1#p; s#.*[?&]id=([A-Za-z0-9_-]{20,}).*#\1#p' | head -1)
   [ -z "$ID" ] && case "$ZIP" in http*) ID="";; *) ID="$ZIP";; esac
   if [ -n "$ID" ]; then URL="https://drive.usercontent.google.com/download?id=${ID}&export=download&confirm=t"; else URL="$ZIP"; fi
-  curl -fL -C - --retry 5 --retry-delay 3 -o "$W/projet.zip" "$URL" || true
+  for essai in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    curl -fL -C - -sS --speed-limit 100000 --speed-time 30 -o "$W/projet.zip" "$URL" && break
+    echo "   téléchargement interrompu (essai $essai, $(stat -c %s "$W/projet.zip" 2>/dev/null) octets) : reprise"; sleep 5
+  done
   if ! unzip -tq "$W/projet.zip" >/dev/null 2>&1 && [ -n "$ID" ]; then
     echo "   le téléchargement direct a donné autre chose qu'un zip : essai avec gdown"
-    python3 -m pip install -q gdown && python3 -m gdown --id "$ID" -O "$W/projet.zip" || true
+    python3 -m pip install -q gdown && python3 -m gdown "$ID" -O "$W/projet.zip" || true
   fi
   unzip -tq "$W/projet.zip" >/dev/null 2>&1 || { echo "!! le fichier téléchargé n'est pas un zip lisible ($(ls -l "$W/projet.zip" 2>&1 | awk '{print $5}') octets)"; fin 12; exit 12; }
   ls -l "$W/projet.zip" | awk '{print "   zip : " $5 " octets"}'
