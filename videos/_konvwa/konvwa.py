@@ -5,6 +5,7 @@
 #     leur moteur servi tel quel à un Chrome / Edge sans fenêtre par web.mjs (comme le fait l'application Creatorize).
 # Une commande par étape ; le même outil sur le PC Windows du client et sur le serveur cloud de Claude.
 #
+#   python videos/_konvwa/konvwa.py pack <mots…> [--zone skill|bibliothèque|support|studio|stylekit|blender] [-n 12]   CHERCHE dans tout le pack (à lancer avant chaque étape)
 #   python videos/_konvwa/konvwa.py styles                         la liste des styles, leur moteur, leur skill, leurs formats
 #   python videos/_konvwa/konvwa.py verifier                       Blender, Python (Pillow, numpy, OpenCV, scipy), ffmpeg, Node, Chrome
 #   python videos/_konvwa/konvwa.py installer [--bpy]              crée videos/_konvwa/.venv avec ce qu'il faut
@@ -615,6 +616,43 @@ def rendu_web(a, proj, st, meta):
     return 0
 
 
+def cmd_pack(a):
+    """Cherche dans TOUT le pack Creatorize (skills et références des styles, PITFALLS, bibliothèque, base de connaissances,
+    Style Studio, style kit) : à lancer avant chaque étape de travail, pour appliquer ce que le pack sait déjà."""
+    mots = [m.lower() for m in a.mots]
+    zones = [('skill', 'skill'), ('bibliothèque', 'library'), ('base de connaissances', 'support'), ('studio', 'studio'),
+             ('style kit', 'stylekit'), ('blender', 'blender/engine'), ('blender', 'blender/ref')]
+    if a.zone:
+        zones = [z for z in zones if a.zone.lower() in z[0].lower() or a.zone.lower() in z[1].lower()]
+    res = []
+    for nom, rel in zones:
+        base = os.path.join(PACK, rel)
+        for racine, dirs, fichiers in os.walk(base):
+            dirs[:] = [d for d in dirs if d not in ('node_modules', '__pycache__', 'assets', 'fonts', 'samples')]
+            for f in fichiers:
+                if not f.lower().endswith(('.md', '.txt', '.json', '.py')) or f in ('index.js',):
+                    continue
+                ch = os.path.join(racine, f)
+                try:
+                    if os.path.getsize(ch) > 400000: continue
+                    t = open(ch, encoding='utf-8', errors='ignore').read()
+                except OSError:
+                    continue
+                bas = t.lower()
+                sc = sum(bas.count(m) for m in mots if m in bas)
+                if all(m in bas or m in ch.lower() for m in mots) and sc:
+                    ligne = next((l.strip() for l in t.splitlines() if all(m in l.lower() for m in mots[:1])), '')
+                    res.append((sc + (50 if all(m in ch.lower() for m in mots) else 0), os.path.relpath(ch, VIDEOS), nom, ligne[:150]))
+    res.sort(reverse=True)
+    if not res:
+        print('rien dans le pack pour : ' + ' '.join(mots) + '  (essaie un mot plus court, ou en anglais : le pack est en anglais)'); return 0
+    print('PACK : %d fichiers pour « %s » (les %d premiers)' % (len(res), ' '.join(mots), min(a.n, len(res))))
+    for sc, ch, nom, l in res[:a.n]:
+        print('  [%s] %s  (%d)\n      %s' % (nom, ch, sc, l))
+    print("LIS les fichiers cités (Read) avant d'écrire ; le pack prime sur la mémoire.")
+    return 0
+
+
 def cmd_rendu(a):
     proj = project_dir(a.projet)
     sid, st, meta0 = style_of(proj)
@@ -767,6 +805,7 @@ def cmd_son(a):
 def main():
     ap = argparse.ArgumentParser(prog='konvwa', description='Fabrication des vidéos KONVWA avec tous les moteurs du pack Creatorize.')
     sp = ap.add_subparsers(dest='cmd', required=True)
+    p = sp.add_parser('pack'); p.add_argument('mots', nargs='+'); p.add_argument('--zone'); p.add_argument('-n', type=int, default=12); p.set_defaults(fn=cmd_pack)
     sp.add_parser('styles').set_defaults(fn=cmd_styles)
     sp.add_parser('verifier').set_defaults(fn=cmd_verifier)
     p = sp.add_parser('installer'); p.add_argument('--bpy', action='store_true', help='aussi Blender en module (serveur sans Blender)'); p.set_defaults(fn=cmd_installer)
