@@ -61,7 +61,36 @@ def to_local(c, t, world):
     return (d.x, d.y - c.T['bodyy'].at(t), d.z - (c.hh + c.T['bodyz'].at(t)))
 
 
-def wall_y(name, y, x0, x1, H, mat, holes=(), t=0.1):
+def _ink_box(name, size, loc):
+    cz.box(name, size, loc, cz.glow('kv_inkline', '#0f0c0a', 1.0), bevel=0, ol=0)
+
+
+def edge_ink(name, axis, fixed, a0, a1, H, t, holes, side):
+    """L'encre des références : fines bandes noires sur les arêtes d'un mur (pied, plafond, angles, pourtour des trous).
+    axis 'y' : mur le long de X à y=fixed ; axis 'x' : mur le long de Y à x=fixed. side : +1 / -1 vers l'intérieur de la salle."""
+    w, e = 0.018, 0.004
+    off = side * (t / 2 + e)
+    def seg(nm, lo, hi, z, h):      # bande horizontale de lo à hi, centrée en hauteur z
+        if hi - lo < 0.02: return
+        c = (lo + hi) / 2
+        if axis == 'y': _ink_box(f'{name}_{nm}', (hi - lo, 0.006, h), (c, fixed + off, z))
+        else: _ink_box(f'{name}_{nm}', (0.006, hi - lo, h), (fixed + off, c, z))
+    def vert(nm, u, z0, z1):        # bande verticale à la position u le long du mur
+        if axis == 'y': _ink_box(f'{name}_{nm}', (w, 0.006, z1 - z0), (u, fixed + off, (z0 + z1) / 2))
+        else: _ink_box(f'{name}_{nm}', (0.006, w, z1 - z0), (fixed + off, u, (z0 + z1) / 2))
+    low = sorted((h[0], h[1]) for h in holes if h[2] <= 0.001)      # trous qui touchent le sol (portes)
+    cur = a0
+    for k, (ha, hb) in enumerate(low):
+        seg(f'base{k}', cur, ha, 0.02, w); cur = hb
+    seg('base_end', cur, a1, 0.02, w)
+    seg('top', a0, a1, H - 0.02, w)
+    vert('cornerA', a0 + 0.01, 0, H); vert('cornerB', a1 - 0.01, 0, H)
+    for k, (ha, hb, za, zb) in enumerate(holes):                    # pourtour des trous
+        seg(f'h{k}lo', ha, hb, za, w); seg(f'h{k}hi', ha, hb, zb, w)
+        vert(f'h{k}a', ha, za, zb); vert(f'h{k}b', hb, za, zb)
+
+
+def wall_y(name, y, x0, x1, H, mat, holes=(), t=0.1, frame_ink=True):
     """Mur le long de X en y, avec de vrais trous rectangulaires [(xa, xb, za, zb)] (portes, fenêtres : la lumière entre)."""
     xs = sorted({x0, x1} | {h[0] for h in holes} | {h[1] for h in holes})
     for i in range(len(xs) - 1):
@@ -75,9 +104,11 @@ def wall_y(name, y, x0, x1, H, mat, holes=(), t=0.1):
             cz.box(f'{name}_{i}lo', (b - a, t, za), ((a + b) / 2, y, za / 2), mat, bevel=0, ol=0)
         if zb < H - 0.001:
             cz.box(f'{name}_{i}hi', (b - a, t, H - zb), ((a + b) / 2, y, (H + zb) / 2), mat, bevel=0, ol=0)
+    if frame_ink:
+        edge_ink(name + '_ink', 'y', y, x0, x1, H, t, holes, 1 if y < 0 else -1)
 
 
-def wall_x(name, x, y0, y1, H, mat, holes=(), t=0.1):
+def wall_x(name, x, y0, y1, H, mat, holes=(), t=0.1, frame_ink=True):
     """Mur le long de Y en x, avec de vrais trous [(ya, yb, za, zb)]."""
     ys = sorted({y0, y1} | {h[0] for h in holes} | {h[1] for h in holes})
     for i in range(len(ys) - 1):
@@ -91,6 +122,8 @@ def wall_x(name, x, y0, y1, H, mat, holes=(), t=0.1):
             cz.box(f'{name}_{i}lo', (t, b - a, za), (x, (a + b) / 2, za / 2), mat, bevel=0, ol=0)
         if zb < H - 0.001:
             cz.box(f'{name}_{i}hi', (t, b - a, H - zb), (x, (a + b) / 2, (H + zb) / 2), mat, bevel=0, ol=0)
+    if frame_ink:
+        edge_ink(name + '_ink', 'x', x, y0, y1, H, t, holes, 1 if x < 0 else -1)
 
 
 def dress(modname, **kw):

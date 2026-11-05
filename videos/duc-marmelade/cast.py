@@ -309,7 +309,7 @@ def hair_bun(color='#14100c'):
 
 def hair_spiky(color='#3a2410'):
     """Cheveux en pointes (sept pointes autour de la tête, une mèche dressée)."""
-    return ch.hair_cap(color, front=0.7, sides=0.05, back=-0.7, thick=0.03, puff=1.08, spikes=7, tuft=(0.13, -12))
+    return ch.hair_cap(color, front=0.7, sides=0.05, back=-0.7, thick=0.03, puff=1.1, spikes=7)
 
 
 def hair_tuft(color='#7a3a1a'):

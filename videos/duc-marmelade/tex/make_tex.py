@@ -27,8 +27,12 @@ def hexc(h, a=255):
     return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)) + (a,)
 
 
+MOTTLE_SCALE = float(os.environ.get('MOTTLE_SCALE', '0.35'))   # 1 = taches d'origine ; 0,35 = aplats presque propres (le style des références)
+
+
 def mottle(img, amount=18, blobs=260, seed=1, r=(20, 90)):
     """Taches douces de peinture (variation de valeur), dessinées en RGBA sur l'image RGB."""
+    amount = max(4, int(amount * MOTTLE_SCALE))
     rnd = random.Random(seed)
     w, h = img.size
     lay = Image.new('RGBA', img.size, (0, 0, 0, 0))

@@ -15,8 +15,8 @@ def build(ctx):
     import sets
     W = cz.words()
     at = lambda w, n=1, after=0.0: cz.at(W, w, n, after)['start']
-    cz.setup(B1, world='#4a5070', world_strength=0.35)
-    sets.salon()
+    cz.setup(B1, world='#2a3070', world_strength=0.3)
+    sets.salon('nuit')
     R, G, B, gz, bowl = salon_cast.stage()
     for c in (R, G):
         c.face(-1, 'unimpressed')

@@ -16,8 +16,8 @@ def build(ctx):
     import sets
     W = cz.words()
     at = lambda w, n=1, after=0.0: cz.at(W, w, n, after)['start']
-    cz.setup(F1, world='#cdeef2', world_strength=0.3)
-    sets.trone('jour', 'hidden')
+    cz.setup(F1, world='#3a4a9a', world_strength=0.3)
+    sets.trone('nuit', 'hidden')
     import bpy
     bpy.context.view_layer.update()
 

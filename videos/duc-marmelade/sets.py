@@ -41,9 +41,10 @@ def trone(mode='jour', shields='all'):
     """La salle du trône. mode 'jour' (après-midi doré) ou 'soir' (tombée du jour, violet et braise).
     shields : 'none' (mur nu, avant la noblesse), 'all' (le mur plein), 'hidden' (construits, cachés : la séquence les fait apparaître)."""
     SHIELDS.clear()
+    nuit = mode == 'nuit'     # nuit bleu-violet lumineuse (lune par les fenêtres, bougies chaudes)
     soir = mode == 'soir'
     floor = cz.toon('tr_floorm', '#ffffff', img=T('floor_checker.png'), proj='box', proj_scale=1 / 3.0)
-    wall = cz.toon('tr_wallm', '#ffffff', img=T('wall_ochre.png'), proj='box', proj_scale=0.5, tint='#d8cfc0' if soir else None)
+    wall = cz.toon('tr_wallm', '#ffffff', img=T('wall_ochre.png'), proj='box', proj_scale=0.5, tint='#d8cfc0' if soir else ('#5a6cc0' if nuit else None))
     white = cz.toon('tr_whitem', '#efe6d4', tex='grain', tex_strength=0.05)
     gold = cz.toon('tr_goldm', '#d2a23e', sheen=0.5)
     red = cz.toon('tr_redm', '#8a1824', sheen=0.3)
@@ -150,10 +151,14 @@ def trone(mode='jour', shields='all'):
         x, y2 = 0.75 * math.cos(a), 0.6 + 0.75 * math.sin(a)
         cz.cyl(f'tr_chand_c{k}', 0.025, 0.14, (x, y2, 3.86), white, ol=0.002, verts=10)
         cz.sphere(f'tr_chand_f{k}', 0.03, (x, y2, 4.04), cz.glow('tr_flamem', '#ffcf6a', 2.2), ol=0.0, segs=10, rings=6)
-    cz.light('tr_chand_light', 'POINT', (0, 0.6, 3.7), color='#ffc27a', power=260 if soir else 90, size=0.6, shadow=False)
+    cz.light('tr_chand_light', 'POINT', (0, 0.6, 3.7), color='#ffc27a', power=260 if soir else (130 if nuit else 90), size=0.6, shadow=False)
 
     # LA LUMIÈRE
-    if soir:
+    if nuit:
+        cz.light('tr_sun', 'SUN', (X0 - 4, -0.5, 5.4), color='#8fa8ff', power=1.6, size=1.0, target=(X0 + 3.2, 1.6, 0.0))
+        cz.light('tr_fill', 'AREA', (3.4, -3.2, 4.2), color='#5a68d0', power=800, size=5, target=(0, 1.5, 1.0))
+        cz.light('tr_rim', 'AREA', (2.8, 4.6, 4.2), color='#ff9a5a', power=620, size=2.5, target=(0, 3.0, 1.2))
+    elif soir:
         cz.light('tr_sun', 'SUN', (X0 - 4, 0.5, 2.6), color='#ff8a4a', power=3.0, size=3, target=(X0 + 4.5, 1.6, 0.0))
         cz.light('tr_fill', 'AREA', (3.0, -3.0, 4.2), color='#7a6ad8', power=1400, size=5, target=(0, 1.5, 1.0))
         cz.light('tr_rim', 'AREA', (2.5, 4.4, 4.0), color='#ff9a5a', power=500, size=2.5, target=(0, 3.0, 1.2))
@@ -193,10 +198,10 @@ def armchair(name, loc, yaw, velvet='#5a2a6a', wood='#4a2414', seat_h=0.4):
     return root
 
 
-def salon():
+def salon(mode='jour'):
     """Le salon parisien de 1811 : papier peint lilas, fenêtre sur la rue (l'enseigne GODZY en face), cheminée qui
     éclaire, carte de France encadrée, guéridon et soupière, le fauteuil de BOUILLON."""
-    wall = cz.toon('sa_wallm', '#ffffff', img=T('wall_salon.png'), proj='box', proj_scale=0.6)
+    wall = cz.toon('sa_wallm', '#ffffff', img=T('wall_salon.png'), proj='box', proj_scale=0.6, tint='#6c7cc0' if mode == 'nuit' else None)
     floor = cz.toon('sa_floorm', '#7a4a2a', pattern=('planks', 1.0, 0.12, '#3e2414'), tex='wood', tex_scale=2, tex_strength=0.12)
     white = cz.toon('sa_whitem', '#ece4d4', tex='grain', tex_strength=0.05)
     gold = cz.toon('tr_goldm', '#d2a23e', sheen=0.5)
@@ -266,9 +271,12 @@ def salon():
         a = math.pi * 2 * k / 6
         cz.sphere(f'sa_chand_f{k}', 0.025, (0.45 * math.cos(a), 0.4 + 0.45 * math.sin(a), 2.95), cz.glow('tr_flamem', '#ffcf6a', 2.2), ol=0.0, segs=10, rings=6)
     # LA LUMIÈRE : jour gris froid par la fenêtre (clé), le feu (contre chaud), un fill violet bas
-    cz.light('sa_window', 'AREA', (xc, SY1 + 0.6, 2.2), rot=(0, 0, 0), color='#9cb4ff', power=900, size=2.2, target=(0.3, 0.4, 0.8))
-    cz.light('sa_sun', 'SUN', (xc, SY1 + 4.0, 5.0), color='#c8d6ff', power=2.2, size=4, target=(xc + 0.8, 0.8, 0.0))
-    cz.light('sa_fill', 'AREA', (2.5, -2.6, 2.6), color='#a58ad8', power=260, size=3, target=(0, 0.8, 1.0))
+    nuit = mode == 'nuit'
+    cz.light('sa_window', 'AREA', (xc, SY1 + 0.6, 2.2), rot=(0, 0, 0), color='#5a70d8' if nuit else '#9cb4ff', power=330 if nuit else 900, size=2.2, target=(0.3, 0.4, 0.8))
+    cz.light('sa_sun', 'SUN', (xc, SY1 + 4.0, 5.0), color='#8aa0ff' if nuit else '#c8d6ff', power=0.9 if nuit else 2.2, size=4, target=(xc + 0.8, 0.8, 0.0))
+    cz.light('sa_fill', 'AREA', (2.5, -2.6, 2.6), color='#7a5ad8' if nuit else '#a58ad8', power=200 if nuit else 260, size=3, target=(0, 0.8, 1.0))
+    if nuit:
+        cz.light('sa_chand_light', 'POINT', (0, 0.4, 2.7), color='#ffc27a', power=160, size=0.5, shadow=False)
     cz.no_shadow(('glass', 'pane', 'sky', 'outside'))
 
 
