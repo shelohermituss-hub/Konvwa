@@ -36,6 +36,11 @@ apt-get install -y -qq git curl ca-certificates ffmpeg xz-utils unzip python3 py
 # serveur du MP4 : seulement /workspace/out
 (cd "$W/out" && nohup python3 -m http.server 8000 >/dev/null 2>&1 &) || true
 
+# ffmpeg d'Ubuntu 22.04 (4.4) ne sait pas le « sidechaincompress » du mix du pack : on prend un ffmpeg statique récent (sinon le mix de secours de konvwa est utilisé).
+if ! ffmpeg -hide_banner -f lavfi -i "sine=d=0.2" -f lavfi -i "sine=d=0.2" -filter_complex "[0:a]apad[a];[1:a]apad[b];[a][b]sidechaincompress[o]" -map "[o]" -f null - >/dev/null 2>&1; then
+  ( cd /tmp && curl -fsSL -o ff.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && tar xf ff.tar.xz && cp ffmpeg-*-static/ffmpeg ffmpeg-*-static/ffprobe /usr/local/bin/ && echo "   ffmpeg récent installé" ) || echo "   (ffmpeg récent non installé : mix de secours)"
+fi
+
 etape "2/6 Blender $BLV et la carte graphique"
 if [ ! -x "$W/blender/blender" ]; then
   MAJ="${BLV%.*}"; BASE="https://download.blender.org/release/Blender${MAJ}"; F="blender-${BLV}-linux-x64.tar.xz"
