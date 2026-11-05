@@ -17,8 +17,8 @@ from mathutils import Matrix, Vector
 import char as ch
 import cz
 
-SKIN_HT = os.environ.get('KV_SKIN', '#b98a66')      # teint des Haïtiens (KV_SKIN=#ffffff : la tête blanche du style)
-SKIN_EU = os.environ.get('KV_SKIN_EU', '#f2dcc8')   # teint des Européens
+SKIN_HT = os.environ.get('KV_SKIN', '#f4f3ef')      # teint des Haïtiens (KV_SKIN=#ffffff : la tête blanche du style)
+SKIN_EU = os.environ.get('KV_SKIN_EU', '#f4f3ef')   # teint des Européens
 GOLD = '#d9a72e'
 
 
@@ -297,6 +297,26 @@ def short_hair(color='#1a1210', front=0.66):
     return ch.hair_cap(color, front=front, sides=0.02, back=-0.7, thick=0.022, puff=1.04)
 
 
+def hair_afro(color='#14100c', puff=1.3):
+    """Coiffure afro : gros nuage de cheveux qui élargit la silhouette."""
+    return ch.hair_cap(color, front=0.74, sides=0.1, back=-0.55, thick=0.05, puff=puff)
+
+
+def hair_bun(color='#14100c'):
+    """Cheveux tirés en arrière avec un chignon sur le haut du crâne."""
+    return ch.hair_cap(color, front=0.7, sides=0.05, back=-0.7, thick=0.022, puff=1.04, bun=(0.085, 1.16, 0.0))
+
+
+def hair_spiky(color='#3a2410'):
+    """Cheveux en pointes (sept pointes autour de la tête, une mèche dressée)."""
+    return ch.hair_cap(color, front=0.7, sides=0.05, back=-0.7, thick=0.03, puff=1.08, spikes=7, tuft=(0.13, -12))
+
+
+def hair_tuft(color='#7a3a1a'):
+    """Cheveux courts avec une mèche qui se dresse sur le front."""
+    return ch.hair_cap(color, front=0.66, sides=0.02, back=-0.7, thick=0.022, puff=1.04, bangs=0.18, part=0.2, tuft=(0.1, 18))
+
+
 def whiskers(color='#3a2a20'):
     """Favoris (côtelettes) le long des joues."""
     def build(c):
@@ -311,37 +331,37 @@ def whiskers(color='#3a2a20'):
 # ---------------- les personnages
 def henri(name='henri'):
     return ch.Char(name, shirt='#1d3f8f', skin=SKIN_HT, torso=(0.172, 0.5), shoe='#14100c',
-                   hair=short_hair('#14100c', 0.68),
+                   hair=short_hair('#d8d4cc', 0.7),
                    extras=ch.combo(coat(GOLD, 5, lapel='#c21f2a'), epaulettes(), sash('#c21f2a'), star(), crown()),
                    face_style={'brow_w': 1.12})
 
 
 def marmelade(name='marmelade'):
     return ch.Char(name, shirt='#e2731c', skin=SKIN_HT, torso=(0.18, 0.46), belly=1.22, shoe='#3a2416',
-                   hair=short_hair('#1a1210', 0.66),
+                   hair=hair_tuft('#7a3a1a'),
                    extras=ch.combo(coat(GOLD, 4, lapel='#b84f10', vest='#f3e6c4'), chain(), bicorne('#16120f', '#f08a1c')),
                    face_style={'brow_w': 1.05})
 
 
 def limonade(name='limonade'):
     return ch.Char(name, shirt='#e8c92a', skin=SKIN_HT, torso=(0.15, 0.5), shoe='#2a1a10',
-                   hair=short_hair('#1a1210', 0.7),
+                   hair=hair_spiky('#3a2410'),
                    extras=ch.combo(coat('#2f8a3a', 4, lapel='#c9a614'), sash('#2f8a3a'), spectacles('#2a1a10', 0.075)),
                    face_style={'brow_w': 1.0})
 
 
-def noble(name, color, lapel, hair='#1a1210'):
+def noble(name, color, lapel, hair=None):
     return ch.Char(name, shirt=color, skin=SKIN_HT, torso=(0.165, 0.47), shoe='#2a1a10',
-                   hair=short_hair(hair, 0.66), extras=ch.combo(coat(GOLD, 4, lapel=lapel), chain(False)),
+                   hair=hair or short_hair('#1a1210', 0.66), extras=ch.combo(coat(GOLD, 4, lapel=lapel), chain(False)),
                    face_style={'brow_w': 1.0})
 
 
 def plaisance(name='plaisance'):
-    return noble(name, '#3f9a4c', '#256b30')
+    return noble(name, '#3f9a4c', '#256b30', hair_afro('#14100c'))
 
 
 def limbe(name='limbe'):
-    return noble(name, '#1f9aa0', '#14686c')
+    return noble(name, '#1f9aa0', '#14686c', hair_bun('#14100c'))
 
 
 def rieur(name='rieur'):
@@ -367,4 +387,4 @@ def bouillon(name='bouillon'):
 
 def ouvrier(name, shirt, hat='#d8b25a'):
     return ch.Char(name, shirt=shirt, skin=SKIN_HT, torso=(0.16, 0.45), shoe='#5a3a22',
-                   hair=short_hair('#14100c', 0.68), extras=strawhat(hat), face_style={'brow_w': 1.0})
+                   hair=short_hair(['#14100c', '#4a2a14', '#7a3a1a', '#2a2a2e'][sum(map(ord, name)) % 4], 0.68), extras=strawhat(hat), face_style={'brow_w': 1.0})
