@@ -63,10 +63,9 @@ def build(ctx):
     c = cam.Cam(lens=30, fstop=2.6, min_fstop=2.4, bounds=((sets.X0 + 0.2, sets.Y0 + 0.2, 0.3), (sets.X1 - 0.2, sets.Y1 - 0.2, sets.H - 0.25)))
     hh, mh = (Hn.head, (0, 0, 0)), (M.head, (0, 0, 0))
     mid = (-0.12, 1.4, 1.0)
-    c.frame(20.35, (-0.6, -1.6, 1.25), mid, lens=26, focus=mid, fly=0, creep=0.0019, fstop=3.0)
-    c.frame(22.38, (-1.05, -0.6, 1.0), (-0.42, 0.75, 0.74), lens=30, focus=sh, fly=14, creep=0.0016, fstop=2.8)
-    c.shot(23.48, mh, 'mcu', yaw=16, rel=M, pitch=3, lens=32, head_y=0.42, at=23.48, focus=mh, fly=10, creep=0.0022)
+    c.frame(20.35, (-0.6, -1.6, 1.25), mid, lens=26, focus=mid, fly=0, creep=0.0019, fstop=3.0, roll=-3)
+    c.shot(23.48, mh, 'cu', yaw=16, rel=M, pitch=-12, roll=4, lens=32, head_y=0.42, at=23.48, focus=mh, fly=24, creep=0.0022)
     tx, ty = sets.MAP_TABLE
-    c.frame(24.55, (tx - 0.1, ty - 0.3, 2.35), (tx - 0.1, ty - 0.02, sets.MAP_TOP), lens=17, focus=(tx, ty, sets.MAP_TOP), fly=12, creep=0.0016, fstop=5.0)
+    c.frame(24.55, (tx - 0.1, ty - 0.3, 2.35), (tx - 0.1, ty - 0.02, sets.MAP_TOP), lens=17, focus=(tx, ty, sets.MAP_TOP), fly=12, creep=0.0016, fstop=5.0, roll=0)
     c.bake(F0, F1)
     return F0, F1

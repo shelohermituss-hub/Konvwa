@@ -71,12 +71,12 @@ def build(ctx):
 
     c = cam.Cam(lens=30, fstop=2.6, min_fstop=2.4, bounds=((sets.X0 + 0.2, sets.Y0 + 0.2, 0.3), (sets.X1 - 0.2, sets.Y1 - 0.2, sets.H - 0.25)))
     mh, lh, hh = (M.head, (0, 0, 0)), (L.head, (0, 0, 0)), (Hn.head, (0, 0, 0))
-    c.shot(0.0, mh, 'ms', yaw=18, rel=M, pitch=4, lens=30, head_y=0.36, head_x=0.45, focus=mh, fly=0, creep=0.0019)
-    c.shot(3.30, lh, 'ms', yaw=-16, rel=L, pitch=4, lens=30, head_y=0.36, head_x=0.55, focus=lh, fly=16, creep=0.0019)
+    c.shot(0.0, mh, 'mcu', yaw=18, rel=M, pitch=-11, roll=3, lens=30, head_y=0.36, head_x=0.45, focus=mh, fly=0, creep=0.0019)
+    c.shot(3.30, lh, 'mcu', yaw=-16, rel=L, pitch=-7, roll=-4, lens=30, head_y=0.36, head_x=0.55, focus=lh, fly=16, creep=0.0019)
     pq = sets.PLAQUE
-    c.frame(5.12, (0.25, 1.4, 2.4), pq, lens=32, focus=pq, fly=13, creep=0.0016)
-    c.frame(5.92, (1.7, -3.1, 1.55), (-1.1, 2.7, 1.15), lens=17, fstop=6.5, focus=(-1.0, 1.0, 1.0), fly=10, creep=0.0012)
-    c.shot(8.85, hh, 'ms', yaw=10, rel=Hn, pitch=3, lens=28, head_y=0.38, at=9.15, focus=hh, fly=16, creep=0.0019, fstop=2.6)
-    c.shot(10.25, hh, 'cu', yaw=-16, rel=Hn, pitch=-10, lens=32, head_y=0.42, focus=hh, fly=8, creep=0.0022)
+    c.frame(5.12, (0.25, 1.4, 2.4), pq, lens=32, focus=pq, fly=13, creep=0.0016, roll=-4)
+    c.frame(5.92, (1.7, -3.1, 1.55), (-1.1, 2.7, 1.15), lens=17, fstop=6.5, focus=(-1.0, 1.0, 1.0), fly=10, creep=0.0012, roll=0)
+    c.shot(8.85, hh, 'ms', yaw=10, rel=Hn, pitch=-6, roll=2, lens=28, head_y=0.38, at=9.15, focus=hh, fly=16, creep=0.0019, fstop=2.6)
+    c.shot(10.25, hh, 'cu', yaw=-16, rel=Hn, pitch=-16, roll=-5, lens=32, head_y=0.42, focus=hh, fly=8, creep=0.0022)
     c.bake(F0, F1)
     return F0, F1

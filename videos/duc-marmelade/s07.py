@@ -45,6 +45,6 @@ def build(ctx):
     c = cam.Cam(lens=30, fstop=2.6, min_fstop=2.4, bounds=((sets.X0 + 0.2, sets.Y0 + 0.2, 0.3), (sets.X1 - 0.2, sets.Y1 - 0.2, sets.H - 0.25)))
     c.frame(46.80, (lim[0] + 0.05, lim[1] - 1.05, 1.5), (lim[0] + 0.05, ty + 0.62, 1.02), lens=24, focus=lim, fly=0, creep=0.0019, fstop=4.0)
     hh = (Hn.head, (0, 0, 0))
-    c.shot(48.15, hh, 'mcu', yaw=16, rel=Hn, pitch=2, lens=32, head_y=0.42, at=48.15, focus=hh, fly=14, creep=0.0024)
+    c.shot(48.15, hh, 'cu', yaw=16, rel=Hn, pitch=-13, roll=-4, lens=32, head_y=0.42, at=48.15, focus=hh, fly=14, creep=0.0024)
     c.bake(B0, B1)
     return F0, F1

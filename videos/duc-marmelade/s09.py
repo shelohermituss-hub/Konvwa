@@ -57,12 +57,11 @@ def build(ctx):
     c.obj.data.clip_end = 3000
     mk = (sets.CIT_MARK[0], sets.CIT_MARK[1] - 0.18, 0.75)
     c.frame(54.00, (16.0, -36.0, 9.0), (0.0, -3.0, 5.0), lens=22, fstop=11.0, focus=(0, -3, 5), fly=0, creep=0.0012)
-    c.frame(54.80, (mk[0] + 0.25, mk[1] - 1.25, 0.95), mk, lens=32, fstop=3.0, focus=mk, fly=12, creep=0.0016)
-    c.frame(55.70, (6.0, -25.0, 1.4), (0.0, 0.0, 6.8), lens=20, fstop=11.0, focus=(0, 0, 6), fly=14, creep=0.0016)
+    c.frame(54.80, (mk[0] + 0.25, mk[1] - 1.25, 0.95), mk, lens=32, fstop=3.0, focus=mk, fly=12, creep=0.0016, roll=-5)
     wh = (file_[1].head, (0, 0, 0))
-    c.frame(56.95, (3.6, -12.9, 1.65), (7.2, -9.9, 1.35), lens=24, fstop=4.0, focus=wh, fly=16, creep=0.0016)
-    c.frame(57.95, (-8.4, -10.6, 2.0), (3.0, -12.9, 0.7), lens=20, fstop=6.0, focus=(-3.0, -12.0, 0.7), fly=14, creep=0.0016)
+    c.frame(56.95, (3.6, -12.9, 1.65), (7.2, -9.9, 1.35), lens=24, fstop=4.0, focus=wh, fly=30, creep=0.0016, roll=3)
+    c.frame(57.95, (-8.4, -10.6, 2.0), (3.0, -12.9, 0.7), lens=20, fstop=6.0, focus=(-3.0, -12.0, 0.7), fly=14, creep=0.0016, roll=-3)
     vh = (v.head, (0, 0, 0))
-    c.frame(58.65, (6.2, -11.5, 1.55), (9.1, -13.1, 1.22), lens=26, fstop=3.0, focus=vh, fly=0, creep=0.0018)
+    c.frame(58.65, (6.2, -11.5, 1.55), (9.1, -13.1, 1.22), lens=26, fstop=3.0, focus=vh, fly=0, creep=0.0018, roll=4)
     c.bake(B0, B1)
     return F0, F1

@@ -22,7 +22,7 @@ def build(ctx):
     gc = (0.9, sets.THRONE_Y - 0.9, 0.02)
     c = cam.Cam(lens=30, fstop=3.0, min_fstop=2.4, bounds=((sets.X0 + 0.2, sets.Y0 + 0.2, 0.3), (sets.X1 - 0.2, sets.Y1 - 0.2, sets.H - 0.25)))
     cr = (sx, sy - 0.12, 1.1)
-    c.frame(61.68, (0.35, 0.6, 1.25), cr, lens=30, focus=cr, fly=0, creep=0.0022)
-    c.frame(63.25, (gc[0] + 0.1, gc[1] - 0.55, 0.95), gc, lens=30, focus=gc, fly=14, creep=0.0018)
+    c.frame(61.68, (0.35, 0.6, 1.25), cr, lens=30, focus=cr, fly=0, creep=0.0022, roll=-3)
+    c.frame(63.25, (gc[0] + 0.1, gc[1] - 0.55, 0.95), gc, lens=30, focus=gc, fly=14, creep=0.0018, roll=4)
     c.bake(B0, B1)
     return F0, F1

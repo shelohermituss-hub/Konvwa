@@ -49,9 +49,8 @@ def build(ctx):
         c.bake(B0, B1)
     c = cam.Cam(lens=26, fstop=4.0, min_fstop=2.4)
     ah = (a.head, (0, 0, 0))
-    c.frame(50.08, (-5.6, -2.7, 1.25), (-3.5, -0.1, 0.85), lens=26, focus=ah, fly=0, creep=0.0019)
-    c.frame(52.65, (2.4, -12.5, 1.4), (0.0, 6.0, 4.3), lens=20, fstop=9.0, focus=(0, 6, 4), fly=18, creep=0.0016)
-    c.frame(53.95, (2.4, -12.0, 2.2), (0.6, 10.0, 12.0), lens=20, fstop=9.0, focus=(0, 30, 20), fly=12, creep=0.0)
+    c.frame(50.08, (-5.6, -2.7, 1.25), (-3.5, -0.1, 0.85), lens=26, focus=ah, fly=0, creep=0.0019, roll=-4)
+    c.frame(52.65, (2.4, -12.5, 1.4), (0.0, 6.0, 4.3), lens=20, fstop=9.0, focus=(0, 6, 4), fly=18, creep=0.0016, roll=0)
     c.obj.data.clip_end = 3000
     c.bake(B0, B1)
     return F0, F1

@@ -31,7 +31,7 @@ def build(ctx):
     # ORLÉANS sur l'image (520, 470) / 1100 : sur le mur droit (face -X), +x de l'image = -Y du monde
     orl = (mx - 0.03, my - (520 - 550) / 1100 * w, mz + (550 - 470) / 1100 * w)
     c = cam.Cam(lens=26, fstop=3.2, min_fstop=2.4, bounds=((sets.SX0 + 0.2, sets.SY0 + 0.2, 0.3), (sets.SX1 - 0.2, sets.SY1 - 0.2, sets.SH - 0.2)))
-    c.frame(42.45, (0.7, -0.9, 1.55), (mx, my, mz - 0.05), lens=24, focus=(mx, my, mz), fly=0, creep=0.0019, fstop=3.2)
-    c.frame(44.75, (2.55, orl[1] - 0.05, orl[2] - 0.05), orl, lens=30, focus=orl, fly=16, creep=0.0016, fstop=3.2)
+    c.frame(42.45, (0.7, -0.9, 1.55), (mx, my, mz - 0.05), lens=24, focus=(mx, my, mz), fly=0, creep=0.0019, fstop=3.2, roll=-3)
+    c.frame(44.75, (2.55, orl[1] - 0.05, orl[2] - 0.05), orl, lens=30, focus=orl, fly=16, creep=0.0016, fstop=3.2, roll=4)
     c.bake(F0, B1)
     return F0, F1

@@ -64,11 +64,10 @@ def build(ctx):
 
     c = cam.Cam(lens=18, fstop=6.0, min_fstop=2.4, bounds=((sets.X0 + 0.2, sets.Y0 + 0.2, 0.3), (sets.X1 - 0.2, sets.Y1 - 0.2, sets.H - 0.25)))
     hh = (Hn.head, (0, 0, 0))
-    c.frame(10.97, (3.4, -3.1, 4.3), (-0.2, 3.4, 0.9), lens=15, fstop=7.0, focus=hh, fly=0, creep=0.0010)
-    c.shot(13.45, hh, 'ms', yaw=14, rel=Hn, pitch=4, lens=30, head_y=0.4, focus=hh, fly=18, creep=0.0019, fstop=2.6)
+    c.frame(10.97, (3.4, -3.1, 4.3), (-0.2, 3.4, 0.9), lens=15, fstop=7.0, focus=hh, fly=0, creep=0.0010, roll=-5)
+    c.shot(13.45, hh, 'mcu', yaw=14, rel=Hn, pitch=-9, roll=4, lens=30, head_y=0.4, focus=hh, fly=18, creep=0.0019, fstop=2.6)
     wall = sets.X1
-    c.frame(16.95, (1.3, -1.6, 2.6), (wall, -2.5, 3.3), lens=22, fstop=5.0, focus=(wall, -2.5, 3.3), fly=16, creep=0.0)
-    c.frame(18.20, (1.5, -0.7, 2.6), (wall, 0.2, 3.2), lens=18, fstop=5.0, focus=(wall, 0.2, 3.2), fly=24, creep=0.0012)
-    c.frame(19.30, (1.6, 1.4, 2.6), (wall, 3.5, 3.2), lens=22, fstop=5.0, focus=(wall, 3.5, 3.2), fly=20, creep=0.0012)
+    c.frame(16.95, (1.3, -1.6, 2.6), (wall, -2.5, 3.3), lens=22, fstop=5.0, focus=(wall, -2.5, 3.3), fly=16, creep=0.0, roll=0)
+    c.frame(19.30, (1.6, 1.4, 2.6), (wall, 3.5, 3.2), lens=22, fstop=5.0, focus=(wall, 3.5, 3.2), fly=34, creep=0.0012, roll=3)
     c.bake(F0, F1)
     return F0, F1

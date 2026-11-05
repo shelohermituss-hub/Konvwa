@@ -61,11 +61,10 @@ def build(ctx):
 
     c = cam.Cam(lens=30, fstop=2.6, min_fstop=2.4, bounds=((sets.X0 + 0.2, sets.Y0 + 0.2, 0.3), (sets.X1 - 0.2, sets.Y1 - 0.2, sets.H - 0.25)))
     heads = [(r[0].head, (0, 0, 0)) for r in row]
-    c.shot(26.75, heads[0], 'ms', yaw=14, pitch=4, lens=30, head_y=0.36, focus=heads[0], fly=0, creep=0.0019)
-    c.shot(28.35, heads[1], 'ms', yaw=10, pitch=4, lens=30, head_y=0.36, focus=heads[1], fly=14, creep=0.0019)
-    c.shot(29.85, heads[2], 'ms', yaw=-10, pitch=4, lens=30, head_y=0.36, focus=heads[2], fly=14, creep=0.0019)
-    c.shot(31.40, heads[3], 'ms', yaw=12, pitch=4, lens=30, head_y=0.38, focus=heads[3], fly=14, creep=0.0024)
-    c.shot(32.42, heads[3], 'mcu', yaw=14, pitch=2, lens=32, head_y=0.42, focus=heads[3], fly=6, creep=0.0028)
+    c.shot(26.75, heads[0], 'mcu', yaw=14, pitch=-12, roll=5, lens=30, head_y=0.36, focus=heads[0], fly=0, creep=0.0019)
+    c.shot(28.35, heads[1], 'mcu', yaw=10, pitch=14, roll=-5, lens=30, head_y=0.36, focus=heads[1], fly=14, creep=0.0019)
+    c.shot(29.85, heads[2], 'mcu', yaw=-10, pitch=-9, roll=4, lens=30, head_y=0.36, focus=heads[2], fly=14, creep=0.0019)
+    c.shot(32.42, heads[3], 'cu', yaw=14, pitch=-15, roll=6, lens=32, head_y=0.42, focus=heads[3], fly=30, creep=0.0028)
     c.push((F1 - 1) / 30, 0.25, 0.45)
     c.bake(F0, F1)
     return F0, F1
