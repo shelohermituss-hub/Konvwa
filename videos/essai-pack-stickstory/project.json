@@ -1,0 +1,14 @@
+{
+ "language": "fr",
+ "settings": {
+  "format": "vertical"
+ },
+ "scenes": [
+  "s01"
+ ],
+ "konvwa": {
+  "style": "stickstory",
+  "moteur": "stickstory"
+ },
+ "end": 69.6
+}

@@ -1,0 +1,14 @@
+{
+ "language": "fr",
+ "settings": {
+  "format": "vertical"
+ },
+ "scenes": [
+  "s01"
+ ],
+ "konvwa": {
+  "style": "vox",
+  "moteur": "collage"
+ },
+ "end": 69.6
+}

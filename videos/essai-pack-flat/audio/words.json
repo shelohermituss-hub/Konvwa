@@ -1,0 +1,1024 @@
+{
+ "words": [
+  {
+   "word": "En",
+   "start": 0.3,
+   "end": 0.186
+  },
+  {
+   "word": "Haïti,",
+   "start": 0.48,
+   "end": 0.743
+  },
+  {
+   "word": "il",
+   "start": 0.743,
+   "end": 0.929
+  },
+  {
+   "word": "y",
+   "start": 0.929,
+   "end": 1.021
+  },
+  {
+   "word": "a",
+   "start": 1.021,
+   "end": 1.114
+  },
+  {
+   "word": "eu",
+   "start": 1.114,
+   "end": 1.3
+  },
+  {
+   "word": "un",
+   "start": 1.3,
+   "end": 1.486
+  },
+  {
+   "word": "vrai",
+   "start": 1.486,
+   "end": 1.857
+  },
+  {
+   "word": "duc",
+   "start": 1.857,
+   "end": 2.136
+  },
+  {
+   "word": "de",
+   "start": 2.136,
+   "end": 2.321
+  },
+  {
+   "word": "la",
+   "start": 2.321,
+   "end": 2.507
+  },
+  {
+   "word": "Marmelade…",
+   "start": 2.507,
+   "end": 3.343
+  },
+  {
+   "word": "et",
+   "start": 3.343,
+   "end": 3.529
+  },
+  {
+   "word": "un",
+   "start": 3.529,
+   "end": 3.714
+  },
+  {
+   "word": "comte",
+   "start": 3.714,
+   "end": 4.179
+  },
+  {
+   "word": "de",
+   "start": 4.179,
+   "end": 4.364
+  },
+  {
+   "word": "Limonade.",
+   "start": 4.364,
+   "end": 5.2
+  },
+  {
+   "word": "1811.",
+   "start": 5.2,
+   "end": 5.66
+  },
+  {
+   "word": "Dans",
+   "start": 5.66,
+   "end": 6.029
+  },
+  {
+   "word": "le",
+   "start": 6.029,
+   "end": 6.213
+  },
+  {
+   "word": "Nord,",
+   "start": 6.213,
+   "end": 6.673
+  },
+  {
+   "word": "le",
+   "start": 6.673,
+   "end": 6.857
+  },
+  {
+   "word": "général",
+   "start": 6.857,
+   "end": 7.502
+  },
+  {
+   "word": "Henri",
+   "start": 7.502,
+   "end": 7.962
+  },
+  {
+   "word": "Christophe",
+   "start": 7.962,
+   "end": 8.883
+  },
+  {
+   "word": "se",
+   "start": 8.883,
+   "end": 9.067
+  },
+  {
+   "word": "proclame",
+   "start": 9.067,
+   "end": 9.803
+  },
+  {
+   "word": "roi :",
+   "start": 9.803,
+   "end": 10.171
+  },
+  {
+   "word": "Henri",
+   "start": 10.171,
+   "end": 10.632
+  },
+  {
+   "word": "Ier.",
+   "start": 10.632,
+   "end": 11.0
+  },
+  {
+   "word": "Mais",
+   "start": 11.0,
+   "end": 11.286
+  },
+  {
+   "word": "un",
+   "start": 11.286,
+   "end": 11.429
+  },
+  {
+   "word": "roi",
+   "start": 11.429,
+   "end": 11.643
+  },
+  {
+   "word": "sans",
+   "start": 11.643,
+   "end": 11.929
+  },
+  {
+   "word": "cour,",
+   "start": 11.929,
+   "end": 12.357
+  },
+  {
+   "word": "ça",
+   "start": 12.357,
+   "end": 12.5
+  },
+  {
+   "word": "fait",
+   "start": 12.5,
+   "end": 12.786
+  },
+  {
+   "word": "un",
+   "start": 12.786,
+   "end": 12.929
+  },
+  {
+   "word": "peu",
+   "start": 12.929,
+   "end": 13.143
+  },
+  {
+   "word": "vide.",
+   "start": 13.143,
+   "end": 13.5
+  },
+  {
+   "word": "Alors,",
+   "start": 13.5,
+   "end": 13.889
+  },
+  {
+   "word": "une",
+   "start": 13.889,
+   "end": 14.083
+  },
+  {
+   "word": "semaine",
+   "start": 14.083,
+   "end": 14.537
+  },
+  {
+   "word": "plus",
+   "start": 14.537,
+   "end": 14.796
+  },
+  {
+   "word": "tard,",
+   "start": 14.796,
+   "end": 15.12
+  },
+  {
+   "word": "il",
+   "start": 15.12,
+   "end": 15.25
+  },
+  {
+   "word": "fabrique",
+   "start": 15.25,
+   "end": 15.769
+  },
+  {
+   "word": "une",
+   "start": 15.769,
+   "end": 15.963
+  },
+  {
+   "word": "noblesse",
+   "start": 15.963,
+   "end": 16.481
+  },
+  {
+   "word": "entière :",
+   "start": 16.481,
+   "end": 17.0
+  },
+  {
+   "word": "quatre",
+   "start": 17.0,
+   "end": 17.346
+  },
+  {
+   "word": "princes,",
+   "start": 17.346,
+   "end": 17.807
+  },
+  {
+   "word": "huit",
+   "start": 17.807,
+   "end": 18.037
+  },
+  {
+   "word": "ducs,",
+   "start": 18.037,
+   "end": 18.325
+  },
+  {
+   "word": "vingt-deux",
+   "start": 18.325,
+   "end": 18.902
+  },
+  {
+   "word": "comtes,",
+   "start": 18.902,
+   "end": 19.363
+  },
+  {
+   "word": "trente-sept",
+   "start": 19.363,
+   "end": 19.997
+  },
+  {
+   "word": "barons.",
+   "start": 19.997,
+   "end": 20.4
+  },
+  {
+   "word": "Chacun",
+   "start": 20.4,
+   "end": 20.833
+  },
+  {
+   "word": "reçoit",
+   "start": 20.833,
+   "end": 21.267
+  },
+  {
+   "word": "des",
+   "start": 21.267,
+   "end": 21.483
+  },
+  {
+   "word": "armoiries,",
+   "start": 21.483,
+   "end": 22.206
+  },
+  {
+   "word": "une",
+   "start": 22.206,
+   "end": 22.422
+  },
+  {
+   "word": "devise,",
+   "start": 22.422,
+   "end": 22.928
+  },
+  {
+   "word": "un",
+   "start": 22.928,
+   "end": 23.072
+  },
+  {
+   "word": "domaine…",
+   "start": 23.072,
+   "end": 23.578
+  },
+  {
+   "word": "et",
+   "start": 23.578,
+   "end": 23.722
+  },
+  {
+   "word": "un",
+   "start": 23.722,
+   "end": 23.867
+  },
+  {
+   "word": "titre.",
+   "start": 23.867,
+   "end": 24.3
+  },
+  {
+   "word": "Et",
+   "start": 24.3,
+   "end": 24.409
+  },
+  {
+   "word": "pour",
+   "start": 24.409,
+   "end": 24.626
+  },
+  {
+   "word": "les",
+   "start": 24.626,
+   "end": 24.789
+  },
+  {
+   "word": "titres,",
+   "start": 24.789,
+   "end": 25.17
+  },
+  {
+   "word": "on",
+   "start": 25.17,
+   "end": 25.278
+  },
+  {
+   "word": "prend",
+   "start": 25.278,
+   "end": 25.55
+  },
+  {
+   "word": "les",
+   "start": 25.55,
+   "end": 25.713
+  },
+  {
+   "word": "noms",
+   "start": 25.713,
+   "end": 25.93
+  },
+  {
+   "word": "des",
+   "start": 25.93,
+   "end": 26.093
+  },
+  {
+   "word": "villes",
+   "start": 26.093,
+   "end": 26.42
+  },
+  {
+   "word": "du",
+   "start": 26.42,
+   "end": 26.528
+  },
+  {
+   "word": "Nord.",
+   "start": 26.528,
+   "end": 26.8
+  },
+  {
+   "word": "Le",
+   "start": 26.8,
+   "end": 26.986
+  },
+  {
+   "word": "duc",
+   "start": 26.986,
+   "end": 27.265
+  },
+  {
+   "word": "de",
+   "start": 27.265,
+   "end": 27.451
+  },
+  {
+   "word": "Plaisance.",
+   "start": 27.451,
+   "end": 28.38
+  },
+  {
+   "word": "Le",
+   "start": 28.38,
+   "end": 28.566
+  },
+  {
+   "word": "prince",
+   "start": 28.566,
+   "end": 29.124
+  },
+  {
+   "word": "du",
+   "start": 29.124,
+   "end": 29.31
+  },
+  {
+   "word": "Limbé.",
+   "start": 29.31,
+   "end": 29.868
+  },
+  {
+   "word": "Le",
+   "start": 29.868,
+   "end": 30.054
+  },
+  {
+   "word": "comte",
+   "start": 30.054,
+   "end": 30.518
+  },
+  {
+   "word": "de",
+   "start": 30.518,
+   "end": 30.704
+  },
+  {
+   "word": "Limonade.",
+   "start": 30.704,
+   "end": 31.448
+  },
+  {
+   "word": "Et",
+   "start": 31.448,
+   "end": 31.634
+  },
+  {
+   "word": "le",
+   "start": 31.634,
+   "end": 31.82
+  },
+  {
+   "word": "duc…",
+   "start": 31.82,
+   "end": 32.099
+  },
+  {
+   "word": "de",
+   "start": 32.099,
+   "end": 32.285
+  },
+  {
+   "word": "la",
+   "start": 32.285,
+   "end": 32.47
+  },
+  {
+   "word": "Marmelade.",
+   "start": 32.47,
+   "end": 33.4
+  },
+  {
+   "word": "En",
+   "start": 33.4,
+   "end": 33.568
+  },
+  {
+   "word": "Europe,",
+   "start": 33.568,
+   "end": 34.158
+  },
+  {
+   "word": "on",
+   "start": 34.158,
+   "end": 34.326
+  },
+  {
+   "word": "se",
+   "start": 34.326,
+   "end": 34.495
+  },
+  {
+   "word": "moque.",
+   "start": 34.495,
+   "end": 35.0
+  },
+  {
+   "word": "Un",
+   "start": 35.0,
+   "end": 35.168
+  },
+  {
+   "word": "duc",
+   "start": 35.168,
+   "end": 35.421
+  },
+  {
+   "word": "de",
+   "start": 35.421,
+   "end": 35.589
+  },
+  {
+   "word": "la",
+   "start": 35.589,
+   "end": 35.758
+  },
+  {
+   "word": "Marmelade !",
+   "start": 35.758,
+   "end": 36.6
+  },
+  {
+   "word": "Heureusement,",
+   "start": 36.6,
+   "end": 37.416
+  },
+  {
+   "word": "la",
+   "start": 37.416,
+   "end": 37.541
+  },
+  {
+   "word": "France",
+   "start": 37.541,
+   "end": 37.918
+  },
+  {
+   "word": "avait",
+   "start": 37.918,
+   "end": 38.231
+  },
+  {
+   "word": "elle",
+   "start": 38.231,
+   "end": 38.482
+  },
+  {
+   "word": "aussi",
+   "start": 38.482,
+   "end": 38.796
+  },
+  {
+   "word": "un",
+   "start": 38.796,
+   "end": 38.922
+  },
+  {
+   "word": "duc…",
+   "start": 38.922,
+   "end": 39.11
+  },
+  {
+   "word": "de",
+   "start": 39.11,
+   "end": 39.235
+  },
+  {
+   "word": "Bouillon.",
+   "start": 39.235,
+   "end": 39.8
+  },
+  {
+   "word": "Malheureusement,",
+   "start": 39.8,
+   "end": 40.647
+  },
+  {
+   "word": "celui-là,",
+   "start": 40.647,
+   "end": 41.124
+  },
+  {
+   "word": "personne",
+   "start": 41.124,
+   "end": 41.547
+  },
+  {
+   "word": "ne",
+   "start": 41.547,
+   "end": 41.653
+  },
+  {
+   "word": "le",
+   "start": 41.653,
+   "end": 41.759
+  },
+  {
+   "word": "trouvait",
+   "start": 41.759,
+   "end": 42.182
+  },
+  {
+   "word": "drôle.",
+   "start": 42.182,
+   "end": 42.5
+  },
+  {
+   "word": "Parce",
+   "start": 42.5,
+   "end": 42.767
+  },
+  {
+   "word": "qu'un",
+   "start": 42.767,
+   "end": 43.035
+  },
+  {
+   "word": "titre,",
+   "start": 43.035,
+   "end": 43.356
+  },
+  {
+   "word": "c'est",
+   "start": 43.356,
+   "end": 43.623
+  },
+  {
+   "word": "juste",
+   "start": 43.623,
+   "end": 43.891
+  },
+  {
+   "word": "le",
+   "start": 43.891,
+   "end": 43.998
+  },
+  {
+   "word": "nom",
+   "start": 43.998,
+   "end": 44.158
+  },
+  {
+   "word": "d'un",
+   "start": 44.158,
+   "end": 44.372
+  },
+  {
+   "word": "endroit.",
+   "start": 44.372,
+   "end": 44.8
+  },
+  {
+   "word": "Le",
+   "start": 44.8,
+   "end": 44.917
+  },
+  {
+   "word": "duc",
+   "start": 44.917,
+   "end": 45.093
+  },
+  {
+   "word": "d'Orléans",
+   "start": 45.093,
+   "end": 45.621
+  },
+  {
+   "word": "porte",
+   "start": 45.621,
+   "end": 45.914
+  },
+  {
+   "word": "le",
+   "start": 45.914,
+   "end": 46.031
+  },
+  {
+   "word": "nom",
+   "start": 46.031,
+   "end": 46.207
+  },
+  {
+   "word": "d'une",
+   "start": 46.207,
+   "end": 46.5
+  },
+  {
+   "word": "ville.",
+   "start": 46.5,
+   "end": 46.852
+  },
+  {
+   "word": "Le",
+   "start": 46.852,
+   "end": 46.969
+  },
+  {
+   "word": "comte",
+   "start": 46.969,
+   "end": 47.262
+  },
+  {
+   "word": "de",
+   "start": 47.262,
+   "end": 47.379
+  },
+  {
+   "word": "Limonade",
+   "start": 47.379,
+   "end": 47.848
+  },
+  {
+   "word": "aussi.",
+   "start": 47.848,
+   "end": 48.2
+  },
+  {
+   "word": "Ce",
+   "start": 48.2,
+   "end": 48.358
+  },
+  {
+   "word": "qui",
+   "start": 48.358,
+   "end": 48.596
+  },
+  {
+   "word": "change,",
+   "start": 48.596,
+   "end": 49.15
+  },
+  {
+   "word": "c'est",
+   "start": 49.15,
+   "end": 49.546
+  },
+  {
+   "word": "qui",
+   "start": 49.546,
+   "end": 49.783
+  },
+  {
+   "word": "rit.",
+   "start": 49.783,
+   "end": 50.1
+  },
+  {
+   "word": "Et",
+   "start": 50.1,
+   "end": 50.224
+  },
+  {
+   "word": "pendant",
+   "start": 50.224,
+   "end": 50.657
+  },
+  {
+   "word": "qu'on",
+   "start": 50.657,
+   "end": 50.967
+  },
+  {
+   "word": "riait,",
+   "start": 50.967,
+   "end": 51.338
+  },
+  {
+   "word": "ce",
+   "start": 51.338,
+   "end": 51.462
+  },
+  {
+   "word": "royaume",
+   "start": 51.462,
+   "end": 51.895
+  },
+  {
+   "word": "construisait.",
+   "start": 51.895,
+   "end": 52.7
+  },
+  {
+   "word": "Le",
+   "start": 52.7,
+   "end": 52.849
+  },
+  {
+   "word": "palais",
+   "start": 52.849,
+   "end": 53.296
+  },
+  {
+   "word": "Sans-Souci.",
+   "start": 53.296,
+   "end": 54.041
+  },
+  {
+   "word": "Et",
+   "start": 54.041,
+   "end": 54.19
+  },
+  {
+   "word": "là-haut,",
+   "start": 54.19,
+   "end": 54.786
+  },
+  {
+   "word": "à",
+   "start": 54.786,
+   "end": 54.861
+  },
+  {
+   "word": "900",
+   "start": 54.861,
+   "end": 55.084
+  },
+  {
+   "word": "mètres,",
+   "start": 55.084,
+   "end": 55.606
+  },
+  {
+   "word": "la",
+   "start": 55.606,
+   "end": 55.755
+  },
+  {
+   "word": "Citadelle :",
+   "start": 55.755,
+   "end": 56.5
+  },
+  {
+   "word": "jusqu’à",
+   "start": 56.5,
+   "end": 56.992
+  },
+  {
+   "word": "20",
+   "start": 56.992,
+   "end": 57.132
+  },
+  {
+   "word": "000",
+   "start": 57.132,
+   "end": 57.343
+  },
+  {
+   "word": "ouvriers,",
+   "start": 57.343,
+   "end": 57.976
+  },
+  {
+   "word": "365",
+   "start": 57.976,
+   "end": 58.186
+  },
+  {
+   "word": "canons,",
+   "start": 58.186,
+   "end": 58.678
+  },
+  {
+   "word": "contre",
+   "start": 58.678,
+   "end": 59.1
+  },
+  {
+   "word": "une",
+   "start": 59.1,
+   "end": 59.311
+  },
+  {
+   "word": "armée",
+   "start": 59.311,
+   "end": 59.662
+  },
+  {
+   "word": "française",
+   "start": 59.662,
+   "end": 60.295
+  },
+  {
+   "word": "qui",
+   "start": 60.295,
+   "end": 60.505
+  },
+  {
+   "word": "n'est",
+   "start": 60.505,
+   "end": 60.857
+  },
+  {
+   "word": "jamais",
+   "start": 60.857,
+   "end": 61.278
+  },
+  {
+   "word": "venue.",
+   "start": 61.278,
+   "end": 61.7
+  },
+  {
+   "word": "Le",
+   "start": 61.7,
+   "end": 61.832
+  },
+  {
+   "word": "royaume",
+   "start": 61.832,
+   "end": 62.294
+  },
+  {
+   "word": "s'arrête",
+   "start": 62.294,
+   "end": 62.821
+  },
+  {
+   "word": "en",
+   "start": 62.821,
+   "end": 62.953
+  },
+  {
+   "word": "1820.",
+   "start": 62.953,
+   "end": 63.283
+  },
+  {
+   "word": "Les",
+   "start": 63.283,
+   "end": 63.481
+  },
+  {
+   "word": "moqueries",
+   "start": 63.481,
+   "end": 64.074
+  },
+  {
+   "word": "se",
+   "start": 64.074,
+   "end": 64.206
+  },
+  {
+   "word": "sont",
+   "start": 64.206,
+   "end": 64.47
+  },
+  {
+   "word": "tues.",
+   "start": 64.47,
+   "end": 64.8
+  },
+  {
+   "word": "La",
+   "start": 64.8,
+   "end": 64.938
+  },
+  {
+   "word": "Citadelle,",
+   "start": 64.938,
+   "end": 65.631
+  },
+  {
+   "word": "elle,",
+   "start": 65.631,
+   "end": 65.977
+  },
+  {
+   "word": "est",
+   "start": 65.977,
+   "end": 66.185
+  },
+  {
+   "word": "toujours",
+   "start": 66.185,
+   "end": 66.738
+  },
+  {
+   "word": "debout.",
+   "start": 66.738,
+   "end": 67.223
+  },
+  {
+   "word": "Et",
+   "start": 67.223,
+   "end": 67.362
+  },
+  {
+   "word": "Marmelade",
+   "start": 67.362,
+   "end": 67.985
+  },
+  {
+   "word": "aussi.",
+   "start": 67.985,
+   "end": 68.4
+  }
+ ]
+}
