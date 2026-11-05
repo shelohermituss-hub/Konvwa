@@ -192,6 +192,10 @@ if [ -n "$LOG" ] && [ -f "$LOG/log.txt" ]; then
   fi
 fi
 
+etape "5b/6 Son : effets, fond et mix (voix devant, -14 LUFS)"
+# sons.json du projet (effets calés sur les mots) + un whoosh à chaque changement de plan ; les effets restent sous la voix (mix du pack : voix au moins 12 dB au-dessus).
+python3 videos/_konvwa/konvwa.py son "$PROJET" 2>&1 | tail -12 || echo "(!) son non fait : la voix seule sera utilisée"
+
 etape "6/6 Rendu complet de $PROJET"
 python3 videos/_konvwa/konvwa.py rendu "$PROJET" --fps60 non && CODE=0 || CODE=$?   # 30 i/s : choix du client
 if [ "$CODE" = "0" ] && [ -f "videos/$PROJET/renders/$PROJET.mp4" ]; then
