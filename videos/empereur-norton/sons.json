@@ -1,7 +1,120 @@
 {
  "_aide": "Les sons du film en plus de ceux que les scènes posent elles-mêmes (S.sfx / sfx(...) : c'est la voie normale de ces styles). t = secondes, ou « mot:jarre » / « mot:jarre#2+0.1 ». type = un nom de son du style (voir references/sound_design.md du skill). beds = fonds ; musique = un fichier, baissé sous la voix (seulement si le client en veut).",
- "sfx": [],
- "beds": [{"from": 0, "to": 70, "type": "room", "gain": -45}],
+ "sfx": [
+  {
+   "t": "mot:Mille",
+   "type": "whoosh",
+   "gain": -4
+  },
+  {
+   "t": "mot:entre",
+   "type": "door",
+   "gain": 0
+  },
+  {
+   "t": "mot:lettre",
+   "type": "paper",
+   "gain": 0
+  },
+  {
+   "t": "mot:EMPEREUR",
+   "type": "pop",
+   "gain": 0
+  },
+  {
+   "t": "mot:perdu",
+   "type": "thud",
+   "gain": -2
+  },
+  {
+   "t": "mot:couronne",
+   "type": "ding",
+   "gain": 0
+  },
+  {
+   "t": "mot:abolit",
+   "type": "impact",
+   "gain": -2
+  },
+  {
+   "t": "mot:l'ignore",
+   "type": "boing",
+   "gain": -4
+  },
+  {
+   "t": "mot:salles",
+   "type": "swish",
+   "gain": -4
+  },
+  {
+   "t": "mot:jeu",
+   "type": "pop",
+   "gain": -2
+  },
+  {
+   "t": "mot:monnaie",
+   "type": "cash",
+   "gain": 0
+  },
+  {
+   "t": "mot:l'ACCEPTENT",
+   "type": "coin",
+   "gain": 0
+  },
+  {
+   "t": "mot:l'arrête",
+   "type": "impact",
+   "gain": 0
+  },
+  {
+   "t": "mot:scandale",
+   "type": "whoosh",
+   "gain": -3
+  },
+  {
+   "t": "mot:libère",
+   "type": "click",
+   "gain": -2
+  },
+  {
+   "t": "mot:excuses",
+   "type": "ding",
+   "gain": -2
+  },
+  {
+   "t": "mot:SALUENT",
+   "type": "pop",
+   "gain": 0
+  },
+  {
+   "t": "mot:meurt",
+   "type": "thud",
+   "gain": -3
+  },
+  {
+   "t": "mot:roi",
+   "type": "bell",
+   "gain": -2
+  },
+  {
+   "t": "mot:pont",
+   "type": "whoosh",
+   "gain": -3
+  },
+  {
+   "t": "mot:JUSTE",
+   "type": "win",
+   "gain": -2
+  }
+ ],
+ "beds": [
+  {
+   "from": 0,
+   "to": 63,
+   "type": "room",
+   "gain": -45
+  }
+ ],
  "musique": null,
  "musique_gain": -22
 }
