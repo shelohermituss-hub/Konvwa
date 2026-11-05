@@ -125,6 +125,34 @@ if not os.path.exists(wj):
         print('   (!) pas de mots : sous-titres impossibles')
 EOF2
 
+etape "4c/6 Chemins Windows de l'outil Creatorize dans le projet"
+# Un projet fait sur PC garde parfois des chemins « C:/Users/…/templates/blender/… » : on les redirige vers le moteur du dépôt
+# (fichiers du projet seulement, jamais le moteur).
+python3 - "$PROJET" "$PWD/videos/_creatorize/blender" <<'EOF3'
+import os, re, sys
+p, moteur = os.path.join('videos', sys.argv[1]), sys.argv[2].rstrip('/')
+rx = re.compile(r'[A-Za-z]:[\\/]+Users[\\/]+[^"\'\n]*?templates[\\/]+blender(?=[\\/"\'])', re.I)
+n = f = 0
+for racine, dirs, fichiers in os.walk(p):
+    dirs[:] = [d for d in dirs if d not in ('shots', 'renders', '.suite', 'out', 'frames_final', 'node_modules')]
+    for nom in fichiers:
+        if nom.endswith(('.py', '.json', '.md', '.txt')):
+            ch = os.path.join(racine, nom)
+            try:
+                t = open(ch, encoding='utf-8').read()
+            except Exception:
+                continue
+            t2, k = rx.subn(lambda m: moteur, t)
+            if k:
+                open(ch, 'w', encoding='utf-8').write(t2); n += k; f += 1
+print('   chemins Windows réécrits : %d dans %d fichier(s)' % (n, f))
+EOF3
+
+# Filet : si le chemin Windows vient d'ailleurs (scène enregistrée), le même chemin relatif pointe vers le moteur (lien, non versionné).
+for u in $(grep -rhoE '[A-Za-z]:/Users/[^/"'"'"']+/AppData/Local/Programs/creatorize-suite/resources/templates/blender' "videos/$PROJET" --include=*.py --include=*.json 2>/dev/null | sort -u | head -3) "C:/Users/GODZYY/AppData/Local/Programs/creatorize-suite/resources/templates/blender"; do
+  L="$PWD/videos/_creatorize/blender/$u"; mkdir -p "$(dirname "$L")"; [ -e "$L" ] || ln -s "$PWD/videos/_creatorize/blender" "$L"
+done
+
 etape "5/6 Contrôles et banc d'essai de $PROJET"
 python3 videos/_konvwa/konvwa.py verifier || true
 INFO=$(python3 - "$PROJET" <<'EOF'
