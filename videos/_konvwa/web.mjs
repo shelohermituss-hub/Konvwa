@@ -104,7 +104,8 @@ function startServer(port = 0) {
 // ---------------- la page dans un Chrome sans fenêtre ----------------
 async function withPage(fn) {
   const { server, port } = await startServer();
-  const browser = await launch({ args: process.platform === 'linux' ? ['--no-sandbox', '--enable-unsafe-swiftshader'] : [] });
+  const gpuArgs = process.env.KONVWA_GPU ? ['--use-gl=angle', '--use-angle=gl-egl', '--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--enable-zero-copy'] : ['--enable-unsafe-swiftshader'];   // KONVWA_GPU=1 : la carte NVIDIA (machine RunPod)
+  const browser = await launch({ args: process.platform === 'linux' ? ['--no-sandbox', ...gpuArgs] : [] });
   const [W, H] = ['16:9', 'landscape', 'wide'].includes(P.settings?.format) ? [1920, 1080] : [1080, 1920];
   const page = await browser.newPage(`http://127.0.0.1:${port}/p/film/__suite/${HOSTPAGE}?mode=render`, {
     width: Math.round(W / 2), height: Math.round(H / 2),
