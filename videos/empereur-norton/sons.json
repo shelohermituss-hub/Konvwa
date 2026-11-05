@@ -1,0 +1,7 @@
+{
+ "_aide": "Les sons du film en plus de ceux que les scènes posent elles-mêmes (S.sfx / sfx(...) : c'est la voie normale de ces styles). t = secondes, ou « mot:jarre » / « mot:jarre#2+0.1 ». type = un nom de son du style (voir references/sound_design.md du skill). beds = fonds ; musique = un fichier, baissé sous la voix (seulement si le client en veut).",
+ "sfx": [],
+ "beds": [{"from": 0, "to": 70, "type": "room", "gain": -45}],
+ "musique": null,
+ "musique_gain": -22
+}

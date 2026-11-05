@@ -1,0 +1,794 @@
+{
+ "words": [
+  {
+   "word": "Mille",
+   "start": 0.143,
+   "end": 0.16
+  },
+  {
+   "word": "huit",
+   "start": 0.2,
+   "end": 0.32
+  },
+  {
+   "word": "cent",
+   "start": 0.336,
+   "end": 0.4
+  },
+  {
+   "word": "cinquante-neuf.",
+   "start": 0.46,
+   "end": 1.36
+  },
+  {
+   "word": "Un",
+   "start": 1.493,
+   "end": 1.76
+  },
+  {
+   "word": "homme",
+   "start": 1.787,
+   "end": 1.92
+  },
+  {
+   "word": "entre",
+   "start": 1.96,
+   "end": 2.16
+  },
+  {
+   "word": "dans",
+   "start": 2.192,
+   "end": 2.32
+  },
+  {
+   "word": "un",
+   "start": 2.347,
+   "end": 2.4
+  },
+  {
+   "word": "journal",
+   "start": 2.44,
+   "end": 2.72
+  },
+  {
+   "word": "de",
+   "start": 2.747,
+   "end": 2.8
+  },
+  {
+   "word": "San",
+   "start": 2.86,
+   "end": 3.04
+  },
+  {
+   "word": "Francisco",
+   "start": 3.088,
+   "end": 3.52
+  },
+  {
+   "word": "avec",
+   "start": 3.568,
+   "end": 3.76
+  },
+  {
+   "word": "une",
+   "start": 3.8,
+   "end": 3.92
+  },
+  {
+   "word": "lettre :",
+   "start": 3.966,
+   "end": 4.24
+  },
+  {
+   "word": "« Je",
+   "start": 5.17,
+   "end": 5.2
+  },
+  {
+   "word": "me",
+   "start": 5.253,
+   "end": 5.36
+  },
+  {
+   "word": "proclame",
+   "start": 5.42,
+   "end": 5.84
+  },
+  {
+   "word": "EMPEREUR",
+   "start": 5.94,
+   "end": 6.56
+  },
+  {
+   "word": "de",
+   "start": 6.587,
+   "end": 6.64
+  },
+  {
+   "word": "ces",
+   "start": 6.7,
+   "end": 6.88
+  },
+  {
+   "word": "États-Unis. »",
+   "start": 6.96,
+   "end": 7.6
+  },
+  {
+   "word": "Il",
+   "start": 8.549,
+   "end": 8.56
+  },
+  {
+   "word": "s'appelle",
+   "start": 8.6,
+   "end": 8.88
+  },
+  {
+   "word": "Joshua",
+   "start": 8.926,
+   "end": 9.2
+  },
+  {
+   "word": "Norton.",
+   "start": 9.269,
+   "end": 9.76
+  },
+  {
+   "word": "Il",
+   "start": 9.92,
+   "end": 10.24
+  },
+  {
+   "word": "a",
+   "start": 10.28,
+   "end": 10.32
+  },
+  {
+   "word": "tout",
+   "start": 10.352,
+   "end": 10.48
+  },
+  {
+   "word": "perdu",
+   "start": 10.52,
+   "end": 10.8
+  },
+  {
+   "word": "en",
+   "start": 10.827,
+   "end": 10.88
+  },
+  {
+   "word": "spéculant",
+   "start": 10.933,
+   "end": 11.36
+  },
+  {
+   "word": "sur",
+   "start": 11.4,
+   "end": 11.52
+  },
+  {
+   "word": "le",
+   "start": 11.573,
+   "end": 11.68
+  },
+  {
+   "word": "riz.",
+   "start": 11.74,
+   "end": 12.0
+  },
+  {
+   "word": "Alors...",
+   "start": 12.787,
+   "end": 13.76
+  },
+  {
+   "word": "il",
+   "start": 13.813,
+   "end": 13.92
+  },
+  {
+   "word": "se",
+   "start": 13.973,
+   "end": 14.08
+  },
+  {
+   "word": "couronne",
+   "start": 14.128,
+   "end": 14.48
+  },
+  {
+   "word": "tout",
+   "start": 14.512,
+   "end": 14.64
+  },
+  {
+   "word": "seul.",
+   "start": 14.704,
+   "end": 15.04
+  },
+  {
+   "word": "Son",
+   "start": 16.302,
+   "end": 16.332
+  },
+  {
+   "word": "premier",
+   "start": 16.372,
+   "end": 16.652
+  },
+  {
+   "word": "décret",
+   "start": 16.705,
+   "end": 16.972
+  },
+  {
+   "word": "abolit",
+   "start": 17.02,
+   "end": 17.292
+  },
+  {
+   "word": "le",
+   "start": 17.319,
+   "end": 17.372
+  },
+  {
+   "word": "Congrès.",
+   "start": 17.42,
+   "end": 17.853
+  },
+  {
+   "word": "Le",
+   "start": 18.634,
+   "end": 18.652
+  },
+  {
+   "word": "Congrès",
+   "start": 18.684,
+   "end": 18.972
+  },
+  {
+   "word": "l'ignore.",
+   "start": 19.012,
+   "end": 19.612
+  },
+  {
+   "word": "Il",
+   "start": 19.772,
+   "end": 20.092
+  },
+  {
+   "word": "ordonne",
+   "start": 20.132,
+   "end": 20.412
+  },
+  {
+   "word": "même",
+   "start": 20.444,
+   "end": 20.572
+  },
+  {
+   "word": "à",
+   "start": 20.612,
+   "end": 20.652
+  },
+  {
+   "word": "l'armée",
+   "start": 20.672,
+   "end": 20.892
+  },
+  {
+   "word": "d'en",
+   "start": 20.932,
+   "end": 21.052
+  },
+  {
+   "word": "vider",
+   "start": 21.092,
+   "end": 21.292
+  },
+  {
+   "word": "les",
+   "start": 21.312,
+   "end": 21.372
+  },
+  {
+   "word": "salles.",
+   "start": 21.432,
+   "end": 21.852
+  },
+  {
+   "word": "Pourtant,",
+   "start": 22.626,
+   "end": 22.812
+  },
+  {
+   "word": "la",
+   "start": 22.839,
+   "end": 22.892
+  },
+  {
+   "word": "ville",
+   "start": 22.932,
+   "end": 23.132
+  },
+  {
+   "word": "joue",
+   "start": 23.152,
+   "end": 23.292
+  },
+  {
+   "word": "le",
+   "start": 23.319,
+   "end": 23.372
+  },
+  {
+   "word": "jeu !",
+   "start": 23.412,
+   "end": 23.532
+  },
+  {
+   "word": "Il",
+   "start": 24.183,
+   "end": 24.185
+  },
+  {
+   "word": "imprime",
+   "start": 24.232,
+   "end": 24.584
+  },
+  {
+   "word": "sa",
+   "start": 24.664,
+   "end": 24.824
+  },
+  {
+   "word": "propre",
+   "start": 24.87,
+   "end": 25.144
+  },
+  {
+   "word": "monnaie,",
+   "start": 25.184,
+   "end": 25.544
+  },
+  {
+   "word": "et",
+   "start": 25.677,
+   "end": 25.944
+  },
+  {
+   "word": "des",
+   "start": 25.984,
+   "end": 26.104
+  },
+  {
+   "word": "restaurants",
+   "start": 26.157,
+   "end": 26.744
+  },
+  {
+   "word": "l'ACCEPTENT.",
+   "start": 26.784,
+   "end": 27.624
+  },
+  {
+   "word": "Mille",
+   "start": 29.211,
+   "end": 29.264
+  },
+  {
+   "word": "huit",
+   "start": 29.284,
+   "end": 29.384
+  },
+  {
+   "word": "cent",
+   "start": 29.416,
+   "end": 29.544
+  },
+  {
+   "word": "soixante-sept.",
+   "start": 29.597,
+   "end": 30.344
+  },
+  {
+   "word": "Un",
+   "start": 30.531,
+   "end": 30.904
+  },
+  {
+   "word": "policier",
+   "start": 30.944,
+   "end": 31.304
+  },
+  {
+   "word": "l'arrête",
+   "start": 31.324,
+   "end": 31.544
+  },
+  {
+   "word": "pour",
+   "start": 31.576,
+   "end": 31.704
+  },
+  {
+   "word": "le",
+   "start": 31.731,
+   "end": 31.784
+  },
+  {
+   "word": "faire",
+   "start": 31.811,
+   "end": 31.944
+  },
+  {
+   "word": "soigner.",
+   "start": 31.997,
+   "end": 32.424
+  },
+  {
+   "word": "Le",
+   "start": 33.098,
+   "end": 33.151
+  },
+  {
+   "word": "scandale",
+   "start": 33.204,
+   "end": 33.551
+  },
+  {
+   "word": "est",
+   "start": 33.591,
+   "end": 33.711
+  },
+  {
+   "word": "immédiat :",
+   "start": 33.751,
+   "end": 34.111
+  },
+  {
+   "word": "un",
+   "start": 34.618,
+   "end": 34.671
+  },
+  {
+   "word": "journal",
+   "start": 34.711,
+   "end": 34.991
+  },
+  {
+   "word": "écrit",
+   "start": 35.031,
+   "end": 35.231
+  },
+  {
+   "word": "qu'il",
+   "start": 35.258,
+   "end": 35.391
+  },
+  {
+   "word": "n'a",
+   "start": 35.431,
+   "end": 35.551
+  },
+  {
+   "word": "versé",
+   "start": 35.599,
+   "end": 35.951
+  },
+  {
+   "word": "aucun",
+   "start": 36.004,
+   "end": 36.271
+  },
+  {
+   "word": "sang,",
+   "start": 36.319,
+   "end": 36.831
+  },
+  {
+   "word": "volé",
+   "start": 36.871,
+   "end": 37.071
+  },
+  {
+   "word": "personne,",
+   "start": 37.133,
+   "end": 37.951
+  },
+  {
+   "word": "ruiné",
+   "start": 38.015,
+   "end": 38.351
+  },
+  {
+   "word": "aucun",
+   "start": 38.418,
+   "end": 38.751
+  },
+  {
+   "word": "pays.",
+   "start": 38.847,
+   "end": 39.631
+  },
+  {
+   "word": "Le",
+   "start": 40.1,
+   "end": 40.111
+  },
+  {
+   "word": "chef",
+   "start": 40.159,
+   "end": 40.351
+  },
+  {
+   "word": "de",
+   "start": 40.378,
+   "end": 40.431
+  },
+  {
+   "word": "la",
+   "start": 40.458,
+   "end": 40.511
+  },
+  {
+   "word": "police",
+   "start": 40.557,
+   "end": 40.831
+  },
+  {
+   "word": "le",
+   "start": 40.858,
+   "end": 40.911
+  },
+  {
+   "word": "libère,",
+   "start": 40.971,
+   "end": 41.591
+  },
+  {
+   "word": "avec",
+   "start": 41.631,
+   "end": 41.791
+  },
+  {
+   "word": "des",
+   "start": 41.831,
+   "end": 41.951
+  },
+  {
+   "word": "excuses.",
+   "start": 42.021,
+   "end": 42.591
+  },
+  {
+   "word": "Et",
+   "start": 43.298,
+   "end": 43.311
+  },
+  {
+   "word": "les",
+   "start": 43.351,
+   "end": 43.471
+  },
+  {
+   "word": "agents",
+   "start": 43.517,
+   "end": 43.791
+  },
+  {
+   "word": "le",
+   "start": 43.844,
+   "end": 43.951
+  },
+  {
+   "word": "SALUENT",
+   "start": 44.031,
+   "end": 44.431
+  },
+  {
+   "word": "dans",
+   "start": 44.447,
+   "end": 44.511
+  },
+  {
+   "word": "la",
+   "start": 44.538,
+   "end": 44.591
+  },
+  {
+   "word": "rue.",
+   "start": 44.671,
+   "end": 44.991
+  },
+  {
+   "word": "Il",
+   "start": 46.498,
+   "end": 46.511
+  },
+  {
+   "word": "meurt",
+   "start": 46.564,
+   "end": 46.831
+  },
+  {
+   "word": "en",
+   "start": 46.858,
+   "end": 46.911
+  },
+  {
+   "word": "mille",
+   "start": 46.951,
+   "end": 47.071
+  },
+  {
+   "word": "huit",
+   "start": 47.111,
+   "end": 47.231
+  },
+  {
+   "word": "cent",
+   "start": 47.247,
+   "end": 47.311
+  },
+  {
+   "word": "quatre-vingt.",
+   "start": 47.357,
+   "end": 48.471
+  },
+  {
+   "word": "Le",
+   "start": 48.511,
+   "end": 48.591
+  },
+  {
+   "word": "journal",
+   "start": 48.631,
+   "end": 48.911
+  },
+  {
+   "word": "titre :",
+   "start": 48.978,
+   "end": 49.311
+  },
+  {
+   "word": "« Le",
+   "start": 50.247,
+   "end": 50.271
+  },
+  {
+   "word": "roi",
+   "start": 50.351,
+   "end": 50.591
+  },
+  {
+   "word": "est",
+   "start": 50.711,
+   "end": 51.071
+  },
+  {
+   "word": "mort. »",
+   "start": 51.151,
+   "end": 51.511
+  },
+  {
+   "word": "Il",
+   "start": 52.89,
+   "end": 52.911
+  },
+  {
+   "word": "réclamait",
+   "start": 52.964,
+   "end": 53.311
+  },
+  {
+   "word": "un",
+   "start": 53.338,
+   "end": 53.391
+  },
+  {
+   "word": "pont",
+   "start": 53.439,
+   "end": 53.631
+  },
+  {
+   "word": "entre",
+   "start": 53.671,
+   "end": 53.871
+  },
+  {
+   "word": "San",
+   "start": 53.931,
+   "end": 54.111
+  },
+  {
+   "word": "Francisco",
+   "start": 54.167,
+   "end": 54.671
+  },
+  {
+   "word": "et",
+   "start": 54.698,
+   "end": 54.751
+  },
+  {
+   "word": "Oakland.",
+   "start": 54.821,
+   "end": 55.391
+  },
+  {
+   "word": "Ce",
+   "start": 55.658,
+   "end": 56.191
+  },
+  {
+   "word": "pont",
+   "start": 56.223,
+   "end": 56.351
+  },
+  {
+   "word": "ouvre",
+   "start": 56.431,
+   "end": 56.671
+  },
+  {
+   "word": "en",
+   "start": 56.698,
+   "end": 56.751
+  },
+  {
+   "word": "mille",
+   "start": 56.791,
+   "end": 56.911
+  },
+  {
+   "word": "neuf",
+   "start": 56.938,
+   "end": 57.071
+  },
+  {
+   "word": "cent",
+   "start": 57.087,
+   "end": 57.151
+  },
+  {
+   "word": "trente-six.",
+   "start": 57.191,
+   "end": 57.871
+  },
+  {
+   "word": "L'empereur",
+   "start": 58.775,
+   "end": 59.155
+  },
+  {
+   "word": "sans",
+   "start": 59.203,
+   "end": 59.395
+  },
+  {
+   "word": "empire",
+   "start": 59.486,
+   "end": 60.035
+  },
+  {
+   "word": "avait",
+   "start": 60.128,
+   "end": 60.595
+  },
+  {
+   "word": "VU",
+   "start": 60.635,
+   "end": 60.755
+  },
+  {
+   "word": "JUSTE.",
+   "start": 60.851,
+   "end": 61.395
+  }
+ ]
+}
