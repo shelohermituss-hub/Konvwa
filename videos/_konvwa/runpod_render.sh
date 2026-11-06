@@ -37,18 +37,18 @@ apt-get install -y -qq git curl ca-certificates ffmpeg xz-utils unzip python3 py
 (cd "$W/out" && nohup python3 -m http.server 8000 >/dev/null 2>&1 &) || true
 
 # ffmpeg d'Ubuntu 22.04 (4.4) ne sait pas le « sidechaincompress » du mix du pack : on prend un ffmpeg statique récent (sinon le mix de secours de konvwa est utilisé).
-if ! ffmpeg -hide_banner -f lavfi -i "sine=d=0.2" -f lavfi -i "sine=d=0.2" -filter_complex "[0:a]apad[a];[1:a]apad[b];[a][b]sidechaincompress[o]" -map "[o]" -f null - >/dev/null 2>&1; then
-  ( cd /tmp && curl -fsSL -o ff.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && tar xf ff.tar.xz && cp ffmpeg-*-static/ffmpeg ffmpeg-*-static/ffprobe /usr/local/bin/ && echo "   ffmpeg récent installé" ) || echo "   (ffmpeg récent non installé : mix de secours)"
+if ! timeout 60 ffmpeg -hide_banner -f lavfi -i "sine=d=0.2" -f lavfi -i "sine=d=0.2" -filter_complex "[0:a]apad[a];[1:a]apad[b];[a][b]sidechaincompress[o]" -map "[o]" -t 1 -f null - >/dev/null 2>&1; then
+  ( cd /tmp && curl -fsSL --connect-timeout 30 --speed-limit 50000 --speed-time 60 -o ff.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && tar xf ff.tar.xz && cp ffmpeg-*-static/ffmpeg ffmpeg-*-static/ffprobe /usr/local/bin/ && echo "   ffmpeg récent installé" ) || echo "   (ffmpeg récent non installé : mix de secours)"
 fi
 
 etape "2/6 Blender $BLV et la carte graphique"
 if [ ! -x "$W/blender/blender" ]; then
   MAJ="${BLV%.*}"; BASE="https://download.blender.org/release/Blender${MAJ}"; F="blender-${BLV}-linux-x64.tar.xz"
-  if ! curl -fsSLI "$BASE/$F" >/dev/null 2>&1; then
-    F=$(curl -fsSL "$BASE/" | grep -o 'blender-[0-9.]*-linux-x64.tar.xz' | sort -uV | tail -1)
+  if ! curl -fsSLI --max-time 60 "$BASE/$F" >/dev/null 2>&1; then
+    F=$(curl -fsSL --max-time 60 "$BASE/" | grep -o 'blender-[0-9.]*-linux-x64.tar.xz' | sort -uV | tail -1)
     echo "   $BLV introuvable, on prend $F"
   fi
-  curl -fsSL "$BASE/$F" -o /tmp/blender.tar.xz
+  curl -fsSL --connect-timeout 30 --speed-limit 50000 --speed-time 60 "$BASE/$F" -o /tmp/blender.tar.xz
   mkdir -p "$W/blender" && tar -xJf /tmp/blender.tar.xz -C "$W/blender" --strip-components=1 && rm /tmp/blender.tar.xz
 fi
 export CZ_BLENDER="$W/blender/blender"

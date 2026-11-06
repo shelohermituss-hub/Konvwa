@@ -19,9 +19,9 @@ apt-get install -y -qq git curl ca-certificates ffmpeg xz-utils unzip python3 py
 nvidia-smi --query-gpu=name,driver_version --format=csv,noheader || echo "(nvidia-smi absent)"
 ls /usr/share/glvnd/egl_vendor.d/ 2>/dev/null; ls /usr/lib/x86_64-linux-gnu | grep -i -E "nvidia|EGL" | head -8
 etape "2/6 ffmpeg récent, Node, Chrome"
-( cd /tmp && curl -fsSL -o ff.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && tar xf ff.tar.xz && cp ffmpeg-*-static/ffmpeg ffmpeg-*-static/ffprobe /usr/local/bin/ ) || echo "(ffmpeg récent non installé)"
-( cd /tmp && curl -fsSL -o node.tar.xz https://nodejs.org/dist/v22.11.0/node-v22.11.0-linux-x64.tar.xz && tar xf node.tar.xz && cp -r node-v22.11.0-linux-x64/{bin,lib,include,share} /usr/local/ ) || { echo "!! Node non installé"; fin 11; exit 11; }
-( cd /tmp && curl -fsSL -o chrome.zip https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.85/linux64/chrome-linux64.zip && unzip -q -o chrome.zip && ln -sf /tmp/chrome-linux64/chrome /usr/local/bin/chrome-cft ) || { echo "!! Chrome non installé"; fin 11; exit 11; }
+( cd /tmp && curl -fsSL --connect-timeout 30 --speed-limit 50000 --speed-time 60 -o ff.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && tar xf ff.tar.xz && cp ffmpeg-*-static/ffmpeg ffmpeg-*-static/ffprobe /usr/local/bin/ ) || echo "(ffmpeg récent non installé)"
+( cd /tmp && curl -fsSL --connect-timeout 30 --speed-limit 50000 --speed-time 60 -o node.tar.xz https://nodejs.org/dist/v22.11.0/node-v22.11.0-linux-x64.tar.xz && tar xf node.tar.xz && cp -r node-v22.11.0-linux-x64/{bin,lib,include,share} /usr/local/ ) || { echo "!! Node non installé"; fin 11; exit 11; }
+( cd /tmp && curl -fsSL --connect-timeout 30 --speed-limit 50000 --speed-time 60 -o chrome.zip https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.85/linux64/chrome-linux64.zip && unzip -q -o chrome.zip && ln -sf /tmp/chrome-linux64/chrome /usr/local/bin/chrome-cft ) || { echo "!! Chrome non installé"; fin 11; exit 11; }
 export CZ_BROWSER=/tmp/chrome-linux64/chrome KONVWA_GPU=1
 node --version; "$CZ_BROWSER" --version
 etape "3/6 Le dépôt KONVWA"
