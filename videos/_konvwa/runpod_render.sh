@@ -211,6 +211,31 @@ for essai in 1 2; do
   echo "   rendu échoué (essai $essai, code $CODE) : images déjà faites gardées, nouvel essai"
   rm -f "videos/$PROJET"/shots/*_q.log
 done
+# Images noires ou illisibles ? (le montage ne les signale pas : elles donnent des passages noirs dans la vidéo). On les supprime
+# et on les refait avec les réglages d'origine (sans le réglage automatique de vitesse) : le moteur ne rend que les images manquantes.
+noires() {
+  videos/_konvwa/.venv/bin/python - "videos/$PROJET" <<'EOF3'
+import glob, os, sys
+from PIL import Image, ImageStat
+for p in sorted(glob.glob(os.path.join(sys.argv[1], 'shots', '*', '[0-9]*.png'))):
+    try: m = ImageStat.Stat(Image.open(p).convert('L').resize((54, 96))).mean[0]
+    except Exception: m = 0   # fichier illisible : à refaire
+    if m < 2: print(p)
+EOF3
+}
+if [ "$CODE" = "0" ]; then
+  etape "6b/6 Images noires ou illisibles ?"
+  NOIRES=$(noires 2>&1 || true)
+  N=$(printf '%s\n' "$NOIRES" | grep -c 'png$' || true)
+  if [ "${N:-0}" -gt 0 ]; then
+    echo "   $N images noires ou illisibles (10 premières) :"; printf '%s\n' "$NOIRES" | head -10
+    printf '%s\n' "$NOIRES" | grep 'png$' | xargs rm -f
+    python3 videos/_konvwa/konvwa.py rendu "$PROJET" --fps60 non --sans-reglage --jobs 2 && CODE=0 || CODE=$?
+    echo "   après nouveau rendu : $(noires 2>&1 | grep -c 'png$' || true) image(s) encore noire(s) (un fondu ou un noir voulu en fait partie)"
+  else
+    echo "   aucune image noire"
+  fi
+fi
 if [ "$CODE" = "0" ] && [ -f "videos/$PROJET/renders/$PROJET.mp4" ]; then
   cp "videos/$PROJET/renders/$PROJET.mp4" "$W/out/$PROJET.mp4"
   ls -l "$W/out/$PROJET.mp4" | awk '{print "   MP4 : " $5 " octets"}'
