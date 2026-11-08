@@ -202,7 +202,15 @@ etape "5b/6 Son : effets, fond et mix (voix devant, -14 LUFS)"
 python3 videos/_konvwa/konvwa.py son "$PROJET" 2>&1 | tail -40; [ -f "videos/$PROJET/audio/final_mix.wav" ] && echo "   son : final_mix.wav prêt" || echo "(!) son non fait : la voix seule sera utilisée"
 
 etape "6/6 Rendu complet de $PROJET"
-python3 videos/_konvwa/konvwa.py rendu "$PROJET" --fps60 non && CODE=0 || CODE=$?   # 30 i/s : choix du client
+# 30 i/s : choix du client. Le moteur garde les images déjà rendues : en cas d'échec on supprime les journaux de plan (un
+# vieux « Traceback » les ferait échouer à nouveau) et on relance une fois, ce qui ne refait que les images manquantes.
+CODE=1
+for essai in 1 2; do
+  python3 videos/_konvwa/konvwa.py rendu "$PROJET" --fps60 non && CODE=0 || CODE=$?
+  [ "$CODE" = "0" ] && break
+  echo "   rendu échoué (essai $essai, code $CODE) : images déjà faites gardées, nouvel essai"
+  rm -f "videos/$PROJET"/shots/*_q.log
+done
 if [ "$CODE" = "0" ] && [ -f "videos/$PROJET/renders/$PROJET.mp4" ]; then
   cp "videos/$PROJET/renders/$PROJET.mp4" "$W/out/$PROJET.mp4"
   ls -l "$W/out/$PROJET.mp4" | awk '{print "   MP4 : " $5 " octets"}'
