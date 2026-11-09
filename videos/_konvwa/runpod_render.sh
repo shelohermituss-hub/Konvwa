@@ -237,6 +237,8 @@ if [ "$CODE" = "0" ]; then
   fi
 fi
 if [ "$CODE" = "0" ] && [ -f "videos/$PROJET/renders/$PROJET.mp4" ]; then
+  echo "   Passages noirs de plus de 0,5 s dans la vidéo finale (secondes) :"
+  ffmpeg -hide_banner -i "videos/$PROJET/renders/$PROJET.mp4" -vf blackdetect=d=0.5:pix_th=0.10 -an -f null - 2>&1 | grep -E 'black_start' || echo "   aucun"
   cp "videos/$PROJET/renders/$PROJET.mp4" "$W/out/$PROJET.mp4"
   ls -l "$W/out/$PROJET.mp4" | awk '{print "   MP4 : " $5 " octets"}'
   ffprobe -v error -show_entries stream=codec_type,width,height,r_frame_rate,duration -of compact "$W/out/$PROJET.mp4" || true
